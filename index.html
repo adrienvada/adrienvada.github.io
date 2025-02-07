@@ -1,106 +1,129 @@
-@ -0,0 +1,105 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Films</title>
+    <title>Adrien Vada</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f8f8;
-            margin: 40px;
-            color: #333;
+            background-color: black;
+            color: white;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* Pour éviter la barre de défilement horizontale */
         }
-        h1 {
-            font-size: 24px;
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            opacity: 0; /* Initialement invisible */
+            animation: fadeIn 1s ease-in-out forwards; /* Animation de fondu */
+        }
+
+        .profile img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        .details {
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            opacity: 0; /* Initialement invisible */
+            animation: fadeIn 1s ease-in-out 0.5s forwards; /* Animation de fondu avec délai */
+        }
+
+        .section-title {
             font-weight: bold;
+            margin-bottom: 10px;
         }
-        .film-list {
+
+        ul {
             list-style: none;
             padding: 0;
         }
-        .film-item {
-            background: #ffffff;
-            margin: 10px 0;
-            padding: 15px;
-            border-left: 5px solid #555;
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+
+        li {
+            margin-bottom: 5px;
         }
-        .film-title {
-            font-weight: bold;
-        }
-        .film-info {
-            font-size: 14px;
-            color: #666;
+
+        /* Animation de fondu */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
     </style>
 </head>
+
 <body>
-    <h1>Films</h1>
-    <ul class="film-list">
-        <li class="film-item">
-            <span class="film-title">2024 D'UN ENFANT RENCONTRÉ</span> - Arnaud Desplechin
-        </li>
-        <li class="film-item">
-            <span class="film-title">2023 L'AMOUR OUF</span> - Gilles Lellouche<br>
-            <span class="film-info">Sélection au Festival de Cannes 2024, Compétition officielle</span><br>
-            <span class="film-info">Nomination au César 2025 du Meilleur Acteur</span>
-        </li>
-        <li class="film-item">
-            <span class="film-title">2022 PAS DE VAGUES</span> - Teddy Lussi Modeste
-        </li>
-        <li class="film-item">
-            <span class="film-title">2022 LES 3 MOUSQUETAIRES : MILADY</span> - Martin Bourboulon
-        </li>
-        <li class="film-item">
-            <span class="film-title">2022 LES 3 MOUSQUETAIRES : D'ARTAGNAN</span> - Martin Bourboulon
-        </li>
-        <li class="film-item">
-            <span class="film-title">2022 UNE ZONE À DÉFENDRE</span> - Romain Cogitore
-        </li>
-        <li class="film-item">
-            <span class="film-title">2021 EN CORPS</span> - Cédric Klapisch<br>
-            <span class="film-info">Nomination au César 2023 du Meilleur acteur dans un second rôle</span>
-        </li>
-        <li class="film-item">
-            <span class="film-title">2021 LA VENGEANCE AU TRIPLE GALOP</span> - Alex Lutz<br>
-            <span class="film-info">Festival de la Fiction Télé de La Rochelle 2021, Meilleure Comédie</span>
-        </li>
-        <li class="film-item">
-            <span class="film-title">2019 BAC NORD</span> - Cédric Jimenez<br>
-            <span class="film-info">Festival de Cannes 2021, hors compétition</span><br>
-            <span class="film-info">César 2022, Meilleur acteur dans un second rôle (nomination)</span>
-        </li>
-        <li class="film-item">
-            <span class="film-title">2018 CELLE QUE VOUS CROYEZ</span> - Safy Nebbou
-        </li>
-        <li class="film-item">
-            <span class="film-title">2018 MON INCONNUE</span> - Hugo Gélin<br>
-            <span class="film-info">Festival de Cabourg 2019, Swan d'or du Meilleur Film romantique</span>
-        </li>
-        <li class="film-item">
-            <span class="film-title">2017 LE CHANT DU LOUP</span> - Antonin Baudry
-        </li>
-        <li class="film-item">
-            <span class="film-title">2016 BURN OUT</span> - Yann Gozlan
-        </li>
-        <li class="film-item">
-            <span class="film-title">2015 FIVE</span> - Igor Gotesman
-        </li>
-        <li class="film-item">
-            <span class="film-title">2015 CE QUI NOUS LIE</span> - Cédric Klapisch
-        </li>
-        <li class="film-item">
-            <span class="film-title">2014 MADE IN FRANCE</span> - Nicolas Boukhrief<br>
-            <span class="film-info">Colcoa French film festival 2016, Prix spécial du public</span>
-        </li>
-        <li class="film-item">
-            <span class="film-title">2014 L'HÉRITIÈRE</span> - Alain Tasma
-        </li>
-        <li class="film-item">
-            <span class="film-title">2013 ALIAS CARACALLA</span> - Alain Tasma
-        </li>
-    </ul>
+    <div class="container">
+        <div class="profile">
+            <img src="URL_DE_L_IMAGE_DE_PROFIL" alt="Adrien Vada">
+            <div class="details">
+                <h1>Adrien Vada</h1>
+                <p>Artiste interprète</p>
+				<p>adrien.vada@gmail.com</p>
+                <p><a href="URL_DE_LINKTREE" target="_blank">Linktree</a></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Théâtre</h2>
+            <ul>
+                <li>Rodogune (Corneille), mise en scène Angelo Jossec, production : Théâtre des Crescite, création 2023-2024</li>
+                <li>À La Barre (Ronan Chéneau), mise en scène Steeve Brunet, production : Compagnie du p'tit ballon, coproduction : CDN de
+                    Normandie-Rouen, création 2023-2024</li>
+                <li>Fulguré.e.s (Jérémie Fabre), mise en scène Amélie Chalmey, production : Compagnie Alchimie, coproduction :
+                    Théâtre Le Passage Scène conventionnée d'intérêt National de Fécamp - Théâtre Juliobona de Lillebonne -
+                    Commédiamuse / La Rotonde, Petit-Couronne, création 2022-2023</li>
+                <li>Bérénice (Racine), mise en scène Angelo Jossec, production : Théâtre des Crescite, coproduction : l'Archipel de
+                    Granville, reprise de rôle 2021-2022</li>
+                <li>As You Like It (Shakespeare), mise en scène Nicolas Gaspar, production : Compagnie Bloomsbury, création
+                    2021-2022</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Cinéma/Voix</h2>
+            <ul>
+                <li>À tout prix, réalisateur Max Laure, autoproduction 2023</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Formations</h2>
+            <ul>
+                <li>[Liste de tes formations]</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Assistant à la mise en scène</h2>
+            <ul>
+                <li>[Liste de tes expériences en tant qu'assistant à la mise en scène]</li>
+            </ul>
+        </div>
+    </div>
 </body>
+
 </html>
