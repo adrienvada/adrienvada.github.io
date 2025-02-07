@@ -4,125 +4,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adrien Vada</title>
+    <title>Adrien Vada - Comédien</title>
     <style>
         body {
-            background-color: black;
-            color: white;
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden; /* Pour éviter la barre de défilement horizontale */
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 40px;
+            color: #333;
         }
 
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .profile {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px;
-            opacity: 0; /* Initialement invisible */
-            animation: fadeIn 1s ease-in-out forwards; /* Animation de fondu */
-        }
-
-        .profile img {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            margin-bottom: 10px;
-        }
-
-        .details {
-            text-align: center;
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
         }
 
         .section {
             margin-bottom: 20px;
-            opacity: 0; /* Initialement invisible */
-            animation: fadeIn 1s ease-in-out 0.5s forwards; /* Animation de fondu avec délai */
         }
 
         .section-title {
+            font-size: 18px;
             font-weight: bold;
             margin-bottom: 10px;
         }
 
-        ul {
+        .item-list {
             list-style: none;
             padding: 0;
         }
 
-        li {
-            margin-bottom: 5px;
+        .item {
+            background: #ffffff;
+            margin: 10px 0;
+            padding: 15px;
+            border-left: 5px solid #555;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* Animation de fondu */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
+        .item-title {
+            font-weight: bold;
+        }
 
-            to {
-                opacity: 1;
-            }
+        .item-info {
+            font-size: 14px;
+            color: #666;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="profile">
-            <img src="URL_DE_L_IMAGE_DE_PROFIL" alt="Adrien Vada">
-            <div class="details">
-                <h1>Adrien Vada</h1>
-                <p>Artiste interprète</p>
-				<p>adrien.vada@gmail.com</p>
-                <p><a href="URL_DE_LINKTREE" target="_blank">Linktree</a></p>
-            </div>
-        </div>
+    <h1>Adrien Vada</h1>
+    <p>06 32 70 38 57 / adrien.vada@gmail.com</p>
+    <p><a href="URL_DE_LINKTREE" target="_blank">Linktree</a></p>
 
-        <div class="section">
-            <h2 class="section-title">Théâtre</h2>
-            <ul>
-                <li>Rodogune (Corneille), mise en scène Angelo Jossec, production : Théâtre des Crescite, création 2023-2024</li>
-                <li>À La Barre (Ronan Chéneau), mise en scène Steeve Brunet, production : Compagnie du p'tit ballon, coproduction : CDN de
-                    Normandie-Rouen, création 2023-2024</li>
-                <li>Fulguré.e.s (Jérémie Fabre), mise en scène Amélie Chalmey, production : Compagnie Alchimie, coproduction :
-                    Théâtre Le Passage Scène conventionnée d'intérêt National de Fécamp - Théâtre Juliobona de Lillebonne -
-                    Commédiamuse / La Rotonde, Petit-Couronne, création 2022-2023</li>
-                <li>Bérénice (Racine), mise en scène Angelo Jossec, production : Théâtre des Crescite, coproduction : l'Archipel de
-                    Granville, reprise de rôle 2021-2022</li>
-                <li>As You Like It (Shakespeare), mise en scène Nicolas Gaspar, production : Compagnie Bloomsbury, création
-                    2021-2022</li>
-            </ul>
-        </div>
+    <div class="section">
+        <h2 class="section-title">Théâtre</h2>
+        <ul class="item-list">
+            <li class="item">
+                <span class="item-title">Rodogune</span> (Corneille), mise en scène Angelo Jossec, production : Théâtre des
+                Crescite, création 2023-2024
+            </li>
+            <li class="item">
+                <span class="item-title">À La Barre</span> (Ronan Chéneau), mise en scène Steeve Brunet, production :
+                Compagnie du p'tit ballon, coproduction : CDN de Normandie-Rouen, création 2023-2024
+            </li>
+            <li class="item">
+                <span class="item-title">Fulguré.e.s</span> (Jérémie Fabre), mise en scène Amélie Chalmey, production :
+                Compagnie Alchimie, coproduction : Théâtre Le Passage Scène conventionnée d'intérêt National de Fécamp -
+                Théâtre Juliobona de Lillebonne - Commédiamuse / La Rotonde, Petit-Couronne, création 2022-2023
+            </li>
+            <li class="item">
+                <span class="item-title">Bérénice</span> (Racine), mise en scène Angelo Jossec, production : Théâtre des
+                Crescite, coproduction : l'Archipel de Granville, reprise de rôle 2021-2022
+            </li>
+            <li class="item">
+                <span class="item-title">As You Like It</span> (Shakespeare), mise en scène Nicolas Gaspar, production :
+                Compagnie Bloomsbury, création 2021-2022
+            </li>
+        </ul>
+    </div>
 
-        <div class="section">
-            <h2 class="section-title">Cinéma/Voix</h2>
-            <ul>
-                <li>À tout prix, réalisateur Max Laure, autoproduction 2023</li>
-            </ul>
-        </div>
+    <div class="section">
+        <h2 class="section-title">Cinéma/Voix</h2>
+        <ul class="item-list">
+            <li class="item">
+                <span class="item-title">À tout prix</span>, réalisateur Max Laure, autoproduction 2023
+            </li>
+        </ul>
+    </div>
 
-        <div class="section">
-            <h2 class="section-title">Formations</h2>
-            <ul>
-                <li>[Liste de tes formations]</li>
-            </ul>
-        </div>
+    <div class="section">
+        <h2 class="section-title">Formations</h2>
+        <ul class="item-list">
+            <li class="item">
+                <span class="item-title">[Liste de tes formations]</span>
+            </li>
+        </ul>
+    </div>
 
-        <div class="section">
-            <h2 class="section-title">Assistant à la mise en scène</h2>
-            <ul>
-                <li>[Liste de tes expériences en tant qu'assistant à la mise en scène]</li>
-            </ul>
-        </div>
+    <div class="section">
+        <h2 class="section-title">Assistant à la mise en scène</h2>
+        <ul class="item-list">
+            <li class="item">
+                <span class="item-title">[Liste de tes expériences en tant qu'assistant à la mise en scène]</span>
+            </li>
+        </ul>
     </div>
 </body>
 
