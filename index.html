@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>Adrien Vada - Artiste interprète</title>
     <style>
 		body {
@@ -36,7 +37,7 @@
         .header img {
             width: 150px;
             height: 150px;
-            border-radius: 30%;
+            border-radius: 50%;
             margin-left: 20px;
         }
 
@@ -59,7 +60,7 @@
 
         .job {
             font-weight: normal;
-            color: #0080ca;
+            color: #006699;
             margin: 0px;
         }
 
@@ -72,8 +73,34 @@
         .section-title {
             opacity: 0;
             transform: translateX(10px);
+			display: flex; /* Active Flexbox pour le titre et le bouton */
+			align-items: center; /* Centre verticalement le titre et le bouton */
+			justify-content: space-between; /* Aligne le titre à gauche et le bouton à droite */
         }
 		 
+		 
+		#download-cv-button {
+		  /* ... (vos autres styles pour le bouton) ... */
+		    margin-left: 20px; /* Marge à gauche pour espacer le bouton du titre */
+		    background-color: #0080ca;
+		    color: white;
+		    padding: 5px 10px;
+		    border: none;
+		    border-radius: 5px;
+		    cursor: pointer;
+		    transition: background-color 0.3s ease;
+		    vertical-align: middle;
+		    margin-left: 10px; /* Ajout d'une marge à gauche */
+		  
+		}
+		
+		#download-cv-button:hover {
+		  background-color: #006699;
+		}
+
+		#download-cv-button i {
+		  font-size: 1.2em;
+		}
 
         .item-list {
             list-style: none;
@@ -164,11 +191,50 @@
             box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
         }
 		
+		/* Styles pour l'image plein écran */
+		.fullscreen-image {
+			position: fixed; /* Couvre tout l'écran */
+			pointer-events: none; /* Empêche les clics sur l'image tant qu'elle n'est pas active */
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.8); /* Fond semi-transparent */
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 9999; /* Assure que l'image est au-dessus de tout */
+			opacity: 0; /* Commence par être invisible */
+			transition: opacity 0.3s ease; /* Transition pour l'apparition */
+			cursor: pointer; /* Indique qu'on peut fermer l'image */
+		}
+
+		.fullscreen-image img {
+			max-width: 90%;
+			max-height: 90%;
+			object-fit: contain; /* Ajuste l'image à la taille de l'écran sans la déformer */
+			cursor: default; /* Remet le curseur par défaut sur l'image */
+		}
+
+		.fullscreen-image.active {
+			opacity: 1; /* Devient visible */
+			pointer-events: auto; /* Permet les clics quand l'image est active */
+		}
+
+		.fullscreen-image.fade-out { /* Classe pour la disparition */
+			opacity: 0;
+			transition: opacity 0.3s ease; /* Transition pour la fermeture */
+		}
 		
     </style>
 </head>
 
 <body>
+	<!-- Image profil plein écran!-->
+	<div class="fullscreen-image" id="fullscreen-container">
+        <img src="ressources/images/profil_resolutionpleine.jpg" alt="Adrien Vada Photo Profil" onerror="ressources/images/profil_1000*1000.jpg'; this.onerror=null;">>
+    </div>
+	
     <div class="content">
 		
         <div class="header">
@@ -177,8 +243,10 @@
                 <h2 class="job">Artiste interprète</h2>
                 <p><a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a></p>
             </div>
-            <img src="ressources/images/profil_1000*1000.jpg" alt="Adrien Vada Photo Profil">
+            <img src="ressources/images/profil_1000*1000.jpg" alt="Adrien Vada Photo Profil" id="profile-image">
         </div>
+		
+		
 		
 		<div class="nav">
             <button onclick="showPage('cv')">CV</button>
@@ -189,7 +257,11 @@
 		<div id="cv" class="page active">
 			
 	        <div class="section">
-	            <h2 class="section-title">Théâtre</h2>
+	            <h2 class="section-title">Théâtre
+					<button id="download-cv-button" onclick="window.location.href='ressources/Adrien Vada CV2024.pdf'" style="margin-left: 20px;">
+				        <i class="fas fa-file-pdf"></i> PDF
+				    </button>
+				</h2>
 	            <ul class="item-list">
 					<li class="item">2025 <span class="item-title">Audiences - spectacle de prévention</span> - Steeve Brunet<br /><span class="item-info"> Compagnie du P'tit Ballon</span></li>
 	                <li class="item">2024 <span class="item-title">Rodogune </span> (Corneille) - Angelo Jossec<br /><span class="item-info">Théâtre des Crescite</span></li>
@@ -247,9 +319,8 @@
 		<div id="autres" class="page">
 			
 	        <div class="section">
-	            <h2 class="section-title">Démos</h2>
 	            <ul class="item-list">
-	                <li class="item">
+	                <li class="item" style="display: flex; align-items: center; text-align: center;">
 
 		                <a href="https://www.youtube.com/watch?v=0igK7gPQMIY" target="_blank" style="display: flex; align-items: flex-start; text-decoration: none; color: inherit;">
 		                    <div style="flex-grow: 1;">
@@ -273,7 +344,7 @@
 		    <div class="section">
 		        <h2 class="section-title">Compositions</h2>
 		        <ul class="item-list">
-		            <li class="item" style="display: flex; align-items: flex-start;">
+		            <li class="item" >
 		                <a href="https://ffm.to/adrienvada-armatures" target="_blank" style="display: flex; align-items: flex-start; text-decoration: none; color: inherit;">
 		                    <div style="flex-grow: 1;">
 		                        <span class="item-title">Armatures</span> (2023 - 2024)
@@ -281,7 +352,7 @@
 		                            Avec "Armatures", j'ai cherché à créer un équilibre entre qualité introspective et rythmes fédérateurs. Le piano y occupe une place centrale, tandis que les sons électroniques apportent des ambiances contrastées, allant de la mélancolie à l'énergie dansante. Plus structuré que mon premier album, cet opus explore un dialogue entre acoustique et synthétique, comme un Détour à travers une Plaine de Ressentis enfuis. Un Aller simple initiatique, tantôt Nomade, tantôt Perdus en mer, fortifiant une intériorité faites de multiples Armatures, jusqu'à l'ivresse d'un Envol final...
 		                        </span>
 		                    </div>
-		                    <img src="ressources/images/armatures.png" alt="Pochette album" style="margin-left: 20px;">
+		                    <img src="ressources/images/armatures.jpg" alt="Pochette album" style="margin-left: 20px;">
 		                </a>
 		            </li>
 
@@ -293,7 +364,7 @@
 		                            Avec "Premiers pas", j’ai compilé ce que j'ai découvert avec les possibilités de la musique assistée par ordinateur, en composant mes premiers morceaux sur FL Studio. Chaque piste est comme une salle différente d’un musée imaginaire, une plongée dans des ambiances variées. Ce projet, à la fois brut et spontané, marque mes premières expérimentations : des boucles hypnotiques, des atmosphères feutrées et un piano quasiment omniprésent. Ici, la danse s’efface au profit de la contemplation, invitant l’auditeur à un voyage introspectif, où chaque sonorité dessine un paysage en mouvement.
 		                        </span>
 		                    </div>
-		                    <img src="ressources/images/premierspas.png" alt="Prochette album" style="margin-left: 20px;">
+		                    <img src="ressources/images/premierspas.jpg" alt="Prochette album" style="margin-left: 20px;">
 		                </a>
 		            </li>
 		        </ul>
@@ -344,6 +415,20 @@
 	            });
 	            document.getElementById(sectionId).classList.add('active');
 	        }
+			
+			const profileImage = document.getElementById('profile-image');
+            const fullscreenContainer = document.getElementById('fullscreen-container');
+
+            profileImage.addEventListener('click', () => {
+                fullscreenContainer.classList.add('active');
+            });
+
+            fullscreenContainer.addEventListener('click', (event) => {
+                if (event.target === fullscreenContainer || event.target.tagName === 'IMG') {
+                    fullscreenContainer.classList.remove('active');
+                }
+            });
+
 	    </script>
 
 </html>
