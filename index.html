@@ -225,6 +225,20 @@
 			opacity: 0;
 			transition: opacity 0.3s ease; /* Transition pour la fermeture */
 		}
+
+		.gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+		}
+
+		.gallery img {
+			width: 150px;
+			height: 150px;
+			object-fit: cover;
+			border-radius: 5px;
+			cursor: pointer; /* Indique que les images sont cliquables */
+		}
 		
     </style>
 </head>
@@ -232,8 +246,15 @@
 <body>
 	<!-- Image profil plein écran!-->
 	<div class="fullscreen-image" id="fullscreen-container">
-        <img src="ressources/images/profil_resolutionpleine.jpg" alt="Adrien Vada Photo Profil" onerror="ressources/images/profil_1000*1000.jpg'; this.onerror=null;">>
+        <img src="ressources/images/profil_1000x1000.jpg" alt="Adrien Vada Photo Profil" onerror="ressources/images/profil_1000x1000.jpg"; this.onerror=null;">>
     </div>
+
+	<!-- Image plein écran pour la galerie -->
+	<div class="fullscreen-image" id="gallery-fullscreen-container">
+		<img src="" alt="Image en plein écran" id="gallery-fullscreen-image">
+	</div>
+
+	
 	
     <div class="content">
 		
@@ -243,7 +264,7 @@
                 <h2 class="job">Artiste interprète</h2>
                 <p><a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a></p>
             </div>
-            <img src="ressources/images/profil_1000*1000.jpg" alt="Adrien Vada Photo Profil" id="profile-image">
+            <img src="ressources/images/profil_1000x1000.jpg" alt="Adrien Vada Photo Profil" id="profile-image">
         </div>
 		
 		
@@ -251,7 +272,8 @@
 		<div class="nav">
             <button onclick="showPage('cv')">CV</button>
             <button onclick="showPage('dates')">Dates de la saison</button>
-            <button onclick="showPage('autres')">Autres</button>
+            <button onclick="showPage('demos')">Démos et photos</button>
+			<button onclick="showPage('autres')">Autres</button>
         </div>
 		
 		<div id="cv" class="page active">
@@ -315,8 +337,8 @@
 				<div class="item">10-11 octobre 2024 : Rodogune, Théâtre L'étincelle, Rouen <span style="font-style: italic;">(premières)</span></div>
             </div>
         </div>
-		
-		<div id="autres" class="page">
+
+		<div id="demos" class="page">
 			
 	        <div class="section">
 	            <ul class="item-list">
@@ -340,6 +362,14 @@
 					</li>
 	            </ul>
 	        </div>
+
+            <div class="section" id="galerie_photos">    
+	            <h2>Photos</h2>
+				<div class="gallery" id="photo-gallery"></div>
+            </div>
+        </div>
+		
+		<div id="autres" class="page">
 			
 		    <div class="section">
 		        <h2 class="section-title">Compositions</h2>
@@ -418,6 +448,7 @@
 			
 			const profileImage = document.getElementById('profile-image');
             const fullscreenContainer = document.getElementById('fullscreen-container');
+			const fullscreenImage = document.getElementById('fullscreen-image');
 
             profileImage.addEventListener('click', () => {
                 fullscreenContainer.classList.add('active');
@@ -429,6 +460,69 @@
                 }
             });
 
+			const photoGallery = document.getElementById('photo-gallery');
+			const imageFolder = 'ressources/images/galerie/';
+			const imageFiles = [
+				'photo1.png',
+				'photo2.png',
+				'photo3.png',
+				'photo4.png',
+				'photo5.png',
+				'photo6.png',
+				'photo7.png',
+				'photo8.png',
+				'photo9.png',
+				'photo10.png',
+				'photo11.png',
+				'photo12.png',
+				'photo13.png',
+				'photo14.png',
+				'photo15.png',
+				'photo16.png',
+				// Ajoutez ici les noms de fichiers des images dans le dossier galerie
+			];
+
+			const galleryFullscreenContainer = document.getElementById('gallery-fullscreen-container');
+			const galleryFullscreenImage = document.getElementById('gallery-fullscreen-image');
+			let currentImageIndex = 0;
+			
+			function showImage(index) {
+				if (index >= 0 && index < imageFiles.length) {
+					galleryFullscreenImage.src = `${imageFolder}${imageFiles[index]}`;
+					galleryFullscreenContainer.classList.add('active');
+					currentImageIndex = index;
+				}
+			}
+
+			imageFiles.forEach((fileName, index) => {
+				const img = document.createElement('img');
+				img.src = `${imageFolder}${fileName}`;
+				img.alt = fileName;
+				img.addEventListener('click', () => {
+					showImage(index);
+				});
+				photoGallery.appendChild(img);
+			});
+
+			galleryFullscreenContainer.addEventListener('click', (event) => {
+				if (event.target === galleryFullscreenContainer || event.target.tagName === 'IMG') {
+					galleryFullscreenContainer.classList.remove('active');
+				}
+			});
+
+			document.addEventListener('keydown', (event) => {
+				if (galleryFullscreenContainer.classList.contains('active')) {
+					if (event.key === 'Escape' || event.key === 'Esc') {
+						galleryFullscreenContainer.classList.remove('active');
+					} else if (event.key === 'ArrowRight') {
+						showImage(currentImageIndex + 1);
+					} else if (event.key === 'ArrowLeft') {
+						showImage(currentImageIndex - 1);
+					} else {
+						galleryFullscreenContainer.classList.remove('active');
+					}
+				}
+			});
 	    </script>
 
 </html>
