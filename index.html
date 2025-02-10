@@ -239,6 +239,32 @@
 			border-radius: 5px;
 			cursor: pointer; /* Indique que les images sont cliquables */
 		}
+
+		.fullscreen-video {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.8);
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 10000;
+			opacity: 0;
+			transition: opacity 0.3s ease;
+			pointer-events: none;
+		}
+
+		.fullscreen-video.active {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		.fullscreen-video iframe {
+			width: 80%;
+			height: 80%;
+		}
 		
     </style>
 </head>
@@ -254,7 +280,10 @@
 		<img src="" alt="Image en plein écran" id="gallery-fullscreen-image">
 	</div>
 
-	
+	<!-- Video plein écran -->
+	<div class="fullscreen-video" id="video-fullscreen-container">
+		<iframe id="video-fullscreen-iframe" width="560" height="315" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+	</div>
 	
     <div class="content">
 		
@@ -521,6 +550,43 @@
 					} else {
 						galleryFullscreenContainer.classList.remove('active');
 					}
+				}
+			});
+
+
+			const videoFullscreenContainer = document.getElementById('video-fullscreen-container');
+			const videoFullscreenIframe = document.getElementById('video-fullscreen-iframe');
+
+			function setupVideoFullscreen(videoLink, itemElement) {
+				itemElement.addEventListener('click', (event) => {
+					event.preventDefault(); // Empêche la navigation vers le lien
+					videoFullscreenIframe.src = videoLink.replace("watch?v=", "embed/"); // Transforme le lien pour l'embed
+					videoFullscreenContainer.classList.add('active');
+				});
+			}
+
+			// Sélectionnez les éléments de la liste des démos
+			const demoListItems = document.querySelectorAll('#demos .item-list .item');
+
+			// Associez chaque élément à sa vidéo
+			demoListItems.forEach((item) => {
+				const videoLink = item.querySelector('a').href;
+				setupVideoFullscreen(videoLink, item);
+			});
+
+			// Écouteur d'événement pour fermer la vidéo plein écran
+			videoFullscreenContainer.addEventListener('click', (event) => {
+				if (event.target === videoFullscreenContainer) {
+					videoFullscreenIframe.src = ""; // Vide la source de l'iframe
+					videoFullscreenContainer.classList.remove('active');
+				}
+			});
+
+			// Écouteur d'événement pour fermer la vidéo plein écran avec la touche "Escape"
+			document.addEventListener('keydown', (event) => {
+				if (event.key === 'Escape' || event.key === 'Esc') {
+					videoFullscreenIframe.src = ""; // Vide la source de l'iframe
+					videoFullscreenContainer.classList.remove('active');
 				}
 			});
 	    </script>
