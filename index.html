@@ -280,10 +280,6 @@
 		<img src="" alt="Image en plein écran" id="gallery-fullscreen-image">
 	</div>
 
-	<!-- Video plein écran -->
-	<div class="fullscreen-video" id="video-fullscreen-container">
-		<iframe id="video-fullscreen-iframe" width="560" height="315" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-	</div>
 	
     <div class="content">
 		
@@ -565,30 +561,7 @@
 				});
 			}
 
-			// Sélectionnez les éléments de la liste des démos
-			const demoListItems = document.querySelectorAll('#demos .item-list .item');
-
-			// Associez chaque élément à sa vidéo
-			demoListItems.forEach((item) => {
-				const videoLink = item.querySelector('a').href;
-				setupVideoFullscreen(videoLink, item);
-			});
-
-			// Écouteur d'événement pour fermer la vidéo plein écran
-			videoFullscreenContainer.addEventListener('click', (event) => {
-				if (event.target === videoFullscreenContainer) {
-					videoFullscreenIframe.src = ""; // Vide la source de l'iframe
-					videoFullscreenContainer.classList.remove('active');
-				}
-			});
-
-			// Écouteur d'événement pour fermer la vidéo plein écran avec la touche "Escape"
-			document.addEventListener('keydown', (event) => {
-				if (event.key === 'Escape' || event.key === 'Esc') {
-					videoFullscreenIframe.src = ""; // Vide la source de l'iframe
-					videoFullscreenContainer.classList.remove('active');
-				}
-			});
+			
 	    </script>
 
 </html>
