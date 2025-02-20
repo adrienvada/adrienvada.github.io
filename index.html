@@ -387,7 +387,7 @@
 		
 		<div id="dates" class="page">
             <div class="section">    
-	            <h2>A venir</h2>
+	            <h2 class="section-title">A venir</h2>
 				<div class="item"><a href="https://www.cdn-normandierouen.fr/spectacle/festival-des-langues-francaises-2025/#:~:text=LE%20DISCOURS%20DE%20CASSANDRE" target="_blank"><span class="item-title">5 mars 2025 : Le discours de Cassandre</span>, Labo Victor Hugo, Rouen<br/><span class="item-info"> 17h30</span></a></div>
                 <div class="item"><span class="item-title">11 mars 2025 : À la barre</span>, Hôtel de Ville de Rouen<br/><span class="item-info"> 19h</span></div>
                 <!--div class="item"><span class="item-title">9 décembre 2025 : Rodogune</span>, L'Archipel, Granville<br/><span class="item-info"> </span></div>
@@ -395,7 +395,7 @@
 				
             </div>
             <div class="section">
-	            <h2>Passées</h2>
+	            <h2 class="section-title">Passées</h2>
                 <div class="item">8 février 2025 : À la barre, Hôtel de Ville de Canteleu</div>
 				<div class="item">17 janvier 2025 : Audiences - spectacle de prévention, Centre André Malraux, Rouen <span style="font-style: italic;">(première)</span></div>
                 <div class="item">12 décembre 2024 : Bérénice, lycée Raymond Queneau, Yvetot</div>
@@ -437,7 +437,7 @@
 	        </div>
 
             <div class="section" id="galerie_photos">    
-	            <h2>Photos</h2>
+	            <h2 class="section-title">Photos</h2>
 				<div class="gallery" id="photo-gallery"></div>
             </div>
         </div>
@@ -500,45 +500,78 @@
 </body>
 
 	<script>
-	        document.addEventListener("DOMContentLoaded", () => {
-	            const sections = document.querySelectorAll(".section");
-	            let delay = 0;
-	            const sectionDelay = 300; // Définir un délai uniforme entre les sections
-	            const itemDelay = 100; // Délai entre chaque élément dans une section
+	        function animateSections() {
+				const activePage = document.querySelector('.page.active');
+				if (!activePage) return;
 
-	            sections.forEach((section, sectionIndex) => {
-	                setTimeout(() => {
-	                    section.style.transition = "opacity 0.5s ease-out, transform 0.5s ease-out";
-	                    section.style.opacity = 1;
-	                    section.style.transform = "translateY(0)";
+				const sections = activePage.querySelectorAll(".section");
+				let delay = 0;
+				const sectionDelay = 300; // Définir un délai uniforme entre les sections
+				const itemDelay = 100; // Délai entre chaque élément dans une section
 
-	                    const title = section.querySelector(".section-title");
-	                    if (title) {
-	                        setTimeout(() => {
-	                            title.style.transition = "opacity 0.3s ease-out, transform 0.3s ease-out";
-	                            title.style.opacity = 1;
-	                            title.style.transform = "translateX(0)";
-	                        }, 100);
-	                    }
+				sections.forEach((section, sectionIndex) => {
+					setTimeout(() => {
+						section.style.transition = "opacity 0.3s ease-out, transform 0.3s ease-out";
+						section.style.opacity = 1;
+						section.style.transform = "translateY(0)";
 
-	                    const items = section.querySelectorAll(".item");
-	                    items.forEach((item, itemIndex) => {
-	                        setTimeout(() => {
-	                            item.style.transition = "opacity 1s ease-out, transform 0.3s ease-out";
-	                            item.style.opacity = 1;
-	                            item.style.transform = "translateY(0)";
-	                        }, itemIndex * itemDelay);
-	                    });
-	                }, sectionIndex * sectionDelay);
-	            });
-	        });
+						const title = section.querySelector(".section-title");
+						if (title) {
+							setTimeout(() => {
+								title.style.transition = "opacity 0.3s ease-out, transform 0.3s ease-out";
+								title.style.opacity = 1;
+								title.style.transform = "translateX(0)";
+							}, 100);
+						}
+
+						const items = section.querySelectorAll(".item");
+						items.forEach((item, itemIndex) => {
+							setTimeout(() => {
+								item.style.transition = "opacity 0.5s ease-out, transform 0.3s ease-out";
+								item.style.opacity = 1;
+								item.style.transform = "translateY(0)";
+							}, itemIndex * itemDelay);
+						});
+					}, sectionIndex * sectionDelay);
+				});
+			}
+
+			document.addEventListener("DOMContentLoaded", () => {
+				animateSections();
+			});
 			
+			function resetSectionStyles() {
+				const activePage = document.querySelector('.page.active');
+				if (!activePage) return;
+
+				const sections = activePage.querySelectorAll(".section");
+				sections.forEach(section => {
+					section.style.opacity = 0;
+					section.style.transform = "translateY(10px)";
+					
+					const title = section.querySelector(".section-title");
+					if (title) {
+						title.style.opacity = 0;
+						title.style.transform = "translateX(10px)";
+					}
+
+					const items = section.querySelectorAll(".item");
+					items.forEach(item => {
+						item.style.opacity = 0;
+						item.style.transform = "translateY(10px)";
+					});
+				});
+			}
+
 			function showPage(sectionId) {
-	            document.querySelectorAll('.page').forEach(page => {
-	                page.classList.remove('active');
-	            });
-	            document.getElementById(sectionId).classList.add('active');
-	        }
+				document.querySelectorAll('.page').forEach(page => {
+					page.classList.remove('active');
+				});
+				document.getElementById(sectionId).classList.add('active');
+				
+				resetSectionStyles();
+				animateSections();
+			}
 			
 			const profileImage = document.getElementById('profile-image');
             const fullscreenContainer = document.getElementById('fullscreen-container');
