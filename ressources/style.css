@@ -1,0 +1,110 @@
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .page {
+            width: 210mm;
+            max-width: 210mm;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+		.header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* Aligne l'image à droite */
+            margin-bottom: 20px;
+        }
+
+        .header img {
+            width: 150px; /* Taille de l'image augmentée */
+            height: 150px;
+            border-radius: 30%;
+            margin-left: 20px; /* Marge à gauche de l'image */
+        }
+
+        .header-info {
+            flex-grow: 1; /* Permet au texte de prendre l'espace disponible */
+            text-align: left; /* Aligne le texte à droite */
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 0px;
+        }
+
+        .job {
+			font-weight: normal;
+        	color :#0080ca;
+			margin: 0px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .item {
+            margin: 10px 0;
+            padding: 15px;
+            border-left: 5px solid #555;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 12px;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out forwards;
+			/* Ajouter un délai variable */
+		    animation-delay: calc(0.2s * var(--index));
+		    /* Utiliser une variable CSS pour l'index */
+		    counter-increment: item-index;
+		    --index: counter(item-index);
+        }
+
+        .item:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .item-title {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .item-info {
+            font-size: 11px;
+            color: #666;
+        }
+
+        a {
+            color: #666;
+        }
+
+		@keyframes fadeIn {
+		    0% {
+		        opacity: 0;
+		        transform: translateY(10px); /* Optionnel: Ajouter un léger mouvement vertical */
+		    }
+		    100% {
+		        opacity: 1;
+		        transform: translateY(0);
+		    }
+		}

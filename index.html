@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Adrien Vada - Artiste interprète</title>
+    <style>
+		body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .content {
+            width: 210mm;
+            max-width: 210mm;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .header img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-left: 20px;
+        }
+
+        .header-info {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 0px;
+        }
+		
+		h2 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+		}
+
+        .job {
+            font-weight: normal;
+            color: #006699;
+            margin: 0px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(0px);
+        }
+		
+        .section-title {
+            opacity: 0;
+            transform: translateX(10px);
+			display: flex; /* Active Flexbox pour le titre et le bouton */
+			align-items: center; /* Centre verticalement le titre et le bouton */
+			justify-content: space-between; /* Aligne le titre à gauche et le bouton à droite */
+        }
+		 
+		 
+		#download-cv-button {
+		  /* ... (vos autres styles pour le bouton) ... */
+		    margin-left: 20px; /* Marge à gauche pour espacer le bouton du titre */
+		    background-color: #0080ca;
+		    color: white;
+		    padding: 5px 10px;
+		    border: none;
+		    border-radius: 5px;
+		    cursor: pointer;
+		    transition: background-color 0.3s ease;
+		    vertical-align: middle;
+		    margin-left: 10px; /* Ajout d'une marge à gauche */
+		  
+		}
+		
+		#download-cv-button:hover {
+		  background-color: #006699;
+		}
+
+		#download-cv-button i {
+		  font-size: 1.2em;
+		}
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .item {
+            margin: 0px 0;
+            padding: 10px;
+            /*border-left: 5px solid #555;*/
+            /*box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);*/
+            font-size: 12px;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+		
+        .item img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-left: 20px;
+        }
+
+        .item:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+		
+        .item:nth-child(odd) {
+            background-color: #eaeaea;
+        }
+
+        .item-title {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .item-info {
+            font-size: 11px;
+            color: #666;
+        }
+		
+		.item a:hover {
+		    opacity: 0.7; /* Légère transparence au survol */
+		    /*  transform: scale(0.999); Légère variation de taille */
+		    transition: opacity 0.3s ease, transform 0.1s ease; /* Transition douce */
+		}
+
+		.item a {
+		    border-radius: 5px; /* Arrondit les coins */
+		    color: inherit; /* Reprend la couleur du texte parent */
+		    text-decoration: none; /* Supprime le soulignement */
+		}
+
+        a {
+            color: #666;
+        }
+		
+		.nav {
+		    display: flex;
+		    justify-content: center;
+		    margin-bottom: 10px; /* Réduit la marge inférieure */
+		    border-bottom: 1px solid #ccc; /* Bordure plus fine */
+		    padding-bottom: 5px; /* Réduit le padding inférieur */
+		}
+
+		.nav button {
+		    background: none;
+		    border: none;
+		    font-size: 14px; /* Taille de police réduite */
+		    margin: 0 10px; /* Marges latérales réduites */
+		    cursor: pointer;
+		    color: #666; /* Couleur plus discrète */
+		    padding: 3px 5px; /* Padding réduit */
+		    transition: color 0.3s;
+		}
+
+		.nav button:hover {
+		    color: #0080ca;
+		}
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .dates .event {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 5px solid #0080ca;
+            background: #f2f2f2;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+		
+		/* Styles pour l'image plein écran */
+		.fullscreen-image {
+			position: fixed; /* Couvre tout l'écran */
+			pointer-events: none; /* Empêche les clics sur l'image tant qu'elle n'est pas active */
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.8); /* Fond semi-transparent */
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 9999; /* Assure que l'image est au-dessus de tout */
+			opacity: 0; /* Commence par être invisible */
+			transition: opacity 0.3s ease; /* Transition pour l'apparition */
+			cursor: pointer; /* Indique qu'on peut fermer l'image */
+		}
+
+		.fullscreen-image img {
+			max-width: 90%;
+			max-height: 90%;
+			object-fit: contain; /* Ajuste l'image à la taille de l'écran sans la déformer */
+			cursor: default; /* Remet le curseur par défaut sur l'image */
+		}
+
+		.fullscreen-image.active {
+			opacity: 1; /* Devient visible */
+			pointer-events: auto; /* Permet les clics quand l'image est active */
+		}
+
+		.fullscreen-image.fade-out { /* Classe pour la disparition */
+			opacity: 0;
+			transition: opacity 0.3s ease; /* Transition pour la fermeture */
+		}
+
+		.gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+		}
+
+		.gallery img {
+			width: 150px;
+			height: 150px;
+			object-fit: cover;
+			border-radius: 5px;
+			cursor: pointer; /* Indique que les images sont cliquables */
+		}
+
+		.fullscreen-video {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.8);
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 10000;
+			opacity: 0;
+			transition: opacity 0.3s ease;
+			pointer-events: none;
+		}
+
+		.fullscreen-video.active {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		.fullscreen-video iframe {
+			width: 80%;
+			height: 80%;
+		}
+
+		/* Styles pour les icônes des réseaux sociaux */
+		#autres .item-list i {
+			font-size: 2em; /* Ajustez la taille des icônes */
+			color: #333; /* Couleur des icônes */
+			transition: color 0.3s ease; /* Transition pour la couleur au survol */
+		}
+
+		#autres .item-list img {
+			font-size: 2em; /* Ajustez la taille des icônes */
+			color: #333; /* Couleur des icônes */
+			transition: color 0.3s ease; /* Transition pour la couleur au survol */
+		}
+
+		#autres .item-list a:hover i {
+			color: #0080ca; /* Couleur au survol */
+		}
+		
+    </style>
+</head>
+
+<body>
+	<!-- Image profil plein écran!-->
+	<div class="fullscreen-image" id="fullscreen-container">
+        <img src="ressources/images/profil_1000x1000.jpg" alt="Adrien Vada Photo Profil" onerror="ressources/images/profil_1000x1000.jpg"; this.onerror=null;">>
+    </div>
+
+	<!-- Image plein écran pour la galerie -->
+	<div class="fullscreen-image" id="gallery-fullscreen-container">
+		<img src="" alt="Image en plein écran" id="gallery-fullscreen-image">
+	</div>
+
+	
+    <div class="content">
+		
+        <div class="header">
+            <div class="header-info">
+                <h1>Adrien VADA</h1>
+                <h2 class="job">Artiste interprète</h2>
+                <p><a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a></p>
+            </div>
+            <img src="ressources/images/profil_1000x1000.jpg" alt="Adrien Vada Photo Profil" id="profile-image">
+        </div>
+		
+		
+		
+		<div class="nav">
+            <button onclick="showPage('cv')">CV</button>
+            <button onclick="showPage('dates')">Dates de la saison</button>
+            <button onclick="showPage('demos')">Démos et photos</button>
+			<button onclick="showPage('autres')">Autres</button>
+        </div>
+		
+		<div id="cv" class="page active">
+			
+	        <div class="section">
+	            <h2 class="section-title">Théâtre
+					<button id="download-cv-button" onclick="window.location.href='ressources/Adrien Vada CV2025.pdf'" style="margin-left: 20px;">
+				        <i class="fas fa-file-pdf"></i> PDF
+				    </button>
+				</h2>
+	            <ul class="item-list">
+					<li class="item"><a href="https://www.facebook.com/cieduptitballon/posts/pfbid0TRcq1Gk9WtQGv9Tp8tTuk8MUtJEgzQi2XU6tBLTWgkWEgMGY1Ybf2NHANYjTLGjKl" target="_blank">
+						2025 <span class="item-title">Audiences - spectacle de prévention</span> - Steeve Brunet<br /><span class="item-info"> Compagnie du P'tit Ballon</span></a>
+					</li>
+	                <li class="item"><a href="https://crescite.fr/cleophene/" target="_blank">
+						2024 <span class="item-title">Rodogune </span> (Corneille) - Angelo Jossec<br /><span class="item-info">Théâtre des Crescite</span></a>
+					</li>
+	                <li class="item"><a href="https://www.cdn-normandierouen.fr/spectacle/a-la-barre/" target="_blank">
+						2024 <span class="item-title">À La Barre</span> (Ronan Chéneau) - Steeve Brunet<br /><span class="item-info"> Compagnie du P'tit Ballon - CDN de Normandie-Rouen</span></a>
+					</li>
+	                <li class="item"><a href="https://alchimiecie.com/fulgure-e-s/" target="_blank">
+						2023 <span class="item-title">Fulguré.e.s</span> (Jérémie Fabre) - Amélie Chalmey<br /><span class="item-info">Compagnie Alchimie</span></a>
+					</li>
+	                <li class="item"><a href="https://crescite.fr/berenice/" target="_blank">
+						2022 <span class="item-title">Bérénice</span> (Racine) - Angelo Jossec<br /><span class="item-info">Théâtre des Crescite</span></a>
+					</li>
+	                <li class="item"><a href="https://labloomsbury.wixsite.com/compagnie/as-you-like-it" target="_blank">
+						2022 <span class="item-title">As You Like It</span> (Shakespeare) - Nicolas Gaspar<br /><span class="item-info">Compagnie Bloomsbury</span></a>
+					</li>
+	            </ul>
+	        </div>
+
+	        <div class="section">
+	            <h2 class="section-title">Courts-métrages</h2>
+	            <ul class="item-list">
+	                <li class="item">2023 <span class="item-title">À tout prix</span> - Max Laure</li>
+	                <li class="item">2022 <span class="item-title">La peau des anges n'est pas si douce</span> - Emma Fridé </li>
+	                <li class="item">2022 <span class="item-title">A la croisée des chemins</span> - Doltin Baveux</li>
+	                <li class="item">2019 <span class="item-title">Le rapt</span> - Cécile Dessillons et Ladane Dehdar</li>
+	            </ul>
+	        </div>
+
+	        <div class="section">
+	            <h2 class="section-title">Formation</h2>
+	            <ul class="item-list">
+	                <li class="item">2024 <span class="item-title">Voix en studio professionnel</span><br /><span class="item-info">Coachs Associés</span></li>
+	                <li class="item">2018 - 2021 <span class="item-title">Art dramatique</span><br /><span class="item-info">Conservatoire à rayonnement régional de Rouen</span></li>
+	            </ul>
+	        </div>
+			
+		</div>
+		
+		<div id="dates" class="page">
+            <div class="section">    
+	            <h2>A venir</h2>
+				<div class="item"><a href="https://www.cdn-normandierouen.fr/spectacle/festival-des-langues-francaises-2025/#:~:text=LE%20DISCOURS%20DE%20CASSANDRE" target="_blank"><span class="item-title">5 mars 2025 : Le discours de Cassandre</span>, Labo Victor Hugo, Rouen<br/><span class="item-info"> 17h30</span></a></div>
+                <div class="item"><span class="item-title">11 mars 2025 : À la barre</span>, Hôtel de Ville de Rouen<br/><span class="item-info"> 19h</span></div>
+                <!--div class="item"><span class="item-title">9 décembre 2025 : Rodogune</span>, L'Archipel, Granville<br/><span class="item-info"> </span></div>
+                <div class="item"><span class="item-title">4 décembre 2025 : Rodogune</span>, Théâtre La Renaissance, Mondeville<br/><span class="item-info"> </span></div!-->
+				
+            </div>
+            <div class="section">
+	            <h2>Passées</h2>
+                <div class="item">8 février 2025 : À la barre, Hôtel de Ville de Canteleu</div>
+				<div class="item">17 janvier 2025 : Audiences - spectacle de prévention, Centre André Malraux, Rouen <span style="font-style: italic;">(première)</span></div>
+                <div class="item">12 décembre 2024 : Bérénice, lycée Raymond Queneau, Yvetot</div>
+                <div class="item">6 décembre 2024 : Bérénice, Lycée Jean-Baptiste de la Salle, Rouen</div>
+				<div class="item">29 novembre 2024 : Rodogune, Athanor, Guérande</div>
+				<div class="item">26 novembre 2024 : Rodogune, Théâtre Le Rayon Vert, Saint-Valéry-en-Caux</div>
+				<div class="item">25 novembre 2024 : À la barre, Lycée les Buyères, Sotteville-lès-Rouen</div>
+				<div class="item">22 novembre 2024 : À la barre, Hotel de ville de Notre-Dame de Bondeville</div>
+				<div class="item">21 novembre 2024 : Bérénice, Lycée Vallée du Cailly, Déville-lès-Rouen</div>
+				<div class="item">18 novembre 2024 : Audiences - spectacle de prévention, Collège Boieldieu, Rouen <span style="font-style: italic;">(forme participative)</span></div>
+				<div class="item">2 novembre 2024 : Bérénice, La Rotonde, Fauville-en-Caux</div>
+				<div class="item">10-11 octobre 2024 : Rodogune, Théâtre L'étincelle, Rouen <span style="font-style: italic;">(premières)</span></div>
+            </div>
+        </div>
+
+		<div id="demos" class="page">
+			
+	        <div class="section">
+	            <ul class="item-list">
+	                <li class="item" style="display: flex; align-items: center; text-align: center;">
+
+		                <a href="https://www.youtube.com/watch?v=0igK7gPQMIY" target="_blank" style="display: flex; align-items: flex-start; text-decoration: none; color: inherit;">
+		                    <div style="flex-grow: 1;">
+		                        <span class="item-title">Bande démo caméra </span><i class="fab fa-youtube"></i>
+		                    </div>
+		                </a>
+						
+					</li>
+	                <li class="item">
+
+		                <a href="https://youtu.be/wADBqbwD0a4" target="_blank" style="display: flex; align-items: flex-start; text-decoration: none; color: inherit;">
+		                    <div style="flex-grow: 1;">
+		                        <span class="item-title">Bande démo voix </span><i class="fa-solid fa-microphone"></i>
+		                    </div>
+		                </a>
+						
+					</li>
+	            </ul>
+	        </div>
+
+            <div class="section" id="galerie_photos">    
+	            <h2>Photos</h2>
+				<div class="gallery" id="photo-gallery"></div>
+            </div>
+        </div>
+		
+		<div id="autres" class="page">
+
+			<div class="section">
+				<h2 class="section-title">Liens</h2>
+				<ul class="item-list" style="display: flex; justify-content: center; align-items: center;">
+					<li class="item">
+						<a href="https://linktr.ee/adrien.vada.djerbetian" target="_blank" style="text-decoration: none; color: inherit;">
+							<i class="fas fa-tree"></i>
+						</a>
+					</li>
+					<li class="item">
+						<a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" style="text-decoration: none; color: inherit;">
+							<i class="fab fa-instagram"></i>
+						</a>
+					</li>
+					<li class="item">
+						<a href="https://www.facebook.com/AdrienVada/" target="_blank" style="text-decoration: none; color: inherit;">
+							<i class="fab fa-facebook"></i>
+						</a>
+					</li>
+				</ul>
+			</div>
+			
+		    <div class="section">
+		        <h2 class="section-title">Compositions</h2>
+		        <ul class="item-list">
+		            <li class="item" >
+		                <a href="https://ffm.to/adrienvada-armatures" target="_blank" style="display: flex; align-items: flex-start; text-decoration: none; color: inherit;">
+		                    <div style="flex-grow: 1;">
+		                        <span class="item-title">Armatures</span> (2023 - 2024)
+		                        <br /><span class="item-info">
+		                            Avec "Armatures", j'ai cherché à créer un équilibre entre qualité introspective et rythmes fédérateurs. Le piano y occupe une place centrale, tandis que les sons électroniques apportent des ambiances contrastées, allant de la mélancolie à l'énergie dansante. Plus structuré que mon premier album, cet opus explore un dialogue entre acoustique et synthétique, comme un Détour à travers une Plaine de Ressentis enfuis. Un Aller simple initiatique, tantôt Nomade, tantôt Perdus en mer, fortifiant une intériorité faites de multiples Armatures, jusqu'à l'ivresse d'un Envol final...
+		                        </span>
+		                    </div>
+		                    <img src="ressources/images/armatures.jpg" alt="Pochette album" style="margin-left: 20px;">
+		                </a>
+		            </li>
+
+		            <li class="item" style="display: flex; align-items: flex-start;">
+		                <a href="https://ffm.to/adrienvada-premierspas" target="_blank" style="display: flex; align-items: flex-start; text-decoration: none; color: inherit;">
+		                    <div style="flex-grow: 1;">
+		                        <span class="item-title">Premiers pas</span> (2022 - 2023)
+		                        <br /><span class="item-info">
+		                            Avec "Premiers pas", j’ai compilé ce que j'ai découvert avec les possibilités de la musique assistée par ordinateur, en composant mes premiers morceaux sur FL Studio. Chaque piste est comme une salle différente d’un musée imaginaire, une plongée dans des ambiances variées. Ce projet, à la fois brut et spontané, marque mes premières expérimentations : des boucles hypnotiques, des atmosphères feutrées et un piano quasiment omniprésent. Ici, la danse s’efface au profit de la contemplation, invitant l’auditeur à un voyage introspectif, où chaque sonorité dessine un paysage en mouvement.
+		                        </span>
+		                    </div>
+		                    <img src="ressources/images/premierspas.jpg" alt="Prochette album" style="margin-left: 20px;">
+		                </a>
+		            </li>
+		        </ul>
+		    </div>
+		</div>
+		
+
+    </div>
+</body>
+
+	<script>
+	        document.addEventListener("DOMContentLoaded", () => {
+	            const sections = document.querySelectorAll(".section");
+	            let delay = 0;
+	            const sectionDelay = 300; // Définir un délai uniforme entre les sections
+	            const itemDelay = 100; // Délai entre chaque élément dans une section
+
+	            sections.forEach((section, sectionIndex) => {
+	                setTimeout(() => {
+	                    section.style.transition = "opacity 0.5s ease-out, transform 0.5s ease-out";
+	                    section.style.opacity = 1;
+	                    section.style.transform = "translateY(0)";
+
+	                    const title = section.querySelector(".section-title");
+	                    if (title) {
+	                        setTimeout(() => {
+	                            title.style.transition = "opacity 0.3s ease-out, transform 0.3s ease-out";
+	                            title.style.opacity = 1;
+	                            title.style.transform = "translateX(0)";
+	                        }, 100);
+	                    }
+
+	                    const items = section.querySelectorAll(".item");
+	                    items.forEach((item, itemIndex) => {
+	                        setTimeout(() => {
+	                            item.style.transition = "opacity 1s ease-out, transform 0.3s ease-out";
+	                            item.style.opacity = 1;
+	                            item.style.transform = "translateY(0)";
+	                        }, itemIndex * itemDelay);
+	                    });
+	                }, sectionIndex * sectionDelay);
+	            });
+	        });
+			
+			function showPage(sectionId) {
+	            document.querySelectorAll('.page').forEach(page => {
+	                page.classList.remove('active');
+	            });
+	            document.getElementById(sectionId).classList.add('active');
+	        }
+			
+			const profileImage = document.getElementById('profile-image');
+            const fullscreenContainer = document.getElementById('fullscreen-container');
+			const fullscreenImage = document.getElementById('fullscreen-image');
+
+            profileImage.addEventListener('click', () => {
+                fullscreenContainer.classList.add('active');
+            });
+
+            fullscreenContainer.addEventListener('click', (event) => {
+                if (event.target === fullscreenContainer || event.target.tagName === 'IMG') {
+                    fullscreenContainer.classList.remove('active');
+                }
+            });
+
+			const photoGallery = document.getElementById('photo-gallery');
+			const imageFolder = 'ressources/images/galerie/';
+			const imageFiles = [
+				'photo1.png',
+				'photo2.png',
+				'photo3.png',
+				'photo4.png',
+				'photo5.png',
+				'photo6.png',
+				'photo7.png',
+				'photo8.png',
+				'photo9.png',
+				'photo10.png',
+				'photo11.png',
+				'photo12.png',
+				'photo13.png',
+				'photo14.png',
+				'photo15.png',
+				'photo16.png',
+				// Ajoutez ici les noms de fichiers des images dans le dossier galerie
+			];
+
+			const galleryFullscreenContainer = document.getElementById('gallery-fullscreen-container');
+			const galleryFullscreenImage = document.getElementById('gallery-fullscreen-image');
+			let currentImageIndex = 0;
+			
+			function showImage(index) {
+				if (index >= 0 && index < imageFiles.length) {
+					galleryFullscreenImage.src = `${imageFolder}${imageFiles[index]}`;
+					galleryFullscreenContainer.classList.add('active');
+					currentImageIndex = index;
+				}
+			}
+
+			imageFiles.forEach((fileName, index) => {
+				const img = document.createElement('img');
+				img.src = `${imageFolder}${fileName}`;
+				img.alt = fileName;
+				img.addEventListener('click', () => {
+					showImage(index);
+				});
+				photoGallery.appendChild(img);
+			});
+
+			galleryFullscreenContainer.addEventListener('click', (event) => {
+				if (event.target === galleryFullscreenContainer || event.target.tagName === 'IMG') {
+					galleryFullscreenContainer.classList.remove('active');
+				}
+			});
+
+			document.addEventListener('keydown', (event) => {
+				if (galleryFullscreenContainer.classList.contains('active')) {
+					if (event.key === 'Escape' || event.key === 'Esc') {
+						galleryFullscreenContainer.classList.remove('active');
+					} else if (event.key === 'ArrowRight') {
+						showImage(currentImageIndex + 1);
+					} else if (event.key === 'ArrowLeft') {
+						showImage(currentImageIndex - 1);
+					} else {
+						galleryFullscreenContainer.classList.remove('active');
+					}
+				}
+			});
+
+
+			const videoFullscreenContainer = document.getElementById('video-fullscreen-container');
+			const videoFullscreenIframe = document.getElementById('video-fullscreen-iframe');
+
+			function setupVideoFullscreen(videoLink, itemElement) {
+				itemElement.addEventListener('click', (event) => {
+					event.preventDefault(); // Empêche la navigation vers le lien
+					videoFullscreenIframe.src = videoLink.replace("watch?v=", "embed/"); // Transforme le lien pour l'embed
+					videoFullscreenContainer.classList.add('active');
+				});
+			}
+
+			
+	    </script>
+
+</html>
