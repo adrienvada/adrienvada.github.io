@@ -84,6 +84,11 @@ function showPage(sectionId, animate = true) {
     if (animate) {
         animateSections();
     }
+
+    // Appeler animateGalleryImages si la page "demos" est activée
+    if (sectionId === 'demos') {
+        animateGalleryImages();
+    }
 }
 
 const profileImage = document.getElementById('profile-image');
@@ -134,10 +139,23 @@ function showImage(index) {
     }
 }
 
+function animateGalleryImages() {
+    const images = photoGallery.querySelectorAll('img');
+    images.forEach((img, index) => {
+        setTimeout(() => {
+            img.style.transition = "opacity 0.5s ease-out, transform 0.3s ease-out";
+            img.style.opacity = 1;
+            img.style.transform = "translateY(0)";
+        }, index * 100);
+    });
+}
+
 imageFiles.forEach((fileName, index) => {
     const img = document.createElement('img');
     img.src = `${imageFolder}${fileName}`;
     img.alt = fileName;
+    img.style.opacity = 0;
+    img.style.transform = "translateY(10px)";
     img.addEventListener('click', () => {
         showImage(index);
     });
@@ -164,14 +182,8 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+    animateGalleryImages();
+});
 
-const videoFullscreenContainer = document.getElementById('video-fullscreen-container');
-const videoFullscreenIframe = document.getElementById('video-fullscreen-iframe');
-
-function setupVideoFullscreen(videoLink, itemElement) {
-    itemElement.addEventListener('click', (event) => {
-        event.preventDefault(); // Empêche la navigation vers le lien
-        videoFullscreenIframe.src = videoLink.replace("watch?v=", "embed/"); // Transforme le lien pour l'embed
-        videoFullscreenContainer.classList.add('active');
-    });
-}
+const videoFullscreenContainer = document.getElementById
