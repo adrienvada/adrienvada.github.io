@@ -105,7 +105,7 @@ fullscreenContainer.addEventListener('click', (event) => {
     }
 });
 
-/*
+
 const photoGallery = document.getElementById('photo-gallery');
 const imageFolder = 'ressources/images/galerie/';
 const imageFiles = [
@@ -151,7 +151,7 @@ function animateGalleryImages() {
     });
 }
 
-/* 
+
 imageFiles.forEach((fileName, index) => {
     const img = document.createElement('img');
     img.src = `${imageFolder}${fileName}`;
@@ -187,6 +187,5 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener("DOMContentLoaded", () => {
     animateGalleryImages();
 });
-*/
 
 const videoFullscreenContainer = document.getElementById
