@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         animateSections();
     }
-    document.querySelector(`.nav button[onclick="showPage('cv')"]`).classList.add('active');
+    document.querySelector(`.nav button[ onclick="showPage('cv')"]`).classList.add('active');
 });
 
 function resetSectionStyles() {
