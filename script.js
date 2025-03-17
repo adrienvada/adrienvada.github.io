@@ -173,7 +173,7 @@ galleryFullscreenContainer.addEventListener('click', (event) => {
         galleryFullscreenContainer.classList.remove('active');
     }
 });
-*/
+
 document.addEventListener('keydown', (event) => {
     if (galleryFullscreenContainer.classList.contains('active')) {
         if (event.key === 'Escape' || event.key === 'Esc') {
@@ -188,8 +188,10 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+
 document.addEventListener("DOMContentLoaded", () => {
     animateGalleryImages();
 });
+*/
 
 const videoFullscreenContainer = document.getElementById
