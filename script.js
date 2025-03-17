@@ -195,3 +195,20 @@ document.addEventListener("DOMContentLoaded", () => {
 */
 
 const videoFullscreenContainer = document.getElementById
+
+
+// Fonction pour ouvrir la lightbox
+function openInstagramLightbox() {
+    const lightbox = document.getElementById('instagram-lightbox');
+    const iframe = document.getElementById('instagram-frame');
+    iframe.src = "https://www.instagram.com/adrien.vada.djerbetian/"; // URL de votre profil Instagram
+    lightbox.style.display = 'flex'; // Affiche la lightbox
+}
+
+// Fonction pour fermer la lightbox
+function closeLightbox() {
+    const lightbox = document.getElementById('instagram-lightbox');
+    const iframe = document.getElementById('instagram-frame');
+    iframe.src = ""; // Vide l'iframe pour arrêter le chargement
+    lightbox.style.display = 'none'; // Cache la lightbox
+}

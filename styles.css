@@ -370,3 +370,55 @@ gap: 10px;
     color: #555;
     text-align: center;
 }
+
+/* Lightbox container */
+.lightbox {
+    display: none; /* Caché par défaut */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8); /* Fond semi-transparent */
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Lightbox content */
+.lightbox-content {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Instagram iframe */
+#instagram-frame {
+    width: 100%;
+    height: 500px; /* Ajustez la hauteur selon vos besoins */
+}
+
+/* Close button */
+.close-lightbox {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ff0000;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.close-lightbox:hover {
+    background: #cc0000;
+}
