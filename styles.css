@@ -296,3 +296,33 @@ gap: 10px;
 #liens .item-list a:hover i {
     color: #0080ca; /* Couleur au survol */
 }
+
+#voice-demos {
+    margin-top: 20px;
+}
+
+#voice-demos .item {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+#voice-demos .item h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    color: #333;
+}
+
+#voice-demos .item audio {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+#voice-demos .item p {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
