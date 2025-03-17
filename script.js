@@ -167,13 +167,13 @@ imageFiles.forEach((fileName, index) => {
     });
     photoGallery.appendChild(img);
 });
-*/
+
 galleryFullscreenContainer.addEventListener('click', (event) => {
     if (event.target === galleryFullscreenContainer || event.target.tagName === 'IMG') {
         galleryFullscreenContainer.classList.remove('active');
     }
 });
-
+*/
 document.addEventListener('keydown', (event) => {
     if (galleryFullscreenContainer.classList.contains('active')) {
         if (event.key === 'Escape' || event.key === 'Esc') {
