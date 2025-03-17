@@ -105,7 +105,7 @@ fullscreenContainer.addEventListener('click', (event) => {
     }
 });
 
-
+/*
 const photoGallery = document.getElementById('photo-gallery');
 const imageFolder = 'ressources/images/galerie/';
 const imageFiles = [
@@ -132,13 +132,7 @@ const galleryFullscreenContainer = document.getElementById('gallery-fullscreen-c
 const galleryFullscreenImage = document.getElementById('gallery-fullscreen-image');
 let currentImageIndex = 0;
 
-function showImage(index) {
-    if (index >= 0 && index < imageFiles.length) {
-        galleryFullscreenImage.src = `${imageFolder}${imageFiles[index]}`;
-        galleryFullscreenContainer.classList.add('active');
-        currentImageIndex = index;
-    }
-}
+
 
 function animateGalleryImages() {
     const images = photoGallery.querySelectorAll('img');
@@ -151,7 +145,17 @@ function animateGalleryImages() {
     });
 }
 
+*/
 
+function showImage(index) {
+    if (index >= 0 && index < imageFiles.length) {
+        galleryFullscreenImage.src = `${imageFolder}${imageFiles[index]}`;
+        galleryFullscreenContainer.classList.add('active');
+        currentImageIndex = index;
+    }
+}
+
+/*
 imageFiles.forEach((fileName, index) => {
     const img = document.createElement('img');
     img.src = `${imageFolder}${fileName}`;
@@ -163,7 +167,7 @@ imageFiles.forEach((fileName, index) => {
     });
     photoGallery.appendChild(img);
 });
-
+*/
 galleryFullscreenContainer.addEventListener('click', (event) => {
     if (event.target === galleryFullscreenContainer || event.target.tagName === 'IMG') {
         galleryFullscreenContainer.classList.remove('active');
