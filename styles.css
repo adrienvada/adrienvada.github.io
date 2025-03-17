@@ -118,7 +118,6 @@ h2 {
 }
 
 .item img {
-    width: 150px;
     height: 150px;
     border-radius: 50%;
     margin-left: 20px;
@@ -326,3 +325,48 @@ gap: 10px;
     color: #666;
 }
 
+/* Conteneur des vignettes */
+#cinema-demos .item-list {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap; /* Permet de passer à la ligne si l'écran est trop petit */
+}
+
+/* Vignette horizontale (16:9) */
+.youtube-thumbnail.horizontal {
+    width: 100%;
+    max-width: 300px; /* Limite la largeur */
+    aspect-ratio: 16 / 9; /* Définit le ratio 16:9 */
+    height: auto; /* Ajuste automatiquement la hauteur */
+    object-fit: cover; /* Remplit le conteneur sans déformer l'image */
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-left: 0;
+}
+
+/* Vignette verticale (9:16) */
+.youtube-thumbnail.vertical {
+    height: 100%; /* Force la hauteur à être égale à celle de la vignette horizontale */
+    max-height: 168.75px; /* Hauteur calculée en fonction de la largeur horizontale (300px * 9 / 16) */
+    width: auto; /* Ajuste automatiquement la largeur pour respecter le ratio */
+    object-fit: cover; /* Remplit le conteneur sans déformer l'image */
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Effet au survol */
+.youtube-thumbnail:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Texte sous les vignettes */
+.item-info {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+}
