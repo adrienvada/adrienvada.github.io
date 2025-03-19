@@ -60,7 +60,7 @@ function showPage(sectionId, animate = true) {
         // Scrolle vers le haut de la page en douceur
         window.scrollTo({
             top: 0,
-            behavior: 'smooth'
+            behavior: 'auto'
         });
 
         // Force l'affichage immédiat si pas d'animation
