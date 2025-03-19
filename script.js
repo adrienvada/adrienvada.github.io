@@ -56,7 +56,13 @@ function showPage(sectionId, animate = true) {
     const targetPage = document.getElementById(sectionId);
     if (targetPage) {
         targetPage.classList.add('active');
-        
+
+        // Scrolle vers le haut de la page en douceur
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+
         // Force l'affichage immédiat si pas d'animation
         if (!animate) {
             targetPage.querySelectorAll('.section').forEach(section => {
@@ -101,10 +107,6 @@ function showPage(sectionId, animate = true) {
     // Ajuster le défilement pour éviter que la tête de lecture ne se déplace en dessous du header
     setTimeout(() => {
         const headerHeight = document.querySelector('.header').offsetHeight;
-        window.scrollTo({
-            top: targetPage.offsetTop - headerHeight,
-            behavior: 'smooth'
-        });
     }, 100);
 }
 
