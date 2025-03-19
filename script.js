@@ -146,17 +146,49 @@ function animateSections() {
     });
 }
 
+const images = [
+    'ressources/images/profil_1000x1000.jpg',
+    'ressources/images/galerie/photo4.png',
+    'ressources/images/galerie/photo14.png',
+    'ressources/images/galerie/photo16.png',
+    'ressources/images/galerie/photo11.png'
+];
+let currentImageIndex = 0;
+
 const profileImage = document.getElementById('profile-image');
 const fullscreenContainer = document.getElementById('fullscreen-container');
 const fullscreenImage = document.getElementById('fullscreen-image');
 
 profileImage.addEventListener('click', () => {
     fullscreenContainer.classList.add('active');
+    fullscreenImage.src = images[currentImageIndex];
 });
 
 fullscreenContainer.addEventListener('click', (event) => {
     if (event.target === fullscreenContainer || event.target.tagName === 'IMG') {
         fullscreenContainer.classList.remove('active');
+    }
+});
+
+function prevImage() {
+    currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+    fullscreenImage.src = images[currentImageIndex];
+}
+
+function nextImage() {
+    currentImageIndex = (currentImageIndex + 1) % images.length;
+    fullscreenImage.src = images[currentImageIndex];
+}
+
+document.addEventListener('keydown', (event) => {
+    if (fullscreenContainer.classList.contains('active')) {
+        if (event.key === 'ArrowLeft') {
+            prevImage();
+        } else if (event.key === 'ArrowRight') {
+            nextImage();
+        } else {
+            fullscreenContainer.classList.remove('active');
+        }
     }
 });
 
