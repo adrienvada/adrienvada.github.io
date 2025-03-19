@@ -1,3 +1,113 @@
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("window.location.hash:", window.location.hash);
+    setTimeout(() => {
+        const hash = window.location.hash.substring(1); // Récupère le hash sans le #
+        console.log("hash récupéré:", hash);
+        if (hash) {
+            showPage(hash, true); // Changé à true pour animer
+        } else {
+            // Affiche par défaut la page CV avec animation
+            showPage('page_cv', true);
+        }
+        // Force l'animation des sections après un court délai
+        setTimeout(animateSections, 100);
+    }, 50); // délai de 50ms
+
+    // Écoute du changement de hash
+    window.addEventListener("hashchange", () => {
+        const newHash = window.location.hash.substring(1);
+        showPage(newHash, true);
+    });
+});
+
+function resetSectionStyles() {
+    const activePage = document.querySelector('.page.active');
+    if (!activePage) return;
+
+    const sections = activePage.querySelectorAll(".section");
+    sections.forEach((section, index) => {
+        // Si c'est la première section, on ne change pas l'opacité initiale
+        if (index !== 0) {
+            section.style.opacity = 0;
+            section.style.transform = "translateY(10px)";
+        }
+
+        const title = section.querySelector(".section-title");
+        if (title) {
+            title.style.opacity = 0;
+            title.style.transform = "translateX(10px)";
+        }
+
+        const items = section.querySelectorAll(".item");
+        items.forEach(item => {
+            item.style.opacity = 0;
+            item.style.transform = "translateY(10px)";
+        });
+    });
+}
+
+function showPage(sectionId, animate = true) {
+    // Cache toutes les pages
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+
+    // Affiche la page correspondant à l'ID
+    const targetPage = document.getElementById(sectionId);
+    if (targetPage) {
+        targetPage.classList.add('active');
+        
+        // Force l'affichage immédiat si pas d'animation
+        if (!animate) {
+            targetPage.querySelectorAll('.section').forEach(section => {
+                section.style.opacity = 1;
+                section.style.transform = 'translateY(0)';
+                
+                const title = section.querySelector(".section-title");
+                if (title) {
+                    title.style.opacity = 1;
+                    title.style.transform = "translateX(0)";
+                }
+
+                const items = section.querySelectorAll(".item");
+                items.forEach(item => {
+                    item.style.opacity = 1;
+                    item.style.transform = "translateY(0)";
+                });
+            });
+        }
+    }
+
+    // Ajouter la classe active au bouton de navigation correspondant
+    document.querySelectorAll('.nav button').forEach(button => {
+        button.classList.remove('active');
+    });
+
+    const targetButton = document.querySelector(`.nav button[onclick="showPage('${sectionId}')"]`);
+    if (targetButton) {
+        targetButton.classList.add('active');
+    }
+
+    if (animate) {
+        resetSectionStyles();
+        setTimeout(animateSections, 100);
+    }
+
+    // Appeler animateGalleryImages si la page "demos" est activée
+    if (sectionId === 'page_demos') {
+        animateGalleryImages();
+    }
+
+    // Ajuster le défilement pour éviter que la tête de lecture ne se déplace en dessous du header
+    setTimeout(() => {
+        const headerHeight = document.querySelector('.header').offsetHeight;
+        window.scrollTo({
+            top: targetPage.offsetTop - headerHeight,
+            behavior: 'smooth'
+        });
+    }, 100);
+}
+
 function animateSections() {
     const activePage = document.querySelector('.page.active');
     if (!activePage) return;
@@ -34,63 +144,6 @@ function animateSections() {
     });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const hash = window.location.hash.substring(1);
-    if (hash) {
-        showPage(hash, false);
-    } else {
-        animateSections();
-    }
-    document.querySelector(`.nav button[ onclick="showPage('cv')"]`).classList.add('active');
-});
-
-function resetSectionStyles() {
-    const activePage = document.querySelector('.page.active');
-    if (!activePage) return;
-
-    const sections = activePage.querySelectorAll(".section");
-    sections.forEach(section => {
-        section.style.opacity = 0;
-        section.style.transform = "translateY(10px)";
-        
-        const title = section.querySelector(".section-title");
-        if (title) {
-            title.style.opacity = 0;
-            title.style.transform = "translateX(10px)";
-        }
-
-        const items = section.querySelectorAll(".item");
-        items.forEach(item => {
-            item.style.opacity = 0;
-            item.style.transform = "translateY(10px)";
-        });
-    });
-}
-
-function showPage(sectionId, animate = true) {
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-    document.getElementById(sectionId).classList.add('active');
-    
-    // Ajouter la classe active au bouton de navigation correspondant
-    document.querySelectorAll('.nav button').forEach(button => {
-        button.classList.remove('active');
-    });
-
-    document.querySelector(`.nav button[onclick="showPage('${sectionId}')"]`).classList.add('active');
-    
-    resetSectionStyles();
-    if (animate) {
-        animateSections();
-    }
-
-    // Appeler animateGalleryImages si la page "demos" est activée
-    if (sectionId === 'demos') {
-        animateGalleryImages();
-    }
-}
-
 const profileImage = document.getElementById('profile-image');
 const fullscreenContainer = document.getElementById('fullscreen-container');
 const fullscreenImage = document.getElementById('fullscreen-image');
@@ -104,96 +157,5 @@ fullscreenContainer.addEventListener('click', (event) => {
         fullscreenContainer.classList.remove('active');
     }
 });
-
-/*
-const photoGallery = document.getElementById('photo-gallery');
-const imageFolder = 'ressources/images/galerie/';
-const imageFiles = [
-    'photo1.png',
-    'photo2.png',
-    'photo3.png',
-    'photo4.png',
-    'photo5.png',
-    'photo6.png',
-    'photo7.png',
-    'photo8.png',
-    'photo9.png',
-    'photo10.png',
-    'photo11.png',
-    'photo12.png',
-    'photo13.png',
-    'photo14.png',
-    'photo15.png',
-    'photo16.png',
-    // Ajoutez ici les noms de fichiers des images dans le dossier galerie
-];
-
-const galleryFullscreenContainer = document.getElementById('gallery-fullscreen-container');
-const galleryFullscreenImage = document.getElementById('gallery-fullscreen-image');
-let currentImageIndex = 0;
-
-
-
-function animateGalleryImages() {
-    const images = photoGallery.querySelectorAll('img');
-    images.forEach((img, index) => {
-        setTimeout(() => {
-            img.style.transition = "opacity 0.5s ease-out, transform 0.3s ease-out";
-            img.style.opacity = 1;
-            img.style.transform = "translateY(0)";
-        }, index * 100);
-    });
-}
-
-*/
-
-function showImage(index) {
-    if (index >= 0 && index < imageFiles.length) {
-        galleryFullscreenImage.src = `${imageFolder}${imageFiles[index]}`;
-        galleryFullscreenContainer.classList.add('active');
-        currentImageIndex = index;
-    }
-}
-
-/*
-imageFiles.forEach((fileName, index) => {
-    const img = document.createElement('img');
-    img.src = `${imageFolder}${fileName}`;
-    img.alt = fileName;
-    img.style.opacity = 0;
-    img.style.transform = "translateY(10px)";
-    img.addEventListener('click', () => {
-        showImage(index);
-    });
-    photoGallery.appendChild(img);
-});
-
-galleryFullscreenContainer.addEventListener('click', (event) => {
-    if (event.target === galleryFullscreenContainer || event.target.tagName === 'IMG') {
-        galleryFullscreenContainer.classList.remove('active');
-    }
-});
-
-document.addEventListener('keydown', (event) => {
-    if (galleryFullscreenContainer.classList.contains('active')) {
-        if (event.key === 'Escape' || event.key === 'Esc') {
-            galleryFullscreenContainer.classList.remove('active');
-        } else if (event.key === 'ArrowRight') {
-            showImage(currentImageIndex + 1);
-        } else if (event.key === 'ArrowLeft') {
-            showImage(currentImageIndex - 1);
-        } else {
-            galleryFullscreenContainer.classList.remove('active');
-        }
-    }
-});
-
-
-document.addEventListener("DOMContentLoaded", () => {
-    animateGalleryImages();
-});
-*/
-
-const videoFullscreenContainer = document.getElementById
 
 
