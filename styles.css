@@ -396,3 +396,27 @@ gap: 10px;
 .nav-arrow:hover {
     background-color: rgba(0, 0, 0, 0.8);
 }
+
+details {
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    padding: 10px;
+}
+
+summary {
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    list-style: none;
+}
+
+summary::-webkit-details-marker {
+    display: none;
+}
+
+details[open] summary {
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+}
