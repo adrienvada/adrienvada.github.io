@@ -420,3 +420,24 @@ details[open] summary {
     border-bottom: 1px solid #ddd;
     margin-bottom: 10px;
 }
+
+/* Par défaut, cache les miniatures verticales */
+.vertical-only {
+    display: none;
+}
+
+/* Par défaut, affiche les miniatures horizontales */
+.horizontal-only {
+    display: block;
+}
+
+/* Si l'écran est inférieur ou égal à 768px (version mobile), affiche les miniatures verticales et cache les horizontales */
+@media screen and (max-width: 768px) {
+    .vertical-only {
+        display: block;
+    }
+
+    .horizontal-only {
+        display: none;
+    }
+}
