@@ -121,7 +121,6 @@ h2 {
 .item img {
     height: 150px;
     border-radius: 50%;
-    margin-left: 20px;
 }
 
 .item:nth-child(even) {
@@ -424,6 +423,9 @@ details[open] summary {
 /* Par défaut, cache les miniatures verticales */
 .vertical-only {
     display: none;
+    flex-direction: column; /* Aligne les éléments verticalement */
+    align-items: center; /* Centre horizontalement */
+    text-align: center; /* Centre le texte */
 }
 
 /* Par défaut, affiche les miniatures horizontales */
