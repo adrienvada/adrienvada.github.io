@@ -99,10 +99,6 @@ function showPage(sectionId, animate = true) {
         setTimeout(animateSections, 100);
     }
 
-    // Appeler animateGalleryImages si la page "demos" est activée
-    if (sectionId === 'page_demos') {
-        animateGalleryImages();
-    }
 
     // Ajuster le défilement pour éviter que la tête de lecture ne se déplace en dessous du header
     setTimeout(() => {
