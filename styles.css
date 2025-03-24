@@ -16,6 +16,7 @@ p {
 
 a {
     text-decoration: none;
+    color: #333;
 }
 
 .content {
@@ -116,6 +117,7 @@ h2 {
     opacity: 0;
     transform: translateY(10px);
     transition: opacity 0.5s ease-out, transform 0.3s ease-out;
+    position: relative; /* Nécessaire pour que l'icône soit positionnée par rapport à l'item */
 }
 
 .item img {
@@ -136,25 +138,46 @@ h2 {
     text-transform: uppercase;
 }
 
+.item i.fa-up-right-from-square {
+    font-size: 0.6em; /* Réduit la taille de l'icône */
+    vertical-align:middle; /* Aligne verticalement avec le texte */
+    position: absolute;
+    top: 5px; /* Ajuste la position verticale */
+    right: 5px; /* Ajuste la position horizontale */
+    color: #666; /* Couleur de l'icône */
+    transition: color 0.3s ease; /* Transition pour un effet au survol */
+}
+
+.item:hover i.fa-up-right-from-square {
+    color: #0080ca; /* Change la couleur au survol */
+}
+
+.item i.fa-map-location-dot {
+    font-size: 0.6em;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
+.item:hover i.fa-map-location-dot {
+    color: #0080ca; /* Change la couleur au survol */
+}
+
 .item-info {
     font-size: 11px;
     color: #666;
 }
 
-.item a:hover {
-    opacity: 0.7; /* Légère transparence au survol */
+a:hover {
+    opacity: 0.8; /* Légère transparence au survol */
     /*  transform: scale(0.999); Légère variation de taille */
     transition: opacity 0.3s ease, transform 0.1s ease; /* Transition douce */
+    cursor: pointer;
 }
 
 .item a {
     border-radius: 5px; /* Arrondit les coins */
-    color: inherit; /* Reprend la couleur du texte parent */
+    color: black; /* Reprend la couleur du texte parent */
     text-decoration: none; /* Supprime le soulignement */
-}
-
-a {
-    color: #666;
 }
 
 .nav {
@@ -163,6 +186,10 @@ a {
     margin-bottom: 10px; /* Réduit la marge inférieure */
     border-bottom: 1px solid #ccc; /* Bordure plus fine */
     padding-bottom: 5px; /* Réduit le padding inférieur */
+}
+
+.nav a {
+    color: #666;
 }
 
 .nav button {
@@ -176,21 +203,24 @@ a {
     transition: color 0.3s;
 }
 
-.nav button:hover {
+.nav button:hover,
+.nav a:hover button {
     color: #0080ca;
 }
 
 .nav button.active {
-    color: #0080ca;
     font-weight: bold;
+    color: #0080ca;
 }
 
 .page {
     display: none; /* Cache toutes les pages par défaut */
 }
 
+/* Ajustement pour l'affichage multiple des pages de démos */
 .page.active {
-    display: block; /* Affiche uniquement la page active */
+    display: block;
+    margin-bottom: 20px;
 }
 
 .dates .event {
@@ -442,4 +472,51 @@ details[open] summary {
     .horizontal-only {
         display: none;
     }
+}
+
+/* Styles pour le menu déroulant */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-button {
+    background: none;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    color: #666;
+    padding: 3px 5px;
+    transition: color 0.3s;
+}
+
+.dropdown-button:hover {
+    color: #0080ca;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    border-radius: 5px;
+}
+
+.dropdown-content a {
+    color: #666;
+    padding: 8px 12px;
+    text-decoration: none;
+    display: block;
+    font-size: 14px;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+    color: #0080ca;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
 }

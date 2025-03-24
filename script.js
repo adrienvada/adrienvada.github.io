@@ -94,6 +94,14 @@ function showPage(sectionId, animate = true) {
         targetButton.classList.add('active');
     }
 
+    // Ajoute la classe active au bouton "Bandes démos" si on est sur une page de démos
+    const showAllDemosButton = document.getElementById('show-all-demos');
+    if (sectionId.includes('demos_')) {
+        showAllDemosButton.classList.add('active');
+    } else {
+        showAllDemosButton.classList.remove('active');
+    }
+
     if (animate) {
         resetSectionStyles();
         setTimeout(animateSections, 100);
@@ -187,5 +195,4 @@ document.addEventListener('keydown', (event) => {
         }
     }
 });
-
 
