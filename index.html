@@ -31,15 +31,24 @@
 		
         <div class="header">
             <div class="header-info">
-                <h1>Adrien VADA</h1>
+                <h1>Adrien <span style="color:#01486c">VADA</span></h1>
                 <h2 class="job">Artiste interprète
 					<a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" style="text-decoration: none; color: red; margin-left: 10px;">
 						<i class="fab fa-instagram"></i>
 					</a>
+					<a id="linkedin" href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" style="text-decoration: none; color: #0e76a8; margin-left: 10px;">
+						<i class="fab fa-linkedin"></i>
+					</a>
 				</h2>
-                <p style="margin-bottom: 5px;"><a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a></p>
-                <p style="margin-top: 0;"><a href="tel:+33632703857">06 32 70 38 57</a>
-				</p>
+				<div class="liens">	
+					<p style="margin-bottom: 5px; margin-left: 10px;">
+						<a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a>
+					</p>
+					<p style="margin-top: 0; margin-left: 10px;">
+						<a href="tel:+33632703857">06 32 70 38 57</a>
+					</p>
+					
+				</div>
             </div>
 
             <img src="ressources/images/profil_1000x1000.jpg" alt="Adrien Vada Photo Profil" id="profile-image">
@@ -52,9 +61,7 @@
 			<a href="#page_cv"><button onclick="showPage('page_cv')">CV</button></a>
 			<a href="#page_dates"><button onclick="showPage('page_dates')">Dates</button></a>
 			<div class="dropdown">
-				<a href="#demos_jeu" onclick="showPage('demos_jeu')">
-					<button id="show-all-demos" class="dropdown-button">Bandes démos</button>
-				</a>
+				<button id="show-all-demos" class="dropdown-button">Bandes démos</button>
 				<div class="dropdown-content">
 					<a href="#demos_jeu" onclick="showPage('demos_jeu')">Démos jeu <i class="fa-solid fa-film"></i></a>
 					<a href="#demos_voix" onclick="showPage('demos_voix')">Démos voix <i class="fa-solid fa-microphone"></i></a>
@@ -76,6 +83,7 @@
 						2025 <span class="item-title">Audiences - spectacle de prévention</span><br /><span class="item-info">Compagnie du P'tit Ballon / CDN de Normandie-Rouen - Steeve Brunet</span> </a>
 					</li>
 	                <li class="item"><a href="https://crescite.fr/cleophene/" target="_blank">
+						
 						2024 <span class="item-title">Rodogune </span> (Corneille)<br /><span class="item-info">Théâtre des Crescite - Angelo Jossec</span>  <i class="fa-solid fa-up-right-from-square"></i></a>
 					</li>
 	                <li class="item"><a href="https://www.cdn-normandierouen.fr/spectacle/a-la-barre/" target="_blank">
@@ -97,7 +105,12 @@
 	            <h2 class="section-title">Courts-métrages</h2>
 	            <ul class="item-list">
 	                <li class="item">2023 <span class="item-title">À tout prix</span> - Max Laure</li>
-	                <li class="item">2022 <span class="item-title">La peau des anges n'est pas si douce</span> - Emma Fridé </li>
+	                <li class="item">
+						<a href="https://www.imdb.com/fr/title/tt27404051/" target="_blank">
+							2022 <span class="item-title">La peau des anges n'est pas si douce</span> - Emma Fridé
+							<i class="fa-solid fa-up-right-from-square"></i>
+						</a>
+					</li>
 	                <li class="item">2022 <span class="item-title">A la croisée des chemins</span> - Doltin Baveux</li>
 	                <li class="item">
 						<a href="https://www.imdb.com/fr/title/tt8957022/" target="_blank">
@@ -121,17 +134,32 @@
 	            <h2 class="section-title">Musique</h2>
 	            <ul class="item-list">
 
-	                <a onclick="showPage('demos_compos')">
-						<li class="item">
+					<li class="item">
+						<a onclick="showPage('demos_compos')">
 							<span class="item-title">Piano</span> Fin de 3ème cycle du CRR de Rouen, improvisation, composition <i class="fa-solid fa-up-right-from-square"></i>
-						</li>
-					</a>
+						</a>
+					</li>
 					
 					<li class="item">
 						<span class="item-title">Chant</span> Baryton-basse
 					</li>
 	            </ul>
 	        </div>
+
+			<!--div class="section">
+	            <h2 class="section-title">Divers</h2>
+	            <ul class="item-list">
+					
+					<li class="item">
+						<span class="item-title">Permis</span> A et B
+					</li>
+
+					<li class="item">
+						<span class="item-title">Sports</span> Natation, boxe anglaise, karaté, course à pied, escrime artistique, équitation, monitorat <a target="_blank" href="https://archives.defense.gouv.fr/terre/actu-terre/archives/le-tior-plus-qu-un-sport-de-combat.html">T.I.O.R.</a> </i>
+					</li>
+					
+	            </ul>
+	        </div!-->
 
 			<!--div class="section">
 	            <h2 class="section-title">Mise en scène</h2>
@@ -158,7 +186,7 @@
             <div class="section">
 	            <h2 class="section-title">Passées</h2>
 
-				<details open>
+				<details>
 					<summary>Saison 2024 - 2025</summary>
 					<div class="item">11 mars 2025 : À la barre, <a href="https://www.google.com/maps/search/Hôtel+de+Ville+de+Rouen" target="_blank">Hôtel de Ville de Rouen <i class="fa-solid fa-map-location-dot"></i></a> </div>
 					<div class="item">5 mars 2025 : Le discours de Cassandre, <a href="https://www.google.com/maps/search/Labo+Victor+Hugo,+Rouen" target="_blank">Labo Victor Hugo, Rouen <i class="fa-solid fa-map-location-dot"></i></a></div>
@@ -351,7 +379,19 @@
 		</div>
 		
 
+		<!--footer class="footer">
+			<div class="social-links">
+				<a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" title="Instagram">
+					<i class="fab fa-instagram"></i>
+				</a>
+				<a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" title="LinkedIn">
+					<i class="fab fa-linkedin"></i>
+				</a>
+			</div>
+		</footer!-->
+
     </div>
+
 </body>
 <script src="script.js"></script>
 
