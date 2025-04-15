@@ -133,8 +133,20 @@
         /* Responsive */
         @media (max-width: 700px) {
             .content { padding: 10px; }
-            .header { flex-direction: column; align-items: flex-start; }
-            .header img { margin-top: 15px; }
+            .header { 
+                flex-direction: row; /* reste en ligne même sur mobile */
+                align-items: flex-start;
+            }
+            .header-info {
+                flex: 1 1 0;
+            }
+            .header img {
+                margin-top: 0;
+                margin-left: 15px;
+                width: 90px;
+                height: 90px;
+                object-fit: cover;
+            }
         }
     </style>
 
