@@ -38,50 +38,46 @@
 
 	
     <div class="content">
-		
-        <div class="header">
+        <header class="header">
             <div class="header-info">
                 <h1>Adrien <span style="color:#01486c">VADA</span></h1>
                 <h2 class="job">Artiste interprète
-					<a class="social-links" href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" style="text-decoration: none; color: red; margin-left: 10px;">
-						<i class="fab fa-instagram"></i>
-					</a>
-					<a class="social-links" id="linkedin" href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" style="text-decoration: none; color: #0e76a8; margin-left: 10px;">
-						<i class="fab fa-linkedin"></i>
-					</a>
-				</h2>
-				<div class="liens">
-					<div class="contact-info">
-						<p style="margin-bottom: 5px;">
-							<a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a>
-						</p>
-						<p style="margin-top: 0;">
-							<a href="tel:+33632703857">06 32 70 38 57</a>
-						</p>
-					</div>
-				</div>
+                    <a class="social-links" href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" style="text-decoration: none; color: red; margin-left: 10px;">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a class="social-links" id="linkedin" href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" style="text-decoration: none; color: #0e76a8; margin-left: 10px;">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                </h2>
+                <div class="liens">
+                    <div class="contact-info">
+                        <p style="margin-bottom: 5px;">
+                            <a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a>
+                        </p>
+                        <p style="margin-top: 0;">
+                            <a href="tel:+33632703857">06 32 70 38 57</a>
+                        </p>
+                    </div>
+                </div>
             </div>
+            <img src="ressources/images/profil_300x300.png" alt="Adrien Vada Photo Profil" id="profile-image" loading="lazy">
+        </header>
 
-            <img src="ressources/images/profil_300x300.jpg" alt="Adrien Vada Photo Profil" id="profile-image" loading="lazy">
-			
-        </div>
-		
-		
-		
-		<div class="nav">
-			<a href="#page_cv"><button onclick="showPage('page_cv')">CV</button></a>
-			<a href="#page_dates"><button onclick="showPage('page_dates')">Dates</button></a>
-			<div class="dropdown">
-				<button id="show-all-demos" class="dropdown-button">Bandes démos</button>
-				<div class="dropdown-content">
-					<a href="#demos_jeu" onclick="showPage('demos_jeu')">Démos jeu <i class="fa-solid fa-film"></i></a>
-					<a href="#demos_voix" onclick="showPage('demos_voix')">Démos voix <i class="fa-solid fa-microphone"></i></a>
-					<a href="#demos_compos" onclick="showPage('demos_compos')">Démos musique <i class="fa-solid fa-music"></i></a>
-				</div>
-			</div>
-		</div>
-		
-		<div id="page_cv" class="page active">
+        <nav class="nav">
+            <a href="#page_cv"><button onclick="showPage('page_cv')">CV</button></a>
+            <a href="#page_dates"><button onclick="showPage('page_dates')">Dates</button></a>
+            <div class="dropdown">
+                <button id="show-all-demos" class="dropdown-button">Bandes démos</button>
+                <div class="dropdown-content">
+                    <a href="#demos_jeu" onclick="showPage('demos_jeu')">Démos jeu <i class="fa-solid fa-film"></i></a>
+                    <a href="#demos_voix" onclick="showPage('demos_voix')">Démos voix <i class="fa-solid fa-microphone"></i></a>
+                    <a href="#demos_compos" onclick="showPage('demos_compos')">Démos musique <i class="fa-solid fa-music"></i></a>
+                </div>
+            </div>
+        </nav>
+
+        <main>
+            <div id="page_cv" class="page active">
 			
 	        <div class="section">
 	            <h2 class="section-title">Théâtre
@@ -402,12 +398,16 @@
 		</div>
 		
 
-		<!--footer class="footer">
-			<div>
-				<p>© 2022 Adrien Vada</p>
-			</div>
-		</footer!-->
-
+        <footer class="footer">
+            <div class="social-links">
+                <a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" title="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" title="LinkedIn">
+                    <i class="fab fa-linkedin"></i>
+                </a>
+            </div>
+        </footer>
     </div>
 
 </body>
