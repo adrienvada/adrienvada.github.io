@@ -4,23 +4,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="google-site-verification" content="nXR_UIG-2NcBhs6kQGuCqpROfPUAqIfyt67kgJUJH6Q" />
-	<meta name="description" content="Site officiel d'Adrien Vada, artiste interprète. Dates de spactacle, CV et démos.">
-	<meta name="keywords" content="Adrien Vada, artiste interprète, théâtre, cinéma, démos, CV">
-	<meta name="author" content="Adrien Vada">
-	<meta property="og:title" content="Adrien Vada - Artiste interprète">
-	<meta property="og:description" content="Site officiel d'Adrien Vada, artiste interprète. Dates de spectacle, CV et démos.">
-	<meta property="og:image" content="https://adrienvada.github.io/ressources/images/profil_1000x1000.jpg">
-	<meta property="og:url" content="https://adrienvada.github.io/">
-	<meta name="twitter:card" content="summary_large_image">
-	
-	<!-- CSS -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="ressources/styles.css">
-	<link rel="icon" href="favicon.ico" type="image/x-icon">
-	<link rel="manifest" href="/favicon_io/site.webmanifest">
-	<title>Adrien Vada - Artiste interprète</title>
-    
+    <meta name="google-site-verification" content="nXR_UIG-2NcBhs6kQGuCqpROfPUAqIfyt67kgJUJH6kQ" />
+    <meta name="description" content="Site officiel d'Adrien Vada, artiste interprète. Dates de spactacle, CV et démos.">
+    <meta name="keywords" content="Adrien Vada, artiste interprète, théâtre, cinéma, démos, CV">
+    <meta name="author" content="Adrien Vada">
+    <meta property="og:title" content="Adrien Vada - Artiste interprète">
+    <meta property="og:description" content="Site officiel d'Adrien Vada, artiste interprète. Dates de spectacle, CV et démos.">
+    <meta property="og:image" content="https://adrienvada.github.io/ressources/images/profil_1000x1000.jpg">
+    <meta property="og:url" content="https://adrienvada.github.io/">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- CSS essentiel inline pour le first paint -->
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #fff;
+            color: #222;
+        }
+        .content {
+            max-width: 900px;
+            margin: 30px auto 0 auto;
+            background: #fff;
+            box-shadow: 0 0 10px #0001;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .header-info h1 {
+            font-size: 2.2em;
+            margin: 0;
+        }
+        .header-info h2 {
+            font-size: 1.2em;
+            margin: 0 0 10px 0;
+            font-weight: normal;
+        }
+        .liens {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .contact-info a {
+            color: #01486c;
+            text-decoration: none;
+        }
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .nav button, .dropdown-button {
+            background: none;
+            border: none;
+            font-size: 1em;
+            color: #666;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: color 0.2s, background 0.2s;
+        }
+        .nav button.active, .dropdown-button.active,
+        .nav button:hover, .dropdown-button:hover {
+            color: #0080ca;
+            font-weight: bold;
+            background: #f0f8ff;
+        }
+        .dropdown {
+            position: relative;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 100%;
+            background: #fff;
+            box-shadow: 0 2px 8px #0002;
+            border-radius: 4px;
+            min-width: 180px;
+            z-index: 10;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown-content a {
+            display: block;
+            padding: 8px 16px;
+            color: #333;
+            text-decoration: none;
+            font-size: 1em;
+        }
+        .dropdown-content a:hover {
+            background: #f0f8ff;
+            color: #0080ca;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        .footer .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .footer .social-links a {
+            color: #666;
+            font-size: 20px;
+            transition: color 0.3s;
+        }
+        .footer .social-links a:hover {
+            color: #0080ca;
+        }
+        /* Responsive */
+        @media (max-width: 700px) {
+            .content { padding: 10px; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .header img { margin-top: 15px; }
+        }
+    </style>
+
+    <!-- CSS complet différé -->
+    <link rel="stylesheet" href="ressources/styles.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="ressources/styles.css"></noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="/favicon_io/site.webmanifest">
+    <title>Adrien Vada - Artiste interprète</title>
 </head>
 
 <body>
