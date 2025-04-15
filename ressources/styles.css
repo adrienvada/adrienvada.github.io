@@ -185,10 +185,15 @@ h2 {
     color: #666;
 }
 
-a:hover {
-    opacity: 0.5; /*  transform: scale(0.999); Légère variation de taille */
+a:hover {/*  transform: scale(0.999); Légère variation de taille */
     transition: opacity 0.3s ease, transform 0.1s ease; /* Transition douce */
     cursor: pointer;
+
+}
+
+.item a:hover {
+    color: #006ead; /* Change la couleur du texte au survol */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Transition douce */
 }
 
 .item a {
@@ -196,6 +201,8 @@ a:hover {
     color: black; /* Reprend la couleur du texte parent */
     text-decoration: none; /* Supprime le soulignement */
 }
+
+
 
 .nav {
     display: flex;
@@ -566,4 +573,8 @@ details[open] summary {
 
 .social-links .fa-linkedin:hover {
     color: #0077B5; /* Couleur spécifique pour LinkedIn */
+}
+
+.social-links .fa-spotify:hover {
+    color: #1DB954; /* Couleur spécifique pour LinkedIn */
 }
