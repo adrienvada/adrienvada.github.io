@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <!-- Page d'accueil -->
+    <url>
+        <loc>https://www.votre-site.com/</loc>
+        <lastmod>2025-04-16</lastmod>
+        <priority>1.0</priority>
+    </url>
+
+    <!-- Pages principales -->
+    <url>
+        <loc>https://www.votre-site.com/#page_cv</loc>
+        <lastmod>2025-04-16</lastmod>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://www.votre-site.com/#page_dates</loc>
+        <lastmod>2025-04-16</lastmod>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://www.votre-site.com/#demos_jeu</loc>
+        <lastmod>2025-04-16</lastmod>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.votre-site.com/#demos_voix</loc>
+        <lastmod>2025-04-16</lastmod>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://www.votre-site.com/#demos_compos</loc>
+        <lastmod>2025-04-16</lastmod>
+        <priority>0.7</priority>
+    </url>
+</urlset>
