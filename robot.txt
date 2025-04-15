@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /ressources/
+Sitemap: https://www.votre-site.com/sitemap.xml
