@@ -58,7 +58,8 @@
             margin-left: 20px;
             box-shadow: #333 0.05em 0.05em 0.2em;
             object-fit: cover;
-            transition: opacity 0.7s, transform 0.7s;
+            display: block;
+            background: #eee;
         }
         .header img:hover {
             cursor: pointer;
@@ -160,10 +161,10 @@
                 flex: 1 1 0;
             }
             .header img {
-                margin-top: 0;
-                margin-left: 15px;
                 width: 90px;
                 height: 90px;
+                margin-left: 15px;
+                margin-top: 0;
             }
         }
     </style>
@@ -219,7 +220,7 @@
                     </div>
                 </div>
             </div>
-            <img src="ressources/images/profil_300x300.webp" alt="Adrien Vada Photo Profil" id="profile-image" loading="lazy">
+            <img src="ressources/images/profil_300x300.webp" alt="Adrien Vada Photo Profil" id="profile-image" fetchpriority="high">
         </header>
 
         <nav class="nav">
