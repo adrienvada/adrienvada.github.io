@@ -57,12 +57,6 @@ function showPage(sectionId, animate = true) {
     if (targetPage) {
         targetPage.classList.add('active');
 
-        // Scrolle vers le haut de la page en douceur
-        window.scrollTo({
-            top: 0,
-            behavior: 'auto'
-        });
-
         // Force l'affichage immédiat si pas d'animation
         if (!animate) {
             targetPage.querySelectorAll('.section').forEach(section => {
