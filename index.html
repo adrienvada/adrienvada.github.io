@@ -23,6 +23,7 @@
             background: #fff;
             color: #222;
         }
+        body.loading { visibility: hidden; }
         .content {
             max-width: 900px;
             margin: 30px auto 0 auto;
@@ -37,6 +38,10 @@
             justify-content: space-between;
             margin-bottom: 20px;
         }
+        .header-info {
+            flex-grow: 1;
+            text-align: left;
+        }
         .header-info h1 {
             font-size: 2.2em;
             margin: 0;
@@ -45,6 +50,20 @@
             font-size: 1.2em;
             margin: 0 0 10px 0;
             font-weight: normal;
+        }
+        .header img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-left: 20px;
+            box-shadow: #333 0.05em 0.05em 0.2em;
+            object-fit: cover;
+            transition: opacity 0.7s, transform 0.7s;
+        }
+        .header img:hover {
+            cursor: pointer;
+            opacity: 0.8;
+            transform: scale(1.03);
         }
         .liens {
             display: flex;
@@ -134,7 +153,7 @@
         @media (max-width: 700px) {
             .content { padding: 10px; }
             .header { 
-                flex-direction: row; /* reste en ligne même sur mobile */
+                flex-direction: row;
                 align-items: flex-start;
             }
             .header-info {
@@ -145,7 +164,6 @@
                 margin-left: 15px;
                 width: 90px;
                 height: 90px;
-                object-fit: cover;
             }
         }
     </style>
@@ -164,7 +182,7 @@
     <title>Adrien Vada - Artiste interprète</title>
 </head>
 
-<body>
+<body class="loading">
 	<!-- Image profil plein écran!-->
 	<div class="fullscreen-image" id="fullscreen-container">
 		<img src="" alt="Photo de profil d'Adrien Vada en plein écran" id="fullscreen-image" loading="lazy">
@@ -554,6 +572,11 @@
         </footer>
     </div>
 
+    <script>
+    window.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.remove('loading');
+    });
+    </script>
 </body>
 <script src="ressources/script.js"></script>
 
