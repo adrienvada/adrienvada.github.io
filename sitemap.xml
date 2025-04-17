@@ -11,26 +11,27 @@
     <url>
         <loc>https://adrienvada.github.io/#page_cv</loc>
         <lastmod>2025-04-16</lastmod>
-        <priority>0.8</priority>
+        <priority>1.0</priority>
     </url>
     <url>
         <loc>https://adrienvada.github.io/#page_dates</loc>
         <lastmod>2025-04-16</lastmod>
+         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://adrienvada.github.io/#demos_jeu</loc>
         <lastmod>2025-04-16</lastmod>
-        <priority>0.7</priority>
+        <priority>0.5</priority>
     </url>
     <url>
         <loc>https://adrienvada.github.io/#demos_voix</loc>
         <lastmod>2025-04-16</lastmod>
-        <priority>0.7</priority>
+        <priority>0.5</priority>
     </url>
     <url>
         <loc>https://adrienvada.github.io/#demos_compos</loc>
         <lastmod>2025-04-16</lastmod>
-        <priority>0.7</priority>
+        <priority>0.5</priority>
     </url>
 </urlset>
