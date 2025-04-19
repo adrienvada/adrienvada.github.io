@@ -461,6 +461,7 @@ summary {
     font-weight: bold;
     cursor: pointer;
     list-style: none;
+    text-decoration: underline;
 }
 
 summary::-webkit-details-marker {
@@ -469,6 +470,37 @@ summary::-webkit-details-marker {
 
 details[open] summary {
     margin-bottom: 10px;
+}
+
+/* Icône de flèche dans le summary */
+details summary {
+    position: relative;
+    padding-left: 28px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    user-select: none;
+    transition: color 0.2s;
+}
+
+details summary:hover {
+    color: #005c91;
+}
+
+details summary::before {
+    content: "\f078"; /* Font Awesome chevron-down */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    left: 0;
+    top: 2px;
+    font-size: 18px;
+    transition: transform 0.3s;
+    color: #0080ca;
+}
+
+details[open] summary::before {
+    transform: rotate(180deg);
 }
 
 /* Par défaut, cache les miniatures verticales */

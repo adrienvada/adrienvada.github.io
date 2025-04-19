@@ -190,4 +190,15 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+document.querySelectorAll('audio.lecteur_audio').forEach(audio => {
+    audio.addEventListener('play', function() {
+        document.querySelectorAll('audio.lecteur_audio').forEach(other => {
+            if (other !== audio) {
+                other.pause();
+                other.currentTime = 0;
+            }
+        });
+    });
+});
+
 
