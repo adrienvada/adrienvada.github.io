@@ -120,7 +120,7 @@ h2 {
 }
 
 #download-cv-button i {
-  font-size: 1.2em;
+  font-size: 1em;
 }
 
 .item-list {
@@ -455,14 +455,6 @@ details {
     padding: 10px;
 }
 
-summary {
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    list-style: none;
-    text-decoration: underline;
-}
-
 summary::-webkit-details-marker {
     display: none;
 }
@@ -476,10 +468,10 @@ details summary {
     position: relative;
     padding-left: 28px;
     cursor: pointer;
-    font-size: 18px;
     font-weight: bold;
     user-select: none;
     transition: color 0.2s;
+    list-style: none;
 }
 
 details summary:hover {
@@ -487,7 +479,7 @@ details summary:hover {
 }
 
 details summary::before {
-    content: "\f078"; /* Font Awesome chevron-down */
+    content: "\f144"; /* Font Awesome chevron-down */
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     position: absolute;
@@ -499,7 +491,7 @@ details summary::before {
 }
 
 details[open] summary::before {
-    transform: rotate(180deg);
+    transform: rotate(90deg);
 }
 
 /* Par défaut, cache les miniatures verticales */
