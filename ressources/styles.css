@@ -116,7 +116,7 @@ h2 {
 }
 
 #download-cv-button:hover {
-  background-color: #006699;
+  background-color: #E1306C;
 }
 
 #download-cv-button i {
@@ -173,7 +173,7 @@ h2 {
 }
 
 .item:hover i.fa-up-right-from-square {
-    color: #0080ca; /* Change la couleur au survol */
+    color: #E1306C; /* Change la couleur au survol */
 }
 
 .item i.fa-map-location-dot {
@@ -183,7 +183,7 @@ h2 {
 }
 
 .item:hover i.fa-map-location-dot {
-    color: #0080ca; /* Change la couleur au survol */
+    color: #E1306C; /* Change la couleur au survol */
 }
 
 .item-info {
@@ -198,7 +198,7 @@ a:hover {/*  transform: scale(0.999); Légère variation de taille */
 }
 
 .item a:hover {
-    color: #006ead; /* Change la couleur du texte au survol */
+    color: #E1306C; /* Change la couleur du texte au survol */
     transition: background-color 0.3s ease, color 0.3s ease; /* Transition douce */
 }
 
@@ -235,7 +235,7 @@ a:hover {/*  transform: scale(0.999); Légère variation de taille */
 
 .nav button:hover,
 .nav a:hover button {
-    color: #0080ca;
+    color: #E1306C;
 }
 
 .nav button.active {
@@ -564,7 +564,7 @@ details[open] summary::before {
 
 .dropdown-content a:hover {
     background-color: #f1f1f1;
-    color: #0080ca;
+    color: #E1306C;
 }
 
 .dropdown:hover .dropdown-content {
