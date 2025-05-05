@@ -147,6 +147,7 @@ function animateSections() {
 const images = [
     'ressources/images/profil_1000x1000.jpg',
     'ressources/images/galerie/photo4.png',
+    'ressources/images/galerie/IMG_1592.png',
     'ressources/images/galerie/photo14.png',
     'ressources/images/galerie/photo16.png',
     'ressources/images/galerie/photo11.png'
