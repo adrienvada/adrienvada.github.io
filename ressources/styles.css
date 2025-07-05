@@ -458,6 +458,9 @@ gap: 10px;
 details {
     margin-bottom: 10px;
     border-radius: 5px;
+}
+
+.details_dates{
     padding: 10px;
 }
 
@@ -499,6 +502,8 @@ details[open] summary::before {
     transform: rotate(90deg);
     color: #E1306C;
 }
+
+
 
 /* Par défaut, cache les miniatures verticales */
 .vertical-only {
