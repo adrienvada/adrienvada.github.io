@@ -119,14 +119,14 @@ function animateSections() {
 
     sections.forEach((section, sectionIndex) => {
         setTimeout(() => {
-            section.style.transition = "opacity 0.3s ease-out, transform 0.3s ease-out";
+            section.style.transition = "opacity 0.05s ease-out, transform 0.6s ease-out";
             section.style.opacity = 1;
             section.style.transform = "translateY(0)";
 
             const title = section.querySelector(".section-title");
             if (title) {
                 setTimeout(() => {
-                    title.style.transition = "opacity 0.3s ease-out, transform 0.3s ease-out";
+                    title.style.transition = "opacity 0.05s ease-out, transform 1s ease-out";
                     title.style.opacity = 1;
                     title.style.transform = "translateX(0)";
                 }, 100);
@@ -135,7 +135,7 @@ function animateSections() {
             const items = section.querySelectorAll(".item");
             items.forEach((item, itemIndex) => {
                 setTimeout(() => {
-                    item.style.transition = "opacity 0.5s ease-out, transform 0.3s ease-out";
+                    item.style.transition = "opacity 0.05s ease-out, transform 0.05s ease-out";
                     item.style.opacity = 1;
                     item.style.transform = "translateY(0)";
                 }, itemIndex * itemDelay);
