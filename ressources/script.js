@@ -25,6 +25,19 @@ function resetSectionStyles() {
     if (!activePage) return;
 
     const sections = activePage.querySelectorAll(".section");
+
+    // Helper: renvoie true si l'élément est dans un <details class="details_dates"> fermé
+    function isInClosedDetails(el) {
+        let parent = el;
+        while (parent && parent !== document) {
+            if (parent.matches && parent.matches('details.details_dates')) {
+                return !parent.open;
+            }
+            parent = parent.parentNode;
+        }
+        return false;
+    }
+
     sections.forEach((section, index) => {
         // Si c'est la première section, on ne change pas l'opacité initiale
         if (index !== 0) {
@@ -40,6 +53,13 @@ function resetSectionStyles() {
 
         const items = section.querySelectorAll(".item");
         items.forEach(item => {
+            // Ne pas préparer à l'animation les items qui sont dans un details.closed
+            if (isInClosedDetails(item)) {
+                // assurer qu'ils restent visibles / statiques (pas d'animation)
+                item.style.opacity = 1;
+                item.style.transform = "translateY(0)";
+                return;
+            }
             item.style.opacity = 0;
             item.style.transform = "translateY(10px)";
         });
@@ -117,6 +137,18 @@ function animateSections() {
     const sectionDelay = 300; // Définir un délai uniforme entre les sections
     const itemDelay = 100; // Délai entre chaque élément dans une section
 
+    // Helper: renvoie true si l'élément est dans un <details class="details_dates"> fermé
+    function isInClosedDetails(el) {
+        let parent = el;
+        while (parent && parent !== document) {
+            if (parent.matches && parent.matches('details.details_dates')) {
+                return !parent.open;
+            }
+            parent = parent.parentNode;
+        }
+        return false;
+    }
+
     sections.forEach((section, sectionIndex) => {
         setTimeout(() => {
             section.style.transition = "opacity 0.05s ease-out, transform 0.6s ease-out";
@@ -134,6 +166,13 @@ function animateSections() {
 
             const items = section.querySelectorAll(".item");
             items.forEach((item, itemIndex) => {
+                // skip items that are inside a closed details (no animation)
+                if (isInClosedDetails(item)) {
+                    item.style.opacity = 1;
+                    item.style.transform = "translateY(0)";
+                    return;
+                }
+
                 setTimeout(() => {
                     item.style.transition = "opacity 0.05s ease-out, transform 0.05s ease-out";
                     item.style.opacity = 1;
