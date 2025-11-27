@@ -51,7 +51,7 @@
             margin: 0 0 10px 0;
             font-weight: normal;
         }
-        .header img {
+        .header img#profile-image {
             width: 150px;
             height: 150px;
             border-radius: 50%;
@@ -71,13 +71,28 @@
             align-items: center;
             gap: 20px;
         }
-        .contact-info a {
-            color: #01486c;
-            text-decoration: none;
-        }
-        .contact-info a:hover {
-            text-decoration: underline;
-        }
+        .contact-info {
+			font-size: 12px;
+			line-height: 1.6;
+		}
+
+		.contact-info a {
+			color: #0080ca;
+			text-decoration: none;
+			transition: opacity 0.3s ease;
+		}
+
+		.contact-info a:hover {
+			opacity: 0.7;
+			text-decoration: underline;
+		}
+		.contact-logo {
+			height: 12px;
+			width: 12px;
+			display: inline-block;
+			vertical-align: middle;
+			object-fit: contain;
+		}
         .nav {
             display: flex;
             align-items: center;
@@ -160,7 +175,7 @@
             .header-info {
                 flex: 1 1 0;
             }
-            .header img {
+            .header img#profile-image {
                 width: 90px;
                 height: 90px;
                 margin-left: 15px;
@@ -203,21 +218,32 @@
             <div class="header-info">
                 <h1>Adrien <span style="color:#01486c">VADA</span></h1>
                 <h2 class="job">Artiste interprète
-                    <a class="social-links" href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" style="text-decoration: none; color: red; margin-left: 10px;">
-                        <i class="fab fa-instagram"></i>
-                    </a>
-                    <a class="social-links" id="linkedin" href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" style="text-decoration: none; color: #0e76a8; margin-left: 10px;">
-                        <i class="fab fa-linkedin"></i>
-                    </a>
                 </h2>
                 <div class="liens">
-                    <div class="contact-info">
-                        <p style="margin-bottom: 5px;">
-                            <a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a>
-                        </p>
-                        <!--p style="margin-top: 0;">
-                            <a href="tel:+33632703857">06 32 70 38 57</a>
-                        </p!-->
+					<div class="contact-info">
+						<a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html" target="_blank">
+							<img src="ressources/images/design/logo agencesartistiques.png" alt="Logo Agences Artistiques" class="contact-logo">
+                            Agences Artistiques
+                        </a>
+                        <br>
+                        <a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank">
+							<img src="ressources/images/design/logo filmmakers.png" alt="Logo Filmmakers" class="contact-logo">
+                            Filmmakers
+                        </a>
+						<br style="margin-bottom: 10px;">
+						<a class="social-links" href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" >
+							<img src="ressources/images/design/logo instagram.png" alt="Logo Filmmakers" class="contact-logo">
+							Instagram
+						</a>
+						<br>
+						<a class="social-links" href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" >
+							<img src="ressources/images/design/logo LinkedIN.png" alt="Logo Filmmakers" class="contact-logo">
+							LinkedIn
+						</a>
+						<br style="margin-bottom: 10px;" >
+                    	<a href="mailto:adrien.vada@gmail.com">
+							adrien.vada@gmail.com
+						</a>
                     </div>
                 </div>
             </div>
@@ -341,7 +367,7 @@
 						<li class="item">
 							<a onclick="showPage('demos_compos')">
 								<span class="item-title">Piano</span> 
-								<br/> Fin de 3ème cycle du CRR de Rouen, improvisation, composition
+								<br/> Fin de cycle 3. Improvisation, composition pour la scène et l'image
 							</a>
 						</li>
 						
