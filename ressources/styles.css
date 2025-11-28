@@ -589,6 +589,41 @@ details[open] summary::before {
     margin-bottom: 10px;
 }
 
+.footer .social-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+    align-items: center;
+}
+
+.footer .social-links a {
+    color: #666;
+    font-size: 20px;
+    transition: color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footer .social-links a:hover {
+    color: #0080ca;
+}
+
+.footer-logo {
+    height: 20px;
+    width: auto;
+    display: inline-block;
+    object-fit: contain;
+    transition: opacity 0.3s ease, filter 0.3s ease;
+    filter: grayscale(100%);
+}
+
+.footer .social-links a:hover .footer-logo {
+    opacity: 0.7;
+    filter: grayscale(0%);
+}
+
 
 /* Conteneur principal */
 .liens {
