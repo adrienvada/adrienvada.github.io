@@ -74,12 +74,24 @@
         .contact-info {
 			font-size: 12px;
 			line-height: 1.6;
+			display: flex;
+			gap: 20px;
+			flex-wrap: wrap;
+		}
+		.contact-column {
+			flex: 1;
+			min-width: 150px;
 		}
 
-		.contact-info a {
+		.contact-column a {
+			display: block;
 			color: #0080ca;
 			text-decoration: none;
 			transition: opacity 0.3s ease;
+			display: inline-flex;
+			align-items: center;
+			gap: 5px;
+			margin-bottom: 8px;
 		}
 
 		.contact-info a:hover {
@@ -220,30 +232,37 @@
                 <h2 class="job">Artiste interprète
                 </h2>
                 <div class="liens">
-					<div class="contact-info">
-						<a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html" target="_blank">
-							<img src="ressources/images/design/logo agencesartistiques.png" alt="Logo Agences Artistiques" class="contact-logo">
-                            Agences Artistiques
-                        </a>
-                        <br>
-                        <a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank">
-							<img src="ressources/images/design/logo filmmakers.png" alt="Logo Filmmakers" class="contact-logo">
-                            Filmmakers
-                        </a>
-						<br style="margin-bottom: 10px;">
-						<a class="social-links" href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" >
-							<img src="ressources/images/design/logo instagram.png" alt="Logo Filmmakers" class="contact-logo">
-							Instagram
-						</a>
-						<br>
-						<a class="social-links" href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" >
-							<img src="ressources/images/design/logo LinkedIN.png" alt="Logo Filmmakers" class="contact-logo">
-							LinkedIn
-						</a>
-						<br style="margin-bottom: 10px;" >
-                    	<a href="mailto:adrien.vada@gmail.com">
-							adrien.vada@gmail.com
-						</a>
+                    <div class="contact-info">
+						<div class="contact-column">
+							<a href="mailto:adrien.vada@gmail.com">
+								<img src="ressources/images/design/logo mail.png" alt="Logo Email" class="contact-logo">
+								adrien.vada@gmail.com
+							</a>
+							<br>
+                            <a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" >
+                                <img src="ressources/images/design/logo LinkedIN.png" alt="Logo LinkedIn" class="contact-logo">
+                                LinkedIn
+                            </a>
+						</div>
+                        <div class="contact-column">
+                            <a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html" target="_blank">
+                                <img src="ressources/images/design/logo agencesartistiques.png" alt="Logo Agences Artistiques" class="contact-logo">
+                                Agences Artistiques
+                            </a>
+                            <br>
+                            <a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank">
+                                <img src="ressources/images/design/logo filmmakers.png" alt="Logo Filmmakers" class="contact-logo">
+                                Filmmakers
+                            </a>
+                        </div>
+                        <div class="contact-column">
+                            <a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" >
+                                <img src="ressources/images/design/logo instagram.png" alt="Logo Instagram" class="contact-logo">
+                                Instagram
+                            </a>
+                            
+						</div>
+						
                     </div>
                 </div>
             </div>
@@ -744,6 +763,10 @@
 
         <footer class="footer">
             <div class="social-links">
+				
+				<a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html" target="_blank" title="Agences Artistiques">
+					<img src="ressources/images/design/logo agencesartistiques.png" alt="Logo Agences Artistiques" class="footer-logo">
+				</a>
                 <a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" title="Instagram">
                     <i class="fab fa-instagram"></i>
                 </a>
@@ -752,6 +775,9 @@
                 </a>
 				<a href="https://open.spotify.com/intl-fr/artist/6eskUhQ2bQBxH1KhBxFPjz" target="_blank" title="Spotify">
                     <i class="fa-brands fa-spotify"></i>
+                </a>
+                <a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank" title="Filmmakers">
+                    <img src="ressources/images/design/logo filmmakers.png" alt="Logo Filmmakers" class="footer-logo">
                 </a>
             </div>
         </footer>
