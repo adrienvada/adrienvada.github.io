@@ -191,6 +191,24 @@ h2 {
     color: #666;
 }
 
+.item-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.item a {
+    display: block;
+}
+
+.item-status {
+    font-style: italic;
+    color: #666;
+    white-space: nowrap;
+}
+
 a:hover {/*  transform: scale(0.999); Légère variation de taille */
     transition: opacity 0.3s ease, transform 0.1s ease; /* Transition douce */
     cursor: pointer;
