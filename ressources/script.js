@@ -20,6 +20,42 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+const fragmentPages = {
+    page_dates: 'dates.html',
+    demos_camera: 'demos_camera.html',
+    demos_voix: 'demos_voix.html'
+};
+
+const loadedFragments = new Set();
+
+async function loadFragmentPage(sectionId) {
+    if (!fragmentPages[sectionId] || loadedFragments.has(sectionId)) {
+        return;
+    }
+
+    const targetPage = document.getElementById(sectionId);
+    if (!targetPage) {
+        return;
+    }
+
+    try {
+        const response = await fetch(fragmentPages[sectionId]);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const html = await response.text();
+        targetPage.innerHTML = html;
+        loadedFragments.add(sectionId);
+    } catch (error) {
+        console.error(`Erreur de chargement de ${sectionId}:`, error);
+        if (window.location.protocol === 'file:') {
+            targetPage.innerHTML = '<div class="section"><p>Impossible de charger cette page en ouvrant le fichier directement dans le navigateur. Utilisez un serveur local (par exemple <code>python3 -m http.server</code>) ou hébergez le site via HTTP.</p></div>';
+        } else {
+            targetPage.innerHTML = '<div class="section"><p>Impossible de charger cette page. Veuillez réessayer.</p></div>';
+        }
+    }
+}
+
 function resetSectionStyles() {
     const activePage = document.querySelector('.page.active');
     if (!activePage) return;
@@ -66,7 +102,11 @@ function resetSectionStyles() {
     });
 }
 
-function showPage(sectionId, animate = true) {
+async function showPage(sectionId, animate = true) {
+    if (fragmentPages[sectionId]) {
+        await loadFragmentPage(sectionId);
+    }
+
     // Cache toutes les pages
     document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
