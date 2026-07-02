@@ -16,7 +16,7 @@
     <meta property="og:url" content="https://adrienvada.github.io/">
     <meta name="twitter:card" content="summary_large_image">
 
-    <!-- Preload for critical fonts -->
+    <!-- Preload for critical fonts  -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -433,7 +433,7 @@
                                             class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2025</span>
                                         <span
                                             class="font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition">Audiences
-                                            - spectacle de prévention</span>
+                                        </span>
                                     </div>
                                     <p class="text-xs text-luxury-textMuted mt-0.5 flex items-center gap-1">
                                         CDN de Normandie-Rouen / Compagnie du P'tit Ballon - Steeve Brunet
@@ -773,7 +773,8 @@
                             class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-gold border border-stone-200">
                             <i class="fa-solid fa-calendar-check text-[11px]"></i>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain" id="upcoming-season-title">Saison 2026 -
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain"
+                            id="upcoming-season-title">Saison 2026 -
                             2027</h3>
                     </div>
 
@@ -799,7 +800,7 @@
                     </div>
                 </section>
             </div>
-            
+
 
             <!-- PAGE 3: DEMOS CAMERA (Now hosts all videos) -->
             <div id="demos_camera" class="page space-y-5">
@@ -1323,10 +1324,10 @@
         function renderDates() {
             const upcomingTitle = document.getElementById('upcoming-season-title');
             const upcomingContainer = document.getElementById('upcoming-dates-container');
-            
+
             if (upcomingTitle && upcomingContainer && typeof SHOW_DATA !== 'undefined') {
                 upcomingTitle.textContent = SHOW_DATA.currentSeasonTitle || 'Saison en cours';
-                
+
                 let upcomingHtml = '';
                 if (SHOW_DATA.upcoming && SHOW_DATA.upcoming.length > 0) {
                     SHOW_DATA.upcoming.forEach(show => {
