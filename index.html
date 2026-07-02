@@ -1,491 +1,2155 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="scroll-smooth">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="nXR_UIG-2NcBhs6kQGuCqpROfPUAqIfyt67kgJUJH6kQ" />
-    <meta name="description" content="Site officiel d'Adrien Vada, artiste interprète. Dates de spactacle, CV et démos.">
+    <meta name="description"
+        content="Site officiel d'Adrien Vada, artiste interprète. Dates de spectacle, CV et démos.">
     <meta name="keywords" content="Adrien Vada, artiste interprète, théâtre, cinéma, démos, CV">
     <meta name="author" content="Adrien Vada">
     <meta property="og:title" content="Adrien Vada - Prochaines dates de spectacle, CV & démos">
-    <meta property="og:description" content="Site officiel d'Adrien Vada, artiste interprète. Dates de spectacle, CV et démos.">
+    <meta property="og:description"
+        content="Site officiel d'Adrien Vada, artiste interprète. Dates de spectacle, CV et démos.">
     <meta property="og:image" content="https://adrienvada.github.io/ressources/images/profil_1000x1000.jpg">
     <meta property="og:url" content="https://adrienvada.github.io/">
     <meta name="twitter:card" content="summary_large_image">
 
-    <!-- CSS essentiel inline pour le first paint -->
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background: #fff;
-            color: #222;
-        }
-        body.loading { visibility: hidden; }
-        .content {
-            max-width: 900px;
-            margin: 30px auto 0 auto;
-            background: #fff;
-            box-shadow: 0 0 10px #0001;
-            border-radius: 8px;
-            padding: 20px;
-        }
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .header-info {
-            flex-grow: 1;
-            text-align: left;
-        }
-        .header-info h1 {
-            font-size: 2.2em;
-            margin: 0;
-        }
-        .header-info h2 {
-            font-size: 1.2em;
-            margin: 0 0 10px 0;
-            font-weight: normal;
-        }
-        .header img#profile-image {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            margin-left: 20px;
-            box-shadow: #333 0.05em 0.05em 0.2em;
-            object-fit: cover;
-            display: block;
-            background: #eee;
-        }
-        .header img:hover {
-            cursor: pointer;
-            opacity: 0.8;
-            transform: scale(1.03);
-        }
-        .liens {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        .contact-info {
-			font-size: 12px;
-			line-height: 1.6;
-			display: flex;
-			gap: 20px;
-			flex-wrap: wrap;
-		}
-		.contact-column {
-			flex: 1;
-			min-width: 150px;
-		}
+    <!-- Preload for critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@200;300;400;500;600;700&display=swap"
+        rel="stylesheet">
 
-		.contact-column a {
-			display: block;
-			color: #0080ca;
-			text-decoration: none;
-			transition: opacity 0.3s ease;
-			display: inline-flex;
-			align-items: center;
-			gap: 5px;
-			margin-bottom: 8px;
-		}
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        inter: ['Inter', 'sans-serif'],
+                        montserrat: ['Montserrat', 'sans-serif'],
+                    },
+                    colors: {
+                        luxury: {
+                            lightBg: '#FAF9F5',
+                            cardBg: 'rgba(255, 255, 255, 0.8)',
+                            textMain: '#1A1A1F',
+                            textMuted: '#575761',
+                            gold: '#967e5b',
+                            goldLight: '#bfa98a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
-		.contact-info a:hover {
-			opacity: 0.7;
-			text-decoration: underline;
-		}
-		.contact-logo {
-			height: 12px;
-			width: 12px;
-			display: inline-block;
-			vertical-align: middle;
-			object-fit: contain;
-		}
-        .nav {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="icon" type="image/png" href="/favicon_io/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon_io/favicon.svg" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Adrien Vada" />
+    <link rel="manifest" href="/favicon_io/site.webmanifest" />
+
+    <title>Adrien Vada - Dates, CV, Démos</title>
+
+    <style type="text/css">
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
         }
-        .nav button, .dropdown-button {
-            background: none;
-            border: none;
-            font-size: 1em;
-            color: #666;
-            cursor: pointer;
-            padding: 6px 12px;
-            border-radius: 4px;
-            transition: color 0.2s, background 0.2s;
+
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.01);
+            border: 1px solid rgba(0, 0, 0, 0.03);
         }
-        .nav button.active, .dropdown-button.active,
-        .nav button:hover, .dropdown-button:hover {
-            color: #0080ca;
-            font-weight: bold;
-            background: #f0f8ff;
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-        .dropdown {
-            position: relative;
+
+        ::-webkit-scrollbar-track {
+            background: #FAF9F5;
         }
-        .dropdown-content {
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(150, 126, 91, 0.25);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(150, 126, 91, 0.45);
+        }
+
+        /* Hide summary details indicator arrow */
+        details summary::-webkit-details-marker {
             display: none;
-            position: absolute;
-            left: 0;
-            top: 100%;
-            background: #fff;
-            box-shadow: 0 2px 8px #0002;
-            border-radius: 4px;
-            min-width: 180px;
-            z-index: 10;
         }
-        .dropdown:hover .dropdown-content {
+
+        details summary {
+            list-style: none;
+        }
+
+        /* Page active states */
+        .page {
+            display: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .page.active {
             display: block;
+            opacity: 1;
+            transform: translateY(0);
         }
-        .dropdown-content a {
-            display: block;
-            padding: 8px 16px;
-            color: #333;
-            text-decoration: none;
-            font-size: 1em;
+
+        /* Scroll reveal effects */
+        .reveal {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .dropdown-content a:hover {
-            background: #f0f8ff;
-            color: #0080ca;
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
         }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            text-align: center;
-            color: #666;
-            font-size: 12px;
-        }
-        .footer .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 10px;
-        }
-        .footer .social-links a {
-            color: #666;
-            font-size: 20px;
-            transition: color 0.3s;
-        }
-        .footer .social-links a:hover {
-            color: #0080ca;
-        }
-        /* Responsive */
-        @media (max-width: 700px) {
-            .content { padding: 10px; }
-            .header { 
-                flex-direction: row;
-                align-items: flex-start;
+
+        /* PRINT RULES FOR PDF EXPORT */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 11px !important;
             }
-            .header-info {
-                flex: 1 1 0;
+
+            .no-print,
+            nav,
+            footer,
+            button,
+            .reserve-btn,
+            #gallery-modal,
+            #video-modal,
+            .play-btn,
+            .progress-bar-container,
+            iframe {
+                display: none !important;
             }
-            .header img#profile-image {
-                width: 90px;
-                height: 90px;
-                margin-left: 15px;
-                margin-top: 0;
+
+            .page {
+                display: none !important;
+                opacity: 0 !important;
+            }
+
+            #page_cv {
+                display: block !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
+
+            header {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin-bottom: 1.5rem !important;
+            }
+
+            header h1 {
+                color: #000000 !important;
+            }
+
+            header h2 {
+                color: #333333 !important;
+            }
+
+            .glass-card,
+            .glass-panel {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+
+            a,
+            span,
+            p,
+            li,
+            h3,
+            h4 {
+                color: #000000 !important;
+            }
+
+            section {
+                page-break-inside: avoid;
+                margin-bottom: 1.25rem !important;
+                border-bottom: 1px solid #e5e7eb !important;
+                padding-bottom: 0.75rem !important;
+            }
+
+            .divide-y>* {
+                border-color: #e5e7eb !important;
+            }
+
+            li {
+                background: transparent !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+
+            .grid {
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 0.5rem !important;
+            }
+
+            .md\:col-span-2 {
+                grid-column: span 2 / span 2 !important;
+            }
+
+            .md\:col-span-1 {
+                grid-column: span 1 / span 1 !important;
             }
         }
     </style>
-
-    <!-- CSS complet différé -->
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="ressources/styles.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="ressources/styles.css"></noscript>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
-    <link rel="icon" type="image/png" href="/favicon_io/favicon-96x96.png" sizes="96x96" />
-	<link rel="icon" type="image/svg+xml" href="/favicon_io/favicon.svg" />
-	<link rel="shortcut icon" href="favicon.ico" />
-	<link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png" />
-	<meta name="apple-mobile-web-app-title" content="Adrien Vada" />
-	<link rel="manifest" href="/favicon_io/site.webmanifest" />
-    <title>Adrien Vada - Dates, CV, Démos</title>
 </head>
 
-<body class="loading">
-	<!-- Image profil plein écran!-->
-	<div class="fullscreen-image" id="fullscreen-container">
-		<img src="" alt="Photo de profil d'Adrien Vada en plein écran" id="fullscreen-image" loading="lazy">
-		<button class="nav-arrow left-arrow" onclick="prevImage()">&#10094;</button>
-		<button class="nav-arrow right-arrow" onclick="nextImage()">&#10095;</button>
-	</div>
+<body class="bg-luxury-lightBg text-luxury-textMain font-inter min-h-screen relative overflow-x-hidden">
 
-	<!-- Image plein écran pour la galerie -->
-	<div class="fullscreen-image" id="gallery-fullscreen-container">
-		<img src="" alt="Image de la galerie en plein écran" id="gallery-fullscreen-image" loading="lazy">
-	</div>
+    <!-- MAIN CONTAINER -->
+    <div class="max-w-4xl mx-auto px-4 md:px-6 py-6 relative z-10 flex flex-col min-h-screen justify-between">
 
-	
-    <div class="content">
-        <header class="header">
-            <div class="header-info">
-                <h1>Adrien <span style="color:#01486c">VADA</span></h1>
-                <h2 class="job">Artiste interprète
-                </h2>
-                <div class="liens">
-                    <div class="contact-info">
-						<div class="contact-column">
-							<a href="mailto:adrien.vada@gmail.com">
-								<img src="ressources/images/design/logo mail.png" alt="Logo Email" class="contact-logo">
-								adrien.vada@gmail.com
-							</a>
-							<br>
-                            <a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" >
-                                <img src="ressources/images/design/logo LinkedIN.png" alt="Logo LinkedIn" class="contact-logo">
-                                LinkedIn
-                            </a>
-						</div>
-                        <div class="contact-column">
-                            <a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html" target="_blank">
-                                <img src="ressources/images/design/logo agencesartistiques.png" alt="Logo Agences Artistiques" class="contact-logo">
-                                Agences Artistiques
-                            </a>
-                            <br>
-                            <a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank">
-                                <img src="ressources/images/design/logo filmmakers.png" alt="Logo Filmmakers" class="contact-logo">
-                                Filmmakers
-                            </a>
-                        </div>
-                        <div class="contact-column">
-                            <a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" >
-                                <img src="ressources/images/design/logo instagram.png" alt="Logo Instagram" class="contact-logo">
-                                Instagram
-                            </a>
-                            
-						</div>
-						
+        <!-- HEADER (Light Luxury Style) -->
+        <header
+            class="glass-card rounded-xl p-4 md:p-5 mb-5 shadow-sm border border-stone-200/50 hover:border-luxury-gold/30 transition duration-500">
+            <div class="flex flex-col-reverse md:flex-row items-center md:items-start justify-between gap-4">
+                <!-- Info column -->
+                <div class="w-full md:flex-1 text-center md:text-left">
+                    <h1 class="text-3xl md:text-4xl font-extrabold font-montserrat tracking-tight text-luxury-textMain">
+                        Adrien <span class="text-luxury-gold font-cinzel">VADA</span>
+                    </h1>
+                    <h2
+                        class="text-sm font-normal font-montserrat tracking-[0.2em] text-luxury-textMuted uppercase mt-0.5 mb-2.5">
+                        Artiste interprète
+                    </h2>
+
+                    <!-- Contact links (Highly compact horizontal bar) -->
+                    <div
+                        class="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1.5 text-xs text-luxury-textMuted border-t border-stone-200/60 pt-2.5">
+                        <a href="mailto:adrien.vada@gmail.com"
+                            class="hover:text-luxury-gold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-envelope text-luxury-gold text-[11px]"></i> adrien.vada@gmail.com
+                        </a>
+                        <span class="text-stone-300 hidden sm:inline">|</span>
+
+                        <a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html"
+                            target="_blank" class="hover:text-luxury-gold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-briefcase text-luxury-gold text-[11px]"></i> Agences Artistiques
+                        </a>
+                        <span class="text-stone-300 hidden sm:inline">|</span>
+
+                        <a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank"
+                            class="hover:text-luxury-gold flex items-center gap-1.5 transition">
+                            <i class="fa-brands fa-instagram text-luxury-gold text-[11px]"></i> Instagram
+                        </a>
+                        <span class="text-stone-300 hidden sm:inline">|</span>
+
+                        <a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank"
+                            class="hover:text-luxury-gold flex items-center gap-1.5 transition">
+                            <i class="fa-brands fa-linkedin-in text-luxury-gold text-[11px]"></i> LinkedIn
+                        </a>
+                        <span class="text-stone-300 hidden sm:inline">|</span>
+
+                        <a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank"
+                            class="hover:text-luxury-gold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-clapperboard text-luxury-gold text-[11px]"></i> Filmmakers
+                        </a>
                     </div>
                 </div>
-            </div>
-            <img src="ressources/images/profil2_1080x1080.png" alt="Adrien Vada Photo Profil" id="profile-image" fetchpriority="high">
-        </header>
 
-        <nav class="nav">
-            <a href="#page_cv"><button onclick="showPage('page_cv')">CV</button></a>
-            <a href="#page_dates"><button onclick="showPage('page_dates')">Dates théâtre</button></a>
-            <div class="dropdown">
-                <button id="show-all-demos" class="dropdown-button">Bandes démos</button>
-                <div class="dropdown-content">
-                    <a href="#demos_camera" onclick="showPage('demos_camera')">Caméra <i class="fa-solid fa-film"></i></a>
-					<a href="#demos_voix" onclick="showPage('demos_voix')">Voix <i class="fa-solid fa-microphone"></i></a>
-                    <!--a href="#demos_compos" onclick="showPage('demos_compos')">Démos musique <i class="fa-solid fa-music"></i></a!-->
+                <!-- Avatar Column with helpers (Interactive profile book link) -->
+                <div class="relative group cursor-pointer flex-shrink-0 flex flex-col items-center"
+                    onclick="openGallery(0)">
+                    <div
+                        class="relative w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border border-stone-200 p-0.5 bg-white transition hover:border-luxury-gold duration-500 shadow-sm">
+                        <img src="ressources/images/profil2_1080x1080.png" alt="Adrien Vada Photo Profil"
+                            class="w-full h-full object-cover rounded-full transition-transform duration-700 ease-out scale-100 group-hover:scale-103"
+                            fetchpriority="high">
+                        <!-- Discrete hover overlay -->
+                        <div
+                            class="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
+                            <i class="fa-solid fa-expand text-white text-xs"></i>
+                        </div>
+                    </div>
+                    <!-- Helper label underneath avatar -->
+                    <span
+                        class="text-[9px] uppercase font-bold tracking-widest text-luxury-gold flex items-center gap-1 mt-1.5 opacity-80 group-hover:opacity-100 transition">
+                        <i class="fa-solid fa-camera"></i> Voir le book
+                    </span>
                 </div>
             </div>
+        </header>
+
+        <!-- NAVIGATION TABS (Splitted buttons) -->
+        <nav
+            class="glass-card rounded-lg p-1 mb-5 flex flex-row items-center justify-between border border-stone-200/50 shadow-sm relative no-print">
+            <div class="flex items-center gap-0.5 w-full md:w-auto relative" id="nav-tabs-container">
+                <a href="#page_cv" id="tab-page_cv"
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase transition-all duration-300 flex items-center justify-center gap-1.5 border border-transparent">
+                    <i class="fa-solid fa-user-tie text-[10px]"></i> <span>CV</span>
+                </a>
+                <a href="#page_dates" id="tab-page_dates"
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase transition-all duration-300 flex items-center justify-center gap-1.5 border border-transparent">
+                    <i class="fa-solid fa-calendar-days text-[10px]"></i> <span>Dates théâtre</span>
+                </a>
+                <a href="#demos_camera" id="tab-demos_camera"
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase transition-all duration-300 flex items-center justify-center gap-1.5 border border-transparent">
+                    <i class="fa-solid fa-film text-[10px]"></i> <span>Démos caméras</span>
+                </a>
+                <a href="#demos_voix" id="tab-demos_voix"
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase transition-all duration-300 flex items-center justify-center gap-1.5 border border-transparent">
+                    <i class="fa-solid fa-microphone text-[10px]"></i> <span>Voix</span>
+                </a>
+            </div>
+
+            <!-- Print PDF button right-aligned on desktop -->
+            <button onclick="window.print()" id="pdf-download-btn"
+                class="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded text-xs font-bold uppercase tracking-wider font-montserrat text-white bg-luxury-gold hover:bg-luxury-goldLight transition-all duration-300 hover:scale-105 active:scale-95 group">
+                <i class="fas fa-file-pdf text-[11px]"></i> Télécharger CV (PDF)
+            </button>
         </nav>
 
-        <main>
-            <div id="page_cv" class="page active">
-			
-	        <div class="section">
-				<details open>
-					<summary>
-						<h2 class="section-title">Théâtre
-							<!--button id="download-cv-button" onclick="window.location.href='ressources/Adrien Vada CV2025.pdf'" style="margin-left: 20px;">
-								<i class="fas fa-file-pdf"></i> PDF
-							</button!-->
-						</h2>
-					</summary>
-					<ul class="item-list">
-						
-						<li class="item"><a href="" target="_blank">
-							2027 <span class="item-title">Cassandres</span> (Angelo Jossec) - <span style="font-style: italic;">en création</span><br />
-							<span class="item-info">Théâtre des Crescite - Angelo Jossec</span> </a>
-						</li>
-						<li class="item"><a href="" target="_blank">
-							2026 <span class="item-title">L'Imaginaire Forcé</span> (d'après Molière) - <span style="font-style: italic;">en création</span><br />
-							<span class="item-info">Théâtre des Crescite - Angelo Jossec</span> </a>
-						</li>
-						<li class="item"><a href="https://www.cdn-normandierouen.fr/production/a-la-barre/" target="_blank">
-							2026 <span class="item-title">À La Barre, peine perdue ?</span> (Ronan Chéneau) - <span style="font-style: italic;">en tournée</span><br />
-							<span class="item-info">CDN de Normandie-Rouen</span>  
-							<i class="fa-solid fa-up-right-from-square"></i></a>
-						</li>
-						<li class="item"><a href="https://www.cdn-normandierouen.fr/production/audiences/" target="_blank"> 
-							2025 <span class="item-title">Audiences - spectacle de prévention</span><br />
-							<span class="item-info">CDN de Normandie-Rouen / Compagnie du P'tit Ballon - Steeve Brunet</span> 
-							<i class="fa-solid fa-up-right-from-square"></i></a>
-						</li>
-						<li class="item"><a href="https://crescite.fr/cleophene/" target="_blank">
-							
-							2024 <span class="item-title">Cléophène </span> d'après Rodogune (Corneille) - <span style="font-style: italic;">en tournée</span><br />
-							<span class="item-info">Théâtre des Crescite - Angelo Jossec</span>  
-							<i class="fa-solid fa-up-right-from-square"></i></a>
-						</li>
-						<li class="item"><a href="https://alchimiecie.com/fulgure-e-s/" target="_blank">
-							2023 <span class="item-title">Fulguré.e.s</span> (Jérémie Fabre)<br />
-							<span class="item-info">Compagnie Alchimie - Amélie Chalmey</span>  
-							<i class="fa-solid fa-up-right-from-square"></i></a>
-						</li>
-						<li class="item"><a href="https://crescite.fr/berenice/" target="_blank">
-							2022 <span class="item-title">Bérénice</span> (Racine) - <span style="font-style: italic;">en tournée</span><br />
-							<span class="item-info">Théâtre des Crescite - Angelo Jossec</span>  
-							<i class="fa-solid fa-up-right-from-square"></i>
-							</a>
-						</li>
-						<li class="item"><a href="https://labloomsbury.wixsite.com/compagnie/as-you-like-it" target="_blank">
-							2022 <span class="item-title">As You Like It</span> (Shakespeare)<br />
-							<span class="item-info">Compagnie Bloomsbury - Nicolas Gaspar</span>  
-							<i class="fa-solid fa-up-right-from-square"></i>
-							</a>
-						</li>
-					</ul>
-				</details>
-	        </div>
+        <!-- MAIN PAGES WRAPPER -->
+        <main class="flex-grow">
 
-	        <div class="section">
-	            <details open>
-					<summary><h2 class="section-title">Courts-métrages</h2></summary>
-					<ul class="item-list">
-						<!--li class="item">2023 <span class="item-title">À tout prix</span> - Max Laure</li!-->
-						<li class="item">
-							<a href="https://www.imdb.com/fr/title/tt27404051/" target="_blank">
-								2022 <span class="item-title">La peau des anges n'est pas si douce</span> - Emma Fridé
-								<i class="fa-solid fa-up-right-from-square"></i>
-							</a>
-						</li>
-						<!--li class="item">2022 <span class="item-title">À la croisée des chemins</span> - Doltin Baveux</li!-->
-						<li class="item">
-							<a href="https://www.imdb.com/fr/title/tt8957022/" target="_blank">
-									2019 <span class="item-title">Le rapt</span> - Cécile Dessillons et Ladane Dehdar 
-									<i class="fa-solid fa-up-right-from-square"></i>
-							</a>	
-						</li>
-					</ul>
-				</details>
-	        </div>
+            <!-- PAGE 1: CV -->
+            <div id="page_cv" class="page active space-y-4">
+                <!-- Mobile Print PDF link -->
+                <div class="md:hidden mb-2">
+                    <button onclick="window.print()"
+                        class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded text-xs font-bold uppercase tracking-wider font-montserrat text-white bg-luxury-gold transition duration-300">
+                        <i class="fas fa-file-pdf text-xs"></i> Télécharger CV (PDF)
+                    </button>
+                </div>
 
-	        <div class="section">
-				<details open>
-					<summary><h2 class="section-title">Formation</h2></summary>
-					<ul class="item-list">
-						<li class="item">2025 <span class="item-title">Jeu caméra et casting</span><br /><span class="item-info">Mon Coach Academy</span></li>
-						<!--li class="item">2025 <span class="item-title">Composer et éditer avec Ableton Live</span><br /><span class="item-info">Fastlane</span></li!-->
-						<li class="item">2024 <span class="item-title">Voix en studio professionnel</span><br /><span class="item-info">Coachs Associés</span></li>
-						<li class="item">2018 - 2021 <span class="item-title">Art dramatique</span><br /><span class="item-info">Conservatoire à rayonnement régional de Rouen</span></li>
-					</ul>
-				</details>
-	        </div>
+                <!-- SECTION 1.1: THÉÂTRE -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
+                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-gold border border-stone-200">
+                            <i class="fa-solid fa-masks-theater text-[11px]"></i>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Théâtre</h3>
+                    </div>
+                    <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
+                        <!-- Cassandres -->
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                            class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2027</span>
+                                        <span
+                                            class="font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition">Cassandres</span>
+                                        <span class="text-luxury-textMuted italic text-xs">(Angelo Jossec)</span>
+                                    </div>
+                                    <p class="text-xs text-luxury-textMuted mt-0.5">Théâtre des Crescite - Angelo Jossec
+                                    </p>
+                                </div>
+                                <span
+                                    class="text-[9px] uppercase font-bold tracking-widest text-luxury-gold bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 self-start sm:self-center font-mono">En
+                                    création</span>
+                            </div>
+                        </li>
+                        <!-- L'Imaginaire Forcé -->
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                            class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2026</span>
+                                        <span
+                                            class="font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition">L'Imaginaire
+                                            Forcé</span>
+                                        <span class="text-luxury-textMuted italic text-xs">(d'après Molière)</span>
+                                    </div>
+                                    <p class="text-xs text-luxury-textMuted mt-0.5">Théâtre des Crescite - Angelo Jossec
+                                    </p>
+                                </div>
+                                <span
+                                    class="text-[9px] uppercase font-bold tracking-widest text-luxury-gold bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 self-start sm:self-center font-mono">En
+                                    création</span>
+                            </div>
+                        </li>
+                        <!-- À La Barre -->
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            <a href="https://www.cdn-normandierouen.fr/production/a-la-barre/" target="_blank"
+                                class="flex flex-col sm:flex-row justify-between sm:items-center gap-1 w-full">
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                            class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2026</span>
+                                        <span
+                                            class="font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition">À
+                                            La Barre, peine perdue ?</span>
+                                        <span class="text-luxury-textMuted italic text-xs">(Ronan Chéneau)</span>
+                                    </div>
+                                    <p class="text-xs text-luxury-textMuted mt-0.5 flex items-center gap-1">
+                                        CDN de Normandie-Rouen
+                                        <i
+                                            class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-gold"></i>
+                                    </p>
+                                </div>
+                                <span
+                                    class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 self-start sm:self-center font-mono">En
+                                    tournée</span>
+                            </a>
+                        </li>
+                        <!-- Audiences -->
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            <a href="https://www.cdn-normandierouen.fr/production/audiences/" target="_blank"
+                                class="flex flex-col sm:flex-row justify-between sm:items-center gap-1 w-full">
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                            class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2025</span>
+                                        <span
+                                            class="font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition">Audiences
+                                            - spectacle de prévention</span>
+                                    </div>
+                                    <p class="text-xs text-luxury-textMuted mt-0.5 flex items-center gap-1">
+                                        CDN de Normandie-Rouen / Compagnie du P'tit Ballon - Steeve Brunet
+                                        <i
+                                            class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-gold"></i>
+                                    </p>
+                                </div>
+                            </a>
+                        </li>
+                        <!-- Cléophène -->
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            <a href="https://crescite.fr/cleophene/" target="_blank"
+                                class="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 w-full">
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                            class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2024</span>
+                                        <span
+                                            class="font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition">Cléophène</span>
+                                        <span class="text-luxury-textMuted italic text-xs">(d'après Rodogune,
+                                            Corneille)</span>
+                                    </div>
+                                    <p class="text-xs text-luxury-textMuted mt-0.5 flex items-center gap-1">
+                                        Théâtre des Crescite - Angelo Jossec
+                                        <i
+                                            class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-gold"></i>
+                                    </p>
+                                </div>
+                                <span
+                                    class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 self-start sm:self-center font-mono">En
+                                    tournée</span>
+                            </a>
+                        </li>
+                        <!-- Fulguré.e.s -->
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            <a href="https://alchimiecie.com/fulgure-e-s/" target="_blank"
+                                class="flex flex-col sm:flex-row justify-between sm:items-center gap-1 w-full">
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                            class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2023</span>
+                                        <span
+                                            class="font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition">Fulguré.e.s</span>
+                                        <span class="text-luxury-textMuted italic text-xs">(Jérémie Fabre)</span>
+                                    </div>
+                                    <p class="text-xs text-luxury-textMuted mt-0.5 flex items-center gap-1">
+                                        Compagnie Alchimie - Amélie Chalmey
+                                        <i
+                                            class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-gold"></i>
+                                    </p>
+                                </div>
+                            </a>
+                        </li>
+                        <!-- Bérénice -->
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            <a href="https://crescite.fr/berenice/" target="_blank"
+                                class="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 w-full">
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                            class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2022</span>
+                                        <span
+                                            class="font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition">Bérénice</span>
+                                        <span class="text-luxury-textMuted italic text-xs">(Racine)</span>
+                                    </div>
+                                    <p class="text-xs text-luxury-textMuted mt-0.5 flex items-center gap-1">
+                                        Théâtre des Crescite - Angelo Jossec
+                                        <i
+                                            class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-gold"></i>
+                                    </p>
+                                </div>
+                                <span
+                                    class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 self-start sm:self-center font-mono">En
+                                    tournée</span>
+                            </a>
+                        </li>
+                        <!-- As You Like It -->
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            <a href="https://labloomsbury.wixsite.com/compagnie/as-you-like-it" target="_blank"
+                                class="flex flex-col sm:flex-row justify-between sm:items-center gap-1 w-full">
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                            class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2022</span>
+                                        <span
+                                            class="font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition">As
+                                            You Like It</span>
+                                        <span class="text-luxury-textMuted italic text-xs">(Shakespeare)</span>
+                                    </div>
+                                    <p class="text-xs text-luxury-textMuted mt-0.5 flex items-center gap-1">
+                                        Compagnie Bloomsbury - Nicolas Gaspar
+                                        <i
+                                            class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-gold"></i>
+                                    </p>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- SECTION 1.2: COURTS-MÉTRAGES -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal">
+                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-gold border border-stone-200">
+                            <i class="fa-solid fa-film text-[11px]"></i>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">
+                            Courts-métrages</h3>
+                    </div>
+                    <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
+                        <!-- La Peau des anges -->
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            <a href="https://www.imdb.com/fr/title/tt27404051/" target="_blank"
+                                class="flex flex-col sm:flex-row justify-between sm:items-center gap-1 w-full">
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                            class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2022</span>
+                                        <span
+                                            class="font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition">La
+                                            peau des anges n'est pas si douce</span>
+                                    </div>
+                                    <p class="text-xs text-luxury-textMuted mt-0.5 flex items-center gap-1">
+                                        Réalisé par Emma Fridé
+                                        <i
+                                            class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-gold"></i>
+                                    </p>
+                                </div>
+                            </a>
+                        </li>
+                        <!-- Le Rapt -->
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            <a href="https://www.imdb.com/fr/title/tt8957022/" target="_blank"
+                                class="flex flex-col sm:flex-row justify-between sm:items-center gap-1 w-full">
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                            class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2019</span>
+                                        <span
+                                            class="font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition">Le
+                                            rapt</span>
+                                    </div>
+                                    <p class="text-xs text-luxury-textMuted mt-0.5 flex items-center gap-1">
+                                        Réalisé par Cécile Dessillons et Ladane Dehdar
+                                        <i
+                                            class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-gold"></i>
+                                    </p>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- SECTION 1.3: FORMATION -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal">
+                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-gold border border-stone-200">
+                            <i class="fa-solid fa-graduation-cap text-[11px]"></i>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Formation
+                        </h3>
+                    </div>
+                    <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                <span
+                                    class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2025</span>
+                                <span class="font-bold text-luxury-textMain">Jeu caméra et casting</span>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted">Mon Coach Academy</span>
+                        </li>
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                <span
+                                    class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2024</span>
+                                <span class="font-bold text-luxury-textMain">Voix en studio professionnel</span>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted">Coachs Associés</span>
+                        </li>
+                        <li
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                <span
+                                    class="text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded">2018
+                                    - 2021</span>
+                                <span class="font-bold text-luxury-textMain">Art dramatique</span>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted">Conservatoire à rayonnement régional de
+                                Rouen</span>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- SECTION 1.4: DIVERS (Sleek Compact Widgets) -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal">
+                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-gold border border-stone-200">
+                            <i class="fa-solid fa-circle-nodes text-[11px]"></i>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Divers</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                        <!-- Taille -->
+                        <div
+                            class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-black/[0.015] even:bg-transparent text-sm">
+                            <span
+                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-gold font-montserrat">Taille</span>
+                            <span class="text-lg font-bold text-luxury-textMain font-mono mt-0.5">186 cm</span>
+                        </div>
+
+                        <!-- Chant -->
+                        <div
+                            class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-black/[0.015] even:bg-transparent text-sm">
+                            <span
+                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-gold font-montserrat">Chant</span>
+                            <span class="font-semibold text-luxury-textMain mt-0.5">Baryton-basse</span>
+                        </div>
+
+                        <!-- Permis -->
+                        <div
+                            class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-black/[0.015] even:bg-transparent text-sm">
+                            <span
+                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-gold font-montserrat">Permis</span>
+                            <div class="flex gap-1 mt-0.5">
+                                <span
+                                    class="text-[9px] bg-white border border-stone-200 text-luxury-textMain px-1 py-0.5 rounded font-mono">A
+                                    (Moto)</span>
+                                <span
+                                    class="text-[9px] bg-white border border-stone-200 text-luxury-textMain px-1 py-0.5 rounded font-mono">B
+                                    (Voiture)</span>
+                            </div>
+                        </div>
+
+                        <!-- Piano -->
+                        <div
+                            class="glass-panel rounded-lg p-2.5 odd:bg-black/[0.015] even:bg-transparent text-sm md:col-span-2 lg:col-span-1">
+                            <span
+                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-gold font-montserrat">Piano</span>
+                            <p class="font-medium text-luxury-textMain mt-0.5">Fin de cycle 3</p>
+                            <p class="text-xs text-luxury-textMuted mt-0.5">Improvisation, composition.</p>
+                        </div>
+
+                        <!-- Activités physiques -->
+                        <div
+                            class="glass-panel rounded-lg p-2.5 odd:bg-black/[0.015] even:bg-transparent text-sm md:col-span-2">
+                            <span
+                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-gold font-montserrat mb-1 block">Activités
+                                physiques & sports</span>
+                            <div class="flex flex-wrap gap-1">
+                                <span
+                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Boxe
+                                    anglaise</span>
+                                <span
+                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Karaté</span>
+                                <span
+                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Natation</span>
+                                <span
+                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Escrime
+                                    artistique</span>
+                                <span
+                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain"
+                                    title="Technique d'intervention opérationnelle rapprochée">
+                                    <a href="https://fr.wikipedia.org/wiki/Technique_d%27intervention_op%C3%A9rationnelle_rapproch%C3%A9e"
+                                        target="_blank" class="hover:underline">TIOR <i
+                                            class="fa-solid fa-up-right-from-square text-[7px]"></i></a>
+                                </span>
+                                <span
+                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Tir
+                                    militaire</span>
+                            </div>
+                        </div>
+
+                        <!-- Expériences pro -->
+                        <div
+                            class="glass-panel rounded-lg p-2.5 odd:bg-black/[0.015] even:bg-transparent text-sm md:col-span-2">
+                            <span
+                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-gold font-montserrat mb-1 block">Expériences
+                                professionnelles</span>
+                            <div class="grid grid-cols-3 gap-1 text-center">
+                                <div class="bg-white border border-stone-200 rounded p-1">
+                                    <p class="text-[9px] text-luxury-textMain font-semibold">Armée de Terre</p>
+                                    <p class="text-[8px] text-luxury-textMuted font-mono">Guyane</p>
+                                </div>
+                                <div class="bg-white border border-stone-200 rounded p-1">
+                                    <p class="text-[9px] text-luxury-textMain font-semibold">Gendarmerie</p>
+                                    <p class="text-[8px] text-luxury-textMuted font-mono">Normandie</p>
+                                </div>
+                                <div class="bg-white border border-stone-200 rounded p-1">
+                                    <p class="text-[9px] text-luxury-textMain font-semibold">SNCF</p>
+                                    <p class="text-[8px] text-luxury-textMuted font-mono">IDF</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Langues -->
+                        <div
+                            class="glass-panel rounded-lg p-2.5 odd:bg-black/[0.015] even:bg-transparent md:col-span-1">
+                            <span
+                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-gold font-montserrat mb-1.5 block">Langues</span>
+                            <div class="space-y-1 text-xs">
+                                <div class="flex justify-between border-b border-stone-200/50 pb-0.5">
+                                    <span class="text-luxury-textMain">Français</span>
+                                    <span class="text-luxury-gold font-mono font-semibold">Natif</span>
+                                </div>
+                                <div class="flex justify-between border-b border-stone-200/50 pb-0.5">
+                                    <span class="text-luxury-textMain">Russe</span>
+                                    <span class="text-luxury-textMuted font-mono">Courant</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-luxury-textMain">Anglais</span>
+                                    <span class="text-luxury-textMuted font-mono">Courant</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- PAGE 2: DATES THEATRE -->
+            <div id="page_dates" class="page space-y-4">
+                <!-- FUTURE DATES (Compacted spacing, larger font) -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
+                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-gold border border-stone-200">
+                            <i class="fa-solid fa-calendar-check text-[11px]"></i>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Saison 2026 -
+                            2027</h3>
+                    </div>
+
+                    <!-- Space-y reduced to 1 for tight layout -->
+                    <div class="space-y-1 text-sm md:text-[15px] leading-tight">
+                        <div
+                            class="glass-panel rounded-md p-1.5 border border-stone-200/20 flex flex-col md:flex-row md:items-center justify-between gap-2 odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 md:gap-2">
+                                <span
+                                    class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-xs">22
+                                    - 23 Octobre 2026</span>
+                                <h4 class="font-bold text-luxury-textMain">À la barre, peine perdue ?</h4>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted flex items-center gap-1 md:text-right">
+                                <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[10px]"></i> Palais de
+                                justice
+                                de Rouen (76)
+                            </span>
+                        </div>
+
+                        <div
+                            class="glass-panel rounded-md p-1.5 border border-stone-200/20 flex flex-col md:flex-row md:items-center justify-between gap-2 odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 md:gap-2">
+                                <span
+                                    class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-xs">12
+                                    Novembre 2026</span>
+                                <h4 class="font-bold text-luxury-textMain">À la barre, peine perdue ?</h4>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted flex items-center gap-1 md:text-right">
+                                <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[10px]"></i> Saint Quentin
+                                (02)
+                            </span>
+                        </div>
+
+                        <div
+                            class="glass-panel rounded-md p-1.5 border border-stone-200/20 flex flex-col md:flex-row md:items-center justify-between gap-2 odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 md:gap-2">
+                                <span
+                                    class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-xs">25
+                                    Novembre 2026</span>
+                                <h4 class="font-bold text-luxury-textMain">À la barre, peine perdue ?</h4>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted flex items-center gap-1 md:text-right">
+                                <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[10px]"></i> Le
+                                Grand-Quevilly
+                                (76)
+                            </span>
+                        </div>
+
+                        <div
+                            class="glass-panel rounded-md p-1.5 border border-stone-200/20 flex flex-col md:flex-row md:items-center justify-between gap-2 odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 md:gap-2">
+                                <span
+                                    class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-xs">18
+                                    Décembre 2026</span>
+                                <h4 class="font-bold text-luxury-textMain">Cléophène, d'après Rodogune</h4>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted flex items-center gap-1 md:text-right">
+                                <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[10px]"></i> L'Eclat,
+                                Pont-Audemer (27)
+                            </span>
+                        </div>
+
+                        <div
+                            class="glass-panel rounded-md p-1.5 border border-stone-200/20 flex flex-col md:flex-row md:items-center justify-between gap-2 odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 md:gap-2">
+                                <span
+                                    class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-xs">26
+                                    Janvier 2027</span>
+                                <h4 class="font-bold text-luxury-textMain">Cléophène, d'après Rodogune</h4>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted flex items-center gap-1 md:text-right">
+                                <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[10px]"></i> Le Forum,
+                                Falaise
+                                (14)
+                            </span>
+                        </div>
+
+                        <div
+                            class="glass-panel rounded-md p-1.5 border border-stone-200/20 flex flex-col md:flex-row md:items-center justify-between gap-2 odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 md:gap-2">
+                                <span
+                                    class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-xs">29
+                                    - 30 Janvier 2027</span>
+                                <h4 class="font-bold text-luxury-textMain">Bérénice</h4>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted flex items-center gap-1 md:text-right">
+                                <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[10px]"></i> Théâtre de la
+                                ville
+                                de Saint-Lô (50)
+                            </span>
+                        </div>
+
+                        <div
+                            class="glass-panel rounded-md p-1.5 border border-stone-200/20 flex flex-col md:flex-row md:items-center justify-between gap-2 odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 md:gap-2">
+                                <span
+                                    class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-xs">29
+                                    - 30 Janvier 2027</span>
+                                <h4 class="font-bold text-luxury-textMain">Cléophène, d'après Rodogune</h4>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted flex items-center gap-1 md:text-right">
+                                <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[10px]"></i> Théâtre de la
+                                ville
+                                de Saint-Lô (50)
+                            </span>
+                        </div>
+
+                        <div
+                            class="glass-panel rounded-md p-1.5 border border-stone-200/20 flex flex-col md:flex-row md:items-center justify-between gap-2 odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 md:gap-2">
+                                <span
+                                    class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-xs">02
+                                    Février 2027</span>
+                                <h4 class="font-bold text-luxury-textMain">Cléophène, d'après Rodogune</h4>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted flex items-center gap-1 md:text-right">
+                                <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[10px]"></i> La Ferme de Bel
+                                Ebat, Guyancourt (78)
+                            </span>
+                        </div>
+
+                        <div
+                            class="glass-panel rounded-md p-1.5 border border-stone-200/20 flex flex-col md:flex-row md:items-center justify-between gap-2 odd:bg-black/[0.015] even:bg-transparent">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-1 md:gap-2">
+                                <span
+                                    class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-xs">18
+                                    - 21 Mai 2027</span>
+                                <h4 class="font-bold text-luxury-textMain">Bérénice</h4>
+                            </div>
+                            <span class="text-xs text-luxury-textMuted flex items-center gap-1 md:text-right">
+                                <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[10px]"></i> Lycée Corneille
+                                <span class="italic text-[9px] text-gray-500">(tout public le vendredi 21)</span>, Rouen
+                                (76)
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PAST DATES (Accordion list) -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal">
+                    <div class="flex items-center gap-2.5 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-gold border border-stone-200">
+                            <i class="fa-solid fa-history text-xs"></i>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Archives &
+                            Dates Passées</h3>
+                    </div>
+
+                    <div class="space-y-1.5 text-sm">
+                        <!-- Accordion season 2025-2026 -->
+                        <details
+                            class="group bg-black/[0.005] border border-stone-200/50 rounded-lg overflow-hidden transition-all duration-300">
+                            <summary
+                                class="flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat hover:bg-stone-50 transition-all text-xs">
+                                <span class="font-semibold flex items-center gap-2">Saison 2025 - 2026</span>
+                                <i
+                                    class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 group-open:rotate-180 text-stone-400"></i>
+                            </summary>
+                            <div
+                                class="p-2.5 border-t border-stone-200/40 space-y-1 bg-stone-50/50 text-xs text-luxury-textMuted divide-y divide-stone-200/30">
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>13 Mai 2026</strong> : Cléophène</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Salle Louis Jouvet, Rouen
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>26 Mars 2026</strong> : Théâtre Forum</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">UFR Santé, Rouen (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>03 Mars 2026</strong> : Cléophène</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Le Rive Gauche,
+                                        St-Étienne-du-Rouvray (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>15 Janvier 2026</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée Le Corbusier,
+                                        Saint-Étienne-du-Rouvray (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>18 Décembre 2025</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée La Salle, Rouen
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>09 Décembre 2025</strong> : Cléophène</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">L'Archipel, Granville
+                                        (50)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>06 Novembre 2025</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée Dumont d'Urville -
+                                        Laplace,
+                                        Caen (14)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>04 Novembre 2025</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Institut Saint-Lô, Saint-Lô
+                                        (50)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>16 Octobre 2025</strong> : Cléophène</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Théâtre Le Sillon,
+                                        Petit-Couronne
+                                        (76)</span>
+                                </div>
+                            </div>
+                        </details>
+
+                        <!-- Accordion season 2024-2025 -->
+                        <details
+                            class="group bg-black/[0.005] border border-stone-200/50 rounded-lg overflow-hidden transition-all duration-300">
+                            <summary
+                                class="flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat hover:bg-stone-50 transition-all text-xs">
+                                <span class="font-semibold flex items-center gap-2">Saison 2024 - 2025</span>
+                                <i
+                                    class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 group-open:rotate-180 text-stone-400"></i>
+                            </summary>
+                            <div
+                                class="p-2.5 border-t border-stone-200/40 space-y-1 bg-stone-50/50 text-xs text-luxury-textMuted divide-y divide-stone-200/30">
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>08 - 18 Juillet 2025</strong> : À la barre</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">La Manufacture / Palais de
+                                        justice d'Avignon (84)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>25 Juin 2025</strong> : Audiences - spectacle de prévention</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Festival théâtre à la cité -
+                                        Quartier Saint-Sever, Rouen (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>10 Juin 2025</strong> : Audiences - spectacle de prévention</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Canteleu (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>11 Mars 2025</strong> : À la barre</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Hôtel de Ville de Rouen
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>05 Mars 2025</strong> : Le discours de Cassandre</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Labo Victor Hugo, Rouen
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>08 Février 2025</strong> : À la barre</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Hôtel de Ville de Canteleu
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>17 Janvier 2025</strong> : Audiences - spectacle de prévention</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Centre André Malraux, Rouen
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>12 Décembre 2024</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée Raymond Queneau, Yvetot
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>06 Décembre 2024</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée Jean-Baptiste de la
+                                        Salle,
+                                        Rouen (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>29 Novembre 2024</strong> : Rodogune</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Athanor, Guérande (44)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>26 Novembre 2024</strong> : Rodogune</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Théâtre Le Rayon Vert,
+                                        Saint-Valéry-en-Caux (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>25 Novembre 2024</strong> : À la barre</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée les Buyères,
+                                        Sotteville-lès-Rouen (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>22 Novembre 2024</strong> : À la barre</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Hotel de ville de Notre-Dame
+                                        de
+                                        Bondeville (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>21 Novembre 2024</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée Vallée du Cailly,
+                                        Déville-lès-Rouen (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>18 Novembre 2024</strong> : Audiences - spectacle de prévention</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Collège Boieldieu, Rouen
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>02 Novembre 2024</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">La Rotonde, Fauville-en-Caux
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>10 - 11 Octobre 2024</strong> : Rodogune</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Théâtre Le Rayon Vert, Rouen
+                                        (76)</span>
+                                </div>
+                            </div>
+                        </details>
+
+                        <!-- Accordion season 2023-2024 -->
+                        <details
+                            class="group bg-black/[0.005] border border-stone-200/50 rounded-lg overflow-hidden transition-all duration-300">
+                            <summary
+                                class="flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat hover:bg-stone-50 transition-all text-xs">
+                                <span class="font-semibold flex items-center gap-2">Saison 2023 - 2024</span>
+                                <i
+                                    class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 group-open:rotate-180 text-stone-400"></i>
+                            </summary>
+                            <div
+                                class="p-2.5 border-t border-stone-200/40 space-y-1 bg-stone-50/50 text-xs text-luxury-textMuted divide-y divide-stone-200/30">
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>14 Juin 2024</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Centre culturel Voltaire,
+                                        Déville-lès-Rouen (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>01 Juin 2024</strong> : À la barre</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Historial Jeanne d'Arc, Rouen
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>25 - 26 Mai 2024</strong> : À la barre</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Palais de justice de Rouen
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>09 Avril 2024</strong> : Spectacle environnement</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">École élémentaire Pierre
+                                        Corneille, Bolbec (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>26 Mars 2024</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée Jean-Baptiste de La
+                                        Salle,
+                                        Rouen (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>01 Février 2024</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Collège Yard, Buchy
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>25 Janvier 2024</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée Vallée du Cailly,
+                                        Déville-lès-Rouen (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>12 Avril 2023</strong> : As You Like It</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Halle Ô Grains, Bayeux
+                                        (14)</span>
+                                </div>
+                            </div>
+                        </details>
+
+                        <!-- Accordion season 2022-2023 -->
+                        <details
+                            class="group bg-black/[0.005] border border-stone-200/50 rounded-lg overflow-hidden transition-all duration-300">
+                            <summary
+                                class="flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat hover:bg-stone-50 transition-all text-xs">
+                                <span class="font-semibold flex items-center gap-2">Saison 2022 - 2023</span>
+                                <i
+                                    class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 group-open:rotate-180 text-stone-400"></i>
+                            </summary>
+                            <div
+                                class="p-2.5 border-t border-stone-200/40 space-y-1 bg-stone-50/50 text-xs text-luxury-textMuted divide-y divide-stone-200/30">
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>26 Mai 2023</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée Jean-Baptiste de La
+                                        Salle,
+                                        Rouen (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>25 Novembre 2022</strong> : Fulguré.e.s</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Théâtre Le Passage, Fécamp
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>23 - 24 Novembre 2022</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Le Rayon Vert,
+                                        Saint-Valery-en-Caux (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>10 Novembre 2022</strong> : Fulguré.e.s</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">La Cité-Théâtre, Caen
+                                        (14)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>08 Novembre 2022</strong> : Fulguré.e.s</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Le Sillon, Petit-Couronne
+                                        (76)</span>
+                                </div>
+                            </div>
+                        </details>
+
+                        <!-- Accordion season 2021-2022 -->
+                        <details
+                            class="group bg-black/[0.005] border border-stone-200/50 rounded-lg overflow-hidden transition-all duration-300">
+                            <summary
+                                class="flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat hover:bg-stone-50 transition-all text-xs">
+                                <span class="font-semibold flex items-center gap-2">Saison 2021 - 2022</span>
+                                <i
+                                    class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 group-open:rotate-180 text-stone-400"></i>
+                            </summary>
+                            <div
+                                class="p-2.5 border-t border-stone-200/40 space-y-1 bg-stone-50/50 text-xs text-luxury-textMuted divide-y divide-stone-200/30">
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>02 - 03 Août 2022</strong> : As You Like It</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Villa Montebello, Trouville
+                                        (14)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>28 - 29 Avril 2022</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Espace Jean Legendre,
+                                        Compiègne
+                                        (60)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>26 Avril 2022</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">La Cidrerie, Beuzeville
+                                        (27)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>07 - 10 Avril 2022</strong> : As You Like It</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Studio Théâtre d’Asnières,
+                                        Asnières-sur-Seine (92)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>28 - 31 Mars 2022</strong> : As You Like It</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Théâtre de Lisieux, Normandie
+                                        (14)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>25 Février 2022</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée de Sotteville-lès-Rouen
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>01 Février 2022</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée de Neufchâtel-en-Bray
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>30 Janvier 2022</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Siroco,
+                                        Saint-Romain-de-Colbosc
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>15 Novembre 2021</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée Pablo Neruda, Dieppe
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>14 Octobre 2021</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Lycée de la Vallée du Cailly,
+                                        Déville-lès-Rouen (76)</span>
+                                </div>
+                            </div>
+                        </details>
+
+                        <!-- Accordion season 2020-2021 -->
+                        <details
+                            class="group bg-black/[0.005] border border-stone-200/50 rounded-lg overflow-hidden transition-all duration-300">
+                            <summary
+                                class="flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat hover:bg-stone-50 transition-all text-xs">
+                                <span class="font-semibold flex items-center gap-2">Saison 2020 - 2021</span>
+                                <i
+                                    class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 group-open:rotate-180 text-stone-400"></i>
+                            </summary>
+                            <div
+                                class="p-2.5 border-t border-stone-200/40 space-y-1 bg-stone-50/50 text-xs text-luxury-textMuted divide-y divide-stone-200/30">
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>26 - 28 Août 2021</strong> : As You Like It</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Festival de Villerville
+                                        (14)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>20 Juillet 2021</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Festival Les Échappées
+                                        Belles,
+                                        Alençon (61)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>16 - 17 Juillet 2021</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Aître Saint-Maclou, Rouen
+                                        (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>15 Juillet 2021</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Salle La Seine,
+                                        Tourville-la-Rivière (76)</span>
+                                </div>
+                                <div
+                                    class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                                    <span><strong>10 Juillet 2021</strong> : Bérénice</span>
+                                    <span class="text-stone-400 text-[11px] md:text-right">Centre culturel Simone
+                                        Signoret,
+                                        Amfreville-La-Mivoie (76)</span>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </section>
+            </div>
+
+            <!-- PAGE 3: DEMOS CAMERA (Now hosts all videos) -->
+            <div id="demos_camera" class="page space-y-5">
+                <!-- CINEMA VIDEOS -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
+                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-gold border border-stone-200">
+                            <i class="fa-solid fa-film text-[11px]"></i>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Bande démo
+                            caméra</h3>
+                    </div>
+
+                    <div class="max-w-md mx-auto">
+                        <div
+                            class="relative group rounded-lg overflow-hidden border border-stone-200/60 bg-black shadow transition duration-500 hover:border-luxury-gold/30">
+                            <div class="aspect-video w-full relative cursor-pointer"
+                                onclick="openVideoModal('GOeL5AMGb_s')">
+                                <img src="ressources/images/miniatures/miniature_horizontale_min.png"
+                                    alt="Miniature Bande Démo Caméra"
+                                    class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-102 group-hover:brightness-90"
+                                    onerror="this.src='ressources/images/galerie/vignette_principale.png';">
+                                <div
+                                    class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/35 transition duration-300">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-white/20 group-hover:bg-luxury-gold flex items-center justify-center text-white group-hover:text-black transition-all duration-300">
+                                        <i class="fa-solid fa-play text-xs pl-0.5"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-2.5 flex justify-between items-center bg-white border-t border-stone-100">
+                                <div>
+                                    <h4 class="text-xs font-bold text-luxury-textMain uppercase tracking-wider">Bande
+                                        démo cinéma</h4>
+                                    <p class="text-[10px] text-luxury-textMuted mt-0.5">Extraits caméra, fictions &
+                                        castings.</p>
+                                </div>
+                                <a href="https://www.youtube.com/watch?v=GOeL5AMGb_s" target="_blank"
+                                    class="w-6.5 h-6.5 rounded bg-stone-50 border border-stone-200 flex items-center justify-center text-luxury-textMuted hover:text-red-600 transition duration-300">
+                                    <i class="fa-brands fa-youtube text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
 
-	        <div class="section">
-				<details open>
-					<summary><h2 class="section-title">Divers</h2></summary>
-					<ul class="item-list">
+            </div>
 
-						<li class="item">
-							<span class="item-title">Activités physiques et sportives</span> 
-							<br/> Boxe anglaise, karaté, tir militaire (fusil d'assault et arme de poing), natation, escrime artistique, <a style="text-decoration: underline;" target="_blank" href="https://fr.wikipedia.org/wiki/Technique_d%27intervention_op%C3%A9rationnelle_rapproch%C3%A9e">TIOR</a>
-						</li>
-						
+            <!-- PAGE 4: DEMOS VOIX -->
+            <div id="demos_voix" class="page space-y-4">
+                <!-- PUBLICITÉ -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
+                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-gold border border-stone-200">
+                            <i class="fa-solid fa-microphone-lines text-[11px]"></i>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Publicités
+                        </h3>
+                    </div>
 
-						<li class="item">
-							<span class="item-title">Experiences professionnelles</span> 
-							<br/> Armée de Terre (Guyane Française), Gendarmerie (Normandie), SNCF (Île-de-France)
-						</li>
+                    <!-- Custom Audio Player List with line striping -->
+                    <div class="space-y-1.5">
+                        <!-- Player 1: L'Oreal -->
+                        <div
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            <button onclick="toggleAudio('audio-loreal')" id="btn-audio-loreal"
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                <i class="fa-solid fa-play text-[10px] pl-0.5" id="icon-audio-loreal"></i>
+                            </button>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
+                                    <span
+                                        class="font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">L'Oréal
+                                        <span
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            - Grave, doux, sincère (home studio)</span></span>
+                                    <span id="time-audio-loreal"
+                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        / 0:00</span>
+                                </div>
+                                <div onclick="seekAudio(event, 'audio-loreal')"
+                                    class="progress-bar-container h-1 bg-stone-200 rounded-full cursor-pointer relative overflow-hidden">
+                                    <div id="progress-audio-loreal"
+                                        class="h-full bg-luxury-gold w-0 transition-all duration-100"></div>
+                                </div>
+                                <audio id="audio-loreal" src="ressources/sons/VADA - Publicité L'Oréal.mp3"
+                                    class="hidden" ontimeupdate="updateAudioProgress('audio-loreal')"
+                                    onloadedmetadata="initAudioMetadata('audio-loreal')"
+                                    onended="resetAudioPlayer('audio-loreal')"></audio>
+                            </div>
+                        </div>
 
-						<li class="item">
-							<span class="item-title">Langues</span>
-							<br/> Français (courant, natif), Russe (courant, accent français), Anglais (courant, accent français)
-						</li>
+                        <!-- Player 2: Nexity -->
+                        <div
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            <button onclick="toggleAudio('audio-nexity')" id="btn-audio-nexity"
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                <i class="fa-solid fa-play text-[10px] pl-0.5" id="icon-audio-nexity"></i>
+                            </button>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
+                                    <span
+                                        class="font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Nexity
+                                        <span
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            - Confiant, lumineux (Europe 1)</span></span>
+                                    <span id="time-audio-nexity"
+                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        / 0:00</span>
+                                </div>
+                                <div onclick="seekAudio(event, 'audio-nexity')"
+                                    class="progress-bar-container h-1 bg-stone-200 rounded-full cursor-pointer relative overflow-hidden">
+                                    <div id="progress-audio-nexity"
+                                        class="h-full bg-luxury-gold w-0 transition-all duration-100"></div>
+                                </div>
+                                <audio id="audio-nexity" src="ressources/sons/VADA - Publicité Nexity.mp3"
+                                    class="hidden" ontimeupdate="updateAudioProgress('audio-nexity')"
+                                    onloadedmetadata="initAudioMetadata('audio-nexity')"
+                                    onended="resetAudioPlayer('audio-nexity')"></audio>
+                            </div>
+                        </div>
 
-						<li class="item">
-							<a onclick="showPage('demos_compos')">
-								<span class="item-title">Piano</span> 
-								<br/> Fin de cycle 3. Improvisation, composition pour la scène et l'image
-							</a>
-						</li>
-						
-						<li class="item">
-							<span class="item-title">Chant</span> 
-							<br/> Baryton-basse
-						</li>
+                        <!-- Player 3: Uber -->
+                        <div
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            <button onclick="toggleAudio('audio-uber')" id="btn-audio-uber"
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                <i class="fa-solid fa-play text-[10px] pl-0.5" id="icon-audio-uber"></i>
+                            </button>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
+                                    <span
+                                        class="font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Uber
+                                        <span
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            - Sobre, intime, droit (Coachs Associés)</span></span>
+                                    <span id="time-audio-uber"
+                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        / 0:00</span>
+                                </div>
+                                <div onclick="seekAudio(event, 'audio-uber')"
+                                    class="progress-bar-container h-1 bg-stone-200 rounded-full cursor-pointer relative overflow-hidden">
+                                    <div id="progress-audio-uber"
+                                        class="h-full bg-luxury-gold w-0 transition-all duration-100">
+                                    </div>
+                                </div>
+                                <audio id="audio-uber"
+                                    src="ressources/sons/Coachs_associes/VADA - Publicité intime droit UBER.mp3"
+                                    class="hidden" ontimeupdate="updateAudioProgress('audio-uber')"
+                                    onloadedmetadata="initAudioMetadata('audio-uber')"
+                                    onended="resetAudioPlayer('audio-uber')"></audio>
+                            </div>
+                        </div>
 
-						<li class="item">
-							<span class="item-title">Permis</span>
-							<br/> A et B
-						</li>						
+                        <!-- Player 4: NBA -->
+                        <div
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            <button onclick="toggleAudio('audio-nba')" id="btn-audio-nba"
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                <i class="fa-solid fa-play text-[10px] pl-0.5" id="icon-audio-nba"></i>
+                            </button>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
+                                    <span
+                                        class="font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Play-Off
+                                        NBA <span
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            - Dynamique, sport, jeunes (Coachs Associés)</span></span>
+                                    <span id="time-audio-nba"
+                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        / 0:00</span>
+                                </div>
+                                <div onclick="seekAudio(event, 'audio-nba')"
+                                    class="progress-bar-container h-1 bg-stone-200 rounded-full cursor-pointer relative overflow-hidden">
+                                    <div id="progress-audio-nba"
+                                        class="h-full bg-luxury-gold w-0 transition-all duration-100">
+                                    </div>
+                                </div>
+                                <audio id="audio-nba"
+                                    src="ressources/sons/Coachs_associes/VADA - Play Off NBA Jeunes.mp3" class="hidden"
+                                    ontimeupdate="updateAudioProgress('audio-nba')"
+                                    onloadedmetadata="initAudioMetadata('audio-nba')"
+                                    onended="resetAudioPlayer('audio-nba')"></audio>
+                            </div>
+                        </div>
 
-						<li class="item">
-							<span class="item-title">Taille</span>
-							<br/> 186cm
-						</li>
-					</ul>
-				</details>
-	        </div>
+                        <!-- Player 5: Se Loger -->
+                        <div
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            <button onclick="toggleAudio('audio-seloger')" id="btn-audio-seloger"
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                <i class="fa-solid fa-play text-[10px] pl-0.5" id="icon-audio-seloger"></i>
+                            </button>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
+                                    <span
+                                        class="font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Se
+                                        Loger <span
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            - Rythmé, espiègle (Coachs Associés)</span></span>
+                                    <span id="time-audio-seloger"
+                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        / 0:00</span>
+                                </div>
+                                <div onclick="seekAudio(event, 'audio-seloger')"
+                                    class="progress-bar-container h-1 bg-stone-200 rounded-full cursor-pointer relative overflow-hidden">
+                                    <div id="progress-audio-seloger"
+                                        class="h-full bg-luxury-gold w-0 transition-all duration-100"></div>
+                                </div>
+                                <audio id="audio-seloger"
+                                    src="ressources/sons/Coachs_associes/VADA - Publicité espoir espiegle Se Loger.mp3"
+                                    class="hidden" ontimeupdate="updateAudioProgress('audio-seloger')"
+                                    onloadedmetadata="initAudioMetadata('audio-seloger')"
+                                    onended="resetAudioPlayer('audio-seloger')"></audio>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-			
-		</div>
-		
-		<div id="page_dates" class="page"></div>
+                <!-- VOIX OFF & DOCUMENTAIRES -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal">
+                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-gold border border-stone-200">
+                            <i class="fa-solid fa-compass text-[11px]"></i>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Voix Off &
+                            Documentaire</h3>
+                    </div>
 
-		<div id="demos_camera" class="page"></div>
+                    <div class="space-y-1.5">
+                        <!-- Player 6: Doc Animalier Coachs -->
+                        <div
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            <button onclick="toggleAudio('audio-docuanimalier')" id="btn-audio-docuanimalier"
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                <i class="fa-solid fa-play text-[10px] pl-0.5" id="icon-audio-docuanimalier"></i>
+                            </button>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
+                                    <span
+                                        class="font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Docu
+                                        Animalier <span
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            - Didactique (Coachs Associés)</span></span>
+                                    <span id="time-audio-docuanimalier"
+                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        / 0:00</span>
+                                </div>
+                                <div onclick="seekAudio(event, 'audio-docuanimalier')"
+                                    class="progress-bar-container h-1 bg-stone-200 rounded-full cursor-pointer relative overflow-hidden">
+                                    <div id="progress-audio-docuanimalier"
+                                        class="h-full bg-luxury-gold w-0 transition-all duration-100"></div>
+                                </div>
+                                <audio id="audio-docuanimalier"
+                                    src="ressources/sons/Coachs_associes/VADA - Narration Documentaire animalier.mp3"
+                                    class="hidden" ontimeupdate="updateAudioProgress('audio-docuanimalier')"
+                                    onloadedmetadata="initAudioMetadata('audio-docuanimalier')"
+                                    onended="resetAudioPlayer('audio-docuanimalier')"></audio>
+                            </div>
+                        </div>
 
-		<div id="demos_theatre" class="page">
-			<div id="cinema-demo" class="section">
-				<h2 class="section-title">Théâtre <i class="fa-solid fa-masks-theater"></i> </h2>
-				<div class="item-list" style="display: flex; gap: 20px; justify-content: center;">
-					<!-- Version horizontale -->
-					<div class="item horizontal-only">
-						<a href="https://www.youtube.com/watch?v=j1_aLgyfc9c" target="_blank">
-							<img src="ressources/images/miniatures/theatre_min.png" alt="Bande Démo Théâtre Horizontale" class="youtube-thumbnail horizontal" loading="lazy">
-						</a>
-						<p class="item-info">Bande démo théâtre</p>
-						<p class="item-info"><a href="https://youtu.be/IIRo6_TGZA0" target="_blank">Version verticale <i class="fa-solid fa-mobile"></i></a></p>
-					</div>
+                        <!-- Player 7: Doc Animalier Home Studio -->
+                        <div
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            <button onclick="toggleAudio('audio-docuhome')" id="btn-audio-docuhome"
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                <i class="fa-solid fa-play text-[10px] pl-0.5" id="icon-audio-docuhome"></i>
+                            </button>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
+                                    <span
+                                        class="font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Docu
+                                        Animalier <span
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            - Narration (Maquette Home Studio)</span></span>
+                                    <span id="time-audio-docuhome"
+                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        / 0:00</span>
+                                </div>
+                                <div onclick="seekAudio(event, 'audio-docuhome')"
+                                    class="progress-bar-container h-1 bg-stone-200 rounded-full cursor-pointer relative overflow-hidden">
+                                    <div id="progress-audio-docuhome"
+                                        class="h-full bg-luxury-gold w-0 transition-all duration-100"></div>
+                                </div>
+                                <audio id="audio-docuhome" src="ressources/sons/Docu animalier.mp3" class="hidden"
+                                    ontimeupdate="updateAudioProgress('audio-docuhome')"
+                                    onloadedmetadata="initAudioMetadata('audio-docuhome')"
+                                    onended="resetAudioPlayer('audio-docuhome')"></audio>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-					<!-- Version verticale -->
-					<div class="item vertical-only">
-						<a href="https://youtu.be/IIRo6_TGZA0" target="_blank">
-							<img src="ressources/images/miniatures/theatre_verticale.png" alt="Bande Démo Théâtre Verticale" class="youtube-thumbnail vertical" loading="lazy">
-						</a>
-						<p class="item-info">Bande démo théâtre</p>
-						<p class="item-info"><a href="https://www.youtube.com/watch?v=j1_aLgyfc9c" target="_blank">Version horizontale <i class="fa-solid fa-desktop"></i></a></p>
-					</div>
-				</div>
-			</div>
-		</div>
+                <!-- AUDIOBOOK -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal">
+                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-gold border border-stone-200">
+                            <i class="fa-solid fa-book-open text-[11px]"></i>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Livre Audio
+                            (Audiobook)</h3>
+                    </div>
 
-		<div id="demos_voix" class="page"></div>
+                    <div class="space-y-2">
+                        <!-- Player 8: Audiobook Les Enfants du Fleuve -->
+                        <div
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            <button onclick="toggleAudio('audio-book')" id="btn-audio-book"
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                <i class="fa-solid fa-play text-[10px] pl-0.5" id="icon-audio-book"></i>
+                            </button>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
+                                    <span
+                                        class="font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Les
+                                        enfants du fleuve <span
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            - Lecture narrative (Coachs Associés)</span></span>
+                                    <span id="time-audio-book"
+                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        / 0:00</span>
+                                </div>
+                                <div onclick="seekAudio(event, 'audio-book')"
+                                    class="progress-bar-container h-1 bg-stone-200 rounded-full cursor-pointer relative overflow-hidden">
+                                    <div id="progress-audio-book"
+                                        class="h-full bg-luxury-gold w-0 transition-all duration-100">
+                                    </div>
+                                </div>
+                                <audio id="audio-book"
+                                    src="ressources/sons/Coachs_associes/VADA - Audiobook Les enfants du fleuve.mp3"
+                                    class="hidden" ontimeupdate="updateAudioProgress('audio-book')"
+                                    onloadedmetadata="initAudioMetadata('audio-book')"
+                                    onended="resetAudioPlayer('audio-book')"></audio>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
 
-        <footer class="footer">
-            <div class="social-links">
-				
-				<a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html" target="_blank" title="Agences Artistiques">
-					<img src="ressources/images/design/logo agencesartistiques.png" alt="Logo Agences Artistiques" class="footer-logo">
-				</a>
-                <a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" title="Instagram">
-                    <i class="fab fa-instagram"></i>
+        </main>
+
+        <!-- FOOTER (Clean luxury layout) -->
+        <footer
+            class="glass-card rounded-xl p-3.5 mt-5 flex flex-col sm:flex-row items-center justify-between gap-3 border border-stone-200/50 bg-white/70 shadow-sm no-print">
+            <div class="text-center sm:text-left">
+                <p class="text-[9px] tracking-wider uppercase font-montserrat text-luxury-textMuted">&copy; 2026 Adrien
+                    VADA. Tous droits réservés.</p>
+                <p class="text-[8px] text-stone-400 mt-0.5">Identité & Code Premium Edition</p>
+            </div>
+
+            <!-- Social Networks Links & logos -->
+            <div class="flex items-center gap-3">
+                <a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html" target="_blank"
+                    title="Agences Artistiques" class="transition hover:scale-105">
+                    <img src="ressources/images/design/logo agencesartistiques.png" alt="Logo Agences Artistiques"
+                        class="h-3.5 w-auto filter grayscale opacity-45 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
                 </a>
-                <a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" title="LinkedIn">
-                    <i class="fab fa-linkedin"></i>
+
+                <a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" title="Instagram"
+                    class="w-6.5 h-6.5 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-luxury-textMuted hover:text-luxury-textMain hover:border-luxury-gold transition-all duration-300">
+                    <i class="fab fa-instagram text-[11px]"></i>
                 </a>
-				<a href="https://open.spotify.com/intl-fr/artist/6eskUhQ2bQBxH1KhBxFPjz" target="_blank" title="Spotify">
-                    <i class="fa-brands fa-spotify"></i>
+
+                <a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank" title="LinkedIn"
+                    class="w-6.5 h-6.5 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-luxury-textMuted hover:text-luxury-textMain hover:border-luxury-gold transition-all duration-300">
+                    <i class="fab fa-linkedin-in text-[11px]"></i>
                 </a>
-                <a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank" title="Filmmakers">
-                    <img src="ressources/images/design/logo filmmakers.png" alt="Logo Filmmakers" class="footer-logo">
+
+                <a href="https://open.spotify.com/intl-fr/artist/6eskUhQ2bQBxH1KhBxFPjz" target="_blank" title="Spotify"
+                    class="w-6.5 h-6.5 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-luxury-textMuted hover:text-luxury-textMain hover:border-luxury-gold transition-all duration-300">
+                    <i class="fa-brands fa-spotify text-[11px]"></i>
+                </a>
+
+                <a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank" title="Filmmakers"
+                    class="transition hover:scale-105">
+                    <img src="ressources/images/design/logo filmmakers.png" alt="Logo Filmmakers"
+                        class="h-3.5 w-auto filter grayscale opacity-45 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
                 </a>
             </div>
         </footer>
     </div>
 
+    <!-- FULLSCREEN PHOTO GALLERY MODAL -->
+    <div id="gallery-modal"
+        class="fixed inset-0 bg-black/95 backdrop-blur-md z-[9999] flex flex-col justify-between items-center py-5 px-4 pointer-events-none opacity-0 transition-opacity duration-300">
+        <!-- Close overlay trigger -->
+        <div class="absolute inset-0 z-0" onclick="closeGallery()"></div>
+
+        <!-- Upper Bar -->
+        <div class="relative z-10 w-full max-w-4xl flex justify-between items-center px-4">
+            <span id="gallery-counter"
+                class="text-[10px] font-mono text-luxury-gold font-bold bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">1
+                / 6</span>
+            <button onclick="closeGallery()"
+                class="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition duration-300">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Image Container -->
+        <div class="relative z-10 flex-grow w-full flex items-center justify-center max-w-3xl py-4">
+            <button onclick="prevGalleryImage(event)"
+                class="absolute left-2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 border border-white/10 flex items-center justify-center text-white hover:text-luxury-gold transition duration-300">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+
+            <img id="gallery-img" src="" alt="Book photo"
+                class="max-w-[85%] max-h-[75vh] md:max-h-[80vh] object-contain rounded shadow-xl transition-all duration-300 transform scale-95 opacity-0">
+
+            <button onclick="nextGalleryImage(event)"
+                class="absolute right-2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 border border-white/10 flex items-center justify-center text-white hover:text-luxury-gold transition duration-300">
+                <i class="fa-solid fa-chevron-right text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Bottom Thumbnails bar -->
+        <div class="relative z-10 w-full max-w-md flex justify-center gap-1.5 overflow-x-auto px-4 py-2"
+            id="gallery-thumbs-container">
+            <!-- Statically populated from script -->
+        </div>
+    </div>
+
+    <!-- PREMIUM YOUTUBE VIDEO MODAL OVERLAY -->
+    <div id="video-modal"
+        class="fixed inset-0 bg-black/95 backdrop-blur-md z-[10000] flex items-center justify-center p-4 pointer-events-none opacity-0 transition-opacity duration-300">
+        <!-- Close overlay trigger -->
+        <div class="absolute inset-0 z-0" onclick="closeVideoModal()"></div>
+
+        <!-- Video box -->
+        <div class="relative z-10 w-full max-w-3xl glass-card rounded-xl overflow-hidden shadow-lg border border-stone-200 transform scale-95 transition-transform duration-300"
+            id="video-modal-card">
+            <!-- Header bar inside video modal -->
+            <div class="bg-stone-50 px-4 py-2 border-b border-stone-200 flex justify-between items-center">
+                <span class="text-[10px] font-mono font-bold text-luxury-gold tracking-wider uppercase"><i
+                        class="fa-solid fa-play mr-2 text-luxury-gold"></i> LECTURE VIDÉO</span>
+                <button onclick="closeVideoModal()"
+                    class="text-luxury-textMuted hover:text-luxury-textMain transition duration-300">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <div class="aspect-video w-full">
+                <iframe id="video-iframe" src="" class="w-full h-full" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- VANILLA JS SCRIPTS -->
     <script>
-    window.addEventListener('DOMContentLoaded', function() {
-        document.body.classList.remove('loading');
-    });
+        // Core states
+        const images = [
+            'ressources/images/profil_1000x1000.jpg',
+            'ressources/images/galerie/photo4.png',
+            'ressources/images/galerie/IMG_1592.png',
+            'ressources/images/galerie/photo14.png',
+            'ressources/images/galerie/photo16.png',
+            'ressources/images/galerie/photo11.png'
+        ];
+        let currentImageIndex = 0;
+        let activeAudioId = null;
+
+        // On DOM Load
+        document.addEventListener("DOMContentLoaded", () => {
+            // Check hash router to set active page
+            const hash = window.location.hash.substring(1);
+            if (hash && document.getElementById(hash)) {
+                showPage(hash, false);
+            } else {
+                showPage('page_cv', false);
+            }
+
+            // Register scroll reveal elements
+            setupScrollReveal();
+
+            // Hash router listener
+            window.addEventListener("hashchange", () => {
+                const newHash = window.location.hash.substring(1);
+                if (newHash && document.getElementById(newHash)) {
+                    showPage(newHash, true);
+                }
+            });
+
+            // Keyboard navigation for image gallery
+            document.addEventListener('keydown', (e) => {
+                const modal = document.getElementById('gallery-modal');
+                if (modal.classList.contains('pointer-events-auto')) {
+                    if (e.key === 'ArrowLeft') {
+                        prevGalleryImage();
+                    } else if (e.key === 'ArrowRight') {
+                        nextGalleryImage();
+                    } else if (e.key === 'Escape') {
+                        closeGallery();
+                    }
+                }
+
+                const videoModal = document.getElementById('video-modal');
+                if (videoModal.classList.contains('pointer-events-auto') && e.key === 'Escape') {
+                    closeVideoModal();
+                }
+            });
+
+            // Initialize gallery touch events (swipe gestures)
+            setupGallerySwipe();
+
+            // Initialize static elements in lightbox
+            initGalleryThumbnails();
+        });
+
+        // 1. PAGE ROUTER
+        function showPage(pageId, animate = true) {
+            // Stop active audio playing
+            if (activeAudioId) {
+                const audio = document.getElementById(activeAudioId);
+                if (audio) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    resetAudioPlayer(activeAudioId);
+                }
+            }
+
+            // Toggle pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            const activePage = document.getElementById(pageId);
+            if (activePage) {
+                activePage.classList.add('active');
+                if (animate) {
+                    // Trigger reflow to restart transition
+                    activePage.offsetHeight;
+                }
+            }
+
+            // Update Tab states
+            document.querySelectorAll('#nav-tabs-container a').forEach(btn => {
+                btn.className = btn.className.replace(/text-luxury-gold|border-stone-200\/80|bg-stone-200\/40/g, '');
+                btn.classList.add('text-gray-400', 'border-transparent');
+            });
+
+            const activeTabButton = document.getElementById('tab-' + pageId);
+            if (activeTabButton) {
+                activeTabButton.classList.remove('text-gray-400', 'border-transparent');
+                activeTabButton.classList.add('text-luxury-gold', 'border-stone-200/80', 'bg-stone-200/40');
+            }
+
+            // Show or hide PDF download button based on active page
+            const pdfBtn = document.getElementById('pdf-download-btn');
+            if (pdfBtn) {
+                if (pageId === 'page_cv') {
+                    pdfBtn.classList.remove('opacity-0', 'pointer-events-none');
+                } else {
+                    pdfBtn.classList.add('opacity-0', 'pointer-events-none');
+                }
+            }
+
+            // Scroll page back to top smoothly
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Re-trigger scroll reveal offsets
+            setTimeout(triggerScrollReveal, 200);
+        }
+
+        // 3. SCROLL REVEAL (Intersection Observer)
+        function setupScrollReveal() {
+            const sections = document.querySelectorAll('section');
+            sections.forEach(sec => {
+                sec.classList.add('reveal');
+            });
+            triggerScrollReveal();
+        }
+
+        function triggerScrollReveal() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, {
+                root: null,
+                threshold: 0.05
+            });
+
+            document.querySelectorAll('.reveal').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        // 4. IMAGE GALLERY LIGHTBOX
+        function initGalleryThumbnails() {
+            const thumbsContainer = document.getElementById('gallery-thumbs-container');
+            if (!thumbsContainer) return;
+            thumbsContainer.innerHTML = '';
+            images.forEach((imgSrc, idx) => {
+                const thumb = document.createElement('img');
+                thumb.src = imgSrc;
+                thumb.className = `w-9 h-9 md:w-11 md:h-11 object-cover rounded border cursor-pointer transition duration-300 hover:scale-105 ${idx === currentImageIndex ? 'border-luxury-gold opacity-100 shadow-md' : 'border-transparent opacity-45 hover:opacity-85'}`;
+                thumb.onclick = (e) => {
+                    e.stopPropagation();
+                    currentImageIndex = idx;
+                    updateGalleryImage();
+                };
+                thumbsContainer.appendChild(thumb);
+            });
+        }
+
+        function updateThumbnailHighlight() {
+            const thumbs = document.querySelectorAll('#gallery-thumbs-container img');
+            thumbs.forEach((thumb, idx) => {
+                if (idx === currentImageIndex) {
+                    thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-luxury-gold opacity-100 shadow-md';
+                } else {
+                    thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-transparent opacity-45 hover:opacity-85';
+                }
+            });
+        }
+
+        function openGallery(index) {
+            currentImageIndex = index;
+            const modal = document.getElementById('gallery-modal');
+
+            modal.classList.remove('pointer-events-none', 'opacity-0');
+            modal.classList.add('pointer-events-auto', 'opacity-100');
+
+            updateGalleryImage();
+        }
+
+        function closeGallery() {
+            const modal = document.getElementById('gallery-modal');
+            const img = document.getElementById('gallery-img');
+
+            img.style.opacity = '0';
+            img.style.transform = 'scale(0.95)';
+
+            modal.classList.remove('pointer-events-auto', 'opacity-100');
+            modal.classList.add('pointer-events-none', 'opacity-0');
+        }
+
+        function updateGalleryImage() {
+            const img = document.getElementById('gallery-img');
+            const counter = document.getElementById('gallery-counter');
+
+            // Soft fluid slide-fade out
+            img.style.opacity = '0';
+            img.style.transform = 'scale(0.97) translateY(4px)';
+
+            setTimeout(() => {
+                img.src = images[currentImageIndex];
+                counter.innerText = `${currentImageIndex + 1} / ${images.length}`;
+                updateThumbnailHighlight();
+
+                img.onload = () => {
+                    // Soft fluid slide-fade in
+                    img.style.opacity = '1';
+                    img.style.transform = 'scale(1) translateY(0)';
+                };
+            }, 120);
+        }
+
+        function prevGalleryImage(e) {
+            if (e) e.stopPropagation();
+            currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+            updateGalleryImage();
+        }
+
+        function nextGalleryImage(e) {
+            if (e) e.stopPropagation();
+            currentImageIndex = (currentImageIndex + 1) % images.length;
+            updateGalleryImage();
+        }
+
+        // Gallery swipe support
+        function setupGallerySwipe() {
+            const modal = document.getElementById('gallery-modal');
+            let startX = 0;
+            let endX = 0;
+
+            modal.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+            }, { passive: true });
+
+            modal.addEventListener('touchend', (e) => {
+                endX = e.changedTouches[0].clientX;
+                const diff = startX - endX;
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) {
+                        nextGalleryImage();
+                    } else {
+                        prevGalleryImage();
+                    }
+                }
+            }, { passive: true });
+        }
+
+        // 5. YOUTUBE VIDEO MODAL CONTROLLER
+        function openVideoModal(videoId) {
+            const modal = document.getElementById('video-modal');
+            const card = document.getElementById('video-modal-card');
+            const iframe = document.getElementById('video-iframe');
+
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+
+            modal.classList.remove('pointer-events-none', 'opacity-0');
+            modal.classList.add('pointer-events-auto', 'opacity-100');
+
+            card.classList.remove('scale-95');
+            card.classList.add('scale-100');
+        }
+
+        function closeVideoModal() {
+            const modal = document.getElementById('video-modal');
+            const card = document.getElementById('video-modal-card');
+            const iframe = document.getElementById('video-iframe');
+
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+
+            modal.classList.remove('pointer-events-auto', 'opacity-100');
+            modal.classList.add('pointer-events-none', 'opacity-0');
+
+            // Clear source to stop video playback
+            iframe.src = '';
+        }
+
+        // 6. CUSTOM AUDIO PLAYERS CONTROLS
+        function toggleAudio(audioId) {
+            const audio = document.getElementById(audioId);
+            const icon = document.getElementById('icon-' + audioId);
+
+            if (activeAudioId && activeAudioId !== audioId) {
+                const prevAudio = document.getElementById(activeAudioId);
+                prevAudio.pause();
+                resetAudioPlayer(activeAudioId);
+            }
+
+            if (audio.paused) {
+                audio.play();
+                activeAudioId = audioId;
+                icon.className = 'fa-solid fa-pause text-xs';
+            } else {
+                audio.pause();
+                activeAudioId = null;
+                icon.className = 'fa-solid fa-play text-xs pl-0.5';
+            }
+        }
+
+        function updateAudioProgress(audioId) {
+            const audio = document.getElementById(audioId);
+            const progress = document.getElementById('progress-' + audioId);
+            const timeText = document.getElementById('time-' + audioId);
+
+            if (audio.duration) {
+                const percentage = (audio.currentTime / audio.duration) * 100;
+                progress.style.width = percentage + '%';
+
+                timeText.innerText = `${formatDuration(audio.currentTime)} / ${formatDuration(audio.duration)}`;
+            }
+        }
+
+        function initAudioMetadata(audioId) {
+            const audio = document.getElementById(audioId);
+            const timeText = document.getElementById('time-' + audioId);
+            if (audio.duration) {
+                timeText.innerText = `0:00 / ${formatDuration(audio.duration)}`;
+            }
+        }
+
+        function resetAudioPlayer(audioId) {
+            const progress = document.getElementById('progress-' + audioId);
+            const icon = document.getElementById('icon-' + audioId);
+            const timeText = document.getElementById('time-' + audioId);
+            const audio = document.getElementById(audioId);
+
+            progress.style.width = '0%';
+            icon.className = 'fa-solid fa-play text-xs pl-0.5';
+            if (audio && audio.duration) {
+                timeText.innerText = `0:00 / ${formatDuration(audio.duration)}`;
+            }
+        }
+
+        function seekAudio(e, audioId) {
+            const container = e.currentTarget;
+            const audio = document.getElementById(audioId);
+            const rect = container.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+
+            const clickPercentage = clickX / width;
+            if (audio.duration) {
+                audio.currentTime = clickPercentage * audio.duration;
+                updateAudioProgress(audioId);
+            }
+        }
+
+        function formatDuration(seconds) {
+            const min = Math.floor(seconds / 60);
+            const sec = Math.floor(seconds % 60);
+            return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+        }
     </script>
 </body>
-<script src="ressources/script.js"></script>
-
-	
 
 </html>
