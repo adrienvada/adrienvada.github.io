@@ -457,6 +457,7 @@
 
             <!-- PAGE 1: CV -->
             <div id="page_cv" class="page active space-y-4">
+                <h2 class="sr-only">Curriculum Vitae</h2>
                 <!-- Mobile Print PDF link -->
                 <div class="md:hidden mb-2">
                     <button onclick="window.print()"
@@ -550,8 +551,7 @@
                                         class="cv-year text-[9px] font-mono text-luxury-gold font-bold bg-white border border-stone-200 px-1 py-0.5 rounded flex-shrink-0 whitespace-nowrap">2025</span>
                                     <span
                                         class="cv-title font-bold text-luxury-textMain uppercase group-hover:text-luxury-gold transition text-xs overflow-hidden text-ellipsis whitespace-nowrap">Audiences</span>
-                                    <span class="text-luxury-textMuted italic font-normal normal-case">(écriture
-                                        collective)</span></span>
+
                                 </div>
                                 <p
                                     class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5 flex items-center gap-1 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -883,6 +883,7 @@
 
             <!-- PAGE 2: DATES THEATRE -->
             <div id="page_dates" class="page space-y-4">
+                <h2 class="sr-only">Dates de Spectacles</h2>
                 <!-- FUTURE DATES (Compacted spacing, larger font) -->
                 <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
                     <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
@@ -921,6 +922,7 @@
 
             <!-- PAGE 3: DEMOS CAMERA (Now hosts all videos) -->
             <div id="demos_camera" class="page space-y-5">
+                <h2 class="sr-only">Démos Caméra</h2>
                 <!-- CINEMA VIDEOS -->
                 <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
                     <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
@@ -968,6 +970,7 @@
 
             <!-- PAGE 4: DEMOS VOIX -->
             <div id="demos_voix" class="page space-y-4">
+                <h2 class="sr-only">Démos Voix</h2>
                 <!-- PUBLICITÉ -->
                 <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
                     <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
@@ -1590,6 +1593,7 @@
             thumbs.forEach((thumb, idx) => {
                 if (idx === currentImageIndex) {
                     thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-luxury-gold opacity-100 shadow-md';
+                    thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 } else {
                     thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-transparent opacity-45 hover:opacity-85';
                 }
