@@ -556,15 +556,16 @@
 
         .enigma-title {
             font-family: var(--font-display);
-            font-size: 1.75rem;
-            font-weight: 700;
-            line-height: 1.25;
+            font-size: 1.35rem;
+            font-weight: 600;
+            line-height: 1.3;
+            text-align: center;
             margin-bottom: var(--gap-md);
-            background: linear-gradient(135deg, #ffffff 0%, #fef08a 40%, #c9a84c 80%, #a16207 100%);
+            background: linear-gradient(135deg, #ffffff 0%, #fef08a 50%, #c9a84c 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            filter: drop-shadow(0 2px 15px rgba(201, 168, 76, 0.45));
+            filter: drop-shadow(0 2px 6px rgba(201, 168, 76, 0.25));
             animation: title-fluo-slow 5s ease-in-out infinite alternate;
             position: relative;
             z-index: 2;
@@ -572,11 +573,11 @@
 
         @keyframes title-fluo-slow {
             0% {
-                filter: drop-shadow(0 2px 10px rgba(201, 168, 76, 0.3));
+                filter: drop-shadow(0 1px 4px rgba(201, 168, 76, 0.15));
             }
 
             100% {
-                filter: drop-shadow(0 2px 22px rgba(254, 240, 138, 0.7)) drop-shadow(0 0 8px rgba(0, 255, 204, 0.3));
+                filter: drop-shadow(0 2px 10px rgba(254, 240, 138, 0.35));
             }
         }
 
@@ -586,7 +587,7 @@
             font-style: italic;
             line-height: 1.85;
             color: rgba(250, 243, 230, 0.92);
-            margin-bottom: var(--gap-lg);
+            margin-bottom: 40px;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
             position: relative;
             z-index: 2;
@@ -597,6 +598,13 @@
             border-radius: var(--radius-md);
             margin-bottom: var(--gap-lg);
             object-fit: cover;
+            cursor: zoom-in;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .enigma-image:hover {
+            transform: scale(1.015);
+            filter: brightness(1.08);
         }
 
         /* ───────────────────────── INPUT & BUTTONS ────────────────────────────── */
@@ -609,8 +617,11 @@
 
         .input-answer {
             width: 100%;
-            padding: 14px 18px;
-            font-size: 1.3rem;
+            max-width: 280px;
+            margin: 0 auto;
+            display: block;
+            padding: 10px 14px;
+            font-size: 1.15rem;
             font-family: var(--font-display);
             font-weight: 700;
             letter-spacing: 3px;
@@ -708,6 +719,28 @@
             opacity: 0.4;
             cursor: not-allowed;
             transform: none;
+        }
+
+        #btn-validate {
+            width: auto !important;
+            min-width: 180px;
+            margin: 8px auto 0 !important;
+            display: flex !important;
+            padding: 10px 24px !important;
+            font-size: 0.75rem !important;
+            letter-spacing: 0.15em !important;
+            background: rgba(201, 168, 76, 0.15) !important;
+            border: 1px solid rgba(201, 168, 76, 0.45) !important;
+            color: var(--clr-gold-bright) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        #btn-validate:hover {
+            background: rgba(201, 168, 76, 0.28) !important;
+            border-color: rgba(201, 168, 76, 0.8) !important;
+            color: #ffffff !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 15px rgba(201, 168, 76, 0.2) !important;
         }
 
         /* Choice buttons for type "choice" */
@@ -1248,8 +1281,11 @@
 
         .date-picker-input {
             width: 100%;
-            padding: 14px 18px;
-            font-size: 1.2rem;
+            max-width: 280px;
+            margin: 0 auto;
+            display: block;
+            padding: 10px 14px;
+            font-size: 1.1rem;
             font-family: var(--font-display);
             font-weight: 700;
             letter-spacing: 2px;
@@ -1324,8 +1360,20 @@
                 <div class="chrono-label">Temps restant</div>
                 <div id="chrono" class="chrono">72:00:00</div>
             </div>
-            <div id="step-badge" class="step-badge">
-                Étape <span class="current" id="step-current">1</span> / <span id="step-total">?</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div id="errors-badge" class="step-badge"
+                    style="border-color: rgba(239, 68, 68, 0.3); color: var(--text-secondary);"
+                    title="Nombre total d'erreurs commises">
+                    ❌ <span id="error-total-count" style="color: var(--error-red); font-weight: 700;">0</span>
+                </div>
+                <div id="hints-badge" class="step-badge"
+                    style="border-color: rgba(201, 168, 76, 0.3); color: var(--text-secondary);"
+                    title="Nombre total d'indices utilisés">
+                    💡 <span id="hint-total-count" style="color: var(--clr-gold-bright); font-weight: 700;">0</span>
+                </div>
+                <div id="step-badge" class="step-badge">
+                    Étape <span class="current" id="step-current">1</span> / <span id="step-total">?</span>
+                </div>
             </div>
         </div>
     </header>
@@ -1335,6 +1383,15 @@
 
     <!-- ═══════════════════════ MAIN APP ═══════════════════════════ -->
     <main id="app"></main>
+
+    <!-- ═══════════════════════ LIGHTBOX MODAL ═══════════════════════ -->
+    <div id="image-lightbox" onclick="closeLightbox()"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.92); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; backdrop-filter: blur(8px);">
+        <span
+            style="position: absolute; top: 20px; right: 30px; color: #ffffff; font-size: 2.5rem; font-weight: bold; cursor: pointer; text-shadow: 0 0 10px rgba(0,0,0,0.8);">&times;</span>
+        <img id="lightbox-img" src="" alt="Enigma Image"
+            style="max-width: 95%; max-height: 95vh; border-radius: 8px; box-shadow: 0 0 30px rgba(201, 168, 76, 0.4); object-fit: contain; transform: scale(0.95); transition: transform 0.3s ease;">
+    </div>
 
     <!-- ═══════════════════════ DEBUG PANEL ════════════════════════ -->
     <div id="debug-panel">
@@ -1401,7 +1458,7 @@
                 image: "assets/enigme1.jpg",
                 reponseAttendue: ["2024-07-19", "2024-07-20", "2024-07-21"],
                 indices: [
-                    "Demander un indice à ce stade c'est abusé.",
+                    "Bravo ! Tu as découvert le fonctionnement des indices. Tu vois le petit compteur en haut 💡 ? Il augmentera à chaque fois que tu utiliseras un indice. Désolé, cet indice ne sert qu'à ça mon amour.",
                     "Franchement ?",
                     "Ca commençait le 19 juillet. Mais je donne pas l'année, faut pas pousser."
                 ]
@@ -1410,6 +1467,21 @@
             {
                 id: 2,
                 type: "choice",
+                titre: "La plus belle",
+                description: "Une personne brillait particulièrement ce jour là.",
+                image: "assets/blasons.jpg",
+                reponseAttendue: "Le Lion",
+                choix: ["L'Aigle", "Le Lion", "Le Serpent", "Le Loup"],
+                indices: [
+                    "Le courage est sa vertu…",
+                    "C'est le roi des animaux.",
+                    "La réponse est : Le Lion"
+                ]
+            },
+
+            {
+                id: 3,
+                type: "choice",
                 titre: "La coupe des couleurs",
                 description: "Quatre blasons ornent le mur. Un seul dissimule le mécanisme secret.",
                 image: "assets/blasons.jpg",
@@ -1423,17 +1495,35 @@
             },
 
             {
-                id: 2,
-                type: "choice",
-                titre: "La coupe des couleurs",
-                description: "Quatre blasons ornent le mur. Un seul dissimule le mécanisme secret.",
-                image: "assets/blasons.jpg",
-                reponseAttendue: "Le Lion",
-                choix: ["L'Aigle", "Le Lion", "Le Serpent", "Le Loup"],
+                id: 4,
+                type: "text",
+                titre: "Le message crypté",
+                description: "Jc lmkpzc 2 ajmafcpq bylq jy plus zcjjc tgjjc",
+                image: "assets/enigme4-floue.jpg",
+                reponseAttendue: [
+                    "Le nombre 2 clochers dans la plus belle ville",
+                    "Le nombre de clochers dans la plus belle ville",
+                    "LE NOMBRE 2 CLOCHERS DANS LA PLUS BELLE VILLE",
+                    "LE NOMBRE DE CLOCHERS DANS LA PLUS BELLE VILLE"
+                ],
                 indices: [
-                    "Le courage est sa vertu…",
-                    "C'est le roi des animaux.",
-                    "La réponse est : Le Lion"
+                    "Regarde attentivement les mots : deux d'entre eux ne semblent pas chiffrés...",
+                    "Chaque autre lettre a été décalée dans l'alphabet. Si tu recules de 2 lettres pour coder (le c devient a, le a devient y...), que dois-tu faire pour décoder ?",
+                    "Ajoute +2 à chaque lettre dans l'ordre de l'alphabet (le a redevient c, le y redevient a...). La phrase commence par : Le nombre 2 clochers..."
+                ]
+            },
+
+            {
+                id: 5,
+                type: "text",
+                titre: "La révélation",
+                description: "Bravo mon amour, tu as parfaitement décrypté le message ! Voici la photo nette.<br><br><strong>Le nombre 2 clochers dans la plus belle ville</strong>",
+                image: "assets/enigme5-nette.jpg",
+                reponseAttendue: ["2", "DEUX", "0", "1", "3", "4", "5"], // TODO: Modifier avec la réponse exacte attendue (ex: "2")
+                indices: [
+                    "Regarde bien la photo nette pour compter les clochers.",
+                    "Quel est ce lieu dans notre ville préférée ?",
+                    "Compte le nombre exact de clochers visibles."
                 ]
             },
         ];
@@ -1449,6 +1539,7 @@
         const LS_KEY_START = 'escapeGame_startTime';
         const LS_KEY_HINTS = 'escapeGame_hints';
         const LS_KEY_HINTS_TOTAL = 'escapeGame_hintsTotal';
+        const LS_KEY_ERRORS_TOTAL = 'escapeGame_errorsTotal';
         const LS_KEY_FINISHED = 'escapeGame_finished';
 
         /* ─────────────────────────────────────────────────────────────
@@ -1460,6 +1551,7 @@
         let lockInterval = null;
         let hintsUsed = {};  // { enigmeId: [0, 1] }  — tabs revealed
         let totalHintsCount = 0; // Compteur global d'indices demandés
+        let totalErrorsCount = 0; // Compteur global d'erreurs commises
 
         /* ─────────────────────────────────────────────────────────────
            DOM REFS
@@ -1519,6 +1611,11 @@
             const savedHintsTotal = localStorage.getItem(LS_KEY_HINTS_TOTAL);
             if (savedHintsTotal) {
                 totalHintsCount = parseInt(savedHintsTotal, 10) || 0;
+            }
+
+            const savedErrorsTotal = localStorage.getItem(LS_KEY_ERRORS_TOTAL);
+            if (savedErrorsTotal) {
+                totalErrorsCount = parseInt(savedErrorsTotal, 10) || 0;
             }
 
             if (savedDone === 'victory') {
@@ -1635,9 +1732,13 @@
         }
 
         function updateProgress() {
-            $stepCur.textContent = currentIndex + 1;
+            if ($stepCur) $stepCur.textContent = currentIndex + 1;
             const pct = (currentIndex / enigmes.length) * 100;
-            $progress.style.width = pct + '%';
+            if ($progress) $progress.style.width = pct + '%';
+            const $hc = document.getElementById('hint-total-count');
+            if ($hc) $hc.textContent = totalHintsCount;
+            const $ec = document.getElementById('error-total-count');
+            if ($ec) $ec.textContent = totalErrorsCount;
         }
 
         function startChrono() {
@@ -1686,7 +1787,7 @@
             updateProgress();
 
             const imageHtml = e.image
-                ? `<img src="${e.image}" alt="${e.titre}" class="enigma-image" loading="lazy">`
+                ? `<img src="${e.image}" alt="" onerror="this.style.display='none'" class="enigma-image" loading="lazy" onclick="openLightbox(this.src)" title="Cliquer pour agrandir">`
                 : '';
 
             let interactionHtml = '';
@@ -1755,10 +1856,9 @@
             <div class="card-num">${index + 1}</div>
             <span class="card-icon">🗝️</span>
           </div>
-          <span class="enigma-step">Étape ${index + 1} sur ${enigmes.length}</span>
           <h1 class="enigma-title">${e.titre}</h1>
-          <div class="enigma-description">${formatText(e.description)}</div>
           ${imageHtml}
+          <div class="enigma-description">${formatText(e.description)}</div>
           ${interactionHtml}
           <div class="feedback" id="feedback"></div>
           ${renderHints(e)}
@@ -1795,10 +1895,8 @@
                 return `<button class="hint-tab ${cls}" id="hint-tab-${i}" onclick="revealHint(${enigme.id}, ${i})">${labels[i] || 'Indice ' + (i + 1)}</button>`;
             }).join('');
 
-            const counterHtml = `<span class="hint-counter">(Total utilisés : <span class="count" id="hint-total-count">${totalHintsCount}</span>)</span>`;
-
             // Show the last revealed hint by default
-            let contentHtml = '<div class="hint-locked" id="hint-body"><span class="lock-icon">🔒</span>Appuie sur un onglet pour révéler un indice</div>';
+            let contentHtml = '<div class="hint-content" id="hint-body"></div>';
             if (revealed.length > 0) {
                 const lastIdx = revealed[revealed.length - 1];
                 contentHtml = `<div class="hint-content visible" id="hint-body">${formatText(enigme.indices[lastIdx])}</div>`;
@@ -1806,7 +1904,7 @@
 
             return `
         <div class="hints-section">
-          <div class="hints-header">💡 Besoin d'aide ? ${counterHtml}</div>
+          <div class="hints-header">💡 Besoin d'aide ?</div>
           <div class="hints-tabs" id="hints-tabs-container">${tabs}</div>
           ${contentHtml}
         </div>
@@ -1872,16 +1970,22 @@
 
             const answer = input.value.trim().toUpperCase();
             const expected = enigmes[currentIndex].reponseAttendue;
-            const expectedStr = (typeof expected === 'string') ? expected.trim().toUpperCase() : '';
+            let isCorrect = false;
 
-            if (answer === expectedStr) {
+            if (Array.isArray(expected)) {
+                isCorrect = expected.some(val => String(val).trim().toUpperCase() === answer);
+            } else if (typeof expected === 'string') {
+                isCorrect = answer === expected.trim().toUpperCase();
+            }
+
+            if (isCorrect) {
                 showFeedback('success', '✅ Bonne réponse ! Bien joué.');
                 input.disabled = true;
                 const btn = document.getElementById('btn-validate');
                 if (btn) btn.disabled = true;
                 setTimeout(() => advanceToNext(), 1200);
             } else {
-                showFeedback('error', '❌ Ce n\'est pas la bonne réponse. Essaie encore.');
+                showFeedback('error', '❌ Attention, une erreur vient d\'être ajoutée ! Plus il y a d\'erreurs, plus cela complique une des étapes finales !');
                 input.classList.add('error');
                 setTimeout(() => input.classList.remove('error'), 600);
             }
@@ -1908,7 +2012,7 @@
                 if (btn) btn.disabled = true;
                 setTimeout(() => advanceToNext(), 1200);
             } else {
-                showFeedback('error', '❌ Ce n\'est pas la bonne date. Essaie encore.');
+                showFeedback('error', '❌ Attention, une erreur vient d\'être ajoutée ! Plus il y a d\'erreurs, plus cela complique une des étapes finales !');
                 input.classList.add('error');
                 setTimeout(() => input.classList.remove('error'), 600);
             }
@@ -1938,6 +2042,12 @@
             if (!$fb) return;
             $fb.className = 'feedback ' + type;
             $fb.textContent = message;
+            if (type === 'error' && message.includes('❌')) {
+                totalErrorsCount++;
+                localStorage.setItem(LS_KEY_ERRORS_TOTAL, totalErrorsCount);
+                const $ec = document.getElementById('error-total-count');
+                if ($ec) $ec.textContent = totalErrorsCount;
+            }
         }
 
         /* ─────────────────────────────────────────────────────────────
@@ -1997,6 +2107,32 @@
                 renderEnigma(currentIndex);
             }
         }
+
+        /* ─────────────────────────────────────────────────────────────
+           LIGHTBOX
+        ────────────────────────────────────────────────────────────── */
+        function openLightbox(src) {
+            const $lb = document.getElementById('image-lightbox');
+            const $img = document.getElementById('lightbox-img');
+            if ($lb && $img) {
+                $img.src = src;
+                $lb.style.display = 'flex';
+                setTimeout(() => $img.style.transform = 'scale(1)', 10);
+            }
+        }
+
+        function closeLightbox() {
+            const $lb = document.getElementById('image-lightbox');
+            const $img = document.getElementById('lightbox-img');
+            if ($lb && $img) {
+                $img.style.transform = 'scale(0.95)';
+                setTimeout(() => $lb.style.display = 'none', 150);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
 
         /* ─────────────────────────────────────────────────────────────
            TEMPORAL LOCK
@@ -2123,6 +2259,10 @@
                 <div class="stat-value">${totalHintsCount}</div>
                 <div class="stat-label">Indices</div>
               </div>
+              <div class="stat">
+                <div class="stat-value">${totalErrorsCount}</div>
+                <div class="stat-label">Erreurs</div>
+              </div>
             </div>
           </div>
 
@@ -2157,6 +2297,7 @@
             startTime = null;
             hintsUsed = {};
             totalHintsCount = 0;
+            totalErrorsCount = 0;
             location.reload();
         }
 
