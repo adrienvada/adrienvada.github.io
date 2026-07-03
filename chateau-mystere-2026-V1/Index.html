@@ -7,12 +7,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0a0f1d">
-    <meta name="description"
-        content="Escape Game interactif — Nuit électrique au château. Résous les énigmes avant la fin du temps imparti.">
-    <title>🏰 Nuit Électrique au Château — Escape Game</title>
+    <meta name="description" content="Joyeux anniversaire">
+    <title>❤️ Bon anniversaire</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
 
     <style>
@@ -26,74 +26,380 @@
         }
 
         :root {
-            /* Palette */
-            --bg-deep: #0a0f1d;
-            --bg-card: #1e2538cc;
-            --bg-card-solid: #1e2538;
+            /* Palette (compatible with existing code + luxury pour-toi additions) */
+            --bg-deep: #05050f;
+            --bg-card: rgba(15, 16, 53, 0.78);
+            --bg-card-solid: #0f1035;
             --neon-green: #10b981;
-            --neon-green-dim: #10b98155;
+            --neon-green-dim: rgba(16, 185, 129, 0.3);
             --error-red: #ef4444;
-            --error-red-dim: #ef444430;
-            --accent-violet: #7c3aed;
+            --error-red-dim: rgba(239, 68, 68, 0.2);
+            --accent-violet: #c9a84c;
             --accent-blue: #2563eb;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #475569;
-            --border-subtle: #ffffff12;
-            --glow-green: 0 0 20px #10b98144, 0 0 60px #10b98122;
-            --glow-violet: 0 0 20px #7c3aed44, 0 0 60px #7c3aed22;
+            --text-primary: #f5ede0;
+            --text-secondary: rgba(245, 237, 224, 0.85);
+            --text-muted: #8e7d62;
+            --border-subtle: rgba(201, 168, 76, 0.22);
+            --glow-green: 0 0 20px rgba(16, 185, 129, 0.4), 0 0 60px rgba(16, 185, 129, 0.2);
+            --glow-violet: 0 0 30px rgba(201, 168, 76, 0.35), 0 0 60px rgba(201, 168, 76, 0.15);
 
-            /* Spacing */
+            /* Luxury Design Tokens from pour-toi */
+            --clr-void: #05050f;
+            --clr-dark: #0b0b1f;
+            --clr-navy: #0f1035;
+            --clr-gold: #c9a84c;
+            --clr-gold-bright: #f2d06b;
+            --clr-gold-dim: #7a5f28;
+            --clr-crimson: #8b1a2e;
+            --clr-crimson-bright: #c4263d;
+            --clr-rose: #c4748c;
+            --clr-rose-light: #e8a0b4;
+            --clr-cream: #f5ede0;
+            --clr-glass: rgba(15, 16, 53, 0.78);
+            --grad-gold: linear-gradient(135deg, #c9a84c 0%, #f2d06b 50%, #c9a84c 100%);
+            --grad-gold-h: linear-gradient(135deg, #f2d06b 0%, #ffe898 50%, #f2d06b 100%);
+            --grad-mystery: linear-gradient(160deg, #0f1035 0%, #1a0a28 50%, #0d0d22 100%);
+
+            /* Typography */
+            --font-display: 'Cinzel', serif;
+            --font-body: 'Cormorant Garamond', serif;
+            --font-ui: 'Inter', sans-serif;
+
+            /* Shadows */
+            --shadow-gold: 0 0 30px rgba(201, 168, 76, 0.25), 0 0 60px rgba(201, 168, 76, 0.1);
+            --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.4);
+            --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+            /* Spacing & Radius */
             --gap-xs: 4px;
             --gap-sm: 8px;
             --gap-md: 16px;
             --gap-lg: 24px;
             --gap-xl: 32px;
             --gap-2xl: 48px;
-
-            /* Radius */
             --radius-sm: 8px;
             --radius-md: 14px;
             --radius-lg: 20px;
             --radius-xl: 28px;
-
-            /* Safe areas */
             --safe-top: env(safe-area-inset-top, 20px);
             --safe-bottom: env(safe-area-inset-bottom, 20px);
         }
 
         html {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-family: var(--font-body);
             background: var(--bg-deep);
             color: var(--text-primary);
             -webkit-font-smoothing: antialiased;
             -webkit-text-size-adjust: 100%;
             overflow-x: hidden;
+            font-size: 16px;
         }
 
         body {
             min-height: 100dvh;
             background: var(--bg-deep);
             position: relative;
+            font-family: var(--font-body);
+            line-height: 1.6;
         }
 
-        /* Starfield background */
-        body::before {
-            content: '';
+        /* Animated Stars Canvas */
+        #stars-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Château Background with fallbacks */
+        .hero-bg {
             position: fixed;
             inset: 0;
-            background:
-                radial-gradient(1.5px 1.5px at 20% 30%, #ffffff22, transparent),
-                radial-gradient(1px 1px at 40% 70%, #ffffff18, transparent),
-                radial-gradient(1.2px 1.2px at 60% 20%, #ffffff15, transparent),
-                radial-gradient(1px 1px at 80% 50%, #ffffff12, transparent),
-                radial-gradient(1.8px 1.8px at 10% 80%, #ffffff10, transparent),
-                radial-gradient(1px 1px at 90% 10%, #ffffff0d, transparent),
-                radial-gradient(1.4px 1.4px at 50% 90%, #ffffff18, transparent),
-                radial-gradient(1px 1px at 30% 50%, #ffffff10, transparent),
-                radial-gradient(ellipse at 50% 0%, #1e1b4b33 0%, transparent 60%);
-            pointer-events: none;
             z-index: 0;
+            background: radial-gradient(circle at 50% 30%, #1a103c 0%, #0a081a 60%, #05050f 100%);
+            background-image: url('pour-toi/assets/images/chateau_bg.jpg');
+            background-size: cover;
+            background-position: center top;
+            filter: brightness(0.35) saturate(0.8);
+            transform: scale(1.03);
+            transition: filter 2s ease;
+        }
+
+        .hero-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(5, 5, 15, 0.35) 0%, rgba(5, 5, 15, 0.65) 45%, rgba(5, 5, 15, 0.95) 85%, rgba(5, 5, 15, 1) 100%);
+        }
+
+        /* ────────────────────────── POUR-TOI SPECIAL ANIMATIONS & STYLES ────────────────────────── */
+        .seal-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto var(--gap-lg);
+        }
+
+        .seal-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            animation: seal-rotate 25s linear infinite;
+            filter: drop-shadow(0 0 25px rgba(201, 168, 76, 0.45));
+            border: 1px solid rgba(201, 168, 76, 0.3);
+            background: radial-gradient(circle, #c9a84c22, #05050f);
+        }
+
+        @keyframes seal-rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .seal-interactive {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: var(--gap-xl) auto;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            z-index: 10;
+            -webkit-tap-highlight-color: transparent;
+            padding: var(--gap-sm);
+        }
+
+        .seal-interactive:hover {
+            transform: scale(1.06);
+        }
+
+        .seal-interactive:active {
+            transform: scale(0.96);
+        }
+
+        .seal-interactive .seal-container {
+            width: 170px;
+            height: 170px;
+            margin: 0 auto var(--gap-md);
+            position: relative;
+        }
+
+        .seal-interactive:hover .seal-img {
+            filter: drop-shadow(0 0 35px rgba(242, 208, 107, 0.8)) brightness(1.1);
+            border-color: rgba(242, 208, 107, 0.8);
+        }
+
+        .seal-prompt {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--clr-gold-bright);
+            text-shadow: 0 0 15px rgba(201, 168, 76, 0.6);
+            transition: color 0.3s, text-shadow 0.3s;
+            margin-top: var(--gap-xs);
+        }
+
+        .seal-interactive:hover .seal-prompt {
+            color: #fff;
+            text-shadow: 0 0 25px rgba(242, 208, 107, 0.9);
+        }
+
+        .footer-anniversary {
+            margin-top: var(--gap-2xl);
+            padding-top: var(--gap-md);
+        }
+
+        .heart-metal-container {
+            display: inline-block;
+            margin-top: var(--gap-md);
+            animation: heartbeat 1.8s ease-in-out infinite;
+            cursor: default;
+            filter: drop-shadow(0 6px 16px rgba(201, 168, 76, 0.45)) drop-shadow(0 0 35px rgba(201, 168, 76, 0.25));
+        }
+
+        .heart-svg {
+            width: 64px;
+            height: 64px;
+        }
+
+        @keyframes heartbeat {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            14% {
+                transform: scale(1.18);
+            }
+
+            28% {
+                transform: scale(1);
+            }
+
+            42% {
+                transform: scale(1.18);
+            }
+
+            70% {
+                transform: scale(1);
+            }
+        }
+
+        .title-eyebrow {
+            font-family: var(--font-ui);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: var(--clr-gold-dim);
+            margin-bottom: var(--gap-sm);
+        }
+
+        .title-main {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 7vw, 3.2rem);
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: 0.06em;
+            color: var(--clr-cream);
+            text-shadow: 0 4px 25px rgba(0, 0, 0, 0.7), 0 0 40px rgba(201, 168, 76, 0.2);
+        }
+
+        .title-main .gold {
+            color: var(--clr-gold-bright);
+            background: var(--grad-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ornament {
+            display: flex;
+            align-items: center;
+            gap: var(--gap-sm);
+            margin: var(--gap-lg) auto;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .ornament-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.5));
+        }
+
+        .ornament-line:last-child {
+            background: linear-gradient(270deg, transparent, rgba(201, 168, 76, 0.5));
+        }
+
+        .ornament-icon {
+            font-size: 0.85rem;
+            color: var(--clr-gold);
+            filter: drop-shadow(0 0 6px rgba(201, 168, 76, 0.6));
+        }
+
+        .welcome-text {
+            font-family: var(--font-body);
+            font-size: 1.25rem;
+            font-style: italic;
+            color: rgba(245, 237, 224, 0.88);
+            line-height: 1.85;
+            max-width: 400px;
+            margin: 0 auto var(--gap-xl);
+            min-height: 4.5em;
+        }
+
+        .tw-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.1em;
+            background: var(--clr-gold);
+            vertical-align: text-bottom;
+            margin-left: 3px;
+            animation: blink 0.8s step-end infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .reveal {
+            animation: reveal-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .reveal[data-delay="1"] {
+            animation-delay: 150ms;
+        }
+
+        .reveal[data-delay="2"] {
+            animation-delay: 350ms;
+        }
+
+        .reveal[data-delay="3"] {
+            animation-delay: 550ms;
+        }
+
+        .reveal[data-delay="4"] {
+            animation-delay: 750ms;
+        }
+
+        @keyframes reveal-in {
+            from {
+                opacity: 0;
+                transform: translateY(25px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Card numbered badge */
+        .card-badge {
+            display: flex;
+            align-items: center;
+            gap: var(--gap-sm);
+            margin-bottom: var(--gap-md);
+        }
+
+        .card-num {
+            background: var(--grad-gold);
+            color: #1a1000;
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 900;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6), 0 0 12px rgba(201, 168, 76, 0.4);
+        }
+
+        .card-icon {
+            font-size: 1.25rem;
+            filter: drop-shadow(0 0 6px rgba(201, 168, 76, 0.5));
         }
 
         /* ───────────────────────── FIXED HEADER (Chrono) ──────────────────────── */
@@ -185,60 +491,113 @@
 
         /* ────────────────────────── ENIGMA CARD ───────────────────────────────── */
         .enigma-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(24px) saturate(1.3);
-            -webkit-backdrop-filter: blur(24px) saturate(1.3);
-            border: 1px solid var(--border-subtle);
+            position: relative;
+            background: radial-gradient(circle at 50% 20%, rgba(35, 28, 16, 0.92) 0%, rgba(18, 14, 24, 0.96) 60%, rgba(6, 5, 10, 0.99) 100%);
+            backdrop-filter: blur(24px) saturate(1.4);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4);
+            border: 2px solid rgba(201, 168, 76, 0.45);
             border-radius: var(--radius-lg);
-            padding: var(--gap-lg);
-            animation: card-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+            padding: var(--gap-xl) var(--gap-lg);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), 0 0 35px rgba(201, 168, 76, 0.15), inset 0 0 50px rgba(5, 4, 10, 0.9);
+            animation: reveal-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+            overflow: hidden;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        @keyframes card-in {
-            from {
-                opacity: 0;
-                transform: translateY(30px) scale(0.97);
+        /* Bordure supérieure fluorescente métallique */
+        .enigma-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #c9a84c, #ffe898, #00ffcc, #f2d06b, #c9a84c, transparent);
+            background-size: 200% 100%;
+            animation: fluo-border-flow 7s linear infinite;
+            z-index: 2;
+        }
+
+        @keyframes fluo-border-flow {
+            0% {
+                background-position: 0% 0%;
+                box-shadow: 0 0 10px rgba(201, 168, 76, 0.6);
             }
 
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
+            50% {
+                background-position: 100% 0%;
+                box-shadow: 0 0 22px rgba(0, 255, 204, 0.8), 0 0 12px rgba(255, 232, 152, 0.9);
             }
+
+            100% {
+                background-position: 0% 0%;
+                box-shadow: 0 0 10px rgba(201, 168, 76, 0.6);
+            }
+        }
+
+        .enigma-card:hover {
+            transform: translateY(-3px) scale(1.005);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 45px rgba(242, 208, 107, 0.3), inset 0 0 60px rgba(201, 168, 76, 0.15);
         }
 
         .enigma-step {
             display: inline-block;
-            font-size: 0.65rem;
-            font-weight: 700;
+            font-family: var(--font-ui);
+            font-size: 0.72rem;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 3px;
-            color: var(--accent-violet);
+            color: var(--clr-gold-bright);
             margin-bottom: var(--gap-sm);
+            text-shadow: 0 0 10px rgba(242, 208, 107, 0.5);
+            position: relative;
+            z-index: 2;
         }
 
         .enigma-title {
-            font-size: 1.4rem;
-            font-weight: 800;
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 700;
             line-height: 1.25;
             margin-bottom: var(--gap-md);
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            background: linear-gradient(135deg, #ffffff 0%, #fef08a 40%, #c9a84c 80%, #a16207 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            filter: drop-shadow(0 2px 15px rgba(201, 168, 76, 0.45));
+            animation: title-fluo-slow 5s ease-in-out infinite alternate;
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes title-fluo-slow {
+            0% {
+                filter: drop-shadow(0 2px 10px rgba(201, 168, 76, 0.3));
+            }
+
+            100% {
+                filter: drop-shadow(0 2px 22px rgba(254, 240, 138, 0.7)) drop-shadow(0 0 8px rgba(0, 255, 204, 0.3));
+            }
         }
 
         .enigma-description {
-            font-size: 0.92rem;
-            line-height: 1.7;
-            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: 1.2rem;
+            font-style: italic;
+            line-height: 1.85;
+            color: rgba(250, 243, 230, 0.92);
             margin-bottom: var(--gap-lg);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 2;
         }
 
         .enigma-image {
             width: 100%;
             border-radius: var(--radius-md);
             margin-bottom: var(--gap-lg);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid rgba(201, 168, 76, 0.3);
+            box-shadow: var(--shadow-card);
             object-fit: cover;
         }
 
@@ -253,26 +612,31 @@
         .input-answer {
             width: 100%;
             padding: 14px 18px;
-            font-size: 1rem;
-            font-family: inherit;
-            font-weight: 600;
-            letter-spacing: 1px;
-            color: var(--text-primary);
-            background: #0d1117;
-            border: 2px solid var(--border-subtle);
+            font-size: 1.3rem;
+            font-family: var(--font-display);
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-align: center;
+            text-transform: uppercase;
+            color: var(--clr-gold-bright);
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(201, 168, 76, 0.3);
             border-radius: var(--radius-md);
             outline: none;
             transition: border-color 0.3s, box-shadow 0.3s;
+            caret-color: var(--clr-gold);
         }
 
         .input-answer::placeholder {
-            color: var(--text-muted);
+            color: rgba(201, 168, 76, 0.25);
+            font-size: 1rem;
+            letter-spacing: 2px;
             font-weight: 400;
         }
 
         .input-answer:focus {
-            border-color: var(--accent-violet);
-            box-shadow: 0 0 0 4px #7c3aed22;
+            border-color: var(--clr-gold);
+            box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15), 0 0 20px rgba(201, 168, 76, 0.1);
         }
 
         .input-answer.error {
@@ -310,14 +674,18 @@
             align-items: center;
             justify-content: center;
             gap: var(--gap-sm);
-            padding: 14px 24px;
-            font-size: 0.95rem;
-            font-family: inherit;
+            padding: 14px 28px;
+            font-size: 0.85rem;
+            font-family: var(--font-display);
             font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
             border: none;
-            border-radius: var(--radius-md);
+            border-radius: 999px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.3s, opacity 0.3s;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -327,14 +695,15 @@
 
         .btn-primary {
             width: 100%;
-            color: #fff;
-            background: linear-gradient(135deg, var(--accent-violet) 0%, var(--accent-blue) 100%);
-            box-shadow: 0 4px 20px #7c3aed33;
-            letter-spacing: 0.5px;
+            color: #1a1000;
+            background: var(--grad-gold);
+            box-shadow: 0 4px 20px rgba(201, 168, 76, 0.35);
         }
 
         .btn-primary:hover {
-            box-shadow: 0 6px 30px #7c3aed55;
+            background: var(--grad-gold-h);
+            box-shadow: 0 6px 30px rgba(201, 168, 76, 0.55);
+            transform: translateY(-2px);
         }
 
         .btn-primary:disabled {
@@ -509,174 +878,186 @@
             margin-bottom: var(--gap-xs);
         }
 
-        /* ──────────────────────── TEMPORAL LOCK SCREEN ────────────────────────── */
-        .lock-screen {
+        /* ──────────────────────── TEMPORAL LOCK & VICTORY SCREENS (Luxury & Royal) ────────────────────────── */
+        .lock-screen,
+        .end-screen {
             text-align: center;
-            padding: var(--gap-2xl) var(--gap-md);
+            padding: var(--gap-lg) 0;
+            animation: reveal-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
-        .lock-screen .lock-icon-big {
+        .luxury-card {
+            position: relative;
+            background: radial-gradient(circle at 50% 20%, rgba(35, 28, 16, 0.92) 0%, rgba(18, 14, 24, 0.96) 60%, rgba(6, 5, 10, 0.99) 100%);
+            backdrop-filter: blur(24px) saturate(1.4);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4);
+            border: 2px solid rgba(201, 168, 76, 0.45);
+            border-radius: var(--radius-lg);
+            padding: var(--gap-xl) var(--gap-lg);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), 0 0 35px rgba(201, 168, 76, 0.15), inset 0 0 50px rgba(5, 4, 10, 0.9);
+            margin: var(--gap-lg) auto;
+            max-width: 440px;
+            overflow: hidden;
+        }
+
+        .luxury-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #c9a84c, #ffe898, #00ffcc, #f2d06b, #c9a84c, transparent);
+            background-size: 200% 100%;
+            animation: fluo-border-flow 7s linear infinite;
+        }
+
+        .icon-metallic {
             font-size: 4rem;
-            margin-bottom: var(--gap-lg);
-            animation: pulse-glow 2s ease-in-out infinite;
+            margin-bottom: var(--gap-md);
+            filter: drop-shadow(0 0 15px rgba(201, 168, 76, 0.6)) drop-shadow(0 0 30px rgba(255, 232, 152, 0.3));
+            animation: float-slow 4s ease-in-out infinite alternate;
         }
 
-        @keyframes pulse-glow {
+        @keyframes float-slow {
+            0% {
+                transform: translateY(0px) scale(1);
+            }
 
-            0%,
             100% {
-                opacity: 0.7;
-                filter: drop-shadow(0 0 8px var(--accent-violet));
-            }
-
-            50% {
-                opacity: 1;
-                filter: drop-shadow(0 0 20px var(--accent-violet));
+                transform: translateY(-8px) scale(1.05);
             }
         }
 
-        .lock-screen h2 {
-            font-size: 1.3rem;
-            font-weight: 800;
-            margin-bottom: var(--gap-sm);
+        .luxury-card h2,
+        .end-screen h1 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: var(--gap-md);
+            background: linear-gradient(135deg, #ffffff 0%, #fef08a 40%, #c9a84c 80%, #a16207 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 2px 15px rgba(201, 168, 76, 0.45));
+            animation: title-fluo-slow 5s ease-in-out infinite alternate;
         }
 
-        .lock-screen p {
-            color: var(--text-secondary);
-            font-size: 0.88rem;
-            line-height: 1.6;
+        .luxury-card p {
+            font-family: var(--font-body);
+            font-size: 1.15rem;
+            font-style: italic;
+            color: rgba(250, 243, 230, 0.92);
+            line-height: 1.8;
             margin-bottom: var(--gap-lg);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
         }
 
         .lock-countdown {
             display: flex;
             justify-content: center;
-            gap: var(--gap-md);
+            gap: 12px;
+            margin: var(--gap-lg) 0;
         }
 
         .lock-countdown-unit {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
         }
 
         .lock-countdown-value {
-            font-size: 2rem;
+            font-family: var(--font-display);
+            font-size: 1.8rem;
             font-weight: 900;
             font-variant-numeric: tabular-nums;
-            color: var(--accent-violet);
-            text-shadow: var(--glow-violet);
-            min-width: 56px;
-            padding: 10px 8px;
-            background: var(--bg-card);
+            color: #fef08a;
+            text-shadow: 0 0 15px rgba(201, 168, 76, 0.8), 0 0 30px rgba(0, 255, 204, 0.4);
+            min-width: 64px;
+            padding: 12px 8px;
+            background: radial-gradient(circle at 50% 30%, rgba(35, 28, 16, 0.95), rgba(12, 10, 16, 0.98));
             border-radius: var(--radius-md);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid rgba(201, 168, 76, 0.5);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8), 0 4px 12px rgba(0, 0, 0, 0.6);
         }
 
         .lock-countdown-label {
-            font-size: 0.6rem;
-            font-weight: 700;
+            font-family: var(--font-ui);
+            font-size: 0.65rem;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 2px;
-            color: var(--text-muted);
-        }
-
-        /* ────────────────────────── END SCREENS ───────────────────────────────── */
-        .end-screen {
-            text-align: center;
-            padding: var(--gap-2xl) var(--gap-md);
-            animation: card-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .end-screen .emoji-big {
-            font-size: 5rem;
-            margin-bottom: var(--gap-lg);
-        }
-
-        .end-screen h1 {
-            font-size: 1.8rem;
-            font-weight: 900;
-            line-height: 1.2;
-            margin-bottom: var(--gap-md);
-        }
-
-        .end-screen p {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            line-height: 1.7;
-            max-width: 340px;
-            margin: 0 auto var(--gap-lg);
-        }
-
-        .end-screen.victory h1 {
-            background: linear-gradient(135deg, var(--neon-green), #34d399, #a7f3d0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .end-screen.failure h1 {
-            color: var(--error-red);
+            color: var(--clr-gold);
         }
 
         .success-stats {
             display: flex;
             justify-content: center;
-            gap: var(--gap-lg);
-            margin-bottom: var(--gap-lg);
+            gap: 16px;
+            margin: var(--gap-lg) 0;
+            flex-wrap: wrap;
         }
 
         .stat {
-            text-align: center;
+            background: radial-gradient(circle at 50% 30%, rgba(35, 28, 16, 0.9), rgba(12, 10, 16, 0.95));
+            border: 1px solid rgba(201, 168, 76, 0.4);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            min-width: 90px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8), 0 4px 10px rgba(0, 0, 0, 0.5);
         }
 
         .stat-value {
-            font-size: 1.6rem;
+            font-family: var(--font-display);
+            font-size: 1.5rem;
             font-weight: 900;
-            color: var(--neon-green);
-            text-shadow: var(--glow-green);
+            color: #fef08a;
+            text-shadow: 0 0 12px rgba(201, 168, 76, 0.8);
         }
 
         .stat-label {
+            font-family: var(--font-ui);
             font-size: 0.65rem;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--text-muted);
-            margin-top: 2px;
+            letter-spacing: 1px;
+            color: var(--clr-gold);
+            margin-top: 4px;
         }
 
         /* ────────────────────────── WELCOME SCREEN ────────────────────────────── */
         .welcome-screen {
             text-align: center;
-            padding: var(--gap-2xl) 0;
-            animation: card-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+            padding: var(--gap-lg) 0;
+            animation: reveal-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
         .welcome-screen .castle-icon {
-            font-size: 5rem;
-            margin-bottom: var(--gap-lg);
+            font-size: 4.5rem;
+            margin-bottom: var(--gap-md);
             animation: pulse-glow 3s ease-in-out infinite;
         }
 
         .welcome-screen h1 {
-            font-size: 1.7rem;
-            font-weight: 900;
-            line-height: 1.25;
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 7vw, 3rem);
+            font-weight: 700;
+            line-height: 1.15;
             margin-bottom: var(--gap-sm);
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-violet) 50%, var(--accent-blue) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--clr-cream);
+            text-shadow: 0 4px 25px rgba(0, 0, 0, 0.7);
         }
 
         .welcome-screen p {
-            font-size: 0.92rem;
-            color: var(--text-secondary);
-            line-height: 1.7;
+            font-family: var(--font-body);
+            font-size: 1.15rem;
+            font-style: italic;
+            color: rgba(245, 237, 224, 0.88);
+            line-height: 1.85;
             margin-bottom: var(--gap-lg);
-            max-width: 340px;
+            max-width: 400px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -684,57 +1065,104 @@
         .welcome-rules {
             text-align: left;
             background: var(--bg-card);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            padding: var(--gap-md);
+            backdrop-filter: blur(24px) saturate(1.3);
+            -webkit-backdrop-filter: blur(24px) saturate(1.3);
+            border: 1px solid rgba(201, 168, 76, 0.25);
+            border-radius: var(--radius-lg);
+            padding: var(--gap-lg);
             margin-bottom: var(--gap-xl);
+            box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .welcome-rules::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.6), transparent);
         }
 
         .welcome-rules li {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: var(--gap-sm);
+            font-family: var(--font-ui);
+            font-size: 0.88rem;
+            color: rgba(245, 237, 224, 0.9);
+            line-height: 1.7;
+            margin-bottom: var(--gap-md);
             list-style: none;
-            padding-left: 24px;
+            padding-left: 28px;
             position: relative;
         }
 
         .welcome-rules li::before {
-            content: '⚡';
+            content: '✨';
             position: absolute;
-            left: 0;
+            left: 2px;
+            top: 1px;
         }
 
         .welcome-rules li:last-child {
             margin-bottom: 0;
         }
 
-        /* ────────────────────────── DEBUG BUTTON ──────────────────────────────── */
-        #debug-btn {
+        /* ────────────────────────── DEBUG PANEL ──────────────────────────────── */
+        #debug-panel {
             position: fixed;
             bottom: calc(var(--safe-bottom) + 16px);
             right: 16px;
-            z-index: 200;
-            padding: 10px 16px;
-            font-size: 0.72rem;
-            font-family: inherit;
-            font-weight: 700;
+            z-index: 9999;
+            display: none;
+            gap: 8px;
+            align-items: center;
+            background: rgba(15, 12, 20, 0.95);
+            padding: 8px 12px;
+            border: 2px solid #fbbf24;
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.9), 0 0 20px rgba(251, 191, 36, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        #debug-panel.visible {
+            display: flex;
+        }
+
+        #debug-btn {
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            font-family: var(--font-ui);
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #fbbf24;
-            background: #78350f;
-            border: 2px solid #fbbf24;
+            color: #1a1000;
+            background: #fbbf24;
+            border: none;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            display: none;
+            transition: all 0.2s;
+            white-space: nowrap;
             -webkit-tap-highlight-color: transparent;
         }
 
-        #debug-btn.visible {
-            display: block;
+        #debug-btn:hover {
+            background: #f59e0b;
+            transform: scale(1.05);
+        }
+
+        #debug-select {
+            padding: 8px 10px;
+            font-size: 0.75rem;
+            font-family: var(--font-ui);
+            font-weight: 700;
+            color: #fbbf24;
+            background: #181108;
+            border: 1px solid #fbbf24;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            outline: none;
+            max-width: 170px;
         }
 
         /* ────────────────────────── DRAWING CANVAS ────────────────────────────── */
@@ -823,13 +1251,14 @@
         .date-picker-input {
             width: 100%;
             padding: 14px 18px;
-            font-size: 1rem;
-            font-family: inherit;
-            font-weight: 600;
-            letter-spacing: 1px;
-            color: var(--text-primary);
-            background: #0d1117;
-            border: 2px solid var(--border-subtle);
+            font-size: 1.2rem;
+            font-family: var(--font-display);
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-align: center;
+            color: var(--clr-gold-bright);
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(201, 168, 76, 0.3);
             border-radius: var(--radius-md);
             outline: none;
             transition: border-color 0.3s, box-shadow 0.3s;
@@ -839,8 +1268,8 @@
         }
 
         .date-picker-input:focus {
-            border-color: var(--accent-violet);
-            box-shadow: 0 0 0 4px #7c3aed22;
+            border-color: var(--clr-gold);
+            box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15), 0 0 20px rgba(201, 168, 76, 0.1);
         }
 
         .date-picker-input.error {
@@ -887,6 +1316,8 @@
 </head>
 
 <body>
+    <canvas id="stars-canvas"></canvas>
+    <div class="hero-bg" id="hero-bg"></div>
 
     <!-- ═══════════════════════ FIXED HEADER ═══════════════════════ -->
     <header id="header" class="hidden">
@@ -907,8 +1338,13 @@
     <!-- ═══════════════════════ MAIN APP ═══════════════════════════ -->
     <main id="app"></main>
 
-    <!-- ═══════════════════════ DEBUG BUTTON ════════════════════════ -->
-    <button id="debug-btn" onclick="skipStep()">⚡ Passer l'étape</button>
+    <!-- ═══════════════════════ DEBUG PANEL ════════════════════════ -->
+    <div id="debug-panel">
+        <button id="debug-btn" onclick="skipStep()" title="Passer à l'énigme suivante">⚡ Passer</button>
+        <select id="debug-select" onchange="jumpToEnigma(this.value)" title="Sauter directement à une énigme">
+            <option value="">🎯 Aller à l'étape...</option>
+        </select>
+    </div>
 
     <!-- ═══════════════════════ JAVASCRIPT ══════════════════════════ -->
     <script>
@@ -1010,7 +1446,7 @@
         ────────────────────────────────────────────────────────────── */
         const GAME_DURATION_MS = 72 * 60 * 60 * 1000;                       // 72 h
         const FINAL_UNLOCK_DATE = new Date('2026-07-19T02:00:00').getTime();  // Dimanche 19 juillet 2026, 02:00
-        const DEBUG = new URLSearchParams(location.search).has('debug');
+        let DEBUG = new URLSearchParams(location.search).get('debug') === 'true' || new URLSearchParams(location.search).has('debug');
         const LS_KEY_INDEX = 'escapeGame_currentIndex';
         const LS_KEY_START = 'escapeGame_startTime';
         const LS_KEY_HINTS = 'escapeGame_hints';
@@ -1037,14 +1473,34 @@
         const $chrono = document.getElementById('chrono');
         const $stepCur = document.getElementById('step-current');
         const $stepTotal = document.getElementById('step-total');
-        const $debugBtn = document.getElementById('debug-btn');
+        const $debugPanel = document.getElementById('debug-panel');
+
+        // Raccourci clavier Alt+D ou Ctrl+Shift+D pour activer/désactiver le debug
+        window.addEventListener('keydown', (e) => {
+            if ((e.altKey && e.key.toLowerCase() === 'd') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd')) {
+                DEBUG = !DEBUG;
+                if ($debugPanel) {
+                    $debugPanel.classList.toggle('visible', DEBUG);
+                    if (DEBUG) initDebugSelect();
+                }
+                alert(DEBUG ? "🛠️ Mode Debug ACTIVÉ ! (Menu en bas à droite)" : "🔒 Mode Debug DÉSACTIVÉ");
+            }
+        });
 
         /* ─────────────────────────────────────────────────────────────
            INIT
         ────────────────────────────────────────────────────────────── */
         function init() {
             // Debug
-            if (DEBUG) $debugBtn.classList.add('visible');
+            if (DEBUG && $debugPanel) {
+                $debugPanel.classList.add('visible');
+                initDebugSelect();
+            }
+
+            // Init starfield background
+            if (typeof initStars === 'function') {
+                initStars('stars-canvas', { count: 120, twinkle: true });
+            }
 
             // Guard: no enigmes
             if (!enigmes.length) {
@@ -1074,11 +1530,6 @@
 
             if (savedStart) {
                 startTime = parseInt(savedStart, 10);
-                // Check expiry
-                if (!DEBUG && Date.now() - startTime >= GAME_DURATION_MS) {
-                    renderFailure();
-                    return;
-                }
             }
 
             if (savedIndex !== null) {
@@ -1107,20 +1558,57 @@
         function renderWelcome() {
             $app.innerHTML = `
         <div class="welcome-screen">
-          <div class="castle-icon">🏰</div>
-          <h1>Joyeux anniversaire !</h1>
-          <p>Mon amour, pour notre anniversaire de rencontre, je t'ai préparé un Escape Game.</p>
-          <p>Attention, lorsque l'aventure commencera, tu auras un temps imparti. Il faut réussir à résoudre toutes les énigmes à temps, sinon le trésor ne sera plus disponible....</p>
+          <p class="title-eyebrow reveal" data-delay="1">Une aventure secrète pour notre anniversaire</p>
+          <p class="welcome-text reveal" data-delay="1" id="welcome-tw"></p>
 
-          <ul class="welcome-rules">
-            <li>Résous chaque énigme pour débloquer la suivante</li>
-            <li>Le chrono démarre dès que tu appuies sur « Commencer »</li>
+          <div class="ornament reveal" data-delay="2">
+            <div class="ornament-line"></div>
+            <span class="ornament-icon">✦</span>
+            <div class="ornament-line"></div>
+          </div>
+
+          <!-- Sceau cliquable centré au milieu de la page -->
+          <div class="seal-interactive reveal" data-delay="2" onclick="startGame()" role="button" tabindex="0" title="Cliquer pour commencer l'aventure">
+            <div class="seal-container">
+              <img src="pour-toi/assets/images/unlock_seal.jpg" alt="Commencer le jeu" class="seal-img" onerror="this.src='assets/chateau%20de%20loin.jpg'">
+            </div>
+            <p class="seal-prompt">Alors prête ?</p>
+          </div>
+
+          <!-- Welcome rules en dessous (désactivées pour l'instant)
+          <ul class="welcome-rules reveal" data-delay="3">
+            <li>Résous chaque énigme pour débloquer la suivante et découvrir ses mystères</li>
+            <li>Le chrono démarre dès que tu appuies sur le sceau pour commencer</li>
+            <li>Des indices progressifs sont à ta disposition en cas de besoin</li>
           </ul>
-          <button class="btn btn-primary" id="btn-start" onclick="startGame()">
-            ⚡ Alors, prête ?
-          </button>
+          -->
+
+          <!-- Joyeux anniversaire tout en bas de la page avec cœur métal doré animé -->
+          <div class="footer-anniversary reveal" data-delay="4">
+            <div class="heart-metal-container">
+              <svg class="heart-svg" viewBox="0 0 24 24" fill="url(#gold-metal-grad)" stroke="#ffe898" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                <defs>
+                  <linearGradient id="gold-metal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#f2d06b" />
+                    <stop offset="25%" stop-color="#c9a84c" />
+                    <stop offset="50%" stop-color="#7a5f28" />
+                    <stop offset="75%" stop-color="#f2d06b" />
+                    <stop offset="100%" stop-color="#4a3814" />
+                  </linearGradient>
+                </defs>
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                <path d="M12 17l-5-4.5C5 10.5 3.5 9 3.5 7.5 3.5 5.8 4.8 4.5 6.5 4.5c1.2 0 2.4.7 3 1.8l2.5 4.5 2.5-4.5c.6-1.1 1.8-1.8 3-1.8 1.7 0 3 1.3 3 3 0 1.5-1.5 3-3.5 5L12 17z" fill="none" stroke="rgba(255, 232, 152, 0.45)" stroke-width="0.5"/>
+              </svg>
+            </div>
+          </div>
         </div>
       `;
+
+            // Start typewriter animation for welcome text
+            const twEl = document.getElementById('welcome-tw');
+            if (twEl && typeof typewriter === 'function') {
+                typewriter(twEl, "Mon amour, pour notre anniversaire de rencontre, je t'ai préparé un Escape Game secret.\nAttention, le trésor apparaîtra au jour de notre anniversaire. Tu as donc un temps imparti pour résoudre toutes les énigmes et y accéder...", 35, 400);
+            }
         }
 
         function startGame() {
@@ -1136,10 +1624,16 @@
            HEADER / CHRONO
         ────────────────────────────────────────────────────────────── */
         function showHeader() {
-            $header.classList.remove('hidden');
-            $progressW.classList.remove('hidden');
-            $stepTotal.textContent = enigmes.length;
+            if ($header) $header.classList.remove('hidden');
+            if ($progressW) $progressW.classList.remove('hidden');
+            if ($stepTotal) $stepTotal.textContent = enigmes.length;
             updateProgress();
+        }
+
+        function hideHeader() {
+            if ($header) $header.classList.add('hidden');
+            if ($progressW) $progressW.classList.add('hidden');
+            if (timerInterval) clearInterval(timerInterval);
         }
 
         function updateProgress() {
@@ -1157,13 +1651,6 @@
         function tickChrono() {
             const elapsed = Date.now() - startTime;
             const remaining = GAME_DURATION_MS - elapsed;
-
-            if (remaining <= 0 && !DEBUG) {
-                clearInterval(timerInterval);
-                renderFailure();
-                return;
-            }
-
             const absRemaining = Math.max(0, remaining);
             const h = Math.floor(absRemaining / 3600000);
             const m = Math.floor((absRemaining % 3600000) / 60000);
@@ -1266,6 +1753,10 @@
 
             $app.innerHTML = `
         <div class="enigma-card">
+          <div class="card-badge">
+            <div class="card-num">${index + 1}</div>
+            <span class="card-icon">🗝️</span>
+          </div>
           <span class="enigma-step">Étape ${index + 1} sur ${enigmes.length}</span>
           <h1 class="enigma-title">${e.titre}</h1>
           <div class="enigma-description">${formatText(e.description)}</div>
@@ -1468,25 +1959,69 @@
         }
 
         /* ─────────────────────────────────────────────────────────────
-           DEBUG — SKIP
+           DEBUG — SKIP & JUMP
         ────────────────────────────────────────────────────────────── */
         function skipStep() {
             advanceToNext();
+        }
+
+        function initDebugSelect() {
+            const $sel = document.getElementById('debug-select');
+            if (!$sel) return;
+            if ($sel.options.length > 1) return; // Already initialized
+            $sel.innerHTML = '<option value="">🎯 Aller à l\'étape...</option>' +
+                enigmes.map((e, idx) => `<option value="${idx}">Étape ${idx + 1}</option>`).join('') +
+                '<option disabled>──────────</option>' +
+                '<option value="welcome">🏠 Accueil</option>' +
+                '<option value="victory">🏆 Victoire</option>' +
+                '<option value="lock">🔒 Verrou final</option>';
+        }
+
+        function jumpToEnigma(val) {
+            if (val === '') return;
+            const $sel = document.getElementById('debug-select');
+            if ($sel) $sel.value = '';
+
+            if (val === 'welcome') { hideHeader(); renderWelcome(); return; }
+            if (val === 'victory') { showHeader(); renderVictory(); return; }
+            if (val === 'lock') { showHeader(); renderTemporalLock(); return; }
+
+            const idx = parseInt(val, 10);
+            if (!isNaN(idx) && enigmes[idx]) {
+                if (!startTime) {
+                    startTime = Date.now();
+                    localStorage.setItem(LS_KEY_START, startTime);
+                    startChrono();
+                }
+                currentIndex = idx;
+                localStorage.setItem(LS_KEY_INDEX, currentIndex);
+                showHeader();
+                renderEnigma(currentIndex);
+            }
         }
 
         /* ─────────────────────────────────────────────────────────────
            TEMPORAL LOCK
         ────────────────────────────────────────────────────────────── */
         function renderTemporalLock() {
-            updateProgress();
+            showHeader();
+            if ($stepCur) $stepCur.textContent = enigmes.length;
+            if ($progress) $progress.style.width = '100%';
 
             $app.innerHTML = `
         <div class="lock-screen">
-          <div class="lock-icon-big">🔐</div>
-          <h2>Étape finale verrouillée</h2>
-          <p>L'ultime énigme sera déverrouillée à la date prévue. Patience, le moment approche…</p>
-          <div class="lock-countdown" id="lock-countdown"></div>
-          <button class="btn btn-primary mt-lg" onclick="resetGame()">🔄 Recommencer l'aventure</button>
+
+
+          <div class="luxury-card">
+            <div class="icon-metallic">⏳</div>
+            <h1 class="title-main">ULTIME <span class="gold">MYSTÈRE</span></h1>
+            
+            <div class="separator-ornate">✦</div>
+            <p>Je savais que tu réussirais.\n Bravo ! Quelle sagacité. \n Il ne reste plus qu'une étape, qui sera dévoilée en temps et en heure. Tu te souviens de la date ? \n \n Il ne reste plus qu'à attendre...</p>
+
+            <div class="lock-countdown" id="lock-countdown"></div>
+            <div id="lock-action-container" style="margin-top: 24px;"></div>
+          </div>
         </div>
       `;
 
@@ -1497,9 +2032,22 @@
 
         function tickLockCountdown() {
             const diff = FINAL_UNLOCK_DATE - Date.now();
+            const $lc = document.getElementById('lock-countdown');
+            const $action = document.getElementById('lock-action-container');
+
             if (diff <= 0) {
                 clearInterval(lockInterval);
-                renderEnigma(currentIndex);
+                if ($lc) {
+                    $lc.innerHTML = `
+                <div class="lock-countdown-unit"><div class="lock-countdown-value">00</div><div class="lock-countdown-label">Jours</div></div>
+                <div class="lock-countdown-unit"><div class="lock-countdown-value">00</div><div class="lock-countdown-label">Heures</div></div>
+                <div class="lock-countdown-unit"><div class="lock-countdown-value">00</div><div class="lock-countdown-label">Minutes</div></div>
+                <div class="lock-countdown-unit"><div class="lock-countdown-value">00</div><div class="lock-countdown-label">Secondes</div></div>
+              `;
+                }
+                if ($action) {
+                    $action.innerHTML = `<button class="btn btn-primary" style="animation: pulse-glow 2s infinite; width: 100%;" onclick="renderVictory()">🏆 DÉCOUVRIR LE DERNIER INDICE ↗</button>`;
+                }
                 return;
             }
 
@@ -1508,10 +2056,8 @@
             const m = Math.floor((diff % 3600000) / 60000);
             const s = Math.floor((diff % 60000) / 1000);
 
-            const $lc = document.getElementById('lock-countdown');
-            if (!$lc) return;
-
-            $lc.innerHTML = `
+            if ($lc) {
+                $lc.innerHTML = `
         <div class="lock-countdown-unit">
           <div class="lock-countdown-value">${String(d).padStart(2, '0')}</div>
           <div class="lock-countdown-label">Jours</div>
@@ -1529,15 +2075,23 @@
           <div class="lock-countdown-label">Secondes</div>
         </div>
       `;
+            }
+
+            if ($action && DEBUG) {
+                $action.innerHTML = `<button class="btn btn-primary" style="animation: pulse-glow 2s infinite; width: 100%;" onclick="renderVictory()">🏆 DÉCOUVRIR LE DERNIER INDICE ↗</button><div style="font-size: 0.75rem; color: var(--clr-gold); margin-top: 8px;">(Bouton affiché ici car le mode Debug est actif)</div>`;
+            } else if ($action && !DEBUG) {
+                $action.innerHTML = '';
+            }
         }
 
         /* ─────────────────────────────────────────────────────────────
            END SCREENS
         ────────────────────────────────────────────────────────────── */
         function renderVictory() {
-            clearInterval(timerInterval);
-            $header.classList.add('hidden');
-            $progressW.classList.add('hidden');
+            if (timerInterval) clearInterval(timerInterval);
+            showHeader();
+            if ($stepCur) $stepCur.textContent = enigmes.length;
+            if ($progress) $progress.style.width = '100%';
 
             const elapsed = startTime ? Date.now() - startTime : 0;
             const totalH = Math.floor(elapsed / 3600000);
@@ -1546,43 +2100,41 @@
 
             $app.innerHTML = `
         <div class="end-screen victory">
-          <div class="emoji-big">🎉</div>
-          <h1>Félicitations !</h1>
-          <p>Tu as percé tous les mystères du château. L'aventure touche à sa fin… ou peut-être ne fait-elle que commencer.</p>
-          <div class="success-stats">
-            <div class="stat">
-              <div class="stat-value">${totalH}h ${String(totalM).padStart(2, '0')}m</div>
-              <div class="stat-label">Temps total</div>
+
+          <div class="luxury-card">
+            <div class="icon-metallic">🪎</div>
+            <h1 class="title-main">Le trésor</h1>   
+            <div class="separator-ornate">✦</div>
+            
+
+            <div class="final-clue-box" style="margin: 24px 0; padding: 20px; background: radial-gradient(circle at center, rgba(201, 168, 76, 0.2), rgba(10, 8, 14, 0.8)); border: 1px solid rgba(254, 240, 138, 0.6); border-radius: var(--radius-md); box-shadow: 0 0 25px rgba(201, 168, 76, 0.25);">
+              <h3 style="color: #fef08a; font-family: var(--font-display); font-size: 1.15rem; margin-bottom: 10px; text-shadow: 0 0 12px rgba(201,168,76,0.9); letter-spacing: 1px;">🔑 L'ULTIME INDICE</h3>
+              <p style="font-size: 1.1rem; color: #ffffff; margin-bottom: 0; font-style: normal; line-height: 1.6;">Retourne sur les lieux de notre premier baiser.</p>
             </div>
-            <div class="stat">
-              <div class="stat-value">${enigmes.length}</div>
-              <div class="stat-label">Énigmes résolues</div>
-            </div>
-            <div class="stat">
-              <div class="stat-value">${totalHintsCount}</div>
-              <div class="stat-label">Indices utilisés</div>
+
+            <div class="success-stats">
+              <div class="stat">
+                <div class="stat-value">${totalH}h ${String(totalM).padStart(2, '0')}m</div>
+                <div class="stat-label">Temps total</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value">${enigmes.length}</div>
+                <div class="stat-label">Énigmes</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value">${totalHintsCount}</div>
+                <div class="stat-label">Indices</div>
+              </div>
             </div>
           </div>
-          <button class="btn btn-primary" onclick="resetGame()">🔄 Recommencer</button>
+
+          <div style="margin-top: 30px;">
+            <button class="btn btn-primary" onclick="resetGame()">🔄 Recommencer l'aventure ↗</button>
+          </div>
         </div>
       `;
 
             spawnConfetti();
-        }
-
-        function renderFailure() {
-            clearInterval(timerInterval);
-            $header.classList.add('hidden');
-            $progressW.classList.add('hidden');
-
-            $app.innerHTML = `
-        <div class="end-screen failure">
-          <div class="emoji-big">💀</div>
-          <h1>Temps écoulé…</h1>
-          <p>Les portes du château se sont refermées à jamais. Le mystère reste entier. Peut-être auras-tu une autre chance…</p>
-          <button class="btn btn-primary mt-lg" onclick="resetGame()">🔄 Recommencer</button>
-        </div>
-      `;
         }
 
         function renderEmpty() {
@@ -1718,6 +2270,74 @@
 
         function escapeAttr(str) {
             return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        /* ─────────────────────────────────────────────────────────────
+           TYPEWRITER & STARS (from pour-toi version)
+        ────────────────────────────────────────────────────────────── */
+        function typewriter(element, text, speed = 30, initialDelay = 500) {
+            if (!element) return;
+            element.innerHTML = '<span class="tw-text"></span><span class="tw-cursor"></span>';
+            const textSpan = element.querySelector('.tw-text');
+            let i = 0;
+            setTimeout(() => {
+                const interval = setInterval(() => {
+                    if (i < text.length) {
+                        textSpan.innerHTML += text.charAt(i) === '\n' ? '<br>' : text.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                        const cursor = element.querySelector('.tw-cursor');
+                        if (cursor) setTimeout(() => cursor.style.display = 'none', 3000);
+                    }
+                }, speed);
+            }, initialDelay);
+        }
+
+        function initStars(canvasId, options = {}) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const count = options.count || 100;
+            const stars = [];
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            for (let i = 0; i < count; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 1.5 + 0.5,
+                    opacity: Math.random() * 0.8 + 0.2,
+                    speed: Math.random() * 0.02 + 0.005,
+                    twinkleSpeed: Math.random() * 0.03 + 0.01,
+                    twinkleVal: Math.random() * Math.PI
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                stars.forEach(star => {
+                    star.twinkleVal += star.twinkleSpeed;
+                    const currentOpacity = star.opacity * (0.6 + 0.4 * Math.sin(star.twinkleVal));
+                    ctx.fillStyle = `rgba(255, 255, 255, ${currentOpacity})`;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    star.y -= star.speed;
+                    if (star.y < 0) {
+                        star.y = canvas.height;
+                        star.x = Math.random() * canvas.width;
+                    }
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
         }
 
         /* ─────────────────────────────────────────────────────────────
