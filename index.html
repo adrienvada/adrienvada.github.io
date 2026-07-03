@@ -75,6 +75,11 @@
             border: 1px solid rgba(0, 0, 0, 0.03);
         }
 
+        /* Fix: force vertical scrollbar to always show to prevent layout shift on tab switch */
+        html {
+            overflow-y: scroll;
+        }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
@@ -103,25 +108,54 @@
             list-style: none;
         }
 
+        /* Animations ultra-modernes & Interactions */
+        a,
+        button,
+        .glass-card,
+        details {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        a:active:not(#nav-tabs-container a),
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.08);
+            border-color: rgba(150, 126, 91, 0.2);
+        }
+
+        /* Lists interactions */
+        ul li.group {
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        ul li.group:has(a):hover {
+            transform: translateX(6px);
+            background: rgba(150, 126, 91, 0.04) !important;
+        }
+
         /* Page active states */
         .page {
             display: none;
             opacity: 0;
-            transform: translateY(6px);
-            transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(12px) scale(0.99);
+            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .page.active {
             display: block;
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
 
         /* Scroll reveal effects */
         .reveal {
             opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(15px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .reveal.active {
@@ -724,7 +758,7 @@
                             class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-black/[0.015] even:bg-transparent text-sm">
                             <span
                                 class="text-[9px] uppercase font-bold tracking-wider text-luxury-gold font-montserrat">Taille</span>
-                            <span class="text-lg font-bold text-luxury-textMain font-mono mt-0.5">186 cm</span>
+                            <span class="text-sm font-semibold text-luxury-textMain mt-0.5">186 cm</span>
                         </div>
 
                         <!-- Chant -->
@@ -757,7 +791,11 @@
                             class="glass-panel rounded-lg p-2.5 odd:bg-black/[0.015] even:bg-transparent text-sm md:col-span-2 lg:col-span-1">
                             <span
                                 class="text-[9px] uppercase font-bold tracking-wider text-luxury-gold font-montserrat">Piano</span>
-                            <p class="text-sm font-semibold text-luxury-textMain mt-0.5 leading-tight">Interprétation, Improvisation, Composition</p>
+                            <p class="text-sm font-semibold text-luxury-textMain mt-0.5">Interprétation,
+                                Improvisation, Composition</p>
+                            <p class="text-[9px] text-luxury-textMuted font-mono">fin de 3ème cycle du
+                                Conservatoire
+                            </p>
                         </div>
 
                         <!-- Activités physiques -->
@@ -786,7 +824,7 @@
                                 </span>
                                 <span
                                     class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Tir
-                                    militaire (armes de poing &amp; fusil d'assaut)</span>
+                                    militaire (arme de poing, fusil d'assaut)</span>
                             </div>
                         </div>
 
@@ -798,16 +836,16 @@
                                 professionnelles</span>
                             <div class="grid grid-cols-3 gap-1 text-center">
                                 <div class="bg-white border border-stone-200 rounded p-1">
-                                    <p class="text-[9px] text-luxury-textMain font-semibold">Armée de Terre</p>
-                                    <p class="text-[8px] text-luxury-textMuted font-mono">Guyane</p>
+                                    <p class="text-[10px] text-luxury-textMain font-semibold">Armée de Terre</p>
+                                    <p class="text-[9px] text-luxury-textMuted font-mono">Guyane française</p>
                                 </div>
                                 <div class="bg-white border border-stone-200 rounded p-1">
-                                    <p class="text-[9px] text-luxury-textMain font-semibold">Gendarmerie</p>
-                                    <p class="text-[8px] text-luxury-textMuted font-mono">Normandie</p>
+                                    <p class="text-[10px] text-luxury-textMain font-semibold">Gendarmerie</p>
+                                    <p class="text-[9px] text-luxury-textMuted font-mono">Normandie</p>
                                 </div>
                                 <div class="bg-white border border-stone-200 rounded p-1">
-                                    <p class="text-[9px] text-luxury-textMain font-semibold">SNCF</p>
-                                    <p class="text-[8px] text-luxury-textMuted font-mono">IDF</p>
+                                    <p class="text-[10px] text-luxury-textMain font-semibold">SNCF</p>
+                                    <p class="text-[9px] text-luxury-textMuted font-mono">Île-de-France</p>
                                 </div>
                             </div>
                         </div>
@@ -1397,7 +1435,9 @@
                         <div class="glass-panel rounded-md px-2 py-1.5 border border-stone-200/20 odd:bg-black/[0.015] even:bg-transparent flex flex-col md:flex-row md:items-center md:justify-between gap-x-3">
                             <div class="flex items-center gap-1.5 flex-nowrap overflow-hidden min-w-0">
                                 <span class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-[10px] flex-shrink-0 whitespace-nowrap">${show.date}</span>
-                                <h4 class="font-bold text-luxury-textMain text-xs overflow-hidden text-ellipsis whitespace-nowrap">${show.title}</h4>
+                                <div class="overflow-hidden min-w-0">
+                                    <h4 class="font-bold text-luxury-textMain text-xs truncate leading-tight">${show.title}${show.subtitle ? ` <span class="font-normal italic text-[10px] text-luxury-textMuted">(${show.subtitle})</span>` : ''}</h4>
+                                </div>
                             </div>
                             <div class="text-[10px] text-luxury-textMuted flex items-center gap-1 mt-0.5 md:mt-0 md:text-right flex-shrink-0 whitespace-nowrap overflow-hidden text-ellipsis pl-0.5 md:pl-0">
                                 <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[8px] flex-shrink-0"></i> ${show.location}
