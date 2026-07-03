@@ -492,7 +492,7 @@
         /* ────────────────────────── ENIGMA CARD ───────────────────────────────── */
         .enigma-card {
             position: relative;
-            background: radial-gradient(circle at 50% 20%, rgba(35, 28, 16, 0.92) 0%, rgba(18, 14, 24, 0.96) 60%, rgba(6, 5, 10, 0.99) 100%);
+            background: #000000;
             backdrop-filter: blur(24px) saturate(1.4);
             -webkit-backdrop-filter: blur(24px) saturate(1.4);
             border: 2px solid rgba(201, 168, 76, 0.45);
@@ -596,8 +596,6 @@
             width: 100%;
             border-radius: var(--radius-md);
             margin-bottom: var(--gap-lg);
-            border: 1px solid rgba(201, 168, 76, 0.3);
-            box-shadow: var(--shadow-card);
             object-fit: cover;
         }
 
@@ -888,7 +886,7 @@
 
         .luxury-card {
             position: relative;
-            background: radial-gradient(circle at 50% 20%, rgba(35, 28, 16, 0.92) 0%, rgba(18, 14, 24, 0.96) 60%, rgba(6, 5, 10, 0.99) 100%);
+            background: #000000;
             backdrop-filter: blur(24px) saturate(1.4);
             -webkit-backdrop-filter: blur(24px) saturate(1.4);
             border: 2px solid rgba(201, 168, 76, 0.45);
@@ -1398,9 +1396,9 @@
             {
                 id: 1,
                 type: "date",
-                titre: "Premiers contacts",
-                description: `<div style="text-align: center;">Bienvenu Eva,</div>Tu as été sélectionnée pour enquêter sur un des évènements les plus magiques et mystérieuses du château du Meux. On m'a dit que tu étais bien informée. Pour vérifier que tu es la bonne personne, merci de rentrer la date dont je parle.`,
-                image: "assets/chateau de loin.jpg",
+                titre: "Premier contact",
+                description: `<div style="text-align: center;">La date de notre rencontre est une information cruciale de notre enquête.`,
+                image: "assets/enigme1.jpg",
                 reponseAttendue: ["2024-07-19", "2024-07-20", "2024-07-21"],
                 indices: [
                     "Demander un indice à ce stade c'est abusé.",
@@ -1570,7 +1568,7 @@
           <!-- Sceau cliquable centré au milieu de la page -->
           <div class="seal-interactive reveal" data-delay="2" onclick="startGame()" role="button" tabindex="0" title="Cliquer pour commencer l'aventure">
             <div class="seal-container">
-              <img src="pour-toi/assets/images/unlock_seal.jpg" alt="Commencer le jeu" class="seal-img" onerror="this.src='assets/chateau%20de%20loin.jpg'">
+              <img src="assets/unlock_seal.jpg" alt="Commencer le jeu" class="seal-img" onerror="this.src='assets/chateau%20de%20loin.jpg'">
             </div>
             <p class="seal-prompt">Alors prête ?</p>
           </div>
