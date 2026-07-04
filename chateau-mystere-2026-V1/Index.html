@@ -281,6 +281,7 @@
             color: var(--clr-gold-bright);
             background: var(--grad-gold);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -1317,6 +1318,87 @@
             box-shadow: 0 0 0 4px #10b98122;
         }
 
+        /* ────────────────────────── COUNTER PICKER (COMBINATION LOCK) ──────────────── */
+        .counter-picker-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin: 24px auto;
+            position: relative;
+            max-width: 280px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(201, 168, 76, 0.3);
+            border-radius: var(--radius-lg);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .counter-picker-container::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 48px;
+            border-top: 1.5px solid rgba(242, 208, 107, 0.5);
+            border-bottom: 1.5px solid rgba(242, 208, 107, 0.5);
+            background: rgba(201, 168, 76, 0.08);
+            pointer-events: none;
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        .counter-picker-container.error {
+            border-color: var(--error-red);
+            box-shadow: 0 0 0 4px var(--error-red-dim), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            animation: shake 0.5s ease;
+        }
+
+        .counter-wheel {
+            position: relative;
+            width: 60px;
+            height: 144px;
+            /* Show exactly 3 items: 48px * 3 = 144px */
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            z-index: 2;
+        }
+
+        .counter-wheel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .counter-wheel-scroll {
+            padding: 48px 0;
+            /* padding equal to item height so first and last item can center */
+        }
+
+        .counter-item {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            scroll-snap-align: center;
+            transition: color 0.2s, transform 0.2s, text-shadow 0.2s;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .counter-item.active {
+            color: var(--clr-gold-bright);
+            text-shadow: 0 0 10px rgba(242, 208, 107, 0.6);
+            transform: scale(1.15);
+        }
+
         /* ────────────────────────── HINT COUNTER BADGE ─────────────────────── */
         .hint-counter {
             display: inline-flex;
@@ -1505,11 +1587,11 @@
 
             {
                 id: 4,
-                type: "text",
+                type: "counter",
                 titre: "Le message crypté (suite)",
                 description: "Tu l'as trouvé ! C'est accompagné d'une photo un peu bizarre...",
                 image: "assets/enigme4_chocher_net.jpeg",
-                reponseAttendue: ["101"], // TODO: Modifier avec la réponse exacte attendue (ex: "2")
+                reponseAttendue: ["101"],
                 indices: [
                     "Pense à son surnom",
                     "Rouen et ses clochers...",
@@ -1823,6 +1905,31 @@
           `;
                     break;
 
+                case 'counter':
+                    interactionHtml = `
+            <div class="counter-picker-container" id="counter-picker">
+              <div class="counter-wheel" id="wheel-hundreds" onscroll="handleWheelScroll(this)">
+                <div class="counter-wheel-scroll">
+                  ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n, idx) => `<div class="counter-item" onclick="selectWheelItem(this, ${idx})">${n}</div>`).join('')}
+                </div>
+              </div>
+              <div class="counter-wheel" id="wheel-tens" onscroll="handleWheelScroll(this)">
+                <div class="counter-wheel-scroll">
+                  ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n, idx) => `<div class="counter-item" onclick="selectWheelItem(this, ${idx})">${n}</div>`).join('')}
+                </div>
+              </div>
+              <div class="counter-wheel" id="wheel-units" onscroll="handleWheelScroll(this)">
+                <div class="counter-wheel-scroll">
+                  ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n, idx) => `<div class="counter-item" onclick="selectWheelItem(this, ${idx})">${n}</div>`).join('')}
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="btn-validate" onclick="validateCounterAnswer()">
+              Valider ma réponse
+            </button>
+          `;
+                    break;
+
                 case 'gps':
                 case 'text':
                 default:
@@ -1864,6 +1971,19 @@
 
             // Init drawing canvas
             if (e.type === 'drawing') initCanvas();
+
+            // Init counter picker
+            if (e.type === 'counter') {
+                setTimeout(() => {
+                    ['wheel-hundreds', 'wheel-tens', 'wheel-units'].forEach(id => {
+                        const wheel = document.getElementById(id);
+                        if (wheel) {
+                            wheel.scrollTop = 0;
+                            handleWheelScroll(wheel);
+                        }
+                    });
+                }, 50);
+            }
         }
 
         /* ─────────────────────────────────────────────────────────────
@@ -2004,6 +2124,71 @@
                 showFeedback('error', '❌ Attention, une erreur vient d\'être ajoutée ! Plus il y a d\'erreurs, plus cela complique une des étapes finales !');
                 input.classList.add('error');
                 setTimeout(() => input.classList.remove('error'), 600);
+            }
+        }
+
+        /* ────────────────────────── COUNTER PICKER LOGIC ───────────────────────── */
+        function handleWheelScroll(wheel) {
+            const itemHeight = 48;
+            const scrollOffset = wheel.scrollTop;
+            const selectedIndex = Math.round(scrollOffset / itemHeight);
+
+            const items = wheel.querySelectorAll('.counter-item');
+            items.forEach((item, idx) => {
+                if (idx === selectedIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        function selectWheelItem(item, idx) {
+            const wheel = item.closest('.counter-wheel');
+            if (wheel) {
+                wheel.scrollTo({
+                    top: idx * 48,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        function getCounterValue() {
+            const itemHeight = 48;
+            const wHundreds = document.getElementById('wheel-hundreds');
+            const wTens = document.getElementById('wheel-tens');
+            const wUnits = document.getElementById('wheel-units');
+
+            if (!wHundreds || !wTens || !wUnits) return '000';
+
+            const h = Math.round(wHundreds.scrollTop / itemHeight);
+            const t = Math.round(wTens.scrollTop / itemHeight);
+            const u = Math.round(wUnits.scrollTop / itemHeight);
+
+            return `${h}${t}${u}`;
+        }
+
+        function validateCounterAnswer() {
+            const answer = getCounterValue();
+            const expected = enigmes[currentIndex].reponseAttendue;
+
+            const acceptedAnswers = Array.isArray(expected) ? expected : [expected];
+            const isCorrect = acceptedAnswers.some(val => String(val).trim() === answer);
+
+            const picker = document.getElementById('counter-picker');
+            const btn = document.getElementById('btn-validate');
+
+            if (isCorrect) {
+                showFeedback('success', '✅ Bonne réponse ! Le code est correct.');
+                if (picker) picker.style.pointerEvents = 'none';
+                if (btn) btn.disabled = true;
+                setTimeout(() => handleSuccess(), 1000);
+            } else {
+                showFeedback('error', '❌ Le code est incorrect ! Une erreur vient d\'être ajoutée.');
+                if (picker) {
+                    picker.classList.add('error');
+                    setTimeout(() => picker.classList.remove('error'), 600);
+                }
             }
         }
 
