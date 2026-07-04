@@ -984,6 +984,214 @@
             margin-bottom: var(--gap-xs);
         }
 
+        /* ──────────────────────── BOSS FIGHT MINI-GAME ──────────────────────── */
+        .bf-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .bf-canvas {
+            display: block;
+            width: 100%;
+            border-radius: var(--radius-md);
+        }
+
+        .bf-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .bf-joystick {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: rgba(201, 168, 76, 0.06);
+            border: 2px solid rgba(201, 168, 76, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        .bf-joystick-knob {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(201, 168, 76, 0.45), rgba(201, 168, 76, 0.1));
+            border: 1.5px solid rgba(242, 208, 107, 0.35);
+            transition: transform 0.05s ease-out;
+        }
+
+        .bf-atk-buttons {
+            display: flex;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .bf-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 2px solid;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            transition: transform 0.08s, opacity 0.15s;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(4px);
+        }
+
+        .bf-btn:active {
+            transform: scale(0.85);
+        }
+
+        .bf-btn-lightning {
+            border-color: rgba(250, 204, 21, 0.5);
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.15);
+        }
+
+        .bf-btn-moon {
+            border-color: rgba(147, 197, 253, 0.5);
+            box-shadow: 0 0 12px rgba(147, 197, 253, 0.15);
+        }
+
+        .bf-btn-nova {
+            border-color: rgba(251, 146, 60, 0.5);
+            box-shadow: 0 0 12px rgba(251, 146, 60, 0.15);
+        }
+
+        .bf-cd-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.55);
+            transition: height 0.08s linear;
+            pointer-events: none;
+        }
+
+        .bf-btn.on-cd {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .bf-intro {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .bf-vs {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin: 18px 0;
+        }
+
+        .bf-fighter-icon {
+            font-size: 2.8rem;
+            margin-bottom: 2px;
+        }
+
+        .bf-fighter-name {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .bf-fighter-name.eva {
+            color: #f2d06b;
+            text-shadow: 0 0 12px rgba(242, 208, 107, 0.4);
+        }
+
+        .bf-fighter-name.malus {
+            color: #c4263d;
+            text-shadow: 0 0 12px rgba(196, 38, 61, 0.4);
+        }
+
+        .bf-vs-text {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            color: var(--text-muted);
+            font-weight: 900;
+            letter-spacing: 3px;
+        }
+
+        .bf-hp-info {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-family: var(--font-ui);
+            margin: 8px 0;
+        }
+
+        .bf-hp-info strong {
+            color: #ef4444;
+        }
+
+        .bf-result {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 5, 15, 0.88);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+            animation: fade-in 0.5s ease;
+            border-radius: var(--radius-md);
+        }
+
+        .bf-result h2 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .bf-result.win h2 {
+            color: #f2d06b;
+            text-shadow: 0 0 20px rgba(242, 208, 107, 0.5);
+        }
+
+        .bf-result.lose h2 {
+            color: #ef4444;
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .bf-kb-hint {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+            font-family: var(--font-ui);
+        }
+
+        @media (pointer: coarse) {
+            .bf-kb-hint {
+                display: none;
+            }
+        }
+
         /* ──────────────────────── TEMPORAL LOCK & VICTORY SCREENS (Luxury & Royal) ────────────────────────── */
         .lock-screen,
         .end-screen {
@@ -1909,7 +2117,7 @@
     <div id="debug-panel">
         <button id="debug-btn" onclick="skipStep()" title="Passer à l'énigme suivante">⚡ Passer</button>
         <select id="debug-select" onchange="jumpToEnigma(this.value)" title="Sauter directement à une énigme">
-            <option value="">🎯 Aller à l'étape...</option>
+            <option value="">🎯 Aller à...</option>
         </select>
     </div>
 
@@ -1925,20 +2133,37 @@
             {
                 id: 1,
                 type: "date",
-                titre: "Premier contact",
-                description: `La date de notre rencontre est une information cruciale de notre enquête.`,
+                titre: "L'anniversaire",
+                description: "Hmm... Une date...",
                 image: "assets/enigme1.jpeg",
-                reponseAttendue: ["2024-07-19", "2024-07-20", "2024-07-21"],
+                reponseAttendue: ["2024-07-19"],
                 indices: [
                     "Bravo ! Tu as découvert le fonctionnement des indices. Tu vois le petit compteur en haut 💡 ? Il augmentera à chaque fois que tu utiliseras un indice. Désolé, cet indice ne sert qu'à ça mon amour.",
-                    "Franchement ?",
-                    "Ca commençait le 19 juillet. Mais je donne pas l'année, faut pas pousser."
+                    "La date de notre rencontre est une information cruciale pour cet escape game.",
+                    "On s'est rencontrés pour la première fois le 19 juillet 2024."
                 ]
             },
 
-            // ── Énigme 2 : La coupe des champions (gems) ──
+            // ── Énigme 2 : GPS Proximité ──
             {
                 id: 2,
+                type: "proximity",
+                titre: "Le premier contact",
+                description: "Il faut autoriser le gps en mode précis",
+                image: null,
+                targetLat: 49.365861,
+                targetLng: 2.746750,
+                toleranceMeters: 2,
+                indices: [
+                    "De quel contact parle-t-on ?",
+                    "La première fois que nous nous sommes touchés",
+                    "49°21'57.1\"N 2°44'48.3\"E"
+                ]
+            },
+
+            // ── Énigme 3 : La coupe des champions (gems) ──
+            {
+                id: 3,
                 type: "gems",
                 titre: "La coupe des champions 2024",
                 description: "",
@@ -1959,9 +2184,9 @@
                 ]
             },
 
-            // ── Énigme 3 : La plus belle ──
+            // ── Énigme 4 : La plus belle ──
             {
-                id: 3,
+                id: 4,
                 type: "text",
                 titre: "La plus belle",
                 description: "Une personne brillait particulièrement ce jour là.",
@@ -1980,9 +2205,9 @@
                 }
             },
 
-            // ── Énigme 4 : Là où tu dors ──
+            // ── Énigme 5 : Là où tu dors ──
             {
-                id: 4,
+                id: 5,
                 type: "text",
                 titre: "Là où tu dors",
                 description: "",
@@ -1992,23 +2217,6 @@
                     "Pense à un endroit sous les étoiles…",
                     "Un lieu temporaire, fait de toile…",
                     "La réponse est : évali"
-                ]
-            },
-
-            // ── Énigme 5 : GPS Proximité ──
-            {
-                id: 5,
-                type: "proximity",
-                titre: "Premier contact (2)",
-                description: "Le premier contact de nos peaux",
-                image: null,
-                targetLat: 49.365861,
-                targetLng: 2.746750,
-                toleranceMeters: 2,
-                indices: [
-                    "Tu dois te rendre physiquement sur un lieu précis.",
-                    "L'écran devient rouge quand tu t'approches…",
-                    "49°21'57.1\"N 2°44'48.3\"E"
                 ]
             },
 
@@ -2045,6 +2253,17 @@
                     "Rouen et ses clochers...",
                     "Dans la ville aux cent clochers, il y en a un en plus que seule toi connaît... 100 + 1 = ..."
                 ]
+            },
+
+            // ── Énigme 8 : Boss Fight Eva vs Malus ──
+            {
+                id: 8,
+                type: "bossfight",
+                titre: "L'épreuve finale",
+                description: "Les ombres de tes erreurs passées et de tes hésitations se sont rassemblées pour donner naissance à <strong>Malus</strong>, un gardien maléfique. Eva doit l'affronter pour continuer l'aventure !",
+                image: null,
+                reponseAttendue: [],
+                indices: []
             },
         ];
 
@@ -2418,9 +2637,44 @@
               </div>
               <div class="proximity-accuracy" id="prox-accuracy"></div>
               <div class="proximity-error-msg" id="prox-error"></div>
+              <button class="btn btn-primary" onclick="requestGpsPermission()" style="margin-top: 24px; width: 100%; font-size: 1.05rem; padding: 14px 20px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(201, 168, 76, 0.3); cursor: pointer;">
+                📍 Autoriser le GPS
+              </button>
             </div>
           `;
                     break;
+
+                case 'bossfight': {
+                    const rawHP = totalErrorsCount * totalHintsCount;
+                    const bossHP = Math.max(3, rawHP);
+                    const hpText = rawHP > 0
+                        ? `<strong>${totalErrorsCount}</strong> erreur${totalErrorsCount > 1 ? 's' : ''} × <strong>${totalHintsCount}</strong> indice${totalHintsCount > 1 ? 's' : ''} = <strong>${bossHP} PV</strong>`
+                        : `Minimum <strong>${bossHP} PV</strong> (aucun malus accumulé)`;
+                    interactionHtml = `
+            <div class="bf-intro">
+                <div class="bf-vs">
+                    <div class="bf-fighter">
+                        <div class="bf-fighter-icon">✨</div>
+                        <div class="bf-fighter-name eva">Eva</div>
+                    </div>
+                    <div class="bf-vs-text">VS</div>
+                    <div class="bf-fighter">
+                        <div class="bf-fighter-icon">👹</div>
+                        <div class="bf-fighter-name malus">Malus</div>
+                    </div>
+                </div>
+                <div class="bf-hp-info">PV de Malus : ${hpText}</div>
+                <div style="margin-top:12px;font-size:0.78rem;color:var(--text-muted);text-align:left;max-width:280px;margin-left:auto;margin-right:auto;line-height:1.8;">
+                    <div>⚡ <strong style="color:#facc15">Éclair d'Amour</strong> — 1 dégât</div>
+                    <div>🌙 <strong style="color:#93c5fd">Lame Lunaire</strong> — 2 dégâts (CD 2.5s)</div>
+                    <div>💫 <strong style="color:#fb923c">Nova Stellaire</strong> — 3 dégâts (CD 5s)</div>
+                </div>
+                <button class="btn btn-primary" onclick="startBossFight()" style="margin-top:18px;">⚔️ Commencer le combat</button>
+                <div class="bf-kb-hint">Clavier : ← → pour bouger · 1 2 3 pour attaquer</div>
+            </div>
+                    `;
+                    break;
+                }
 
                 case 'gps':
                 case 'text':
@@ -2884,12 +3138,48 @@
                 },
                 (err) => {
                     let msg = "Erreur GPS : impossible d'obtenir votre position.";
-                    if (err.code === 1) msg = "⚠️ Vous devez autoriser la géolocalisation pour résoudre cette énigme.";
+                    if (err.code === 1) msg = "⚠️ Accès au GPS refusé. Veuillez toucher le bouton 'Autoriser le GPS' ci-dessous ou vérifier les réglages de votre navigateur.";
                     else if (err.code === 2) msg = "⚠️ Position indisponible. Vérifiez l'activation du GPS.";
                     else if (err.code === 3) msg = "⚠️ Délai d'attente dépassé pour le GPS.";
                     showProxError(msg);
                 },
                 { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 }
+            );
+        }
+
+        function requestGpsPermission() {
+            if (!navigator.geolocation) {
+                showProxError("La géolocalisation n'est pas supportée par votre navigateur.");
+                return;
+            }
+            const $status = document.getElementById('prox-status');
+            const $err = document.getElementById('prox-error');
+            if ($err) $err.classList.remove('visible');
+            if ($status) {
+                $status.textContent = 'Demande d\'autorisation GPS…';
+                $status.classList.add('searching');
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    if ($err) $err.classList.remove('visible');
+                    initProximity(enigmes[currentIndex]);
+                    showFeedback('success', '📍 Autorisation GPS accordée avec succès !');
+                },
+                (err) => {
+                    let msg = "Erreur GPS : impossible d'obtenir votre position.";
+                    if (err.code === 1) {
+                        msg = "⚠️ Autorisation refusée dans le navigateur ! Pour autoriser : sur iPhone (Safari), allez dans Réglages > Confidentialité et sécurité > Service de localisation > Safari > 'Lorsque l'app est active'. Sur Android (Chrome), touchez le cadenas 🔒 dans la barre d'adresse > Autorisations > Localisation > Autoriser. Ensuite, touchez à nouveau le bouton ci-dessous !";
+                        showFeedback('error', '⚠️ Accès au GPS bloqué dans les réglages du navigateur.');
+                    } else if (err.code === 2) {
+                        msg = "⚠️ Position indisponible. Vérifiez que le GPS est activé sur votre téléphone.";
+                    } else if (err.code === 3) {
+                        msg = "⚠️ Délai d'attente dépassé pour le GPS. Réessayez à l'extérieur ou cliquez à nouveau.";
+                        initProximity(enigmes[currentIndex]);
+                    }
+                    showProxError(msg);
+                },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
             );
         }
 
@@ -3033,9 +3323,9 @@
             const $sel = document.getElementById('debug-select');
             if (!$sel) return;
             if ($sel.options.length > 1) return; // Already initialized
-            $sel.innerHTML = '<option value="">🎯 Aller à l\'étape...</option>' +
+            $sel.innerHTML = '<option value="">🎯 Aller à...</option>' +
                 '<option value="welcome">🏠 Accueil</option>' +
-                enigmes.map((e, idx) => `<option value="${idx}">Étape ${idx + 1}</option>`).join('') +
+                enigmes.map((e, idx) => `<option value="${idx}">${idx + 1}. ${e.titre}</option>`).join('') +
                 '<option value="lock">🔒 Décompte final</option>' +
                 '<option value="victory">🏆 Victoire</option>';
         }
@@ -3565,6 +3855,600 @@
                 requestAnimationFrame(animate);
             }
             animate();
+        }
+
+        /* ─────────────────────────────────────────────────────────────
+           BOSS FIGHT ENGINE ⚔️
+        ────────────────────────────────────────────────────────────── */
+        let bf = null;
+
+        function startBossFight() {
+            $app.innerHTML = `
+                <div class="bf-wrapper" id="bf-wrapper">
+                    <canvas id="bf-canvas" class="bf-canvas"></canvas>
+                    <div class="bf-controls">
+                        <div class="bf-joystick" id="bf-joystick-base">
+                            <div class="bf-joystick-knob" id="bf-joystick-knob"></div>
+                        </div>
+                        <div class="bf-atk-buttons">
+                            <button class="bf-btn bf-btn-lightning" id="bf-btn-lightning">⚡</button>
+                            <button class="bf-btn bf-btn-moon" id="bf-btn-moon">🌙</button>
+                            <button class="bf-btn bf-btn-nova" id="bf-btn-nova">💫</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            const wrapper = document.getElementById('bf-wrapper');
+            wrapper.addEventListener('touchstart', e => { if (e.target === wrapper || e.target.tagName === 'CANVAS') e.preventDefault(); }, { passive: false });
+            wrapper.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+            initBFGame();
+        }
+
+        function initBFGame() {
+            const canvas = document.getElementById('bf-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const cw = canvas.parentElement.clientWidth;
+            const ch = Math.min(cw * 1.35, window.innerHeight * 0.62);
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = cw * dpr;
+            canvas.height = ch * dpr;
+            canvas.style.height = ch + 'px';
+            ctx.scale(dpr, dpr);
+            const malusHP = Math.max(3, totalErrorsCount * totalHintsCount);
+
+            bf = {
+                ctx, canvas, W: cw, H: ch, running: true, time: 0,
+                shake: 0, flash: 0, flashColor: '#fff', introTimer: 1.5,
+                eva: {
+                    x: cw / 2, y: ch * 0.78, w: 28, h: 48,
+                    speed: cw * 0.5, hp: 5, maxHp: 5,
+                    dir: 0, facing: 1, inv: 0, atk: null,
+                    cd: [0, 0, 0], trail: [], anim: 0
+                },
+                malus: {
+                    x: cw / 2, y: ch * 0.18, w: 45, h: 60,
+                    hp: malusHP, maxHp: malusHP,
+                    atkTimer: 2.5, hurt: 0, anim: 0,
+                    moveTarget: cw / 2, moveTimer: 0, phase: 0
+                },
+                projectiles: [], particles: [], dmgTexts: [],
+                stars: Array.from({ length: 40 }, () => ({
+                    x: Math.random() * cw, y: Math.random() * ch,
+                    s: Math.random() * 1.5 + 0.5, t: Math.random() * 6.28,
+                    sp: Math.random() * 0.02 + 0.005
+                })),
+                input: { moveX: 0 }
+            };
+            setupBFInput();
+            bf._lastT = performance.now();
+            bf._raf = requestAnimationFrame(bfLoop);
+        }
+
+        function setupBFInput() {
+            const base = document.getElementById('bf-joystick-base');
+            const knob = document.getElementById('bf-joystick-knob');
+            let joyActive = false, joyCX = 0;
+            if (base) {
+                const jStart = (e) => {
+                    e.preventDefault(); joyActive = true;
+                    joyCX = base.getBoundingClientRect().left + base.clientWidth / 2;
+                    jMove(e);
+                };
+                const jMove = (e) => {
+                    if (!joyActive || !bf) return;
+                    const t = e.touches ? e.touches[0] : e;
+                    const dx = t.clientX - joyCX;
+                    const max = base.clientWidth / 2 - 12;
+                    const cl = Math.max(-max, Math.min(max, dx));
+                    if (knob) knob.style.transform = `translateX(${cl}px)`;
+                    bf.input.moveX = cl / max;
+                };
+                const jEnd = () => {
+                    joyActive = false;
+                    if (knob) knob.style.transform = '';
+                    if (bf) bf.input.moveX = 0;
+                };
+                base.addEventListener('touchstart', jStart, { passive: false });
+                base.addEventListener('touchmove', jMove, { passive: false });
+                base.addEventListener('touchend', jEnd);
+                base.addEventListener('touchcancel', jEnd);
+                base.addEventListener('mousedown', jStart);
+                document.addEventListener('mousemove', (e) => { if (joyActive) jMove(e); });
+                document.addEventListener('mouseup', () => { if (joyActive) { joyActive = false; if (knob) knob.style.transform = ''; if (bf) bf.input.moveX = 0; } });
+            }
+            ['lightning', 'moon', 'nova'].forEach((t, i) => {
+                const btn = document.getElementById('bf-btn-' + t);
+                if (btn) {
+                    btn.addEventListener('touchstart', (e) => { e.preventDefault(); bfDoAttack(i); }, { passive: false });
+                    btn.addEventListener('click', () => bfDoAttack(i));
+                }
+            });
+            const kd = (e) => {
+                if (!bf || !bf.running) return;
+                if (e.key === 'ArrowLeft' || e.key === 'a') bf.input.moveX = -1;
+                if (e.key === 'ArrowRight' || e.key === 'd') bf.input.moveX = 1;
+                if (e.key === '1' || e.key === 'j') bfDoAttack(0);
+                if (e.key === '2' || e.key === 'k') bfDoAttack(1);
+                if (e.key === '3' || e.key === 'l') bfDoAttack(2);
+            };
+            const ku = (e) => {
+                if (!bf) return;
+                if ((e.key === 'ArrowLeft' || e.key === 'a') && bf.input.moveX < 0) bf.input.moveX = 0;
+                if ((e.key === 'ArrowRight' || e.key === 'd') && bf.input.moveX > 0) bf.input.moveX = 0;
+            };
+            window.addEventListener('keydown', kd);
+            window.addEventListener('keyup', ku);
+            bf._kd = kd; bf._ku = ku;
+        }
+
+        function bfDoAttack(idx) {
+            if (!bf || !bf.running || bf.introTimer > 0 || bf.eva.cd[idx] > 0 || bf.eva.atk) return;
+            const { eva, malus } = bf;
+            const dmgs = [1, 2, 3], cds = [0.8, 2.5, 5], durs = [0.3, 0.5, 0.8];
+            const names = ['lightning', 'moon', 'nova'];
+            eva.atk = { type: names[idx], t: 0, dur: durs[idx], dmg: dmgs[idx] };
+            eva.cd[idx] = cds[idx];
+
+            if (idx === 0) {
+                bf.projectiles.push({ type: 'lightning', x: eva.x, y: eva.y - 20, t: 0, dur: 0.3, dmg: 1, hit: false });
+                for (let i = 0; i < 8; i++) {
+                    const r = i / 8;
+                    bfParticle(eva.x + (malus.x - eva.x) * r, (eva.y - 20) + (malus.y - eva.y + 20) * r,
+                        (Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80, 0.4, '#facc15', 3);
+                }
+            } else if (idx === 1) {
+                bf.projectiles.push({ type: 'moon', x: eva.x, y: eva.y - 30, vx: 0, vy: -bf.H * 0.85, t: 0, dur: 0.8, dmg: 2, r: 18, hit: false });
+            } else {
+                bf.projectiles.push({ type: 'nova', x: eva.x, y: eva.y - 30, t: 0, dur: 0.8, dmg: 3, hit: false });
+                bf.shake = 0.4; bf.flash = 0.2; bf.flashColor = '#f2d06b';
+            }
+            updateBFBtns();
+        }
+
+        function bfLoop(now) {
+            if (!bf) return;
+            const dt = Math.min((now - bf._lastT) / 1000, 0.05);
+            bf._lastT = now;
+            bf.time += dt;
+            if (bf.running) bfUpdate(dt);
+            bfRender();
+            bf._raf = requestAnimationFrame(bfLoop);
+        }
+
+        function bfUpdate(dt) {
+            const { eva, malus, W, H } = bf;
+            if (bf.introTimer > 0) { bf.introTimer -= dt; return; }
+
+            // Eva
+            eva.dir = bf.input.moveX;
+            eva.x += eva.dir * eva.speed * dt;
+            eva.x = Math.max(20, Math.min(W - 20, eva.x));
+            if (eva.dir !== 0) eva.facing = eva.dir > 0 ? 1 : -1;
+            eva.inv = Math.max(0, eva.inv - dt);
+            eva.anim += dt;
+            if (Math.abs(eva.dir) > 0.1) eva.trail.push({ x: eva.x, y: eva.y, a: 0.4 });
+            eva.trail = eva.trail.filter(p => (p.a -= dt * 1.5) > 0);
+            if (eva.atk) { eva.atk.t += dt; if (eva.atk.t >= eva.atk.dur) eva.atk = null; }
+            for (let i = 0; i < 3; i++) eva.cd[i] = Math.max(0, eva.cd[i] - dt);
+            updateBFBtns();
+
+            // Malus AI
+            malus.phase = malus.hp <= malus.maxHp * 0.5 ? 1 : 0;
+            malus.hurt = Math.max(0, malus.hurt - dt);
+            malus.anim += dt;
+            malus.moveTimer -= dt;
+            if (malus.moveTimer <= 0) {
+                malus.moveTarget = 40 + Math.random() * (W - 80);
+                malus.moveTimer = malus.phase ? 0.8 + Math.random() : 1.5 + Math.random() * 2;
+            }
+            const ms = malus.phase ? 160 : 90;
+            if (Math.abs(malus.x - malus.moveTarget) > 5)
+                malus.x += Math.sign(malus.moveTarget - malus.x) * ms * dt;
+
+            // Malus attacks
+            malus.atkTimer -= dt;
+            if (malus.atkTimer <= 0) {
+                malus.atkTimer = (malus.phase ? 0.8 : 1.6) + Math.random() * 0.6;
+                if (malus.phase && Math.random() < 0.35) {
+                    for (let i = -1; i <= 1; i++)
+                        bf.projectiles.push({ type: 'orb', x: malus.x, y: malus.y + 30, vx: i * 70, vy: H * 0.38, r: 8, dmg: 1, t: 0, dur: 3 });
+                } else {
+                    const dx = eva.x - malus.x, dy = eva.y - malus.y;
+                    const d = Math.sqrt(dx * dx + dy * dy) || 1;
+                    const sp = H * 0.42;
+                    bf.projectiles.push({ type: 'orb', x: malus.x, y: malus.y + 30, vx: (dx / d) * sp, vy: (dy / d) * sp, r: 8, dmg: 1, t: 0, dur: 3 });
+                }
+                for (let i = 0; i < 4; i++)
+                    bfParticle(malus.x + (Math.random() - 0.5) * 40, malus.y + 30, (Math.random() - 0.5) * 40, 20 + Math.random() * 30, 0.5, '#c4263d', 4);
+            }
+
+            // Update projectiles
+            bf.projectiles = bf.projectiles.filter(p => {
+                p.t += dt;
+                if (p.t > p.dur) return false;
+                if (p.type === 'orb') {
+                    p.x += p.vx * dt; p.y += p.vy * dt;
+                    if (eva.inv <= 0 && Math.abs(p.x - eva.x) < 22 && Math.abs(p.y - eva.y) < 28) {
+                        eva.hp -= p.dmg; eva.inv = 1.0;
+                        bf.shake = 0.3; bf.flash = 0.15; bf.flashColor = '#ef4444';
+                        bf.dmgTexts.push({ x: eva.x, y: eva.y - 35, text: '-1', color: '#ef4444', t: 0.9 });
+                        for (let i = 0; i < 10; i++)
+                            bfParticle(eva.x, eva.y, (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200, 0.5, '#ef4444', 4);
+                        if (eva.hp <= 0) bfEndGame(false);
+                        return false;
+                    }
+                    if (Math.random() < 0.3) bfParticle(p.x, p.y, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15, 0.3, '#8b1a2e', 3);
+                }
+                if (p.type === 'lightning' && !p.hit && p.t > 0.08) { p.hit = true; bfHitMalus(p.dmg); }
+                if (p.type === 'moon') {
+                    p.x += p.vx * dt; p.y += p.vy * dt;
+                    bfParticle(p.x + (Math.random() - 0.5) * 10, p.y, (Math.random() - 0.5) * 30, Math.random() * 20, 0.4, '#93c5fd', 3);
+                    if (!p.hit && Math.abs(p.x - malus.x) < 40 && Math.abs(p.y - malus.y) < 45) { p.hit = true; bfHitMalus(p.dmg); }
+                }
+                if (p.type === 'nova' && !p.hit && p.t > 0.2) {
+                    p.hit = true; bfHitMalus(p.dmg);
+                    for (let i = 0; i < 30; i++) {
+                        const a = (i / 30) * Math.PI * 2, sp = 100 + Math.random() * 150;
+                        bfParticle(malus.x, malus.y, Math.cos(a) * sp, Math.sin(a) * sp, 0.8, ['#f2d06b', '#facc15', '#fb923c', '#fff'][i % 4], 5);
+                    }
+                }
+                return true;
+            });
+
+            // Update particles & damage texts
+            bf.particles = bf.particles.filter(p => { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.96; p.vy *= 0.96; return p.t > 0; });
+            bf.dmgTexts = bf.dmgTexts.filter(d => (d.t -= dt) > 0);
+            bf.shake = Math.max(0, bf.shake - dt);
+            bf.flash = Math.max(0, bf.flash - dt);
+
+            // Ambient particles
+            if (Math.random() < 0.15)
+                bfParticle(eva.x + (Math.random() - 0.5) * 20, eva.y + (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 12, -8 - Math.random() * 15, 0.6, '#f2d06b', 2);
+            if (Math.random() < 0.1)
+                bfParticle(malus.x + (Math.random() - 0.5) * 40, malus.y + (Math.random() - 0.5) * 50, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 12, 0.5, '#2a0a20', 3);
+        }
+
+        function bfHitMalus(dmg) {
+            if (!bf) return;
+            bf.malus.hp = Math.max(0, bf.malus.hp - dmg);
+            bf.malus.hurt = 0.3;
+            bf.shake = Math.max(bf.shake, 0.15);
+            bf.dmgTexts.push({ x: bf.malus.x, y: bf.malus.y - 40, text: '-' + dmg, color: '#facc15', t: 0.9 });
+            for (let i = 0; i < 6; i++)
+                bfParticle(bf.malus.x + (Math.random() - 0.5) * 30, bf.malus.y, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120, 0.5, '#c4263d', 4);
+            if (bf.malus.hp <= 0) bfEndGame(true);
+        }
+
+        function bfParticle(x, y, vx, vy, life, color, size) {
+            if (bf) bf.particles.push({ x, y, vx, vy, t: life, maxT: life, color, size });
+        }
+
+        function bfEndGame(win) {
+            if (!bf) return;
+            bf.running = false;
+            if (win) {
+                for (let i = 0; i < 50; i++) {
+                    const a = (i / 50) * Math.PI * 2, sp = 50 + Math.random() * 200;
+                    bfParticle(bf.malus.x, bf.malus.y, Math.cos(a) * sp, Math.sin(a) * sp, 1.2, ['#c4263d', '#8b1a2e', '#4a0f1a', '#ef4444'][i % 4], 6);
+                }
+                bf.flash = 0.5; bf.flashColor = '#f2d06b'; bf.shake = 0.6;
+            }
+            setTimeout(() => {
+                const wrapper = document.getElementById('bf-wrapper');
+                if (!wrapper) return;
+                const ov = document.createElement('div');
+                ov.className = 'bf-result ' + (win ? 'win' : 'lose');
+                ov.innerHTML = win
+                    ? `<h2>✨ Victoire ! ✨</h2><p style="color:var(--text-secondary);margin-bottom:20px;text-align:center;">Eva a vaincu Malus !</p><button class="btn btn-primary" onclick="bfCleanup();handleSuccess();">Continuer l'aventure ↗</button>`
+                    : `<h2>💀 Défaite...</h2><p style="color:var(--text-secondary);margin-bottom:20px;text-align:center;">Eva a été vaincue...</p><button class="btn btn-primary" onclick="startBossFight()">⚔️ Réessayer</button>`;
+                wrapper.appendChild(ov);
+            }, win ? 1500 : 800);
+        }
+
+        function bfCleanup() {
+            if (!bf) return;
+            if (bf._raf) cancelAnimationFrame(bf._raf);
+            if (bf._kd) window.removeEventListener('keydown', bf._kd);
+            if (bf._ku) window.removeEventListener('keyup', bf._ku);
+            bf = null;
+        }
+
+        function updateBFBtns() {
+            if (!bf) return;
+            const names = ['lightning', 'moon', 'nova'], maxCds = [0.8, 2.5, 5];
+            names.forEach((n, i) => {
+                const btn = document.getElementById('bf-btn-' + n);
+                if (!btn) return;
+                const cd = bf.eva.cd[i];
+                btn.classList.toggle('on-cd', cd > 0);
+                let ov = btn.querySelector('.bf-cd-overlay');
+                if (!ov) { ov = document.createElement('div'); ov.className = 'bf-cd-overlay'; btn.appendChild(ov); }
+                ov.style.height = cd > 0 ? (cd / maxCds[i] * 100) + '%' : '0';
+            });
+        }
+
+        // ── BOSS FIGHT RENDERING ──
+        function bfRender() {
+            const { ctx, W, H, eva, malus, shake, time } = bf;
+            ctx.save();
+            if (shake > 0) ctx.translate((Math.random() - 0.5) * shake * 15, (Math.random() - 0.5) * shake * 15);
+
+            // Background
+            const bg = ctx.createLinearGradient(0, 0, 0, H);
+            bg.addColorStop(0, '#0a0118'); bg.addColorStop(0.5, '#0d0a1f'); bg.addColorStop(1, '#050510');
+            ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+            // Stars
+            bf.stars.forEach(s => {
+                s.t += s.sp;
+                ctx.fillStyle = `rgba(255,255,255,${0.35 + 0.25 * Math.sin(s.t)})`;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI * 2); ctx.fill();
+            });
+
+            // Ground
+            ctx.fillStyle = 'rgba(201,168,76,0.15)';
+            ctx.fillRect(0, H * 0.88, W, 1);
+
+            // Particles behind
+            bf.particles.forEach(p => {
+                ctx.globalAlpha = p.t / p.maxT;
+                ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (p.t / p.maxT), 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            // Eva trail
+            eva.trail.forEach(t => {
+                ctx.globalAlpha = t.a * 0.5;
+                ctx.fillStyle = '#c9a84c';
+                ctx.beginPath(); ctx.arc(t.x, t.y, 4, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            // Draw Malus
+            bfDrawMalus(ctx, malus, time);
+            // Draw Eva
+            bfDrawEva(ctx, eva, time);
+
+            // Draw projectiles
+            bf.projectiles.forEach(p => {
+                if (p.type === 'orb') bfDrawOrb(ctx, p);
+                else if (p.type === 'lightning') bfDrawLightning(ctx, p, eva, malus);
+                else if (p.type === 'moon') bfDrawMoonBlade(ctx, p);
+                else if (p.type === 'nova') bfDrawNova(ctx, p, malus);
+            });
+
+            // Damage texts
+            bf.dmgTexts.forEach(d => {
+                ctx.globalAlpha = Math.min(1, d.t * 2);
+                ctx.fillStyle = d.color;
+                ctx.font = `bold ${W * 0.04}px Inter, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.shadowColor = d.color; ctx.shadowBlur = 8;
+                ctx.fillText(d.text, d.x, d.y - (0.9 - d.t) * 40);
+                ctx.shadowBlur = 0;
+            });
+            ctx.globalAlpha = 1;
+
+            // HUD
+            bfDrawHUD(ctx, W, eva, malus);
+
+            // Intro text
+            if (bf.introTimer > 0) {
+                ctx.globalAlpha = Math.min(1, bf.introTimer / 0.3);
+                ctx.fillStyle = '#f2d06b';
+                ctx.font = `bold ${W * 0.11}px Cinzel, serif`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 30;
+                ctx.fillText('COMBAT !', W / 2, H / 2);
+                ctx.shadowBlur = 0;
+            }
+
+            // Flash overlay
+            if (bf.flash > 0) {
+                ctx.globalAlpha = bf.flash * 1.5;
+                ctx.fillStyle = bf.flashColor;
+                ctx.fillRect(0, 0, W, H);
+            }
+            ctx.globalAlpha = 1;
+            ctx.restore();
+        }
+
+        function bfDrawEva(ctx, eva, time) {
+            ctx.save();
+            ctx.translate(eva.x, eva.y);
+            if (eva.inv > 0 && Math.sin(time * 20) > 0) ctx.globalAlpha = 0.3;
+
+            ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 18;
+            const g = ctx.createLinearGradient(0, -32, 0, 18);
+            g.addColorStop(0, '#fef08a'); g.addColorStop(0.4, '#f2d06b'); g.addColorStop(1, '#c9a84c');
+            ctx.fillStyle = g;
+
+            // Head
+            ctx.beginPath(); ctx.arc(0, -28, 7, 0, Math.PI * 2); ctx.fill();
+            // Body
+            ctx.beginPath();
+            ctx.moveTo(-9, -20); ctx.quadraticCurveTo(-11, 0, -7, 16);
+            ctx.lineTo(7, 16); ctx.quadraticCurveTo(11, 0, 9, -20);
+            ctx.closePath(); ctx.fill();
+            // Legs
+            ctx.fillRect(-6, 16, 4, 10); ctx.fillRect(2, 16, 4, 10);
+
+            // Hair
+            ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 1.5; ctx.shadowBlur = 8;
+            for (let i = 0; i < 3; i++) {
+                const off = Math.sin(time * 3 + i) * 4;
+                ctx.beginPath();
+                ctx.moveTo(eva.facing > 0 ? -4 : 4, -33);
+                ctx.quadraticCurveTo(eva.facing * (-12 - i * 4) + off, -28 + i * 3, eva.facing * (-8 - i * 6), -18 + i * 5);
+                ctx.stroke();
+            }
+
+            // Attack arc
+            if (eva.atk) {
+                ctx.globalAlpha = 1 - eva.atk.t / eva.atk.dur;
+                ctx.strokeStyle = eva.atk.type === 'lightning' ? '#facc15' : eva.atk.type === 'moon' ? '#93c5fd' : '#fb923c';
+                ctx.lineWidth = 2.5; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 20;
+                ctx.beginPath();
+                const sa = -Math.PI / 2 + (eva.atk.t / eva.atk.dur) * Math.PI;
+                ctx.arc(0, -10, 22, sa - 0.6, sa + 0.6); ctx.stroke();
+            }
+
+            // Name label
+            ctx.shadowBlur = 0; ctx.globalAlpha = 0.6;
+            ctx.fillStyle = '#f2d06b';
+            ctx.font = `600 ${bf.W * 0.025}px Cinzel, serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText('EVA', 0, 38);
+
+            ctx.restore();
+        }
+
+        function bfDrawMalus(ctx, malus, time) {
+            ctx.save();
+            const fy = Math.sin(time * 2) * 6;
+            ctx.translate(malus.x, malus.y + fy);
+            if (malus.hurt > 0) ctx.globalAlpha = 0.5 + Math.sin(time * 30) * 0.3;
+
+            ctx.shadowColor = '#c4263d'; ctx.shadowBlur = 25;
+            const ag = ctx.createRadialGradient(0, 0, 5, 0, 0, 38);
+            ag.addColorStop(0, malus.phase ? '#8b1a2e' : '#2a0a30');
+            ag.addColorStop(0.5, '#1a0520'); ag.addColorStop(1, 'rgba(10,2,15,0)');
+            ctx.fillStyle = ag;
+
+            // Body
+            ctx.beginPath();
+            for (let i = 0; i < 12; i++) {
+                const a = (i / 12) * Math.PI * 2;
+                const r = 28 + Math.sin(time * 3 + i * 1.5) * 7;
+                const px = Math.cos(a) * r, py = Math.sin(a) * r * 0.8;
+                i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+            }
+            ctx.closePath(); ctx.fill();
+
+            // Core
+            ctx.fillStyle = malus.phase ? '#4a0f1a' : '#0d0418';
+            ctx.beginPath(); ctx.ellipse(0, 0, 20, 25, 0, 0, Math.PI * 2); ctx.fill();
+
+            // Eyes
+            ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 12;
+            ctx.fillStyle = malus.hurt > 0 ? '#fff' : '#ef4444';
+            ctx.beginPath(); ctx.ellipse(-7, -4, 3.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(7, -4, 3.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+
+            // Tendrils
+            ctx.strokeStyle = malus.phase ? 'rgba(196,38,61,0.5)' : 'rgba(74,16,37,0.3)';
+            ctx.lineWidth = 1.5; ctx.shadowBlur = 4;
+            for (let i = 0; i < 4; i++) {
+                const a = (i / 4) * Math.PI + Math.PI * 0.5, w = Math.sin(time * 2 + i * 2) * 8;
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(a) * 22, Math.sin(a) * 18);
+                ctx.quadraticCurveTo(Math.cos(a) * 36 + w, Math.sin(a) * 32, Math.cos(a) * 45 + w * 1.5, Math.sin(a) * 42);
+                ctx.stroke();
+            }
+
+            // Name label
+            if (malus.hp > 0) {
+                ctx.shadowBlur = 0; ctx.globalAlpha = 0.6;
+                ctx.fillStyle = '#c4263d';
+                ctx.font = `600 ${bf.W * 0.025}px Cinzel, serif`;
+                ctx.textAlign = 'center';
+                ctx.fillText('MALUS', 0, 45);
+            }
+            ctx.restore();
+        }
+
+        function bfDrawOrb(ctx, p) {
+            ctx.save(); ctx.translate(p.x, p.y);
+            const g = ctx.createRadialGradient(0, 0, 2, 0, 0, p.r);
+            g.addColorStop(0, '#c4263d'); g.addColorStop(0.5, '#8b1a2e'); g.addColorStop(1, 'rgba(139,26,46,0)');
+            ctx.shadowColor = '#c4263d'; ctx.shadowBlur = 12;
+            ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+        }
+
+        function bfDrawLightning(ctx, p, eva, malus) {
+            if (p.t > p.dur) return;
+            ctx.save();
+            ctx.globalAlpha = 1 - p.t / p.dur;
+            ctx.strokeStyle = '#facc15'; ctx.lineWidth = 2.5;
+            ctx.shadowColor = '#facc15'; ctx.shadowBlur = 18;
+            ctx.beginPath(); ctx.moveTo(eva.x, eva.y - 22);
+            for (let i = 1; i <= 6; i++) {
+                const r = i / 6;
+                ctx.lineTo(eva.x + (malus.x - eva.x) * r + (Math.random() - 0.5) * 28,
+                    (eva.y - 22) + (malus.y - eva.y + 22) * r + (Math.random() - 0.5) * 12);
+            }
+            ctx.stroke();
+            ctx.lineWidth = 1; ctx.globalAlpha *= 0.5;
+            ctx.beginPath(); ctx.moveTo(eva.x + 3, eva.y - 20);
+            for (let i = 1; i <= 6; i++) {
+                const r = i / 6;
+                ctx.lineTo(eva.x + (malus.x - eva.x) * r + (Math.random() - 0.5) * 35,
+                    (eva.y - 20) + (malus.y - eva.y + 20) * r + (Math.random() - 0.5) * 18);
+            }
+            ctx.stroke(); ctx.restore();
+        }
+
+        function bfDrawMoonBlade(ctx, p) {
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(bf.time * 8);
+            ctx.shadowColor = '#93c5fd'; ctx.shadowBlur = 18;
+            ctx.fillStyle = '#bfdbfe';
+            ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI);
+            ctx.arc(4, 0, p.r * 0.7, Math.PI, 0, true);
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#dbeafe'; ctx.beginPath(); ctx.arc(0, 0, p.r * 0.4, 0, Math.PI); ctx.fill();
+            ctx.restore();
+        }
+
+        function bfDrawNova(ctx, p, malus) {
+            ctx.save();
+            if (p.t < 0.2) {
+                const r = p.t / 0.2;
+                ctx.globalAlpha = r; ctx.fillStyle = '#fb923c';
+                ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 30 * r;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 14 * r, 0, Math.PI * 2); ctx.fill();
+            } else {
+                const r = (p.t - 0.2) / (p.dur - 0.2), rad = 18 + r * 55;
+                ctx.globalAlpha = 1 - r;
+                const g = ctx.createRadialGradient(malus.x, malus.y, 0, malus.x, malus.y, rad);
+                g.addColorStop(0, '#fff'); g.addColorStop(0.3, '#fef08a');
+                g.addColorStop(0.6, '#f2d06b'); g.addColorStop(1, 'rgba(242,208,107,0)');
+                ctx.fillStyle = g; ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 35;
+                ctx.beginPath(); ctx.arc(malus.x, malus.y, rad, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 1.5;
+                for (let i = 0; i < 8; i++) {
+                    const a = (i / 8) * Math.PI * 2 + bf.time * 3;
+                    ctx.beginPath(); ctx.moveTo(malus.x, malus.y);
+                    ctx.lineTo(malus.x + Math.cos(a) * rad * 1.3, malus.y + Math.sin(a) * rad * 1.3);
+                    ctx.stroke();
+                }
+            }
+            ctx.restore();
+        }
+
+        function bfDrawHUD(ctx, W, eva, malus) {
+            const bw = W * 0.35, bh = 8, y = 14, pad = 10;
+            ctx.shadowBlur = 0;
+            // Eva HP
+            ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(pad, y, bw, bh);
+            const eg = ctx.createLinearGradient(pad, 0, pad + bw, 0);
+            eg.addColorStop(0, '#f2d06b'); eg.addColorStop(1, '#c9a84c');
+            ctx.fillStyle = eg; ctx.fillRect(pad, y, bw * Math.max(0, eva.hp / eva.maxHp), bh);
+            ctx.strokeStyle = 'rgba(201,168,76,0.4)'; ctx.lineWidth = 1; ctx.strokeRect(pad, y, bw, bh);
+            ctx.fillStyle = '#f2d06b'; ctx.font = `600 ${W * 0.024}px Inter, sans-serif`;
+            ctx.textAlign = 'left'; ctx.fillText(`Eva  ${eva.hp}/${eva.maxHp}`, pad, y - 3);
+            // Malus HP
+            const mx = W - pad - bw;
+            ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(mx, y, bw, bh);
+            const mg = ctx.createLinearGradient(mx, 0, mx + bw, 0);
+            mg.addColorStop(0, '#c4263d'); mg.addColorStop(1, '#8b1a2e');
+            ctx.fillStyle = mg; ctx.fillRect(mx, y, bw * Math.max(0, malus.hp / malus.maxHp), bh);
+            ctx.strokeStyle = 'rgba(196,38,61,0.4)'; ctx.strokeRect(mx, y, bw, bh);
+            ctx.fillStyle = '#ef4444'; ctx.textAlign = 'right';
+            ctx.fillText(`Malus  ${malus.hp}/${malus.maxHp}`, W - pad, y - 3);
         }
 
         /* ─────────────────────────────────────────────────────────────
