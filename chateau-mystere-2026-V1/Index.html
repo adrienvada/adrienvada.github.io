@@ -1415,6 +1415,351 @@
             font-weight: 800;
         }
 
+        /* ────────────────────────── GEMS PUZZLE (Enigma 5) ─────────────────────── */
+        .gems-puzzle-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto var(--gap-lg);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .gems-puzzle-container img {
+            width: 100%;
+            display: block;
+            border-radius: var(--radius-md);
+        }
+
+        .gem-hotspot {
+            position: absolute;
+            width: 11%;
+            height: 11%;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            z-index: 5;
+            background: transparent;
+            -webkit-tap-highlight-color: transparent;
+            transform: rotate(45deg);
+        }
+
+        .gem-hotspot::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .gem-hotspot:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            transform: rotate(45deg) scale(1.15);
+        }
+
+        .gem-hotspot.selected {
+            border-color: rgba(254, 240, 138, 0.9);
+            box-shadow: 0 0 20px rgba(254, 240, 138, 0.6), 0 0 40px rgba(201, 168, 76, 0.3);
+            animation: gem-pulse 1.5s ease-in-out infinite;
+            transform: rotate(45deg) scale(1.1);
+        }
+
+        .gem-hotspot.selected::before {
+            border-color: rgba(254, 240, 138, 0.4);
+        }
+
+        .gem-hotspot.correct {
+            border-color: var(--neon-green) !important;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.7), 0 0 50px rgba(16, 185, 129, 0.3) !important;
+            animation: gem-success 0.6s ease forwards !important;
+        }
+
+        .gem-hotspot.wrong {
+            border-color: var(--error-red) !important;
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.7), 0 0 50px rgba(239, 68, 68, 0.3) !important;
+            animation: shake 0.5s ease, gem-wrong-fade 0.8s ease 0.5s forwards !important;
+        }
+
+        @keyframes gem-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(254, 240, 138, 0.6), 0 0 40px rgba(201, 168, 76, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(254, 240, 138, 0.9), 0 0 60px rgba(201, 168, 76, 0.5);
+            }
+        }
+
+        @keyframes gem-success {
+            0% {
+                transform: rotate(45deg) scale(1.1);
+            }
+
+            50% {
+                transform: rotate(45deg) scale(1.25);
+            }
+
+            100% {
+                transform: rotate(45deg) scale(1.1);
+            }
+        }
+
+        @keyframes gem-wrong-fade {
+            to {
+                border-color: transparent;
+                box-shadow: none;
+            }
+        }
+
+        .gems-selection-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: var(--gap-md) auto;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            max-width: 300px;
+        }
+
+        .gem-slot {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px dashed rgba(201, 168, 76, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .gem-slot.filled {
+            border-style: solid;
+            border-color: rgba(201, 168, 76, 0.6);
+            background: rgba(201, 168, 76, 0.1);
+        }
+
+        .gem-slot-separator {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        .gems-instruction {
+            font-family: var(--font-ui);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: var(--gap-sm);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .gems-reset-btn {
+            display: block;
+            margin: var(--gap-sm) auto 0;
+            padding: 6px 16px;
+            font-size: 0.72rem;
+            font-family: var(--font-ui);
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .gems-reset-btn:hover {
+            border-color: var(--text-muted);
+            color: var(--text-secondary);
+        }
+
+        /* ────────────────────────── GPS PROXIMITY PUZZLE ─────────────────────── */
+        .proximity-widget {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--gap-md);
+            margin: var(--gap-md) auto;
+            max-width: 360px;
+        }
+
+        .proximity-radar {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, rgba(5, 5, 15, 0.9) 70%);
+            border: 2px solid rgba(37, 99, 235, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease;
+            overflow: hidden;
+        }
+
+        .proximity-radar::before {
+            content: '';
+            position: absolute;
+            inset: 15%;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            pointer-events: none;
+        }
+
+        .proximity-radar::after {
+            content: '';
+            position: absolute;
+            inset: 35%;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            pointer-events: none;
+        }
+
+        .proximity-radar .radar-sweep {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.06) 30deg, transparent 60deg);
+            animation: radar-spin 3s linear infinite;
+        }
+
+        @keyframes radar-spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .proximity-distance {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .proximity-distance-value {
+            font-family: var(--font-display);
+            font-size: 2.8rem;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            color: #93c5fd;
+            text-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+            transition: color 0.8s ease, text-shadow 0.8s ease;
+            line-height: 1;
+        }
+
+        .proximity-distance-unit {
+            font-family: var(--font-ui);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .proximity-coords {
+            font-family: var(--font-ui);
+            font-size: 0.72rem;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 10px 16px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+            width: 100%;
+            transition: border-color 0.5s ease;
+        }
+
+        .proximity-status {
+            font-family: var(--font-ui);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            text-align: center;
+            transition: color 0.5s ease;
+            min-height: 1.4em;
+        }
+
+        .proximity-status.searching {
+            animation: pulse-text 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-text {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .proximity-widget.frozen .proximity-radar {
+            border-color: var(--neon-green) !important;
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.5), 0 0 80px rgba(16, 185, 129, 0.2) !important;
+        }
+
+        .proximity-widget.frozen .radar-sweep {
+            animation: none;
+        }
+
+        .proximity-widget.frozen .proximity-distance-value {
+            color: var(--neon-green) !important;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.6) !important;
+        }
+
+        .proximity-widget.frozen .proximity-coords {
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .proximity-error-msg {
+            font-family: var(--font-ui);
+            font-size: 0.82rem;
+            color: var(--error-red);
+            text-align: center;
+            padding: 12px;
+            background: var(--error-red-dim);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-sm);
+            display: none;
+        }
+
+        .proximity-error-msg.visible {
+            display: block;
+        }
+
+        .proximity-accuracy {
+            font-family: var(--font-ui);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-align: center;
+            opacity: 0.6;
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 4px;
@@ -1488,50 +1833,10 @@
         'use strict';
 
         /* ─────────────────────────────────────────────────────────────
-           DONNÉES DES ÉNIGMES (à remplir)
-           Structure de chaque objet :
-           {
-             id:               Number,
-             type:             "text" | "gps" | "choice" | "drawing",
-             titre:            String,
-             description:      String,
-             image:            String (optionnel, chemin vers l'image),
-             reponseAttendue:  String (pour text/gps) ou String (pour choice),
-             choix:            Array<String> (requis pour type "choice"),
-             indices:          [String, String, String]
-           }
+           DONNÉES DES ÉNIGMES
         ────────────────────────────────────────────────────────────── */
         const enigmes = [
-            // ── Exemple d'énigme « texte » ──
-            // {
-            //   id: 1,
-            //   type: "text",
-            //   titre: "Le portail du crépuscule",
-            //   description: "En approchant de la grille rouillée du château, tu remarques une inscription gravée dans la pierre...\n\nQuel mot ouvre le portail ?",
-            //   image: null,
-            //   reponseAttendue: "LUMIERE",
-            //   indices: [
-            //     "C'est ce qui chasse les ténèbres…",
-            //     "Thomas Edison en fut un maître.",
-            //     "La réponse est : LUMIERE"
-            //   ]
-            // },
-
-            // ── Exemple d'énigme « choix multiples » ──
-            // {
-            //   id: 2,
-            //   type: "choice",
-            //   titre: "La salle des blasons",
-            //   description: "Quatre blasons ornent le mur. Un seul dissimule le mécanisme secret.",
-            //   image: "assets/blasons.jpg",
-            //   reponseAttendue: "Le Lion",
-            //   choix: ["L'Aigle", "Le Lion", "Le Serpent", "Le Loup"],
-            //   indices: [
-            //     "Le courage est sa vertu…",
-            //     "C'est le roi des animaux.",
-            //     "La réponse est : Le Lion"
-            //   ]
-            // },
+            // ── Énigme 1 : Date de rencontre ──
             {
                 id: 1,
                 type: "date",
@@ -1546,8 +1851,32 @@
                 ]
             },
 
+            // ── Énigme 2 : La coupe des champions (gems) ──
             {
                 id: 2,
+                type: "gems",
+                titre: "La coupe des champions 2024",
+                description: "",
+                image: "assets/enigme5_coupe.jpeg",
+                reponseAttendue: ["rouge", "bleu"],
+                gems: [
+                    { id: "noir", emoji: "⬛", label: "Noir", top: 7, left: 45 },
+                    { id: "orange", emoji: "🟧", label: "Orange", top: 26, left: 10 },
+                    { id: "vert", emoji: "🟩", label: "Vert", top: 26, left: 77 },
+                    { id: "rouge", emoji: "🟥", label: "Rouge", top: 63, left: 10 },
+                    { id: "jaune", emoji: "🟨", label: "Jaune", top: 63, left: 77 },
+                    { id: "bleu", emoji: "🟦", label: "Bleu", top: 82, left: 45 }
+                ],
+                indices: [
+                    "Penser à l'édition 2024 de la boîte à Meuh.",
+                    "Nous étions séparés.",
+                    "La combinaison est : Rouge, Bleu"
+                ]
+            },
+
+            // ── Énigme 3 : La plus belle ──
+            {
+                id: 3,
                 type: "text",
                 titre: "La plus belle",
                 description: "Une personne brillait particulièrement ce jour là.",
@@ -1566,11 +1895,44 @@
                 }
             },
 
+            // ── Énigme 4 : Là où tu dors ──
             {
-                id: 3,
+                id: 4,
+                type: "text",
+                titre: "Là où tu dors",
+                description: "",
+                image: null,
+                reponseAttendue: ["évali", "Évali", "ÉVALI", "evali", "Evali", "EVALI"],
+                indices: [
+                    "Pense à un endroit sous les étoiles…",
+                    "Un lieu temporaire, fait de toile…",
+                    "La réponse est : évali"
+                ]
+            },
+
+            // ── Énigme 5 : GPS Proximité ──
+            {
+                id: 5,
+                type: "proximity",
+                titre: "Premier contact (2)",
+                description: "Le premier contact de nos peaux",
+                image: null,
+                targetLat: 49.365861,
+                targetLng: 2.746750,
+                toleranceMeters: 2,
+                indices: [
+                    "Tu dois te rendre physiquement sur un lieu précis.",
+                    "L'écran devient rouge quand tu t'approches…",
+                    "49°21'57.1\"N 2°44'48.3\"E"
+                ]
+            },
+
+            // ── Énigme 6 : Le message crypté ──
+            {
+                id: 6,
                 type: "text",
                 titre: "Le message crypté",
-                description: "Nous avons trouvé un message codé. Il semble connecté à un endroit que tu as appris à connaître : \“Jc lmkpzc 2 ajmafcpq bylq jy plus zcjjc tgjjc \" . Sauras-tu trouver le message ?",
+                description: "Nous avons trouvé un message codé. Il semble connecté à un endroit que tu as appris à connaître : \"Jc lmkpzc 2 ajmafcpq bylq jy plus zcjjc tgjjc \" . Sauras-tu trouver le message ?",
                 image: "assets/enigme3_chochers_flous.jpeg",
                 reponseAttendue: [
                     "Le nombre 2 clochers dans la plus belle ville",
@@ -1585,8 +1947,9 @@
                 ]
             },
 
+            // ── Énigme 7 : Le message crypté (suite) ──
             {
-                id: 4,
+                id: 7,
                 type: "counter",
                 titre: "Le message crypté (suite)",
                 description: "Tu l'as trouvé ! C'est accompagné d'une photo un peu bizarre...",
@@ -1849,6 +2212,9 @@
             const e = enigmes[index];
             if (!e) return;
 
+            if (window._geoWatchId) { navigator.geolocation.clearWatch(window._geoWatchId); window._geoWatchId = null; }
+            if (window._proximityTimer) { clearInterval(window._proximityTimer); window._proximityTimer = null; }
+
             // Temporal lock: only blocks enigmas explicitly marked with temporalLock: true
             if (e.temporalLock && !DEBUG && Date.now() < FINAL_UNLOCK_DATE) {
                 renderTemporalLock();
@@ -1857,7 +2223,7 @@
 
             updateProgress();
 
-            const imageHtml = e.image
+            const imageHtml = (e.image && e.type !== 'gems')
                 ? `<img src="${e.image}" alt="" onerror="this.style.display='none'" class="enigma-image" loading="lazy" onclick="openLightbox(this.src)" title="Cliquer pour agrandir">`
                 : '';
 
@@ -1930,6 +2296,47 @@
           `;
                     break;
 
+                case 'gems':
+                    interactionHtml = `
+            <p class="gems-instruction"></p>
+            <div class="gems-puzzle-container" id="gems-container">
+              <img src="${e.image}" alt="La coupe des champions" loading="lazy">
+              ${(e.gems || []).map(g => `
+                <div class="gem-hotspot" id="gem-${g.id}" data-gem="${g.id}"
+                     style="top: ${g.top}%; left: ${g.left}%;"
+                     onclick="selectGem('${g.id}')"
+                     title="${g.label}"></div>
+              `).join('')}
+            </div>
+            <div class="gems-selection-display" id="gems-selection">
+              <div class="gem-slot" id="gem-slot-0">?</div>
+              <div class="gem-slot-separator">+</div>
+              <div class="gem-slot" id="gem-slot-1">?</div>
+            </div>
+            <button class="gems-reset-btn" onclick="resetGems()">↺ Réinitialiser</button>
+          `;
+                    break;
+
+                case 'proximity':
+                    interactionHtml = `
+            <div class="proximity-widget" id="proximity-widget">
+              <div class="proximity-status searching" id="prox-status">Recherche du signal GPS…</div>
+              <div class="proximity-radar" id="prox-radar">
+                <div class="radar-sweep"></div>
+                <div class="proximity-distance">
+                  <div class="proximity-distance-value" id="prox-distance">—</div>
+                  <div class="proximity-distance-unit">mètres</div>
+                </div>
+              </div>
+              <div class="proximity-coords" id="prox-coords">
+                Lat: —<br>Lng: —
+              </div>
+              <div class="proximity-accuracy" id="prox-accuracy"></div>
+              <div class="proximity-error-msg" id="prox-error"></div>
+            </div>
+          `;
+                    break;
+
                 case 'gps':
                 case 'text':
                 default:
@@ -1954,7 +2361,7 @@
           </div>
           <h1 class="enigma-title">${e.titre}</h1>
           ${imageHtml}
-          <div class="enigma-description">${formatText(e.description)}</div>
+          ${e.description ? `<div class="enigma-description">${formatText(e.description)}</div>` : ''}
           ${interactionHtml}
           <div class="feedback" id="feedback"></div>
           ${renderHints(e)}
@@ -1983,6 +2390,16 @@
                         }
                     });
                 }, 50);
+            }
+
+            // Init gems puzzle
+            if (e.type === 'gems') {
+                window._gemsSelected = [];
+            }
+
+            // Init proximity puzzle
+            if (e.type === 'proximity') {
+                setTimeout(() => initProximity(e), 100);
             }
         }
 
@@ -2191,6 +2608,231 @@
                 }
             }
         }
+
+        /* ────────────────────────── GEMS PUZZLE LOGIC ───────────────────────── */
+        function selectGem(gemId) {
+            if (!window._gemsSelected) window._gemsSelected = [];
+
+            // Don't allow more than 2
+            if (window._gemsSelected.length >= 2) return;
+
+            // Don't allow same gem twice
+            if (window._gemsSelected.includes(gemId)) return;
+
+            // Add to selection
+            window._gemsSelected.push(gemId);
+
+            // Highlight the gem
+            const hotspot = document.getElementById('gem-' + gemId);
+            if (hotspot) hotspot.classList.add('selected');
+
+            // Update selection display
+            const enigme = enigmes[currentIndex];
+            const gemData = enigme.gems.find(g => g.id === gemId);
+            const slotIndex = window._gemsSelected.length - 1;
+            const slot = document.getElementById('gem-slot-' + slotIndex);
+            if (slot && gemData) {
+                slot.textContent = gemData.emoji;
+                slot.classList.add('filled');
+            }
+
+            // If 2 gems selected, validate after short delay
+            if (window._gemsSelected.length === 2) {
+                setTimeout(() => validateGems(), 500);
+            }
+        }
+
+        function validateGems() {
+            const enigme = enigmes[currentIndex];
+            const expected = enigme.reponseAttendue; // ["rouge", "bleu"]
+            const selected = window._gemsSelected;
+
+            const isCorrect = selected.length === expected.length &&
+                selected.every((gem, idx) => gem === expected[idx]);
+
+            if (isCorrect) {
+                // Mark gems as correct
+                selected.forEach(gemId => {
+                    const el = document.getElementById('gem-' + gemId);
+                    if (el) {
+                        el.classList.remove('selected');
+                        el.classList.add('correct');
+                    }
+                });
+                showFeedback('success', '✅ Bonne combinaison ! Les pierres s\'illuminent.');
+                // Disable all gems
+                document.querySelectorAll('.gem-hotspot').forEach(el => {
+                    el.style.pointerEvents = 'none';
+                });
+                setTimeout(() => handleSuccess(), 1200);
+            } else {
+                // Mark gems as wrong
+                selected.forEach(gemId => {
+                    const el = document.getElementById('gem-' + gemId);
+                    if (el) {
+                        el.classList.remove('selected');
+                        el.classList.add('wrong');
+                    }
+                });
+                showFeedback('error', '❌ Mauvaise combinaison ! Une erreur vient d\'être ajoutée.');
+                // Reset after animation
+                setTimeout(() => {
+                    resetGems();
+                }, 1300);
+            }
+        }
+
+        function resetGems() {
+            window._gemsSelected = [];
+            // Clear feedback when resetting
+            const $fb = document.getElementById('feedback');
+            if ($fb) $fb.className = 'feedback';
+            document.querySelectorAll('.gem-hotspot').forEach(el => {
+                el.classList.remove('selected', 'wrong', 'correct');
+            });
+            for (let i = 0; i < 2; i++) {
+                const slot = document.getElementById('gem-slot-' + i);
+                if (slot) {
+                    slot.textContent = '?';
+                    slot.classList.remove('filled');
+                }
+            }
+        }
+
+        /* ────────────────────────── GPS PROXIMITY LOGIC ───────────────────────── */
+        function initProximity(enigme) {
+            if (window._geoWatchId) { navigator.geolocation.clearWatch(window._geoWatchId); window._geoWatchId = null; }
+            if (window._proximityTimer) { clearInterval(window._proximityTimer); window._proximityTimer = null; }
+
+            let isFrozen = false;
+            let inZoneSince = null;
+
+            const $widget = document.getElementById('proximity-widget');
+            const $status = document.getElementById('prox-status');
+            const $dist = document.getElementById('prox-distance');
+            const $coords = document.getElementById('prox-coords');
+            const $acc = document.getElementById('prox-accuracy');
+            const $radar = document.getElementById('prox-radar');
+
+            if (DEBUG && $radar) {
+                $radar.title = "DEBUG : Cliquez ici pour simuler que vous êtes sur place (distance = 0m)";
+                $radar.style.cursor = "pointer";
+                $radar.onclick = () => {
+                    if (isFrozen) return;
+                    processPosition(enigme.targetLat, enigme.targetLng, 2);
+                };
+            }
+
+            if (!navigator.geolocation) {
+                showProxError("La géolocalisation n'est pas supportée par votre navigateur.");
+                return;
+            }
+
+            function processPosition(lat, lng, acc) {
+                if (isFrozen) return;
+                if ($coords) $coords.innerHTML = 'Lat: ' + lat.toFixed(6) + '°<br>Lng: ' + lng.toFixed(6) + '°';
+                if ($acc) $acc.textContent = 'Précision GPS : ±' + Math.round(acc) + ' m';
+
+                const dist = getDistanceFromLatLonInKm(lat, lng, enigme.targetLat, enigme.targetLng) * 1000;
+                const distRound = Math.round(dist);
+                if ($dist) $dist.textContent = distRound;
+
+                if ($status) {
+                    $status.classList.remove('searching');
+                }
+
+                // Color mapping: interpolate from blue (distance >= 500m) to red (distance <= 0m)
+                const ratio = Math.max(0, Math.min(1, (500 - dist) / 500));
+                const red = Math.round(37 + (239 - 37) * ratio);
+                const green = Math.round(99 + (68 - 99) * ratio);
+                const blue = Math.round(235 + (68 - 235) * ratio);
+                const rgb = `${red}, ${green}, ${blue}`;
+
+                if ($radar) {
+                    $radar.style.background = `radial-gradient(circle, rgba(${rgb}, 0.3) 0%, rgba(5, 5, 15, 0.9) 70%)`;
+                    $radar.style.borderColor = `rgba(${rgb}, 0.8)`;
+                    $radar.style.boxShadow = `0 0 ${Math.round(20 + 40 * ratio)}px rgba(${rgb}, 0.5)`;
+                }
+                if ($dist) $dist.style.color = `rgb(${rgb})`;
+
+                // Tolerance check
+                if (dist <= enigme.toleranceMeters) {
+                    if (!inZoneSince) {
+                        inZoneSince = Date.now();
+                        if ($status) $status.textContent = '📍 Zone atteinte ! Ne bougez plus (3s)…';
+                        window._proximityTimer = setInterval(() => {
+                            const elapsed = (Date.now() - inZoneSince) / 1000;
+                            if (elapsed >= 3 && !isFrozen) {
+                                isFrozen = true;
+                                clearInterval(window._proximityTimer);
+                                window._proximityTimer = null;
+                                if (window._geoWatchId) { navigator.geolocation.clearWatch(window._geoWatchId); window._geoWatchId = null; }
+
+                                if ($widget) $widget.classList.add('frozen');
+                                if ($status) $status.textContent = '✅ Position validée !';
+
+                                showFeedback('success', '📍 Cible atteinte avec succès ! Le souvenir se déverrouille…');
+                                setTimeout(() => handleSuccess(), 1500);
+                            } else if (!isFrozen && $status) {
+                                $status.textContent = `📍 Zone atteinte ! Ne bougez plus (${Math.ceil(3 - elapsed)}s)…`;
+                            }
+                        }, 250);
+                    }
+                } else {
+                    if (inZoneSince) {
+                        inZoneSince = null;
+                        if (window._proximityTimer) {
+                            clearInterval(window._proximityTimer);
+                            window._proximityTimer = null;
+                        }
+                        if ($status) $status.textContent = 'Signal GPS actif — Approchez-vous';
+                    } else if ($status && !inZoneSince && $status.textContent === 'Recherche du signal GPS…') {
+                        $status.textContent = 'Signal GPS actif — Approchez-vous';
+                    }
+                }
+            }
+
+            window._geoWatchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    processPosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy || 10);
+                },
+                (err) => {
+                    let msg = "Erreur GPS : impossible d'obtenir votre position.";
+                    if (err.code === 1) msg = "⚠️ Vous devez autoriser la géolocalisation pour résoudre cette énigme.";
+                    else if (err.code === 2) msg = "⚠️ Position indisponible. Vérifiez l'activation du GPS.";
+                    else if (err.code === 3) msg = "⚠️ Délai d'attente dépassé pour le GPS.";
+                    showProxError(msg);
+                },
+                { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 }
+            );
+        }
+
+        function showProxError(msg) {
+            const $err = document.getElementById('prox-error');
+            const $status = document.getElementById('prox-status');
+            if ($status) $status.classList.remove('searching');
+            if ($err) {
+                $err.textContent = msg;
+                $err.classList.add('visible');
+            }
+        }
+
+        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius of the earth in km
+            const dLat = deg2rad(lat2 - lat1);
+            const dLon = deg2rad(lon2 - lon1);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function deg2rad(deg) {
+            return deg * (Math.PI / 180);
+        }
+
 
         function handleChoice(index, value) {
             const expected = enigmes[currentIndex].reponseAttendue.trim().toUpperCase();
