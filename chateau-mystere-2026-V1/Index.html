@@ -441,6 +441,134 @@
             color: var(--text-muted);
         }
 
+        @keyframes header-chrono-spawn {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+                filter: brightness(3);
+            }
+
+            50% {
+                transform: scale(1.25);
+                opacity: 1;
+                filter: brightness(2);
+                text-shadow: 0 0 25px var(--clr-gold-bright), 0 0 50px var(--neon-green);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+                filter: brightness(1);
+            }
+        }
+
+        .header-chrono-animated {
+            animation: header-chrono-spawn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes header-flash-glow {
+            0% {
+                border-bottom-color: rgba(255, 255, 255, 0.08);
+                box-shadow: none;
+            }
+
+            30% {
+                border-bottom-color: var(--clr-gold-bright);
+                box-shadow: 0 5px 30px rgba(242, 208, 107, 0.5);
+                background: rgba(242, 208, 107, 0.15);
+            }
+
+            100% {
+                border-bottom-color: rgba(255, 255, 255, 0.08);
+                box-shadow: none;
+            }
+        }
+
+        .header-flash-active {
+            animation: header-flash-glow 2.5s ease-out forwards;
+        }
+
+        .chrono-notify-badge {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 10px;
+            background: linear-gradient(135deg, var(--clr-gold), var(--clr-gold-bright));
+            color: var(--clr-void);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-ui);
+            font-size: 0.72rem;
+            font-weight: 800;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(201, 168, 76, 0.6);
+            pointer-events: none;
+            animation: bounce-notify 1s ease-in-out infinite, fade-in-up 0.4s ease forwards;
+            z-index: 100;
+        }
+
+        @keyframes bounce-notify {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(5px);
+            }
+        }
+
+        .stat-notify-bubble {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 12px;
+            width: 270px;
+            max-width: 80vw;
+            background: linear-gradient(135deg, var(--bg-card), rgba(20, 20, 30, 0.98));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--clr-gold);
+            color: var(--text-primary);
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 0.78rem;
+            line-height: 1.4;
+            text-align: left;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(201, 168, 76, 0.3);
+            pointer-events: none;
+            animation: bounce-notify 1.5s ease-in-out infinite, fade-in-up 0.4s ease forwards;
+            z-index: 1000;
+        }
+
+        .stat-notify-bubble.error-style {
+            border-color: var(--error-red);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        @keyframes badge-pulse-highlight {
+            0% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+
+            50% {
+                transform: scale(1.3);
+                filter: brightness(2);
+            }
+
+            100% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+        }
+
+        .badge-highlight-animated {
+            animation: badge-pulse-highlight 0.8s cubic-bezier(0.16, 1, 0.3, 1) 3;
+        }
+
         .step-badge {
             display: flex;
             align-items: center;
@@ -862,6 +990,304 @@
             animation: shake 0.5s ease;
         }
 
+        /* ────────────────────────── ENIGME MOSAIC (SPACE ENSEMBLE) ────────────────────────── */
+        .mosaic-container {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+            width: 100%;
+            max-width: 640px;
+            margin: var(--gap-md) auto;
+            padding: var(--gap-sm);
+            background: var(--clr-glass);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-card), var(--shadow-inset);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        @media (max-width: 480px) {
+            .mosaic-container {
+                gap: 4px;
+                padding: 6px;
+            }
+        }
+
+        .mosaic-tile {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(15, 16, 53, 0.6);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease, filter 0.25s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mosaic-tile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease, filter 0.3s ease;
+        }
+
+        .mosaic-tile:hover:not(.disabled):not(.valid-clicked) {
+            transform: scale(1.06);
+            z-index: 2;
+            border-color: var(--clr-gold-bright);
+            box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
+        }
+
+        .mosaic-tile:hover:not(.disabled):not(.valid-clicked) img {
+            transform: scale(1.1);
+        }
+
+        .mosaic-tile:active:not(.disabled):not(.valid-clicked) {
+            transform: scale(0.95);
+        }
+
+        .mosaic-tile.valid-clicked {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), inset 0 0 15px rgba(16, 185, 129, 0.4);
+            pointer-events: none;
+            cursor: default;
+        }
+
+        .mosaic-tile.valid-clicked::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(16, 185, 129, 0.45);
+            backdrop-filter: contrast(1.1) brightness(1.1);
+            -webkit-backdrop-filter: contrast(1.1) brightness(1.1);
+            transition: all 0.3s ease;
+            animation: mosaicPulse 1.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes mosaicPulse {
+            0% {
+                background: rgba(16, 185, 129, 0.35);
+            }
+
+            100% {
+                background: rgba(16, 185, 129, 0.55);
+            }
+        }
+
+        .mosaic-tile.disabled {
+            pointer-events: none;
+            cursor: default;
+        }
+
+        .mosaic-instruction-banner {
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto var(--gap-sm);
+            padding: 10px 14px;
+            background: rgba(201, 168, 76, 0.12);
+            border: 1px solid rgba(201, 168, 76, 0.35);
+            border-radius: var(--radius-sm);
+            color: var(--clr-gold-bright);
+            font-size: 0.85rem;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .mosaic-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto var(--gap-sm);
+            padding: 10px 14px;
+            background: rgba(15, 16, 53, 0.65);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+        }
+
+        .mosaic-zoom-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .mosaic-zoom-btns {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-mosaic-zoom {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: var(--font-ui);
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-mosaic-zoom:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .btn-mosaic-zoom.active {
+            background: var(--clr-gold);
+            color: #05050f;
+            border-color: var(--clr-gold-bright);
+            box-shadow: 0 0 12px rgba(201, 168, 76, 0.4);
+        }
+
+        .mosaic-grid-wrapper {
+            width: 100%;
+            max-width: 100%;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: var(--radius-md);
+            margin: 0 auto var(--gap-md);
+            position: relative;
+        }
+
+        .mosaic-grid-wrapper::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        .mosaic-grid-wrapper::-webkit-scrollbar-track {
+            background: rgba(5, 5, 15, 0.5);
+            border-radius: 4px;
+        }
+
+        .mosaic-grid-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(201, 168, 76, 0.4);
+            border-radius: 4px;
+        }
+
+        .mosaic-preview-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 5, 15, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .mosaic-preview-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .mosaic-preview-card {
+            background: var(--clr-surface);
+            border: 2px solid var(--clr-gold);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(201, 168, 76, 0.3);
+            max-width: 85vw;
+            max-height: 85vh;
+            transform: scale(0.9);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .mosaic-preview-overlay.active .mosaic-preview-card {
+            transform: scale(1);
+        }
+
+        .mosaic-preview-img-wrapper {
+            width: 280px;
+            height: 280px;
+            max-width: 75vw;
+            max-height: 55vh;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (min-width: 600px) {
+            .mosaic-preview-img-wrapper {
+                width: 360px;
+                height: 360px;
+            }
+        }
+
+        .mosaic-preview-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .mosaic-preview-title {
+            margin-top: 14px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--clr-gold-bright);
+            text-align: center;
+            font-family: var(--font-heading);
+            text-shadow: 0 0 10px rgba(201, 168, 76, 0.4);
+        }
+
+        .mosaic-preview-hint {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mosaic-tile.mosaic-win-pulse {
+            border-color: #00ff88 !important;
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.9), inset 0 0 20px rgba(0, 255, 136, 0.7) !important;
+            z-index: 5;
+        }
+
+        .mosaic-tile.mosaic-win-pulse::after {
+            background: rgba(0, 255, 136, 0.65) !important;
+            backdrop-filter: contrast(1.3) brightness(1.3) !important;
+            -webkit-backdrop-filter: contrast(1.3) brightness(1.3) !important;
+            animation: spaceInvaderWinPulse 0.5s infinite alternate cubic-bezier(0.4, 0, 0.6, 1) !important;
+        }
+
+        @keyframes spaceInvaderWinPulse {
+            0% {
+                background: rgba(0, 255, 136, 0.45);
+                box-shadow: inset 0 0 15px rgba(0, 255, 136, 0.6);
+            }
+
+            100% {
+                background: rgba(0, 255, 136, 0.85);
+                box-shadow: inset 0 0 35px rgba(0, 255, 136, 1);
+            }
+        }
+
         /* ──────────────────────── FEEDBACK MESSAGE ────────────────────────────── */
         .feedback {
             font-size: 0.85rem;
@@ -923,7 +1349,11 @@
 
         .hint-tab {
             flex: 1;
-            padding: 10px 8px;
+            height: 38px;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 0.72rem;
             font-family: inherit;
             font-weight: 600;
@@ -952,6 +1382,38 @@
         .hint-tab.revealed {
             color: var(--text-secondary);
             border-color: var(--text-muted);
+        }
+
+        .hint-tab.confirming {
+            display: flex;
+            padding: 0;
+            overflow: hidden;
+            border-color: var(--accent-violet);
+            background: rgba(124, 58, 237, 0.05);
+        }
+
+        .hint-confirm-btn,
+        .hint-cancel-btn {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+
+        .hint-confirm-btn:hover {
+            background: rgba(46, 213, 115, 0.2);
+        }
+
+        .hint-cancel-btn:hover {
+            background: rgba(255, 71, 87, 0.2);
+        }
+
+        .hint-confirm-btn {
+            border-right: 1px solid var(--border-subtle);
         }
 
         .hint-content {
@@ -1443,7 +1905,8 @@
             display: flex;
         }
 
-        #debug-btn {
+        #debug-btn,
+        #debug-reset-btn {
             padding: 8px 12px;
             font-size: 0.75rem;
             font-family: var(--font-ui);
@@ -1460,9 +1923,19 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        #debug-btn:hover {
+        #debug-btn:hover,
+        #debug-reset-btn:hover {
             background: #f59e0b;
             transform: scale(1.05);
+        }
+
+        #debug-reset-btn {
+            background: #ef4444;
+            color: #ffffff;
+        }
+
+        #debug-reset-btn:hover {
+            background: #dc2626;
         }
 
         #debug-select {
@@ -2065,23 +2538,26 @@
     <!-- ═══════════════════════ FIXED HEADER ═══════════════════════ -->
     <header id="header" class="hidden">
         <div class="header-inner">
-            <div>
+            <div id="header-chrono-wrap" class="hidden" style="position: relative;">
                 <div class="chrono-label">Temps restant</div>
                 <div id="chrono" class="chrono">72:00:00</div>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
                 <div id="errors-badge" class="step-badge"
-                    style="border-color: rgba(239, 68, 68, 0.3); color: var(--text-secondary);"
+                    style="border-color: rgba(239, 68, 68, 0.3); color: var(--text-secondary); position: relative;"
                     title="Nombre total d'erreurs commises">
-                    ❌ <span id="error-total-count" style="color: var(--error-red); font-weight: 700;">0</span>
+                    <span id="errors-badge-content" style="display: inline-flex; align-items: center; gap: 4px;">❌ <span
+                            id="error-total-count" style="color: var(--error-red); font-weight: 700;">0</span></span>
                 </div>
                 <div id="hints-badge" class="step-badge"
-                    style="border-color: rgba(201, 168, 76, 0.3); color: var(--text-secondary);"
+                    style="border-color: rgba(201, 168, 76, 0.3); color: var(--text-secondary); position: relative;"
                     title="Nombre total d'indices utilisés">
-                    💡 <span id="hint-total-count" style="color: var(--clr-gold-bright); font-weight: 700;">0</span>
+                    <span id="hints-badge-content" style="display: inline-flex; align-items: center; gap: 4px;">💡 <span
+                            id="hint-total-count"
+                            style="color: var(--clr-gold-bright); font-weight: 700;">0</span></span>
                 </div>
                 <div id="step-badge" class="step-badge">
-                    Étape <span class="current" id="step-current">1</span> / <span id="step-total">?</span>
+                    Étape <span class="current" id="step-current">1</span>
                 </div>
             </div>
         </div>
@@ -2116,6 +2592,8 @@
     <!-- ═══════════════════════ DEBUG PANEL ════════════════════════ -->
     <div id="debug-panel">
         <button id="debug-btn" onclick="skipStep()" title="Passer à l'énigme suivante">⚡ Passer</button>
+        <button id="debug-reset-btn" onclick="resetGame()" title="Réinitialiser la partie et les énigmes">🔄
+            Réinitialiser</button>
         <select id="debug-select" onchange="jumpToEnigma(this.value)" title="Sauter directement à une énigme">
             <option value="">🎯 Aller à...</option>
         </select>
@@ -2138,7 +2616,7 @@
                 image: "assets/enigme1.jpeg",
                 reponseAttendue: ["2024-07-19"],
                 indices: [
-                    "Bravo ! Tu as découvert le fonctionnement des indices. Tu vois le petit compteur en haut 💡 ? Il augmentera à chaque fois que tu utiliseras un indice. Désolé, cet indice ne sert qu'à ça mon amour.",
+                    "Bravo ! Tu as découvert le fonctionnement des indices ! Celui-là ne sert qu'à ça d'ailleurs.",
                     "La date de notre rencontre est une information cruciale pour cet escape game.",
                     "On s'est rencontrés pour la première fois le 19 juillet 2024."
                 ]
@@ -2161,11 +2639,26 @@
                 ]
             },
 
-            // ── Énigme 3 : La coupe des champions (gems) ──
+            // ── Énigme 3 : Là où tu dors ──
             {
                 id: 3,
+                type: "text",
+                titre: "Là où tu dors",
+                description: "",
+                image: "assets/enigme6_carte_tente.jpeg",
+                reponseAttendue: ["évali", "Évali", "ÉVALI", "evali", "Evali", "EVALI"],
+                indices: [
+                    "Pense à un endroit sous les étoiles…",
+                    "Un lieu temporaire, fait de toile…",
+                    "Une carte t'attend dans une des poches de la tente ♥️"
+                ]
+            },
+
+            // ── Énigme 4 : La coupe des champions (gems) ──
+            {
+                id: 4,
                 type: "gems",
-                titre: "La coupe des champions 2024",
+                titre: "",
                 description: "",
                 image: "assets/enigme5_coupe.jpeg",
                 reponseAttendue: ["rouge", "bleu"],
@@ -2184,9 +2677,9 @@
                 ]
             },
 
-            // ── Énigme 4 : La plus belle ──
+            // ── Énigme 5 : La plus belle ──
             {
-                id: 4,
+                id: 5,
                 type: "text",
                 titre: "La plus belle",
                 description: "Une personne brillait particulièrement ce jour là.",
@@ -2205,20 +2698,7 @@
                 }
             },
 
-            // ── Énigme 5 : Là où tu dors ──
-            {
-                id: 5,
-                type: "text",
-                titre: "Là où tu dors",
-                description: "",
-                image: null,
-                reponseAttendue: ["évali", "Évali", "ÉVALI", "evali", "Evali", "EVALI"],
-                indices: [
-                    "Pense à un endroit sous les étoiles…",
-                    "Un lieu temporaire, fait de toile…",
-                    "La réponse est : évali"
-                ]
-            },
+
 
             // ── Énigme 6 : Le message crypté ──
             {
@@ -2255,9 +2735,89 @@
                 ]
             },
 
-            // ── Énigme 8 : Boss Fight Eva vs Malus ──
+            // ── Énigme 8 : Space Ensemble (Mosaic) ──
             {
                 id: 8,
+                type: "mosaic",
+                titre: "Un ensemble un peu space",
+                description: "",
+                image: null,
+                reponseAttendue: [],
+                indices: [
+                    "Parmi cette selection, certaines oeuvres ont un point commun",
+                    "C'est d'être passé par nos mains, ensemble ♥️",
+                    "Et en plus elles forment un space invader..."
+                ],
+                tiles: [
+                    // Row 1
+                    { file: "1_1_Oppenheimer - Petite.jpeg", valid: 0, title: "Oppenheimer" },
+                    { file: "1_2_Barbie - Petite.jpeg", valid: 0, title: "Barbie" },
+                    { file: "1_3_GTAV - Petite.jpeg", valid: 0, title: "GTA V" },
+                    { file: "1_4_It follows - Petite.jpeg", valid: 1, title: "It follows" },
+                    { file: "1_5_Stardew Valley - Petite.jpeg", valid: 1, title: "Stardew Valley" },
+                    { file: "1_6_Poor Things - Petite.jpeg", valid: 0, title: "Poor Things" },
+                    { file: "1_7_Anatomy of a Fall - Petite.jpeg", valid: 0, title: "Anatomy of a Fall" },
+                    { file: "1_8_Past Lives - Petite.jpeg", valid: 0, title: "Past Lives" },
+                    // Row 2
+                    { file: "2_1_Alan Wake - Petite.jpeg", valid: 0, title: "Alan Wake 2" },
+                    { file: "2_2_Super Mario Bros - Petite.jpeg", valid: 0, title: "Super Mario Bros. Wonder" },
+                    { file: "2_3_Zelda - Petite.jpeg", valid: 1, title: "Zelda" },
+                    { file: "2_4_Balatro - Petite.jpeg", valid: 1, title: "Balatro" },
+                    { file: "2_5_Borderlands - Petite.jpeg", valid: 1, title: "Borderlands" },
+                    { file: "2_6_Au boulot - Petite.jpeg", valid: 1, title: "Au boulot" },
+                    { file: "2_7_Spider-Man 2 - Petite.jpeg", valid: 0, title: "Spider-Man 2" },
+                    { file: "2_8_Helldivers 2 - Petite.jpeg", valid: 0, title: "Helldivers 2" },
+                    // Row 3
+                    { file: "3_1_Tekken 8 - Petite.jpeg", valid: 0, title: "Tekken 8" },
+                    { file: "3_2_Arco - Petite.jpeg", valid: 1, title: "Arco" },
+                    { file: "3_3_Diablo IV - Petite.jpeg", valid: 1, title: "Diablo IV" },
+                    { file: "3_4_Split fiction - Petite.jpeg", valid: 1, title: "Split fiction" },
+                    { file: "3_5_Anora - Petite.jpeg", valid: 1, title: "Anora" },
+                    { file: "3_6_The office - Petite.jpeg", valid: 1, title: "The office" },
+                    { file: "3_7_Breaking bad - Petite.jpeg", valid: 1, title: "Breaking bad" },
+                    { file: "3_8_Starfield - Petite.jpeg", valid: 0, title: "Starfield" },
+                    // Row 4
+                    { file: "4_1_Hamnet - Petite.jpeg", valid: 1, title: "Hamnet" },
+                    { file: "4_2_Le petit prince - Petite.jpeg", valid: 1, title: "Le petit prince" },
+                    { file: "4_3_Furiosa - Petite.jpeg", valid: 0, title: "Furiosa" },
+                    { file: "4_4_Minecraft, le film - Petite.jpeg", valid: 1, title: "Minecraft, le film" },
+                    { file: "4_5_Monsieur Aznavour - Petite.jpeg", valid: 1, title: "Monsieur Aznavour" },
+                    { file: "4_6_Inside Out 2 - Petite.jpeg", valid: 0, title: "Inside Out 2" },
+                    { file: "4_7_La distance - Petite.jpeg", valid: 1, title: "La distance" },
+                    { file: "4_8_Pinocchio - Petite.jpeg", valid: 1, title: "Pinocchio" },
+                    // Row 5
+                    { file: "5_1_Hadès - Petite.jpeg", valid: 1, title: "Hadès" },
+                    { file: "5_2_Baldur's Gate 3 - Petite.jpeg", valid: 1, title: "Baldur's gate 3" },
+                    { file: "5_3_Rocket League - Petite.jpeg", valid: 1, title: "Rocket League" },
+                    { file: "5_4_Control - Petite.jpeg", valid: 1, title: "Control" },
+                    { file: "5_5_Don't starve together - Petite.jpeg", valid: 1, title: "Don't starve together" },
+                    { file: "5_6_Stranger things - Petite.jpeg", valid: 1, title: "Stranger things" },
+                    { file: "5_7_Cat quest - Petite.jpeg", valid: 1, title: "Cat quest" },
+                    { file: "5_8_Cocoon - Petite.jpeg", valid: 1, title: "Cocoon" },
+                    // Row 6
+                    { file: "6_1_Challengers - Petite.jpeg", valid: 0, title: "Challengers" },
+                    { file: "6_2_The Holdovers - Petite.jpeg", valid: 0, title: "The Holdovers" },
+                    { file: "6_3_Sackboy - Petite.jpeg", valid: 1, title: "Sackboy" },
+                    { file: "6_4_Final Fantasy VI - Petite.jpeg", valid: 0, title: "Final Fantasy VII Rebirth" },
+                    { file: "6_5_Dragon's Dogma - Petite.jpeg", valid: 0, title: "Dragon's Dogma 2" },
+                    { file: "6_6_Detroit - Petite.jpeg", valid: 1, title: "Detroit" },
+                    { file: "6_7_Killers of the Flower Moon - Petite.jpeg", valid: 0, title: "Killers of the Flower Moon" },
+                    { file: "6_8_The Boy and the Heron - Petite.jpeg", valid: 0, title: "The Boy and the Heron" },
+                    // Row 7
+                    { file: "7_1_Deadpool & Wolverine - Petite.jpeg", valid: 0, title: "Deadpool & Wolverine" },
+                    { file: "7_2_Cyberpunk - Petite.jpeg", valid: 1, title: "Cyberpunk" },
+                    { file: "7_3_Friends - Petite.jpeg", valid: 0, title: "Friends" },
+                    { file: "7_4_Twilight 5 - Petite.jpeg", valid: 0, title: "Twilight 5" },
+                    { file: "7_5_Shadow of the Erdtree - Petite.jpeg", valid: 0, title: "Shadow of the Erdtree" },
+                    { file: "7_6_Le diable - Petite.jpeg", valid: 0, title: "Le diable s'habille en prada 2" },
+                    { file: "7_7_Red dead Redemption II - Petite.jpeg", valid: 1, title: "Red dead Redemption II" },
+                    { file: "7_8_Across the Spider-Verse - Petite.jpeg", valid: 0, title: "Across the Spider-Verse" }
+                ]
+            },
+
+            // ── Énigme 9 : Boss Fight Eva vs Malus ──
+            {
+                id: 9,
                 type: "bossfight",
                 titre: "L'épreuve finale",
                 description: "Les ombres de tes erreurs passées et de tes hésitations se sont rassemblées pour donner naissance à <strong>Malus</strong>, un gardien maléfique. Eva doit l'affronter pour continuer l'aventure !",
@@ -2271,7 +2831,6 @@
         /* ─────────────────────────────────────────────────────────────
            CONFIGURATION
         ────────────────────────────────────────────────────────────── */
-        const GAME_DURATION_MS = 72 * 60 * 60 * 1000;                       // 72 h
         const FINAL_UNLOCK_DATE = new Date('2026-07-19T02:00:00').getTime();  // Dimanche 19 juillet 2026, 02:00
         let DEBUG = new URLSearchParams(location.search).get('debug') === 'true' || new URLSearchParams(location.search).has('debug');
         const LS_KEY_INDEX = 'escapeGame_currentIndex';
@@ -2280,6 +2839,8 @@
         const LS_KEY_HINTS_TOTAL = 'escapeGame_hintsTotal';
         const LS_KEY_ERRORS_TOTAL = 'escapeGame_errorsTotal';
         const LS_KEY_FINISHED = 'escapeGame_finished';
+        const LS_KEY_HINT_BUBBLE = 'escapeGame_hintBubbleShown';
+        const LS_KEY_ERROR_BUBBLE = 'escapeGame_errorBubbleShown';
 
         /* ─────────────────────────────────────────────────────────────
            STATE
@@ -2301,7 +2862,6 @@
         const $progress = document.getElementById('progress-bar');
         const $chrono = document.getElementById('chrono');
         const $stepCur = document.getElementById('step-current');
-        const $stepTotal = document.getElementById('step-total');
         const $debugPanel = document.getElementById('debug-panel');
 
         // Raccourci clavier Alt+D ou Ctrl+Shift+D pour activer/désactiver le debug
@@ -2441,7 +3001,7 @@
             // Start typewriter animation for welcome text
             const twEl = document.getElementById('welcome-tw');
             if (twEl && typeof typewriter === 'function') {
-                typewriter(twEl, "Mon amour, pour notre anniversaire de rencontre, je t'ai préparé un Escape Game secret.\nAttention, le trésor apparaîtra au jour de notre anniversaire. Tu as donc un temps imparti pour résoudre toutes les énigmes et y accéder...", 35, 400);
+                typewriter(twEl, "Mon amour, pour notre anniversaire de rencontre, je t'ai préparé un Escape Game secret. \n Prends ton temps. \n Ou pas. \n Seule. Ou pas. \n Fais comme tu veux. \n \n Ou comme tu peux...", 35, 400);
             }
         }
 
@@ -2460,7 +3020,7 @@
         function showHeader() {
             if ($header) $header.classList.remove('hidden');
             if ($progressW) $progressW.classList.remove('hidden');
-            if ($stepTotal) $stepTotal.textContent = enigmes.length;
+            updateChronoVisibility();
             updateProgress();
         }
 
@@ -2468,6 +3028,16 @@
             if ($header) $header.classList.add('hidden');
             if ($progressW) $progressW.classList.add('hidden');
             if (timerInterval) clearInterval(timerInterval);
+        }
+
+        function updateChronoVisibility(forceShow = false) {
+            const $wrap = document.getElementById('header-chrono-wrap');
+            if (!$wrap) return;
+            if (currentIndex === 0 && !forceShow && !window._enigma1ChronoUnlocked) {
+                $wrap.classList.add('hidden');
+            } else {
+                $wrap.classList.remove('hidden');
+            }
         }
 
         function updateProgress() {
@@ -2487,23 +3057,43 @@
         }
 
         function tickChrono() {
-            const elapsed = Date.now() - startTime;
-            const remaining = GAME_DURATION_MS - elapsed;
-            const absRemaining = Math.max(0, remaining);
-            const h = Math.floor(absRemaining / 3600000);
-            const m = Math.floor((absRemaining % 3600000) / 60000);
-            const s = Math.floor((absRemaining % 60000) / 1000);
+            const diff = FINAL_UNLOCK_DATE - Date.now();
+
+            if (diff <= 0) {
+                $chrono.textContent = "00:00:00:00";
+                $chrono.style.color = 'var(--clr-crimson-bright)';
+                $chrono.style.textShadow = '0 0 20px var(--clr-crimson-bright), 0 0 60px rgba(196, 38, 61, 0.5)';
+                $chrono.style.animation = 'pulse-glow 1s infinite';
+                return;
+            } else {
+                $chrono.style.animation = '';
+            }
+
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
 
             $chrono.textContent =
+                String(d).padStart(2, '0') + ':' +
                 String(h).padStart(2, '0') + ':' +
                 String(m).padStart(2, '0') + ':' +
                 String(s).padStart(2, '0');
 
-            // Color urgency
-            if (remaining < 3600000) {
+            if (diff <= 2 * 3600000) { // <= 2h
+                $chrono.style.color = 'var(--clr-crimson-bright)';
+                $chrono.style.textShadow = '0 0 20px var(--clr-crimson-bright), 0 0 60px rgba(196, 38, 61, 0.5)';
+                $chrono.style.animation = 'pulse-glow 1s infinite';
+            } else if (diff <= 24 * 3600000) { // <= 24h
                 $chrono.style.color = 'var(--error-red)';
-                $chrono.style.textShadow = '0 0 20px var(--error-red), 0 0 60px #ef444422';
-            } else {
+                $chrono.style.textShadow = '0 0 15px var(--error-red), 0 0 45px rgba(239, 68, 68, 0.4)';
+            } else if (diff <= 48 * 3600000) { // <= 48h
+                $chrono.style.color = 'var(--clr-gold-bright)';
+                $chrono.style.textShadow = '0 0 15px var(--clr-gold-bright), 0 0 40px rgba(242, 208, 107, 0.3)';
+            } else if (diff <= 72 * 3600000) { // <= 72h
+                $chrono.style.color = 'var(--clr-gold)';
+                $chrono.style.textShadow = '0 0 10px var(--clr-gold)';
+            } else { // > 72h
                 $chrono.style.color = '';
                 $chrono.style.textShadow = '';
             }
@@ -2518,6 +3108,12 @@
 
             if (window._geoWatchId) { navigator.geolocation.clearWatch(window._geoWatchId); window._geoWatchId = null; }
             if (window._proximityTimer) { clearInterval(window._proximityTimer); window._proximityTimer = null; }
+            if (window._e1Timer) { clearInterval(window._e1Timer); window._e1Timer = null; }
+            window._enigma1SuccessActive = false;
+            if (index === 0) window._enigma1ChronoUnlocked = false;
+            const notifyBadge = document.getElementById('header-chrono-notify');
+            if (notifyBadge) notifyBadge.remove();
+            updateChronoVisibility();
 
             // Temporal lock: only blocks enigmas explicitly marked with temporalLock: true
             if (e.temporalLock && !DEBUG && Date.now() < FINAL_UNLOCK_DATE) {
@@ -2632,9 +3228,7 @@
                   <div class="proximity-distance-unit">mètres</div>
                 </div>
               </div>
-              <div class="proximity-coords" id="prox-coords">
-                Lat: —<br>Lng: —
-              </div>
+
               <div class="proximity-accuracy" id="prox-accuracy"></div>
               <div class="proximity-error-msg" id="prox-error"></div>
               <button class="btn btn-primary" onclick="requestGpsPermission()" style="margin-top: 24px; width: 100%; font-size: 1.05rem; padding: 14px 20px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(201, 168, 76, 0.3); cursor: pointer;">
@@ -2673,6 +3267,47 @@
                 <div class="bf-kb-hint">Clavier : ← → pour bouger · 1 2 3 pour attaquer</div>
             </div>
                     `;
+                    break;
+                }
+
+                case 'mosaic': {
+                    const tilesHtml = (e.tiles || []).map((tile, i) => {
+                        const srcUrl = `assets/Enigme Space Ensemble/${encodeURI(tile.file)}`;
+                        return `
+            <div class="mosaic-tile" id="mosaic-tile-${i}" data-valid="${tile.valid}"
+                 onmousedown="startMosaicPress(event, ${i})"
+                 ontouchstart="startMosaicPress(event, ${i})"
+                 onmouseup="endMosaicPress(event, ${i})"
+                 ontouchend="endMosaicPress(event, ${i})"
+                 onmouseleave="cancelMosaicPress()"
+                 ontouchmove="moveMosaicPress(event)"
+                 ontouchcancel="cancelMosaicPress()"
+                 onclick="handleMosaicClick(${i}, ${tile.valid})">
+              <img src="${srcUrl}" alt="${tile.title}" title="${tile.title}" loading="lazy">
+            </div>`;
+                    }).join('');
+                    interactionHtml = `
+            <div class="mosaic-instruction-banner">
+              💡 <strong>Astuce :</strong> Laissez votre doigt appuyé sur une image pour la voir en grand sans valider !
+            </div>
+            <div class="mosaic-toolbar">
+              <div class="mosaic-zoom-info">
+                <span>🔍</span>
+                <span>Zoom grille :</span>
+              </div>
+              <div class="mosaic-zoom-btns">
+                <button class="btn-mosaic-zoom active" id="btn-zoom-1" onclick="setMosaicGridZoom(1, this)" title="Vue standard">1x</button>
+                <button class="btn-mosaic-zoom" id="btn-zoom-1.4" onclick="setMosaicGridZoom(1.4, this)" title="Zoom moyen">1.4x</button>
+                <button class="btn-mosaic-zoom" id="btn-zoom-1.8" onclick="setMosaicGridZoom(1.8, this)" title="Grand zoom">1.8x</button>
+                <button class="btn-mosaic-zoom" id="btn-zoom-2.2" onclick="setMosaicGridZoom(2.2, this)" title="Zoom maximum">2.2x</button>
+              </div>
+            </div>
+            <div class="mosaic-grid-wrapper" id="mosaic-grid-wrapper">
+              <div class="mosaic-container" id="mosaic-grid">
+                ${tilesHtml}
+              </div>
+            </div>
+          `;
                     break;
                 }
 
@@ -2757,7 +3392,12 @@
                 const isUnlocked = (i === 0) || revealed.includes(i - 1);
                 if (!isUnlocked) return ''; // Don't render the tab at all
                 const cls = isRevealed ? 'revealed' : '';
-                return `<button class="hint-tab ${cls}" id="hint-tab-${i}" onclick="revealHint(${enigme.id}, ${i})">${labels[i] || 'Indice ' + (i + 1)}</button>`;
+
+                if (isRevealed) {
+                    return `<button class="hint-tab ${cls}" id="hint-tab-${i}" onclick="revealHint(${enigme.id}, ${i})">${labels[i] || 'Indice ' + (i + 1)}</button>`;
+                } else {
+                    return `<button class="hint-tab" id="hint-tab-${i}" onclick="confirmHint(${enigme.id}, ${i}, this)">${labels[i] || 'Indice ' + (i + 1)}</button>`;
+                }
             }).join('');
 
             // Show the last revealed hint by default
@@ -2776,6 +3416,26 @@
       `;
         }
 
+        function confirmHint(enigmeId, hintIndex, btn) {
+            if (btn.classList.contains('confirming')) return;
+            btn.classList.add('confirming');
+            btn.onclick = null;
+            btn.innerHTML = `
+                <span class="hint-confirm-btn" onclick="event.stopPropagation(); revealHint(${enigmeId}, ${hintIndex})" title="Valider">✅</span>
+                <span class="hint-cancel-btn" onclick="event.stopPropagation(); cancelHint(${enigmeId}, ${hintIndex}, this)" title="Annuler">❌</span>
+            `;
+        }
+
+        function cancelHint(enigmeId, hintIndex, element) {
+            const btn = element.closest('.hint-tab');
+            if (btn) {
+                const labels = ['Indice 1', 'Indice 2', 'Solution'];
+                btn.innerHTML = labels[hintIndex] || 'Indice ' + (hintIndex + 1);
+                btn.classList.remove('confirming');
+                btn.onclick = function () { confirmHint(enigmeId, hintIndex, this); };
+            }
+        }
+
         function revealHint(enigmeId, hintIndex) {
             if (!hintsUsed[enigmeId]) hintsUsed[enigmeId] = [];
             if (!hintsUsed[enigmeId].includes(hintIndex)) {
@@ -2785,6 +3445,10 @@
                 // Incrémenter le compteur global
                 totalHintsCount++;
                 localStorage.setItem(LS_KEY_HINTS_TOTAL, totalHintsCount);
+                if (totalHintsCount === 1 && !localStorage.getItem(LS_KEY_HINT_BUBBLE)) {
+                    localStorage.setItem(LS_KEY_HINT_BUBBLE, '1');
+                    triggerHintNotifyBubble();
+                }
             }
 
             const enigme = enigmes.find(e => e.id === enigmeId);
@@ -2793,9 +3457,33 @@
             // Update tab styling
             const tab = document.getElementById('hint-tab-' + hintIndex);
             if (tab) {
+                // Restore text if it was confirming
+                const labels = ['Indice 1', 'Indice 2', 'Solution'];
+                tab.innerHTML = labels[hintIndex] || 'Indice ' + (hintIndex + 1);
+                tab.classList.remove('confirming');
+                tab.onclick = function () { revealHint(enigmeId, hintIndex); };
+
                 // Remove active from all
                 document.querySelectorAll('.hint-tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active', 'revealed');
+            }
+
+            // Si le prochain indice est désormais débloqué, on l'ajoute au DOM s'il n'y est pas encore
+            if (hintIndex + 1 < enigme.indices.length) {
+                const nextTabId = 'hint-tab-' + (hintIndex + 1);
+                if (!document.getElementById(nextTabId)) {
+                    const tabsContainer = document.getElementById('hints-tabs-container');
+                    if (tabsContainer) {
+                        const labels = ['Indice 1', 'Indice 2', 'Solution'];
+                        const nextLabel = labels[hintIndex + 1] || 'Indice ' + (hintIndex + 2);
+                        const newTab = document.createElement('button');
+                        newTab.className = 'hint-tab';
+                        newTab.id = nextTabId;
+                        newTab.innerHTML = nextLabel;
+                        newTab.onclick = function () { confirmHint(enigmeId, hintIndex + 1, this); };
+                        tabsContainer.appendChild(newTab);
+                    }
+                }
             }
 
             // Show content
@@ -2988,7 +3676,7 @@
             const selected = window._gemsSelected;
 
             const isCorrect = selected.length === expected.length &&
-                selected.every((gem, idx) => gem === expected[idx]);
+                [...selected].sort().join(',') === [...expected].sort().join(',');
 
             if (isCorrect) {
                 // Mark gems as correct
@@ -3229,6 +3917,195 @@
             }
         }
 
+        let _mosaicPressTimer = null;
+        let _mosaicIsLongPress = false;
+        let _mosaicStartX = 0;
+        let _mosaicStartY = 0;
+
+        function startMosaicPress(event, tileIndex) {
+            if (event && event.button && event.button !== 0) return;
+            cancelMosaicPress();
+
+            const tileEl = document.getElementById(`mosaic-tile-${tileIndex}`);
+            if (!tileEl || tileEl.classList.contains('valid-clicked') || tileEl.classList.contains('disabled')) return;
+
+            _mosaicIsLongPress = false;
+            if (event.touches && event.touches.length > 0) {
+                _mosaicStartX = event.touches[0].clientX;
+                _mosaicStartY = event.touches[0].clientY;
+            } else if (event.clientX) {
+                _mosaicStartX = event.clientX;
+                _mosaicStartY = event.clientY;
+            }
+
+            _mosaicPressTimer = setTimeout(() => {
+                _mosaicIsLongPress = true;
+                if (navigator.vibrate) navigator.vibrate(40);
+                showMosaicPreview(tileIndex);
+            }, 280);
+        }
+
+        function moveMosaicPress(event) {
+            if (!_mosaicPressTimer) return;
+            let currentX = 0;
+            let currentY = 0;
+            if (event.touches && event.touches.length > 0) {
+                currentX = event.touches[0].clientX;
+                currentY = event.touches[0].clientY;
+            } else if (event.clientX) {
+                currentX = event.clientX;
+                currentY = event.clientY;
+            }
+            if (Math.abs(currentX - _mosaicStartX) > 10 || Math.abs(currentY - _mosaicStartY) > 10) {
+                cancelMosaicPress();
+            }
+        }
+
+        function endMosaicPress(event, tileIndex) {
+            if (_mosaicPressTimer) {
+                clearTimeout(_mosaicPressTimer);
+                _mosaicPressTimer = null;
+            }
+            if (_mosaicIsLongPress) {
+                if (event && event.preventDefault) event.preventDefault();
+                hideMosaicPreview();
+                window._mosaicIgnoreNextClick = true;
+                setTimeout(() => { window._mosaicIgnoreNextClick = false; }, 350);
+            }
+        }
+
+        function cancelMosaicPress() {
+            if (_mosaicPressTimer) {
+                clearTimeout(_mosaicPressTimer);
+                _mosaicPressTimer = null;
+            }
+            if (_mosaicIsLongPress) {
+                hideMosaicPreview();
+                window._mosaicIgnoreNextClick = true;
+                setTimeout(() => { window._mosaicIgnoreNextClick = false; }, 350);
+                _mosaicIsLongPress = false;
+            }
+        }
+
+        function showMosaicPreview(tileIndex) {
+            const enigma = enigmes[currentIndex];
+            if (!enigma || !enigma.tiles || !enigma.tiles[tileIndex]) return;
+            const tile = enigma.tiles[tileIndex];
+            const srcUrl = `assets/Enigme Space Ensemble/${encodeURI(tile.file)}`;
+
+            let overlay = document.getElementById('mosaic-preview-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'mosaic-preview-overlay';
+                overlay.className = 'mosaic-preview-overlay';
+                overlay.innerHTML = `
+            <div class="mosaic-preview-card" onclick="event.stopPropagation()">
+                <div class="mosaic-preview-img-wrapper">
+                    <img id="mosaic-preview-img" src="" alt="Preview">
+                </div>
+                <div id="mosaic-preview-title" class="mosaic-preview-title"></div>
+                <div class="mosaic-preview-hint">Relâchez votre doigt pour fermer</div>
+            </div>
+          `;
+                overlay.addEventListener('click', hideMosaicPreview);
+                document.body.appendChild(overlay);
+            }
+
+            const imgEl = document.getElementById('mosaic-preview-img');
+            const titleEl = document.getElementById('mosaic-preview-title');
+            if (imgEl) imgEl.src = srcUrl;
+            if (titleEl) titleEl.textContent = tile.title || '';
+
+            overlay.classList.add('active');
+            window.addEventListener('touchend', hideMosaicPreview, { once: true });
+            window.addEventListener('touchcancel', hideMosaicPreview, { once: true });
+            window.addEventListener('mouseup', hideMosaicPreview, { once: true });
+        }
+
+        function hideMosaicPreview() {
+            const overlay = document.getElementById('mosaic-preview-overlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+            }
+            window._mosaicIgnoreNextClick = true;
+            setTimeout(() => { window._mosaicIgnoreNextClick = false; }, 350);
+        }
+
+        function setMosaicGridZoom(level, btn) {
+            const grid = document.getElementById('mosaic-grid');
+            const wrapper = document.getElementById('mosaic-grid-wrapper');
+            if (!grid) return;
+
+            document.querySelectorAll('.btn-mosaic-zoom').forEach(b => b.classList.remove('active'));
+            if (btn && btn.classList) {
+                btn.classList.add('active');
+            } else {
+                const targetBtn = document.getElementById(`btn-zoom-${level}`);
+                if (targetBtn) targetBtn.classList.add('active');
+            }
+
+            if (level === 1) {
+                grid.style.width = '100%';
+                grid.style.minWidth = 'auto';
+                grid.style.gap = '6px';
+            } else {
+                const widthPct = Math.round(level * 100);
+                grid.style.width = `${widthPct}%`;
+                grid.style.minWidth = `${widthPct}%`;
+                grid.style.gap = `${Math.round(6 * Math.sqrt(level))}px`;
+            }
+
+            if (wrapper && level > 1) {
+                setTimeout(() => {
+                    const scrollLeft = (grid.scrollWidth - wrapper.clientWidth) / 2;
+                    if (scrollLeft > 0 && wrapper.scrollLeft === 0) {
+                        wrapper.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                    }
+                }, 50);
+            }
+        }
+
+        function handleMosaicClick(tileIndex, isValid) {
+            if (window._mosaicIgnoreNextClick) return;
+            const tileEl = document.getElementById(`mosaic-tile-${tileIndex}`);
+            if (!tileEl || tileEl.classList.contains('valid-clicked') || tileEl.classList.contains('disabled')) return;
+
+            if (Number(isValid) === 1) {
+                tileEl.classList.add('valid-clicked');
+
+                const allValid = document.querySelectorAll('.mosaic-tile[data-valid="1"]');
+                const clickedValid = document.querySelectorAll('.mosaic-tile.valid-clicked');
+                if (allValid.length > 0 && allValid.length === clickedValid.length) {
+                    document.querySelectorAll('.mosaic-tile').forEach(t => t.classList.add('disabled'));
+                    allValid.forEach(t => t.classList.add('mosaic-win-pulse'));
+                    showFeedback('success', '✅ Space Invader complété ! Bien joué.');
+
+                    let btnContainer = document.getElementById('mosaic-next-btn-container');
+                    if (!btnContainer) {
+                        btnContainer = document.createElement('div');
+                        btnContainer.id = 'mosaic-next-btn-container';
+                        btnContainer.style.textAlign = 'center';
+                        btnContainer.style.margin = '25px auto 10px';
+                        btnContainer.innerHTML = `<button class="btn btn-primary" style="padding: 16px 36px; font-size: 1.15rem; box-shadow: 0 0 30px rgba(0, 255, 136, 0.6); border-color: #00ff88; animation: float 3s ease-in-out infinite; background: linear-gradient(135deg, #10b981, #059669); color: #fff;" onclick="handleSuccess()">Passer à l'énigme suivante ↗</button>`;
+                        const gridWrapper = document.getElementById('mosaic-grid-wrapper');
+                        if (gridWrapper && gridWrapper.parentNode) {
+                            gridWrapper.parentNode.insertBefore(btnContainer, gridWrapper.nextSibling);
+                        }
+                    }
+                }
+            } else {
+                showFeedback('error', '❌ Mauvaise case ! La grille a été réinitialisée. Une erreur a été ajoutée !');
+                const allTiles = document.querySelectorAll('.mosaic-tile');
+                allTiles.forEach(t => {
+                    t.classList.add('wrong');
+                    t.classList.remove('valid-clicked');
+                });
+                setTimeout(() => {
+                    allTiles.forEach(t => t.classList.remove('wrong'));
+                }, 600);
+            }
+        }
+
         function showFeedback(type, message) {
             const $fb = document.getElementById('feedback');
             if (!$fb) return;
@@ -3239,6 +4116,10 @@
                 localStorage.setItem(LS_KEY_ERRORS_TOTAL, totalErrorsCount);
                 const $ec = document.getElementById('error-total-count');
                 if ($ec) $ec.textContent = totalErrorsCount;
+                if (totalErrorsCount === 1 && !localStorage.getItem(LS_KEY_ERROR_BUBBLE)) {
+                    localStorage.setItem(LS_KEY_ERROR_BUBBLE, '1');
+                    triggerErrorNotifyBubble();
+                }
             }
         }
 
@@ -3246,12 +4127,184 @@
            SUCCESS SCREEN & ADVANCE
         ────────────────────────────────────────────────────────────── */
         function handleSuccess() {
+            if (currentIndex === 0) {
+                renderEnigma1SuccessScreen();
+                return;
+            }
             const currentEnigma = enigmes[currentIndex];
             if (currentEnigma && currentEnigma.succes) {
                 renderSuccessScreen(currentEnigma.succes);
             } else {
                 advanceToNext();
             }
+        }
+
+        function renderEnigma1SuccessScreen() {
+            window._enigma1SuccessActive = true;
+            updateChronoVisibility(); // ensure header chrono is hidden initially
+
+            $app.innerHTML = `
+                <div class="enigma-card" style="text-align: center; border-color: rgba(201, 168, 76, 0.6); box-shadow: 0 0 35px rgba(201, 168, 76, 0.25);">
+                    <div style="margin: 0 auto 20px; font-size: 2.5rem; filter: drop-shadow(0 0 15px rgba(201, 168, 76, 0.6)); animation: float 3s ease-in-out infinite;">⏳</div>
+                    <h1 class="enigma-title" style="color: var(--clr-gold-bright);">Date confirmée ! ✨</h1>
+                    
+                    <div class="enigma-description" style="min-height: 90px; margin: 30px auto; max-width: 520px; font-size: 1.25rem; line-height: 1.8; color: var(--text-primary); font-family: var(--font-body); font-style: italic;">
+                        <span id="enigma1-tw"></span>
+                    </div>
+
+                    <!-- Countdown Box on Success Screen (initially hidden) -->
+                    <div id="enigma1-countdown-box" style="opacity: 0; transform: translateY(20px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); margin: 35px 0;">
+                        <div style="font-family: var(--font-ui); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--clr-gold); margin-bottom: 15px;">
+                            ⚡ Décompte avant l'ouverture du trésor (19 juillet 2026)
+                        </div>
+                        <div class="lock-countdown" id="enigma1-live-countdown">
+                            <div class="lock-countdown-unit"><div class="lock-countdown-value">00</div><div class="lock-countdown-label">Jours</div></div>
+                            <div class="lock-countdown-unit"><div class="lock-countdown-value">00</div><div class="lock-countdown-label">Heures</div></div>
+                            <div class="lock-countdown-unit"><div class="lock-countdown-value">00</div><div class="lock-countdown-label">Minutes</div></div>
+                            <div class="lock-countdown-unit"><div class="lock-countdown-value">00</div><div class="lock-countdown-label">Secondes</div></div>
+                        </div>
+                    </div>
+ 
+                    <!-- Next Button (initially hidden) -->
+                    <div id="enigma1-btn-box" style="opacity: 0; transform: translateY(15px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); margin-top: 30px;">
+                        <button class="btn btn-primary" style="padding: 16px 36px; font-size: 1.1rem; box-shadow: 0 0 25px rgba(201, 168, 76, 0.4);" onclick="advanceToNext()">Passer à l'énigme suivante ↗</button>
+                    </div>
+                </div>
+            `;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            function tickE1() {
+                const $e1c = document.getElementById('enigma1-live-countdown');
+                if (!$e1c) return;
+                const diff = FINAL_UNLOCK_DATE - Date.now();
+                const d = Math.max(0, Math.floor(diff / 86400000));
+                const h = Math.max(0, Math.floor((diff % 86400000) / 3600000));
+                const m = Math.max(0, Math.floor((diff % 3600000) / 60000));
+                const s = Math.max(0, Math.floor((diff % 60000) / 1000));
+                $e1c.innerHTML = `
+                    <div class="lock-countdown-unit"><div class="lock-countdown-value">${String(d).padStart(2, '0')}</div><div class="lock-countdown-label">Jours</div></div>
+                    <div class="lock-countdown-unit"><div class="lock-countdown-value">${String(h).padStart(2, '0')}</div><div class="lock-countdown-label">Heures</div></div>
+                    <div class="lock-countdown-unit"><div class="lock-countdown-value">${String(m).padStart(2, '0')}</div><div class="lock-countdown-label">Minutes</div></div>
+                    <div class="lock-countdown-unit"><div class="lock-countdown-value">${String(s).padStart(2, '0')}</div><div class="lock-countdown-label">Secondes</div></div>
+                `;
+            }
+            tickE1();
+            if (window._e1Timer) clearInterval(window._e1Timer);
+            window._e1Timer = setInterval(tickE1, 1000);
+
+            const twEl = document.getElementById('enigma1-tw');
+            const announcementText = "Bravo tu as trouvé la date clé de cet escape game. Attention : le trésor de cet escape game apparaîtra le 19 à minuit. Il faut que tu aies résolu toutes les énigmes avant pour chercher son emplacement... \n Game on?";
+
+            typewriter(twEl, announcementText, 35, 500, () => {
+                // Step 1: Reveal the countdown box below the text on the success screen
+                setTimeout(() => {
+                    const box = document.getElementById('enigma1-countdown-box');
+                    if (box) {
+                        box.style.opacity = '1';
+                        box.style.transform = 'translateY(0)';
+                    }
+                }, 400);
+
+                // Step 2: Reveal in the top-left header with visual effect!
+                setTimeout(() => {
+                    triggerHeaderCountdownActivation();
+                }, 2200);
+
+                // Step 3: Reveal the proceed button after user has seen the header update
+                setTimeout(() => {
+                    const btnBox = document.getElementById('enigma1-btn-box');
+                    if (btnBox) {
+                        btnBox.style.opacity = '1';
+                        btnBox.style.transform = 'translateY(0)';
+                    }
+                }, 3400);
+            });
+        }
+
+        function triggerHeaderCountdownActivation() {
+            window._enigma1ChronoUnlocked = true;
+            updateChronoVisibility(true); // force show header chrono
+            const $wrap = document.getElementById('header-chrono-wrap');
+            if ($wrap) {
+                $wrap.classList.remove('header-chrono-animated');
+                void $wrap.offsetWidth; // trigger reflow
+                $wrap.classList.add('header-chrono-animated');
+
+                // Add temporary notify badge
+                let badge = document.getElementById('header-chrono-notify');
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.id = 'header-chrono-notify';
+                    badge.className = 'chrono-notify-badge';
+                    badge.innerHTML = '⚡ Chrono activé ici !';
+                    $wrap.appendChild(badge);
+                }
+                setTimeout(() => {
+                    if (badge && badge.parentNode) {
+                        badge.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                        badge.style.opacity = '0';
+                        badge.style.transform = 'translateY(-10px)';
+                        setTimeout(() => badge.remove(), 600);
+                    }
+                }, 5000);
+            }
+            if ($header) {
+                $header.classList.remove('header-flash-active');
+                void $header.offsetWidth;
+                $header.classList.add('header-flash-active');
+            }
+        }
+
+        function triggerHintNotifyBubble() {
+            const badge = document.getElementById('hints-badge');
+            const contentSpan = document.getElementById('hints-badge-content');
+            if (!badge || !contentSpan) return;
+            contentSpan.classList.remove('badge-highlight-animated');
+            void contentSpan.offsetWidth;
+            contentSpan.classList.add('badge-highlight-animated');
+
+            let bubble = document.getElementById('hint-notify-bubble');
+            if (!bubble) {
+                bubble = document.createElement('div');
+                bubble.id = 'hint-notify-bubble';
+                bubble.className = 'stat-notify-bubble';
+                bubble.innerHTML = `<div style="font-family: var(--font-ui); font-weight: 700; color: var(--clr-gold-bright); margin-bottom: 4px;">💡 Premier indice !</div><div>Attention : plus le nombre d'indices utilisés est important, plus une des étapes finales sera difficile !</div>`;
+                badge.appendChild(bubble);
+            }
+            setTimeout(() => {
+                if (bubble && bubble.parentNode) {
+                    bubble.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                    bubble.style.opacity = '0';
+                    bubble.style.transform = 'translateY(-10px)';
+                    setTimeout(() => bubble.remove(), 800);
+                }
+            }, 8000);
+        }
+
+        function triggerErrorNotifyBubble() {
+            const badge = document.getElementById('errors-badge');
+            const contentSpan = document.getElementById('errors-badge-content');
+            if (!badge || !contentSpan) return;
+            contentSpan.classList.remove('badge-highlight-animated');
+            void contentSpan.offsetWidth;
+            contentSpan.classList.add('badge-highlight-animated');
+
+            let bubble = document.getElementById('error-notify-bubble');
+            if (!bubble) {
+                bubble = document.createElement('div');
+                bubble.id = 'error-notify-bubble';
+                bubble.className = 'stat-notify-bubble error-style';
+                bubble.innerHTML = `<div style="font-family: var(--font-ui); font-weight: 700; color: var(--error-red); margin-bottom: 4px;">❌ Première erreur !</div><div>Attention : plus le nombre d'erreurs commises est important, plus une des étapes finales sera difficile !</div>`;
+                badge.appendChild(bubble);
+            }
+            setTimeout(() => {
+                if (bubble && bubble.parentNode) {
+                    bubble.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                    bubble.style.opacity = '0';
+                    bubble.style.transform = 'translateY(-10px)';
+                    setTimeout(() => bubble.remove(), 800);
+                }
+            }, 8000);
         }
 
         function renderSuccessScreen(succes) {
@@ -3513,6 +4566,11 @@
             if ($stepCur) $stepCur.textContent = enigmes.length;
             if ($progress) $progress.style.width = '100%';
 
+            const elapsed = startTime ? Date.now() - startTime : 0;
+            const totalH = Math.floor(elapsed / 3600000);
+            const totalM = Math.floor((elapsed % 3600000) / 60000);
+            const totalHintsCount = Object.values(hintsUsed).reduce((sum, arr) => sum + arr.length, 0);
+
             $app.innerHTML = `
         <div class="lock-screen">
 
@@ -3523,6 +4581,25 @@
             
             <div class="separator-ornate">✦</div>
             <p>Je savais que tu réussirais.\n Bravo ! Quelle sagacité. \n Il ne reste plus qu'une étape, qui sera dévoilée en temps et en heure. Tu te souviens de la date ? \n \n Il ne reste plus qu'à attendre...</p>
+
+            <div class="success-stats" style="margin-bottom: 24px;">
+              <div class="stat" style="width: 100%;">
+                <div class="stat-value">${totalH}h ${String(totalM).padStart(2, '0')}m</div>
+                <div class="stat-label">Temps total</div>
+              </div>
+              <div class="stat" style="flex: 1;">
+                <div class="stat-value">${enigmes.length}</div>
+                <div class="stat-label">Énigmes</div>
+              </div>
+              <div class="stat" style="flex: 1;">
+                <div class="stat-value">${totalHintsCount}</div>
+                <div class="stat-label">Indices</div>
+              </div>
+              <div class="stat" style="flex: 1;">
+                <div class="stat-value">${totalErrorsCount}</div>
+                <div class="stat-label">Erreurs</div>
+              </div>
+            </div>
 
             <div class="lock-countdown" id="lock-countdown"></div>
             <div id="lock-action-container" style="margin-top: 24px;"></div>
@@ -3600,15 +4677,9 @@
            END SCREENS
         ────────────────────────────────────────────────────────────── */
         function renderVictory() {
-            if (timerInterval) clearInterval(timerInterval);
             showHeader();
             if ($stepCur) $stepCur.textContent = enigmes.length;
             if ($progress) $progress.style.width = '100%';
-
-            const elapsed = startTime ? Date.now() - startTime : 0;
-            const totalH = Math.floor(elapsed / 3600000);
-            const totalM = Math.floor((elapsed % 3600000) / 60000);
-            const totalHintsCount = Object.values(hintsUsed).reduce((sum, arr) => sum + arr.length, 0);
 
             $app.innerHTML = `
         <div class="end-screen victory">
@@ -3622,25 +4693,6 @@
             <div class="final-clue-box" style="margin: 24px 0; padding: 20px; background: radial-gradient(circle at center, rgba(201, 168, 76, 0.2), rgba(10, 8, 14, 0.8)); border: 1px solid rgba(254, 240, 138, 0.6); border-radius: var(--radius-md); box-shadow: 0 0 25px rgba(201, 168, 76, 0.25);">
               <h3 style="color: #fef08a; font-family: var(--font-display); font-size: 1.15rem; margin-bottom: 10px; text-shadow: 0 0 12px rgba(201,168,76,0.9); letter-spacing: 1px;">🔑 L'ULTIME INDICE</h3>
               <p style="font-size: 1.1rem; color: #ffffff; margin-bottom: 0; font-style: normal; line-height: 1.6;">Retourne sur les lieux de notre premier baiser.</p>
-            </div>
-
-            <div class="success-stats">
-              <div class="stat">
-                <div class="stat-value">${totalH}h ${String(totalM).padStart(2, '0')}m</div>
-                <div class="stat-label">Temps total</div>
-              </div>
-              <div class="stat">
-                <div class="stat-value">${enigmes.length}</div>
-                <div class="stat-label">Énigmes</div>
-              </div>
-              <div class="stat">
-                <div class="stat-value">${totalHintsCount}</div>
-                <div class="stat-label">Indices</div>
-              </div>
-              <div class="stat">
-                <div class="stat-value">${totalErrorsCount}</div>
-                <div class="stat-label">Erreurs</div>
-              </div>
             </div>
           </div>
 
@@ -3792,7 +4844,7 @@
         /* ─────────────────────────────────────────────────────────────
            TYPEWRITER & STARS (from pour-toi version)
         ────────────────────────────────────────────────────────────── */
-        function typewriter(element, text, speed = 30, initialDelay = 500) {
+        function typewriter(element, text, speed = 30, initialDelay = 500, onComplete = null) {
             if (!element) return;
             element.innerHTML = '<span class="tw-text"></span><span class="tw-cursor"></span>';
             const textSpan = element.querySelector('.tw-text');
@@ -3806,6 +4858,7 @@
                         clearInterval(interval);
                         const cursor = element.querySelector('.tw-cursor');
                         if (cursor) setTimeout(() => cursor.style.display = 'none', 3000);
+                        if (typeof onComplete === 'function') onComplete();
                     }
                 }, speed);
             }, initialDelay);
