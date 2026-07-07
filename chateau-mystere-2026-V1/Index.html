@@ -1288,6 +1288,192 @@
             }
         }
 
+        /* ──────────────────────── ENIGME 6: CLOCK PUZZLE ──────────────────────── */
+        .clock-puzzle-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 520px;
+            margin: var(--gap-md) auto;
+            padding: var(--gap-md);
+            background: var(--clr-glass);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card), inset 0 0 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            user-select: none;
+        }
+
+        .clock-face-wrapper {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 10px 0 18px;
+        }
+
+        @media (min-width: 480px) {
+            .clock-face-wrapper {
+                width: 290px;
+                height: 290px;
+            }
+        }
+
+        .clock-face {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, #181b40 0%, #0a0b1d 80%, #05050f 100%);
+            border: 4px solid var(--clr-gold);
+            box-shadow: 0 0 35px rgba(201, 168, 76, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.8);
+            cursor: pointer;
+            touch-action: none;
+        }
+
+        .clock-ticks {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .clock-tick {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            padding-top: 6px;
+        }
+
+        .clock-numbers {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .clock-num {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
+        }
+
+        @media (min-width: 480px) {
+            .clock-num {
+                font-size: 1.25rem;
+            }
+        }
+
+        .clock-center-cap {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            background: var(--clr-gold-bright);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(201, 168, 76, 0.8);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .clock-hand {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: 50% 100%;
+            border-radius: 4px;
+            pointer-events: none;
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .clock-hand-hour {
+            width: 6px;
+            height: 28%;
+            margin-left: -3px;
+            margin-top: -28%;
+            background: linear-gradient(to top, var(--clr-gold), var(--clr-gold-bright));
+            box-shadow: 0 0 12px rgba(201, 168, 76, 0.5);
+            z-index: 8;
+        }
+
+        .clock-hand-minute {
+            width: 4px;
+            height: 38%;
+            margin-left: -2px;
+            margin-top: -38%;
+            background: linear-gradient(to top, #38bdf8, #bae6fd);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+            z-index: 9;
+        }
+
+        .clock-hand.active-hand {
+            filter: drop-shadow(0 0 8px #fff) brightness(1.2);
+        }
+
+        .clock-readout {
+            position: absolute;
+            top: 68%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: var(--font-ui);
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--clr-gold-bright);
+            background: rgba(5, 5, 15, 0.85);
+            border: 1px solid rgba(201, 168, 76, 0.4);
+            padding: 4px 14px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8), 0 0 15px rgba(201, 168, 76, 0.2);
+            pointer-events: none;
+        }
+
+        .clock-mode-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .clock-mode-btn {
+            flex: 1;
+            max-width: 180px;
+            padding: 8px 12px;
+            font-family: var(--font-ui);
+            font-size: 0.85rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .clock-mode-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .clock-mode-btn.active {
+            background: var(--clr-gold);
+            color: #05050f;
+            border-color: var(--clr-gold-bright);
+            box-shadow: 0 0 15px rgba(201, 168, 76, 0.4);
+        }
+
         /* ──────────────────────── FEEDBACK MESSAGE ────────────────────────────── */
         .feedback {
             font-size: 0.85rem;
@@ -2677,6 +2863,8 @@
                 ]
             },
 
+
+
             // ── Énigme 5 : La plus belle ──
             {
                 id: 5,
@@ -2700,9 +2888,32 @@
 
 
 
-            // ── Énigme 6 : Le message crypté ──
+            // ── Énigme 6 : Premiers messages ──
             {
                 id: 6,
+                type: "clock",
+                titre: "Premiers messages",
+                description: "Combien de temps séparent ces deux messages ? \n (+/- 17min)",
+                image: "assets/enigme9_textos_flous.jpeg",
+                reponseAttendue: [137],
+                indices: [
+                    "Regardez les deux messages sur la capture d'écran, même flous on peut deviner la forme des heures d'envoi.",
+                    "Le premier message a été envoyé vers 13h30-13h40.",
+                    "Le second message a été envoyé un peu avant 16h, vers 15h55."
+                ],
+                succes: {
+                    titre: "Premiers messages ✨",
+                    description: "Félicitations ! Le 23 juillet, le premier message a été envoyé à <strong>13h39</strong> et le deuxième à <strong>15h56</strong>.<br><br>Soit exactement <strong>2 heures et 17 minutes</strong> d'écart !",
+                    image: "assets/enigme9_textos.jpeg",
+                    bouton: "Énigme suivante ↗"
+                }
+            },
+
+
+
+            // ── Énigme 7 : Le message crypté ──
+            {
+                id: 7,
                 type: "text",
                 titre: "Le message crypté",
                 description: "Nous avons trouvé un message codé. Il semble connecté à un endroit que tu as appris à connaître : \"Jc lmkpzc 2 ajmafcpq bylq jy plus zcjjc tgjjc \" . Sauras-tu trouver le message ?",
@@ -2720,9 +2931,9 @@
                 ]
             },
 
-            // ── Énigme 7 : Le message crypté (suite) ──
+            // ── Énigme 8 : Le message crypté (suite) ──
             {
-                id: 7,
+                id: 8,
                 type: "counter",
                 titre: "Le message crypté (suite)",
                 description: "Tu l'as trouvé ! C'est accompagné d'une photo un peu bizarre...",
@@ -2735,9 +2946,9 @@
                 ]
             },
 
-            // ── Énigme 8 : Space Ensemble (Mosaic) ──
+            // ── Énigme 9 : Space Ensemble (Mosaic) ──
             {
-                id: 8,
+                id: 9,
                 type: "mosaic",
                 titre: "Un ensemble un peu space",
                 description: "",
@@ -2815,9 +3026,9 @@
                 ]
             },
 
-            // ── Énigme 9 : Boss Fight Eva vs Malus ──
+            // ── Énigme 10 : Boss Fight Eva vs Malus ──
             {
-                id: 9,
+                id: 10,
                 type: "bossfight",
                 titre: "L'épreuve finale",
                 description: "Les ombres de tes erreurs passées et de tes hésitations se sont rassemblées pour donner naissance à <strong>Malus</strong>, un gardien maléfique. Eva doit l'affronter pour continuer l'aventure !",
@@ -3196,6 +3407,32 @@
           `;
                     break;
 
+                case 'clock':
+                    interactionHtml = `
+            <div class="clock-puzzle-container">
+              <div class="clock-face-wrapper">
+                <div class="clock-face" id="clock-face" onmousedown="startClockDrag(event)" ontouchstart="startClockDrag(event)">
+                  <div class="clock-ticks" id="clock-ticks"></div>
+                  <div class="clock-numbers" id="clock-numbers"></div>
+                  <div class="clock-hand clock-hand-hour" id="clock-hand-hour"></div>
+                  <div class="clock-hand clock-hand-minute" id="clock-hand-minute"></div>
+                  <div class="clock-center-cap"></div>
+                  <div class="clock-readout" id="clock-readout">00 h 00 m</div>
+                </div>
+              </div>
+
+              <div class="clock-mode-tabs">
+                <button class="clock-mode-btn active" id="btn-mode-hour" onclick="setClockMode('hour')">🕒 Heures</button>
+                <button class="clock-mode-btn" id="btn-mode-minute" onclick="setClockMode('minute')">⏱️ Minutes</button>
+              </div>
+
+              <button class="btn btn-primary" id="btn-validate" onclick="validateClockAnswer()" style="margin-top: 18px; width: 100%; max-width: 320px;">
+                Valider cette durée
+              </button>
+            </div>
+          `;
+                    break;
+
                 case 'gems':
                     interactionHtml = `
             <p class="gems-instruction"></p>
@@ -3334,8 +3571,9 @@
             <span class="card-icon">🗝️</span>
           </div>
           <h1 class="enigma-title">${e.titre}</h1>
+          ${e.type === 'clock' ? (e.description ? `<div class="enigma-description">${formatText(e.description)}</div>` : '') : ''}
           ${imageHtml}
-          ${e.description ? `<div class="enigma-description">${formatText(e.description)}</div>` : ''}
+          ${e.type !== 'clock' ? (e.description ? `<div class="enigma-description">${formatText(e.description)}</div>` : '') : ''}
           ${interactionHtml}
           <div class="feedback" id="feedback"></div>
           ${renderHints(e)}
@@ -3364,6 +3602,11 @@
                         }
                     });
                 }, 50);
+            }
+
+            // Init clock puzzle
+            if (e.type === 'clock') {
+                initClockPuzzle();
             }
 
             // Init gems puzzle
@@ -3632,6 +3875,161 @@
                 if (picker) {
                     picker.classList.add('error');
                     setTimeout(() => picker.classList.remove('error'), 600);
+                }
+            }
+        }
+
+        /* ────────────────────────── CLOCK PUZZLE LOGIC ──────────────────────── */
+        let _clockHours = 0;
+        let _clockMinutes = 0;
+        let _clockMode = 'hour';
+        let _clockIsDragging = false;
+
+        function initClockPuzzle() {
+            _clockHours = 0;
+            _clockMinutes = 0;
+            _clockMode = 'hour';
+            _clockIsDragging = false;
+
+            const ticksContainer = document.getElementById('clock-ticks');
+            const numsContainer = document.getElementById('clock-numbers');
+            if (ticksContainer) {
+                let ticksHtml = '';
+                for (let i = 0; i < 60; i++) {
+                    const deg = i * 6;
+                    const isHour = i % 5 === 0;
+                    const h = isHour ? 12 : 6;
+                    const w = isHour ? 2 : 1;
+                    const bg = isHour ? 'var(--clr-gold)' : 'rgba(255,255,255,0.25)';
+                    ticksHtml += `<div class="clock-tick" style="transform: rotate(${deg}deg);"><div style="width:${w}px; height:${h}px; background:${bg}; margin: 0 auto; border-radius:1px;"></div></div>`;
+                }
+                ticksContainer.innerHTML = ticksHtml;
+            }
+
+            if (numsContainer) {
+                let numsHtml = '';
+                for (let i = 1; i <= 12; i++) {
+                    const deg = (i * 30) - 90;
+                    const rad = deg * (Math.PI / 180);
+                    const radiusPct = 38;
+                    const x = 50 + radiusPct * Math.cos(rad);
+                    const y = 50 + radiusPct * Math.sin(rad);
+                    numsHtml += `<div class="clock-num" style="left: ${x}%; top: ${y}%;">${i}</div>`;
+                }
+                numsContainer.innerHTML = numsHtml;
+            }
+
+            updateClockDisplay();
+            setClockMode('hour');
+
+            window.removeEventListener('mouseup', endClockDrag);
+            window.removeEventListener('touchend', endClockDrag);
+            window.removeEventListener('mousemove', moveClockDrag);
+            window.removeEventListener('touchmove', moveClockDrag);
+
+            window.addEventListener('mouseup', endClockDrag);
+            window.addEventListener('touchend', endClockDrag);
+            window.addEventListener('mousemove', moveClockDrag);
+            window.addEventListener('touchmove', moveClockDrag, { passive: false });
+        }
+
+        function startClockDrag(event) {
+            if (event.target && (event.target.tagName === 'BUTTON' || event.target.closest('button'))) return;
+            _clockIsDragging = true;
+            handleClockInput(event);
+            if (event.preventDefault) event.preventDefault();
+        }
+
+        function moveClockDrag(event) {
+            if (!_clockIsDragging) return;
+            handleClockInput(event);
+            if (event.preventDefault) event.preventDefault();
+        }
+
+        function endClockDrag() {
+            _clockIsDragging = false;
+        }
+
+        function handleClockInput(event) {
+            const face = document.getElementById('clock-face');
+            if (!face) return;
+            const rect = face.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            let clientX = 0;
+            let clientY = 0;
+            if (event.touches && event.touches.length > 0) {
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else if (event.clientX !== undefined) {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+
+            const dx = clientX - centerX;
+            const dy = clientY - centerY;
+            let deg = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+            if (deg < 0) deg += 360;
+
+            if (_clockMode === 'hour') {
+                let h = Math.round(deg / 30) % 12;
+                if (h === 0) h = 12;
+                _clockHours = h;
+            } else {
+                let m = Math.round(deg / 6) % 60;
+                _clockMinutes = m;
+            }
+            updateClockDisplay();
+        }
+
+        function setClockMode(mode) {
+            _clockMode = mode;
+            document.querySelectorAll('.clock-mode-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`btn-mode-${mode}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            const hHand = document.getElementById('clock-hand-hour');
+            const mHand = document.getElementById('clock-hand-minute');
+            if (hHand) hHand.classList.toggle('active-hand', mode === 'hour');
+            if (mHand) mHand.classList.toggle('active-hand', mode === 'minute');
+        }
+
+        function updateClockDisplay() {
+            const hHand = document.getElementById('clock-hand-hour');
+            const mHand = document.getElementById('clock-hand-minute');
+            const readout = document.getElementById('clock-readout');
+
+            if (hHand) {
+                const hDeg = (_clockHours % 12) * 30 + (_clockMinutes * 0.5);
+                hHand.style.transform = `rotate(${hDeg}deg)`;
+            }
+            if (mHand) {
+                const mDeg = _clockMinutes * 6;
+                mHand.style.transform = `rotate(${mDeg}deg)`;
+            }
+
+            const hStr = String(_clockHours).padStart(2, '0');
+            const mStr = String(_clockMinutes).padStart(2, '0');
+
+            if (readout) readout.textContent = `${hStr} h ${mStr} m`;
+        }
+
+        function validateClockAnswer() {
+            const totalMinutes = _clockHours * 60 + _clockMinutes;
+            if (totalMinutes >= 120 && totalMinutes <= 154) {
+                showFeedback('success', '✅ Durée correcte ! Bien calculé.');
+                const container = document.querySelector('.clock-puzzle-container');
+                if (container) container.style.pointerEvents = 'none';
+                const btn = document.getElementById('btn-validate');
+                if (btn) btn.disabled = true;
+                setTimeout(() => handleSuccess(), 1500);
+            } else {
+                showFeedback('error', '❌ Incorrect ! Vérifiez bien les heures d\'envoi des deux messages sur l\'image.');
+                const card = document.querySelector('.enigma-card');
+                if (card) {
+                    card.classList.add('shake');
+                    setTimeout(() => card.classList.remove('shake'), 500);
                 }
             }
         }
