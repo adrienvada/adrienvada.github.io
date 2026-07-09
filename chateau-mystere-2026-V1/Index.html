@@ -717,6 +717,7 @@
             line-height: 1.85;
             color: rgba(250, 243, 230, 0.92);
             margin-bottom: 40px;
+            text-align: center;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
             position: relative;
             z-index: 2;
@@ -734,6 +735,142 @@
         .enigma-image:hover {
             transform: scale(1.015);
             filter: brightness(1.08);
+        }
+
+        /* ───────────────────────── ENIGMA CAROUSEL ───────────────────────── */
+        .enigma-carousel {
+            position: relative;
+            max-width: 540px;
+            margin: 0 auto var(--gap-lg);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: rgba(15, 16, 53, 0.65);
+            border: 1px solid rgba(201, 168, 76, 0.4);
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .carousel-main-wrapper {
+            position: relative;
+            width: 100%;
+            height: 440px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #060714;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .carousel-main-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            cursor: zoom-in;
+            transition: opacity 0.25s ease, transform 0.3s ease;
+        }
+
+        .carousel-counter-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(6, 7, 20, 0.85);
+            border: 1px solid var(--clr-gold);
+            color: var(--clr-gold-bright);
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            backdrop-filter: blur(8px);
+            z-index: 5;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: rgba(15, 16, 53, 0.88);
+            border: 1px solid var(--clr-gold);
+            color: var(--clr-gold-bright);
+            font-size: 1.35rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 5;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+        }
+
+        .carousel-btn:hover {
+            background: var(--clr-gold-bright);
+            color: #060714;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 0 15px rgba(242, 208, 107, 0.5);
+        }
+
+        .carousel-btn.prev {
+            left: 14px;
+        }
+
+        .carousel-btn.next {
+            right: 14px;
+        }
+
+        .carousel-thumbs-bar {
+            display: flex;
+            gap: 10px;
+            padding: 14px;
+            overflow-x: auto;
+            background: rgba(6, 7, 20, 0.95);
+            border-top: 1px solid rgba(201, 168, 76, 0.25);
+            scrollbar-width: thin;
+            scrollbar-color: var(--clr-gold-dim) transparent;
+        }
+
+        .carousel-thumb {
+            width: 58px;
+            height: 58px;
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: pointer;
+            opacity: 0.45;
+            border: 2px solid transparent;
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+            background: #0f1035;
+        }
+
+        .carousel-thumb:hover {
+            opacity: 0.85;
+        }
+
+        .carousel-thumb.active {
+            opacity: 1;
+            border-color: var(--clr-gold-bright);
+            transform: scale(1.08);
+            box-shadow: 0 0 15px rgba(242, 208, 107, 0.45);
+        }
+
+        @media (max-width: 600px) {
+            .carousel-main-wrapper {
+                height: 330px;
+            }
+
+            .carousel-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 1.15rem;
+            }
+
+            .carousel-thumb {
+                width: 48px;
+                height: 48px;
+            }
         }
 
         /* ───────────────────────── LIGHTBOX ZOOM CONTROLS ──────────────────────── */
@@ -1084,20 +1221,6 @@
             cursor: default;
         }
 
-        .mosaic-instruction-banner {
-            width: 100%;
-            max-width: 640px;
-            margin: 0 auto var(--gap-sm);
-            padding: 10px 14px;
-            background: rgba(201, 168, 76, 0.12);
-            border: 1px solid rgba(201, 168, 76, 0.35);
-            border-radius: var(--radius-sm);
-            color: var(--clr-gold-bright);
-            font-size: 0.85rem;
-            line-height: 1.4;
-            text-align: center;
-        }
-
         .mosaic-toolbar {
             display: flex;
             flex-wrap: wrap;
@@ -1177,90 +1300,6 @@
         .mosaic-grid-wrapper::-webkit-scrollbar-thumb {
             background: rgba(201, 168, 76, 0.4);
             border-radius: 4px;
-        }
-
-        .mosaic-preview-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(5, 5, 15, 0.85);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .mosaic-preview-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .mosaic-preview-card {
-            background: var(--clr-surface);
-            border: 2px solid var(--clr-gold);
-            border-radius: var(--radius-lg);
-            padding: 18px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(201, 168, 76, 0.3);
-            max-width: 85vw;
-            max-height: 85vh;
-            transform: scale(0.9);
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .mosaic-preview-overlay.active .mosaic-preview-card {
-            transform: scale(1);
-        }
-
-        .mosaic-preview-img-wrapper {
-            width: 280px;
-            height: 280px;
-            max-width: 75vw;
-            max-height: 55vh;
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        @media (min-width: 600px) {
-            .mosaic-preview-img-wrapper {
-                width: 360px;
-                height: 360px;
-            }
-        }
-
-        .mosaic-preview-img-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .mosaic-preview-title {
-            margin-top: 14px;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--clr-gold-bright);
-            text-align: center;
-            font-family: var(--font-heading);
-            text-shadow: 0 0 10px rgba(201, 168, 76, 0.4);
-        }
-
-        .mosaic-preview-hint {
-            margin-top: 8px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .mosaic-tile.mosaic-win-pulse {
@@ -1616,6 +1655,29 @@
 
         .hint-content.visible {
             display: block;
+        }
+
+        .gps-hint-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--clr-gold-bright);
+            font-weight: 600;
+            text-decoration: none;
+            padding: 6px 12px;
+            margin-top: 6px;
+            background: rgba(201, 168, 76, 0.15);
+            border: 1px solid rgba(242, 208, 107, 0.4);
+            border-radius: var(--radius-sm);
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+
+        .gps-hint-link:hover {
+            background: rgba(201, 168, 76, 0.3);
+            border-color: var(--clr-gold-bright);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(242, 208, 107, 0.25);
         }
 
         .hint-locked {
@@ -2059,7 +2121,7 @@
         }
 
         .welcome-rules li::before {
-            content: '✨';
+            content: ' ';
             position: absolute;
             left: 2px;
             top: 1px;
@@ -2338,6 +2400,89 @@
             color: var(--clr-gold-bright);
             text-shadow: 0 0 10px rgba(242, 208, 107, 0.6);
             transform: scale(1.15);
+        }
+
+        /* ────────────────────────── SLOTS PICKER (FRUIT SLOT MACHINE) ──────────────── */
+        .slots-picker-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 24px auto;
+            max-width: 440px;
+        }
+
+        .slots-headers {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+            opacity: 0.5;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+        }
+
+        .slots-headers span {
+            flex: 1;
+            text-align: center;
+        }
+
+        .slots-picker-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            padding: 12px 10px;
+            background: linear-gradient(145deg, rgba(15, 12, 25, 0.85), rgba(5, 5, 12, 0.95));
+            border: 2px solid rgba(201, 168, 76, 0.45);
+            border-radius: var(--radius-lg);
+            box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.9), 0 0 20px rgba(201, 168, 76, 0.15);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .slots-picker-container::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 48px;
+            border-top: 2px solid rgba(242, 208, 107, 0.75);
+            border-bottom: 2px solid rgba(242, 208, 107, 0.75);
+            background: linear-gradient(90deg, rgba(201, 168, 76, 0.05) 0%, rgba(201, 168, 76, 0.18) 50%, rgba(201, 168, 76, 0.05) 100%);
+            pointer-events: none;
+            border-radius: 6px;
+            box-shadow: 0 0 12px rgba(242, 208, 107, 0.2);
+            z-index: 1;
+        }
+
+        .slots-picker-container.error {
+            border-color: var(--error-red);
+            box-shadow: 0 0 0 4px var(--error-red-dim), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            animation: shake 0.5s ease;
+        }
+
+        .slots-picker-container .counter-wheel {
+            flex: 1;
+            width: auto;
+            min-width: 75px;
+            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .slots-picker-container .counter-item {
+            font-size: 2.1rem;
+            white-space: nowrap;
+        }
+
+        .slots-picker-container .counter-item.active {
+            transform: scale(1.25);
+            filter: drop-shadow(0 0 10px rgba(242, 208, 107, 0.75));
         }
 
         /* ────────────────────────── HINT COUNTER BADGE ─────────────────────── */
@@ -2714,6 +2859,113 @@
             background: var(--border-subtle);
             border-radius: 4px;
         }
+
+        /* ────────────────────────── PIANO PUZZLE ────────────────────────── */
+        .piano-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 24px auto;
+            max-width: 440px;
+            width: 100%;
+        }
+
+        .piano-keyboard {
+            display: flex;
+            position: relative;
+            width: 340px;
+            height: 220px;
+            margin: 20px auto;
+            padding: 10px;
+            background: rgba(15, 12, 25, 0.65);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--radius-lg);
+            border: 2px solid rgba(201, 168, 76, 0.4);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(201, 168, 76, 0.15);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        .piano-keyboard.disabled {
+            pointer-events: none;
+        }
+
+        .piano-key {
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        .piano-key.white {
+            width: 40px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(201, 168, 76, 0.3);
+            border-radius: 0 0 6px 6px;
+            z-index: 1;
+            position: relative;
+            transition: background 0.15s, box-shadow 0.15s;
+        }
+
+        .piano-key.white.active {
+            background: rgba(201, 168, 76, 0.2);
+            box-shadow: inset 0 0 15px rgba(201, 168, 76, 0.4);
+        }
+
+        .piano-key.black {
+            width: 24px;
+            height: 120px;
+            background: rgba(10, 8, 16, 0.95);
+            border: 1px solid rgba(201, 168, 76, 0.45);
+            border-radius: 0 0 4px 4px;
+            z-index: 5;
+            position: absolute;
+            transition: background 0.15s, box-shadow 0.15s;
+        }
+
+        .piano-key.black.active {
+            background: rgba(201, 168, 76, 0.5);
+            box-shadow: inset 0 0 10px rgba(242, 208, 107, 0.7);
+        }
+
+        .piano-key.success-active {
+            background: linear-gradient(135deg, var(--clr-gold), var(--clr-gold-bright)) !important;
+            border-color: var(--clr-gold-bright) !important;
+            animation: pulseGoldKey 1s infinite alternate;
+            z-index: 6;
+        }
+
+        .piano-key.success-active .key-label {
+            color: #fff !important;
+            opacity: 1 !important;
+            font-weight: 700;
+        }
+
+        .key-label {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            color: var(--clr-gold);
+            opacity: 0.2;
+            pointer-events: none;
+            transition: opacity 0.3s, color 0.3s;
+        }
+
+        @keyframes pulseGoldKey {
+            from {
+                box-shadow: 0 0 15px rgba(242, 208, 107, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.7);
+            }
+
+            to {
+                box-shadow: 0 0 30px rgba(242, 208, 107, 0.95), inset 0 0 15px rgba(255, 255, 255, 1);
+            }
+        }
     </style>
 </head>
 
@@ -2813,15 +3065,15 @@
                 id: 2,
                 type: "proximity",
                 titre: "Le premier contact",
-                description: "Il faut autoriser le gps en mode précis",
+                description: "",
                 image: null,
                 targetLat: 49.365861,
                 targetLng: 2.746750,
                 toleranceMeters: 2,
                 indices: [
                     "De quel contact parle-t-on ?",
-                    "La première fois que nous nous sommes touchés",
-                    "49°21'57.1\"N 2°44'48.3\"E"
+                    "La première fois que nous nous sommes fait la bise",
+                    `<a href="geo:49.365861,2.74675?q=49.365861,2.74675" onclick="openGPS(event, 49.365861, 2.74675)" class="gps-hint-link" title="Ouvrir dans votre application de cartes">📍 49°21'57.1"N 2°44'48.3"E</a>`
                 ]
             },
 
@@ -2845,6 +3097,7 @@
                 id: 4,
                 type: "gems",
                 titre: "",
+                debugTitre: "Coupe des champions",
                 description: "",
                 image: "assets/enigme5_coupe.jpeg",
                 reponseAttendue: ["rouge", "bleu"],
@@ -2879,41 +3132,93 @@
                     "La réponse est : Eva"
                 ],
                 succes: {
-                    titre: "La plus belle ✨",
+                    titre: "La plus belle  ",
                     description: "C'était bien Eva !",
                     image: "assets/enigme2_cadre_eva.jpeg",
                     bouton: "Énigme suivante ↗"
                 }
             },
 
-
-
-            // ── Énigme 6 : Premiers messages ──
+            // ── Énigme 6 : Nom de code ──
             {
                 id: 6,
+                type: "carousel",
+                titre: "Nom de code",
+                description: "Nous avons retrouvé une des multiples identités de cette personne qui sévissait sous plusieurs alias. Des témoins existent. Il faut obtenir cet alias.",
+                image: null,
+                images: [
+                    "assets/Enigme Eva jeune/1.jpeg",
+                    "assets/Enigme Eva jeune/2.jpeg",
+                    "assets/Enigme Eva jeune/3.jpeg",
+                    "assets/Enigme Eva jeune/4.jpeg",
+                    "assets/Enigme Eva jeune/4,5.jpeg",
+                    "assets/Enigme Eva jeune/7.jpeg",
+                    "assets/Enigme Eva jeune/8.jpeg",
+                    "assets/Enigme Eva jeune/8.3.jpeg",
+                    "assets/Enigme Eva jeune/8.5.jpeg",
+                    "assets/Enigme Eva jeune/8.7.jpeg",
+                    "assets/Enigme Eva jeune/9.jpeg",
+                    "assets/Enigme Eva jeune/10.jpeg",
+                    "assets/Enigme Eva jeune/11.jpeg",
+                    "assets/Enigme Eva jeune/11.2.jpeg",
+                    "assets/Enigme Eva jeune/12.jpeg",
+                    "assets/Enigme Eva jeune/13.jpeg",
+                    "assets/Enigme Eva jeune/13.5.jpeg",
+                    "assets/Enigme Eva jeune/14.jpeg",
+                    "assets/Enigme Eva jeune/15.jpeg",
+                    "assets/Enigme Eva jeune/16.jpeg"
+                ],
+                reponseAttendue: ["Kikinette", "kikinette", "KIKINETTE", "Kikinete", "kikinete", "Kikinete"],
+                indices: [
+                    "Un surnom très mignon",
+                    "Les instigateurs ont eu une idée très mignonounette",
+                    "Appelle Sonja"
+                ],
+                succes: {
+                    titre: "Nom de code trouvé !  ",
+                    description: "C'était bien Kikinette !",
+                    image: "assets/Enigme Eva jeune/kiki.jpeg",
+                    bouton: "Énigme suivante ↗"
+                }
+            },
+
+            // ── Énigme 7 : Premiers messages ──
+            {
+                id: 7,
                 type: "clock",
                 titre: "Premiers messages",
-                description: "Combien de temps séparent ces deux messages ? \n (+/- 17min)",
+                description: "Combien de temps séparent ces deux messages ? \n (+/- 17 minutes)",
                 image: "assets/enigme9_textos_flous.jpeg",
                 reponseAttendue: [137],
                 indices: [
-                    "Regardez les deux messages sur la capture d'écran, même flous on peut deviner la forme des heures d'envoi.",
-                    "Le premier message a été envoyé vers 13h30-13h40.",
-                    "Le second message a été envoyé un peu avant 16h, vers 15h55."
+                    "L'un était sur Messenger et l'autre par SMS",
+                    "Le premier message a été envoyé à 13h39",
+                    "Le second message a été envoyé à 15h56"
                 ],
                 succes: {
-                    titre: "Premiers messages ✨",
+                    titre: "Premiers messages  ",
                     description: "Félicitations ! Le 23 juillet, le premier message a été envoyé à <strong>13h39</strong> et le deuxième à <strong>15h56</strong>.<br><br>Soit exactement <strong>2 heures et 17 minutes</strong> d'écart !",
                     image: "assets/enigme9_textos.jpeg",
                     bouton: "Énigme suivante ↗"
                 }
             },
 
-
-
-            // ── Énigme 7 : Le message crypté ──
+            // ── Énigme 8 : Piano Duet ──
             {
-                id: 7,
+                id: 8,
+                type: "piano",
+                titre: "Duet",
+                description: "", // Aucun texte explicatif, tout est visuel
+                indices: [
+                    "Connais-tu le nom des notes dans ta langue de naissance ?",
+                    "Le piano est le seul instrument que nous ayons pratiqué tous les deux.",
+                    "L'accord A & E."
+                ]
+            },
+
+            // ── Énigme 9 : Le message crypté ──
+            {
+                id: 9,
                 type: "text",
                 titre: "Le message crypté",
                 description: "Nous avons trouvé un message codé. Il semble connecté à un endroit que tu as appris à connaître : \"Jc lmkpzc 2 ajmafcpq bylq jy plus zcjjc tgjjc \" . Sauras-tu trouver le message ?",
@@ -2931,9 +3236,9 @@
                 ]
             },
 
-            // ── Énigme 8 : Le message crypté (suite) ──
+            // ── Énigme 10 : Le message crypté (suite) ──
             {
-                id: 8,
+                id: 10,
                 type: "counter",
                 titre: "Le message crypté (suite)",
                 description: "Tu l'as trouvé ! C'est accompagné d'une photo un peu bizarre...",
@@ -2946,9 +3251,9 @@
                 ]
             },
 
-            // ── Énigme 9 : Space Ensemble (Mosaic) ──
+            // ── Énigme 11 : Space Ensemble (Mosaic) ──
             {
-                id: 9,
+                id: 11,
                 type: "mosaic",
                 titre: "Un ensemble un peu space",
                 description: "",
@@ -2997,7 +3302,7 @@
                     { file: "4_7_La distance - Petite.jpeg", valid: 1, title: "La distance" },
                     { file: "4_8_Pinocchio - Petite.jpeg", valid: 1, title: "Pinocchio" },
                     // Row 5
-                    { file: "5_1_Hadès - Petite.jpeg", valid: 1, title: "Hadès" },
+                    { file: "5_1_Hades - Petite.jpeg", valid: 1, title: "Hadès" },
                     { file: "5_2_Baldur's Gate 3 - Petite.jpeg", valid: 1, title: "Baldur's gate 3" },
                     { file: "5_3_Rocket League - Petite.jpeg", valid: 1, title: "Rocket League" },
                     { file: "5_4_Control - Petite.jpeg", valid: 1, title: "Control" },
@@ -3007,9 +3312,9 @@
                     { file: "5_8_Cocoon - Petite.jpeg", valid: 1, title: "Cocoon" },
                     // Row 6
                     { file: "6_1_Challengers - Petite.jpeg", valid: 0, title: "Challengers" },
-                    { file: "6_2_The Holdovers - Petite.jpeg", valid: 0, title: "The Holdovers" },
-                    { file: "6_3_Sackboy - Petite.jpeg", valid: 1, title: "Sackboy" },
-                    { file: "6_4_Final Fantasy VI - Petite.jpeg", valid: 0, title: "Final Fantasy VII Rebirth" },
+                    { file: "6_2_Maniac - Petite.jpeg", valid: 1, title: "Maniac" },
+                    { file: "6_3_Helldivers 2 - Petite.jpeg", valid: 0, title: "Helldivers 2" },
+                    { file: "6_4_Dune 2 - Petite.jpeg", valid: 0, title: "Dune : Deuxième Partie" },
                     { file: "6_5_Dragon's Dogma - Petite.jpeg", valid: 0, title: "Dragon's Dogma 2" },
                     { file: "6_6_Detroit - Petite.jpeg", valid: 1, title: "Detroit" },
                     { file: "6_7_Killers of the Flower Moon - Petite.jpeg", valid: 0, title: "Killers of the Flower Moon" },
@@ -3026,9 +3331,24 @@
                 ]
             },
 
-            // ── Énigme 10 : Boss Fight Eva vs Malus ──
+            // ── Énigme 12 : La Machine à Délices (Slots) ──
             {
-                id: 10,
+                id: 12,
+                type: "slots",
+                titre: "La Machine à Délices",
+                description: "Parmi tous les plaisirs sucrés de la vie, il y a un ordre immuable... Trouve la combinaison qui régit mes préférences.",
+                fruits: ["Abricot", "Fraise", "Cerise", "Banane", "Pomme", "Pêche", "Citron"],
+                reponseAttendue: ["abricot-fraise-cerise"],
+                indices: [
+                    "Remarque les petits numéros au dessus de chaque case.",
+                    "Le numéro 1 est un fruit de toutes saisons, idéal à toute heure.",
+                    "Dans l'ordre de préférence : l'abricot, la fraise, la cerise."
+                ]
+            },
+
+            // ── Énigme 13 : Boss Fight Eva vs Malus ──
+            {
+                id: 13,
                 type: "bossfight",
                 titre: "L'épreuve finale",
                 description: "Les ombres de tes erreurs passées et de tes hésitations se sont rassemblées pour donner naissance à <strong>Malus</strong>, un gardien maléfique. Eva doit l'affronter pour continuer l'aventure !",
@@ -3084,6 +3404,7 @@
                     if (DEBUG) initDebugSelect();
                 }
                 alert(DEBUG ? "🛠️ Mode Debug ACTIVÉ ! (Menu en bas à droite)" : "🔒 Mode Debug DÉSACTIVÉ");
+                renderEnigma(currentIndex);
             }
         });
 
@@ -3311,6 +3632,105 @@
         }
 
         /* ─────────────────────────────────────────────────────────────
+           CAROUSEL HELPER FUNCTIONS
+        ────────────────────────────────────────────────────────────── */
+        function renderCarouselHtml(images, currentIdx = 0) {
+            if (!images || images.length === 0) return '';
+            const total = images.length;
+            const currentSrc = images[currentIdx];
+
+            const thumbsHtml = images.map((src, idx) => `
+                <img src="${src}" alt="Photo ${idx + 1}"
+                     class="carousel-thumb ${idx === currentIdx ? 'active' : ''}"
+                     id="carousel-thumb-${idx}"
+                     onclick="goCarousel(${idx})"
+                     loading="lazy">
+            `).join('');
+
+            return `
+              <div class="enigma-carousel" id="enigma-carousel">
+                <div class="carousel-main-wrapper" id="carousel-main-wrapper">
+                  <div class="carousel-counter-badge" id="carousel-counter">${currentIdx + 1} / ${total}</div>
+                  <button class="carousel-btn prev" onclick="moveCarousel(-1)" title="Photo précédente">←</button>
+                  <img src="${currentSrc}" alt="Photo ${currentIdx + 1}" class="carousel-main-img" id="carousel-main-img" onclick="openLightbox(this.src)" title="Cliquer pour agrandir">
+                  <button class="carousel-btn next" onclick="moveCarousel(1)" title="Photo suivante">→</button>
+                </div>
+                <div class="carousel-thumbs-bar" id="carousel-thumbs-bar">
+                  ${thumbsHtml}
+                </div>
+              </div>
+            `;
+        }
+
+        function moveCarousel(step) {
+            const e = enigmes[currentIndex];
+            if (!e || !e.images || e.images.length === 0) return;
+            const total = e.images.length;
+            window._carouselIndex = ((window._carouselIndex || 0) + step + total) % total;
+            updateCarouselView();
+        }
+
+        function goCarousel(idx) {
+            const e = enigmes[currentIndex];
+            if (!e || !e.images || e.images.length === 0) return;
+            if (idx >= 0 && idx < e.images.length) {
+                window._carouselIndex = idx;
+                updateCarouselView();
+            }
+        }
+
+        function updateCarouselView() {
+            const e = enigmes[currentIndex];
+            if (!e || !e.images) return;
+            const idx = window._carouselIndex || 0;
+            const mainImg = document.getElementById('carousel-main-img');
+            const counter = document.getElementById('carousel-counter');
+            if (mainImg) {
+                mainImg.style.opacity = '0.35';
+                setTimeout(() => {
+                    mainImg.src = e.images[idx];
+                    mainImg.style.opacity = '1';
+                }, 120);
+            }
+            if (counter) {
+                counter.innerText = `${idx + 1} / ${e.images.length}`;
+            }
+            const thumbs = document.querySelectorAll('.carousel-thumb');
+            thumbs.forEach((thumb, i) => {
+                if (i === idx) {
+                    thumb.classList.add('active');
+                    thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                } else {
+                    thumb.classList.remove('active');
+                }
+            });
+        }
+
+        function initCarouselTouch() {
+            const wrapper = document.getElementById('carousel-main-wrapper');
+            if (!wrapper) return;
+            let startX = 0;
+            wrapper.addEventListener('touchstart', e => {
+                startX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            wrapper.addEventListener('touchend', e => {
+                const endX = e.changedTouches[0].screenX;
+                const diff = startX - endX;
+                if (Math.abs(diff) > 40) {
+                    if (diff > 0) moveCarousel(1);
+                    else moveCarousel(-1);
+                }
+            }, { passive: true });
+        }
+
+        window.addEventListener('keydown', (ev) => {
+            if (document.getElementById('enigma-carousel') && document.activeElement.tagName !== 'INPUT') {
+                if (ev.key === 'ArrowLeft') moveCarousel(-1);
+                else if (ev.key === 'ArrowRight') moveCarousel(1);
+            }
+        });
+
+        /* ─────────────────────────────────────────────────────────────
            RENDER ENIGMA
         ────────────────────────────────────────────────────────────── */
         function renderEnigma(index) {
@@ -3334,9 +3754,13 @@
 
             updateProgress();
 
-            const imageHtml = (e.image && e.type !== 'gems')
-                ? `<img src="${e.image}" alt="" onerror="this.style.display='none'" class="enigma-image" loading="lazy" onclick="openLightbox(this.src)" title="Cliquer pour agrandir et zoomer">`
-                : '';
+            let imageHtml = '';
+            if (e.type === 'carousel' && e.images && e.images.length > 0) {
+                window._carouselIndex = 0;
+                imageHtml = renderCarouselHtml(e.images, 0);
+            } else if (e.image && e.type !== 'gems') {
+                imageHtml = `<img src="${e.image}" alt="" onerror="this.style.display='none'" class="enigma-image" loading="lazy" onclick="openLightbox(this.src)" title="Cliquer pour agrandir et zoomer">`;
+            }
 
             let interactionHtml = '';
 
@@ -3407,6 +3831,69 @@
           `;
                     break;
 
+                case 'slots': {
+                    const fruits = e.fruits || ["Abricot", "Fraise", "Cerise", "Banane", "Pomme", "Pêche", "Citron"];
+                    const fruitEmojis = {
+                        "Abricot": "🍑",
+                        "Fraise": "🍓",
+                        "Cerise": "🍒",
+                        "Banane": "🍌",
+                        "Pomme": "🍏",
+                        "Pêche": "🍑",
+                        "Citron": "🍋"
+                    };
+                    const shuffleArray = (arr) => {
+                        const res = [...arr];
+                        for (let i = res.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [res[i], res[j]] = [res[j], res[i]];
+                        }
+                        return res;
+                    };
+                    const createLoopedWheelHtml = () => {
+                        const shuffled = shuffleArray(fruits);
+                        let html = '';
+                        for (let cycle = 0; cycle < 15; cycle++) {
+                            shuffled.forEach(fruit => {
+                                const emoji = fruitEmojis[fruit] || "🎰";
+                                html += `<div class="counter-item" data-fruit="${fruit}" title="${fruit}" onclick="selectSlotsWheelItem(this)">${emoji}</div>`;
+                            });
+                        }
+                        return html;
+                    };
+
+                    interactionHtml = `
+            <div class="slots-picker-wrapper">
+              <div class="slots-headers">
+                <span>1</span>
+                <span>2</span>
+                <span>3</span>
+              </div>
+              <div class="slots-picker-container" id="slots-picker">
+                <div class="counter-wheel" id="wheel-fruit-1" onscroll="handleFruitWheelScroll(this)">
+                  <div class="counter-wheel-scroll">
+                    ${createLoopedWheelHtml()}
+                  </div>
+                </div>
+                <div class="counter-wheel" id="wheel-fruit-2" onscroll="handleFruitWheelScroll(this)">
+                  <div class="counter-wheel-scroll">
+                    ${createLoopedWheelHtml()}
+                  </div>
+                </div>
+                <div class="counter-wheel" id="wheel-fruit-3" onscroll="handleFruitWheelScroll(this)">
+                  <div class="counter-wheel-scroll">
+                    ${createLoopedWheelHtml()}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="btn-validate" onclick="validateSlotsAnswer()">
+              Valider ma réponse
+            </button>
+          `;
+                    break;
+                }
+
                 case 'clock':
                     interactionHtml = `
             <div class="clock-puzzle-container">
@@ -3429,6 +3916,35 @@
               <button class="btn btn-primary" id="btn-validate" onclick="validateClockAnswer()" style="margin-top: 18px; width: 100%; max-width: 320px;">
                 Valider cette durée
               </button>
+            </div>
+          `;
+                    break;
+
+                case 'piano':
+                    interactionHtml = `
+            <div class="piano-container">
+              <div class="piano-keyboard" id="piano-keyboard">
+                <!-- White Keys -->
+                <div class="piano-key white" data-freq="440" data-note="A">
+                  <div class="key-label">A</div>
+                </div>
+                <div class="piano-key white" data-freq="493.88" data-note="B"></div>
+                <div class="piano-key white" data-freq="523.25" data-note="C"></div>
+                <div class="piano-key white" data-freq="587.33" data-note="D"></div>
+                <div class="piano-key white" data-freq="659.25" data-note="E">
+                  <div class="key-label">E</div>
+                </div>
+                <div class="piano-key white" data-freq="698.46" data-note="F"></div>
+                <div class="piano-key white" data-freq="783.99" data-note="G"></div>
+                <div class="piano-key white" data-freq="880" data-note="A_high"></div>
+
+                <!-- Black Keys -->
+                <div class="piano-key black" data-freq="466.16" data-note="A_sharp" style="left: 38px;"></div>
+                <div class="piano-key black" data-freq="554.37" data-note="C_sharp" style="left: 118px;"></div>
+                <div class="piano-key black" data-freq="622.25" data-note="D_sharp" style="left: 158px;"></div>
+                <div class="piano-key black" data-freq="739.99" data-note="F_sharp" style="left: 238px;"></div>
+                <div class="piano-key black" data-freq="830.61" data-note="G_sharp" style="left: 278px;"></div>
+              </div>
             </div>
           `;
                     break;
@@ -3485,7 +4001,7 @@
             <div class="bf-intro">
                 <div class="bf-vs">
                     <div class="bf-fighter">
-                        <div class="bf-fighter-icon">✨</div>
+                        <div class="bf-fighter-icon"> </div>
                         <div class="bf-fighter-name eva">Eva</div>
                     </div>
                     <div class="bf-vs-text">VS</div>
@@ -3512,31 +4028,19 @@
                         const srcUrl = `assets/Enigme Space Ensemble/${encodeURI(tile.file)}`;
                         return `
             <div class="mosaic-tile" id="mosaic-tile-${i}" data-valid="${tile.valid}"
-                 onmousedown="startMosaicPress(event, ${i})"
-                 ontouchstart="startMosaicPress(event, ${i})"
-                 onmouseup="endMosaicPress(event, ${i})"
-                 ontouchend="endMosaicPress(event, ${i})"
-                 onmouseleave="cancelMosaicPress()"
-                 ontouchmove="moveMosaicPress(event)"
-                 ontouchcancel="cancelMosaicPress()"
                  onclick="handleMosaicClick(${i}, ${tile.valid})">
               <img src="${srcUrl}" alt="${tile.title}" title="${tile.title}" loading="lazy">
             </div>`;
                     }).join('');
                     interactionHtml = `
-            <div class="mosaic-instruction-banner">
-              💡 <strong>Astuce :</strong> Laissez votre doigt appuyé sur une image pour la voir en grand sans valider !
-            </div>
             <div class="mosaic-toolbar">
               <div class="mosaic-zoom-info">
                 <span>🔍</span>
                 <span>Zoom grille :</span>
               </div>
               <div class="mosaic-zoom-btns">
-                <button class="btn-mosaic-zoom active" id="btn-zoom-1" onclick="setMosaicGridZoom(1, this)" title="Vue standard">1x</button>
-                <button class="btn-mosaic-zoom" id="btn-zoom-1.4" onclick="setMosaicGridZoom(1.4, this)" title="Zoom moyen">1.4x</button>
-                <button class="btn-mosaic-zoom" id="btn-zoom-1.8" onclick="setMosaicGridZoom(1.8, this)" title="Grand zoom">1.8x</button>
-                <button class="btn-mosaic-zoom" id="btn-zoom-2.2" onclick="setMosaicGridZoom(2.2, this)" title="Zoom maximum">2.2x</button>
+                <button class="btn-mosaic-zoom active" id="btn-zoom-1" onclick="setMosaicGridZoom(1, this)" title="Vue standard">x1</button>
+                <button class="btn-mosaic-zoom" id="btn-zoom-2" onclick="setMosaicGridZoom(2, this)" title="Zoom x2">x2</button>
               </div>
             </div>
             <div class="mosaic-grid-wrapper" id="mosaic-grid-wrapper">
@@ -3548,6 +4052,7 @@
                     break;
                 }
 
+                case 'carousel':
                 case 'gps':
                 case 'text':
                 default:
@@ -3591,6 +4096,9 @@
             // Init drawing canvas
             if (e.type === 'drawing') initCanvas();
 
+            // Init carousel touch
+            if (e.type === 'carousel') initCarouselTouch();
+
             // Init counter picker
             if (e.type === 'counter') {
                 setTimeout(() => {
@@ -3604,9 +4112,28 @@
                 }, 50);
             }
 
+            // Init slots picker
+            if (e.type === 'slots') {
+                setTimeout(() => {
+                    ['wheel-fruit-1', 'wheel-fruit-2', 'wheel-fruit-3'].forEach(id => {
+                        const wheel = document.getElementById(id);
+                        if (wheel) {
+                            const randomOffset = Math.floor(Math.random() * 7);
+                            wheel.scrollTop = (7 * 7 + randomOffset) * 48;
+                            handleFruitWheelScroll(wheel);
+                        }
+                    });
+                }, 50);
+            }
+
             // Init clock puzzle
             if (e.type === 'clock') {
                 initClockPuzzle();
+            }
+
+            // Init piano puzzle
+            if (e.type === 'piano') {
+                initPianoPuzzle();
             }
 
             // Init gems puzzle
@@ -3879,6 +4406,95 @@
             }
         }
 
+        /* ────────────────────────── SLOTS PICKER LOGIC ───────────────────────── */
+        function handleFruitWheelScroll(wheel) {
+            const itemHeight = 48;
+            const scrollOffset = wheel.scrollTop;
+            const selectedIndex = Math.round(scrollOffset / itemHeight);
+
+            const items = wheel.querySelectorAll('.counter-item');
+            items.forEach((item, idx) => {
+                if (idx === selectedIndex) {
+                    if (!item.classList.contains('active')) {
+                        item.classList.add('active');
+                        if (navigator.vibrate) navigator.vibrate(10);
+                    }
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            clearTimeout(wheel._loopTimeout);
+            wheel._loopTimeout = setTimeout(() => {
+                const cycleHeight = 7 * 48;
+                if (wheel.scrollTop < cycleHeight * 3) {
+                    wheel.scrollTop += cycleHeight * 7;
+                } else if (wheel.scrollTop > cycleHeight * 11) {
+                    wheel.scrollTop -= cycleHeight * 7;
+                }
+            }, 120);
+        }
+
+        function selectSlotsWheelItem(item) {
+            const wheel = item.closest('.counter-wheel');
+            if (wheel) {
+                const items = Array.from(wheel.querySelectorAll('.counter-item'));
+                const idx = items.indexOf(item);
+                if (idx !== -1) {
+                    wheel.scrollTo({
+                        top: idx * 48,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }
+
+        function getSlotsValue() {
+            const itemHeight = 48;
+            const w1 = document.getElementById('wheel-fruit-1');
+            const w2 = document.getElementById('wheel-fruit-2');
+            const w3 = document.getElementById('wheel-fruit-3');
+
+            if (!w1 || !w2 || !w3) return '';
+
+            const getWheelFruit = (wheel) => {
+                const idx = Math.round(wheel.scrollTop / itemHeight);
+                const items = wheel.querySelectorAll('.counter-item');
+                const item = items[idx] || items[0];
+                return item ? (item.getAttribute('data-fruit') || '').trim().toLowerCase() : '';
+            };
+
+            const f1 = getWheelFruit(w1);
+            const f2 = getWheelFruit(w2);
+            const f3 = getWheelFruit(w3);
+
+            return `${f1}-${f2}-${f3}`;
+        }
+
+        function validateSlotsAnswer() {
+            const answer = getSlotsValue();
+            const expected = enigmes[currentIndex].reponseAttendue;
+
+            const acceptedAnswers = Array.isArray(expected) ? expected : [expected];
+            const isCorrect = acceptedAnswers.some(val => String(val).trim().toLowerCase() === answer);
+
+            const picker = document.getElementById('slots-picker');
+            const btn = document.getElementById('btn-validate');
+
+            if (isCorrect) {
+                showFeedback('success', '🎰 Jackpot ! La combinaison est correcte.');
+                if (picker) picker.style.pointerEvents = 'none';
+                if (btn) btn.disabled = true;
+                setTimeout(() => handleSuccess(), 1000);
+            } else {
+                showFeedback('error', '❌ Combinaison incorrecte ! Une erreur vient d\'être ajoutée.');
+                if (picker) {
+                    picker.classList.add('error');
+                    setTimeout(() => picker.classList.remove('error'), 600);
+                }
+            }
+        }
+
         /* ────────────────────────── CLOCK PUZZLE LOGIC ──────────────────────── */
         let _clockHours = 0;
         let _clockMinutes = 0;
@@ -4033,6 +4649,239 @@
                 }
             }
         }
+
+        /* ────────────────────────── PIANO PUZZLE LOGIC ──────────────────────── */
+        let pianoAudioCtx = null;
+        let activeOscillators = {};
+        let pressedNotes = new Set();
+        let pianoSuccessTimer = null;
+        let pianoSolved = false;
+
+        function getPianoAudioContext() {
+            if (!pianoAudioCtx) {
+                pianoAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (pianoAudioCtx.state === 'suspended') {
+                pianoAudioCtx.resume();
+            }
+            return pianoAudioCtx;
+        }
+
+        function playNote(freq, noteId) {
+            try {
+                const ctx = getPianoAudioContext();
+                stopNote(noteId);
+
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(parseFloat(freq), ctx.currentTime);
+
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                gainNode.gain.setValueAtTime(0, ctx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.35, ctx.currentTime + 0.02);
+
+                osc.start();
+                activeOscillators[noteId] = { osc, gainNode, freq };
+            } catch (err) {
+                console.error("Error playing note:", err);
+            }
+        }
+
+        function stopNote(noteId) {
+            const activeNode = activeOscillators[noteId];
+            if (activeNode) {
+                try {
+                    const ctx = getPianoAudioContext();
+                    const gainNode = activeNode.gainNode;
+                    const osc = activeNode.osc;
+
+                    gainNode.gain.setValueAtTime(gainNode.gain.value, ctx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+
+                    setTimeout(() => {
+                        try {
+                            osc.stop();
+                            osc.disconnect();
+                        } catch (e) { }
+                    }, 100);
+                } catch (err) {
+                    console.error("Error stopping note:", err);
+                }
+                delete activeOscillators[noteId];
+            }
+        }
+
+        function checkPianoValidation() {
+            if (pianoSolved) return;
+
+            const isAActive = pressedNotes.has("A");
+            const isEActive = pressedNotes.has("E");
+
+            if (isAActive && isEActive) {
+                if (!pianoSuccessTimer) {
+                    pianoSuccessTimer = setTimeout(() => {
+                        triggerPianoSuccess();
+                    }, 2000);
+                }
+            } else {
+                if (pianoSuccessTimer) {
+                    clearTimeout(pianoSuccessTimer);
+                    pianoSuccessTimer = null;
+                }
+            }
+        }
+
+        function triggerPianoSuccess() {
+            pianoSolved = true;
+            if (pianoSuccessTimer) {
+                clearTimeout(pianoSuccessTimer);
+                pianoSuccessTimer = null;
+            }
+
+            // Stop all active notes
+            Object.keys(activeOscillators).forEach(noteId => stopNote(noteId));
+            pressedNotes.clear();
+
+            // Block keyboard UI
+            const kbd = document.getElementById('piano-keyboard');
+            if (kbd) kbd.classList.add('disabled');
+
+            // Remove active classes from keys
+            const keys = document.querySelectorAll('.piano-key');
+            keys.forEach(k => k.classList.remove('active'));
+
+            // Illuminate A and E in bright gold
+            const keyA = document.querySelector('.piano-key[data-note="A"]');
+            const keyE = document.querySelector('.piano-key[data-note="E"]');
+            if (keyA) keyA.classList.add('success-active');
+            if (keyE) keyE.classList.add('success-active');
+
+            // Display success feedback
+            showFeedback('success', '✨ Magnifique ! L\'accord parfait A & E a retenti pendant 2 secondes. ✨');
+
+            // Call handleSuccess after 1.5 seconds
+            setTimeout(() => {
+                handleSuccess();
+            }, 1500);
+        }
+
+        function initPianoPuzzle() {
+            // Reset state
+            pianoSolved = false;
+            pressedNotes.clear();
+            if (pianoSuccessTimer) {
+                clearTimeout(pianoSuccessTimer);
+                pianoSuccessTimer = null;
+            }
+            // Stop any dangling oscillators
+            Object.keys(activeOscillators).forEach(noteId => stopNote(noteId));
+            activeOscillators = {};
+
+            const keys = document.querySelectorAll('.piano-key');
+            keys.forEach(key => {
+                const freq = key.getAttribute('data-freq');
+                const noteId = key.getAttribute('data-note');
+
+                // Touch support
+                key.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (pianoSolved) return;
+                    playNote(freq, noteId);
+                    pressedNotes.add(noteId);
+                    key.classList.add('active');
+                    checkPianoValidation();
+                });
+
+                key.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    if (pianoSolved) return;
+                    stopNote(noteId);
+                    pressedNotes.delete(noteId);
+                    key.classList.remove('active');
+                    checkPianoValidation();
+                });
+
+                key.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    if (pianoSolved) return;
+                    stopNote(noteId);
+                    pressedNotes.delete(noteId);
+                    key.classList.remove('active');
+                    checkPianoValidation();
+                });
+
+                // Mouse support
+                key.addEventListener('mousedown', (e) => {
+                    if (pianoSolved) return;
+                    playNote(freq, noteId);
+                    pressedNotes.add(noteId);
+                    key.classList.add('active');
+                    checkPianoValidation();
+                });
+
+                key.addEventListener('mouseup', (e) => {
+                    if (pianoSolved) return;
+                    stopNote(noteId);
+                    pressedNotes.delete(noteId);
+                    key.classList.remove('active');
+                    checkPianoValidation();
+                });
+
+                key.addEventListener('mouseleave', (e) => {
+                    if (pianoSolved) return;
+                    stopNote(noteId);
+                    pressedNotes.delete(noteId);
+                    key.classList.remove('active');
+                    checkPianoValidation();
+                });
+            });
+        }
+
+        // Global key event listeners for keyboard backup (and testing)
+        document.addEventListener('keydown', (e) => {
+            const kbd = document.getElementById('piano-keyboard');
+            if (!kbd || pianoSolved) return;
+
+            const keyName = e.key.toLowerCase();
+            let targetNote = null;
+            if (keyName === 'a') targetNote = 'A';
+            else if (keyName === 'e') targetNote = 'E';
+
+            if (targetNote) {
+                const keyEl = document.querySelector(`.piano-key[data-note="${targetNote}"]`);
+                if (keyEl && !pressedNotes.has(targetNote)) {
+                    const freq = keyEl.getAttribute('data-freq');
+                    playNote(freq, targetNote);
+                    pressedNotes.add(targetNote);
+                    keyEl.classList.add('active');
+                    checkPianoValidation();
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            const kbd = document.getElementById('piano-keyboard');
+            if (!kbd) return;
+
+            const keyName = e.key.toLowerCase();
+            let targetNote = null;
+            if (keyName === 'a') targetNote = 'A';
+            else if (keyName === 'e') targetNote = 'E';
+
+            if (targetNote) {
+                const keyEl = document.querySelector(`.piano-key[data-note="${targetNote}"]`);
+                if (keyEl && pressedNotes.has(targetNote)) {
+                    stopNote(targetNote);
+                    pressedNotes.delete(targetNote);
+                    keyEl.classList.remove('active');
+                    checkPianoValidation();
+                }
+            }
+        });
 
         /* ────────────────────────── GEMS PUZZLE LOGIC ───────────────────────── */
         function selectGem(gemId) {
@@ -4315,120 +5164,6 @@
             }
         }
 
-        let _mosaicPressTimer = null;
-        let _mosaicIsLongPress = false;
-        let _mosaicStartX = 0;
-        let _mosaicStartY = 0;
-
-        function startMosaicPress(event, tileIndex) {
-            if (event && event.button && event.button !== 0) return;
-            cancelMosaicPress();
-
-            const tileEl = document.getElementById(`mosaic-tile-${tileIndex}`);
-            if (!tileEl || tileEl.classList.contains('valid-clicked') || tileEl.classList.contains('disabled')) return;
-
-            _mosaicIsLongPress = false;
-            if (event.touches && event.touches.length > 0) {
-                _mosaicStartX = event.touches[0].clientX;
-                _mosaicStartY = event.touches[0].clientY;
-            } else if (event.clientX) {
-                _mosaicStartX = event.clientX;
-                _mosaicStartY = event.clientY;
-            }
-
-            _mosaicPressTimer = setTimeout(() => {
-                _mosaicIsLongPress = true;
-                if (navigator.vibrate) navigator.vibrate(40);
-                showMosaicPreview(tileIndex);
-            }, 280);
-        }
-
-        function moveMosaicPress(event) {
-            if (!_mosaicPressTimer) return;
-            let currentX = 0;
-            let currentY = 0;
-            if (event.touches && event.touches.length > 0) {
-                currentX = event.touches[0].clientX;
-                currentY = event.touches[0].clientY;
-            } else if (event.clientX) {
-                currentX = event.clientX;
-                currentY = event.clientY;
-            }
-            if (Math.abs(currentX - _mosaicStartX) > 10 || Math.abs(currentY - _mosaicStartY) > 10) {
-                cancelMosaicPress();
-            }
-        }
-
-        function endMosaicPress(event, tileIndex) {
-            if (_mosaicPressTimer) {
-                clearTimeout(_mosaicPressTimer);
-                _mosaicPressTimer = null;
-            }
-            if (_mosaicIsLongPress) {
-                if (event && event.preventDefault) event.preventDefault();
-                hideMosaicPreview();
-                window._mosaicIgnoreNextClick = true;
-                setTimeout(() => { window._mosaicIgnoreNextClick = false; }, 350);
-            }
-        }
-
-        function cancelMosaicPress() {
-            if (_mosaicPressTimer) {
-                clearTimeout(_mosaicPressTimer);
-                _mosaicPressTimer = null;
-            }
-            if (_mosaicIsLongPress) {
-                hideMosaicPreview();
-                window._mosaicIgnoreNextClick = true;
-                setTimeout(() => { window._mosaicIgnoreNextClick = false; }, 350);
-                _mosaicIsLongPress = false;
-            }
-        }
-
-        function showMosaicPreview(tileIndex) {
-            const enigma = enigmes[currentIndex];
-            if (!enigma || !enigma.tiles || !enigma.tiles[tileIndex]) return;
-            const tile = enigma.tiles[tileIndex];
-            const srcUrl = `assets/Enigme Space Ensemble/${encodeURI(tile.file)}`;
-
-            let overlay = document.getElementById('mosaic-preview-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'mosaic-preview-overlay';
-                overlay.className = 'mosaic-preview-overlay';
-                overlay.innerHTML = `
-            <div class="mosaic-preview-card" onclick="event.stopPropagation()">
-                <div class="mosaic-preview-img-wrapper">
-                    <img id="mosaic-preview-img" src="" alt="Preview">
-                </div>
-                <div id="mosaic-preview-title" class="mosaic-preview-title"></div>
-                <div class="mosaic-preview-hint">Relâchez votre doigt pour fermer</div>
-            </div>
-          `;
-                overlay.addEventListener('click', hideMosaicPreview);
-                document.body.appendChild(overlay);
-            }
-
-            const imgEl = document.getElementById('mosaic-preview-img');
-            const titleEl = document.getElementById('mosaic-preview-title');
-            if (imgEl) imgEl.src = srcUrl;
-            if (titleEl) titleEl.textContent = tile.title || '';
-
-            overlay.classList.add('active');
-            window.addEventListener('touchend', hideMosaicPreview, { once: true });
-            window.addEventListener('touchcancel', hideMosaicPreview, { once: true });
-            window.addEventListener('mouseup', hideMosaicPreview, { once: true });
-        }
-
-        function hideMosaicPreview() {
-            const overlay = document.getElementById('mosaic-preview-overlay');
-            if (overlay) {
-                overlay.classList.remove('active');
-            }
-            window._mosaicIgnoreNextClick = true;
-            setTimeout(() => { window._mosaicIgnoreNextClick = false; }, 350);
-        }
-
         function setMosaicGridZoom(level, btn) {
             const grid = document.getElementById('mosaic-grid');
             const wrapper = document.getElementById('mosaic-grid-wrapper');
@@ -4464,7 +5199,6 @@
         }
 
         function handleMosaicClick(tileIndex, isValid) {
-            if (window._mosaicIgnoreNextClick) return;
             const tileEl = document.getElementById(`mosaic-tile-${tileIndex}`);
             if (!tileEl || tileEl.classList.contains('valid-clicked') || tileEl.classList.contains('disabled')) return;
 
@@ -4544,7 +5278,7 @@
             $app.innerHTML = `
                 <div class="enigma-card" style="text-align: center; border-color: rgba(201, 168, 76, 0.6); box-shadow: 0 0 35px rgba(201, 168, 76, 0.25);">
                     <div style="margin: 0 auto 20px; font-size: 2.5rem; filter: drop-shadow(0 0 15px rgba(201, 168, 76, 0.6)); animation: float 3s ease-in-out infinite;">⏳</div>
-                    <h1 class="enigma-title" style="color: var(--clr-gold-bright);">Date confirmée ! ✨</h1>
+                    <h1 class="enigma-title" style="color: var(--clr-gold-bright);">Date confirmée !</h1>
                     
                     <div class="enigma-description" style="min-height: 90px; margin: 30px auto; max-width: 520px; font-size: 1.25rem; line-height: 1.8; color: var(--text-primary); font-family: var(--font-body); font-style: italic;">
                         <span id="enigma1-tw"></span>
@@ -4553,7 +5287,7 @@
                     <!-- Countdown Box on Success Screen (initially hidden) -->
                     <div id="enigma1-countdown-box" style="opacity: 0; transform: translateY(20px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); margin: 35px 0;">
                         <div style="font-family: var(--font-ui); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--clr-gold); margin-bottom: 15px;">
-                            ⚡ Décompte avant l'ouverture du trésor (19 juillet 2026)
+                            ⚡ Décompte avant apparition du trésor (19 juillet 2026 à 00:00)
                         </div>
                         <div class="lock-countdown" id="enigma1-live-countdown">
                             <div class="lock-countdown-unit"><div class="lock-countdown-value">00</div><div class="lock-countdown-label">Jours</div></div>
@@ -4718,7 +5452,7 @@
 
             $app.innerHTML = `
                 <div class="enigma-card" style="text-align: center; border-color: rgba(201, 168, 76, 0.6); box-shadow: 0 0 35px rgba(201, 168, 76, 0.25);">
-                    <div style="margin: 0 auto 20px; font-size: 2.2rem; filter: drop-shadow(0 0 10px rgba(201, 168, 76, 0.5));">✨</div>
+                    <div style="margin: 0 auto 20px; font-size: 2.2rem; filter: drop-shadow(0 0 10px rgba(201, 168, 76, 0.5));"> </div>
                     <h1 class="enigma-title" style="color: var(--clr-gold-bright);">${titleText}</h1>
                     ${imageHtml}
                     ${descText}
@@ -4776,7 +5510,7 @@
             if ($sel.options.length > 1) return; // Already initialized
             $sel.innerHTML = '<option value="">🎯 Aller à...</option>' +
                 '<option value="welcome">🏠 Accueil</option>' +
-                enigmes.map((e, idx) => `<option value="${idx}">${idx + 1}. ${e.titre}</option>`).join('') +
+                enigmes.map((e, idx) => `<option value="${idx}">${idx + 1}. ${e.debugTitre || e.titre}</option>`).join('') +
                 '<option value="lock">🔒 Décompte final</option>' +
                 '<option value="victory">🏆 Victoire</option>';
         }
@@ -5239,6 +5973,17 @@
             return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
         }
 
+        function openGPS(event, lat, lng) {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isMobile = isIOS || isAndroid;
+
+            if (!isMobile) {
+                event.preventDefault();
+                window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank', 'noopener');
+            }
+        }
+
         /* ─────────────────────────────────────────────────────────────
            TYPEWRITER & STARS (from pour-toi version)
         ────────────────────────────────────────────────────────────── */
@@ -5591,7 +6336,7 @@
                 const ov = document.createElement('div');
                 ov.className = 'bf-result ' + (win ? 'win' : 'lose');
                 ov.innerHTML = win
-                    ? `<h2>✨ Victoire ! ✨</h2><p style="color:var(--text-secondary);margin-bottom:20px;text-align:center;">Eva a vaincu Malus !</p><button class="btn btn-primary" onclick="bfCleanup();handleSuccess();">Continuer l'aventure ↗</button>`
+                    ? `<h2>  Victoire !  </h2><p style="color:var(--text-secondary);margin-bottom:20px;text-align:center;">Eva a vaincu Malus !</p><button class="btn btn-primary" onclick="bfCleanup();handleSuccess();">Continuer l'aventure ↗</button>`
                     : `<h2>💀 Défaite...</h2><p style="color:var(--text-secondary);margin-bottom:20px;text-align:center;">Eva a été vaincue...</p><button class="btn btn-primary" onclick="startBossFight()">⚔️ Réessayer</button>`;
                 wrapper.appendChild(ov);
             }, win ? 1500 : 800);
