@@ -2952,7 +2952,7 @@
             font-family: var(--font-display);
             font-size: 1.15rem;
             color: var(--clr-gold);
-            opacity: 0.2;
+            opacity: 0.07;
             pointer-events: none;
             transition: opacity 0.3s, color 0.3s;
         }
@@ -3943,9 +3943,9 @@
                 <div class="piano-key white" data-freq="440" data-note="A">
                   <div class="key-label">A</div>
                 </div>
-                <div class="piano-key white" data-freq="493.88" data-note="B"></div>
-                <div class="piano-key white" data-freq="523.25" data-note="C"></div>
-                <div class="piano-key white" data-freq="587.33" data-note="D"></div>
+                <div class="piano-key white" data-freq="493.88" data-note="B"><div class="key-label">B</div></div>
+                <div class="piano-key white" data-freq="523.25" data-note="C"><div class="key-label">C</div></div>
+                <div class="piano-key white" data-freq="587.33" data-note="D"><div class="key-label">D</div></div>
                 <div class="piano-key white" data-freq="659.25" data-note="E">
                   <div class="key-label">E</div>
                 </div>
@@ -4740,7 +4740,7 @@
                 if (!pianoSuccessTimer) {
                     pianoSuccessTimer = setTimeout(() => {
                         triggerPianoSuccess();
-                    }, 2000);
+                    }, 1000);
                 }
             } else {
                 if (pianoSuccessTimer) {
@@ -4776,12 +4776,12 @@
             if (keyE) keyE.classList.add('success-active');
 
             // Display success feedback
-            showFeedback('success', '✨ Magnifique ! L\'accord parfait A & E a retenti pendant 2 secondes. ✨');
+            showFeedback('success', '✨ Magnifique ! L\'accord parfait A & E a retenti pendant 1 seconde. ✨');
 
-            // Call handleSuccess after 1.5 seconds
+            // Call handleSuccess after 4 seconds
             setTimeout(() => {
                 handleSuccess();
-            }, 1500);
+            }, 4000);
         }
 
         function initPianoPuzzle() {
