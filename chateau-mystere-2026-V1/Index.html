@@ -1188,10 +1188,11 @@
             transform: scale(0.95);
         }
 
-        /* Contraste progressif : assombrissement léger des cases non encore validées dès la première case cliquée */
-        .mosaic-container.has-valid-clicked .mosaic-tile:not(.valid-clicked):not(:hover) {
-            opacity: 0.62;
-            filter: saturate(0.45) brightness(0.82);
+        /* Atténuation progressive en 30 étapes : le fond non validé s'atténue proportionnellement aux trouvailles (adapté smartphone sans survol) */
+        .mosaic-container .mosaic-tile:not(.valid-clicked) {
+            opacity: var(--bg-opacity, 1);
+            filter: saturate(var(--bg-saturate, 1)) brightness(var(--bg-brightness, 1));
+            transition: opacity 0.45s ease, filter 0.45s ease;
         }
 
         .mosaic-tile.valid-clicked {
@@ -1231,22 +1232,9 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.85), rgba(16, 185, 129, 0.92));
-            box-shadow: inset 0 0 12px #00ff88;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.88), rgba(16, 185, 129, 0.94));
+            box-shadow: inset 0 0 14px #00ff88;
             transition: all 0.3s ease;
-            animation: mosaicPixelPulse 2s infinite alternate ease-in-out;
-        }
-
-        @keyframes mosaicPixelPulse {
-            0% {
-                background: linear-gradient(135deg, rgba(0, 255, 136, 0.82), rgba(16, 185, 129, 0.88));
-                box-shadow: inset 0 0 10px rgba(0, 255, 136, 0.85);
-            }
-
-            100% {
-                background: linear-gradient(135deg, rgba(0, 255, 136, 0.96), rgba(16, 185, 129, 0.98));
-                box-shadow: inset 0 0 18px #00ff88;
-            }
         }
 
         .mosaic-tile.disabled {
@@ -4280,6 +4268,9 @@
             // Init carousel touch, observer & préchargement intelligent
             if (e.type === 'carousel') initCarouselSmartLoader();
 
+            // Init mosaic progressive background attenuation
+            if (e.type === 'mosaic') updateMosaicBackgroundAttenuation();
+
             // Init counter picker
             if (e.type === 'counter') {
                 setTimeout(() => {
@@ -5379,6 +5370,22 @@
             }
         }
 
+        function updateMosaicBackgroundAttenuation() {
+            const grid = document.getElementById('mosaic-grid');
+            if (!grid) return;
+            const clickedValid = document.querySelectorAll('.mosaic-tile.valid-clicked').length;
+            const step = Math.min(30, clickedValid);
+            const t = step / 30; // varie de 0 (0 étape) à 1 (30 étapes)
+
+            const opacity = (1 - 0.68 * t).toFixed(3);     // 1.000 -> 0.320
+            const saturate = (1 - 0.85 * t).toFixed(3);    // 1.000 -> 0.150
+            const brightness = (1 - 0.55 * t).toFixed(3);  // 1.000 -> 0.450
+
+            grid.style.setProperty('--bg-opacity', opacity);
+            grid.style.setProperty('--bg-saturate', saturate);
+            grid.style.setProperty('--bg-brightness', brightness);
+        }
+
         function handleMosaicClick(tileIndex, isValid) {
             const tileEl = document.getElementById(`mosaic-tile-${tileIndex}`);
             if (!tileEl || tileEl.classList.contains('valid-clicked') || tileEl.classList.contains('disabled')) return;
@@ -5388,13 +5395,14 @@
             if (Number(isValid) === 1) {
                 tileEl.classList.add('valid-clicked');
                 if (grid) grid.classList.add('has-valid-clicked');
+                updateMosaicBackgroundAttenuation();
 
                 const allValid = document.querySelectorAll('.mosaic-tile[data-valid="1"]');
                 const clickedValid = document.querySelectorAll('.mosaic-tile.valid-clicked');
                 if (allValid.length > 0 && allValid.length === clickedValid.length) {
                     document.querySelectorAll('.mosaic-tile').forEach(t => t.classList.add('disabled'));
                     allValid.forEach(t => t.classList.add('mosaic-win-pulse'));
-                    showFeedback('success', '✅ Space Invader complété ! Bien joué.');
+                    showFeedback('success', '✅ Ensemble complété ! Bien joué.');
 
                     let btnContainer = document.getElementById('mosaic-next-btn-container');
                     if (!btnContainer) {
@@ -5409,7 +5417,7 @@
                         }
                     }
                 } else {
-                    showFeedback('success', `👾 Pixel Space Invader activé ! (${clickedValid.length} / ${allValid.length})`);
+                    showFeedback('success', `✨ Élément validé ! (${clickedValid.length} / ${allValid.length})`);
                 }
             } else {
                 showFeedback('error', '❌ Mauvaise case ! La grille a été réinitialisée. Une erreur a été ajoutée !');
@@ -5419,6 +5427,7 @@
                     t.classList.add('wrong');
                     t.classList.remove('valid-clicked');
                 });
+                updateMosaicBackgroundAttenuation();
                 setTimeout(() => {
                     allTiles.forEach(t => t.classList.remove('wrong'));
                 }, 600);
