@@ -3052,6 +3052,88 @@
                 box-shadow: 0 0 30px rgba(242, 208, 107, 0.95), inset 0 0 15px rgba(255, 255, 255, 1);
             }
         }
+
+        /* ──────────────────────── VICTORY ADDITIONS (CYLUMES & VIENS SEULE) ────────────────────────── */
+        .victory-image-wrapper {
+            position: relative;
+            margin: var(--gap-md) auto var(--gap-lg) auto;
+            max-width: 100%;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: fadeInScale 1.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .victory-image-wrapper:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85);
+        }
+
+        .victory-image {
+            display: block;
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        .viens-seule-container {
+            position: relative;
+            margin: var(--gap-lg) auto 0 auto;
+            width: 380px;
+            max-width: 100%;
+            height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: visible;
+        }
+
+        #viens-seule-canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+
+        /* Ambient glow under the canvas particles */
+        .viens-seule-container::before {
+            content: '';
+            position: absolute;
+            width: 180px;
+            height: 45px;
+            background: radial-gradient(ellipse, rgba(16, 185, 129, 0.12), rgba(196, 116, 140, 0.08), transparent 70%);
+            filter: blur(14px);
+            z-index: 1;
+            pointer-events: none;
+            animation: bgGlowPulse 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes fadeInScale {
+            0% {
+                opacity: 0;
+                transform: scale(0.96);
+                filter: blur(8px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes bgGlowPulse {
+            0% {
+                transform: scale(0.85);
+                opacity: 0.4;
+            }
+
+            100% {
+                transform: scale(1.25);
+                opacity: 0.8;
+            }
+        }
     </style>
 </head>
 
@@ -3459,10 +3541,10 @@
                 id: 13,
                 type: "scanner",
                 titre: "Sécurité Maximale",
-                description: "Une information importante est dissimulée dans ce document. Scanne le avec ton doigt (effet lampe torche) pour la révéler.",
+                description: "Une information importante",
                 imageOriginale: "assets/analyses mst-2.png",
                 imageRevelee: "assets/analyses mst-2 - reveal.png",
-                reponseAttendue: ["évali", "evali", "ÉVALI"],
+                reponseAttendue: ["évali", "evali", "ÉVALI", "Évali"],
                 indices: [
                     "Un secret est dissimulé directement dans le premier examen du document.",
                     "Passe ton doigt sur les lignes de la sérologie HIV 1 et 2.",
@@ -4028,18 +4110,10 @@
                     interactionHtml = `
             <div class="scanner-container" style="display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%;">
               <div class="mst-page-1" style="max-width: 100%; width: 100%; max-width: 500px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-subtle); background: var(--bg-card); padding: 10px;">
-                <p style="text-align: center; margin-bottom: 8px; font-weight: bold; color: var(--text-secondary); font-family: var(--font-ui); font-size: 0.85rem;">Page 1/2 (Cliquez pour agrandir)</p>
-                <img src="assets/analyses mst-1.png" style="width: 100%; display: block; cursor: zoom-in; border-radius: 4px;" onclick="openLightbox(this.src)">
-              </div>
-              <div class="mst-page-2" style="max-width: 100%; width: 100%; max-width: 500px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-subtle); background: var(--bg-card); padding: 10px;">
-                <p style="text-align: center; margin-bottom: 8px; font-weight: bold; color: var(--text-secondary); font-family: var(--font-ui); font-size: 0.85rem;">Page 2/2 (Passez le doigt ou la souris pour scanner)</p>
-                <div class="scanner-wrapper" style="position: relative; display: inline-block; width: 100%;">
-                  <img id="scanner-bg" src="${e.imageOriginale}" style="display: block; width: 100%; height: auto; pointer-events: none; border-radius: 4px;">
-                  <canvas id="scanner-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; border-radius: 4px;"></canvas>
-                </div>
+                <img src="assets/analyses mst-1.png" style="width: 100%; display: block; cursor: default; border-radius: 4px;">
               </div>
               
-              <div id="scanner-input-block" class="hidden" style="opacity: 0; pointer-events: none; transition: opacity 0.6s ease; margin-top: 20px; width: 100%; max-width: 320px; text-align: center;">
+              <div id="scanner-input-block" class="hidden" style="opacity: 0; max-height: 0; overflow: hidden; pointer-events: none; transition: opacity 0.6s ease, max-height 0.6s ease, margin 0.6s ease; margin: 0; width: 100%; max-width: 320px; text-align: center;">
                 <div class="input-group">
                   <input type="text" class="input-answer" id="answer-input"
                          placeholder="Code sérologique révélé…"
@@ -4048,6 +4122,13 @@
                 <button class="btn btn-primary" id="btn-validate" onclick="validateAnswer()" style="margin-top: 10px; width: 100%;">
                   Valider ma réponse
                 </button>
+              </div>
+
+              <div class="mst-page-2" style="max-width: 100%; width: 100%; max-width: 500px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-subtle); background: var(--bg-card); padding: 10px;">
+                <div class="scanner-wrapper" style="position: relative; display: inline-block; width: 100%;">
+                  <img id="scanner-bg" src="${e.imageOriginale}" style="display: block; width: 100%; height: auto; pointer-events: none; border-radius: 4px; cursor: default;">
+                  <canvas id="scanner-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; border-radius: 4px;"></canvas>
+                </div>
               </div>
             </div>
           `;
@@ -5159,10 +5240,19 @@
             const imgReveal = new Image();
             imgReveal.src = enigme.imageRevelee;
 
+            let isInteracting = false;
+            let spotlightOpacity = 0;
+            let lastX = 0;
+            let lastY = 0;
+            let fadeReq = null;
+
             const resizeCanvas = () => {
                 const rect = bg.getBoundingClientRect();
                 canvas.width = rect.width;
                 canvas.height = rect.height;
+                if (!isInteracting && spotlightOpacity > 0) {
+                    drawSpotlight(lastX, lastY, spotlightOpacity);
+                }
             };
 
             bg.onload = resizeCanvas;
@@ -5179,33 +5269,63 @@
             }
             window._cleanupScannerResize = onResize;
 
-            const handleMove = (clientX, clientY) => {
-                if (!imgReveal.complete) return;
-                const rect = canvas.getBoundingClientRect();
-                const x = clientX - rect.left;
-                const y = clientY - rect.top;
-
-                // Draw spotlight
+            const drawSpotlight = (x, y, opacity) => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (opacity <= 0) return;
                 ctx.save();
+                ctx.globalAlpha = opacity;
                 ctx.beginPath();
                 ctx.arc(x, y, 60, 0, Math.PI * 2);
                 ctx.clip();
                 ctx.drawImage(imgReveal, 0, 0, canvas.width, canvas.height);
                 ctx.restore();
+            };
 
-                // Collision detection (corresponds to the HIV 1/2 line in the document)
-                const xRatio = x / canvas.width;
-                const yRatio = y / canvas.height;
-                if (xRatio >= 0.05 && xRatio <= 0.85 && yRatio >= 0.12 && yRatio <= 0.22) {
-                    const inputBlock = document.getElementById('scanner-input-block');
-                    if (inputBlock && inputBlock.classList.contains('hidden')) {
-                        inputBlock.classList.remove('hidden');
-                        setTimeout(() => {
-                            inputBlock.style.opacity = '1';
-                            inputBlock.style.pointerEvents = 'auto';
-                        }, 50);
-                    }
+            const fadeOut = () => {
+                if (isInteracting) return;
+                spotlightOpacity -= 0.05; // Fade out over ~300ms (20 frames)
+                if (spotlightOpacity <= 0) {
+                    spotlightOpacity = 0;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                } else {
+                    drawSpotlight(lastX, lastY, spotlightOpacity);
+                    fadeReq = requestAnimationFrame(fadeOut);
+                }
+            };
+
+            const startFadeOut = () => {
+                isInteracting = false;
+                if (fadeReq) cancelAnimationFrame(fadeReq);
+                fadeReq = requestAnimationFrame(fadeOut);
+            };
+
+            const handleMove = (clientX, clientY) => {
+                if (!imgReveal.complete) return;
+                isInteracting = true;
+                if (fadeReq) {
+                    cancelAnimationFrame(fadeReq);
+                    fadeReq = null;
+                }
+                spotlightOpacity = 1;
+
+                const rect = canvas.getBoundingClientRect();
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+                lastX = x;
+                lastY = y;
+
+                drawSpotlight(x, y, 1);
+
+                // Show input block immediately upon first scan interaction anywhere on page 2
+                const inputBlock = document.getElementById('scanner-input-block');
+                if (inputBlock && inputBlock.classList.contains('hidden')) {
+                    inputBlock.classList.remove('hidden');
+                    setTimeout(() => {
+                        inputBlock.style.opacity = '1';
+                        inputBlock.style.maxHeight = '150px';
+                        inputBlock.style.margin = '10px 0 20px 0';
+                        inputBlock.style.pointerEvents = 'auto';
+                    }, 50);
                 }
             };
 
@@ -5226,7 +5346,7 @@
 
             canvas.addEventListener('touchend', (ev) => {
                 ev.preventDefault();
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                startFadeOut();
             }, { passive: false });
 
             // Mouse events
@@ -5244,12 +5364,14 @@
 
             canvas.addEventListener('mouseup', () => {
                 isDrawing = false;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                startFadeOut();
             });
 
             canvas.addEventListener('mouseleave', () => {
-                isDrawing = false;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (isDrawing) {
+                    isDrawing = false;
+                }
+                startFadeOut();
             });
         }
 
@@ -6325,14 +6447,20 @@
         <div class="end-screen victory">
 
           <div class="luxury-card">
-            <div class="icon-metallic">🪎</div>
             <h1 class="title-main">Le trésor</h1>   
             <div class="separator-ornate">✦</div>
             
+            <div class="victory-image-wrapper">
+              <img src="assets/final_cylumes.jpeg" alt="Le trésor" class="victory-image">
+            </div>
 
-            <div class="final-clue-box" style="margin: 24px 0; padding: 20px; background: radial-gradient(circle at center, rgba(201, 168, 76, 0.2), rgba(10, 8, 14, 0.8)); border: 1px solid rgba(254, 240, 138, 0.6); border-radius: var(--radius-md); box-shadow: 0 0 25px rgba(201, 168, 76, 0.25);">
+            <div class="final-clue-box" style="margin: 24px 0 0 0; padding: 20px; background: radial-gradient(circle at center, rgba(201, 168, 76, 0.2), rgba(10, 8, 14, 0.8)); border: 1px solid rgba(254, 240, 138, 0.6); border-radius: var(--radius-md); box-shadow: 0 0 25px rgba(201, 168, 76, 0.25);">
               <h3 style="color: #fef08a; font-family: var(--font-display); font-size: 1.15rem; margin-bottom: 10px; text-shadow: 0 0 12px rgba(201,168,76,0.9); letter-spacing: 1px;">🔑 L'ULTIME INDICE</h3>
               <p style="font-size: 1.1rem; color: #ffffff; margin-bottom: 0; font-style: normal; line-height: 1.6;">Retourne sur les lieux de notre premier baiser.</p>
+            </div>
+
+            <div class="viens-seule-container">
+              <canvas id="viens-seule-canvas"></canvas>
             </div>
           </div>
 
@@ -6342,7 +6470,180 @@
         </div>
       `;
 
-            spawnConfetti();
+            // --- CANVAS PARTICLES OF HEARTS FOR "VIENS SEULE" ---
+            if (window.viensSeuleAnimId) {
+                cancelAnimationFrame(window.viensSeuleAnimId);
+            }
+
+            const canvas = document.getElementById('viens-seule-canvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const width = 380;
+            const height = 90;
+            const dpr = window.devicePixelRatio || 1;
+
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            ctx.scale(dpr, dpr);
+
+            // 1. Pré-rendu de 3 styles de cœurs scintillants sur des canvas hors-écran
+            const heartCanvases = [];
+            const heartColors = ['#f2d06b', '#c4db58', '#34d399']; // Or, Vert doré (lime), Vert Cylume
+
+            for (const color of heartColors) {
+                const hc = document.createElement('canvas');
+                hc.width = 16;
+                hc.height = 16;
+                const hctx = hc.getContext('2d');
+                hctx.fillStyle = color;
+
+                // Effet de halo lumineux doux pré-rendu
+                hctx.shadowColor = color;
+                hctx.shadowBlur = 4;
+
+                // Tracé d'un joli cœur centré dans l'espace 16x16
+                hctx.beginPath();
+                hctx.moveTo(8, 4.5);
+                hctx.bezierCurveTo(8, 2, 3, 2, 3, 5.5);
+                hctx.bezierCurveTo(3, 9.5, 8, 14, 8, 14);
+                hctx.bezierCurveTo(8, 14, 13, 9.5, 13, 5.5);
+                hctx.bezierCurveTo(13, 2, 8, 2, 8, 4.5);
+                hctx.fill();
+
+                heartCanvases.push(hc);
+            }
+
+            // 2. Rendu du texte cible hors-écran pour extraire les coordonnées des points
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            const tCtx = tempCanvas.getContext('2d');
+
+            tCtx.fillStyle = '#ffffff';
+            tCtx.font = "bold 34px 'Cinzel', serif";
+            tCtx.textAlign = 'center';
+            tCtx.textBaseline = 'middle';
+            tCtx.letterSpacing = "6px";
+            tCtx.fillText("VIENS SEULE", width / 2, height / 2);
+
+            const imgData = tCtx.getImageData(0, 0, width, height);
+            const pixels = imgData.data;
+            const targetPoints = [];
+
+            // Balayage plus large (pas de 5 au lieu de 3) pour diviser le nombre de particules par ~3 et éliminer le lag
+            for (let y = 0; y < height; y += 5) {
+                for (let x = 0; x < width; x += 5) {
+                    const idx = (y * width + x) * 4;
+                    const alpha = pixels[idx + 3];
+                    if (alpha > 128) {
+                        targetPoints.push({ x, y });
+                    }
+                }
+            }
+
+            // Attente du montage complet pour obtenir la position réelle du canvas dans la fenêtre
+            setTimeout(() => {
+                const rect = canvas.getBoundingClientRect();
+
+                // 3. Création des particules avec position de départ aléatoire sur l'ÉCRAN entier
+                const particles = [];
+                for (const pt of targetPoints) {
+                    const startX = Math.random() * window.innerWidth - rect.left;
+                    const startY = Math.random() * window.innerHeight - rect.top;
+
+                    particles.push({
+                        x: startX,
+                        y: startY,
+                        tx: pt.x,
+                        ty: pt.y,
+                        size: Math.random() * 3 + 4, // Taille entre 4px et 7px
+                        colorIdx: Math.floor(Math.random() * heartColors.length),
+                        phase: Math.random() * Math.PI * 2,
+                        speed: 0.015 + Math.random() * 0.02, // Vitesse progressive et douce
+                        driftRadius: 1 + Math.random() * 1.5
+                    });
+                }
+
+                const startTime = Date.now();
+
+                // 4. Boucle de rendu optimisée
+                function draw() {
+                    ctx.clearRect(0, 0, width, height);
+                    const time = Date.now() * 0.0018; // Vitesse d'oscillation lente
+                    const elapsedSeconds = (Date.now() - startTime) / 1000;
+
+                    // Le texte doré en arrière-plan ne s'affiche et ne scintille qu'après 20 secondes
+                    if (elapsedSeconds >= 20) {
+                        const fadeInFactor = Math.min(1, (elapsedSeconds - 20) / 2); // Fondu sur 2 secondes
+
+                        // Rendu d'une silhouette dorée floue sous les particules pour améliorer la lisibilité
+                        ctx.fillStyle = '#f2d06b';
+                        ctx.font = "bold 34px 'Cinzel', serif";
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.letterSpacing = "6px";
+
+                        // Opacité pulsant doucement (scintillement lent et très fluide)
+                        const textAlpha = (0.08 + Math.sin(time * 0.5) * 0.04) * fadeInFactor;
+                        ctx.globalAlpha = textAlpha;
+
+                        // Halo de lueur doré sous le texte
+                        ctx.shadowColor = '#f2d06b';
+                        ctx.shadowBlur = 8;
+
+                        ctx.fillText("VIENS SEULE", width / 2, height / 2);
+
+                        // Réinitialisation de la lueur pour les performances du tracé des particules
+                        ctx.shadowBlur = 0;
+                    }
+
+                    for (let i = 0; i < particles.length; i++) {
+                        const p = particles[i];
+
+                        // Convergence vers le point cible
+                        const dx = p.tx - p.x;
+                        const dy = p.ty - p.y;
+
+                        // Déplacement ondulatoire organique (flottement)
+                        const driftX = Math.sin(time + p.phase) * p.driftRadius;
+                        const driftY = Math.cos(time * 0.8 + p.phase) * p.driftRadius;
+
+                        // Évite Math.hypot() pour optimiser le CPU
+                        const distSq = dx * dx + dy * dy;
+                        if (distSq > 0.25) {
+                            p.x += dx * p.speed;
+                            p.y += dy * p.speed;
+                        } else {
+                            p.x = p.tx + driftX;
+                            p.y = p.ty + driftY;
+                        }
+
+                        // Le scintillement des particules ne démarre qu'après 20 secondes
+                        let alpha = 0.85;
+                        if (elapsedSeconds >= 20) {
+                            const shimmerFactor = Math.min(1, (elapsedSeconds - 20) / 2);
+                            const targetAlpha = 0.55 + Math.sin(time * 1.5 + p.phase) * 0.45;
+                            alpha = 0.85 + (targetAlpha - 0.85) * shimmerFactor;
+                        }
+                        ctx.globalAlpha = alpha;
+
+                        const heartImg = heartCanvases[p.colorIdx];
+                        ctx.drawImage(heartImg, p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+                    }
+
+                    ctx.globalAlpha = 1.0;
+
+                    // Condition de sortie : arrêt si le canvas n'est plus présent dans le DOM
+                    if (document.getElementById('viens-seule-canvas')) {
+                        window.viensSeuleAnimId = requestAnimationFrame(draw);
+                    }
+                }
+
+                window.viensSeuleAnimId = requestAnimationFrame(draw);
+            }, 150);
         }
 
         function renderEmpty() {
