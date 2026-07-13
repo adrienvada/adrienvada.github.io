@@ -1188,31 +1188,64 @@
             transform: scale(0.95);
         }
 
+        /* Contraste progressif : assombrissement léger des cases non encore validées dès la première case cliquée */
+        .mosaic-container.has-valid-clicked .mosaic-tile:not(.valid-clicked):not(:hover) {
+            opacity: 0.62;
+            filter: saturate(0.45) brightness(0.82);
+        }
+
         .mosaic-tile.valid-clicked {
-            border-color: var(--neon-green);
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), inset 0 0 15px rgba(16, 185, 129, 0.4);
+            border: 2px solid #00ff88 !important;
+            box-shadow: 0 0 22px rgba(0, 255, 136, 0.95), inset 0 0 16px rgba(0, 255, 136, 0.85) !important;
             pointer-events: none;
             cursor: default;
+            z-index: 5;
+            transform: scale(1.03);
+            animation: mosaicPixelPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes mosaicPixelPop {
+            0% {
+                transform: scale(0.88);
+                filter: brightness(2.2);
+            }
+
+            60% {
+                transform: scale(1.1);
+                filter: brightness(1.4);
+            }
+
+            100% {
+                transform: scale(1.03);
+                filter: brightness(1);
+            }
+        }
+
+        /* L'image devient un motif vert néon monochrome sous le bloc LED */
+        .mosaic-tile.valid-clicked img {
+            filter: brightness(1.35) contrast(1.3) sepia(1) hue-rotate(85deg) saturate(4.5);
+            opacity: 0.45;
         }
 
         .mosaic-tile.valid-clicked::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: rgba(16, 185, 129, 0.45);
-            backdrop-filter: contrast(1.1) brightness(1.1);
-            -webkit-backdrop-filter: contrast(1.1) brightness(1.1);
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.85), rgba(16, 185, 129, 0.92));
+            box-shadow: inset 0 0 12px #00ff88;
             transition: all 0.3s ease;
-            animation: mosaicPulse 1.5s infinite alternate ease-in-out;
+            animation: mosaicPixelPulse 2s infinite alternate ease-in-out;
         }
 
-        @keyframes mosaicPulse {
+        @keyframes mosaicPixelPulse {
             0% {
-                background: rgba(16, 185, 129, 0.35);
+                background: linear-gradient(135deg, rgba(0, 255, 136, 0.82), rgba(16, 185, 129, 0.88));
+                box-shadow: inset 0 0 10px rgba(0, 255, 136, 0.85);
             }
 
             100% {
-                background: rgba(16, 185, 129, 0.55);
+                background: linear-gradient(135deg, rgba(0, 255, 136, 0.96), rgba(16, 185, 129, 0.98));
+                box-shadow: inset 0 0 18px #00ff88;
             }
         }
 
@@ -3147,26 +3180,44 @@
                 description: "Nous avons retrouvé une des multiples identités de cette personne qui sévissait sous plusieurs alias. Des témoins existent. Il faut obtenir cet alias.",
                 image: null,
                 images: [
-                    "assets/Enigme Eva jeune/1.jpeg",
-                    "assets/Enigme Eva jeune/2.jpeg",
-                    "assets/Enigme Eva jeune/3.jpeg",
-                    "assets/Enigme Eva jeune/4.jpeg",
-                    "assets/Enigme Eva jeune/4,5.jpeg",
-                    "assets/Enigme Eva jeune/7.jpeg",
-                    "assets/Enigme Eva jeune/8.jpeg",
-                    "assets/Enigme Eva jeune/8.3.jpeg",
-                    "assets/Enigme Eva jeune/8.5.jpeg",
-                    "assets/Enigme Eva jeune/8.7.jpeg",
-                    "assets/Enigme Eva jeune/9.jpeg",
-                    "assets/Enigme Eva jeune/10.jpeg",
-                    "assets/Enigme Eva jeune/11.jpeg",
-                    "assets/Enigme Eva jeune/11.2.jpeg",
-                    "assets/Enigme Eva jeune/12.jpeg",
-                    "assets/Enigme Eva jeune/13.jpeg",
-                    "assets/Enigme Eva jeune/13.5.jpeg",
-                    "assets/Enigme Eva jeune/14.jpeg",
-                    "assets/Enigme Eva jeune/15.jpeg",
-                    "assets/Enigme Eva jeune/16.jpeg"
+                    "assets/Enigme Eva jeune/Compress/1 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/2 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/3 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/4 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/4,5 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/7 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/8 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/8.3 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/8.5 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/8.7 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/33 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/34 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/35 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/36 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/37 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/38 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/39 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/40 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/9 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/10 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/11 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/11.2 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/12 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/13 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/13.5 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/14 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/15 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/16 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/17 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/21 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/22 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/24 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/27 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/28 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/29 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/30 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/31 - Petite.jpeg",
+                    "assets/Enigme Eva jeune/Compress/32 - Petite.jpeg"
                 ],
                 reponseAttendue: ["Kikinette", "kikinette", "KIKINETTE", "Kikinete", "kikinete", "Kikinete"],
                 indices: [
@@ -3327,9 +3378,9 @@
                     { file: "5_8_Cocoon - Petite.jpeg", valid: 1, title: "Cocoon" },
                     // Row 6
                     { file: "6_1_Challengers - Petite.jpeg", valid: 0, title: "Challengers" },
-                    { file: "6_2_Maniac - Petite.jpeg", valid: 1, title: "Maniac" },
-                    { file: "6_3_Helldivers 2 - Petite.jpeg", valid: 0, title: "Helldivers 2" },
-                    { file: "6_4_Dune 2 - Petite.jpeg", valid: 0, title: "Dune : Deuxième Partie" },
+                    { file: "6_2_The Holdovers - Petite.jpeg", valid: 0, title: "The Holdovers" },
+                    { file: "6_3_Sackboy - Petite.jpeg", valid: 1, title: "Sackboy" },
+                    { file: "6_4_Final Fantasy VI - Petite.jpeg", valid: 0, title: "FF VI" },
                     { file: "6_5_Dragon's Dogma - Petite.jpeg", valid: 0, title: "Dragon's Dogma 2" },
                     { file: "6_6_Detroit - Petite.jpeg", valid: 1, title: "Detroit" },
                     { file: "6_7_Killers of the Flower Moon - Petite.jpeg", valid: 0, title: "Killers of the Flower Moon" },
@@ -3649,25 +3700,97 @@
         /* ─────────────────────────────────────────────────────────────
            CAROUSEL HELPER FUNCTIONS
         ────────────────────────────────────────────────────────────── */
+        /* Gestion mémoire et préchargement intelligent du carrousel */
+        function preloadCarouselNeighbors(images, currentIdx) {
+            if (!images || !images.length) return;
+            const total = images.length;
+            if (!window._carouselPreloadCache) {
+                window._carouselPreloadCache = new Map();
+            }
+            const cache = window._carouselPreloadCache;
+
+            // Fenêtre glissante restreinte pour ne pas surcharger la mémoire
+            const desiredIndices = new Set([
+                currentIdx,
+                (currentIdx + 1) % total,
+                (currentIdx + 2) % total,
+                (currentIdx - 1 + total) % total,
+                (currentIdx - 2 + total) % total
+            ]);
+
+            // Libération explicite de la mémoire des images hors de la zone active
+            for (const [key, img] of cache.entries()) {
+                if (!desiredIndices.has(key)) {
+                    img.src = '';
+                    cache.delete(key);
+                }
+            }
+
+            // Préchargement asynchrone hors du thread principal
+            desiredIndices.forEach(idx => {
+                if (!cache.has(idx)) {
+                    const preloadImg = new Image();
+                    preloadImg.decoding = 'async';
+                    preloadImg.src = images[idx];
+                    cache.set(idx, preloadImg);
+                }
+            });
+        }
+
+        function initCarouselThumbsObserver() {
+            const thumbsBar = document.getElementById('carousel-thumbs-bar');
+            if (!thumbsBar) return;
+
+            if (window._carouselThumbsObserver) {
+                window._carouselThumbsObserver.disconnect();
+            }
+
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                            obs.unobserve(img);
+                        }
+                    }
+                });
+            }, {
+                root: thumbsBar,
+                rootMargin: '200px'
+            });
+
+            window._carouselThumbsObserver = observer;
+            thumbsBar.querySelectorAll('.carousel-thumb[data-src]').forEach(thumb => {
+                observer.observe(thumb);
+            });
+        }
+
         function renderCarouselHtml(images, currentIdx = 0) {
             if (!images || images.length === 0) return '';
             const total = images.length;
             const currentSrc = images[currentIdx];
 
-            const thumbsHtml = images.map((src, idx) => `
-                <img src="${src}" alt="Photo ${idx + 1}"
+            const thumbsHtml = images.map((src, idx) => {
+                const isNear = Math.abs(idx - currentIdx) <= 5 || idx < 7;
+                return `
+                <img ${isNear ? `src="${src}"` : `data-src="${src}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E"`}
+                     alt="Photo ${idx + 1}"
                      class="carousel-thumb ${idx === currentIdx ? 'active' : ''}"
                      id="carousel-thumb-${idx}"
                      onclick="goCarousel(${idx})"
-                     loading="lazy">
-            `).join('');
+                     loading="lazy"
+                     decoding="async">
+            `;
+            }).join('');
 
             return `
               <div class="enigma-carousel" id="enigma-carousel">
                 <div class="carousel-main-wrapper" id="carousel-main-wrapper">
                   <div class="carousel-counter-badge" id="carousel-counter">${currentIdx + 1} / ${total}</div>
                   <button class="carousel-btn prev" onclick="moveCarousel(-1)" title="Photo précédente">←</button>
-                  <img src="${currentSrc}" alt="Photo ${currentIdx + 1}" class="carousel-main-img" id="carousel-main-img" onclick="openLightbox(this.src)" title="Cliquer pour agrandir">
+                  <img src="${currentSrc}" alt="Photo ${currentIdx + 1}" class="carousel-main-img" id="carousel-main-img" onclick="openLightbox(this.src)" title="Cliquer pour agrandir" decoding="async" fetchpriority="high">
                   <button class="carousel-btn next" onclick="moveCarousel(1)" title="Photo suivante">→</button>
                 </div>
                 <div class="carousel-thumbs-bar" id="carousel-thumbs-bar">
@@ -3700,19 +3823,53 @@
             const idx = window._carouselIndex || 0;
             const mainImg = document.getElementById('carousel-main-img');
             const counter = document.getElementById('carousel-counter');
+
+            // 1. Préchargement de la fenêtre active & nettoyage mémoire
+            preloadCarouselNeighbors(e.images, idx);
+
+            // 2. Transition fluide et sans scintillement de l'image principale
             if (mainImg) {
-                mainImg.style.opacity = '0.35';
-                setTimeout(() => {
-                    mainImg.src = e.images[idx];
+                const targetSrc = e.images[idx];
+                window._carouselLoadToken = (window._carouselLoadToken || 0) + 1;
+                const currentToken = window._carouselLoadToken;
+
+                if (mainImg.getAttribute('src') === targetSrc) {
                     mainImg.style.opacity = '1';
-                }, 120);
+                } else {
+                    mainImg.style.opacity = '0.35';
+                    const applySrc = () => {
+                        if (window._carouselLoadToken !== currentToken) return;
+                        mainImg.src = targetSrc;
+                        mainImg.style.opacity = '1';
+                    };
+
+                    const cachedImg = window._carouselPreloadCache && window._carouselPreloadCache.get(idx);
+                    if (cachedImg && cachedImg.complete && cachedImg.naturalWidth > 0) {
+                        applySrc();
+                    } else {
+                        const loader = new Image();
+                        loader.decoding = 'async';
+                        loader.onload = applySrc;
+                        loader.onerror = applySrc;
+                        loader.src = targetSrc;
+                        if (loader.complete) applySrc();
+                    }
+                }
             }
+
+            // 3. Mise à jour du badge compteur
             if (counter) {
                 counter.innerText = `${idx + 1} / ${e.images.length}`;
             }
+
+            // 4. Hydratation et mise en valeur de la miniature active
             const thumbs = document.querySelectorAll('.carousel-thumb');
             thumbs.forEach((thumb, i) => {
                 if (i === idx) {
+                    if (thumb.dataset && thumb.dataset.src) {
+                        thumb.src = thumb.dataset.src;
+                        thumb.removeAttribute('data-src');
+                    }
                     thumb.classList.add('active');
                     thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 } else {
@@ -3736,6 +3893,15 @@
                     else moveCarousel(-1);
                 }
             }, { passive: true });
+        }
+
+        function initCarouselSmartLoader() {
+            initCarouselTouch();
+            initCarouselThumbsObserver();
+            const e = enigmes[currentIndex];
+            if (e && e.images) {
+                preloadCarouselNeighbors(e.images, window._carouselIndex || 0);
+            }
         }
 
         window.addEventListener('keydown', (ev) => {
@@ -4111,8 +4277,8 @@
             // Init drawing canvas
             if (e.type === 'drawing') initCanvas();
 
-            // Init carousel touch
-            if (e.type === 'carousel') initCarouselTouch();
+            // Init carousel touch, observer & préchargement intelligent
+            if (e.type === 'carousel') initCarouselSmartLoader();
 
             // Init counter picker
             if (e.type === 'counter') {
@@ -5217,8 +5383,11 @@
             const tileEl = document.getElementById(`mosaic-tile-${tileIndex}`);
             if (!tileEl || tileEl.classList.contains('valid-clicked') || tileEl.classList.contains('disabled')) return;
 
+            const grid = document.getElementById('mosaic-grid');
+
             if (Number(isValid) === 1) {
                 tileEl.classList.add('valid-clicked');
+                if (grid) grid.classList.add('has-valid-clicked');
 
                 const allValid = document.querySelectorAll('.mosaic-tile[data-valid="1"]');
                 const clickedValid = document.querySelectorAll('.mosaic-tile.valid-clicked');
@@ -5239,9 +5408,12 @@
                             gridWrapper.parentNode.insertBefore(btnContainer, gridWrapper.nextSibling);
                         }
                     }
+                } else {
+                    showFeedback('success', `👾 Pixel Space Invader activé ! (${clickedValid.length} / ${allValid.length})`);
                 }
             } else {
                 showFeedback('error', '❌ Mauvaise case ! La grille a été réinitialisée. Une erreur a été ajoutée !');
+                if (grid) grid.classList.remove('has-valid-clicked');
                 const allTiles = document.querySelectorAll('.mosaic-tile');
                 allTiles.forEach(t => {
                     t.classList.add('wrong');
