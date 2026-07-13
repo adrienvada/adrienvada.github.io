@@ -1405,9 +1405,10 @@
                     allowfullscreen></iframe>
             </div>
         </div>
+    </div>
 
-        <!-- CALENDAR EXPORT MODAL -->
-        <div id="calendar-modal"
+    <!-- CALENDAR EXPORT MODAL -->
+    <div id="calendar-modal"
             class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 pointer-events-none opacity-0 transition-all duration-300">
             <!-- Close overlay trigger -->
             <div class="absolute inset-0 z-0" onclick="closeCalendarModal()"></div>
@@ -1588,7 +1589,10 @@
 
             // Clic sur le badge de date : ouvre la modale de choix d'agenda
             function downloadICS(data, event) {
-                if (event) event.stopPropagation();
+                if (event) {
+                    event.stopPropagation();
+                    if (event.preventDefault) event.preventDefault();
+                }
                 currentCalendarEventData = data;
 
                 const titleEl = document.getElementById('cal-modal-title');
