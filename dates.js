@@ -22,7 +22,7 @@ const SHOW_DATA = {
       id: "panel-rouen",
       dateLabel: "22 - 23 oct. 2026",
       title: "À la barre, peine perdue ?",
-      location: "Palais de justice de Rouen (76)",
+      location: "Tribunal judiciaire de Rouen (76)",
       shows: [
         {
           dateLabel: "22 oct. 2026",
@@ -47,7 +47,7 @@ const SHOW_DATA = {
       dateLabel: "12 nov. 2026",
       fullDate: "12 novembre 2026",
       title: "À la barre, peine perdue ?",
-      location: "Saint-Quentin (02)",
+      location: "Tribunal judiciaire de Saint-Quentin (02)",
       time: "", // Vide = "Horaire à confirmer"
       bookingUrl: "",
       isSchool: false,
@@ -60,7 +60,7 @@ const SHOW_DATA = {
       dateLabel: "25 nov. 2026",
       fullDate: "25 novembre 2026",
       title: "À la barre, peine perdue ?",
-      location: "Le Grand-Quevilly (76)",
+      location: "Hôtel de Ville de Grand-Quevilly (76)",
       time: "",
       bookingUrl: "",
       isSchool: false,
@@ -158,6 +158,19 @@ const SHOW_DATA = {
       bookingUrl: "",
       isSchool: false,
       icsDate: "2027-02-02"
+    },
+
+    // ── 12 mars 2027 : Cléophène (Guyancourt) [Date unique] ──
+    {
+      type: "single",
+      dateLabel: "12 mars 2027",
+      fullDate: "12 mars 2027",
+      title: "À la barre, peine perdu ?",
+      location: "Hôtel de ville de Barentin (76)",
+      time: "",
+      bookingUrl: "",
+      isSchool: false,
+      icsDate: "2027-03-12"
     },
 
     // ── 18 - 21 mai 2027 : Bérénice (Lycée Corneille) [Série] ──
