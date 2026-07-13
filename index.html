@@ -1405,118 +1405,333 @@
                     allowfullscreen></iframe>
             </div>
         </div>
-    </div>
 
-    <!-- VANILLA JS SCRIPTS -->
-    <script src="dates.js"></script>
-    <script src="galerie.js"></script>
-    <script>
-        // Core states
-        // Images chargées depuis galerie.js (voir ce fichier pour modifier l'ordre)
-        const images = GALLERY_IMAGES.map(img =>
-            img.folder === 'profil'
-                ? `ressources/images/${img.file}`
-                : `ressources/images/galerie/${img.file}`
-        );
-        let currentImageIndex = 0;
-        let activeAudioId = null;
+        <!-- CALENDAR EXPORT MODAL -->
+        <div id="calendar-modal"
+            class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 pointer-events-none opacity-0 transition-all duration-300">
+            <!-- Close overlay trigger -->
+            <div class="absolute inset-0 z-0" onclick="closeCalendarModal()"></div>
 
-        // On DOM Load
-        document.addEventListener("DOMContentLoaded", () => {
-            // Render dates from config file
-            renderDates();
+            <!-- Modal card -->
+            <div class="relative z-10 w-full max-w-md bg-white rounded-xl overflow-hidden shadow-2xl border border-stone-200 transform scale-95 transition-all duration-300"
+                id="calendar-modal-card">
+                <!-- Header -->
+                <div class="bg-stone-50 px-5 py-3.5 border-b border-stone-200 flex justify-between items-center">
+                    <span
+                        class="text-xs font-mono font-bold text-luxury-gold tracking-wider uppercase flex items-center gap-2">
+                        <i class="fa-regular fa-calendar-plus text-luxury-gold text-sm"></i> AJOUTER À L'AGENDA
+                    </span>
+                    <button onclick="closeCalendarModal()"
+                        class="text-stone-400 hover:text-stone-700 transition duration-300 w-7 h-7 rounded-full flex items-center justify-center hover:bg-stone-200/50">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
 
-            // Check hash router to set active page
-            const hash = window.location.hash.substring(1);
-            if (hash && document.getElementById(hash)) {
-                showPage(hash, false);
-            } else {
-                showPage('page_cv', false);
-            }
+                <!-- Body -->
+                <div class="p-5 space-y-4">
+                    <div class="text-left">
+                        <h4 class="font-bold text-luxury-textMain text-sm leading-tight" id="cal-modal-title">Spectacle
+                        </h4>
+                        <p class="text-xs text-luxury-textMuted mt-1" id="cal-modal-subtitle">Date & Lieu</p>
+                    </div>
 
-            // Register scroll reveal elements
-            setupScrollReveal();
+                    <div class="border-t border-stone-100 pt-3 space-y-2.5">
+                        <button onclick="calOptionClick('google')"
+                            class="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-stone-200 hover:border-luxury-gold/60 hover:bg-stone-50/80 transition-all group text-left">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 flex-shrink-0">
+                                    <i class="fa-brands fa-google text-sm"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-stone-800">Google Agenda</div>
+                                    <div class="text-[10px] text-stone-500">Ouverture directe en ligne ou dans
+                                        l'application</div>
+                                </div>
+                            </div>
+                            <i
+                                class="fa-solid fa-arrow-up-right-from-square text-stone-300 group-hover:text-luxury-gold text-xs"></i>
+                        </button>
 
-            // Hash router listener
-            window.addEventListener("hashchange", () => {
-                const newHash = window.location.hash.substring(1);
-                if (newHash && document.getElementById(newHash)) {
-                    showPage(newHash, true);
+                        <button onclick="calOptionClick('ics')"
+                            class="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-stone-200 hover:border-luxury-gold/60 hover:bg-stone-50/80 transition-all group text-left">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-700 flex-shrink-0">
+                                    <i class="fa-brands fa-apple text-sm"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-stone-800">Apple Calendar / Autre (.ics)</div>
+                                    <div class="text-[10px] text-stone-500">Fichier standard compatible Apple, Outlook
+                                        bureau...</div>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-download text-stone-300 group-hover:text-luxury-gold text-xs"></i>
+                        </button>
+
+                        <button onclick="calOptionClick('outlook')"
+                            class="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-stone-200 hover:border-luxury-gold/60 hover:bg-stone-50/80 transition-all group text-left">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
+                                    <i class="fa-brands fa-microsoft text-sm"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-stone-800">Microsoft Outlook Web</div>
+                                    <div class="text-[10px] text-stone-500">Ouverture directe dans Outlook Live en ligne
+                                    </div>
+                                </div>
+                            </div>
+                            <i
+                                class="fa-solid fa-arrow-up-right-from-square text-stone-300 group-hover:text-luxury-gold text-xs"></i>
+                        </button>
+
+                        <button id="cal-option-share" onclick="calOptionClick('share')" style="display:none;"
+                            class="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-stone-200 hover:border-luxury-gold/60 hover:bg-stone-50/80 transition-all group text-left">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-luxury-gold flex-shrink-0">
+                                    <i class="fa-solid fa-share-nodes text-sm"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-stone-800">Autre application mobile...</div>
+                                    <div class="text-[10px] text-stone-500">Menu de partage natif du téléphone</div>
+                                </div>
+                            </div>
+                            <i
+                                class="fa-solid fa-chevron-right text-stone-300 group-hover:text-luxury-gold text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VANILLA JS SCRIPTS -->
+        <script src="dates.js"></script>
+        <script src="galerie.js"></script>
+        <script>
+            // Core states
+            // Images chargées depuis galerie.js (voir ce fichier pour modifier l'ordre)
+            const images = GALLERY_IMAGES.map(img =>
+                img.folder === 'profil'
+                    ? `ressources/images/${img.file}`
+                    : `ressources/images/galerie/${img.file}`
+            );
+            let currentImageIndex = 0;
+            let activeAudioId = null;
+
+            // On DOM Load
+            document.addEventListener("DOMContentLoaded", () => {
+                // Render dates from config file
+                renderDates();
+
+                // Check hash router to set active page
+                const hash = window.location.hash.substring(1);
+                if (hash && document.getElementById(hash)) {
+                    showPage(hash, false);
+                } else {
+                    showPage('page_cv', false);
                 }
-            });
 
-            // Keyboard navigation for image gallery
-            document.addEventListener('keydown', (e) => {
-                const modal = document.getElementById('gallery-modal');
-                if (modal.classList.contains('pointer-events-auto')) {
-                    if (e.key === 'ArrowLeft') {
-                        prevGalleryImage();
-                    } else if (e.key === 'ArrowRight') {
-                        nextGalleryImage();
-                    } else if (e.key === 'Escape') {
-                        closeGallery();
+                // Register scroll reveal elements
+                setupScrollReveal();
+
+                // Hash router listener
+                window.addEventListener("hashchange", () => {
+                    const newHash = window.location.hash.substring(1);
+                    if (newHash && document.getElementById(newHash)) {
+                        showPage(newHash, true);
                     }
-                }
+                });
 
-                const videoModal = document.getElementById('video-modal');
-                if (videoModal.classList.contains('pointer-events-auto') && e.key === 'Escape') {
-                    closeVideoModal();
-                }
+                // Keyboard navigation for image gallery
+                document.addEventListener('keydown', (e) => {
+                    const modal = document.getElementById('gallery-modal');
+                    if (modal.classList.contains('pointer-events-auto')) {
+                        if (e.key === 'ArrowLeft') {
+                            prevGalleryImage();
+                        } else if (e.key === 'ArrowRight') {
+                            nextGalleryImage();
+                        } else if (e.key === 'Escape') {
+                            closeGallery();
+                        }
+                    }
+
+                    const videoModal = document.getElementById('video-modal');
+                    if (videoModal.classList.contains('pointer-events-auto') && e.key === 'Escape') {
+                        closeVideoModal();
+                    }
+                });
+
+                // Initialize gallery touch events (swipe gestures)
+                setupGallerySwipe();
+
+                // Initialize static elements in lightbox
+                initGalleryThumbnails();
             });
+            // ── DATE PANEL INTERACTIONS & ICS EXPORT ──
 
-            // Initialize gallery touch events (swipe gestures)
-            setupGallerySwipe();
-
-            // Initialize static elements in lightbox
-            initGalleryThumbnails();
-        });
-        // ── DATE PANEL INTERACTIONS & ICS EXPORT ──
-
-        // Toggle smooth expand/collapse for multi-date panels
-        function toggleDatePanel(panelId) {
-            const panel = document.getElementById(panelId);
-            const chevron = document.getElementById('chevron-' + panelId.replace('panel-', ''));
-            if (panel) {
-                panel.classList.toggle('expanded');
+            // Toggle smooth expand/collapse for multi-date panels
+            function toggleDatePanel(panelId) {
+                const panel = document.getElementById(panelId);
+                const chevron = document.getElementById('chevron-' + panelId.replace('panel-', ''));
+                if (panel) {
+                    panel.classList.toggle('expanded');
+                }
+                if (chevron) {
+                    chevron.classList.toggle('rotated');
+                }
             }
-            if (chevron) {
-                chevron.classList.toggle('rotated');
+
+            // Données d'évènement en cours pour la modale agenda
+            let currentCalendarEventData = null;
+
+            // Clic sur le badge de date : ouvre la modale de choix d'agenda
+            function downloadICS(data, event) {
+                if (event) event.stopPropagation();
+                currentCalendarEventData = data;
+
+                const titleEl = document.getElementById('cal-modal-title');
+                const subtitleEl = document.getElementById('cal-modal-subtitle');
+                if (titleEl) titleEl.textContent = data.title || 'Spectacle';
+                if (subtitleEl) {
+                    const cleanSubtitle = data.subtitle ? ` (${data.subtitle})` : '';
+                    subtitleEl.textContent = `${data.dateLabel || data.icsDate || ''}${cleanSubtitle} • ${data.location || ''}`;
+                }
+
+                const shareBtn = document.getElementById('cal-option-share');
+                if (shareBtn) {
+                    let canShareFile = false;
+                    try {
+                        const testFile = new File([''], 'test.ics', { type: 'text/calendar' });
+                        canShareFile = !!(navigator.canShare && navigator.canShare({ files: [testFile] }));
+                    } catch (e) {
+                        canShareFile = false;
+                    }
+                    shareBtn.style.display = canShareFile ? 'flex' : 'none';
+                }
+
+                const modal = document.getElementById('calendar-modal');
+                const card = document.getElementById('calendar-modal-card');
+                if (modal && card) {
+                    modal.classList.remove('pointer-events-none', 'opacity-0');
+                    modal.classList.add('pointer-events-auto', 'opacity-100');
+                    card.classList.remove('scale-95');
+                    card.classList.add('scale-100');
+                }
             }
-        }
 
-        // Clic sur le badge de date : génère et télécharge le fichier .ics (supporte plusieurs horaires dans la même journée)
-        function downloadICS(data, event) {
-            if (event) event.stopPropagation();
+            function closeCalendarModal() {
+                const modal = document.getElementById('calendar-modal');
+                const card = document.getElementById('calendar-modal-card');
+                if (modal && card) {
+                    modal.classList.add('pointer-events-none', 'opacity-0');
+                    modal.classList.remove('pointer-events-auto', 'opacity-100');
+                    card.classList.add('scale-95');
+                    card.classList.remove('scale-100');
+                }
+            }
 
-            const yearMonthDay = (data.icsDate || '').split('-');
-            if (yearMonthDay.length !== 3) return;
-            const y = yearMonthDay[0];
-            const m = yearMonthDay[1];
-            const d = yearMonthDay[2];
+            // Action sélectionnée dans la modale agenda
+            function calOptionClick(type) {
+                const data = currentCalendarEventData;
+                if (!data) return;
 
-            const now = new Date();
-            const dtstamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-            const cleanTitle = (data.title || '').replace(/[,;\\]/g, ' ');
-            const cleanSubtitle = data.subtitle ? ` (${data.subtitle.replace(/[,;\\]/g, ' ')})` : '';
-            const summary = `${cleanTitle}${cleanSubtitle}`;
-            const location = (data.location || '').replace(/[,;\\]/g, ' ');
-            const timeStr = Array.isArray(data.times) ? data.times.join(' & ') : String(data.time || '');
-            const description = `Représentation : ${summary}\\nLieu : ${location}\\n${timeStr ? 'Horaire : ' + timeStr : 'Horaire à confirmer'}`;
+                const yearMonthDay = (data.icsDate || '').split('-');
+                if (yearMonthDay.length !== 3) return;
+                const y = yearMonthDay[0];
+                const m = yearMonthDay[1];
+                const d = yearMonthDay[2];
 
-            // Analyse des horaires multiples potentiels (ex: "14h30 & 19h00" ou ["14h30", "19h00"])
-            const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
-            const vevents = [];
+                const now = new Date();
+                const dtstamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                const cleanTitle = (data.title || '').replace(/[,;\\]/g, ' ');
+                const cleanSubtitle = data.subtitle ? ` (${data.subtitle.replace(/[,;\\]/g, ' ')})` : '';
+                const summary = `${cleanTitle}${cleanSubtitle}`;
+                const location = (data.location || '').replace(/[,;\\]/g, ' ');
+                const timeStr = Array.isArray(data.times) ? data.times.join(' & ') : String(data.time || '');
+                const description = `Représentation : ${summary}\\nLieu : ${location}\\n${timeStr ? 'Horaire : ' + timeStr : 'Horaire à confirmer'}`;
 
-            if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
-                timeMatches.forEach((tm, idx) => {
-                    const hour = String(tm[1]).padStart(2, '0');
-                    const min = String(tm[2] || '00').padStart(2, '0');
-                    const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
-                    const dtstart = `DTSTART:${y}${m}${d}T${hour}${min}00`;
-                    const dtend = `DTEND:${y}${m}${d}T${endHour}${min}00`;
+                if (type === 'google') {
+                    let datesParam = '';
+                    const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
+                    if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
+                        const tm = timeMatches[0];
+                        const hour = String(tm[1]).padStart(2, '0');
+                        const min = String(tm[2] || '00').padStart(2, '0');
+                        const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
+                        datesParam = `${y}${m}${d}T${hour}${min}00/${y}${m}${d}T${endHour}${min}00`;
+                    } else {
+                        const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+                        dateObj.setDate(dateObj.getDate() + 1);
+                        const nextY = dateObj.getFullYear();
+                        const nextM = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const nextD = String(dateObj.getDate()).padStart(2, '0');
+                        datesParam = `${y}${m}${d}/${nextY}${nextM}${nextD}`;
+                    }
+                    const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(summary)}&dates=${datesParam}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+                    window.open(gcalUrl, '_blank');
+                    closeCalendarModal();
+                    return;
+                }
+
+                if (type === 'outlook') {
+                    let startISO = '';
+                    let endISO = '';
+                    let isAllDay = false;
+                    const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
+                    if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
+                        const tm = timeMatches[0];
+                        const hour = String(tm[1]).padStart(2, '0');
+                        const min = String(tm[2] || '00').padStart(2, '0');
+                        const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
+                        startISO = `${y}-${m}-${d}T${hour}:${min}:00`;
+                        endISO = `${y}-${m}-${d}T${endHour}:${min}:00`;
+                    } else {
+                        isAllDay = true;
+                        startISO = `${y}-${m}-${d}T09:00:00`;
+                        endISO = `${y}-${m}-${d}T18:00:00`;
+                    }
+                    const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=${encodeURIComponent(summary)}&startdt=${encodeURIComponent(startISO)}&enddt=${encodeURIComponent(endISO)}&location=${encodeURIComponent(location)}&body=${encodeURIComponent(description)}${isAllDay ? '&allday=true' : ''}`;
+                    window.open(outlookUrl, '_blank');
+                    closeCalendarModal();
+                    return;
+                }
+
+                // Génération du fichier .ics standard pour 'ics' ou 'share'
+                const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
+                const vevents = [];
+
+                if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
+                    timeMatches.forEach((tm, idx) => {
+                        const hour = String(tm[1]).padStart(2, '0');
+                        const min = String(tm[2] || '00').padStart(2, '0');
+                        const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
+                        const dtstart = `DTSTART:${y}${m}${d}T${hour}${min}00`;
+                        const dtend = `DTEND:${y}${m}${d}T${endHour}${min}00`;
+                        vevents.push([
+                            'BEGIN:VEVENT',
+                            `UID:event-${y}${m}${d}-${hour}${min}-${Date.now()}-${idx}@adrienvada.com`,
+                            `DTSTAMP:${dtstamp}`,
+                            dtstart,
+                            dtend,
+                            `SUMMARY:${summary}`,
+                            `LOCATION:${location}`,
+                            `DESCRIPTION:${description}`,
+                            'END:VEVENT'
+                        ].join('\r\n'));
+                    });
+                } else {
+                    const dtstart = `DTSTART;VALUE=DATE:${y}${m}${d}`;
+                    const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+                    dateObj.setDate(dateObj.getDate() + 1);
+                    const nextY = dateObj.getFullYear();
+                    const nextM = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const nextD = String(dateObj.getDate()).padStart(2, '0');
+                    const dtend = `DTEND;VALUE=DATE:${nextY}${nextM}${nextD}`;
                     vevents.push([
                         'BEGIN:VEVENT',
-                        `UID:event-${y}${m}${d}-${hour}${min}-${Date.now()}-${idx}@adrienvada.com`,
+                        `UID:event-${y}${m}${d}-${Date.now()}@adrienvada.com`,
                         `DTSTAMP:${dtstamp}`,
                         dtstart,
                         dtend,
@@ -1525,127 +1740,107 @@
                         `DESCRIPTION:${description}`,
                         'END:VEVENT'
                     ].join('\r\n'));
-                });
-            } else {
-                // Évènement sur toute la journée si horaire non défini / à confirmer
-                const dtstart = `DTSTART;VALUE=DATE:${y}${m}${d}`;
-                const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-                dateObj.setDate(dateObj.getDate() + 1);
-                const nextY = dateObj.getFullYear();
-                const nextM = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const nextD = String(dateObj.getDate()).padStart(2, '0');
-                const dtend = `DTEND;VALUE=DATE:${nextY}${nextM}${nextD}`;
-                vevents.push([
-                    'BEGIN:VEVENT',
-                    `UID:event-${y}${m}${d}-${Date.now()}@adrienvada.com`,
-                    `DTSTAMP:${dtstamp}`,
-                    dtstart,
-                    dtend,
-                    `SUMMARY:${summary}`,
-                    `LOCATION:${location}`,
-                    `DESCRIPTION:${description}`,
-                    'END:VEVENT'
-                ].join('\r\n'));
-            }
-
-            const icsContent = [
-                'BEGIN:VCALENDAR',
-                'VERSION:2.0',
-                'PRODID:-//Adrien Vada//Spectacles//FR',
-                ...vevents,
-                'END:VCALENDAR'
-            ].join('\r\n');
-
-            const filename = `${cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'spectacle'}-${y}-${m}-${d}.ics`;
-            
-            // Tentative d'utiliser l'API de partage natif (parfait pour mobile iOS/Android)
-            try {
-                const file = new File([icsContent], filename, { type: 'text/calendar' });
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    navigator.share({
-                        files: [file],
-                        title: 'Ajouter à l\'agenda',
-                    }).catch(console.error);
-                    return; // Succès du partage natif
                 }
-            } catch (e) {
-                console.log("Partage natif non supporté pour ce fichier, fallback au téléchargement");
+
+                const icsContent = [
+                    'BEGIN:VCALENDAR',
+                    'VERSION:2.0',
+                    'PRODID:-//Adrien Vada//Spectacles//FR',
+                    ...vevents,
+                    'END:VCALENDAR'
+                ].join('\r\n');
+
+                const filename = `${cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'spectacle'}-${y}-${m}-${d}.ics`;
+
+                if (type === 'share' && navigator.canShare) {
+                    try {
+                        const file = new File([icsContent], filename, { type: 'text/calendar' });
+                        if (navigator.canShare({ files: [file] })) {
+                            navigator.share({
+                                files: [file],
+                                title: 'Ajouter à l\'agenda'
+                            }).catch(console.error);
+                            closeCalendarModal();
+                            return;
+                        }
+                    } catch (e) { }
+                }
+
+                // Téléchargement classique du fichier .ics
+                const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+
+                closeCalendarModal();
             }
 
-            // Fallback au téléchargement classique (ordinateur)
-            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 100);
-        }
-
-        // Clic sur la ligne du spectacle : redirige vers la réservation si disponible
-        function handleRowClick(bookingUrl, event) {
-            if (bookingUrl) {
-                window.open(bookingUrl, '_blank');
+            // Clic sur la ligne du spectacle : redirige vers la réservation si disponible
+            function handleRowClick(bookingUrl, event) {
+                if (bookingUrl) {
+                    window.open(bookingUrl, '_blank');
+                }
             }
-        }
 
-        // 1. PAGE ROUTER
-        function renderDates() {
-            const upcomingTitle = document.getElementById('upcoming-season-title');
-            const upcomingContainer = document.getElementById('upcoming-dates-container');
+            // 1. PAGE ROUTER
+            function renderDates() {
+                const upcomingTitle = document.getElementById('upcoming-season-title');
+                const upcomingContainer = document.getElementById('upcoming-dates-container');
 
-            if (upcomingTitle && upcomingContainer && typeof SHOW_DATA !== 'undefined') {
-                upcomingTitle.textContent = SHOW_DATA.currentSeasonTitle || 'Saison en cours';
+                if (upcomingTitle && upcomingContainer && typeof SHOW_DATA !== 'undefined') {
+                    upcomingTitle.textContent = SHOW_DATA.currentSeasonTitle || 'Saison en cours';
 
-                const amberBadge = `<span class="text-[9px] text-amber-600/70 font-normal mt-0.5 flex items-center gap-1 opacity-75"><i class="fa-solid fa-circle-info text-[9px]"></i> Les réservations ne sont pas encore ouvertes</span>`;
+                    const amberBadge = `<span class="text-[9px] text-amber-600/70 font-normal mt-0.5 flex items-center gap-1 opacity-75"><i class="fa-solid fa-circle-info text-[9px]"></i> Les réservations ne sont pas encore ouvertes</span>`;
+                    const schoolWarningBadge = `<span class="text-[9px] text-amber-600/75 font-normal mt-0.5 flex items-center gap-1"><i class="fa-solid fa-lock text-[9px]"></i> Accès restreint : contactez-moi directement pour savoir si on peut vous trouver une place ! 😉</span>`;
 
-                const getTimeStr = (item) => {
-                    if (Array.isArray(item.times) && item.times.length > 0) {
-                        return item.times.join(' & ');
-                    }
-                    if (item.time) {
-                        return item.time;
-                    }
-                    return '';
-                };
+                    const getTimeStr = (item) => {
+                        if (Array.isArray(item.times) && item.times.length > 0) {
+                            return item.times.join(' & ');
+                        }
+                        if (item.time) {
+                            return item.time;
+                        }
+                        return '';
+                    };
 
-                let upcomingHtml = '';
-                if (SHOW_DATA.upcoming && SHOW_DATA.upcoming.length > 0) {
-                    SHOW_DATA.upcoming.forEach((show, idx) => {
-                        const panelId = show.id || `panel-series-${idx}`;
+                    let upcomingHtml = '';
+                    if (SHOW_DATA.upcoming && SHOW_DATA.upcoming.length > 0) {
+                        SHOW_DATA.upcoming.forEach((show, idx) => {
+                            const panelId = show.id || `panel-series-${idx}`;
 
-                        if (show.type === 'series' && show.shows) {
-                            const hasAnyBooking = show.shows.some(s => s.bookingUrl);
+                            if (show.type === 'series' && show.shows) {
+                                let showsHtml = '';
+                                show.shows.forEach((rep) => {
+                                    const repDataStr = JSON.stringify({
+                                        title: show.title,
+                                        subtitle: show.subtitle || '',
+                                        location: show.location,
+                                        icsDate: rep.icsDate,
+                                        time: rep.time,
+                                        times: rep.times
+                                    }).replace(/"/g, '&quot;');
 
-                            let showsHtml = '';
-                            show.shows.forEach((rep) => {
-                                const repDataStr = JSON.stringify({
-                                    title: show.title,
-                                    subtitle: show.subtitle || '',
-                                    location: show.location,
-                                    icsDate: rep.icsDate,
-                                    time: rep.time,
-                                    times: rep.times
-                                }).replace(/"/g, '&quot;');
+                                    const isClickable = !!rep.bookingUrl;
+                                    const rowClickAttr = isClickable ? `onclick="handleRowClick('${rep.bookingUrl}', event)"` : '';
+                                    const rowClasses = isClickable ? 'date-row-clickable cursor-pointer' : '';
+                                    const arrowIcon = isClickable ? `<i class="fa-solid fa-arrow-right text-[9px] text-luxury-gold/50"></i>` : '';
 
-                                const isClickable = !!rep.bookingUrl;
-                                const rowClickAttr = isClickable ? `onclick="handleRowClick('${rep.bookingUrl}', event)"` : '';
-                                const rowClasses = isClickable ? 'date-row-clickable cursor-pointer' : '';
-                                const arrowIcon = isClickable ? `<i class="fa-solid fa-arrow-right text-[9px] text-luxury-gold/50"></i>` : '';
+                                    const repTimeStr = getTimeStr(rep);
+                                    const repBadgeContent = repTimeStr
+                                        ? `${rep.dateLabel} • ${repTimeStr} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`
+                                        : `${rep.dateLabel} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`;
+                                    const repTimeBelow = !repTimeStr
+                                        ? `<span class="text-[9px] text-luxury-textMuted/75 italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>`
+                                        : '';
 
-                                const repTimeStr = getTimeStr(rep);
-                                const repBadgeContent = repTimeStr
-                                    ? `${rep.dateLabel} • ${repTimeStr} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`
-                                    : `${rep.dateLabel} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`;
-                                const repTimeBelow = !repTimeStr
-                                    ? `<span class="text-[9px] text-luxury-textMuted/75 italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>`
-                                    : '';
-
-                                showsHtml += `
+                                    showsHtml += `
                                 <div class="glass-panel rounded px-2.5 py-2 border border-stone-200/20 ${rowClasses} flex items-center justify-between" ${rowClickAttr}>
                                     <div class="flex items-center gap-3 min-w-0 flex-1">
                                         <div class="flex flex-col items-start flex-shrink-0 w-[155px]">
@@ -1656,15 +1851,16 @@
                                             ${repTimeBelow}
                                         </div>
                                         <div class="flex flex-col min-w-0 flex-1">
-                                            ${rep.isSchool ? `<span class="text-[10px] text-stone-500 italic">Séances scolaires</span>` : ''}
-                                            ${!rep.bookingUrl ? amberBadge : ''}
+                                            ${rep.isSchool
+                                            ? `<span class="text-[10px] text-stone-500 italic block">Séance scolaire</span>${schoolWarningBadge}`
+                                            : (!rep.bookingUrl ? amberBadge : '')}
                                         </div>
                                     </div>
                                     ${arrowIcon}
                                 </div>`;
-                            });
+                                });
 
-                            upcomingHtml += `
+                                upcomingHtml += `
                             <div class="date-multi-wrapper">
                                 <div class="glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 date-row-clickable cursor-pointer"
                                     onclick="toggleDatePanel('${panelId}')">
@@ -1679,7 +1875,6 @@
                                                 ${show.title}
                                                 ${show.subtitle ? `<span class="font-normal italic text-[10px] text-luxury-textMuted">(${show.subtitle})</span>` : ''}
                                             </h4>
-                                            ${!hasAnyBooking ? amberBadge : ''}
                                         </div>
                                     </div>
                                     <div class="text-[10px] text-luxury-textMuted flex items-center gap-2 md:text-right flex-shrink-0 whitespace-nowrap pl-0.5 md:pl-0">
@@ -1695,31 +1890,31 @@
                                     </div>
                                 </div>
                             </div>`;
-                        } else {
-                            // Date unique (single)
-                            const singleDataStr = JSON.stringify({
-                                title: show.title,
-                                subtitle: show.subtitle || '',
-                                location: show.location,
-                                icsDate: show.icsDate,
-                                time: show.time,
-                                times: show.times
-                            }).replace(/"/g, '&quot;');
+                            } else {
+                                // Date unique (single)
+                                const singleDataStr = JSON.stringify({
+                                    title: show.title,
+                                    subtitle: show.subtitle || '',
+                                    location: show.location,
+                                    icsDate: show.icsDate,
+                                    time: show.time,
+                                    times: show.times
+                                }).replace(/"/g, '&quot;');
 
-                            const isClickable = !!show.bookingUrl;
-                            const rowClickAttr = isClickable ? `onclick="handleRowClick('${show.bookingUrl}', event)"` : '';
-                            const rowClasses = isClickable ? 'date-row-clickable cursor-pointer' : '';
-                            const arrowIcon = isClickable ? `<i class="fa-solid fa-arrow-right text-[9px] text-luxury-gold/50 ml-1"></i>` : '';
+                                const isClickable = !!show.bookingUrl;
+                                const rowClickAttr = isClickable ? `onclick="handleRowClick('${show.bookingUrl}', event)"` : '';
+                                const rowClasses = isClickable ? 'date-row-clickable cursor-pointer' : '';
+                                const arrowIcon = isClickable ? `<i class="fa-solid fa-arrow-right text-[9px] text-luxury-gold/50 ml-1"></i>` : '';
 
-                            const showTimeStr = getTimeStr(show);
-                            const singleBadgeContent = showTimeStr
-                                ? `${show.dateLabel || show.date} • ${showTimeStr} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`
-                                : `${show.dateLabel || show.date} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`;
-                            const singleTimeBelow = !showTimeStr
-                                ? `<span class="text-[9px] text-luxury-textMuted/75 italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>`
-                                : '';
+                                const showTimeStr = getTimeStr(show);
+                                const singleBadgeContent = showTimeStr
+                                    ? `${show.dateLabel || show.date} • ${showTimeStr} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`
+                                    : `${show.dateLabel || show.date} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`;
+                                const singleTimeBelow = !showTimeStr
+                                    ? `<span class="text-[9px] text-luxury-textMuted/75 italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>`
+                                    : '';
 
-                            upcomingHtml += `
+                                upcomingHtml += `
                             <div class="glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 ${rowClasses}"
                                 ${rowClickAttr}>
                                 <div class="flex items-center gap-3 flex-nowrap overflow-hidden min-w-0 flex-1">
@@ -1735,8 +1930,9 @@
                                             ${show.title}
                                             ${show.subtitle ? `<span class="font-normal italic text-[10px] text-luxury-textMuted">(${show.subtitle})</span>` : ''}
                                         </h4>
-                                        ${show.isSchool ? `<span class="text-[9px] text-stone-500 italic mt-0.5 block">Séance scolaire</span>` : ''}
-                                        ${!show.bookingUrl ? amberBadge : ''}
+                                        ${show.isSchool
+                                        ? `<span class="text-[9px] text-stone-500 italic mt-0.5 block">Séance scolaire</span>${schoolWarningBadge}`
+                                        : (!show.bookingUrl ? amberBadge : '')}
                                     </div>
                                 </div>
                                 <div class="text-[10px] text-luxury-textMuted flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap pl-0.5 md:pl-0">
@@ -1744,29 +1940,29 @@
                                     ${arrowIcon}
                                 </div>
                             </div>`;
-                        }
-                    });
-                } else {
-                    upcomingHtml = `<p class="text-xs text-luxury-textMuted italic p-2">Aucune date à venir pour le moment.</p>`;
+                            }
+                        });
+                    } else {
+                        upcomingHtml = `<p class="text-xs text-luxury-textMuted italic p-2">Aucune date à venir pour le moment.</p>`;
+                    }
+                    upcomingContainer.innerHTML = upcomingHtml;
                 }
-                upcomingContainer.innerHTML = upcomingHtml;
-            }
 
-            const archivesContainer = document.getElementById('archived-seasons-container');
-            if (archivesContainer && typeof SHOW_DATA !== 'undefined' && SHOW_DATA.archives) {
-                let archivesHtml = '';
-                Object.keys(SHOW_DATA.archives).forEach(seasonName => {
-                    const shows = SHOW_DATA.archives[seasonName];
-                    let showsHtml = '';
-                    shows.forEach(show => {
-                        showsHtml += `
+                const archivesContainer = document.getElementById('archived-seasons-container');
+                if (archivesContainer && typeof SHOW_DATA !== 'undefined' && SHOW_DATA.archives) {
+                    let archivesHtml = '';
+                    Object.keys(SHOW_DATA.archives).forEach(seasonName => {
+                        const shows = SHOW_DATA.archives[seasonName];
+                        let showsHtml = '';
+                        shows.forEach(show => {
+                            showsHtml += `
                         <div class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
                             <span><strong>${show.date}</strong> : ${show.title}</span>
                             <span class="text-stone-400 text-[11px] md:text-right">${show.location}</span>
                         </div>`;
-                    });
+                        });
 
-                    archivesHtml += `
+                        archivesHtml += `
                     <details class="group bg-black/[0.005] border border-stone-200/50 rounded-lg overflow-hidden transition-all duration-300">
                         <summary class="flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat hover:bg-stone-50 transition-all text-xs">
                             <span class="font-semibold flex items-center gap-2">${seasonName}</span>
@@ -1776,312 +1972,312 @@
                             ${showsHtml}
                         </div>
                     </details>`;
-                });
-                archivesContainer.innerHTML = archivesHtml;
+                    });
+                    archivesContainer.innerHTML = archivesHtml;
+                }
             }
-        }
 
-        // 1. PAGE ROUTER
-        function showPage(pageId, animate = true) {
-            // Stop active audio playing
-            if (activeAudioId) {
-                const audio = document.getElementById(activeAudioId);
-                if (audio) {
-                    audio.pause();
-                    audio.currentTime = 0;
+            // 1. PAGE ROUTER
+            function showPage(pageId, animate = true) {
+                // Stop active audio playing
+                if (activeAudioId) {
+                    const audio = document.getElementById(activeAudioId);
+                    if (audio) {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        resetAudioPlayer(activeAudioId);
+                    }
+                }
+
+                // Toggle pages
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+
+                const activePage = document.getElementById(pageId);
+                if (activePage) {
+                    activePage.classList.add('active');
+                    if (animate) {
+                        // Trigger reflow to restart transition
+                        activePage.offsetHeight;
+                    }
+                }
+
+                // Update Tab states
+                document.querySelectorAll('#nav-tabs-container a').forEach(btn => {
+                    btn.className = btn.className.replace(/text-luxury-gold|border-stone-200\/80|bg-stone-200\/40/g, '');
+                    btn.classList.add('text-gray-400', 'border-transparent');
+                });
+
+                const activeTabButton = document.getElementById('tab-' + pageId);
+                if (activeTabButton) {
+                    activeTabButton.classList.remove('text-gray-400', 'border-transparent');
+                    activeTabButton.classList.add('text-luxury-gold', 'border-stone-200/80', 'bg-stone-200/40');
+                }
+
+                // Show or hide PDF download button based on active page
+                const pdfBtn = document.getElementById('pdf-download-btn');
+                if (pdfBtn) {
+                    if (pageId === 'page_cv') {
+                        pdfBtn.classList.remove('opacity-0', 'pointer-events-none');
+                    } else {
+                        pdfBtn.classList.add('opacity-0', 'pointer-events-none');
+                    }
+                }
+
+                // Scroll page back to top smoothly
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                // Re-trigger scroll reveal offsets
+                setTimeout(triggerScrollReveal, 200);
+            }
+
+            // 3. SCROLL REVEAL (Intersection Observer)
+            function setupScrollReveal() {
+                const sections = document.querySelectorAll('section');
+                sections.forEach(sec => {
+                    sec.classList.add('reveal');
+                });
+                triggerScrollReveal();
+            }
+
+            function triggerScrollReveal() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('active');
+                        }
+                    });
+                }, {
+                    root: null,
+                    threshold: 0.05
+                });
+
+                document.querySelectorAll('.reveal').forEach(el => {
+                    observer.observe(el);
+                });
+            }
+
+            // 4. IMAGE GALLERY LIGHTBOX
+            function initGalleryThumbnails() {
+                const thumbsContainer = document.getElementById('gallery-thumbs-container');
+                if (!thumbsContainer) return;
+                thumbsContainer.innerHTML = '';
+                images.forEach((imgSrc, idx) => {
+                    const thumb = document.createElement('img');
+                    thumb.src = imgSrc;
+                    thumb.className = `w-9 h-9 md:w-11 md:h-11 object-cover rounded border cursor-pointer flex-shrink-0 transition duration-300 hover:scale-105 ${idx === currentImageIndex ? 'border-luxury-gold opacity-100 shadow-md' : 'border-transparent opacity-45 hover:opacity-85'}`;
+                    thumb.onclick = (e) => {
+                        e.stopPropagation();
+                        currentImageIndex = idx;
+                        updateGalleryImage();
+                    };
+                    thumbsContainer.appendChild(thumb);
+                });
+            }
+
+            function updateThumbnailHighlight() {
+                const thumbsContainer = document.getElementById('gallery-thumbs-container');
+                const thumbs = document.querySelectorAll('#gallery-thumbs-container img');
+                thumbs.forEach((thumb, idx) => {
+                    if (idx === currentImageIndex) {
+                        thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-luxury-gold opacity-100 shadow-md flex-shrink-0';
+                        if (thumbsContainer) {
+                            const targetScrollLeft = thumb.offsetLeft - (thumbsContainer.clientWidth / 2) + (thumb.offsetWidth / 2);
+                            thumbsContainer.scrollTo({
+                                left: targetScrollLeft,
+                                behavior: 'smooth'
+                            });
+                        }
+                    } else {
+                        thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-transparent opacity-45 hover:opacity-85 flex-shrink-0';
+                    }
+                });
+            }
+
+            function openGallery(index) {
+                currentImageIndex = index;
+                const modal = document.getElementById('gallery-modal');
+
+                modal.classList.remove('pointer-events-none', 'opacity-0');
+                modal.classList.add('pointer-events-auto', 'opacity-100');
+
+                updateGalleryImage();
+            }
+
+            function closeGallery() {
+                const modal = document.getElementById('gallery-modal');
+                const img = document.getElementById('gallery-img');
+
+                img.style.opacity = '0';
+                img.style.transform = 'scale(0.95)';
+
+                modal.classList.remove('pointer-events-auto', 'opacity-100');
+                modal.classList.add('pointer-events-none', 'opacity-0');
+            }
+
+            function updateGalleryImage() {
+                const img = document.getElementById('gallery-img');
+                const counter = document.getElementById('gallery-counter');
+
+                // Soft fluid slide-fade out
+                img.style.opacity = '0';
+                img.style.transform = 'scale(0.97) translateY(4px)';
+
+                setTimeout(() => {
+                    img.src = images[currentImageIndex];
+                    counter.innerText = `${currentImageIndex + 1} / ${images.length}`;
+                    updateThumbnailHighlight();
+
+                    img.onload = () => {
+                        // Soft fluid slide-fade in
+                        img.style.opacity = '1';
+                        img.style.transform = 'scale(1) translateY(0)';
+                    };
+                }, 120);
+            }
+
+            function prevGalleryImage(e) {
+                if (e) e.stopPropagation();
+                currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+                updateGalleryImage();
+            }
+
+            function nextGalleryImage(e) {
+                if (e) e.stopPropagation();
+                currentImageIndex = (currentImageIndex + 1) % images.length;
+                updateGalleryImage();
+            }
+
+            // Gallery swipe support
+            function setupGallerySwipe() {
+                const modal = document.getElementById('gallery-modal');
+                let startX = 0;
+                let endX = 0;
+
+                modal.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                }, { passive: true });
+
+                modal.addEventListener('touchend', (e) => {
+                    endX = e.changedTouches[0].clientX;
+                    const diff = startX - endX;
+                    if (Math.abs(diff) > 50) {
+                        if (diff > 0) {
+                            nextGalleryImage();
+                        } else {
+                            prevGalleryImage();
+                        }
+                    }
+                }, { passive: true });
+            }
+
+            // 5. YOUTUBE VIDEO MODAL CONTROLLER
+            function openVideoModal(videoId) {
+                const modal = document.getElementById('video-modal');
+                const card = document.getElementById('video-modal-card');
+                const iframe = document.getElementById('video-iframe');
+
+                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+
+                modal.classList.remove('pointer-events-none', 'opacity-0');
+                modal.classList.add('pointer-events-auto', 'opacity-100');
+
+                card.classList.remove('scale-95');
+                card.classList.add('scale-100');
+            }
+
+            function closeVideoModal() {
+                const modal = document.getElementById('video-modal');
+                const card = document.getElementById('video-modal-card');
+                const iframe = document.getElementById('video-iframe');
+
+                card.classList.remove('scale-100');
+                card.classList.add('scale-95');
+
+                modal.classList.remove('pointer-events-auto', 'opacity-100');
+                modal.classList.add('pointer-events-none', 'opacity-0');
+
+                // Clear source to stop video playback
+                iframe.src = '';
+            }
+
+            // 6. CUSTOM AUDIO PLAYERS CONTROLS
+            function toggleAudio(audioId) {
+                const audio = document.getElementById(audioId);
+                const icon = document.getElementById('icon-' + audioId);
+
+                if (activeAudioId && activeAudioId !== audioId) {
+                    const prevAudio = document.getElementById(activeAudioId);
+                    prevAudio.pause();
                     resetAudioPlayer(activeAudioId);
                 }
-            }
 
-            // Toggle pages
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
-
-            const activePage = document.getElementById(pageId);
-            if (activePage) {
-                activePage.classList.add('active');
-                if (animate) {
-                    // Trigger reflow to restart transition
-                    activePage.offsetHeight;
-                }
-            }
-
-            // Update Tab states
-            document.querySelectorAll('#nav-tabs-container a').forEach(btn => {
-                btn.className = btn.className.replace(/text-luxury-gold|border-stone-200\/80|bg-stone-200\/40/g, '');
-                btn.classList.add('text-gray-400', 'border-transparent');
-            });
-
-            const activeTabButton = document.getElementById('tab-' + pageId);
-            if (activeTabButton) {
-                activeTabButton.classList.remove('text-gray-400', 'border-transparent');
-                activeTabButton.classList.add('text-luxury-gold', 'border-stone-200/80', 'bg-stone-200/40');
-            }
-
-            // Show or hide PDF download button based on active page
-            const pdfBtn = document.getElementById('pdf-download-btn');
-            if (pdfBtn) {
-                if (pageId === 'page_cv') {
-                    pdfBtn.classList.remove('opacity-0', 'pointer-events-none');
+                if (audio.paused) {
+                    audio.play();
+                    activeAudioId = audioId;
+                    icon.className = 'fa-solid fa-pause text-xs';
                 } else {
-                    pdfBtn.classList.add('opacity-0', 'pointer-events-none');
+                    audio.pause();
+                    activeAudioId = null;
+                    icon.className = 'fa-solid fa-play text-xs pl-0.5';
                 }
             }
 
-            // Scroll page back to top smoothly
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            function updateAudioProgress(audioId) {
+                const audio = document.getElementById(audioId);
+                const progress = document.getElementById('progress-' + audioId);
+                const timeText = document.getElementById('time-' + audioId);
 
-            // Re-trigger scroll reveal offsets
-            setTimeout(triggerScrollReveal, 200);
-        }
+                if (audio.duration) {
+                    const percentage = (audio.currentTime / audio.duration) * 100;
+                    progress.style.width = percentage + '%';
 
-        // 3. SCROLL REVEAL (Intersection Observer)
-        function setupScrollReveal() {
-            const sections = document.querySelectorAll('section');
-            sections.forEach(sec => {
-                sec.classList.add('reveal');
-            });
-            triggerScrollReveal();
-        }
-
-        function triggerScrollReveal() {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                    }
-                });
-            }, {
-                root: null,
-                threshold: 0.05
-            });
-
-            document.querySelectorAll('.reveal').forEach(el => {
-                observer.observe(el);
-            });
-        }
-
-        // 4. IMAGE GALLERY LIGHTBOX
-        function initGalleryThumbnails() {
-            const thumbsContainer = document.getElementById('gallery-thumbs-container');
-            if (!thumbsContainer) return;
-            thumbsContainer.innerHTML = '';
-            images.forEach((imgSrc, idx) => {
-                const thumb = document.createElement('img');
-                thumb.src = imgSrc;
-                thumb.className = `w-9 h-9 md:w-11 md:h-11 object-cover rounded border cursor-pointer flex-shrink-0 transition duration-300 hover:scale-105 ${idx === currentImageIndex ? 'border-luxury-gold opacity-100 shadow-md' : 'border-transparent opacity-45 hover:opacity-85'}`;
-                thumb.onclick = (e) => {
-                    e.stopPropagation();
-                    currentImageIndex = idx;
-                    updateGalleryImage();
-                };
-                thumbsContainer.appendChild(thumb);
-            });
-        }
-
-        function updateThumbnailHighlight() {
-            const thumbsContainer = document.getElementById('gallery-thumbs-container');
-            const thumbs = document.querySelectorAll('#gallery-thumbs-container img');
-            thumbs.forEach((thumb, idx) => {
-                if (idx === currentImageIndex) {
-                    thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-luxury-gold opacity-100 shadow-md flex-shrink-0';
-                    if (thumbsContainer) {
-                        const targetScrollLeft = thumb.offsetLeft - (thumbsContainer.clientWidth / 2) + (thumb.offsetWidth / 2);
-                        thumbsContainer.scrollTo({
-                            left: targetScrollLeft,
-                            behavior: 'smooth'
-                        });
-                    }
-                } else {
-                    thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-transparent opacity-45 hover:opacity-85 flex-shrink-0';
+                    timeText.innerText = `${formatDuration(audio.currentTime)} / ${formatDuration(audio.duration)}`;
                 }
-            });
-        }
-
-        function openGallery(index) {
-            currentImageIndex = index;
-            const modal = document.getElementById('gallery-modal');
-
-            modal.classList.remove('pointer-events-none', 'opacity-0');
-            modal.classList.add('pointer-events-auto', 'opacity-100');
-
-            updateGalleryImage();
-        }
-
-        function closeGallery() {
-            const modal = document.getElementById('gallery-modal');
-            const img = document.getElementById('gallery-img');
-
-            img.style.opacity = '0';
-            img.style.transform = 'scale(0.95)';
-
-            modal.classList.remove('pointer-events-auto', 'opacity-100');
-            modal.classList.add('pointer-events-none', 'opacity-0');
-        }
-
-        function updateGalleryImage() {
-            const img = document.getElementById('gallery-img');
-            const counter = document.getElementById('gallery-counter');
-
-            // Soft fluid slide-fade out
-            img.style.opacity = '0';
-            img.style.transform = 'scale(0.97) translateY(4px)';
-
-            setTimeout(() => {
-                img.src = images[currentImageIndex];
-                counter.innerText = `${currentImageIndex + 1} / ${images.length}`;
-                updateThumbnailHighlight();
-
-                img.onload = () => {
-                    // Soft fluid slide-fade in
-                    img.style.opacity = '1';
-                    img.style.transform = 'scale(1) translateY(0)';
-                };
-            }, 120);
-        }
-
-        function prevGalleryImage(e) {
-            if (e) e.stopPropagation();
-            currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
-            updateGalleryImage();
-        }
-
-        function nextGalleryImage(e) {
-            if (e) e.stopPropagation();
-            currentImageIndex = (currentImageIndex + 1) % images.length;
-            updateGalleryImage();
-        }
-
-        // Gallery swipe support
-        function setupGallerySwipe() {
-            const modal = document.getElementById('gallery-modal');
-            let startX = 0;
-            let endX = 0;
-
-            modal.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-            }, { passive: true });
-
-            modal.addEventListener('touchend', (e) => {
-                endX = e.changedTouches[0].clientX;
-                const diff = startX - endX;
-                if (Math.abs(diff) > 50) {
-                    if (diff > 0) {
-                        nextGalleryImage();
-                    } else {
-                        prevGalleryImage();
-                    }
-                }
-            }, { passive: true });
-        }
-
-        // 5. YOUTUBE VIDEO MODAL CONTROLLER
-        function openVideoModal(videoId) {
-            const modal = document.getElementById('video-modal');
-            const card = document.getElementById('video-modal-card');
-            const iframe = document.getElementById('video-iframe');
-
-            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-
-            modal.classList.remove('pointer-events-none', 'opacity-0');
-            modal.classList.add('pointer-events-auto', 'opacity-100');
-
-            card.classList.remove('scale-95');
-            card.classList.add('scale-100');
-        }
-
-        function closeVideoModal() {
-            const modal = document.getElementById('video-modal');
-            const card = document.getElementById('video-modal-card');
-            const iframe = document.getElementById('video-iframe');
-
-            card.classList.remove('scale-100');
-            card.classList.add('scale-95');
-
-            modal.classList.remove('pointer-events-auto', 'opacity-100');
-            modal.classList.add('pointer-events-none', 'opacity-0');
-
-            // Clear source to stop video playback
-            iframe.src = '';
-        }
-
-        // 6. CUSTOM AUDIO PLAYERS CONTROLS
-        function toggleAudio(audioId) {
-            const audio = document.getElementById(audioId);
-            const icon = document.getElementById('icon-' + audioId);
-
-            if (activeAudioId && activeAudioId !== audioId) {
-                const prevAudio = document.getElementById(activeAudioId);
-                prevAudio.pause();
-                resetAudioPlayer(activeAudioId);
             }
 
-            if (audio.paused) {
-                audio.play();
-                activeAudioId = audioId;
-                icon.className = 'fa-solid fa-pause text-xs';
-            } else {
-                audio.pause();
-                activeAudioId = null;
+            function initAudioMetadata(audioId) {
+                const audio = document.getElementById(audioId);
+                const timeText = document.getElementById('time-' + audioId);
+                if (audio.duration) {
+                    timeText.innerText = `0:00 / ${formatDuration(audio.duration)}`;
+                }
+            }
+
+            function resetAudioPlayer(audioId) {
+                const progress = document.getElementById('progress-' + audioId);
+                const icon = document.getElementById('icon-' + audioId);
+                const timeText = document.getElementById('time-' + audioId);
+                const audio = document.getElementById(audioId);
+
+                progress.style.width = '0%';
                 icon.className = 'fa-solid fa-play text-xs pl-0.5';
+                if (audio && audio.duration) {
+                    timeText.innerText = `0:00 / ${formatDuration(audio.duration)}`;
+                }
             }
-        }
 
-        function updateAudioProgress(audioId) {
-            const audio = document.getElementById(audioId);
-            const progress = document.getElementById('progress-' + audioId);
-            const timeText = document.getElementById('time-' + audioId);
+            function seekAudio(e, audioId) {
+                const container = e.currentTarget;
+                const audio = document.getElementById(audioId);
+                const rect = container.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const width = rect.width;
 
-            if (audio.duration) {
-                const percentage = (audio.currentTime / audio.duration) * 100;
-                progress.style.width = percentage + '%';
-
-                timeText.innerText = `${formatDuration(audio.currentTime)} / ${formatDuration(audio.duration)}`;
+                const clickPercentage = clickX / width;
+                if (audio.duration) {
+                    audio.currentTime = clickPercentage * audio.duration;
+                    updateAudioProgress(audioId);
+                }
             }
-        }
 
-        function initAudioMetadata(audioId) {
-            const audio = document.getElementById(audioId);
-            const timeText = document.getElementById('time-' + audioId);
-            if (audio.duration) {
-                timeText.innerText = `0:00 / ${formatDuration(audio.duration)}`;
+            function formatDuration(seconds) {
+                const min = Math.floor(seconds / 60);
+                const sec = Math.floor(seconds % 60);
+                return `${min}:${sec < 10 ? '0' : ''}${sec}`;
             }
-        }
-
-        function resetAudioPlayer(audioId) {
-            const progress = document.getElementById('progress-' + audioId);
-            const icon = document.getElementById('icon-' + audioId);
-            const timeText = document.getElementById('time-' + audioId);
-            const audio = document.getElementById(audioId);
-
-            progress.style.width = '0%';
-            icon.className = 'fa-solid fa-play text-xs pl-0.5';
-            if (audio && audio.duration) {
-                timeText.innerText = `0:00 / ${formatDuration(audio.duration)}`;
-            }
-        }
-
-        function seekAudio(e, audioId) {
-            const container = e.currentTarget;
-            const audio = document.getElementById(audioId);
-            const rect = container.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const width = rect.width;
-
-            const clickPercentage = clickX / width;
-            if (audio.duration) {
-                audio.currentTime = clickPercentage * audio.duration;
-                updateAudioProgress(audioId);
-            }
-        }
-
-        function formatDuration(seconds) {
-            const min = Math.floor(seconds / 60);
-            const sec = Math.floor(seconds % 60);
-            return `${min}:${sec < 10 ? '0' : ''}${sec}`;
-        }
-    </script>
+        </script>
 </body>
 
 </html>

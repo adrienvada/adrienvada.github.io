@@ -181,11 +181,25 @@ const SHOW_DATA = {
       location: "Lycée Corneille, Rouen (76)",
       shows: [
         {
-          dateLabel: "18 - 20 mai 2027",
+          dateLabel: "18 mai 2027",
           time: "",
           bookingUrl: "",
           isSchool: true, // "Séances scolaires"
           icsDate: "2027-05-18"
+        },
+        {
+          dateLabel: "19 mai 2027",
+          time: "",
+          bookingUrl: "",
+          isSchool: true, // "Séances scolaires"
+          icsDate: "2027-05-19"
+        },
+        {
+          dateLabel: "20 mai 2027",
+          time: "",
+          bookingUrl: "",
+          isSchool: true, // "Séances scolaires"
+          icsDate: "2027-05-20"
         },
         {
           dateLabel: "21 mai 2027",
