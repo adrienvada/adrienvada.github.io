@@ -160,12 +160,11 @@ const SHOW_DATA = {
       icsDate: "2027-02-02"
     },
 
-    // ── 12 mars 2027 : Cléophène (Guyancourt) [Date unique] ──
     {
       type: "single",
       dateLabel: "12 mars 2027",
       fullDate: "12 mars 2027",
-      title: "À la barre, peine perdu ?",
+      title: "À la barre, peine perdue ?",
       location: "Hôtel de ville de Barentin (76)",
       time: "",
       bookingUrl: "",

@@ -1374,7 +1374,7 @@
         </div>
 
         <!-- Bottom Thumbnails bar -->
-        <div class="relative z-10 w-full max-w-md flex justify-center gap-1.5 overflow-x-auto px-4 py-2"
+        <div class="relative z-10 w-full max-w-4xl flex justify-start gap-1.5 overflow-x-auto px-4 py-2 scroll-smooth"
             id="gallery-thumbs-container">
             <!-- Statically populated from script -->
         </div>
@@ -1556,12 +1556,28 @@
                 'END:VCALENDAR'
             ].join('\r\n');
 
+            const filename = `${cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'spectacle'}-${y}-${m}-${d}.ics`;
+            
+            // Tentative d'utiliser l'API de partage natif (parfait pour mobile iOS/Android)
+            try {
+                const file = new File([icsContent], filename, { type: 'text/calendar' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    navigator.share({
+                        files: [file],
+                        title: 'Ajouter à l\'agenda',
+                    }).catch(console.error);
+                    return; // Succès du partage natif
+                }
+            } catch (e) {
+                console.log("Partage natif non supporté pour ce fichier, fallback au téléchargement");
+            }
+
+            // Fallback au téléchargement classique (ordinateur)
             const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            const filename = cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'spectacle';
-            a.download = `${filename}-${y}-${m}-${d}.ics`;
+            a.download = filename;
             document.body.appendChild(a);
             a.click();
             setTimeout(() => {
@@ -1623,8 +1639,8 @@
 
                                 const repTimeStr = getTimeStr(rep);
                                 const repBadgeContent = repTimeStr
-                                    ? `${rep.dateLabel} • ${repTimeStr} <i class="fa-regular fa-calendar-plus text-[10px] text-luxury-gold ml-0.5"></i>`
-                                    : `${rep.dateLabel} <i class="fa-regular fa-calendar-plus text-[10px] text-luxury-gold ml-0.5"></i>`;
+                                    ? `${rep.dateLabel} • ${repTimeStr} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`
+                                    : `${rep.dateLabel} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`;
                                 const repTimeBelow = !repTimeStr
                                     ? `<span class="text-[9px] text-luxury-textMuted/75 italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>`
                                     : '';
@@ -1632,8 +1648,8 @@
                                 showsHtml += `
                                 <div class="glass-panel rounded px-2.5 py-2 border border-stone-200/20 ${rowClasses} flex items-center justify-between" ${rowClickAttr}>
                                     <div class="flex items-center gap-3 min-w-0 flex-1">
-                                        <div class="flex flex-col items-start flex-shrink-0">
-                                            <span class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap cursor-pointer hover:border-luxury-gold transition-colors inline-flex items-center gap-1"
+                                        <div class="flex flex-col items-start flex-shrink-0 w-[155px]">
+                                            <span class="font-mono font-bold text-white bg-luxury-gold border border-luxury-gold px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap cursor-pointer hover:bg-luxury-goldLight transition-colors inline-flex items-center gap-1 shadow-sm"
                                                 onclick="downloadICS(JSON.parse('${repDataStr}'), event)" title="Ajouter à l'agenda (.ics)">
                                                 ${repBadgeContent}
                                             </span>
@@ -1653,8 +1669,8 @@
                                 <div class="glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 date-row-clickable cursor-pointer"
                                     onclick="toggleDatePanel('${panelId}')">
                                     <div class="flex items-center gap-3 flex-nowrap overflow-hidden min-w-0 flex-1">
-                                        <div class="flex flex-col items-start flex-shrink-0">
-                                            <span class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap">
+                                        <div class="flex flex-col items-start flex-shrink-0 w-[155px]">
+                                            <span class="font-mono font-bold text-white bg-luxury-gold/80 border border-luxury-gold/80 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap shadow-sm">
                                                 ${show.dateLabel || show.date}
                                             </span>
                                         </div>
@@ -1697,8 +1713,8 @@
 
                             const showTimeStr = getTimeStr(show);
                             const singleBadgeContent = showTimeStr
-                                ? `${show.dateLabel || show.date} • ${showTimeStr} <i class="fa-regular fa-calendar-plus text-[10px] text-luxury-gold ml-0.5"></i>`
-                                : `${show.dateLabel || show.date} <i class="fa-regular fa-calendar-plus text-[10px] text-luxury-gold ml-0.5"></i>`;
+                                ? `${show.dateLabel || show.date} • ${showTimeStr} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`
+                                : `${show.dateLabel || show.date} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5"></i>`;
                             const singleTimeBelow = !showTimeStr
                                 ? `<span class="text-[9px] text-luxury-textMuted/75 italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>`
                                 : '';
@@ -1707,8 +1723,8 @@
                             <div class="glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 ${rowClasses}"
                                 ${rowClickAttr}>
                                 <div class="flex items-center gap-3 flex-nowrap overflow-hidden min-w-0 flex-1">
-                                    <div class="flex flex-col items-start flex-shrink-0">
-                                        <span class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap cursor-pointer hover:border-luxury-gold transition-colors inline-flex items-center gap-1"
+                                    <div class="flex flex-col items-start flex-shrink-0 w-[155px]">
+                                        <span class="font-mono font-bold text-white bg-luxury-gold border border-luxury-gold px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap cursor-pointer hover:bg-luxury-goldLight transition-colors inline-flex items-center gap-1 shadow-sm"
                                             onclick="downloadICS(JSON.parse('${singleDataStr}'), event)" title="Ajouter à l'agenda (.ics)">
                                             ${singleBadgeContent}
                                         </span>
@@ -1854,7 +1870,7 @@
             images.forEach((imgSrc, idx) => {
                 const thumb = document.createElement('img');
                 thumb.src = imgSrc;
-                thumb.className = `w-9 h-9 md:w-11 md:h-11 object-cover rounded border cursor-pointer transition duration-300 hover:scale-105 ${idx === currentImageIndex ? 'border-luxury-gold opacity-100 shadow-md' : 'border-transparent opacity-45 hover:opacity-85'}`;
+                thumb.className = `w-9 h-9 md:w-11 md:h-11 object-cover rounded border cursor-pointer flex-shrink-0 transition duration-300 hover:scale-105 ${idx === currentImageIndex ? 'border-luxury-gold opacity-100 shadow-md' : 'border-transparent opacity-45 hover:opacity-85'}`;
                 thumb.onclick = (e) => {
                     e.stopPropagation();
                     currentImageIndex = idx;
@@ -1865,13 +1881,20 @@
         }
 
         function updateThumbnailHighlight() {
+            const thumbsContainer = document.getElementById('gallery-thumbs-container');
             const thumbs = document.querySelectorAll('#gallery-thumbs-container img');
             thumbs.forEach((thumb, idx) => {
                 if (idx === currentImageIndex) {
-                    thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-luxury-gold opacity-100 shadow-md';
-                    thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-luxury-gold opacity-100 shadow-md flex-shrink-0';
+                    if (thumbsContainer) {
+                        const targetScrollLeft = thumb.offsetLeft - (thumbsContainer.clientWidth / 2) + (thumb.offsetWidth / 2);
+                        thumbsContainer.scrollTo({
+                            left: targetScrollLeft,
+                            behavior: 'smooth'
+                        });
+                    }
                 } else {
-                    thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-transparent opacity-45 hover:opacity-85';
+                    thumb.className = 'w-9 h-9 md:w-11 md:h-11 object-cover rounded border border-transparent opacity-45 hover:opacity-85 flex-shrink-0';
                 }
             });
         }
