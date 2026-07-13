@@ -3134,6 +3134,214 @@
                 opacity: 0.8;
             }
         }
+
+        /* ────────────────────────── HANGMAN PUZZLE ────────────────────────── */
+        .hangman-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 16px auto;
+            max-width: 480px;
+            width: 100%;
+        }
+
+        .hangman-heart-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 14px auto 18px;
+            width: 100px;
+            height: 100px;
+        }
+
+        .hangman-heart {
+            width: 82px;
+            height: 82px;
+            color: var(--clr-gold);
+            filter: drop-shadow(0 0 16px rgba(201, 168, 76, 0.65));
+            transition: color 0.3s ease, filter 0.3s ease;
+        }
+
+        .hangman-heart.error-shake {
+            color: #ef4444 !important;
+            filter: drop-shadow(0 0 22px rgba(239, 68, 68, 0.9)) !important;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .hangman-error-float {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ef4444;
+            font-weight: 800;
+            font-size: 1.3rem;
+            text-shadow: 0 0 12px rgba(239, 68, 68, 0.85);
+            pointer-events: none;
+            z-index: 10;
+            animation: hangmanErrorFloat 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes hangmanErrorFloat {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -30%) scale(0.75);
+            }
+
+            15% {
+                opacity: 1;
+                transform: translate(-50%, -70%) scale(1.15);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -210%) scale(0.95);
+            }
+        }
+
+        .hangman-word-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 8px 5px;
+            margin: 6px auto 24px;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .hangman-letter-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 26px;
+            height: 40px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--clr-gold-bright);
+            border-bottom: 3px solid var(--clr-gold);
+            user-select: none;
+            transition: transform 0.25s ease, color 0.25s ease;
+        }
+
+        .hangman-letter-box.hyphen {
+            border-bottom: none;
+            color: var(--clr-gold);
+            width: 16px;
+            font-size: 1.4rem;
+        }
+
+        .hangman-letter-box.revealed {
+            animation: hangmanLetterPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes hangmanLetterPop {
+            0% {
+                transform: scale(0.4);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .hangman-keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            max-width: 460px;
+            margin: 8px auto 6px;
+            padding: 0 2px;
+        }
+
+        .hangman-keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .hangman-key {
+            flex: 1;
+            height: 46px;
+            min-width: 28px;
+            max-width: 42px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            font-size: 1.08rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
+            padding: 0;
+        }
+
+        .hangman-key:active:not(:disabled) {
+            transform: scale(0.92);
+            background: var(--clr-gold);
+            color: #000;
+        }
+
+        .hangman-key:disabled {
+            opacity: 0.35;
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.25);
+            cursor: default;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .hangman-key.guessed-correct:disabled {
+            opacity: 0.85;
+            background: rgba(201, 168, 76, 0.22);
+            border-color: var(--clr-gold);
+            color: var(--clr-gold-bright);
+        }
+
+        .hangman-key.guessed-wrong:disabled {
+            opacity: 0.35;
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.25);
+            color: rgba(239, 68, 68, 0.6);
+        }
+
+        @media (max-width: 420px) {
+            .hangman-letter-box {
+                width: 17px;
+                height: 35px;
+                font-size: 1.12rem;
+                border-bottom-width: 2.5px;
+            }
+
+            .hangman-letter-box.hyphen {
+                width: 11px;
+            }
+
+            .hangman-word-container {
+                gap: 6px 3px;
+            }
+
+            .hangman-keyboard-row {
+                gap: 3px;
+            }
+
+            .hangman-key {
+                height: 44px;
+                min-width: 24px;
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 
@@ -3254,7 +3462,7 @@
                 id: 3,
                 type: "carousel",
                 titre: "Dans le cadre...",
-                description: "Nous avons retrouvé une des multiples identités de cette personne qui sévissait sous plusieurs alias. Des témoins existent. Il faut obtenir cet alias.",
+                description: "Cela semble être un des personnages principaux de l'enquête.",
                 image: null,
                 images: [
                     "assets/Enigme Eva jeune/Compress/1 - Petite.jpeg",
@@ -3489,9 +3697,24 @@
                 ]
             },
 
-            // ── Énigme 11 : La coupe des champions (gems) ──
+            // ── Énigme 11 : Faute avouée (Hangman) ──
             {
                 id: 11,
+                type: "hangman",
+                titre: "Spécialité cachée",
+                description: ".",
+                image: "",
+                reponseAttendue: "PARMESAN-POUBELLE",
+                indices: [
+                    "Acompagné de basilic",
+                    "Encore meilleur le lendemain",
+                    "C'était le Parmesan-Poubelle."
+                ]
+            },
+
+            // ── Énigme 12 : La coupe des champions (gems) ──
+            {
+                id: 12,
                 type: "gems",
                 titre: "Coupe 2024",
                 debugTitre: "Coupe des champions",
@@ -3513,9 +3736,9 @@
                 ]
             },
 
-            // ── Énigme 12 : Premiers messages ──
+            // ── Énigme 13 : Premiers messages ──
             {
-                id: 12,
+                id: 13,
                 type: "clock",
                 titre: "Premiers messages",
                 description: "Combien de temps séparent ces deux messages ? \n (+/- 17 minutes)",
@@ -3536,9 +3759,9 @@
 
 
 
-            // ── Énigme 13 : Sécurité Maximale (Scanner) ──
+            // ── Énigme 14 : Sécurité Maximale (Scanner) ──
             {
-                id: 13,
+                id: 14,
                 type: "scanner",
                 titre: "Sécurité Maximale",
                 description: "Une information importante",
@@ -3552,9 +3775,9 @@
                 ]
             },
 
-            // ── Énigme 14 : Boss Fight Eva vs Malus ──
+            // ── Énigme 15 : Boss Fight Eva vs Malus ──
             {
-                id: 14,
+                id: 15,
                 type: "bossfight",
                 titre: "L'épreuve finale",
                 description: "Les ombres de tes erreurs passées et de tes hésitations se sont rassemblées pour donner naissance à <strong>Malus</strong>, un gardien maléfique. Eva doit l'affronter pour continuer l'aventure !",
@@ -3563,9 +3786,9 @@
                 indices: []
             },
 
-            // ── Énigme 15 : GPS Proximité ──
+            // ── Énigme 16 : GPS Proximité ──
             {
-                id: 15,
+                id: 16,
                 type: "proximity",
                 titre: "Le premier contact",
                 description: "",
@@ -4418,6 +4641,23 @@
                     break;
                 }
 
+                case 'hangman': {
+                    interactionHtml = `
+            <div class="hangman-container">
+              <div class="hangman-heart-wrapper" id="hangman-heart-wrapper">
+                <svg class="hangman-heart" id="hangman-heart" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </div>
+
+              <div class="hangman-word-container" id="hangman-word-display"></div>
+
+              <div class="hangman-keyboard" id="hangman-keyboard"></div>
+            </div>
+          `;
+                    break;
+                }
+
                 case 'carousel':
                 case 'gps':
                 case 'text':
@@ -4536,6 +4776,9 @@
 
             // Init scanner puzzle
             if (e.type === 'scanner') initScannerPuzzle(e);
+
+            // Init hangman puzzle
+            if (e.type === 'hangman') initHangmanPuzzle(e);
 
             // Init carousel touch, observer & préchargement intelligent
             if (e.type === 'carousel') initCarouselSmartLoader();
@@ -5229,6 +5472,102 @@
             setTimeout(() => {
                 handleSuccess();
             }, 4000);
+        }
+
+        function initHangmanPuzzle(enigme) {
+            window._hangmanGuessed = new Set(['-']);
+            const targetWord = (enigme.reponseAttendue || '').toUpperCase();
+
+            const $wordContainer = document.getElementById('hangman-word-display');
+            const $keyboardContainer = document.getElementById('hangman-keyboard');
+            if (!$wordContainer || !$keyboardContainer) return;
+
+            $wordContainer.innerHTML = targetWord.split('').map((char, index) => {
+                const isHyphen = char === '-';
+                return `<div class="hangman-letter-box ${isHyphen ? 'hyphen' : ''}" id="hangman-char-${index}">${isHyphen ? '-' : ''}</div>`;
+            }).join('');
+
+            const rows = [
+                ['A', 'Z', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+                ['Q', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M'],
+                ['W', 'X', 'C', 'V', 'B', 'N']
+            ];
+
+            $keyboardContainer.innerHTML = rows.map(row => `
+                <div class="hangman-keyboard-row">
+                    ${row.map(char => `
+                        <button type="button" class="hangman-key" id="hangman-key-${char}" onclick="handleHangmanKey('${char}')">${char}</button>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        function handleHangmanKey(char) {
+            const enigme = enigmes[currentIndex];
+            if (!enigme || enigme.type !== 'hangman') return;
+
+            const targetWord = (enigme.reponseAttendue || '').toUpperCase();
+            const btn = document.getElementById(`hangman-key-${char}`);
+            if (btn && btn.disabled) return;
+
+            if (btn) btn.disabled = true;
+            window._hangmanGuessed.add(char);
+
+            const isCorrect = targetWord.includes(char);
+
+            if (isCorrect) {
+                if (btn) btn.classList.add('guessed-correct');
+                targetWord.split('').forEach((c, idx) => {
+                    if (c === char) {
+                        const box = document.getElementById(`hangman-char-${idx}`);
+                        if (box) {
+                            box.textContent = char;
+                            box.classList.add('revealed');
+                        }
+                    }
+                });
+
+                const allRevealed = targetWord.split('').every(c => window._hangmanGuessed.has(c));
+                if (allRevealed) {
+                    document.querySelectorAll('.hangman-key').forEach(b => b.disabled = true);
+                    showFeedback('success', "✨ Expression trouvée : PARMESAN-POUBELLE ! Magnifique !");
+                    setTimeout(() => {
+                        handleSuccess();
+                    }, 1400);
+                }
+            } else {
+                if (btn) btn.classList.add('guessed-wrong');
+
+                totalErrorsCount++;
+                localStorage.setItem(LS_KEY_ERRORS_TOTAL, totalErrorsCount);
+                const $ec = document.getElementById('error-total-count');
+                if ($ec) $ec.textContent = totalErrorsCount;
+                if (totalErrorsCount === 1 && !localStorage.getItem(LS_KEY_ERROR_BUBBLE)) {
+                    localStorage.setItem(LS_KEY_ERROR_BUBBLE, '1');
+                    triggerErrorNotifyBubble();
+                }
+
+                const heartEl = document.getElementById('hangman-heart');
+                const heartWrapper = document.getElementById('hangman-heart-wrapper');
+                if (heartEl) {
+                    heartEl.classList.remove('error-shake');
+                    void heartEl.offsetWidth;
+                    heartEl.classList.add('error-shake');
+                    setTimeout(() => {
+                        if (heartEl) heartEl.classList.remove('error-shake');
+                    }, 600);
+                }
+
+                if (heartWrapper) {
+                    const floatEl = document.createElement('div');
+                    floatEl.className = 'hangman-error-float';
+                    floatEl.textContent = '+1 Erreur';
+                    heartWrapper.appendChild(floatEl);
+                    setTimeout(() => {
+                        floatEl.remove();
+                    }, 1000);
+                }
+            }
         }
 
         function initScannerPuzzle(enigme) {
@@ -6533,9 +6872,9 @@
             const pixels = imgData.data;
             const targetPoints = [];
 
-            // Balayage plus large (pas de 5 au lieu de 3) pour diviser le nombre de particules par ~3 et éliminer le lag
-            for (let y = 0; y < height; y += 5) {
-                for (let x = 0; x < width; x += 5) {
+            // Balayage optimisé pour aligner parfaitement les particules avec le texte de fond
+            for (let y = 0; y < height; y += 4) {
+                for (let x = 0; x < width; x += 4) {
                     const idx = (y * width + x) * 4;
                     const alpha = pixels[idx + 3];
                     if (alpha > 128) {
