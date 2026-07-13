@@ -15,11 +15,10 @@ const GALLERY_IMAGES = [
     { file: 'vignette_principale.jpeg', folder: 'galerie' },
 
     // ── Book photos ───────────────────────────────────────────────────
-    { file: 'profil_1000x1000.jpg', folder: 'profil' },
     { file: 'photo1.jpeg', folder: 'galerie' },
+    { file: 'profil_1000x1000.jpg', folder: 'profil' },
     { file: 'photo2.jpeg', folder: 'galerie' },
     { file: 'photo4.jpeg', folder: 'galerie' },
-    { file: 'photo6.jpeg', folder: 'galerie' },
     { file: 'photo8.jpeg', folder: 'galerie' },
     { file: 'photo10.jpeg', folder: 'galerie' },
     { file: 'photo11.jpeg', folder: 'galerie' },
