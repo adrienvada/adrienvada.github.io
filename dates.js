@@ -11,56 +11,178 @@ const SHOW_DATA = {
 
   // -------------------------------------------------------------
   // PROCHAINES DATES (Saison en cours)
+  // Options de configuration d'un spectacle / représentation :
+  // - time: "19h00" (ou pour plusieurs horaires par jour sur la même ligne : time: "14h30 & 19h00" ou times: ["14h30", "19h00"])
+  // - bookingUrl: "" (vide affiche "Les réservations ne sont pas encore ouvertes" sous le titre du spectacle)
   // -------------------------------------------------------------
   upcoming: [
+    // ── 22 - 23 octobre 2026 : À la barre (Rouen) [Série] ──
     {
-      date: "22 - 23 octobre 2026",
+      type: "series",
+      id: "panel-rouen",
+      dateLabel: "22 - 23 oct. 2026",
       title: "À la barre, peine perdue ?",
-      location: "Palais de justice de Rouen (76)"
+      location: "Palais de justice de Rouen (76)",
+      shows: [
+        {
+          dateLabel: "22 oct. 2026",
+          time: "19h00",
+          bookingUrl: "", // Vide = "Les réservations ne sont pas encore ouvertes"
+          isSchool: false,
+          icsDate: "2026-10-22"
+        },
+        {
+          dateLabel: "23 oct. 2026",
+          time: "19h00",
+          bookingUrl: "",
+          isSchool: false,
+          icsDate: "2026-10-23"
+        }
+      ]
     },
+
+    // ── 12 novembre 2026 : À la barre (Saint-Quentin) [Date unique] ──
     {
-      date: "12 novembre 2026",
+      type: "single",
+      dateLabel: "12 nov. 2026",
+      fullDate: "12 novembre 2026",
       title: "À la barre, peine perdue ?",
-      location: "Saint Quentin (02)"
+      location: "Saint-Quentin (02)",
+      time: "", // Vide = "Horaire à confirmer"
+      bookingUrl: "",
+      isSchool: false,
+      icsDate: "2026-11-12"
     },
+
+    // ── 25 novembre 2026 : À la barre (Le Grand-Quevilly) [Date unique] ──
     {
-      date: "25 novembre 2026",
+      type: "single",
+      dateLabel: "25 nov. 2026",
+      fullDate: "25 novembre 2026",
       title: "À la barre, peine perdue ?",
-      location: "Le Grand-Quevilly (76)"
+      location: "Le Grand-Quevilly (76)",
+      time: "",
+      bookingUrl: "",
+      isSchool: false,
+      icsDate: "2026-11-25"
     },
+
+    // ── 18 décembre 2026 : Cléophène (Pont-Audemer) [Date unique] ──
     {
-      date: "18 décembre 2026",
+      type: "single",
+      dateLabel: "18 déc. 2026",
+      fullDate: "18 décembre 2026",
       title: "Cléophène",
       subtitle: "d'après Rodogune",
-      location: "L'Eclat, Pont-Audemer (27)"
+      location: "L'Eclat, Pont-Audemer (27)",
+      time: "",
+      bookingUrl: "",
+      isSchool: false,
+      icsDate: "2026-12-18"
     },
+
+    // ── 26 janvier 2027 : Cléophène (Falaise) [Date unique] ──
     {
-      date: "26 janvier 2027",
+      type: "single",
+      dateLabel: "26 janv. 2027",
+      fullDate: "26 janvier 2027",
       title: "Cléophène",
       subtitle: "d'après Rodogune",
-      location: "Le Forum, Falaise (14)"
+      location: "Le Forum, Falaise (14)",
+      time: "",
+      bookingUrl: "",
+      isSchool: false,
+      icsDate: "2027-01-26"
     },
+
+    // ── 29 - 30 janvier 2027 : Bérénice (Saint-Lô) [Série] ──
     {
-      date: "29 - 30 janvier 2027",
+      type: "series",
+      id: "panel-saintlo-berenice",
+      dateLabel: "29 - 30 janv. 2027",
       title: "Bérénice",
-      location: "Théâtre de la ville de Saint-Lô (50)"
+      location: "Théâtre de la ville de Saint-Lô (50)",
+      shows: [
+        {
+          dateLabel: "29 janv. 2027",
+          time: "",
+          bookingUrl: "",
+          isSchool: false,
+          icsDate: "2027-01-29"
+        },
+        {
+          dateLabel: "30 janv. 2027",
+          time: "",
+          bookingUrl: "",
+          isSchool: false,
+          icsDate: "2027-01-30"
+        }
+      ]
     },
+
+    // ── 29 - 30 janvier 2027 : Cléophène (Saint-Lô) [Série] ──
     {
-      date: "29 - 30 janvier 2027",
+      type: "series",
+      id: "panel-saintlo-cleophene",
+      dateLabel: "29 - 30 janv. 2027",
       title: "Cléophène",
       subtitle: "d'après Rodogune",
-      location: "Théâtre de la ville de Saint-Lô (50)"
+      location: "Théâtre de la ville de Saint-Lô (50)",
+      shows: [
+        {
+          dateLabel: "29 janv. 2027",
+          time: "",
+          bookingUrl: "",
+          isSchool: false,
+          icsDate: "2027-01-29"
+        },
+        {
+          dateLabel: "30 janv. 2027",
+          time: "",
+          bookingUrl: "",
+          isSchool: false,
+          icsDate: "2027-01-30"
+        }
+      ]
     },
+
+    // ── 2 février 2027 : Cléophène (Guyancourt) [Date unique] ──
     {
-      date: "2 février 2027",
+      type: "single",
+      dateLabel: "2 fév. 2027",
+      fullDate: "2 février 2027",
       title: "Cléophène",
       subtitle: "d'après Rodogune",
-      location: "La Ferme de Bel Ebat, Guyancourt (78)"
+      location: "La Ferme de Bel Ebat, Guyancourt (78)",
+      time: "",
+      bookingUrl: "",
+      isSchool: false,
+      icsDate: "2027-02-02"
     },
+
+    // ── 18 - 21 mai 2027 : Bérénice (Lycée Corneille) [Série] ──
     {
-      date: "18 - 21 mai 2027",
+      type: "series",
+      id: "panel-corneille",
+      dateLabel: "18 - 21 mai 2027",
       title: "Bérénice",
-      location: "Lycée Corneille <span class=\"italic text-[9px] text-gray-500\">(tout public le vendredi 21)</span>, Rouen (76)"
+      location: "Lycée Corneille, Rouen (76)",
+      shows: [
+        {
+          dateLabel: "18 - 20 mai 2027",
+          time: "",
+          bookingUrl: "",
+          isSchool: true, // "Séances scolaires"
+          icsDate: "2027-05-18"
+        },
+        {
+          dateLabel: "21 mai 2027",
+          time: "",
+          bookingUrl: "",
+          isSchool: false,
+          icsDate: "2027-05-21"
+        }
+      ]
     }
   ],
 
