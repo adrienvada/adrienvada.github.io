@@ -335,9 +335,51 @@
             }
 
             /* ── UPCOMING DATES ── */
-            #upcoming-dates-container>div {
+            #upcoming-dates-container-static>div,
+            #upcoming-dates-container-static>.date-multi-wrapper {
                 padding: 5px 8px !important;
             }
+        }
+
+        /* ── Smooth expand panels for multi-date series ── */
+        .date-expand-panel {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .date-expand-panel.expanded {
+            grid-template-rows: 1fr;
+            opacity: 1;
+        }
+
+        .date-expand-panel>.date-expand-inner {
+            overflow: hidden;
+        }
+
+        /* Clickable date row hover effect */
+        .date-row-clickable {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .date-row-clickable:hover {
+            border-color: rgba(var(--gold-rgb, 183, 153, 98), 0.4) !important;
+            box-shadow: 0 0 0 1px rgba(var(--gold-rgb, 183, 153, 98), 0.1);
+        }
+
+        .date-row-clickable:active {
+            transform: scale(0.995);
+        }
+
+        /* Chevron rotation for multi-date toggles */
+        .date-toggle-chevron {
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .date-toggle-chevron.rotated {
+            transform: rotate(180deg);
         }
     </style>
 </head>
@@ -896,9 +938,8 @@
                             2027</h3>
                     </div>
 
-                    <!-- Space-y reduced to 1 for tight layout -->
-                    <div class="space-y-1 text-sm md:text-[15px] leading-tight" id="upcoming-dates-container">
-                        <!-- Populated by script -->
+                    <!-- Dates container rendu dynamiquement par renderDates() depuis dates.js -->
+                    <div class="space-y-1.5 text-sm md:text-[15px] leading-tight" id="upcoming-dates-container">
                     </div>
                 </section>
 
@@ -1429,6 +1470,112 @@
             // Initialize static elements in lightbox
             initGalleryThumbnails();
         });
+        // ── DATE PANEL INTERACTIONS & ICS EXPORT ──
+
+        // Toggle smooth expand/collapse for multi-date panels
+        function toggleDatePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            const chevron = document.getElementById('chevron-' + panelId.replace('panel-', ''));
+            if (panel) {
+                panel.classList.toggle('expanded');
+            }
+            if (chevron) {
+                chevron.classList.toggle('rotated');
+            }
+        }
+
+        // Clic sur le badge de date : génère et télécharge le fichier .ics (supporte plusieurs horaires dans la même journée)
+        function downloadICS(data, event) {
+            if (event) event.stopPropagation();
+
+            const yearMonthDay = (data.icsDate || '').split('-');
+            if (yearMonthDay.length !== 3) return;
+            const y = yearMonthDay[0];
+            const m = yearMonthDay[1];
+            const d = yearMonthDay[2];
+
+            const now = new Date();
+            const dtstamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            const cleanTitle = (data.title || '').replace(/[,;\\]/g, ' ');
+            const cleanSubtitle = data.subtitle ? ` (${data.subtitle.replace(/[,;\\]/g, ' ')})` : '';
+            const summary = `${cleanTitle}${cleanSubtitle}`;
+            const location = (data.location || '').replace(/[,;\\]/g, ' ');
+            const timeStr = Array.isArray(data.times) ? data.times.join(' & ') : String(data.time || '');
+            const description = `Représentation : ${summary}\\nLieu : ${location}\\n${timeStr ? 'Horaire : ' + timeStr : 'Horaire à confirmer'}`;
+
+            // Analyse des horaires multiples potentiels (ex: "14h30 & 19h00" ou ["14h30", "19h00"])
+            const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
+            const vevents = [];
+
+            if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
+                timeMatches.forEach((tm, idx) => {
+                    const hour = String(tm[1]).padStart(2, '0');
+                    const min = String(tm[2] || '00').padStart(2, '0');
+                    const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
+                    const dtstart = `DTSTART:${y}${m}${d}T${hour}${min}00`;
+                    const dtend = `DTEND:${y}${m}${d}T${endHour}${min}00`;
+                    vevents.push([
+                        'BEGIN:VEVENT',
+                        `UID:event-${y}${m}${d}-${hour}${min}-${Date.now()}-${idx}@adrienvada.com`,
+                        `DTSTAMP:${dtstamp}`,
+                        dtstart,
+                        dtend,
+                        `SUMMARY:${summary}`,
+                        `LOCATION:${location}`,
+                        `DESCRIPTION:${description}`,
+                        'END:VEVENT'
+                    ].join('\r\n'));
+                });
+            } else {
+                // Évènement sur toute la journée si horaire non défini / à confirmer
+                const dtstart = `DTSTART;VALUE=DATE:${y}${m}${d}`;
+                const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+                dateObj.setDate(dateObj.getDate() + 1);
+                const nextY = dateObj.getFullYear();
+                const nextM = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const nextD = String(dateObj.getDate()).padStart(2, '0');
+                const dtend = `DTEND;VALUE=DATE:${nextY}${nextM}${nextD}`;
+                vevents.push([
+                    'BEGIN:VEVENT',
+                    `UID:event-${y}${m}${d}-${Date.now()}@adrienvada.com`,
+                    `DTSTAMP:${dtstamp}`,
+                    dtstart,
+                    dtend,
+                    `SUMMARY:${summary}`,
+                    `LOCATION:${location}`,
+                    `DESCRIPTION:${description}`,
+                    'END:VEVENT'
+                ].join('\r\n'));
+            }
+
+            const icsContent = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Adrien Vada//Spectacles//FR',
+                ...vevents,
+                'END:VCALENDAR'
+            ].join('\r\n');
+
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const filename = cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'spectacle';
+            a.download = `${filename}-${y}-${m}-${d}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+
+        // Clic sur la ligne du spectacle : redirige vers la réservation si disponible
+        function handleRowClick(bookingUrl, event) {
+            if (bookingUrl) {
+                window.open(bookingUrl, '_blank');
+            }
+        }
 
         // 1. PAGE ROUTER
         function renderDates() {
@@ -1438,21 +1585,150 @@
             if (upcomingTitle && upcomingContainer && typeof SHOW_DATA !== 'undefined') {
                 upcomingTitle.textContent = SHOW_DATA.currentSeasonTitle || 'Saison en cours';
 
+                const amberBadge = `<span class="text-[9px] text-amber-600/70 font-normal mt-0.5 flex items-center gap-1 opacity-75"><i class="fa-solid fa-circle-info text-[9px]"></i> Les réservations ne sont pas encore ouvertes</span>`;
+
+                const getTimeStr = (item) => {
+                    if (Array.isArray(item.times) && item.times.length > 0) {
+                        return item.times.join(' & ');
+                    }
+                    if (item.time) {
+                        return item.time;
+                    }
+                    return '';
+                };
+
                 let upcomingHtml = '';
                 if (SHOW_DATA.upcoming && SHOW_DATA.upcoming.length > 0) {
-                    SHOW_DATA.upcoming.forEach(show => {
-                        upcomingHtml += `
-                        <div class="glass-panel rounded-md px-2 py-1.5 border border-stone-200/20 odd:bg-black/[0.015] even:bg-transparent flex flex-col md:flex-row md:items-center md:justify-between gap-x-3">
-                            <div class="flex items-center gap-1.5 flex-nowrap overflow-hidden min-w-0">
-                                <span class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-[10px] flex-shrink-0 whitespace-nowrap">${show.date}</span>
-                                <div class="overflow-hidden min-w-0">
-                                    <h4 class="font-bold text-luxury-textMain text-xs truncate leading-tight">${show.title}${show.subtitle ? ` <span class="font-normal italic text-[10px] text-luxury-textMuted">(${show.subtitle})</span>` : ''}</h4>
+                    SHOW_DATA.upcoming.forEach((show, idx) => {
+                        const panelId = show.id || `panel-series-${idx}`;
+
+                        if (show.type === 'series' && show.shows) {
+                            const hasAnyBooking = show.shows.some(s => s.bookingUrl);
+
+                            let showsHtml = '';
+                            show.shows.forEach((rep) => {
+                                const repDataStr = JSON.stringify({
+                                    title: show.title,
+                                    subtitle: show.subtitle || '',
+                                    location: show.location,
+                                    icsDate: rep.icsDate,
+                                    time: rep.time,
+                                    times: rep.times
+                                }).replace(/"/g, '&quot;');
+
+                                const isClickable = !!rep.bookingUrl;
+                                const rowClickAttr = isClickable ? `onclick="handleRowClick('${rep.bookingUrl}', event)"` : '';
+                                const rowClasses = isClickable ? 'date-row-clickable cursor-pointer' : '';
+                                const arrowIcon = isClickable ? `<i class="fa-solid fa-arrow-right text-[9px] text-luxury-gold/50"></i>` : '';
+
+                                const repTimeStr = getTimeStr(rep);
+                                const repBadgeContent = repTimeStr
+                                    ? `${rep.dateLabel} • ${repTimeStr} <i class="fa-regular fa-calendar-plus text-[10px] text-luxury-gold ml-0.5"></i>`
+                                    : `${rep.dateLabel} <i class="fa-regular fa-calendar-plus text-[10px] text-luxury-gold ml-0.5"></i>`;
+                                const repTimeBelow = !repTimeStr
+                                    ? `<span class="text-[9px] text-luxury-textMuted/75 italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>`
+                                    : '';
+
+                                showsHtml += `
+                                <div class="glass-panel rounded px-2.5 py-2 border border-stone-200/20 ${rowClasses} flex items-center justify-between" ${rowClickAttr}>
+                                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                                        <div class="flex flex-col items-start flex-shrink-0">
+                                            <span class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap cursor-pointer hover:border-luxury-gold transition-colors inline-flex items-center gap-1"
+                                                onclick="downloadICS(JSON.parse('${repDataStr}'), event)" title="Ajouter à l'agenda (.ics)">
+                                                ${repBadgeContent}
+                                            </span>
+                                            ${repTimeBelow}
+                                        </div>
+                                        <div class="flex flex-col min-w-0 flex-1">
+                                            ${rep.isSchool ? `<span class="text-[10px] text-stone-500 italic">Séances scolaires</span>` : ''}
+                                            ${!rep.bookingUrl ? amberBadge : ''}
+                                        </div>
+                                    </div>
+                                    ${arrowIcon}
+                                </div>`;
+                            });
+
+                            upcomingHtml += `
+                            <div class="date-multi-wrapper">
+                                <div class="glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 date-row-clickable cursor-pointer"
+                                    onclick="toggleDatePanel('${panelId}')">
+                                    <div class="flex items-center gap-3 flex-nowrap overflow-hidden min-w-0 flex-1">
+                                        <div class="flex flex-col items-start flex-shrink-0">
+                                            <span class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap">
+                                                ${show.dateLabel || show.date}
+                                            </span>
+                                        </div>
+                                        <div class="overflow-hidden min-w-0 flex-1">
+                                            <h4 class="font-bold text-luxury-textMain text-xs truncate leading-tight">
+                                                ${show.title}
+                                                ${show.subtitle ? `<span class="font-normal italic text-[10px] text-luxury-textMuted">(${show.subtitle})</span>` : ''}
+                                            </h4>
+                                            ${!hasAnyBooking ? amberBadge : ''}
+                                        </div>
+                                    </div>
+                                    <div class="text-[10px] text-luxury-textMuted flex items-center gap-2 md:text-right flex-shrink-0 whitespace-nowrap pl-0.5 md:pl-0">
+                                        <span><i class="fa-solid fa-location-dot text-luxury-gold/70 text-[8px]"></i> ${show.location}</span>
+                                        <i class="fa-solid fa-chevron-down text-[9px] text-stone-400 date-toggle-chevron" id="chevron-${panelId.replace('panel-', '')}"></i>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="text-[10px] text-luxury-textMuted flex items-center gap-1 mt-0.5 md:mt-0 md:text-right flex-shrink-0 whitespace-nowrap overflow-hidden text-ellipsis pl-0.5 md:pl-0">
-                                <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[8px] flex-shrink-0"></i> ${show.location}
-                            </div>
-                        </div>`;
+                                <div class="date-expand-panel" id="${panelId}">
+                                    <div class="date-expand-inner">
+                                        <div class="mt-1 ml-3 border-l-2 border-luxury-gold/20 pl-3 space-y-1.5 pb-1">
+                                            ${showsHtml}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                        } else {
+                            // Date unique (single)
+                            const singleDataStr = JSON.stringify({
+                                title: show.title,
+                                subtitle: show.subtitle || '',
+                                location: show.location,
+                                icsDate: show.icsDate,
+                                time: show.time,
+                                times: show.times
+                            }).replace(/"/g, '&quot;');
+
+                            const isClickable = !!show.bookingUrl;
+                            const rowClickAttr = isClickable ? `onclick="handleRowClick('${show.bookingUrl}', event)"` : '';
+                            const rowClasses = isClickable ? 'date-row-clickable cursor-pointer' : '';
+                            const arrowIcon = isClickable ? `<i class="fa-solid fa-arrow-right text-[9px] text-luxury-gold/50 ml-1"></i>` : '';
+
+                            const showTimeStr = getTimeStr(show);
+                            const singleBadgeContent = showTimeStr
+                                ? `${show.dateLabel || show.date} • ${showTimeStr} <i class="fa-regular fa-calendar-plus text-[10px] text-luxury-gold ml-0.5"></i>`
+                                : `${show.dateLabel || show.date} <i class="fa-regular fa-calendar-plus text-[10px] text-luxury-gold ml-0.5"></i>`;
+                            const singleTimeBelow = !showTimeStr
+                                ? `<span class="text-[9px] text-luxury-textMuted/75 italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>`
+                                : '';
+
+                            upcomingHtml += `
+                            <div class="glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 ${rowClasses}"
+                                ${rowClickAttr}>
+                                <div class="flex items-center gap-3 flex-nowrap overflow-hidden min-w-0 flex-1">
+                                    <div class="flex flex-col items-start flex-shrink-0">
+                                        <span class="font-mono font-bold text-luxury-gold bg-white border border-stone-200 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap cursor-pointer hover:border-luxury-gold transition-colors inline-flex items-center gap-1"
+                                            onclick="downloadICS(JSON.parse('${singleDataStr}'), event)" title="Ajouter à l'agenda (.ics)">
+                                            ${singleBadgeContent}
+                                        </span>
+                                        ${singleTimeBelow}
+                                    </div>
+                                    <div class="overflow-hidden min-w-0 flex-1">
+                                        <h4 class="font-bold text-luxury-textMain text-xs truncate leading-tight">
+                                            ${show.title}
+                                            ${show.subtitle ? `<span class="font-normal italic text-[10px] text-luxury-textMuted">(${show.subtitle})</span>` : ''}
+                                        </h4>
+                                        ${show.isSchool ? `<span class="text-[9px] text-stone-500 italic mt-0.5 block">Séance scolaire</span>` : ''}
+                                        ${!show.bookingUrl ? amberBadge : ''}
+                                    </div>
+                                </div>
+                                <div class="text-[10px] text-luxury-textMuted flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap pl-0.5 md:pl-0">
+                                    <i class="fa-solid fa-location-dot text-luxury-gold/70 text-[8px]"></i> ${show.location}
+                                    ${arrowIcon}
+                                </div>
+                            </div>`;
+                        }
                     });
                 } else {
                     upcomingHtml = `<p class="text-xs text-luxury-textMuted italic p-2">Aucune date à venir pour le moment.</p>`;
