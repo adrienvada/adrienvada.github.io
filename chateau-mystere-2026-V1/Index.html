@@ -1768,16 +1768,35 @@
 
         .bf-atk-buttons {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             pointer-events: auto;
+            align-items: flex-end;
+        }
+
+        .bf-btn-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .bf-btn-label {
+            font-size: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            opacity: 0.85;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+            pointer-events: none;
+            text-transform: uppercase;
         }
 
         .bf-btn {
-            width: 52px;
-            height: 52px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             border: 2px solid;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1786,28 +1805,34 @@
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
-            transition: transform 0.08s, opacity 0.15s;
-            background: rgba(0, 0, 0, 0.35);
-            backdrop-filter: blur(4px);
+            transition: transform 0.08s, opacity 0.2s, box-shadow 0.3s;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
         }
 
         .bf-btn:active {
-            transform: scale(0.85);
+            transform: scale(0.82);
         }
 
         .bf-btn-lightning {
-            border-color: rgba(250, 204, 21, 0.5);
-            box-shadow: 0 0 12px rgba(250, 204, 21, 0.15);
+            border-color: rgba(250, 204, 21, 0.55);
+            box-shadow: 0 0 14px rgba(250, 204, 21, 0.2);
+        }
+
+        .bf-btn-bottle {
+            border-color: rgba(167, 139, 250, 0.55);
+            box-shadow: 0 0 14px rgba(167, 139, 250, 0.2);
         }
 
         .bf-btn-moon {
-            border-color: rgba(147, 197, 253, 0.5);
-            box-shadow: 0 0 12px rgba(147, 197, 253, 0.15);
+            border-color: rgba(147, 197, 253, 0.55);
+            box-shadow: 0 0 14px rgba(147, 197, 253, 0.2);
         }
 
-        .bf-btn-nova {
-            border-color: rgba(251, 146, 60, 0.5);
-            box-shadow: 0 0 12px rgba(251, 146, 60, 0.15);
+        .bf-btn-shield {
+            border-color: rgba(244, 114, 182, 0.55);
+            box-shadow: 0 0 14px rgba(244, 114, 182, 0.2);
         }
 
         .bf-cd-overlay {
@@ -1815,14 +1840,54 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(0, 0, 0, 0.55);
+            background: rgba(0, 0, 0, 0.7);
             transition: height 0.08s linear;
             pointer-events: none;
         }
 
-        .bf-btn.on-cd {
-            opacity: 0.3;
+        .bf-cd-text {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: 800;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
             pointer-events: none;
+            z-index: 2;
+        }
+
+        .bf-btn.on-cd {
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .bf-btn.on-cd .bf-cd-text {
+            display: flex;
+        }
+
+        @keyframes bf-ready-pulse {
+            0% {
+                box-shadow: 0 0 8px currentColor;
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow: 0 0 25px currentColor, 0 0 40px currentColor;
+                transform: scale(1.12);
+            }
+
+            100% {
+                box-shadow: 0 0 8px currentColor;
+                transform: scale(1);
+            }
+        }
+
+        .bf-btn.bf-ready-flash {
+            animation: bf-ready-pulse 0.5s ease-out;
         }
 
         .bf-intro {
@@ -3016,7 +3081,7 @@
                             style="color: var(--clr-gold-bright); font-weight: 700;">0</span></span>
                 </div>
                 <div id="step-badge" class="step-badge">
-                    Étape <span class="current" id="step-current">1</span>
+                    Étape <span class="current" id="step-current">1</span>/<span id="step-total">1</span>
                 </div>
             </div>
         </div>
@@ -3081,67 +3146,9 @@
                 ]
             },
 
-            // ── Énigme 2 : GPS Proximité ──
+            // ── Énigme 2 : La plus belle ──
             {
                 id: 2,
-                type: "proximity",
-                titre: "Le premier contact",
-                description: "",
-                image: null,
-                targetLat: 49.365861,
-                targetLng: 2.746750,
-                toleranceMeters: 2,
-                indices: [
-                    "De quel contact parle-t-on ?",
-                    "La première fois que nous nous sommes fait la bise",
-                    `<a href="geo:49.365861,2.74675?q=49.365861,2.74675" onclick="openGPS(event, 49.365861, 2.74675)" class="gps-hint-link" title="Ouvrir dans votre application de cartes">📍 49°21'57.1"N 2°44'48.3"E</a>`
-                ]
-            },
-
-            // ── Énigme 3 : Là où tu dors ──
-            {
-                id: 3,
-                type: "text",
-                titre: "Là où tu dors",
-                description: "",
-                image: "assets/enigme6_carte_tente.jpeg",
-                reponseAttendue: ["évali", "Évali", "ÉVALI", "evali", "Evali", "EVALI"],
-                indices: [
-                    "Pense à un endroit sous les étoiles…",
-                    "Un lieu temporaire, fait de toile…",
-                    "Une carte t'attend dans une des poches de la tente ♥️"
-                ]
-            },
-
-            // ── Énigme 4 : La coupe des champions (gems) ──
-            {
-                id: 4,
-                type: "gems",
-                titre: "",
-                debugTitre: "Coupe des champions",
-                description: "",
-                image: "assets/enigme5_coupe.jpeg",
-                reponseAttendue: ["rouge", "bleu"],
-                gems: [
-                    { id: "noir", emoji: "⬛", label: "Noir", top: 7, left: 45 },
-                    { id: "orange", emoji: "🟧", label: "Orange", top: 26, left: 10 },
-                    { id: "vert", emoji: "🟩", label: "Vert", top: 26, left: 77 },
-                    { id: "rouge", emoji: "🟥", label: "Rouge", top: 63, left: 10 },
-                    { id: "jaune", emoji: "🟨", label: "Jaune", top: 63, left: 77 },
-                    { id: "bleu", emoji: "🟦", label: "Bleu", top: 82, left: 45 }
-                ],
-                indices: [
-                    "Penser à l'édition 2024 de la boîte à Meuh.",
-                    "Nous étions séparés.",
-                    "La combinaison est : Rouge, Bleu"
-                ]
-            },
-
-
-
-            // ── Énigme 5 : La plus belle ──
-            {
-                id: 5,
                 type: "text",
                 titre: "La plus belle",
                 description: "Une personne brillait particulièrement ce jour là.",
@@ -3160,11 +3167,11 @@
                 }
             },
 
-            // ── Énigme 6 : Nom de code ──
+            // ── Énigme 3 : Dans le cadre ──
             {
-                id: 6,
+                id: 3,
                 type: "carousel",
-                titre: "Nom de code",
+                titre: "Dans le cadre...",
                 description: "Nous avons retrouvé une des multiples identités de cette personne qui sévissait sous plusieurs alias. Des témoins existent. Il faut obtenir cet alias.",
                 image: null,
                 images: [
@@ -3209,8 +3216,8 @@
                 ],
                 reponseAttendue: ["Kikinette", "kikinette", "KIKINETTE", "Kikinete", "kikinete", "Kikinete"],
                 indices: [
-                    "Un surnom très mignon",
                     "Les instigateurs ont eu une idée très mignonounette",
+                    "Un indice dans le cadre",
                     "Appelle Sonja"
                 ],
                 succes: {
@@ -3221,30 +3228,9 @@
                 }
             },
 
-            // ── Énigme 7 : Premiers messages ──
+            // ── Énigme 4 : Piano Duet ──
             {
-                id: 7,
-                type: "clock",
-                titre: "Premiers messages",
-                description: "Combien de temps séparent ces deux messages ? \n (+/- 17 minutes)",
-                image: "assets/enigme9_textos_flous.jpeg",
-                reponseAttendue: [137],
-                indices: [
-                    "L'un était sur Messenger et l'autre par SMS",
-                    "Le premier message a été envoyé à 13h39",
-                    "Le second message a été envoyé à 15h56"
-                ],
-                succes: {
-                    titre: "Premiers messages  ",
-                    description: "Félicitations ! Le 23 juillet, le premier message a été envoyé à <strong>13h39</strong> et le deuxième à <strong>15h56</strong>.<br><br>Soit exactement <strong>2 heures et 17 minutes</strong> d'écart !",
-                    image: "assets/enigme9_textos.jpeg",
-                    bouton: "Énigme suivante ↗"
-                }
-            },
-
-            // ── Énigme 8 : Piano Duet ──
-            {
-                id: 8,
+                id: 4,
                 type: "piano",
                 titre: "Duet",
                 description: "", // Aucun texte explicatif, tout est visuel
@@ -3255,59 +3241,24 @@
                 ]
             },
 
-            // ── Énigme 9 : Mesure à Cinq Temps ──
+            // ── Énigme 5 : Mesure à Cinq Temps ──
             {
-                id: 9,
+                id: 5,
                 type: "text",
                 titre: "Mesure à Cinq Temps",
-                description: "Dans le piano",
-                image: "",
+                description: "Sous la carte son",
+                image: "assets/enigme9_carteson.jpeg",
                 reponseAttendue: ["4:21", "4min21s", "quatre minutes vingt et une secondes", "4minutes 21secondes", "quatre minutes vingt et une secondes", "4 minutes 21 secondes", "quatre vingt vingt et une secondes"],
                 indices: [
-                    "Regarde bien l'image cachée dans le piano : combien de fois vois-tu un certain prénom ?",
+                    "Regarde sous ma carte dans les étagères.",
                     "Un pentagramme avec le prénom Eva : Penteva ?",
                     "La durée du morceau est 4:21"
                 ]
             },
 
-            // ── Énigme 10 : Le message crypté ──
+            // ── Énigme 6 : Space Ensemble (Mosaic) ──
             {
-                id: 10,
-                type: "text",
-                titre: "Le message crypté",
-                description: "Nous avons trouvé un message codé. Il semble connecté à un endroit que tu as appris à connaître : \"Jc lmkpzc 2 ajmafcpq bylq jy plus zcjjc tgjjc \" . Sauras-tu trouver le message ?",
-                image: "assets/enigme3_chochers_flous.jpeg",
-                reponseAttendue: [
-                    "Le nombre 2 clochers dans la plus belle ville",
-                    "Le nombre de clochers dans la plus belle ville",
-                    "LE NOMBRE 2 CLOCHERS DANS LA PLUS BELLE VILLE",
-                    "LE NOMBRE DE CLOCHERS DANS LA PLUS BELLE VILLE"
-                ],
-                indices: [
-                    "Regarde attentivement les mots : deux d'entre eux ne semblent pas chiffrés...",
-                    "L'encodage semble provenir d'un décalage. Le premier mot est \"Le\"... ",
-                    "Tu ajoutes 2 à chaque lettre dans l'ordre de l'alphabet. La message commence par : \"Le nombre 2 clochers...\""
-                ]
-            },
-
-            // ── Énigme 11 : Le message crypté (suite) ──
-            {
-                id: 11,
-                type: "counter",
-                titre: "Le message crypté (suite)",
-                description: "Tu l'as trouvé ! C'est accompagné d'une photo un peu bizarre...",
-                image: "assets/enigme4_chocher_net.jpeg",
-                reponseAttendue: ["101"],
-                indices: [
-                    "Pense à son surnom",
-                    "Rouen et ses clochers...",
-                    "Dans la ville aux cent clochers, il y en a un en plus que seule toi connaît... 100 + 1 = ..."
-                ]
-            },
-
-            // ── Énigme 12 : Space Ensemble (Mosaic) ──
-            {
-                id: 12,
+                id: 6,
                 type: "mosaic",
                 titre: "Un ensemble un peu space",
                 description: "",
@@ -3385,18 +3336,137 @@
                 ]
             },
 
-            // ── Énigme 13 : La Machine à Délices (Slots) ──
+            // ── Énigme 7 : La Machine à Délices (Slots) ──
             {
-                id: 13,
+                id: 7,
                 type: "slots",
                 titre: "La Machine à Délices",
-                description: "Parmi tous les plaisirs sucrés de la vie, il y a un ordre immuable... Trouve la combinaison qui régit mes préférences.",
+                description: "",
                 fruits: ["Abricot", "Fraise", "Cerise", "Banane", "Pomme", "Pêche", "Citron"],
                 reponseAttendue: ["abricot-fraise-cerise"],
                 indices: [
                     "Remarque les petits numéros au dessus de chaque case.",
                     "Le numéro 1 est un fruit de toutes saisons, idéal à toute heure.",
                     "Dans l'ordre de préférence : l'abricot, la fraise, la cerise."
+                ]
+            },
+
+            // ── Énigme 8 : Là où tu dors ──
+            {
+                id: 8,
+                type: "text",
+                titre: "Là où tu dors",
+                description: "Il faut rentrer un code...",
+                image: "assets/enigme6_carte_tente.jpeg",
+                reponseAttendue: ["51□18-145"],
+                indices: [
+                    "Pense à un endroit sous les étoiles…",
+                    "Un lieu temporaire, fait de toile…",
+                    "Un indice de notre rencontre t'attend dans la tente ♥️"
+                ],
+                succes: {
+                    titre: "Là où tu dors ",
+                    description: "Bravo mon amour, t'es trop forte",
+                    image: "assets/enigme8_succes_lunettes.jpeg",
+                    bouton: "Énigme suivante ↗"
+                }
+            },
+
+            // ── Énigme 9 : Le message crypté ──
+            {
+                id: 9,
+                type: "text",
+                titre: "Dans le caleçon",
+                description: "Décode et transcris simplement le texte encodé.",
+                image: "assets/enigme3_chochers_flous - Petite.jpeg",
+                reponseAttendue: [
+                    "Le nombre 2 clochers dans la plus belle ville",
+                    "Le nombre de clochers dans la plus belle ville",
+                    "LE NOMBRE 2 CLOCHERS DANS LA PLUS BELLE VILLE",
+                    "LE NOMBRE DE CLOCHERS DANS LA PLUS BELLE VILLE"
+                ],
+                indices: [
+                    "Dans un de mes caleçons à la maison se trouve un indice. Regarde attentivement les mots : deux d'entre eux ne semblent pas chiffrés...",
+                    "L'encodage semble provenir d'un décalage. Le premier mot est \"Le\"... ",
+                    "Tu ajoutes 2 à chaque lettre dans l'ordre de l'alphabet. La message commence par : \"Le nombre 2 clochers...\""
+                ]
+            },
+
+            // ── Énigme 10 : Le message crypté (suite) ──
+            {
+                id: 10,
+                type: "counter",
+                titre: "Le message crypté (suite)",
+                description: "Tu l'as trouvé ! C'est accompagné d'une photo un peu bizarre... Sauras-tu trouver la réponse ?",
+                image: "assets/enigme4_chocher_net.jpeg",
+                reponseAttendue: ["101"],
+                indices: [
+                    "Pense à son surnom",
+                    "Rouen et ses clochers...",
+                    "Dans la ville aux cent clochers, il y en a un en plus que seule toi connaît... 100 + 1 = ..."
+                ]
+            },
+
+            // ── Énigme 11 : La coupe des champions (gems) ──
+            {
+                id: 11,
+                type: "gems",
+                titre: "Coupe 2024",
+                debugTitre: "Coupe des champions",
+                description: "",
+                image: "assets/enigme5_coupe.jpeg",
+                reponseAttendue: ["rouge", "bleu"],
+                gems: [
+                    { id: "noir", emoji: "⬛", label: "Noir", top: 7, left: 45 },
+                    { id: "orange", emoji: "🟧", label: "Orange", top: 26, left: 10 },
+                    { id: "vert", emoji: "🟩", label: "Vert", top: 26, left: 77 },
+                    { id: "rouge", emoji: "🟥", label: "Rouge", top: 63, left: 10 },
+                    { id: "jaune", emoji: "🟨", label: "Jaune", top: 63, left: 77 },
+                    { id: "bleu", emoji: "🟦", label: "Bleu", top: 82, left: 45 }
+                ],
+                indices: [
+                    "Penser à l'édition 2024 de la boîte à Meuh.",
+                    "Nous étions séparés.",
+                    "La combinaison est : Rouge, Bleu"
+                ]
+            },
+
+            // ── Énigme 12 : Premiers messages ──
+            {
+                id: 12,
+                type: "clock",
+                titre: "Premiers messages",
+                description: "Combien de temps séparent ces deux messages ? \n (+/- 17 minutes)",
+                image: "assets/enigme9_textos_flous.jpeg",
+                reponseAttendue: [137],
+                indices: [
+                    "L'un était sur Messenger et l'autre par SMS",
+                    "Le premier message a été envoyé à 13h39",
+                    "Le second message a été envoyé à 15h56"
+                ],
+                succes: {
+                    titre: "Premiers messages  ",
+                    description: "Félicitations ! Le 23 juillet, le premier message a été envoyé à <strong>13h39</strong> et le deuxième à <strong>15h56</strong>.<br><br>Soit exactement <strong>2 heures et 17 minutes</strong> d'écart !",
+                    image: "assets/enigme9_textos.jpeg",
+                    bouton: "Énigme suivante ↗"
+                }
+            },
+
+
+
+            // ── Énigme 13 : Sécurité Maximale (Scanner) ──
+            {
+                id: 13,
+                type: "scanner",
+                titre: "Sécurité Maximale",
+                description: "Une information importante est dissimulée dans ce document. Scanne le avec ton doigt (effet lampe torche) pour la révéler.",
+                imageOriginale: "assets/analyses mst-2.png",
+                imageRevelee: "assets/analyses mst-2 - reveal.png",
+                reponseAttendue: ["évali", "evali", "ÉVALI"],
+                indices: [
+                    "Un secret est dissimulé directement dans le premier examen du document.",
+                    "Passe ton doigt sur les lignes de la sérologie HIV 1 et 2.",
+                    "Le mot à entrer est le prénom fluorescent qui apparaît : Évali."
                 ]
             },
 
@@ -3409,6 +3479,23 @@
                 image: null,
                 reponseAttendue: [],
                 indices: []
+            },
+
+            // ── Énigme 15 : GPS Proximité ──
+            {
+                id: 15,
+                type: "proximity",
+                titre: "Le premier contact",
+                description: "",
+                image: null,
+                targetLat: 49.365861,
+                targetLng: 2.746750,
+                toleranceMeters: 0.5,
+                indices: [
+                    "De quel contact parle-t-on ?",
+                    "La première fois que nous nous sommes fait la bise",
+                    `<a href="geo:49.365861,2.74675?q=49.365861,2.74675" onclick="openGPS(event, 49.365861, 2.74675)" class="gps-hint-link" title="Ouvrir dans votre application de cartes">📍 49°21'57.1"N 2°44'48.3"E</a>`
+                ]
             },
         ];
 
@@ -3447,6 +3534,7 @@
         const $progress = document.getElementById('progress-bar');
         const $chrono = document.getElementById('chrono');
         const $stepCur = document.getElementById('step-current');
+        const $stepTotal = document.getElementById('step-total');
         const $debugPanel = document.getElementById('debug-panel');
 
         // Raccourci clavier Alt+D ou Ctrl+Shift+D pour activer/désactiver le debug
@@ -3587,7 +3675,7 @@
             // Start typewriter animation for welcome text
             const twEl = document.getElementById('welcome-tw');
             if (twEl && typeof typewriter === 'function') {
-                typewriter(twEl, "Mon amour, pour notre anniversaire de rencontre, je t'ai préparé un Escape Game secret. \n Prends ton temps. \n Ou pas. \n Seule. Ou pas. \n Fais comme tu veux. \n \n Ou comme tu peux...", 35, 400);
+                typewriter(twEl, "Mon amour, pour notre anniversaire de rencontre, je t'ai préparé un Escape Game secret. \n Prends ton temps. \n Ou pas. \n Seule. Ou avec de l'aide. \n Fais comme tu veux. \n \n Ou comme tu peux...", 35, 400);
             }
         }
 
@@ -3628,6 +3716,7 @@
 
         function updateProgress() {
             if ($stepCur) $stepCur.textContent = currentIndex + 1;
+            if ($stepTotal) $stepTotal.textContent = enigmes.length;
             const pct = (currentIndex / enigmes.length) * 100;
             if ($progress) $progress.style.width = pct + '%';
             const $hc = document.getElementById('hint-total-count');
@@ -3909,6 +3998,7 @@
             if (window._geoWatchId) { navigator.geolocation.clearWatch(window._geoWatchId); window._geoWatchId = null; }
             if (window._proximityTimer) { clearInterval(window._proximityTimer); window._proximityTimer = null; }
             if (window._e1Timer) { clearInterval(window._e1Timer); window._e1Timer = null; }
+            if (window._cleanupScannerResize) { window.removeEventListener('resize', window._cleanupScannerResize); window._cleanupScannerResize = null; }
             window._enigma1SuccessActive = false;
             if (index === 0) window._enigma1ChronoUnlocked = false;
             const notifyBadge = document.getElementById('header-chrono-notify');
@@ -3934,6 +4024,35 @@
             let interactionHtml = '';
 
             switch (e.type) {
+                case 'scanner':
+                    interactionHtml = `
+            <div class="scanner-container" style="display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%;">
+              <div class="mst-page-1" style="max-width: 100%; width: 100%; max-width: 500px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-subtle); background: var(--bg-card); padding: 10px;">
+                <p style="text-align: center; margin-bottom: 8px; font-weight: bold; color: var(--text-secondary); font-family: var(--font-ui); font-size: 0.85rem;">Page 1/2 (Cliquez pour agrandir)</p>
+                <img src="assets/analyses mst-1.png" style="width: 100%; display: block; cursor: zoom-in; border-radius: 4px;" onclick="openLightbox(this.src)">
+              </div>
+              <div class="mst-page-2" style="max-width: 100%; width: 100%; max-width: 500px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-subtle); background: var(--bg-card); padding: 10px;">
+                <p style="text-align: center; margin-bottom: 8px; font-weight: bold; color: var(--text-secondary); font-family: var(--font-ui); font-size: 0.85rem;">Page 2/2 (Passez le doigt ou la souris pour scanner)</p>
+                <div class="scanner-wrapper" style="position: relative; display: inline-block; width: 100%;">
+                  <img id="scanner-bg" src="${e.imageOriginale}" style="display: block; width: 100%; height: auto; pointer-events: none; border-radius: 4px;">
+                  <canvas id="scanner-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; border-radius: 4px;"></canvas>
+                </div>
+              </div>
+              
+              <div id="scanner-input-block" class="hidden" style="opacity: 0; pointer-events: none; transition: opacity 0.6s ease; margin-top: 20px; width: 100%; max-width: 320px; text-align: center;">
+                <div class="input-group">
+                  <input type="text" class="input-answer" id="answer-input"
+                         placeholder="Code sérologique révélé…"
+                         autocomplete="off" autocorrect="off" spellcheck="false">
+                </div>
+                <button class="btn btn-primary" id="btn-validate" onclick="validateAnswer()" style="margin-top: 10px; width: 100%;">
+                  Valider ma réponse
+                </button>
+              </div>
+            </div>
+          `;
+                    break;
+
                 case 'date':
                     interactionHtml = `
             <div class="date-picker-group">
@@ -4094,15 +4213,11 @@
             <div class="piano-container">
               <div class="piano-keyboard" id="piano-keyboard">
                 <!-- White Keys -->
-                <div class="piano-key white" data-freq="440" data-note="A">
-                  <div class="key-label">A</div>
-                </div>
-                <div class="piano-key white" data-freq="493.88" data-note="B"><div class="key-label">B</div></div>
-                <div class="piano-key white" data-freq="523.25" data-note="C"><div class="key-label">C</div></div>
-                <div class="piano-key white" data-freq="587.33" data-note="D"><div class="key-label">D</div></div>
-                <div class="piano-key white" data-freq="659.25" data-note="E">
-                  <div class="key-label">E</div>
-                </div>
+                <div class="piano-key white" data-freq="440" data-note="A"></div>
+                <div class="piano-key white" data-freq="493.88" data-note="B"></div>
+                <div class="piano-key white" data-freq="523.25" data-note="C"><div class="key-label" style="opacity: 0.6; font-weight: bold; color: var(--clr-gold-bright);">C</div></div>
+                <div class="piano-key white" data-freq="587.33" data-note="D"></div>
+                <div class="piano-key white" data-freq="659.25" data-note="E"></div>
                 <div class="piano-key white" data-freq="698.46" data-note="F"></div>
                 <div class="piano-key white" data-freq="783.99" data-note="G"></div>
                 <div class="piano-key white" data-freq="880" data-note="A_high"></div>
@@ -4163,14 +4278,14 @@
                 case 'bossfight': {
                     const rawHP = totalErrorsCount * totalHintsCount;
                     const bossHP = Math.max(3, rawHP);
-                    const hpText = rawHP > 0
-                        ? `<strong>${totalErrorsCount}</strong> erreur${totalErrorsCount > 1 ? 's' : ''} × <strong>${totalHintsCount}</strong> indice${totalHintsCount > 1 ? 's' : ''} = <strong>${bossHP} PV</strong>`
+                    const hpText = (totalErrorsCount > 0 && totalHintsCount > 0)
+                        ? `<strong>${totalErrorsCount}</strong> × <strong>${totalHintsCount}</strong> = <strong>${bossHP} PV</strong>`
                         : `Minimum <strong>${bossHP} PV</strong> (aucun malus accumulé)`;
                     interactionHtml = `
             <div class="bf-intro">
                 <div class="bf-vs">
                     <div class="bf-fighter">
-                        <div class="bf-fighter-icon"> </div>
+                        <div class="bf-fighter-icon">✨</div>
                         <div class="bf-fighter-name eva">Eva</div>
                     </div>
                     <div class="bf-vs-text">VS</div>
@@ -4180,13 +4295,14 @@
                     </div>
                 </div>
                 <div class="bf-hp-info">PV de Malus : ${hpText}</div>
-                <div style="margin-top:12px;font-size:0.78rem;color:var(--text-muted);text-align:left;max-width:280px;margin-left:auto;margin-right:auto;line-height:1.8;">
-                    <div>⚡ <strong style="color:#facc15">Éclair d'Amour</strong> — 1 dégât</div>
-                    <div>🌙 <strong style="color:#93c5fd">Lame Lunaire</strong> — 2 dégâts (CD 2.5s)</div>
-                    <div>💫 <strong style="color:#fb923c">Nova Stellaire</strong> — 3 dégâts (CD 5s)</div>
+                <div style="margin-top:12px;font-size:0.78rem;color:var(--text-muted);text-align:left;max-width:320px;margin-left:auto;margin-right:auto;line-height:1.9;">
+                    <div>⚡ <strong style="color:#facc15">Éclair d'Amour</strong> — 1 dégât (cône frontal)</div>
+                    <div>🧴 <strong style="color:#a78bfa">Lancer d'Alcoo Ménager</strong> — 3 dégâts (CD 2s)</div>
+                    <div>🌙 <strong style="color:#93c5fd">Laku Noc</strong> — 5 dégâts (CD 15s)</div>
+                    <div>🤗 <strong style="color:#f472b6">Câlin</strong> — Bouclier ❤️ 5s + soin 3 PV (CD 30s)</div>
                 </div>
                 <button class="btn btn-primary" onclick="startBossFight()" style="margin-top:18px;">⚔️ Commencer le combat</button>
-                <div class="bf-kb-hint">Clavier : ← → pour bouger · 1 2 3 pour attaquer</div>
+                <div class="bf-kb-hint">Clavier : ← → pour bouger · 1 2 3 4 pour attaquer</div>
             </div>
                     `;
                     break;
@@ -4225,7 +4341,26 @@
                 case 'gps':
                 case 'text':
                 default:
-                    interactionHtml = `
+                    if (e.id === 8) {
+                        interactionHtml = `
+            <div class="special-input-container" style="display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0;">
+              <input type="text" class="char-input" data-index="0" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 1.5rem; border: 1px solid var(--border-subtle); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-primary); outline: none;">
+              <input type="text" class="char-input" data-index="1" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 1.5rem; border: 1px solid var(--border-subtle); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-primary); outline: none;">
+              <span style="font-size: 1.8rem; font-weight: bold; color: var(--clr-gold-bright); width: 30px; text-align: center;">□</span>
+              <input type="text" class="char-input" data-index="3" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 1.5rem; border: 1px solid var(--border-subtle); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-primary); outline: none;">
+              <input type="text" class="char-input" data-index="4" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 1.5rem; border: 1px solid var(--border-subtle); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-primary); outline: none;">
+              <span style="font-size: 1.8rem; font-weight: bold; color: var(--clr-gold-bright); width: 20px; text-align: center;">-</span>
+              <input type="text" class="char-input" data-index="6" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 1.5rem; border: 1px solid var(--border-subtle); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-primary); outline: none;">
+              <input type="text" class="char-input" data-index="7" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 1.5rem; border: 1px solid var(--border-subtle); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-primary); outline: none;">
+              <input type="text" class="char-input" data-index="8" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 1.5rem; border: 1px solid var(--border-subtle); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-primary); outline: none;">
+              <input type="hidden" id="answer-input">
+            </div>
+            <button class="btn btn-primary" id="btn-validate" onclick="validateAnswer()">
+              Valider ma réponse
+            </button>
+          `;
+                    } else {
+                        interactionHtml = `
             <div class="input-group">
               <input type="text" class="input-answer" id="answer-input"
                      placeholder="Ta réponse…"
@@ -4235,6 +4370,7 @@
               Valider ma réponse
             </button>
           `;
+                    }
                     break;
             }
 
@@ -4254,16 +4390,71 @@
         </div>
       `;
 
-            // Focus input
-            const input = document.getElementById('answer-input');
-            if (input) {
-                input.addEventListener('keydown', (ev) => {
-                    if (ev.key === 'Enter') validateAnswer();
+            // Focus input / special input handlers
+            if (e.id === 8) {
+                const charInputs = document.querySelectorAll('.char-input');
+                const hiddenInput = document.getElementById('answer-input');
+
+                const updateHiddenValue = () => {
+                    let finalVal = '';
+                    for (let i = 0; i < 9; i++) {
+                        if (i === 2) finalVal += '□';
+                        else if (i === 5) finalVal += '-';
+                        else {
+                            const inp = document.querySelector(`.char-input[data-index="${i}"]`);
+                            finalVal += inp ? inp.value : '';
+                        }
+                    }
+                    if (hiddenInput) hiddenInput.value = finalVal;
+                };
+
+                charInputs.forEach(inp => {
+                    inp.addEventListener('input', (ev) => {
+                        updateHiddenValue();
+                        if (inp.value.length >= 1) {
+                            const currentIdx = parseInt(inp.getAttribute('data-index'), 10);
+                            let nextIdx = currentIdx + 1;
+                            if (nextIdx === 2) nextIdx = 3;
+                            if (nextIdx === 5) nextIdx = 6;
+                            const nextInp = document.querySelector(`.char-input[data-index="${nextIdx}"]`);
+                            if (nextInp) nextInp.focus();
+                        }
+                    });
+
+                    inp.addEventListener('keydown', (ev) => {
+                        if (ev.key === 'Backspace' && inp.value.length === 0) {
+                            const currentIdx = parseInt(inp.getAttribute('data-index'), 10);
+                            let prevIdx = currentIdx - 1;
+                            if (prevIdx === 5) prevIdx = 4;
+                            if (prevIdx === 2) prevIdx = 1;
+                            const prevInp = document.querySelector(`.char-input[data-index="${prevIdx}"]`);
+                            if (prevInp) {
+                                prevInp.focus();
+                                prevInp.value = '';
+                                updateHiddenValue();
+                            }
+                        } else if (ev.key === 'Enter') {
+                            validateAnswer();
+                        }
+                    });
                 });
+
+                const firstInp = document.querySelector('.char-input[data-index="0"]');
+                if (firstInp) firstInp.focus();
+            } else {
+                const input = document.getElementById('answer-input');
+                if (input) {
+                    input.addEventListener('keydown', (ev) => {
+                        if (ev.key === 'Enter') validateAnswer();
+                    });
+                }
             }
 
             // Init drawing canvas
             if (e.type === 'drawing') initCanvas();
+
+            // Init scanner puzzle
+            if (e.type === 'scanner') initScannerPuzzle(e);
 
             // Init carousel touch, observer & préchargement intelligent
             if (e.type === 'carousel') initCarouselSmartLoader();
@@ -4463,6 +4654,19 @@
             const input = document.getElementById('answer-input');
             if (!input) return;
 
+            if (enigmes[currentIndex].id === 8) {
+                let finalVal = '';
+                for (let i = 0; i < 9; i++) {
+                    if (i === 2) finalVal += '□';
+                    else if (i === 5) finalVal += '-';
+                    else {
+                        const inp = document.querySelector(`.char-input[data-index="${i}"]`);
+                        finalVal += inp ? inp.value.trim() : '';
+                    }
+                }
+                input.value = finalVal;
+            }
+
             const answer = input.value.trim().toUpperCase();
             const expected = enigmes[currentIndex].reponseAttendue;
             let isCorrect = false;
@@ -4476,6 +4680,7 @@
             if (isCorrect) {
                 showFeedback('success', '✅ Bonne réponse ! Bien joué.');
                 input.disabled = true;
+                document.querySelectorAll('.char-input').forEach(inp => inp.disabled = true);
                 const btn = document.getElementById('btn-validate');
                 if (btn) btn.disabled = true;
                 setTimeout(() => handleSuccess(), 1000);
@@ -4483,6 +4688,10 @@
                 showFeedback('error', '❌ Attention, une erreur vient d\'être ajoutée ! Plus il y a d\'erreurs, plus cela complique une des étapes finales !');
                 input.classList.add('error');
                 setTimeout(() => input.classList.remove('error'), 600);
+                document.querySelectorAll('.char-input').forEach(inp => {
+                    inp.classList.add('error');
+                    setTimeout(() => inp.classList.remove('error'), 600);
+                });
             }
         }
 
@@ -4941,6 +5150,109 @@
             }, 4000);
         }
 
+        function initScannerPuzzle(enigme) {
+            const canvas = document.getElementById('scanner-canvas');
+            const bg = document.getElementById('scanner-bg');
+            if (!canvas || !bg) return;
+
+            const ctx = canvas.getContext('2d');
+            const imgReveal = new Image();
+            imgReveal.src = enigme.imageRevelee;
+
+            const resizeCanvas = () => {
+                const rect = bg.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+            };
+
+            bg.onload = resizeCanvas;
+            if (bg.complete) {
+                resizeCanvas();
+            }
+
+            const onResize = () => {
+                resizeCanvas();
+            };
+            window.addEventListener('resize', onResize);
+            if (window._cleanupScannerResize) {
+                window.removeEventListener('resize', window._cleanupScannerResize);
+            }
+            window._cleanupScannerResize = onResize;
+
+            const handleMove = (clientX, clientY) => {
+                if (!imgReveal.complete) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+
+                // Draw spotlight
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(x, y, 60, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.drawImage(imgReveal, 0, 0, canvas.width, canvas.height);
+                ctx.restore();
+
+                // Collision detection (corresponds to the HIV 1/2 line in the document)
+                const xRatio = x / canvas.width;
+                const yRatio = y / canvas.height;
+                if (xRatio >= 0.05 && xRatio <= 0.85 && yRatio >= 0.12 && yRatio <= 0.22) {
+                    const inputBlock = document.getElementById('scanner-input-block');
+                    if (inputBlock && inputBlock.classList.contains('hidden')) {
+                        inputBlock.classList.remove('hidden');
+                        setTimeout(() => {
+                            inputBlock.style.opacity = '1';
+                            inputBlock.style.pointerEvents = 'auto';
+                        }, 50);
+                    }
+                }
+            };
+
+            // Touch events
+            canvas.addEventListener('touchstart', (ev) => {
+                ev.preventDefault();
+                if (ev.touches.length > 0) {
+                    handleMove(ev.touches[0].clientX, ev.touches[0].clientY);
+                }
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', (ev) => {
+                ev.preventDefault();
+                if (ev.touches.length > 0) {
+                    handleMove(ev.touches[0].clientX, ev.touches[0].clientY);
+                }
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', (ev) => {
+                ev.preventDefault();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }, { passive: false });
+
+            // Mouse events
+            let isDrawing = false;
+            canvas.addEventListener('mousedown', (ev) => {
+                isDrawing = true;
+                handleMove(ev.clientX, ev.clientY);
+            });
+
+            canvas.addEventListener('mousemove', (ev) => {
+                if (isDrawing) {
+                    handleMove(ev.clientX, ev.clientY);
+                }
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                isDrawing = false;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                isDrawing = false;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+        }
+
         function initPianoPuzzle() {
             // Reset state
             pianoSolved = false;
@@ -5202,8 +5514,8 @@
                 }
                 if ($dist) $dist.style.color = `rgb(${rgb})`;
 
-                // Tolerance check
-                if (dist <= enigme.toleranceMeters) {
+                // Tolerance check (within GPS accuracy margin of the 0.5m/1m² target center)
+                if (dist <= (enigme.toleranceMeters + acc)) {
                     if (!inZoneSince) {
                         inZoneSince = Date.now();
                         if ($status) $status.textContent = '📍 Zone atteinte ! Ne bougez plus (3s)…';
@@ -6263,9 +6575,22 @@
                             <div class="bf-joystick-knob" id="bf-joystick-knob"></div>
                         </div>
                         <div class="bf-atk-buttons">
-                            <button class="bf-btn bf-btn-lightning" id="bf-btn-lightning">⚡</button>
-                            <button class="bf-btn bf-btn-moon" id="bf-btn-moon">🌙</button>
-                            <button class="bf-btn bf-btn-nova" id="bf-btn-nova">💫</button>
+                            <div class="bf-btn-wrap">
+                                <button class="bf-btn bf-btn-lightning" id="bf-btn-lightning">⚡</button>
+                                <span class="bf-btn-label" style="color:#facc15">Éclair</span>
+                            </div>
+                            <div class="bf-btn-wrap">
+                                <button class="bf-btn bf-btn-bottle" id="bf-btn-bottle">🧴</button>
+                                <span class="bf-btn-label" style="color:#a78bfa">Alcoo</span>
+                            </div>
+                            <div class="bf-btn-wrap">
+                                <button class="bf-btn bf-btn-moon" id="bf-btn-moon">🌙</button>
+                                <span class="bf-btn-label" style="color:#93c5fd">Laku</span>
+                            </div>
+                            <div class="bf-btn-wrap">
+                                <button class="bf-btn bf-btn-shield" id="bf-btn-shield">🤗</button>
+                                <span class="bf-btn-label" style="color:#f472b6">Câlin</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -6296,19 +6621,37 @@
                     x: cw / 2, y: ch * 0.78, w: 28, h: 48,
                     speed: cw * 0.5, hp: 5, maxHp: 5,
                     dir: 0, facing: 1, inv: 0, atk: null,
-                    cd: [0, 0, 0], trail: [], anim: 0
+                    cd: [0, 0, 0, 0], trail: [], anim: 0,
+                    shield: { active: false, timer: 0, healAccum: 0 }
                 },
                 malus: {
                     x: cw / 2, y: ch * 0.18, w: 45, h: 60,
                     hp: malusHP, maxHp: malusHP,
                     atkTimer: 2.5, hurt: 0, anim: 0,
-                    moveTarget: cw / 2, moveTimer: 0, phase: 0
+                    moveTarget: cw / 2, moveTimer: 0, phase: 0,
+                    spiralAngle: 0, isPaused: false, pauseTimer: 0,
+                    currentPattern: 'aimed', patternIndex: 0
                 },
                 projectiles: [], particles: [], dmgTexts: [],
-                stars: Array.from({ length: 40 }, () => ({
+                stars: Array.from({ length: 60 }, () => ({
                     x: Math.random() * cw, y: Math.random() * ch,
-                    s: Math.random() * 1.5 + 0.5, t: Math.random() * 6.28,
-                    sp: Math.random() * 0.02 + 0.005
+                    s: Math.random() * 1.8 + 0.3, t: Math.random() * 6.28,
+                    sp: Math.random() * 0.02 + 0.005,
+                    layer: Math.floor(Math.random() * 3)
+                })),
+                nebulae: Array.from({ length: 5 }, () => ({
+                    x: Math.random() * cw, y: Math.random() * ch,
+                    rx: 40 + Math.random() * 80, ry: 30 + Math.random() * 60,
+                    color: ['rgba(139,26,46,0.04)', 'rgba(167,139,250,0.03)', 'rgba(201,168,76,0.03)',
+                        'rgba(59,130,246,0.04)', 'rgba(244,114,182,0.03)'][Math.floor(Math.random() * 5)],
+                    drift: (Math.random() - 0.5) * 8, phase: Math.random() * Math.PI * 2
+                })),
+                runes: Array.from({ length: 8 }, () => ({
+                    x: Math.random() * cw, y: Math.random() * ch,
+                    char: '✦⬡◇△⊕☆✧⟡'[Math.floor(Math.random() * 8)],
+                    speed: 5 + Math.random() * 15, opacity: 0, fadeIn: true,
+                    size: 6 + Math.random() * 8,
+                    color: ['#c9a84c', '#a78bfa', '#93c5fd', '#f472b6'][Math.floor(Math.random() * 4)]
                 })),
                 input: { moveX: 0 }
             };
@@ -6349,7 +6692,7 @@
                 document.addEventListener('mousemove', (e) => { if (joyActive) jMove(e); });
                 document.addEventListener('mouseup', () => { if (joyActive) { joyActive = false; if (knob) knob.style.transform = ''; if (bf) bf.input.moveX = 0; } });
             }
-            ['lightning', 'moon', 'nova'].forEach((t, i) => {
+            ['lightning', 'bottle', 'moon', 'shield'].forEach((t, i) => {
                 const btn = document.getElementById('bf-btn-' + t);
                 if (btn) {
                     btn.addEventListener('touchstart', (e) => { e.preventDefault(); bfDoAttack(i); }, { passive: false });
@@ -6363,6 +6706,7 @@
                 if (e.key === '1' || e.key === 'j') bfDoAttack(0);
                 if (e.key === '2' || e.key === 'k') bfDoAttack(1);
                 if (e.key === '3' || e.key === 'l') bfDoAttack(2);
+                if (e.key === '4' || e.key === 'h') bfDoAttack(3);
             };
             const ku = (e) => {
                 if (!bf) return;
@@ -6375,27 +6719,109 @@
         }
 
         function bfDoAttack(idx) {
-            if (!bf || !bf.running || bf.introTimer > 0 || bf.eva.cd[idx] > 0 || bf.eva.atk) return;
+            if (!bf || !bf.running || bf.introTimer > 0) return;
             const { eva, malus } = bf;
-            const dmgs = [1, 2, 3], cds = [0.8, 2.5, 5], durs = [0.3, 0.5, 0.8];
-            const names = ['lightning', 'moon', 'nova'];
-            eva.atk = { type: names[idx], t: 0, dur: durs[idx], dmg: dmgs[idx] };
-            eva.cd[idx] = cds[idx];
+            if (eva.shield.active && idx !== 3) return;
+            if (eva.cd[idx] > 0 || (eva.atk && idx !== 3)) return;
 
             if (idx === 0) {
-                bf.projectiles.push({ type: 'lightning', x: eva.x, y: eva.y - 20, t: 0, dur: 0.3, dmg: 1, hit: false });
+                // ⚡ Éclair d'Amour — cone check
+                eva.cd[0] = 0.8;
+                eva.atk = { type: 'lightning', t: 0, dur: 0.3, dmg: 1 };
+                const dx = malus.x - eva.x, dy = malus.y - eva.y;
+                const angle = Math.atan2(dy, dx);
+                const coneCenter = -Math.PI / 2;
+                let angleDiff = angle - coneCenter;
+                if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                const inCone = Math.abs(angleDiff) < Math.PI / 4;
+                bf.projectiles.push({ type: 'lightning', x: eva.x, y: eva.y - 20, t: 0, dur: 0.3, dmg: 1, hit: false, inCone });
                 for (let i = 0; i < 8; i++) {
                     const r = i / 8;
-                    bfParticle(eva.x + (malus.x - eva.x) * r, (eva.y - 20) + (malus.y - eva.y + 20) * r,
-                        (Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80, 0.4, '#facc15', 3);
+                    if (inCone) {
+                        bfParticle(eva.x + (malus.x - eva.x) * r, (eva.y - 20) + (malus.y - eva.y + 20) * r,
+                            (Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80, 0.4, '#facc15', 3);
+                    } else {
+                        const sa = coneCenter + (Math.random() - 0.5) * Math.PI / 2;
+                        const dist = 30 + Math.random() * 60;
+                        bfParticle(eva.x + Math.cos(sa) * dist, eva.y + Math.sin(sa) * dist,
+                            Math.cos(sa) * 40, Math.sin(sa) * 40, 0.25, 'rgba(250,204,21,0.4)', 2);
+                    }
                 }
             } else if (idx === 1) {
-                bf.projectiles.push({ type: 'moon', x: eva.x, y: eva.y - 30, vx: 0, vy: -bf.H * 0.85, t: 0, dur: 0.8, dmg: 2, r: 18, hit: false });
-            } else {
-                bf.projectiles.push({ type: 'nova', x: eva.x, y: eva.y - 30, t: 0, dur: 0.8, dmg: 3, hit: false });
-                bf.shake = 0.4; bf.flash = 0.2; bf.flashColor = '#f2d06b';
+                // 🧴 Lancer d'Alcoo Ménager — straight shot
+                eva.cd[1] = 2;
+                eva.atk = { type: 'bottle', t: 0, dur: 0.4, dmg: 3 };
+                bf.projectiles.push({ type: 'bottle', x: eva.x, y: eva.y - 30, vx: 0, vy: -bf.H * 0.95, t: 0, dur: 1.5, dmg: 3, r: 10, hit: false, spin: 0 });
+            } else if (idx === 2) {
+                // 🌙 Laku Noc — moon blade
+                eva.cd[2] = 15;
+                eva.atk = { type: 'moon', t: 0, dur: 0.8, dmg: 5 };
+                bf.projectiles.push({ type: 'moon', x: eva.x, y: eva.y - 30, vx: 0, vy: -bf.H * 0.85, t: 0, dur: 0.8, dmg: 5, r: 22, hit: false });
+                bf.shake = 0.2; bf.flash = 0.1; bf.flashColor = '#93c5fd';
+            } else if (idx === 3) {
+                // 🤗 Câlin — shield
+                if (eva.shield.active) return;
+                eva.cd[3] = 30;
+                eva.shield = { active: true, timer: 5, healAccum: 0 };
+                eva.atk = null;
+                bf.flash = 0.15; bf.flashColor = '#f472b6';
+                for (let i = 0; i < 25; i++) {
+                    const a = (i / 25) * Math.PI * 2;
+                    bfParticle(eva.x + Math.cos(a) * 25, eva.y + Math.sin(a) * 25,
+                        Math.cos(a) * 50, Math.sin(a) * 50, 0.8,
+                        ['#f472b6', '#ec4899', '#fb7185', '#fda4af'][i % 4], 4);
+                }
             }
             updateBFBtns();
+        }
+
+        function bfMalusAttack(pattern) {
+            if (!bf) return;
+            const { eva, malus, W, H } = bf;
+            const sp = H * 0.42;
+            if (pattern === 'aimed') {
+                const dx = eva.x - malus.x, dy = eva.y - malus.y;
+                const d = Math.sqrt(dx * dx + dy * dy) || 1;
+                bf.projectiles.push({ type: 'orb', x: malus.x, y: malus.y + 30, vx: (dx / d) * sp, vy: (dy / d) * sp, r: 8, dmg: 1, t: 0, dur: 3 });
+            } else if (pattern === 'spread3') {
+                for (let i = -1; i <= 1; i++)
+                    bf.projectiles.push({ type: 'orb', x: malus.x, y: malus.y + 30, vx: i * 70, vy: sp, r: 8, dmg: 1, t: 0, dur: 3 });
+            } else if (pattern === 'spiral') {
+                const sa = malus.spiralAngle || 0;
+                for (let i = 0; i < 3; i++) {
+                    const a = sa + (i / 3) * Math.PI * 2;
+                    bf.projectiles.push({
+                        type: 'orb', x: malus.x, y: malus.y + 30,
+                        vx: Math.cos(a) * sp * 0.7, vy: Math.sin(a) * sp * 0.7,
+                        r: 7, dmg: 1, t: 0, dur: 3.5, spiral: true, baseAngle: a, spd: sp * 0.55
+                    });
+                }
+                malus.spiralAngle = (malus.spiralAngle || 0) + 0.6;
+            } else if (pattern === 'sun') {
+                const count = malus.phase === 2 ? 14 : 8;
+                for (let i = 0; i < count; i++) {
+                    const a = (i / count) * Math.PI * 2;
+                    bf.projectiles.push({
+                        type: 'orb', x: malus.x, y: malus.y + 30,
+                        vx: Math.cos(a) * sp * 0.6, vy: Math.sin(a) * sp * 0.6,
+                        r: 6, dmg: 1, t: 0, dur: 2.8
+                    });
+                }
+            } else if (pattern === 'wave') {
+                const dx = eva.x - malus.x, dy = eva.y - malus.y;
+                const d = Math.sqrt(dx * dx + dy * dy) || 1;
+                for (let i = -2; i <= 2; i++) {
+                    bf.projectiles.push({
+                        type: 'orb', x: malus.x + i * 12, y: malus.y + 30,
+                        vx: (dx / d) * sp * 0.8, vy: (dy / d) * sp * 0.8,
+                        r: 7, dmg: 1, t: 0, dur: 3, wave: true, waveOff: i * 0.4
+                    });
+                }
+            }
+            for (let i = 0; i < 4; i++)
+                bfParticle(malus.x + (Math.random() - 0.5) * 40, malus.y + 30,
+                    (Math.random() - 0.5) * 40, 20 + Math.random() * 30, 0.5, '#c4263d', 4);
         }
 
         function bfLoop(now) {
@@ -6412,7 +6838,7 @@
             const { eva, malus, W, H } = bf;
             if (bf.introTimer > 0) { bf.introTimer -= dt; return; }
 
-            // Eva
+            // ── Eva Movement ──
             eva.dir = bf.input.moveX;
             eva.x += eva.dir * eva.speed * dt;
             eva.x = Math.max(20, Math.min(W - 20, eva.x));
@@ -6422,46 +6848,123 @@
             if (Math.abs(eva.dir) > 0.1) eva.trail.push({ x: eva.x, y: eva.y, a: 0.4 });
             eva.trail = eva.trail.filter(p => (p.a -= dt * 1.5) > 0);
             if (eva.atk) { eva.atk.t += dt; if (eva.atk.t >= eva.atk.dur) eva.atk = null; }
-            for (let i = 0; i < 3; i++) eva.cd[i] = Math.max(0, eva.cd[i] - dt);
+            for (let i = 0; i < 4; i++) {
+                const prev = eva.cd[i];
+                eva.cd[i] = Math.max(0, eva.cd[i] - dt);
+                if (prev > 0 && eva.cd[i] <= 0) {
+                    const names = ['lightning', 'bottle', 'moon', 'shield'];
+                    const btn = document.getElementById('bf-btn-' + names[i]);
+                    if (btn) { btn.classList.remove('bf-ready-flash'); void btn.offsetWidth; btn.classList.add('bf-ready-flash'); }
+                }
+            }
+
+            // ── Shield Update ──
+            if (eva.shield.active) {
+                eva.shield.timer -= dt;
+                const healRate = 3 / 5;
+                eva.shield.healAccum += healRate * dt;
+                while (eva.shield.healAccum >= 1 && eva.hp < eva.maxHp) {
+                    eva.hp = Math.min(eva.maxHp, eva.hp + 1);
+                    eva.shield.healAccum -= 1;
+                    bf.dmgTexts.push({ x: eva.x + (Math.random() - 0.5) * 20, y: eva.y - 45, text: '+1 ❤️', color: '#f472b6', t: 1.0 });
+                }
+                if (Math.random() < 0.35) {
+                    const a = Math.random() * Math.PI * 2;
+                    bfParticle(eva.x + Math.cos(a) * 28, eva.y - 5 + Math.sin(a) * 22,
+                        Math.cos(a) * 12 + (Math.random() - 0.5) * 8, -8 - Math.random() * 12, 0.5, '#f472b6', 2.5);
+                }
+                if (eva.shield.timer <= 0) {
+                    eva.shield.active = false; eva.shield.timer = 0; eva.shield.healAccum = 0;
+                }
+            }
             updateBFBtns();
 
-            // Malus AI
-            malus.phase = malus.hp <= malus.maxHp * 0.5 ? 1 : 0;
+            // ── Malus AI ──
+            const prevPhase = malus.phase;
+            malus.phase = malus.hp <= malus.maxHp * 0.1 ? 2 : malus.hp <= malus.maxHp * 0.5 ? 1 : 0;
+            // Phase transition effect
+            if (malus.phase > prevPhase) {
+                bf.shake = 0.8; bf.flash = 0.5;
+                bf.flashColor = malus.phase === 2 ? '#c4263d' : '#8b1a2e';
+                for (let i = 0; i < 35; i++) {
+                    const a = (i / 35) * Math.PI * 2, spd = 80 + Math.random() * 180;
+                    bfParticle(malus.x, malus.y, Math.cos(a) * spd, Math.sin(a) * spd, 1.2,
+                        malus.phase === 2
+                            ? ['#ef4444', '#dc2626', '#f87171', '#fca5a5'][i % 4]
+                            : ['#c4263d', '#8b1a2e', '#4a0f1a', '#ef4444'][i % 4], 6);
+                }
+            }
+
             malus.hurt = Math.max(0, malus.hurt - dt);
             malus.anim += dt;
             malus.moveTimer -= dt;
             if (malus.moveTimer <= 0) {
                 malus.moveTarget = 40 + Math.random() * (W - 80);
-                malus.moveTimer = malus.phase ? 0.8 + Math.random() : 1.5 + Math.random() * 2;
+                malus.moveTimer = malus.phase === 2 ? 0.3 + Math.random() * 0.4
+                    : malus.phase === 1 ? 0.8 + Math.random() : 1.5 + Math.random() * 2;
             }
-            const ms = malus.phase ? 160 : 90;
+            const ms = malus.phase === 2 ? 240 : malus.phase === 1 ? 160 : 90;
             if (Math.abs(malus.x - malus.moveTarget) > 5)
                 malus.x += Math.sign(malus.moveTarget - malus.x) * ms * dt;
 
-            // Malus attacks
-            malus.atkTimer -= dt;
-            if (malus.atkTimer <= 0) {
-                malus.atkTimer = (malus.phase ? 0.8 : 1.6) + Math.random() * 0.6;
-                if (malus.phase && Math.random() < 0.35) {
-                    for (let i = -1; i <= 1; i++)
-                        bf.projectiles.push({ type: 'orb', x: malus.x, y: malus.y + 30, vx: i * 70, vy: H * 0.38, r: 8, dmg: 1, t: 0, dur: 3 });
+            // ── Malus Attacks (3 phases) ──
+            if (malus.phase === 2) {
+                // Phase 2: very fast + irregular pauses + pattern switching
+                if (malus.isPaused) {
+                    malus.pauseTimer -= dt;
+                    if (malus.pauseTimer <= 0) {
+                        malus.isPaused = false;
+                        const patterns = ['aimed', 'spiral', 'sun', 'spread3', 'wave'];
+                        malus.patternIndex = (malus.patternIndex + 1) % patterns.length;
+                        malus.currentPattern = patterns[malus.patternIndex];
+                        bf.flash = 0.1; bf.flashColor = '#c4263d';
+                    }
                 } else {
-                    const dx = eva.x - malus.x, dy = eva.y - malus.y;
-                    const d = Math.sqrt(dx * dx + dy * dy) || 1;
-                    const sp = H * 0.42;
-                    bf.projectiles.push({ type: 'orb', x: malus.x, y: malus.y + 30, vx: (dx / d) * sp, vy: (dy / d) * sp, r: 8, dmg: 1, t: 0, dur: 3 });
+                    malus.atkTimer -= dt;
+                    if (malus.atkTimer <= 0) {
+                        malus.atkTimer = 0.12 + Math.random() * 0.22;
+                        bfMalusAttack(malus.currentPattern);
+                        if (Math.random() < 0.1) {
+                            malus.isPaused = true;
+                            malus.pauseTimer = 0.4 + Math.random() * 1.8;
+                        }
+                    }
                 }
-                for (let i = 0; i < 4; i++)
-                    bfParticle(malus.x + (Math.random() - 0.5) * 40, malus.y + 30, (Math.random() - 0.5) * 40, 20 + Math.random() * 30, 0.5, '#c4263d', 4);
+            } else if (malus.phase === 1) {
+                // Phase 1: faster + spiral/sun patterns
+                malus.atkTimer -= dt;
+                malus.spiralAngle = (malus.spiralAngle || 0) + dt * 3;
+                if (malus.atkTimer <= 0) {
+                    malus.atkTimer = 0.45 + Math.random() * 0.5;
+                    const r = Math.random();
+                    if (r < 0.25) bfMalusAttack('spiral');
+                    else if (r < 0.45) bfMalusAttack('sun');
+                    else if (r < 0.65) bfMalusAttack('spread3');
+                    else bfMalusAttack('aimed');
+                }
+            } else {
+                // Phase 0: normal
+                malus.atkTimer -= dt;
+                if (malus.atkTimer <= 0) {
+                    malus.atkTimer = 1.6 + Math.random() * 0.6;
+                    bfMalusAttack('aimed');
+                }
             }
 
-            // Update projectiles
+            // ── Update Projectiles ──
             bf.projectiles = bf.projectiles.filter(p => {
                 p.t += dt;
                 if (p.t > p.dur) return false;
                 if (p.type === 'orb') {
+                    if (p.spiral) {
+                        p.baseAngle += dt * 2.2;
+                        p.vx = Math.cos(p.baseAngle) * p.spd;
+                        p.vy = Math.sin(p.baseAngle) * p.spd;
+                    }
+                    if (p.wave) p.vx += Math.sin(bf.time * 9 + p.waveOff) * 250 * dt;
                     p.x += p.vx * dt; p.y += p.vy * dt;
-                    if (eva.inv <= 0 && Math.abs(p.x - eva.x) < 22 && Math.abs(p.y - eva.y) < 28) {
+                    // Hit Eva
+                    if (eva.inv <= 0 && !eva.shield.active && Math.abs(p.x - eva.x) < 22 && Math.abs(p.y - eva.y) < 28) {
                         eva.hp -= p.dmg; eva.inv = 1.0;
                         bf.shake = 0.3; bf.flash = 0.15; bf.flashColor = '#ef4444';
                         bf.dmgTexts.push({ x: eva.x, y: eva.y - 35, text: '-1', color: '#ef4444', t: 0.9 });
@@ -6470,35 +6973,75 @@
                         if (eva.hp <= 0) bfEndGame(false);
                         return false;
                     }
-                    if (Math.random() < 0.3) bfParticle(p.x, p.y, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15, 0.3, '#8b1a2e', 3);
+                    // Shield deflection
+                    if (eva.shield.active && Math.abs(p.x - eva.x) < 30 && Math.abs(p.y - eva.y) < 35) {
+                        for (let i = 0; i < 5; i++)
+                            bfParticle(p.x, p.y, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100, 0.3, '#f472b6', 3);
+                        return false;
+                    }
+                    if (Math.random() < 0.25) bfParticle(p.x, p.y, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15, 0.3, '#8b1a2e', 3);
                 }
-                if (p.type === 'lightning' && !p.hit && p.t > 0.08) { p.hit = true; bfHitMalus(p.dmg); }
+                if (p.type === 'lightning' && !p.hit && p.t > 0.08) {
+                    p.hit = true;
+                    if (p.inCone) bfHitMalus(p.dmg);
+                    else bf.dmgTexts.push({ x: eva.x, y: eva.y - 55, text: 'Raté !', color: '#888', t: 0.7 });
+                }
+                if (p.type === 'bottle') {
+                    p.x += p.vx * dt; p.y += p.vy * dt;
+                    p.spin = (p.spin || 0) + dt * 8;
+                    if (Math.random() < 0.5)
+                        bfParticle(p.x + (Math.random() - 0.5) * 6, p.y + 5, (Math.random() - 0.5) * 15, Math.random() * 20, 0.3, '#a78bfa', 2.5);
+                    if (!p.hit && Math.abs(p.x - malus.x) < 35 && Math.abs(p.y - malus.y) < 45) {
+                        p.hit = true; bfHitMalus(p.dmg);
+                        for (let i = 0; i < 15; i++) {
+                            const a = (i / 15) * Math.PI * 2, spd = 60 + Math.random() * 80;
+                            bfParticle(malus.x, malus.y, Math.cos(a) * spd, Math.sin(a) * spd, 0.5, '#a78bfa', 3);
+                        }
+                    }
+                }
                 if (p.type === 'moon') {
                     p.x += p.vx * dt; p.y += p.vy * dt;
-                    bfParticle(p.x + (Math.random() - 0.5) * 10, p.y, (Math.random() - 0.5) * 30, Math.random() * 20, 0.4, '#93c5fd', 3);
-                    if (!p.hit && Math.abs(p.x - malus.x) < 40 && Math.abs(p.y - malus.y) < 45) { p.hit = true; bfHitMalus(p.dmg); }
-                }
-                if (p.type === 'nova' && !p.hit && p.t > 0.2) {
-                    p.hit = true; bfHitMalus(p.dmg);
-                    for (let i = 0; i < 30; i++) {
-                        const a = (i / 30) * Math.PI * 2, sp = 100 + Math.random() * 150;
-                        bfParticle(malus.x, malus.y, Math.cos(a) * sp, Math.sin(a) * sp, 0.8, ['#f2d06b', '#facc15', '#fb923c', '#fff'][i % 4], 5);
+                    bfParticle(p.x + (Math.random() - 0.5) * 12, p.y, (Math.random() - 0.5) * 30, Math.random() * 20, 0.4, '#93c5fd', 3);
+                    if (!p.hit && Math.abs(p.x - malus.x) < 40 && Math.abs(p.y - malus.y) < 45) {
+                        p.hit = true; bfHitMalus(p.dmg);
+                        bf.shake = 0.5; bf.flash = 0.25; bf.flashColor = '#93c5fd';
+                        for (let i = 0; i < 30; i++) {
+                            const a = (i / 30) * Math.PI * 2, spd = 100 + Math.random() * 150;
+                            bfParticle(malus.x, malus.y, Math.cos(a) * spd, Math.sin(a) * spd, 0.8,
+                                ['#93c5fd', '#bfdbfe', '#dbeafe', '#fff'][i % 4], 5);
+                        }
                     }
                 }
                 return true;
             });
 
-            // Update particles & damage texts
+            // Particles & damage texts
             bf.particles = bf.particles.filter(p => { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.96; p.vy *= 0.96; return p.t > 0; });
             bf.dmgTexts = bf.dmgTexts.filter(d => (d.t -= dt) > 0);
             bf.shake = Math.max(0, bf.shake - dt);
             bf.flash = Math.max(0, bf.flash - dt);
 
-            // Ambient particles
+            // Ambient VFX
             if (Math.random() < 0.15)
-                bfParticle(eva.x + (Math.random() - 0.5) * 20, eva.y + (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 12, -8 - Math.random() * 15, 0.6, '#f2d06b', 2);
-            if (Math.random() < 0.1)
-                bfParticle(malus.x + (Math.random() - 0.5) * 40, malus.y + (Math.random() - 0.5) * 50, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 12, 0.5, '#2a0a20', 3);
+                bfParticle(eva.x + (Math.random() - 0.5) * 20, eva.y + (Math.random() - 0.5) * 40,
+                    (Math.random() - 0.5) * 12, -8 - Math.random() * 15, 0.6, '#f2d06b', 2);
+            if (Math.random() < 0.1 + malus.phase * 0.08)
+                bfParticle(malus.x + (Math.random() - 0.5) * 40, malus.y + (Math.random() - 0.5) * 50,
+                    (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 12, 0.5,
+                    malus.phase === 2 ? '#ef4444' : '#2a0a20', 3);
+            // Floating runes
+            bf.runes.forEach(r => {
+                r.y -= r.speed * dt;
+                if (r.fadeIn) { r.opacity = Math.min(0.3, r.opacity + dt * 0.3); if (r.opacity >= 0.3) r.fadeIn = false; }
+                else r.opacity -= dt * 0.08;
+                if (r.y < -10 || r.opacity <= 0) {
+                    r.x = Math.random() * bf.W; r.y = bf.H + 10;
+                    r.opacity = 0; r.fadeIn = true;
+                    r.char = '✦⬡◇△⊕☆✧⟡'[Math.floor(Math.random() * 8)];
+                }
+            });
+            // Nebula drift
+            bf.nebulae.forEach(n => { n.phase += dt * 0.15; n.x += Math.sin(n.phase) * n.drift * dt; });
         }
 
         function bfHitMalus(dmg) {
@@ -6522,7 +7065,8 @@
             if (win) {
                 for (let i = 0; i < 50; i++) {
                     const a = (i / 50) * Math.PI * 2, sp = 50 + Math.random() * 200;
-                    bfParticle(bf.malus.x, bf.malus.y, Math.cos(a) * sp, Math.sin(a) * sp, 1.2, ['#c4263d', '#8b1a2e', '#4a0f1a', '#ef4444'][i % 4], 6);
+                    bfParticle(bf.malus.x, bf.malus.y, Math.cos(a) * sp, Math.sin(a) * sp, 1.2,
+                        ['#c4263d', '#8b1a2e', '#4a0f1a', '#ef4444'][i % 4], 6);
                 }
                 bf.flash = 0.5; bf.flashColor = '#f2d06b'; bf.shake = 0.6;
             }
@@ -6548,15 +7092,28 @@
 
         function updateBFBtns() {
             if (!bf) return;
-            const names = ['lightning', 'moon', 'nova'], maxCds = [0.8, 2.5, 5];
+            const names = ['lightning', 'bottle', 'moon', 'shield'];
+            const maxCds = [0.8, 2, 15, 30];
             names.forEach((n, i) => {
                 const btn = document.getElementById('bf-btn-' + n);
                 if (!btn) return;
                 const cd = bf.eva.cd[i];
-                btn.classList.toggle('on-cd', cd > 0);
+                const blocked = bf.eva.shield.active && i !== 3;
+                btn.classList.toggle('on-cd', cd > 0 || blocked);
                 let ov = btn.querySelector('.bf-cd-overlay');
                 if (!ov) { ov = document.createElement('div'); ov.className = 'bf-cd-overlay'; btn.appendChild(ov); }
-                ov.style.height = cd > 0 ? (cd / maxCds[i] * 100) + '%' : '0';
+                ov.style.height = cd > 0 ? (cd / maxCds[i] * 100) + '%' : blocked ? '100%' : '0';
+                let cdText = btn.querySelector('.bf-cd-text');
+                if (!cdText) { cdText = document.createElement('div'); cdText.className = 'bf-cd-text'; btn.appendChild(cdText); }
+                if (cd > 0) {
+                    cdText.textContent = cd >= 10 ? Math.ceil(cd) + 's' : cd.toFixed(1) + 's';
+                    cdText.style.display = 'flex';
+                } else if (blocked) {
+                    cdText.textContent = '🛡️';
+                    cdText.style.display = 'flex';
+                } else {
+                    cdText.style.display = 'none';
+                }
             });
         }
 
@@ -6566,28 +7123,72 @@
             ctx.save();
             if (shake > 0) ctx.translate((Math.random() - 0.5) * shake * 15, (Math.random() - 0.5) * shake * 15);
 
-            // Background
+            // Background with phase-dependent coloring
             const bg = ctx.createLinearGradient(0, 0, 0, H);
-            bg.addColorStop(0, '#0a0118'); bg.addColorStop(0.5, '#0d0a1f'); bg.addColorStop(1, '#050510');
+            if (malus.phase === 2) {
+                bg.addColorStop(0, '#1a0508'); bg.addColorStop(0.5, '#180612'); bg.addColorStop(1, '#0a0205');
+            } else if (malus.phase === 1) {
+                bg.addColorStop(0, '#0f0118'); bg.addColorStop(0.5, '#120a1f'); bg.addColorStop(1, '#060510');
+            } else {
+                bg.addColorStop(0, '#0a0118'); bg.addColorStop(0.5, '#0d0a1f'); bg.addColorStop(1, '#050510');
+            }
             ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
-            // Stars
-            bf.stars.forEach(s => {
-                s.t += s.sp;
-                ctx.fillStyle = `rgba(255,255,255,${0.35 + 0.25 * Math.sin(s.t)})`;
-                ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI * 2); ctx.fill();
+            // Nebula clouds
+            bf.nebulae.forEach(n => {
+                ctx.fillStyle = n.color;
+                ctx.beginPath(); ctx.ellipse(n.x, n.y, n.rx, n.ry, 0, 0, Math.PI * 2); ctx.fill();
             });
 
-            // Ground
-            ctx.fillStyle = 'rgba(201,168,76,0.15)';
-            ctx.fillRect(0, H * 0.88, W, 1);
+            // Stars (3-layer parallax)
+            bf.stars.forEach(s => {
+                s.t += s.sp;
+                const px = s.x + Math.sin(time * 0.1 * (1 + s.layer * 0.3)) * (2 + s.layer * 2);
+                const br = 0.2 + 0.15 * s.layer + 0.2 * Math.sin(s.t);
+                ctx.fillStyle = `rgba(255,255,255,${br})`;
+                ctx.beginPath(); ctx.arc(px, s.y, s.s * (0.6 + s.layer * 0.3), 0, Math.PI * 2); ctx.fill();
+            });
 
-            // Particles behind
+            // Floating runes
+            bf.runes.forEach(r => {
+                if (r.opacity <= 0) return;
+                ctx.globalAlpha = r.opacity;
+                ctx.fillStyle = r.color;
+                ctx.font = `${r.size}px serif`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(r.char, r.x, r.y);
+            });
+            ctx.globalAlpha = 1;
+
+            // Energy ground line
+            const groundY = H * 0.88;
+            const gPulse = 0.12 + 0.08 * Math.sin(time * 2);
+            const gg = ctx.createLinearGradient(0, groundY - 3, 0, groundY + 3);
+            gg.addColorStop(0, 'rgba(201,168,76,0)');
+            gg.addColorStop(0.5, `rgba(201,168,76,${gPulse})`);
+            gg.addColorStop(1, 'rgba(201,168,76,0)');
+            ctx.fillStyle = gg; ctx.fillRect(0, groundY - 3, W, 6);
+
+            // Energy pillars at edges
+            const pA = 0.03 + malus.phase * 0.015 + Math.sin(time * 1.5) * 0.01;
+            const pC = malus.phase === 2 ? `rgba(239,68,68,${pA})` : `rgba(201,168,76,${pA})`;
+            let lg = ctx.createLinearGradient(0, 0, 15, 0);
+            lg.addColorStop(0, pC); lg.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = lg; ctx.fillRect(0, 0, 15, H);
+            let rg = ctx.createLinearGradient(W, 0, W - 15, 0);
+            rg.addColorStop(0, pC); rg.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = rg; ctx.fillRect(W - 15, 0, 15, H);
+
+            // Particles (additive blending)
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
             bf.particles.forEach(p => {
-                ctx.globalAlpha = p.t / p.maxT;
+                ctx.globalAlpha = (p.t / p.maxT) * 0.8;
                 ctx.fillStyle = p.color;
                 ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (p.t / p.maxT), 0, Math.PI * 2); ctx.fill();
             });
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.restore();
             ctx.globalAlpha = 1;
 
             // Eva trail
@@ -6598,17 +7199,34 @@
             });
             ctx.globalAlpha = 1;
 
-            // Draw Malus
+            // Boss aura (phase 1+)
+            if (malus.phase >= 1 && malus.hp > 0) {
+                ctx.save();
+                const aSize = malus.phase === 2 ? 70 : 50;
+                const aAlpha = malus.phase === 2 ? 0.15 + Math.sin(time * 5) * 0.08 : 0.08 + Math.sin(time * 3) * 0.04;
+                ctx.globalAlpha = aAlpha;
+                ctx.globalCompositeOperation = 'lighter';
+                const ag = ctx.createRadialGradient(malus.x, malus.y, 5, malus.x, malus.y, aSize);
+                ag.addColorStop(0, malus.phase === 2 ? '#ef4444' : '#c4263d');
+                ag.addColorStop(0.5, malus.phase === 2 ? 'rgba(220,38,38,0.3)' : 'rgba(196,38,61,0.2)');
+                ag.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = ag;
+                ctx.beginPath(); ctx.arc(malus.x, malus.y, aSize, 0, Math.PI * 2); ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.restore();
+            }
+
+            // Draw characters
             bfDrawMalus(ctx, malus, time);
-            // Draw Eva
+            if (eva.shield.active) bfDrawHeartShield(ctx, eva, time);
             bfDrawEva(ctx, eva, time);
 
             // Draw projectiles
             bf.projectiles.forEach(p => {
                 if (p.type === 'orb') bfDrawOrb(ctx, p);
                 else if (p.type === 'lightning') bfDrawLightning(ctx, p, eva, malus);
+                else if (p.type === 'bottle') bfDrawBottle(ctx, p);
                 else if (p.type === 'moon') bfDrawMoonBlade(ctx, p);
-                else if (p.type === 'nova') bfDrawNova(ctx, p, malus);
             });
 
             // Damage texts
@@ -6625,6 +7243,20 @@
 
             // HUD
             bfDrawHUD(ctx, W, eva, malus);
+
+            // Phase 2 danger pulse
+            if (malus.phase === 2 && malus.hp > 0) {
+                const dp = 0.03 + Math.sin(time * 3) * 0.02;
+                ctx.fillStyle = `rgba(239,68,68,${dp})`;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            // Vignette
+            const vigS = 0.4 + malus.phase * 0.1;
+            const vig = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75);
+            vig.addColorStop(0, 'rgba(0,0,0,0)');
+            vig.addColorStop(1, `rgba(0,0,0,${vigS})`);
+            ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
 
             // Intro text
             if (bf.introTimer > 0) {
@@ -6651,12 +7283,14 @@
             ctx.save();
             ctx.translate(eva.x, eva.y);
             if (eva.inv > 0 && Math.sin(time * 20) > 0) ctx.globalAlpha = 0.3;
-
-            ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 18;
+            if (eva.shield.active) {
+                ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 22;
+            } else {
+                ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 18;
+            }
             const g = ctx.createLinearGradient(0, -32, 0, 18);
             g.addColorStop(0, '#fef08a'); g.addColorStop(0.4, '#f2d06b'); g.addColorStop(1, '#c9a84c');
             ctx.fillStyle = g;
-
             // Head
             ctx.beginPath(); ctx.arc(0, -28, 7, 0, Math.PI * 2); ctx.fill();
             // Body
@@ -6666,7 +7300,6 @@
             ctx.closePath(); ctx.fill();
             // Legs
             ctx.fillRect(-6, 16, 4, 10); ctx.fillRect(2, 16, 4, 10);
-
             // Hair
             ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 1.5; ctx.shadowBlur = 8;
             for (let i = 0; i < 3; i++) {
@@ -6676,24 +7309,22 @@
                 ctx.quadraticCurveTo(eva.facing * (-12 - i * 4) + off, -28 + i * 3, eva.facing * (-8 - i * 6), -18 + i * 5);
                 ctx.stroke();
             }
-
             // Attack arc
             if (eva.atk) {
                 ctx.globalAlpha = 1 - eva.atk.t / eva.atk.dur;
-                ctx.strokeStyle = eva.atk.type === 'lightning' ? '#facc15' : eva.atk.type === 'moon' ? '#93c5fd' : '#fb923c';
+                const atkC = { lightning: '#facc15', bottle: '#a78bfa', moon: '#93c5fd' };
+                ctx.strokeStyle = atkC[eva.atk.type] || '#facc15';
                 ctx.lineWidth = 2.5; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 20;
                 ctx.beginPath();
                 const sa = -Math.PI / 2 + (eva.atk.t / eva.atk.dur) * Math.PI;
                 ctx.arc(0, -10, 22, sa - 0.6, sa + 0.6); ctx.stroke();
             }
-
-            // Name label
+            // Name
             ctx.shadowBlur = 0; ctx.globalAlpha = 0.6;
-            ctx.fillStyle = '#f2d06b';
+            ctx.fillStyle = eva.shield.active ? '#f472b6' : '#f2d06b';
             ctx.font = `600 ${bf.W * 0.025}px Cinzel, serif`;
             ctx.textAlign = 'center';
-            ctx.fillText('EVA', 0, 38);
-
+            ctx.fillText(eva.shield.active ? 'EVA 🛡️' : 'EVA', 0, 38);
             ctx.restore();
         }
 
@@ -6702,48 +7333,60 @@
             const fy = Math.sin(time * 2) * 6;
             ctx.translate(malus.x, malus.y + fy);
             if (malus.hurt > 0) ctx.globalAlpha = 0.5 + Math.sin(time * 30) * 0.3;
-
-            ctx.shadowColor = '#c4263d'; ctx.shadowBlur = 25;
+            ctx.shadowColor = malus.phase === 2 ? '#ef4444' : '#c4263d';
+            ctx.shadowBlur = malus.phase === 2 ? 35 : 25;
             const ag = ctx.createRadialGradient(0, 0, 5, 0, 0, 38);
-            ag.addColorStop(0, malus.phase ? '#8b1a2e' : '#2a0a30');
-            ag.addColorStop(0.5, '#1a0520'); ag.addColorStop(1, 'rgba(10,2,15,0)');
+            ag.addColorStop(0, malus.phase === 2 ? '#dc2626' : malus.phase === 1 ? '#8b1a2e' : '#2a0a30');
+            ag.addColorStop(0.5, malus.phase === 2 ? '#450a0a' : '#1a0520');
+            ag.addColorStop(1, 'rgba(10,2,15,0)');
             ctx.fillStyle = ag;
-
             // Body
             ctx.beginPath();
-            for (let i = 0; i < 12; i++) {
-                const a = (i / 12) * Math.PI * 2;
-                const r = 28 + Math.sin(time * 3 + i * 1.5) * 7;
+            const bp = malus.phase === 2 ? 16 : 12;
+            for (let i = 0; i < bp; i++) {
+                const a = (i / bp) * Math.PI * 2;
+                const r = 28 + Math.sin(time * (3 + malus.phase * 2) + i * 1.5) * (7 + malus.phase * 3);
                 const px = Math.cos(a) * r, py = Math.sin(a) * r * 0.8;
                 i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
             }
             ctx.closePath(); ctx.fill();
-
             // Core
-            ctx.fillStyle = malus.phase ? '#4a0f1a' : '#0d0418';
+            ctx.fillStyle = malus.phase === 2 ? '#7f1d1d' : malus.phase === 1 ? '#4a0f1a' : '#0d0418';
             ctx.beginPath(); ctx.ellipse(0, 0, 20, 25, 0, 0, Math.PI * 2); ctx.fill();
-
-            // Eyes
-            ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 12;
-            ctx.fillStyle = malus.hurt > 0 ? '#fff' : '#ef4444';
-            ctx.beginPath(); ctx.ellipse(-7, -4, 3.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(7, -4, 3.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
-
+            // Eyes (track Eva)
+            const eAngle = Math.atan2(bf.eva.y - (malus.y + fy), bf.eva.x - malus.x);
+            const lkX = Math.cos(eAngle) * 1.5, lkY = Math.sin(eAngle) * 0.8;
+            ctx.shadowColor = malus.phase === 2 ? '#fca5a5' : '#ef4444';
+            ctx.shadowBlur = malus.phase === 2 ? 20 : 12;
+            ctx.fillStyle = malus.hurt > 0 ? '#fff' : (malus.phase === 2 ? '#fca5a5' : '#ef4444');
+            const eS = malus.phase === 2 ? 4.5 : 3.5;
+            ctx.beginPath(); ctx.ellipse(-7 + lkX, -4 + lkY, eS, eS * 0.7, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(7 + lkX, -4 + lkY, eS, eS * 0.7, 0, 0, Math.PI * 2); ctx.fill();
             // Tendrils
-            ctx.strokeStyle = malus.phase ? 'rgba(196,38,61,0.5)' : 'rgba(74,16,37,0.3)';
+            const tc = 4 + malus.phase * 2;
+            ctx.strokeStyle = malus.phase === 2 ? 'rgba(239,68,68,0.5)' : malus.phase === 1 ? 'rgba(196,38,61,0.5)' : 'rgba(74,16,37,0.3)';
             ctx.lineWidth = 1.5; ctx.shadowBlur = 4;
-            for (let i = 0; i < 4; i++) {
-                const a = (i / 4) * Math.PI + Math.PI * 0.5, w = Math.sin(time * 2 + i * 2) * 8;
+            for (let i = 0; i < tc; i++) {
+                const a = (i / tc) * Math.PI + Math.PI * 0.5;
+                const w = Math.sin(time * (2 + malus.phase) + i * 2) * (8 + malus.phase * 3);
                 ctx.beginPath();
                 ctx.moveTo(Math.cos(a) * 22, Math.sin(a) * 18);
-                ctx.quadraticCurveTo(Math.cos(a) * 36 + w, Math.sin(a) * 32, Math.cos(a) * 45 + w * 1.5, Math.sin(a) * 42);
+                ctx.quadraticCurveTo(Math.cos(a) * 36 + w, Math.sin(a) * 32,
+                    Math.cos(a) * (45 + malus.phase * 10) + w * 1.5, Math.sin(a) * (42 + malus.phase * 5));
                 ctx.stroke();
             }
-
-            // Name label
+            // Pause indicator
+            if (malus.phase === 2 && malus.isPaused) {
+                ctx.globalAlpha = 0.5 + Math.sin(time * 8) * 0.3;
+                ctx.fillStyle = '#ef4444';
+                ctx.font = `bold ${bf.W * 0.035}px Inter, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillText('...', 0, -45);
+            }
+            // Name
             if (malus.hp > 0) {
                 ctx.shadowBlur = 0; ctx.globalAlpha = 0.6;
-                ctx.fillStyle = '#c4263d';
+                ctx.fillStyle = malus.phase === 2 ? '#fca5a5' : '#c4263d';
                 ctx.font = `600 ${bf.W * 0.025}px Cinzel, serif`;
                 ctx.textAlign = 'center';
                 ctx.fillText('MALUS', 0, 45);
@@ -6754,94 +7397,168 @@
         function bfDrawOrb(ctx, p) {
             ctx.save(); ctx.translate(p.x, p.y);
             const g = ctx.createRadialGradient(0, 0, 2, 0, 0, p.r);
-            g.addColorStop(0, '#c4263d'); g.addColorStop(0.5, '#8b1a2e'); g.addColorStop(1, 'rgba(139,26,46,0)');
-            ctx.shadowColor = '#c4263d'; ctx.shadowBlur = 12;
+            g.addColorStop(0, p.spiral ? '#a855f7' : '#c4263d');
+            g.addColorStop(0.5, p.spiral ? '#7c3aed' : '#8b1a2e');
+            g.addColorStop(1, 'rgba(139,26,46,0)');
+            ctx.shadowColor = p.spiral ? '#a855f7' : '#c4263d'; ctx.shadowBlur = 12;
             ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = p.spiral ? '#c4b5fd' : '#ef4444';
+            ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI * 2); ctx.fill();
+            if (p.spiral) {
+                ctx.globalAlpha = 0.3; ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.arc(0, 0, p.r + 3, 0, Math.PI * 1.5); ctx.stroke();
+            }
             ctx.restore();
         }
 
         function bfDrawLightning(ctx, p, eva, malus) {
             if (p.t > p.dur) return;
             ctx.save();
-            ctx.globalAlpha = 1 - p.t / p.dur;
-            ctx.strokeStyle = '#facc15'; ctx.lineWidth = 2.5;
-            ctx.shadowColor = '#facc15'; ctx.shadowBlur = 18;
+            ctx.globalAlpha = (1 - p.t / p.dur) * (p.inCone ? 1 : 0.3);
+            ctx.strokeStyle = p.inCone ? '#facc15' : '#666';
+            ctx.lineWidth = p.inCone ? 2.5 : 1.5;
+            ctx.shadowColor = p.inCone ? '#facc15' : '#444'; ctx.shadowBlur = p.inCone ? 18 : 6;
+            // Cone indicator flash
+            if (p.t < 0.1) {
+                ctx.save();
+                ctx.globalAlpha *= 0.25;
+                ctx.beginPath(); ctx.moveTo(eva.x, eva.y - 22);
+                const cL = 120, cH = Math.PI / 4;
+                ctx.lineTo(eva.x + Math.cos(-Math.PI / 2 - cH) * cL, eva.y - 22 + Math.sin(-Math.PI / 2 - cH) * cL);
+                ctx.lineTo(eva.x + Math.cos(-Math.PI / 2 + cH) * cL, eva.y - 22 + Math.sin(-Math.PI / 2 + cH) * cL);
+                ctx.closePath();
+                ctx.fillStyle = p.inCone ? 'rgba(250,204,21,0.1)' : 'rgba(100,100,100,0.05)';
+                ctx.fill();
+                ctx.restore();
+                ctx.globalAlpha = (1 - p.t / p.dur) * (p.inCone ? 1 : 0.3);
+            }
+            // Lightning bolt
+            const tX = p.inCone ? malus.x : eva.x + (Math.random() - 0.5) * 80;
+            const tY = p.inCone ? malus.y : eva.y - 80;
             ctx.beginPath(); ctx.moveTo(eva.x, eva.y - 22);
             for (let i = 1; i <= 6; i++) {
                 const r = i / 6;
-                ctx.lineTo(eva.x + (malus.x - eva.x) * r + (Math.random() - 0.5) * 28,
-                    (eva.y - 22) + (malus.y - eva.y + 22) * r + (Math.random() - 0.5) * 12);
+                ctx.lineTo(eva.x + (tX - eva.x) * r + (Math.random() - 0.5) * 28,
+                    (eva.y - 22) + (tY - eva.y + 22) * r + (Math.random() - 0.5) * 12);
             }
             ctx.stroke();
-            ctx.lineWidth = 1; ctx.globalAlpha *= 0.5;
-            ctx.beginPath(); ctx.moveTo(eva.x + 3, eva.y - 20);
-            for (let i = 1; i <= 6; i++) {
-                const r = i / 6;
-                ctx.lineTo(eva.x + (malus.x - eva.x) * r + (Math.random() - 0.5) * 35,
-                    (eva.y - 20) + (malus.y - eva.y + 20) * r + (Math.random() - 0.5) * 18);
+            if (p.inCone) {
+                ctx.lineWidth = 1; ctx.globalAlpha *= 0.5;
+                ctx.beginPath(); ctx.moveTo(eva.x + 3, eva.y - 20);
+                for (let i = 1; i <= 6; i++) {
+                    const r = i / 6;
+                    ctx.lineTo(eva.x + (malus.x - eva.x) * r + (Math.random() - 0.5) * 35,
+                        (eva.y - 20) + (malus.y - eva.y + 20) * r + (Math.random() - 0.5) * 18);
+                }
+                ctx.stroke();
             }
-            ctx.stroke(); ctx.restore();
+            ctx.restore();
+        }
+
+        function bfDrawBottle(ctx, p) {
+            ctx.save();
+            ctx.translate(p.x, p.y); ctx.rotate(p.spin || 0);
+            ctx.shadowColor = '#a78bfa'; ctx.shadowBlur = 14;
+            ctx.fillStyle = '#c4b5fd';
+            ctx.beginPath(); ctx.roundRect(-5, -6, 10, 14, 2); ctx.fill();
+            ctx.fillStyle = '#ddd6fe'; ctx.fillRect(-3, -10, 6, 5);
+            ctx.fillStyle = '#7c3aed';
+            ctx.beginPath(); ctx.roundRect(-4, -13, 8, 4, 1); ctx.fill();
+            ctx.fillStyle = '#a78bfa'; ctx.globalAlpha = 0.6;
+            ctx.beginPath(); ctx.arc(0, -15, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
         }
 
         function bfDrawMoonBlade(ctx, p) {
             ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(bf.time * 8);
-            ctx.shadowColor = '#93c5fd'; ctx.shadowBlur = 18;
+            ctx.shadowColor = '#93c5fd'; ctx.shadowBlur = 22;
             ctx.fillStyle = '#bfdbfe';
             ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI);
             ctx.arc(4, 0, p.r * 0.7, Math.PI, 0, true);
             ctx.closePath(); ctx.fill();
             ctx.fillStyle = '#dbeafe'; ctx.beginPath(); ctx.arc(0, 0, p.r * 0.4, 0, Math.PI); ctx.fill();
+            ctx.globalAlpha = 0.3; ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = '#93c5fd';
+            ctx.beginPath(); ctx.arc(0, 0, p.r * 1.3, 0, Math.PI * 2); ctx.fill();
             ctx.restore();
         }
 
-        function bfDrawNova(ctx, p, malus) {
+        function bfDrawHeartShield(ctx, eva, time) {
             ctx.save();
-            if (p.t < 0.2) {
-                const r = p.t / 0.2;
-                ctx.globalAlpha = r; ctx.fillStyle = '#fb923c';
-                ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 30 * r;
-                ctx.beginPath(); ctx.arc(p.x, p.y, 14 * r, 0, Math.PI * 2); ctx.fill();
-            } else {
-                const r = (p.t - 0.2) / (p.dur - 0.2), rad = 18 + r * 55;
-                ctx.globalAlpha = 1 - r;
-                const g = ctx.createRadialGradient(malus.x, malus.y, 0, malus.x, malus.y, rad);
-                g.addColorStop(0, '#fff'); g.addColorStop(0.3, '#fef08a');
-                g.addColorStop(0.6, '#f2d06b'); g.addColorStop(1, 'rgba(242,208,107,0)');
-                ctx.fillStyle = g; ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 35;
-                ctx.beginPath(); ctx.arc(malus.x, malus.y, rad, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 1.5;
-                for (let i = 0; i < 8; i++) {
-                    const a = (i / 8) * Math.PI * 2 + bf.time * 3;
-                    ctx.beginPath(); ctx.moveTo(malus.x, malus.y);
-                    ctx.lineTo(malus.x + Math.cos(a) * rad * 1.3, malus.y + Math.sin(a) * rad * 1.3);
-                    ctx.stroke();
-                }
+            ctx.translate(eva.x, eva.y - 8);
+            const pulse = 1 + Math.sin(time * 4) * 0.06;
+            const s = 2 * pulse;
+            ctx.scale(s, -s);
+            // Heart outline
+            ctx.globalAlpha = 0.35 + Math.sin(time * 3) * 0.1;
+            ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 1.2 / s;
+            ctx.shadowColor = '#ec4899'; ctx.shadowBlur = 20;
+            ctx.beginPath();
+            for (let t = 0; t <= Math.PI * 2 + 0.1; t += 0.06) {
+                const hx = 16 * Math.pow(Math.sin(t), 3);
+                const hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+                t < 0.01 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
             }
+            ctx.closePath(); ctx.stroke();
+            // Heart fill
+            ctx.globalAlpha = 0.06 + Math.sin(time * 2.5) * 0.03;
+            const hg = ctx.createRadialGradient(0, 5, 0, 0, 5, 18);
+            hg.addColorStop(0, '#f472b6'); hg.addColorStop(1, 'rgba(244,114,182,0)');
+            ctx.fillStyle = hg; ctx.fill();
+            // Inner glow
+            ctx.globalAlpha = 0.15; ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = '#fda4af'; ctx.fill();
             ctx.restore();
         }
 
         function bfDrawHUD(ctx, W, eva, malus) {
-            const bw = W * 0.35, bh = 8, y = 14, pad = 10;
+            const bw = W * 0.35, bh = 10, y = 16, pad = 10;
             ctx.shadowBlur = 0;
             // Eva HP
-            ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(pad, y, bw, bh);
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath(); ctx.roundRect(pad, y, bw, bh, 4); ctx.fill();
             const eg = ctx.createLinearGradient(pad, 0, pad + bw, 0);
-            eg.addColorStop(0, '#f2d06b'); eg.addColorStop(1, '#c9a84c');
-            ctx.fillStyle = eg; ctx.fillRect(pad, y, bw * Math.max(0, eva.hp / eva.maxHp), bh);
-            ctx.strokeStyle = 'rgba(201,168,76,0.4)'; ctx.lineWidth = 1; ctx.strokeRect(pad, y, bw, bh);
-            ctx.fillStyle = '#f2d06b'; ctx.font = `600 ${W * 0.024}px Inter, sans-serif`;
-            ctx.textAlign = 'left'; ctx.fillText(`Eva  ${eva.hp}/${eva.maxHp}`, pad, y - 3);
+            if (eva.shield.active) { eg.addColorStop(0, '#f472b6'); eg.addColorStop(1, '#ec4899'); }
+            else { eg.addColorStop(0, '#f2d06b'); eg.addColorStop(1, '#c9a84c'); }
+            ctx.fillStyle = eg;
+            ctx.beginPath(); ctx.roundRect(pad, y, bw * Math.max(0, eva.hp / eva.maxHp), bh, 4); ctx.fill();
+            ctx.strokeStyle = eva.shield.active ? 'rgba(244,114,182,0.5)' : 'rgba(201,168,76,0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.roundRect(pad, y, bw, bh, 4); ctx.stroke();
+            ctx.fillStyle = eva.shield.active ? '#f472b6' : '#f2d06b';
+            ctx.font = `700 ${W * 0.026}px Inter, sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.fillText(`Eva  ${eva.hp}/${eva.maxHp}`, pad, y - 4);
+            // Shield timer
+            if (eva.shield.active) {
+                ctx.fillStyle = '#fda4af';
+                ctx.font = `600 ${W * 0.02}px Inter, sans-serif`;
+                ctx.fillText(`🛡️ ${eva.shield.timer.toFixed(1)}s`, pad + bw + 5, y + bh - 1);
+            }
             // Malus HP
             const mx = W - pad - bw;
-            ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(mx, y, bw, bh);
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath(); ctx.roundRect(mx, y, bw, bh, 4); ctx.fill();
             const mg = ctx.createLinearGradient(mx, 0, mx + bw, 0);
-            mg.addColorStop(0, '#c4263d'); mg.addColorStop(1, '#8b1a2e');
-            ctx.fillStyle = mg; ctx.fillRect(mx, y, bw * Math.max(0, malus.hp / malus.maxHp), bh);
-            ctx.strokeStyle = 'rgba(196,38,61,0.4)'; ctx.strokeRect(mx, y, bw, bh);
-            ctx.fillStyle = '#ef4444'; ctx.textAlign = 'right';
-            ctx.fillText(`Malus  ${malus.hp}/${malus.maxHp}`, W - pad, y - 3);
+            if (malus.phase === 2) { mg.addColorStop(0, '#ef4444'); mg.addColorStop(1, '#dc2626'); }
+            else { mg.addColorStop(0, '#c4263d'); mg.addColorStop(1, '#8b1a2e'); }
+            ctx.fillStyle = mg;
+            ctx.beginPath(); ctx.roundRect(mx, y, bw * Math.max(0, malus.hp / malus.maxHp), bh, 4); ctx.fill();
+            ctx.strokeStyle = malus.phase === 2 ? 'rgba(239,68,68,0.5)' : 'rgba(196,38,61,0.4)';
+            ctx.beginPath(); ctx.roundRect(mx, y, bw, bh, 4); ctx.stroke();
+            ctx.fillStyle = malus.phase === 2 ? '#fca5a5' : '#ef4444';
+            ctx.textAlign = 'right';
+            ctx.fillText(`Malus  ${malus.hp}/${malus.maxHp}`, W - pad, y - 4);
+            // Phase indicator
+            if (malus.phase >= 1 && malus.hp > 0) {
+                ctx.font = `600 ${W * 0.018}px Inter, sans-serif`;
+                ctx.fillStyle = malus.phase === 2 ? '#fca5a5' : '#f87171';
+                ctx.globalAlpha = 0.6 + Math.sin(bf.time * 4) * 0.2;
+                ctx.fillText(malus.phase === 2 ? '🔥 RAGE' : '⚠️ ENRAGÉ', W - pad, y + bh + 14);
+                ctx.globalAlpha = 1;
+            }
         }
+
 
         /* ─────────────────────────────────────────────────────────────
            BOOT 🚀
