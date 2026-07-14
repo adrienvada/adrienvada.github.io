@@ -1766,6 +1766,146 @@
             transition: transform 0.05s ease-out;
         }
 
+        .bf-difficulty-menu {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 2, 15, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            animation: bf-diff-fadein 0.25s ease;
+        }
+
+        @keyframes bf-diff-fadein {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .bf-difficulty-box {
+            background: linear-gradient(160deg, rgba(20, 8, 40, 0.98) 0%, rgba(10, 4, 25, 0.98) 100%);
+            border: 1px solid rgba(201, 168, 76, 0.25);
+            border-radius: 18px;
+            padding: 28px 24px;
+            max-width: 340px;
+            width: 90%;
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(201, 168, 76, 0.08);
+            text-align: center;
+        }
+
+        .bf-diff-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #f2d06b;
+            text-shadow: 0 0 14px rgba(242, 208, 107, 0.4);
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .bf-diff-subtitle {
+            font-size: 0.72rem;
+            color: var(--text-muted, #888);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .bf-diff-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .bf-diff-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1.5px solid;
+            cursor: pointer;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .bf-diff-card:active {
+            transform: scale(0.97);
+        }
+
+        .bf-diff-card.easy {
+            border-color: rgba(74, 222, 128, 0.45);
+        }
+
+        .bf-diff-card.easy:hover {
+            background: rgba(74, 222, 128, 0.08);
+            box-shadow: 0 0 16px rgba(74, 222, 128, 0.15);
+        }
+
+        .bf-diff-card.normal {
+            border-color: rgba(250, 204, 21, 0.45);
+        }
+
+        .bf-diff-card.normal:hover {
+            background: rgba(250, 204, 21, 0.08);
+            box-shadow: 0 0 16px rgba(250, 204, 21, 0.15);
+        }
+
+        .bf-diff-card.hard {
+            border-color: rgba(239, 68, 68, 0.45);
+        }
+
+        .bf-diff-card.hard:hover {
+            background: rgba(239, 68, 68, 0.08);
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.2);
+        }
+
+        .bf-diff-icon {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+            width: 36px;
+            text-align: center;
+        }
+
+        .bf-diff-info {
+            flex: 1;
+        }
+
+        .bf-diff-name {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .bf-diff-card.easy .bf-diff-name {
+            color: #4ade80;
+        }
+
+        .bf-diff-card.normal .bf-diff-name {
+            color: #facc15;
+        }
+
+        .bf-diff-card.hard .bf-diff-name {
+            color: #ef4444;
+        }
+
+        .bf-diff-desc {
+            font-size: 0.64rem;
+            color: var(--text-muted, #888);
+            line-height: 1.4;
+        }
+
         .bf-atk-buttons {
             display: flex;
             gap: 6px;
@@ -1781,14 +1921,18 @@
         }
 
         .bf-btn-label {
-            font-size: 0.5rem;
+            font-size: 0.42rem;
             font-family: 'Inter', sans-serif;
             font-weight: 700;
-            letter-spacing: 0.3px;
-            opacity: 0.85;
+            letter-spacing: 0px;
+            opacity: 0.9;
             text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
             pointer-events: none;
             text-transform: uppercase;
+            text-align: center;
+            line-height: 1.2;
+            max-width: 56px;
+            word-break: break-word;
         }
 
         .bf-btn {
@@ -2974,6 +3118,45 @@
             touch-action: none;
         }
 
+        .piano-sound-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 auto 6px;
+            padding: 7px 16px;
+            background: rgba(15, 12, 25, 0.55);
+            border: 1px solid rgba(201, 168, 76, 0.35);
+            border-radius: 50px;
+            color: rgba(201, 168, 76, 0.65);
+            font-family: var(--font-body, sans-serif);
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: fit-content;
+            text-transform: uppercase;
+        }
+
+        .piano-sound-toggle:hover {
+            border-color: rgba(201, 168, 76, 0.7);
+            color: rgba(201, 168, 76, 1);
+            background: rgba(201, 168, 76, 0.08);
+            box-shadow: 0 0 12px rgba(201, 168, 76, 0.15);
+        }
+
+        .piano-sound-toggle.active {
+            border-color: rgba(201, 168, 76, 0.8);
+            color: rgba(201, 168, 76, 1);
+            background: rgba(201, 168, 76, 0.12);
+            box-shadow: 0 0 16px rgba(201, 168, 76, 0.2);
+        }
+
+        .piano-sound-toggle .psound-icon {
+            font-size: 1rem;
+            line-height: 1;
+        }
+
         .piano-keyboard.disabled {
             pointer-events: none;
         }
@@ -3443,7 +3626,7 @@
                 titre: "La plus belle",
                 description: "Une personne brillait particulièrement ce jour là.",
                 image: "assets/enigme2_cadre_eva_floue.jpeg",
-                reponseAttendue: ["Eva", "EVA", "eva", "Eva"],
+                reponseAttendue: ["Eva", "EVA", "eva", "Eva", "éva", "Éva", "ÉVA", "Éva"],
                 indices: [
                     "Ca n'est pas un personnage de Disney",
                     "Mais ça y ressemble fort",
@@ -3462,7 +3645,7 @@
                 id: 3,
                 type: "carousel",
                 titre: "Dans le cadre...",
-                description: "Cela semble être un des personnages principaux de l'enquête.",
+                description: "Cela semble être un des personnages principaux de l'enquête. Il séit sous plusieurs alias. Nous avons reconstitué un dossier.",
                 image: null,
                 images: [
                     "assets/Enigme Eva jeune/Compress/1 - Petite.jpeg",
@@ -3523,7 +3706,7 @@
                 id: 4,
                 type: "piano",
                 titre: "Duet",
-                description: "", // Aucun texte explicatif, tout est visuel
+                description: "Parfait accord",
                 indices: [
                     "Connais-tu le nom des notes dans ta langue de naissance ?",
                     "Le piano est le seul instrument que nous ayons pratiqué tous les deux.",
@@ -3769,9 +3952,9 @@
                 imageRevelee: "assets/analyses mst-2 - reveal.png",
                 reponseAttendue: ["évali", "evali", "ÉVALI", "Évali"],
                 indices: [
-                    "Un secret est dissimulé directement dans le premier examen du document.",
-                    "Passe ton doigt sur les lignes de la sérologie HIV 1 et 2.",
-                    "Le mot à entrer est le prénom fluorescent qui apparaît : Évali."
+                    "Il semblerait que quelque chose soit caché page 2...",
+                    "Ton doigt te permet de scanner !",
+                    "Un prénom fluorescent apparaît : Évali."
                 ]
             },
 
@@ -4515,6 +4698,12 @@
                 case 'piano':
                     interactionHtml = `
             <div class="piano-container">
+              <div style="text-align:center;">
+                <button class="piano-sound-toggle" id="piano-sound-btn" onclick="togglePianoSound(this)" title="Activer le son">
+                  <span class="psound-icon">🔇</span>
+                  <span id="piano-sound-label">Son désactivé — cliquez pour activer</span>
+                </button>
+              </div>
               <div class="piano-keyboard" id="piano-keyboard">
                 <!-- White Keys -->
                 <div class="piano-key white" data-freq="440" data-note="A"></div>
@@ -4603,7 +4792,7 @@
                     <div>⚡ <strong style="color:#facc15">Éclair d'Amour</strong> — 1 dégât (cône frontal)</div>
                     <div>🧴 <strong style="color:#a78bfa">Lancer d'Alcoo Ménager</strong> — 3 dégâts (CD 2s)</div>
                     <div>🌙 <strong style="color:#93c5fd">Laku Noc</strong> — 5 dégâts (CD 15s)</div>
-                    <div>🤗 <strong style="color:#f472b6">Câlin</strong> — Bouclier ❤️ 5s + soin 3 PV (CD 30s)</div>
+                    <div>💋 <strong style="color:#f472b6">Orgasme</strong> — Renvoie les projectiles vers Malus (cercle, 5s, CD 30s)</div>
                 </div>
                 <button class="btn btn-primary" onclick="startBossFight()" style="margin-top:18px;">⚔️ Commencer le combat</button>
                 <div class="bf-kb-hint">Clavier : ← → pour bouger · 1 2 3 4 pour attaquer</div>
@@ -5361,6 +5550,29 @@
         let pressedNotes = new Set();
         let pianoSuccessTimer = null;
         let pianoSolved = false;
+        let pianoSoundEnabled = false;
+
+        function togglePianoSound(btn) {
+            pianoSoundEnabled = !pianoSoundEnabled;
+            const icon = btn.querySelector('.psound-icon');
+            const label = document.getElementById('piano-sound-label');
+            if (pianoSoundEnabled) {
+                icon.textContent = '🔊';
+                label.textContent = 'Son activé';
+                btn.classList.add('active');
+                // Unlock AudioContext on user gesture
+                try {
+                    const ctx = getPianoAudioContext();
+                    if (ctx.state === 'suspended') ctx.resume();
+                } catch (e) { }
+            } else {
+                icon.textContent = '🔇';
+                label.textContent = 'Son désactivé — cliquez pour activer';
+                btn.classList.remove('active');
+                // Mute all active notes immediately
+                Object.keys(activeOscillators).forEach(n => stopNote(n));
+            }
+        }
 
         function getPianoAudioContext() {
             if (!pianoAudioCtx) {
@@ -5373,6 +5585,7 @@
         }
 
         function playNote(freq, noteId) {
+            if (!pianoSoundEnabled) return;
             try {
                 const ctx = getPianoAudioContext();
                 stopNote(noteId);
@@ -7207,6 +7420,49 @@
         let bf = null;
 
         function startBossFight() {
+            // Show difficulty selection overlay
+            const menu = document.createElement('div');
+            menu.className = 'bf-difficulty-menu';
+            menu.id = 'bf-difficulty-menu';
+            menu.innerHTML = `
+                <div class="bf-difficulty-box">
+                    <div class="bf-diff-title">⚔️ Choisir la difficulté</div>
+                    <div class="bf-diff-subtitle">Le niveau de difficulté affecte les PV d'Eva et la résistance de Malus.</div>
+                    <div class="bf-diff-cards">
+                        <button class="bf-diff-card easy" onclick="_bfPickDiff('easy')">
+                            <span class="bf-diff-icon">🌿</span>
+                            <div class="bf-diff-info">
+                                <div class="bf-diff-name">Facile</div>
+                                <div class="bf-diff-desc">Eva +10 PV · Malus PV ×1<br>Pour profiter de l'histoire</div>
+                            </div>
+                        </button>
+                        <button class="bf-diff-card normal" onclick="_bfPickDiff('normal')">
+                            <span class="bf-diff-icon">⚔️</span>
+                            <div class="bf-diff-info">
+                                <div class="bf-diff-name">Normal</div>
+                                <div class="bf-diff-desc">Eva +5 PV · Malus PV ×2<br>L'expérience équilibrée</div>
+                            </div>
+                        </button>
+                        <button class="bf-diff-card hard" onclick="_bfPickDiff('hard')">
+                            <span class="bf-diff-icon">🔥</span>
+                            <div class="bf-diff-info">
+                                <div class="bf-diff-name">Difficile</div>
+                                <div class="bf-diff-desc">Eva +0 PV · Malus PV ×3<br>Pour les warriors</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(menu);
+        }
+
+        function _bfPickDiff(diff) {
+            const menu = document.getElementById('bf-difficulty-menu');
+            if (menu) menu.remove();
+            _startBossFightActual(diff);
+        }
+
+        function _startBossFightActual(diff) {
             $app.innerHTML = `
                 <div class="bf-wrapper" id="bf-wrapper">
                     <canvas id="bf-canvas" class="bf-canvas"></canvas>
@@ -7217,19 +7473,20 @@
                         <div class="bf-atk-buttons">
                             <div class="bf-btn-wrap">
                                 <button class="bf-btn bf-btn-lightning" id="bf-btn-lightning">⚡</button>
-                                <span class="bf-btn-label" style="color:#facc15">Éclair</span>
+                                <span class="bf-btn-label" style="color:#facc15">Éclair d'Amour</span>
                             </div>
                             <div class="bf-btn-wrap">
                                 <button class="bf-btn bf-btn-bottle" id="bf-btn-bottle">🧴</button>
-                                <span class="bf-btn-label" style="color:#a78bfa">Alcoo</span>
+                                <span class="bf-btn-label" style="color:#a78bfa">Alcool
+Ménager</span>
                             </div>
                             <div class="bf-btn-wrap">
                                 <button class="bf-btn bf-btn-moon" id="bf-btn-moon">🌙</button>
-                                <span class="bf-btn-label" style="color:#93c5fd">Laku</span>
+                                <span class="bf-btn-label" style="color:#93c5fd">Laku Noc</span>
                             </div>
                             <div class="bf-btn-wrap">
-                                <button class="bf-btn bf-btn-shield" id="bf-btn-shield">🤗</button>
-                                <span class="bf-btn-label" style="color:#f472b6">Câlin</span>
+                                <button class="bf-btn bf-btn-shield" id="bf-btn-shield">💋</button>
+                                <span class="bf-btn-label" style="color:#f472b6">Orgasme</span>
                             </div>
                         </div>
                     </div>
@@ -7238,10 +7495,10 @@
             const wrapper = document.getElementById('bf-wrapper');
             wrapper.addEventListener('touchstart', e => { if (e.target === wrapper || e.target.tagName === 'CANVAS') e.preventDefault(); }, { passive: false });
             wrapper.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-            initBFGame();
+            initBFGame(diff);
         }
 
-        function initBFGame() {
+        function initBFGame(diff) {
             const canvas = document.getElementById('bf-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
@@ -7252,14 +7509,20 @@
             canvas.height = ch * dpr;
             canvas.style.height = ch + 'px';
             ctx.scale(dpr, dpr);
-            const malusHP = Math.max(3, totalErrorsCount * totalHintsCount);
+            const baseHP = Math.max(3, totalErrorsCount * totalHintsCount);
+            const easyBonus = diff === 'easy' ? 10 : diff === 'normal' ? 5 : 0;
+            const malusMult = diff === 'easy' ? 1 : diff === 'normal' ? 2 : 3;
+            const evaMaxHp = 5 + easyBonus;
+            const malusHP = Math.max(3, baseHP * malusMult);
+            const diffLabel = diff === 'easy' ? '🌿 Facile' : diff === 'normal' ? '⚔️ Normal' : '🔥 Difficile';
 
             bf = {
                 ctx, canvas, W: cw, H: ch, running: true, time: 0,
                 shake: 0, flash: 0, flashColor: '#fff', introTimer: 1.5,
+                difficulty: diff, diffLabel,
                 eva: {
                     x: cw / 2, y: ch * 0.78, w: 28, h: 48,
-                    speed: cw * 0.5, hp: 5, maxHp: 5,
+                    speed: cw * 0.5, hp: evaMaxHp, maxHp: evaMaxHp,
                     dir: 0, facing: 1, inv: 0, atk: null,
                     cd: [0, 0, 0, 0], trail: [], anim: 0,
                     shield: { active: false, timer: 0, healAccum: 0 }
@@ -7361,11 +7624,11 @@
         function bfDoAttack(idx) {
             if (!bf || !bf.running || bf.introTimer > 0) return;
             const { eva, malus } = bf;
-            if (eva.shield.active && idx !== 3) return;
+            if (eva.orgasme && eva.orgasme.active && idx !== 3) return;
             if (eva.cd[idx] > 0 || (eva.atk && idx !== 3)) return;
 
             if (idx === 0) {
-                // ⚡ Éclair d'Amour — cone check
+                // ⚡ Éclair d'Amour — cone check ±15°
                 eva.cd[0] = 0.8;
                 eva.atk = { type: 'lightning', t: 0, dur: 0.3, dmg: 1 };
                 const dx = malus.x - eva.x, dy = malus.y - eva.y;
@@ -7374,7 +7637,7 @@
                 let angleDiff = angle - coneCenter;
                 if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
                 if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-                const inCone = Math.abs(angleDiff) < Math.PI / 4;
+                const inCone = Math.abs(angleDiff) < Math.PI / 12; // ±15°
                 bf.projectiles.push({ type: 'lightning', x: eva.x, y: eva.y - 20, t: 0, dur: 0.3, dmg: 1, hit: false, inCone });
                 for (let i = 0; i < 8; i++) {
                     const r = i / 8;
@@ -7394,23 +7657,24 @@
                 eva.atk = { type: 'bottle', t: 0, dur: 0.4, dmg: 3 };
                 bf.projectiles.push({ type: 'bottle', x: eva.x, y: eva.y - 30, vx: 0, vy: -bf.H * 0.95, t: 0, dur: 1.5, dmg: 3, r: 10, hit: false, spin: 0 });
             } else if (idx === 2) {
-                // 🌙 Laku Noc — moon blade
+                // 🌙 Laku Noc — moon blade (10 dmg, large hitbox)
                 eva.cd[2] = 15;
-                eva.atk = { type: 'moon', t: 0, dur: 0.8, dmg: 5 };
-                bf.projectiles.push({ type: 'moon', x: eva.x, y: eva.y - 30, vx: 0, vy: -bf.H * 0.85, t: 0, dur: 0.8, dmg: 5, r: 22, hit: false });
-                bf.shake = 0.2; bf.flash = 0.1; bf.flashColor = '#93c5fd';
+                eva.atk = { type: 'moon', t: 0, dur: 0.8, dmg: 10 };
+                eva.shout = { text: 'Laku noć !', t: 1.3, color: '#93c5fd' };
+                bf.projectiles.push({ type: 'moon', x: eva.x, y: eva.y - 30, vx: 0, vy: -bf.H * 0.85, t: 0, dur: 0.8, dmg: 10, r: 40, hit: false });
+                bf.shake = 0.3; bf.flash = 0.2; bf.flashColor = '#93c5fd';
             } else if (idx === 3) {
-                // 🤗 Câlin — shield
-                if (eva.shield.active) return;
-                eva.cd[3] = 30;
-                eva.shield = { active: true, timer: 5, healAccum: 0 };
+                // 💋 Orgasme — reflect orbs back toward Malus
+                if (eva.orgasme && eva.orgasme.active) return;
+                eva.cd[3] = 18;
+                eva.orgasme = { active: true, timer: 5 };
                 eva.atk = null;
-                bf.flash = 0.15; bf.flashColor = '#f472b6';
-                for (let i = 0; i < 25; i++) {
-                    const a = (i / 25) * Math.PI * 2;
-                    bfParticle(eva.x + Math.cos(a) * 25, eva.y + Math.sin(a) * 25,
-                        Math.cos(a) * 50, Math.sin(a) * 50, 0.8,
-                        ['#f472b6', '#ec4899', '#fb7185', '#fda4af'][i % 4], 4);
+                bf.flash = 0.2; bf.flashColor = '#f472b6';
+                for (let i = 0; i < 30; i++) {
+                    const a = (i / 30) * Math.PI * 2;
+                    bfParticle(eva.x + Math.cos(a) * 38, eva.y + Math.sin(a) * 38,
+                        Math.cos(a) * 70, Math.sin(a) * 70, 1.0,
+                        ['#f472b6', '#ec4899', '#fb7185', '#fda4af', '#fff'][i % 5], 5);
                 }
             }
             updateBFBtns();
@@ -7485,6 +7749,7 @@
             if (eva.dir !== 0) eva.facing = eva.dir > 0 ? 1 : -1;
             eva.inv = Math.max(0, eva.inv - dt);
             eva.anim += dt;
+            if (eva.shout) { eva.shout.t -= dt; if (eva.shout.t <= 0) eva.shout = null; }
             if (Math.abs(eva.dir) > 0.1) eva.trail.push({ x: eva.x, y: eva.y, a: 0.4 });
             eva.trail = eva.trail.filter(p => (p.a -= dt * 1.5) > 0);
             if (eva.atk) { eva.atk.t += dt; if (eva.atk.t >= eva.atk.dur) eva.atk = null; }
@@ -7498,23 +7763,43 @@
                 }
             }
 
-            // ── Shield Update ──
-            if (eva.shield.active) {
-                eva.shield.timer -= dt;
-                const healRate = 3 / 5;
-                eva.shield.healAccum += healRate * dt;
-                while (eva.shield.healAccum >= 1 && eva.hp < eva.maxHp) {
+            // ── Orgasme Update ──
+            if (eva.orgasme && eva.orgasme.active) {
+                eva.orgasme.timer -= dt;
+                // Heal: 50% of maxHp over 5s = 10% per second, rounded up
+                const healRate = Math.ceil(eva.maxHp * 0.1);
+                eva.orgasme.healAccum = (eva.orgasme.healAccum || 0) + healRate * dt;
+                while (eva.orgasme.healAccum >= 1 && eva.hp < eva.maxHp) {
                     eva.hp = Math.min(eva.maxHp, eva.hp + 1);
-                    eva.shield.healAccum -= 1;
-                    bf.dmgTexts.push({ x: eva.x + (Math.random() - 0.5) * 20, y: eva.y - 45, text: '+1 ❤️', color: '#f472b6', t: 1.0 });
+                    eva.orgasme.healAccum -= 1;
+                    bf.dmgTexts.push({ x: eva.x + (Math.random() - 0.5) * 20, y: eva.y - 45, text: '+1 ♥', color: '#f472b6', t: 1.0 });
                 }
-                if (Math.random() < 0.35) {
+                // Pulse particles around Eva
+                if (Math.random() < 0.5) {
                     const a = Math.random() * Math.PI * 2;
-                    bfParticle(eva.x + Math.cos(a) * 28, eva.y - 5 + Math.sin(a) * 22,
-                        Math.cos(a) * 12 + (Math.random() - 0.5) * 8, -8 - Math.random() * 12, 0.5, '#f472b6', 2.5);
+                    bfParticle(eva.x + Math.cos(a) * 40, eva.y + Math.sin(a) * 40,
+                        Math.cos(a) * 15 + (Math.random() - 0.5) * 10, Math.sin(a) * 15 - Math.random() * 8, 0.6, '#f472b6', 2.5);
                 }
-                if (eva.shield.timer <= 0) {
-                    eva.shield.active = false; eva.shield.timer = 0; eva.shield.healAccum = 0;
+                // Reflect any orbs that enter the circular hitbox (r=42)
+                bf.projectiles.forEach(p => {
+                    if (p.type !== 'orb' || p.reflected) return;
+                    const dx = p.x - eva.x, dy = p.y - eva.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 42) {
+                        p.reflected = true;
+                        // Direction from Eva toward Malus
+                        const tdx = malus.x - eva.x, tdy = malus.y - eva.y;
+                        const td = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
+                        const spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy) * 1.2;
+                        p.vx = (tdx / td) * spd; p.vy = (tdy / td) * spd;
+                        p.dmg = 1; p.dur = p.t + 2;
+                        // Splash particles
+                        for (let i = 0; i < 8; i++)
+                            bfParticle(p.x, p.y, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120, 0.4, '#f472b6', 3);
+                    }
+                });
+                if (eva.orgasme.timer <= 0) {
+                    eva.orgasme = null;
                 }
             }
             updateBFBtns();
@@ -7613,10 +7898,11 @@
                         if (eva.hp <= 0) bfEndGame(false);
                         return false;
                     }
-                    // Shield deflection
-                    if (eva.shield.active && Math.abs(p.x - eva.x) < 30 && Math.abs(p.y - eva.y) < 35) {
-                        for (let i = 0; i < 5; i++)
-                            bfParticle(p.x, p.y, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100, 0.3, '#f472b6', 3);
+                    // Orgasme reflection (handled in update loop above; skip orbs already reflected or consumed)
+                    if (p.reflected && Math.abs(p.x - malus.x) < 40 && Math.abs(p.y - malus.y) < 50) {
+                        bfHitMalus(p.dmg);
+                        for (let i = 0; i < 12; i++)
+                            bfParticle(malus.x, malus.y, (Math.random() - 0.5) * 150, (Math.random() - 0.5) * 150, 0.6, '#f472b6', 4);
                         return false;
                     }
                     if (Math.random() < 0.25) bfParticle(p.x, p.y, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15, 0.3, '#8b1a2e', 3);
@@ -7641,14 +7927,14 @@
                 }
                 if (p.type === 'moon') {
                     p.x += p.vx * dt; p.y += p.vy * dt;
-                    bfParticle(p.x + (Math.random() - 0.5) * 12, p.y, (Math.random() - 0.5) * 30, Math.random() * 20, 0.4, '#93c5fd', 3);
-                    if (!p.hit && Math.abs(p.x - malus.x) < 40 && Math.abs(p.y - malus.y) < 45) {
+                    bfParticle(p.x + (Math.random() - 0.5) * 16, p.y, (Math.random() - 0.5) * 40, Math.random() * 25, 0.4, '#93c5fd', 4);
+                    if (!p.hit && Math.abs(p.x - malus.x) < 55 && Math.abs(p.y - malus.y) < 65) {
                         p.hit = true; bfHitMalus(p.dmg);
-                        bf.shake = 0.5; bf.flash = 0.25; bf.flashColor = '#93c5fd';
-                        for (let i = 0; i < 30; i++) {
-                            const a = (i / 30) * Math.PI * 2, spd = 100 + Math.random() * 150;
-                            bfParticle(malus.x, malus.y, Math.cos(a) * spd, Math.sin(a) * spd, 0.8,
-                                ['#93c5fd', '#bfdbfe', '#dbeafe', '#fff'][i % 4], 5);
+                        bf.shake = 0.6; bf.flash = 0.35; bf.flashColor = '#93c5fd';
+                        for (let i = 0; i < 40; i++) {
+                            const a = (i / 40) * Math.PI * 2, spd = 120 + Math.random() * 180;
+                            bfParticle(malus.x, malus.y, Math.cos(a) * spd, Math.sin(a) * spd, 1.0,
+                                ['#93c5fd', '#bfdbfe', '#dbeafe', '#fff', '#e0f2fe'][i % 5], 6);
                         }
                     }
                 }
@@ -7734,12 +8020,13 @@
             if (!bf) return;
             const names = ['lightning', 'bottle', 'moon', 'shield'];
             const maxCds = [0.8, 2, 15, 30];
+            const orgActive = bf.eva.orgasme && bf.eva.orgasme.active;
             names.forEach((n, i) => {
                 const btn = document.getElementById('bf-btn-' + n);
                 if (!btn) return;
                 const cd = bf.eva.cd[i];
-                const blocked = bf.eva.shield.active && i !== 3;
-                btn.classList.toggle('on-cd', cd > 0 || blocked);
+                const blocked = orgActive && i !== 3;
+                btn.classList.toggle('on-cd', cd > 0 || (i === 3 && orgActive));
                 let ov = btn.querySelector('.bf-cd-overlay');
                 if (!ov) { ov = document.createElement('div'); ov.className = 'bf-cd-overlay'; btn.appendChild(ov); }
                 ov.style.height = cd > 0 ? (cd / maxCds[i] * 100) + '%' : blocked ? '100%' : '0';
@@ -7858,8 +8145,8 @@
 
             // Draw characters
             bfDrawMalus(ctx, malus, time);
-            if (eva.shield.active) bfDrawHeartShield(ctx, eva, time);
             bfDrawEva(ctx, eva, time);
+            if (eva.orgasme && eva.orgasme.active) bfDrawOrgasmeRing(ctx, eva, time);
 
             // Draw projectiles
             bf.projectiles.forEach(p => {
@@ -7961,10 +8248,31 @@
             }
             // Name
             ctx.shadowBlur = 0; ctx.globalAlpha = 0.6;
-            ctx.fillStyle = eva.shield.active ? '#f472b6' : '#f2d06b';
+            ctx.fillStyle = (eva.orgasme && eva.orgasme.active) ? '#f472b6' : '#f2d06b';
             ctx.font = `600 ${bf.W * 0.025}px Cinzel, serif`;
             ctx.textAlign = 'center';
-            ctx.fillText(eva.shield.active ? 'EVA 🛡️' : 'EVA', 0, 38);
+            ctx.fillText((eva.orgasme && eva.orgasme.active) ? 'EVA 💋' : 'EVA', 0, 38);
+
+            // BD / comic character shout bubble next to Eva
+            if (eva.shout && eva.shout.t > 0) {
+                ctx.save();
+                const a = Math.min(1, eva.shout.t * 3);
+                ctx.globalAlpha = a;
+                ctx.shadowColor = eva.shout.color;
+                ctx.shadowBlur = 16;
+                const fs = Math.round(bf.W * 0.042);
+                ctx.font = `bold italic ${fs}px Inter, sans-serif`;
+                ctx.textAlign = 'left';
+                ctx.lineWidth = 3.5;
+                ctx.strokeStyle = '#0a020f';
+                ctx.strokeText(eva.shout.text, 22, -26);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(eva.shout.text, 22, -26);
+                ctx.fillStyle = eva.shout.color;
+                ctx.fillText(eva.shout.text, 21, -27);
+                ctx.restore();
+            }
+
             ctx.restore();
         }
 
@@ -8110,44 +8418,146 @@
         }
 
         function bfDrawMoonBlade(ctx, p) {
-            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(bf.time * 8);
-            ctx.shadowColor = '#93c5fd'; ctx.shadowBlur = 22;
+            ctx.save();
+            const age = Math.min(1, p.t / 0.12);
+            const fade = Math.max(0, 1 - p.t / p.dur);
+            const alpha = age * fade;
+            ctx.globalAlpha = alpha;
+
+            // Translate to projectile center and spin
+            ctx.translate(p.x, p.y);
+            ctx.rotate(bf.time * 6);
+
+            // ── trailing stardust ──
+            ctx.globalCompositeOperation = 'lighter';
+            for (let i = 0; i < 3; i++) {
+                const ta = Math.random() * Math.PI * 2;
+                const tr = p.r * (0.6 + Math.random() * 0.7);
+                const sg = ctx.createRadialGradient(Math.cos(ta) * tr * 0.3, Math.sin(ta) * tr * 0.3, 0, 0, 0, tr);
+                sg.addColorStop(0, 'rgba(219,234,254,0.18)');
+                sg.addColorStop(1, 'rgba(147,197,253,0)');
+                ctx.fillStyle = sg;
+                ctx.beginPath(); ctx.arc(0, 0, tr, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.globalCompositeOperation = 'source-over';
+
+            // ── outer corona ──
+            ctx.shadowColor = '#93c5fd'; ctx.shadowBlur = 38;
+            const corona = ctx.createRadialGradient(0, 0, p.r * 0.5, 0, 0, p.r * 1.7);
+            corona.addColorStop(0, 'rgba(147,197,253,0.18)');
+            corona.addColorStop(0.5, 'rgba(96,165,250,0.08)');
+            corona.addColorStop(1, 'rgba(59,130,246,0)');
+            ctx.fillStyle = corona;
+            ctx.beginPath(); ctx.arc(0, 0, p.r * 1.7, 0, Math.PI * 2); ctx.fill();
+
+            // ── crescent body (using winding rule: outer circle clockwise, inner circle counter-clockwise) ──
+            ctx.shadowBlur = 20;
             ctx.fillStyle = '#bfdbfe';
-            ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI);
-            ctx.arc(4, 0, p.r * 0.7, Math.PI, 0, true);
-            ctx.closePath(); ctx.fill();
-            ctx.fillStyle = '#dbeafe'; ctx.beginPath(); ctx.arc(0, 0, p.r * 0.4, 0, Math.PI); ctx.fill();
-            ctx.globalAlpha = 0.3; ctx.globalCompositeOperation = 'lighter';
-            ctx.fillStyle = '#93c5fd';
-            ctx.beginPath(); ctx.arc(0, 0, p.r * 1.3, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath();
+            ctx.arc(0, 0, p.r, 0, Math.PI * 2, false);
+            ctx.arc(p.r * 0.42, -p.r * 0.08, p.r * 0.82, Math.PI * 2, 0, true);
+            ctx.fill();
+
+            // ── inner highlight ──
+            ctx.shadowBlur = 12;
+            ctx.fillStyle = '#e0f2fe';
+            ctx.beginPath();
+            ctx.arc(-p.r * 0.18, 0, p.r * 0.28, 0, Math.PI * 2);
+            ctx.fill();
+
+            // ── star sparkles orbiting the moon ──
+            ctx.shadowColor = '#dbeafe'; ctx.shadowBlur = 8;
+            const nStars = 5;
+            for (let i = 0; i < nStars; i++) {
+                const sa = (i / nStars) * Math.PI * 2 + bf.time * 1.8;
+                const sd = p.r * 1.45 + Math.sin(bf.time * 3 + i) * p.r * 0.15;
+                const sx = Math.cos(sa) * sd;
+                const sy = Math.sin(sa) * sd;
+                const ss = 1.5 + Math.sin(bf.time * 4 + i * 1.3) * 1;
+                ctx.fillStyle = '#dbeafe';
+                ctx.globalAlpha = alpha * (0.5 + Math.sin(bf.time * 5 + i) * 0.3);
+                ctx.beginPath(); ctx.arc(sx, sy, ss, 0, Math.PI * 2); ctx.fill();
+            }
+
             ctx.restore();
         }
 
-        function bfDrawHeartShield(ctx, eva, time) {
+        function bfDrawOrgasmeRing(ctx, eva, time) {
             ctx.save();
-            ctx.translate(eva.x, eva.y - 8);
-            const pulse = 1 + Math.sin(time * 4) * 0.06;
-            const s = 2 * pulse;
-            ctx.scale(s, -s);
-            // Heart outline
-            ctx.globalAlpha = 0.35 + Math.sin(time * 3) * 0.1;
-            ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 1.2 / s;
-            ctx.shadowColor = '#ec4899'; ctx.shadowBlur = 20;
+            const r = 42;
+            const pulse = 1 + Math.sin(time * 8) * 0.07;
+
+            // ── Outer glow ring ──
+            ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 25;
+            ctx.globalAlpha = 0.5 + Math.sin(time * 6) * 0.15;
+            ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.arc(eva.x, eva.y, r * pulse, 0, Math.PI * 2); ctx.stroke();
+
+            // ── Inner radial fill ──
+            ctx.globalAlpha = 0.08 + Math.sin(time * 4) * 0.04;
+            const rg = ctx.createRadialGradient(eva.x, eva.y, 0, eva.x, eva.y, r);
+            rg.addColorStop(0, 'rgba(244,114,182,0.6)'); rg.addColorStop(1, 'rgba(244,114,182,0)');
+            ctx.fillStyle = rg;
+            ctx.beginPath(); ctx.arc(eva.x, eva.y, r, 0, Math.PI * 2); ctx.fill();
+
+            // ── Spinning 💋 orbit ──
+            ctx.globalAlpha = 0.45; ctx.globalCompositeOperation = 'lighter';
+            for (let i = 0; i < 6; i++) {
+                const a = (i / 6) * Math.PI * 2 + time * 2;
+                const x = eva.x + Math.cos(a) * r * 0.85;
+                const y = eva.y + Math.sin(a) * r * 0.85;
+                ctx.fillStyle = '#fda4af';
+                ctx.font = '10px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText('💋', x, y);
+            }
+            ctx.globalCompositeOperation = 'source-over';
+
+            // ── Vibrating parametric heart ──
+            // The heart uses the parametric eq: x=16sin³(t), y=13cos(t)-5cos(2t)-2cos(3t)-cos(4t)
+            // We scale it and apply a vibration + pulsation
+            ctx.save();
+            const hScale = (18 + Math.sin(time * 14) * 3) * (1 + Math.sin(time * 5) * 0.08);
+            const hX = eva.x;
+            const hY = eva.y - 4;  // slightly above center
+
+            // Outer glow pass (additive)
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = 0.4 + Math.sin(time * 7) * 0.15;
+            ctx.shadowColor = '#ec4899'; ctx.shadowBlur = 35;
+            ctx.fillStyle = '#ec4899';
             ctx.beginPath();
-            for (let t = 0; t <= Math.PI * 2 + 0.1; t += 0.06) {
-                const hx = 16 * Math.pow(Math.sin(t), 3);
-                const hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+            for (let t = 0; t <= Math.PI * 2; t += 0.05) {
+                const hx = hX + (16 * Math.pow(Math.sin(t), 3)) * hScale * 0.065;
+                const hy = hY - (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * hScale * 0.065;
+                t < 0.01 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
+            }
+            ctx.closePath(); ctx.fill();
+
+            // Sharp stroke pass
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 1.0;
+            ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 20;
+            ctx.strokeStyle = '#f9a8d4'; ctx.lineWidth = 3.2;
+            ctx.beginPath();
+            for (let t = 0; t <= Math.PI * 2; t += 0.04) {
+                const hx = hX + (16 * Math.pow(Math.sin(t), 3)) * hScale * 0.065;
+                const hy = hY - (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * hScale * 0.065;
                 t < 0.01 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
             }
             ctx.closePath(); ctx.stroke();
-            // Heart fill
-            ctx.globalAlpha = 0.06 + Math.sin(time * 2.5) * 0.03;
-            const hg = ctx.createRadialGradient(0, 5, 0, 0, 5, 18);
-            hg.addColorStop(0, '#f472b6'); hg.addColorStop(1, 'rgba(244,114,182,0)');
-            ctx.fillStyle = hg; ctx.fill();
-            // Inner glow
-            ctx.globalAlpha = 0.15; ctx.globalCompositeOperation = 'lighter';
-            ctx.fillStyle = '#fda4af'; ctx.fill();
+
+            // Highlight fill (bright centre)
+            ctx.globalAlpha = 0.45 + Math.sin(time * 9) * 0.15;
+            ctx.fillStyle = '#fce7f3';
+            ctx.beginPath();
+            for (let t = 0; t <= Math.PI * 2; t += 0.07) {
+                const hx = hX + (16 * Math.pow(Math.sin(t), 3)) * hScale * 0.035;
+                const hy = hY - (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * hScale * 0.035;
+                t < 0.01 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
+            }
+            ctx.closePath(); ctx.fill();
+
+            ctx.restore();
             ctx.restore();
         }
 
@@ -8158,22 +8568,23 @@
             ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.beginPath(); ctx.roundRect(pad, y, bw, bh, 4); ctx.fill();
             const eg = ctx.createLinearGradient(pad, 0, pad + bw, 0);
-            if (eva.shield.active) { eg.addColorStop(0, '#f472b6'); eg.addColorStop(1, '#ec4899'); }
+            const orgActive = eva.orgasme && eva.orgasme.active;
+            if (orgActive) { eg.addColorStop(0, '#f472b6'); eg.addColorStop(1, '#ec4899'); }
             else { eg.addColorStop(0, '#f2d06b'); eg.addColorStop(1, '#c9a84c'); }
             ctx.fillStyle = eg;
             ctx.beginPath(); ctx.roundRect(pad, y, bw * Math.max(0, eva.hp / eva.maxHp), bh, 4); ctx.fill();
-            ctx.strokeStyle = eva.shield.active ? 'rgba(244,114,182,0.5)' : 'rgba(201,168,76,0.4)';
+            ctx.strokeStyle = (eva.orgasme && eva.orgasme.active) ? 'rgba(244,114,182,0.5)' : 'rgba(201,168,76,0.4)';
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.roundRect(pad, y, bw, bh, 4); ctx.stroke();
-            ctx.fillStyle = eva.shield.active ? '#f472b6' : '#f2d06b';
+            ctx.fillStyle = (eva.orgasme && eva.orgasme.active) ? '#f472b6' : '#f2d06b';
             ctx.font = `700 ${W * 0.026}px Inter, sans-serif`;
             ctx.textAlign = 'left';
             ctx.fillText(`Eva  ${eva.hp}/${eva.maxHp}`, pad, y - 4);
-            // Shield timer
-            if (eva.shield.active) {
+            // Orgasme timer
+            if (eva.orgasme && eva.orgasme.active) {
                 ctx.fillStyle = '#fda4af';
                 ctx.font = `600 ${W * 0.02}px Inter, sans-serif`;
-                ctx.fillText(`🛡️ ${eva.shield.timer.toFixed(1)}s`, pad + bw + 5, y + bh - 1);
+                ctx.fillText(`💋 ${eva.orgasme.timer.toFixed(1)}s`, pad + bw + 5, y + bh - 1);
             }
             // Malus HP
             const mx = W - pad - bw;
@@ -8195,6 +8606,15 @@
                 ctx.fillStyle = malus.phase === 2 ? '#fca5a5' : '#f87171';
                 ctx.globalAlpha = 0.6 + Math.sin(bf.time * 4) * 0.2;
                 ctx.fillText(malus.phase === 2 ? '🔥 RAGE' : '⚠️ ENRAGÉ', W - pad, y + bh + 14);
+                ctx.globalAlpha = 1;
+            }
+            // Difficulty badge (centred top)
+            if (bf.diffLabel) {
+                ctx.font = `600 ${W * 0.019}px Inter, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillStyle = bf.difficulty === 'easy' ? '#4ade80' : bf.difficulty === 'normal' ? '#facc15' : '#ef4444';
+                ctx.globalAlpha = 0.55;
+                ctx.fillText(bf.diffLabel, W / 2, y + bh - 1);
                 ctx.globalAlpha = 1;
             }
         }
