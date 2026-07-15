@@ -4810,6 +4810,9 @@
 
                 if (playWav) {
                     this.lastUnlockTime = now;
+                    if (typeof currentIndex !== 'undefined') {
+                        window._successSoundPlayedForIndex = currentIndex;
+                    }
                     try {
                         const audio = new Audio('assets/sons/unlocked.wav');
                         const baseVol = this.sfxVolume !== undefined ? this.sfxVolume : 0.5;
@@ -6245,7 +6248,7 @@
             const btn = document.getElementById('btn-validate');
             if (isCorrect) {
                 triggerLockValidationFeedback(true, btn);
-                showFeedback('success', '✅ Bonne réponse ! Bien joué.');
+                showFeedback('success', '✅ Bonne réponse ! Bien joué.', false);
                 input.disabled = true;
                 document.querySelectorAll('.char-input').forEach(inp => inp.disabled = true);
                 if (btn) btn.disabled = true;
@@ -6279,7 +6282,7 @@
 
             if (acceptedDates.includes(answer)) {
                 triggerLockValidationFeedback(true, btn);
-                showFeedback('success', '✅ Bonne date ! Bien joué.');
+                showFeedback('success', '✅ Bonne date ! Bien joué.', false);
                 input.disabled = true;
                 input.classList.add('correct');
                 if (btn) btn.disabled = true;
@@ -6346,7 +6349,7 @@
 
             if (isCorrect) {
                 triggerLockValidationFeedback(true, btn);
-                showFeedback('success', '✅ Bonne réponse ! Le code est correct.');
+                showFeedback('success', '✅ Bonne réponse ! Le code est correct.', false);
                 if (picker) picker.style.pointerEvents = 'none';
                 if (btn) btn.disabled = true;
                 setTimeout(() => handleSuccess(), 1000);
@@ -6438,7 +6441,7 @@
 
             if (isCorrect) {
                 triggerLockValidationFeedback(true, btn);
-                showFeedback('success', '🎰 Trop forte, jackpot ! La combinaison de mes préférences est la bonne. 😍');
+                showFeedback('success', '🎰 Trop forte, jackpot ! La combinaison de mes préférences est la bonne. 😍', false);
                 if (picker) picker.style.pointerEvents = 'none';
                 if (btn) btn.disabled = true;
                 setTimeout(() => handleSuccess(), 1000);
@@ -6593,7 +6596,7 @@
             const totalMinutes = _clockHours * 60 + _clockMinutes;
             if (totalMinutes >= 120 && totalMinutes <= 154) {
                 triggerLockValidationFeedback(true, btn);
-                showFeedback('success', '✅ Durée correcte ! Bien calculé.');
+                showFeedback('success', '✅ Durée correcte ! Bien calculé.', false);
                 const container = document.querySelector('.clock-puzzle-container');
                 if (container) container.style.pointerEvents = 'none';
                 if (btn) btn.disabled = true;
@@ -6723,6 +6726,7 @@
 
         function triggerPianoSuccess() {
             pianoSolved = true;
+            ChateauAudio.playSuccess(true);
             if (pianoSuccessTimer) {
                 clearTimeout(pianoSuccessTimer);
                 pianoSuccessTimer = null;
@@ -6747,7 +6751,7 @@
             if (keyE) keyE.classList.add('success-active');
 
             // Display success feedback
-            showFeedback('success', '✨ Magnifique ! L\'accord A & E a retenti pendant 1 seconde. ✨');
+            showFeedback('success', '✨ Magnifique ! L\'accord A & E a retenti pendant 1 seconde. ✨', false);
 
             // Call handleSuccess after 4 seconds
             setTimeout(() => {
@@ -6812,7 +6816,8 @@
                 const allRevealed = targetWord.split('').every(c => window._hangmanGuessed.has(c));
                 if (allRevealed) {
                     document.querySelectorAll('.hangman-key').forEach(b => b.disabled = true);
-                    showFeedback('success', "✨ Expression trouvée : PARMESAN-POUBELLE ! Magnifique !");
+                    ChateauAudio.playSuccess(true);
+                    showFeedback('success', "✨ Expression trouvée : PARMESAN-POUBELLE ! Magnifique !", false);
                     setTimeout(() => {
                         handleSuccess();
                     }, 1400);
@@ -7167,6 +7172,7 @@
                 [...selected].sort().join(',') === [...expected].sort().join(',');
 
             if (isCorrect) {
+                ChateauAudio.playSuccess(true);
                 // Mark gems as correct
                 selected.forEach(gemId => {
                     const el = document.getElementById('gem-' + gemId);
@@ -7175,7 +7181,7 @@
                         el.classList.add('correct');
                     }
                 });
-                showFeedback('success', '✅ Bonne combinaison ! Les pierres s\'illuminent.');
+                showFeedback('success', '✅ Bonne combinaison ! Les pierres s\'illuminent.', false);
                 // Disable all gems & reset btn
                 document.querySelectorAll('.gem-hotspot').forEach(el => {
                     el.style.pointerEvents = 'none';
@@ -7352,8 +7358,9 @@
 
                                 if ($widget) $widget.classList.add('frozen');
                                 if ($status) $status.textContent = '✅ Position validée !';
+                                ChateauAudio.playSuccess(true);
 
-                                showFeedback('success', '📍 Cible atteinte avec succès ! Le souvenir se déverrouille…');
+                                showFeedback('success', '📍 Cible atteinte avec succès ! Le souvenir se déverrouille…', false);
                                 setTimeout(() => handleSuccess(), 1500);
                             } else if (!isFrozen && $status) {
                                 $status.textContent = `📍 Zone atteinte ! Ne bougez plus (${Math.ceil(3 - elapsed)}s)…`;
@@ -7559,7 +7566,8 @@
                     if (!window._mosaicHadError) ChateauAchievements.unlock('lynx');
                     document.querySelectorAll('.mosaic-tile').forEach(t => t.classList.add('disabled'));
                     allValid.forEach(t => t.classList.add('mosaic-win-pulse'));
-                    showFeedback('success', '✅ Space invader trouvé ! Bien joué.');
+                    ChateauAudio.playSuccess(true);
+                    showFeedback('success', '✅ Space invader trouvé ! Bien joué.', false);
 
                     let btnContainer = document.getElementById('mosaic-next-btn-container');
                     if (!btnContainer) {
@@ -7571,7 +7579,7 @@
                         btnContainer.style.pointerEvents = 'none';
                         btnContainer.style.transform = 'translateY(15px)';
                         btnContainer.style.transition = 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
-                        btnContainer.innerHTML = `<button class="btn btn-primary" style="padding: 16px 36px; font-size: 1.15rem; box-shadow: 0 0 30px rgba(0, 255, 136, 0.6); border-color: #00ff88; animation: float 3s ease-in-out infinite; background: linear-gradient(135deg, #10b981, #059669); color: #fff;" onclick="handleSuccess(true)">Passer à l'énigme suivante ↗</button>`;
+                        btnContainer.innerHTML = `<button class="btn btn-primary" style="padding: 16px 36px; font-size: 1.15rem; box-shadow: 0 0 30px rgba(0, 255, 136, 0.6); border-color: #00ff88; animation: float 3s ease-in-out infinite; background: linear-gradient(135deg, #10b981, #059669); color: #fff;" onclick="handleSuccess()">Passer à l'énigme suivante ↗</button>`;
                         const gridWrapper = document.getElementById('mosaic-grid-wrapper');
                         if (gridWrapper && gridWrapper.parentNode) {
                             gridWrapper.parentNode.insertBefore(btnContainer, gridWrapper.nextSibling);
@@ -7714,7 +7722,7 @@
             window._e1Timer = setInterval(tickE1, 1000);
 
             const twEl = document.getElementById('enigma1-tw');
-            const announcementText = "Bravo tu as trouvé la date clé de cet escape game. Attention : le trésor de cet escape game apparaîtra le 19 à minuit. Il faut que tu aies résolu toutes les énigmes avant pour chercher son emplacement... \n Game on?";
+            const announcementText = "Bravo tu as trouvé la date clé de cet escape game. Attention : le trésor de cet escape game apparaîtra le 19 à minuit. Il faut que tu aies résolu toutes les énigmes avant pour connaître son emplacement... \n Game on?";
 
             typewriter(twEl, announcementText, 35, 500, () => {
                 // Step 1: Reveal the countdown box below the text on the success screen
@@ -7984,7 +7992,11 @@
 
         function advanceToNext(fromButton = false) {
             if (fromButton) {
-                ChateauAudio.playSuccess(true);
+                if (window._successSoundPlayedForIndex !== currentIndex) {
+                    ChateauAudio.playSuccess(true);
+                } else {
+                    ChateauAudio.playClick(true);
+                }
             }
             triggerPortalTransition();
             currentIndex++;
@@ -9760,6 +9772,7 @@
             if (!bf) return;
             bf.running = false;
             if (win) {
+                ChateauAudio.playSuccess(true);
                 for (let i = 0; i < 50; i++) {
                     const a = (i / 50) * Math.PI * 2, sp = 50 + Math.random() * 200;
                     bfParticle(bf.malus.x, bf.malus.y, Math.cos(a) * sp, Math.sin(a) * sp, 1.2,
