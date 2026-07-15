@@ -3756,11 +3756,26 @@
         }
 
         /* ───────────────────────── GAMIFICATION & AUDIO CSS ───────────────────────── */
-        .achievement-toast {
+        /* Nouveau conteneur pour empiler les notifications */
+        #toast-container {
             position: fixed;
             bottom: 30px;
             right: 30px;
             z-index: 100000;
+            display: flex;
+            flex-direction: column-reverse;
+            /* Empile les nouvelles notifications au-dessus des anciennes */
+            gap: 12px;
+            pointer-events: none;
+            /* Permet de cliquer à travers l'espace vide du conteneur */
+        }
+
+        /* La classe modifiée */
+        .achievement-toast {
+            position: relative;
+            /* On retire le fixed, bottom et right gérés par le conteneur */
+            pointer-events: auto;
+            /* On réactive le clic sur la notification elle-même */
             background: rgba(15, 23, 42, 0.95);
             border: 1.5px solid var(--clr-gold-bright);
             box-shadow: 0 10px 30px rgba(201, 168, 76, 0.35);
@@ -4946,6 +4961,15 @@
                 if (el) el.textContent = this.unlocked.size;
             },
             showToast(ach) {
+                // 1. Cherche ou crée le conteneur
+                let container = document.getElementById('toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toast-container';
+                    document.body.appendChild(container);
+                }
+
+                // 2. Crée la notification
                 const toast = document.createElement('div');
                 toast.className = 'achievement-toast';
                 toast.innerHTML = `
@@ -4956,7 +4980,10 @@
                         <div class="achievement-toast-desc">${ach.desc}</div>
                     </div>
                 `;
-                document.body.appendChild(toast);
+
+                // 3. Ajoute la notification dans le conteneur (et non plus directement dans le body)
+                container.appendChild(toast);
+
                 setTimeout(() => {
                     toast.style.animation = 'toast-slide-out 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards';
                     setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
