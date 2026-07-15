@@ -8,7 +8,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0a0f1d">
     <meta name="description" content="Joyeux anniversaire">
-    <title>❤️ Bon anniversaire</title>
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="À nos 2 ans ♥️">
+    <link rel="manifest" href="manifest.json">
+    <title>À nos 2 ans ♥️</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -96,6 +101,7 @@
         }
 
         body {
+            perspective: 1200px;
             min-height: 100dvh;
             background: var(--bg-deep);
             position: relative;
@@ -121,11 +127,11 @@
             inset: 0;
             z-index: 0;
             background: radial-gradient(circle at 50% 30%, #1a103c 0%, #0a081a 60%, #05050f 100%);
-            background-image: url('pour-toi/assets/images/chateau_bg.jpg');
+            background-image: url('assets\chateau_bg.jpeg');
             background-size: cover;
             background-position: center top;
-            filter: brightness(0.35) saturate(0.8);
-            transform: scale(1.03);
+            filter: brightness(0.65) saturate(0.8);
+            transform: scale(1.1);
             transition: filter 2s ease;
             will-change: filter, transform;
         }
@@ -134,7 +140,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom, rgba(5, 5, 15, 0.35) 0%, rgba(5, 5, 15, 0.65) 45%, rgba(5, 5, 15, 0.95) 85%, rgba(5, 5, 15, 1) 100%);
+            background: linear-gradient(to bottom, rgba(5, 5, 15, 0.1) 0%, rgba(5, 5, 15, 0.4) 45%, rgba(5, 5, 15, 0.8) 100%);
         }
 
         /* ────────────────────────── POUR-TOI SPECIAL ANIMATIONS & STYLES ────────────────────────── */
