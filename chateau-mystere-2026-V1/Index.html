@@ -4203,7 +4203,7 @@
                 indices: [
                     "Le piano est un instrument qui nous connecte.",
                     "Connais-tu le nom des notes dans ta langue de naissance ?",
-                    "L'accord A & E : Do & Mi"
+                    "L'accord A & E : La & Mi"
                 ]
             },
 
@@ -6094,7 +6094,11 @@
             if (btn && btn.classList.contains('btn-validate-lockable')) {
                 const icon = btn.querySelector('.validate-lock-icon');
                 if (isCorrect) {
-                    ChateauAudio.playSuccess(true);
+                    // Retarder le son de 300ms pour qu'il "frappe" en même temps que le cadenas s'ouvre
+                    setTimeout(() => {
+                        ChateauAudio.playSuccess(true);
+                    }, 300);
+
                     if (icon) {
                         icon.textContent = '🔓';
                         icon.classList.remove('lock-vibrate');
