@@ -5319,13 +5319,21 @@
                         "Orange": "🍊",
                         "Citron": "🍋"
                     };
+                    const answerFruits = ["Abricot", "Fraise", "Cerise"];
                     const shuffleArray = (arr) => {
-                        const res = [...arr];
-                        for (let i = res.length - 1; i > 0; i--) {
-                            const j = Math.floor(Math.random() * (i + 1));
-                            [res[i], res[j]] = [res[j], res[i]];
-                        }
-                        return res;
+                        // Séparer fruits neutres et fruits réponses, puis mélanger chaque groupe
+                        const neutral = arr.filter(f => !answerFruits.includes(f));
+                        const answers = arr.filter(f => answerFruits.includes(f));
+                        const shuffle = (a) => {
+                            const r = [...a];
+                            for (let i = r.length - 1; i > 0; i--) {
+                                const j = Math.floor(Math.random() * (i + 1));
+                                [r[i], r[j]] = [r[j], r[i]];
+                            }
+                            return r;
+                        };
+                        // Les 3 premières positions (visibles) = fruits neutres, puis les réponses
+                        return [...shuffle(neutral), ...shuffle(answers)];
                     };
                     const createLoopedWheelHtml = () => {
                         const shuffled = shuffleArray(fruits);
@@ -5700,7 +5708,7 @@
                     ['wheel-fruit-1', 'wheel-fruit-2', 'wheel-fruit-3'].forEach(id => {
                         const wheel = document.getElementById(id);
                         if (wheel) {
-                            const randomOffset = Math.floor(Math.random() * 7);
+                            const randomOffset = Math.floor(Math.random() * 4); // Seulement les 4 fruits neutres
                             wheel.scrollTop = (7 * 7 + randomOffset) * 48;
                             handleFruitWheelScroll(wheel);
                         }
