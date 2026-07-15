@@ -2116,16 +2116,31 @@
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
-            transition: transform 0.08s, opacity 0.2s, box-shadow 0.3s;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+            background: rgba(15, 23, 42, 0.88);
         }
 
         .bf-btn-wrap:active .bf-btn,
         .bf-btn-bear-wrap:active .bf-btn,
         .bf-btn:active {
             transform: scale(0.82);
+        }
+
+        .bf-btn-click-feedback {
+            animation: bfBtnClick 0.15s ease-out;
+        }
+
+        @keyframes bfBtnClick {
+            0% {
+                transform: scale(1);
+            }
+
+            30% {
+                transform: scale(0.78);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .bf-btn-lightning {
@@ -2288,8 +2303,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(5, 5, 15, 0.88);
-            backdrop-filter: blur(10px);
+            background: rgba(5, 5, 15, 0.95);
             z-index: 10;
             animation: fade-in 0.5s ease;
             border-radius: var(--radius-md);
@@ -8875,20 +8889,15 @@
                     spiralAngle: 0, isPaused: false, pauseTimer: 0,
                     currentPattern: 'aimed', patternIndex: 0
                 },
-                projectiles: [], particles: [], dmgTexts: [],
-                stars: Array.from({ length: 60 }, () => ({
-                    x: Math.random() * cw, y: Math.random() * ch,
-                    s: Math.random() * 1.8 + 0.3, t: Math.random() * 6.28,
-                    sp: Math.random() * 0.02 + 0.005,
-                    layer: Math.floor(Math.random() * 3)
+                projectiles: [], particles: [], dmgTexts: [], bgLightnings: [], bgLightningTimer: 2.0,
+                stars: Array.from({ length: 12 }, () => ({
+                    angle: Math.random() * Math.PI * 2,
+                    dist: Math.random() * 600,
+                    speed: 180 + Math.random() * 220,
+                    s: Math.random() * 1.5 + 0.5
                 })),
-                nebulae: Array.from({ length: 5 }, () => ({
-                    x: Math.random() * cw, y: Math.random() * ch,
-                    rx: 40 + Math.random() * 80, ry: 30 + Math.random() * 60,
-                    color: ['rgba(139,26,46,0.04)', 'rgba(167,139,250,0.03)', 'rgba(201,168,76,0.03)',
-                        'rgba(59,130,246,0.04)', 'rgba(244,114,182,0.03)'][Math.floor(Math.random() * 5)],
-                    drift: (Math.random() - 0.5) * 8, phase: Math.random() * Math.PI * 2
-                })),
+                gridY: 0,
+
                 runes: Array.from({ length: 8 }, () => ({
                     x: Math.random() * cw, y: Math.random() * ch,
                     char: '✦⬡◇△⊕☆✧⟡'[Math.floor(Math.random() * 8)],
@@ -9040,6 +9049,17 @@
             if (!bf || !bf.running || bf.introTimer > 0) return;
             const { eva, malus } = bf;
             if (eva.orgasme && eva.orgasme.active && idx !== 3) return;
+
+            // Animation feedback au clic/toucher (même en cooldown)
+            const names = ['lightning', 'bottle', 'moon', 'shield', 'expresso', 'bear'];
+            const btn = document.getElementById('bf-btn-' + names[idx]);
+            if (btn) {
+                btn.classList.remove('bf-btn-click-feedback');
+                void btn.offsetWidth; // Force reflow pour relancer l'animation CSS
+                btn.classList.add('bf-btn-click-feedback');
+                setTimeout(() => btn.classList.remove('bf-btn-click-feedback'), 150);
+            }
+
             if (eva.cd[idx] > 0 || (eva.atk && idx !== 3)) return;
 
             if (idx === 0) {
@@ -9303,7 +9323,11 @@
                     eva.expresso = null;
                 }
             }
-            updateBFBtns();
+            bf._btnTimer = (bf._btnTimer || 0) + dt;
+            if (bf._btnTimer >= 0.05) {
+                bf._btnTimer = 0;
+                updateBFBtns();
+            }
 
             // ── Malus AI ──
             const prevPhase = malus.phase;
@@ -9554,9 +9578,58 @@
                     r.char = '✦⬡◇△⊕☆✧⟡'[Math.floor(Math.random() * 8)];
                 }
             });
-            // Nebula drift
-            bf.nebulae.forEach(n => { n.phase += dt * 0.15; n.x += Math.sin(n.phase) * n.drift * dt; });
-            // ... (fin de la gestion des projectiles de Malus)
+
+            // Mise à jour de la grille de fond et des étoiles en tunnel (effet Warp)
+            bf.gridY = (bf.gridY + dt * 60) % 80;
+            const maxDist = Math.hypot(W, H);
+            bf.stars.forEach(s => {
+                s.dist += s.speed * dt;
+                if (s.dist > maxDist) {
+                    s.dist = 0;
+                    s.angle = Math.random() * Math.PI * 2;
+                    s.speed = 180 + Math.random() * 220;
+                }
+            });
+
+
+            // Spawning background red lightnings (sporadique, s'intensifie selon la phase de Malus)
+            bf.bgLightningTimer -= dt;
+            if (bf.bgLightningTimer <= 0) {
+                const phase = malus.phase; // 0, 1, 2, 3
+                const baseTimer = [6.0, 4.0, 2.2, 1.1][phase] || 6.0;
+                bf.bgLightningTimer = baseTimer + Math.random() * baseTimer;
+
+                // Stade de Malus phase 0,1,2,3 -> Max 1,2,3,4 éclairs simultanés
+                const maxCount = phase + 1;
+                const spawnCount = Math.floor(Math.random() * maxCount) + 1;
+                for (let k = 0; k < spawnCount; k++) {
+                    const lX = Math.random() * W;
+                    const points = [{ x: lX, y: 0 }];
+                    let currY = 0;
+                    let currX = lX;
+                    const segments = 10;
+                    const segmentHeight = H / segments;
+                    for (let s = 1; s <= segments; s++) {
+                        currY += segmentHeight;
+                        currX += (Math.random() - 0.5) * 45;
+                        points.push({ x: currX, y: currY });
+                    }
+                    bf.bgLightnings.push({
+                        points,
+                        t: 0,
+                        dur: 0.15 + Math.random() * 0.10,
+                        width: 1.5 + Math.random() * 2,
+                        opacity: 0.5 + Math.random() * 0.4,
+                        rgb: ['129, 140, 248', '192, 132, 252', '244, 114, 182', '239, 68, 68'][phase] || '129, 140, 248'
+                    });
+                }
+            }
+
+            // Update background lightnings
+            if (bf.bgLightnings) {
+                bf.bgLightnings.forEach(l => { l.t += dt; });
+                bf.bgLightnings = bf.bgLightnings.filter(l => l.t < l.dur);
+            }
 
             // ── Update QTE (Événements rythmiques) ──
             bf.qteSpawnTimer -= dt;
@@ -9780,20 +9853,91 @@
             }
             ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
-            // Nebula clouds
-            bf.nebulae.forEach(n => {
-                ctx.fillStyle = n.color;
-                ctx.beginPath(); ctx.ellipse(n.x, n.y, n.rx, n.ry, 0, 0, Math.PI * 2); ctx.fill();
-            });
+            // Draw background lightnings (dans le fond, avec couleurs harmonisées à la phase et très optimisé)
+            let maxIntensity = 0;
+            let maxRgb = '129, 140, 248';
+            if (bf.bgLightnings) {
+                bf.bgLightnings.forEach(l => {
+                    const ratio = l.t / l.dur;
+                    const alpha = (1 - ratio) * l.opacity;
+                    if (alpha > maxIntensity) {
+                        maxIntensity = alpha;
+                        maxRgb = l.rgb;
+                    }
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(${l.rgb || '129, 140, 248'}, ${alpha})`;
+                    ctx.lineWidth = l.width;
+                    ctx.shadowBlur = 0;
+                    ctx.beginPath();
+                    ctx.moveTo(l.points[0].x, l.points[0].y);
+                    for (let i = 1; i < l.points.length; i++) {
+                        ctx.lineTo(l.points[i].x, l.points[i].y);
+                    }
+                    ctx.stroke();
+                    // Fine white core for high-voltage effect
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
+                    ctx.lineWidth = l.width * 0.35;
+                    ctx.stroke();
+                    ctx.restore();
+                });
+            }
 
-            // Stars (3-layer parallax)
+            // Illumination très subtile de l'arrière-plan derrière Malus en dégradé radial vers le bas
+            if (maxIntensity > 0) {
+                ctx.save();
+                const glowAlpha = maxIntensity * 0.15; // Intensité très douce
+                const glowGrad = ctx.createRadialGradient(malus.x, malus.y, 20, malus.x, malus.y, H * 0.65);
+                glowGrad.addColorStop(0, `rgba(${maxRgb}, ${glowAlpha})`);
+                glowGrad.addColorStop(1, `rgba(${maxRgb}, 0)`);
+                ctx.fillStyle = glowGrad;
+                ctx.fillRect(0, 0, W, H);
+                ctx.restore();
+            }
+
+
+
+            // Grille Cybernétique de fond (Option B - défilement vertical ultra-optimisé)
+            ctx.save();
+            ctx.strokeStyle = malus.phase === 3 ? 'rgba(239, 68, 68, 0.08)' : malus.phase === 2 ? 'rgba(244, 114, 182, 0.06)' : 'rgba(167, 139, 250, 0.06)';
+            ctx.lineWidth = 1.0;
+            ctx.shadowBlur = 0;
+            // Lignes horizontales défilantes
+            for (let y = bf.gridY; y < H; y += 80) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(W, y);
+                ctx.stroke();
+            }
+            // Lignes verticales de perspective discrètes partant du centre de Malus
+            const malusY = malus.y + Math.sin(time * 2) * 6;
+            const cX = malus.x;
+            const cY = malusY;
+            const nPersp = 6;
+            for (let i = 0; i <= nPersp; i++) {
+                const ratio = i / nPersp;
+                const targetX = ratio * W;
+                ctx.beginPath();
+                ctx.moveTo(cX, cY);
+                ctx.lineTo(targetX, H);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // Stars (Option C - Warp Starfield Tunnel radiating dynamically from Malus)
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.shadowBlur = 0;
             bf.stars.forEach(s => {
-                s.t += s.sp;
-                const px = s.x + Math.sin(time * 0.1 * (1 + s.layer * 0.3)) * (2 + s.layer * 2);
-                const br = 0.2 + 0.15 * s.layer + 0.2 * Math.sin(s.t);
-                ctx.fillStyle = `rgba(255,255,255,${br})`;
-                ctx.beginPath(); ctx.arc(px, s.y, s.s * (0.6 + s.layer * 0.3), 0, Math.PI * 2); ctx.fill();
+                const px = cX + Math.cos(s.angle) * s.dist;
+                const py = cY + Math.sin(s.angle) * s.dist;
+                if (px >= 0 && px <= W && py >= 0 && py <= H) {
+                    const factor = s.dist / 400;
+                    ctx.beginPath();
+                    ctx.arc(px, py, s.s * (0.5 + factor * 1.5), 0, Math.PI * 2);
+                    ctx.fill();
+                }
             });
+            ctx.restore();
 
             // Floating runes
             bf.runes.forEach(r => {
@@ -9973,11 +10117,12 @@
             ctx.save();
             const fy = Math.sin(time * 3) * 4;
             ctx.translate(bear.x, bear.y + fy);
-            ctx.shadowColor = '#fb7185'; ctx.shadowBlur = 20;
+            ctx.shadowColor = '#fb7185'; ctx.shadowBlur = 6;
             ctx.font = `bold ${Math.round(bf.W * 0.08)}px sans-serif`;
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText('🧸', 0, 0);
 
+            ctx.shadowBlur = 0;
             ctx.strokeStyle = 'rgba(251, 113, 133, 0.6)';
             ctx.lineWidth = 2.5;
             ctx.beginPath();
@@ -10000,7 +10145,7 @@
             ctx.translate(eva.x, eva.y);
             ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
             ctx.lineWidth = 3;
-            ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 15;
+            ctx.shadowBlur = 0;
             for (let i = 0; i < 3; i++) {
                 const r = 24 + i * 8 + (time * 40 % 15);
                 const a = 1 - ((r - 24) / 30);
@@ -10019,9 +10164,9 @@
             ctx.translate(eva.x, eva.y);
             if (eva.inv > 0 && Math.sin(time * 20) > 0) ctx.globalAlpha = 0.3;
             if (eva.shield.active) {
-                ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 22;
+                ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 10;
             } else {
-                ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 18;
+                ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 6;
             }
             const g = ctx.createLinearGradient(0, -32, 0, 18);
             g.addColorStop(0, '#fef08a'); g.addColorStop(0.4, '#f2d06b'); g.addColorStop(1, '#c9a84c');
@@ -10036,7 +10181,8 @@
             // Legs
             ctx.fillRect(-6, 16, 4, 10); ctx.fillRect(2, 16, 4, 10);
             // Hair
-            ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 1.5; ctx.shadowBlur = 8;
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 1.5;
             for (let i = 0; i < 3; i++) {
                 const off = Math.sin(time * 3 + i) * 4;
                 ctx.beginPath();
@@ -10049,7 +10195,7 @@
                 ctx.globalAlpha = 1 - eva.atk.t / eva.atk.dur;
                 const atkC = { lightning: '#facc15', bottle: '#a78bfa', moon: '#93c5fd' };
                 ctx.strokeStyle = atkC[eva.atk.type] || '#facc15';
-                ctx.lineWidth = 2.5; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 20;
+                ctx.lineWidth = 2.5; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 8;
                 ctx.beginPath();
                 const sa = -Math.PI / 2 + (eva.atk.t / eva.atk.dur) * Math.PI;
                 ctx.arc(0, -10, 22, sa - 0.6, sa + 0.6); ctx.stroke();
@@ -10090,7 +10236,7 @@
             ctx.translate(malus.x, malus.y + fy);
             if (malus.hurt > 0) ctx.globalAlpha = 0.5 + Math.sin(time * 30) * 0.3;
             ctx.shadowColor = malus.phase === 3 ? '#ef4444' : malus.phase === 2 ? '#f87171' : '#c4263d';
-            ctx.shadowBlur = malus.phase === 3 ? 40 : malus.phase === 2 ? 30 : 20;
+            ctx.shadowBlur = 6;
             const ag = ctx.createRadialGradient(0, 0, 5, 0, 0, 38);
             ag.addColorStop(0, malus.phase === 3 ? '#ef4444' : malus.phase === 2 ? '#dc2626' : malus.phase === 1 ? '#8b1a2e' : '#2a0a30');
             ag.addColorStop(0.5, malus.phase === 3 ? '#7f1d1d' : malus.phase === 2 ? '#450a0a' : '#1a0520');
@@ -10113,7 +10259,7 @@
             const eAngle = Math.atan2(bf.eva.y - (malus.y + fy), bf.eva.x - malus.x);
             const lkX = Math.cos(eAngle) * 1.5, lkY = Math.sin(eAngle) * 0.8;
             ctx.shadowColor = malus.phase === 3 ? '#fca5a5' : malus.phase === 2 ? '#ef4444' : '#f87171';
-            ctx.shadowBlur = malus.phase === 3 ? 25 : malus.phase === 2 ? 18 : 12;
+            ctx.shadowBlur = 4;
             ctx.fillStyle = malus.hurt > 0 ? '#fff' : (malus.phase === 3 ? '#fff' : malus.phase === 2 ? '#fca5a5' : '#ef4444');
             const eS = malus.phase === 3 ? 5 : malus.phase === 2 ? 4.2 : 3.5;
             ctx.beginPath(); ctx.ellipse(-7 + lkX, -4 + lkY, eS, eS * 0.7, 0, 0, Math.PI * 2); ctx.fill();
@@ -10121,7 +10267,7 @@
             // Tendrils
             const tc = 4 + malus.phase * 2;
             ctx.strokeStyle = malus.phase === 3 ? 'rgba(239,68,68,0.7)' : malus.phase === 2 ? 'rgba(239,68,68,0.5)' : malus.phase === 1 ? 'rgba(196,38,61,0.5)' : 'rgba(74,16,37,0.3)';
-            ctx.lineWidth = 1.5; ctx.shadowBlur = 4;
+            ctx.lineWidth = 1.5; ctx.shadowBlur = 0;
             for (let i = 0; i < tc; i++) {
                 const a = (i / tc) * Math.PI + Math.PI * 0.5;
                 const w = Math.sin(time * (2 + malus.phase) + i * 2) * (8 + malus.phase * 3);
@@ -10250,7 +10396,7 @@
             ctx.globalCompositeOperation = 'source-over';
 
             // ── outer corona ──
-            ctx.shadowColor = '#93c5fd'; ctx.shadowBlur = 38;
+            ctx.shadowColor = '#93c5fd'; ctx.shadowBlur = 10;
             const corona = ctx.createRadialGradient(0, 0, p.r * 0.5, 0, 0, p.r * 1.7);
             corona.addColorStop(0, 'rgba(147,197,253,0.18)');
             corona.addColorStop(0.5, 'rgba(96,165,250,0.08)');
@@ -10259,7 +10405,7 @@
             ctx.beginPath(); ctx.arc(0, 0, p.r * 1.7, 0, Math.PI * 2); ctx.fill();
 
             // ── crescent body (using winding rule: outer circle clockwise, inner circle counter-clockwise) ──
-            ctx.shadowBlur = 20;
+            ctx.shadowBlur = 6;
             ctx.fillStyle = '#bfdbfe';
             ctx.beginPath();
             ctx.arc(0, 0, p.r, 0, Math.PI * 2, false);
@@ -10267,14 +10413,13 @@
             ctx.fill();
 
             // ── inner highlight ──
-            ctx.shadowBlur = 12;
+            ctx.shadowBlur = 0;
             ctx.fillStyle = '#e0f2fe';
             ctx.beginPath();
             ctx.arc(-p.r * 0.18, 0, p.r * 0.28, 0, Math.PI * 2);
             ctx.fill();
 
             // ── star sparkles orbiting the moon ──
-            ctx.shadowColor = '#dbeafe'; ctx.shadowBlur = 8;
             const nStars = 5;
             for (let i = 0; i < nStars; i++) {
                 const sa = (i / nStars) * Math.PI * 2 + bf.time * 1.8;
@@ -10328,7 +10473,7 @@
             const pulse = 1 + Math.sin(time * 8) * 0.07;
 
             // ── Outer glow ring ──
-            ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 25;
+            ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 10;
             ctx.globalAlpha = 0.5 + Math.sin(time * 6) * 0.15;
             ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 2.5;
             ctx.beginPath(); ctx.arc(eva.x, eva.y, r * pulse, 0, Math.PI * 2); ctx.stroke();
@@ -10353,20 +10498,18 @@
             ctx.globalCompositeOperation = 'source-over';
 
             // ── Vibrating parametric heart ──
-            // The heart uses the parametric eq: x=16sin³(t), y=13cos(t)-5cos(2t)-2cos(3t)-cos(4t)
-            // We scale it and apply a vibration + pulsation
             ctx.save();
             const hScale = (18 + Math.sin(time * 14) * 3) * (1 + Math.sin(time * 5) * 0.08);
             const hX = eva.x;
-            const hY = eva.y - 4;  // slightly above center
+            const hY = eva.y - 4;
 
             // Outer glow pass (additive)
             ctx.globalCompositeOperation = 'lighter';
             ctx.globalAlpha = 0.4 + Math.sin(time * 7) * 0.15;
-            ctx.shadowColor = '#ec4899'; ctx.shadowBlur = 35;
+            ctx.shadowColor = '#ec4899'; ctx.shadowBlur = 10;
             ctx.fillStyle = '#ec4899';
             ctx.beginPath();
-            for (let t = 0; t <= Math.PI * 2; t += 0.05) {
+            for (let t = 0; t <= Math.PI * 2; t += 0.1) {
                 const hx = hX + (16 * Math.pow(Math.sin(t), 3)) * hScale * 0.065;
                 const hy = hY - (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * hScale * 0.065;
                 t < 0.01 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
@@ -10376,10 +10519,10 @@
             // Sharp stroke pass
             ctx.globalCompositeOperation = 'source-over';
             ctx.globalAlpha = 1.0;
-            ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 20;
+            ctx.shadowBlur = 0;
             ctx.strokeStyle = '#f9a8d4'; ctx.lineWidth = 3.2;
             ctx.beginPath();
-            for (let t = 0; t <= Math.PI * 2; t += 0.04) {
+            for (let t = 0; t <= Math.PI * 2; t += 0.08) {
                 const hx = hX + (16 * Math.pow(Math.sin(t), 3)) * hScale * 0.065;
                 const hy = hY - (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * hScale * 0.065;
                 t < 0.01 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
@@ -10390,7 +10533,7 @@
             ctx.globalAlpha = 0.45 + Math.sin(time * 9) * 0.15;
             ctx.fillStyle = '#fce7f3';
             ctx.beginPath();
-            for (let t = 0; t <= Math.PI * 2; t += 0.07) {
+            for (let t = 0; t <= Math.PI * 2; t += 0.12) {
                 const hx = hX + (16 * Math.pow(Math.sin(t), 3)) * hScale * 0.035;
                 const hy = hY - (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * hScale * 0.035;
                 t < 0.01 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
