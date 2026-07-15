@@ -3936,6 +3936,26 @@
                 box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), 0 0 35px rgba(201, 168, 76, 0.15), inset 0 0 50px rgba(5, 4, 10, 0.9);
                 border-color: rgba(201, 168, 76, 0.45);
             }
+
+        }
+
+        /* ────────────────────────── CORRECTION BULLES MOBILE ────────────────────────── */
+        @media (max-width: 550px) {
+            .stat-notify-bubble {
+                width: 250px;
+                /* Légèrement plus compact pour les petits écrans */
+            }
+
+            /* Le badge d'erreur est très à gauche, on force la bulle à s'étendre vers la droite */
+            #errors-badge .stat-notify-bubble {
+                right: auto;
+                left: -20px;
+            }
+
+            /* Le badge des indices est plus au centre, on le décale juste un peu */
+            #hints-badge .stat-notify-bubble {
+                right: -70px;
+            }
         }
     </style>
 </head>
