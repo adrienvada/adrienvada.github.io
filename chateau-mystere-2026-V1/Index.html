@@ -2887,6 +2887,7 @@
                 opacity: 0;
                 transform: scale(0.7);
             }
+
             100% {
                 opacity: 1;
                 transform: scale(1);
@@ -3591,6 +3592,117 @@
                 font-size: 1rem;
             }
         }
+
+        /* ───────────────────────── GAMIFICATION & AUDIO CSS ───────────────────────── */
+        .achievement-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100000;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1.5px solid var(--clr-gold-bright);
+            box-shadow: 0 10px 30px rgba(201, 168, 76, 0.35);
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #fff;
+            font-family: var(--font-ui);
+            animation: toast-slide-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            max-width: 360px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        @keyframes toast-slide-in {
+            0% {
+                opacity: 0;
+                transform: translateY(40px) scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes toast-slide-out {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+        }
+
+        .achievement-toast-icon {
+            font-size: 2rem;
+            filter: drop-shadow(0 0 8px rgba(242, 208, 107, 0.6));
+        }
+
+        .achievement-toast-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--clr-gold-bright);
+            margin-bottom: 2px;
+        }
+
+        .achievement-toast-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+
+        .cursor-star {
+            position: fixed;
+            pointer-events: none;
+            z-index: 999999;
+            color: #facc15;
+            font-size: 14px;
+            transform: translate(-50%, -50%);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease-out;
+            text-shadow: 0 0 6px rgba(250, 204, 21, 0.8);
+        }
+
+        .achievements-modal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 14px;
+            margin-top: 20px;
+            max-height: 65vh;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .achievement-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-item.unlocked {
+            background: rgba(201, 168, 76, 0.08);
+            border-color: rgba(201, 168, 76, 0.5);
+            box-shadow: 0 4px 20px rgba(201, 168, 76, 0.15);
+        }
+
+        .achievement-item.unlocked .ach-icon {
+            filter: drop-shadow(0 0 8px rgba(242, 208, 107, 0.8));
+        }
+
+        .achievement-item:not(.unlocked) {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
     </style>
 </head>
 
@@ -3623,6 +3735,17 @@
                     Étape <span class="current" id="step-current">1</span><span id="step-total-wrap" class="hidden"
                         style="display: inline-block;">/<span id="step-total">1</span></span>
                 </div>
+                <div id="achievements-badge" class="step-badge"
+                    style="border-color: rgba(201, 168, 76, 0.4); color: var(--text-secondary); cursor: pointer;"
+                    onclick="ChateauAchievements.showModal()" title="Consulter la galerie des succès">
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">🏆 <span id="achievements-count"
+                            style="color: var(--clr-gold-bright); font-weight: 700;">0</span></span>
+                </div>
+                <div id="audio-toggle-btn" class="step-badge"
+                    style="border-color: rgba(201, 168, 76, 0.4); color: var(--text-secondary); cursor: pointer; padding: 6px 10px;"
+                    onclick="ChateauAudio.toggleMute()" title="Activer/Désactiver les effets sonores">
+                    <span id="audio-icon" style="font-size: 0.9rem;">🔊</span>
+                </div>
             </div>
         </div>
     </header>
@@ -3650,6 +3773,22 @@
             style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
             <img id="lightbox-img" src="" alt="Enigma Image" onclick="toggleImageZoom(event)"
                 style="max-width: 95%; max-height: 95vh; border-radius: 8px; box-shadow: 0 0 30px rgba(201, 168, 76, 0.4); object-fit: contain; transform: scale(1) translate(0px, 0px); transition: transform 0.3s ease; cursor: zoom-in; transform-origin: center center;">
+        </div>
+    </div>
+
+    <!-- ═══════════════════════ ACHIEVEMENTS MODAL ═══════════════════════ -->
+    <div id="achievements-modal" onclick="if(event.target===this) ChateauAchievements.closeModal()"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 8, 22, 0.92); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 20px;">
+        <div class="enigma-card"
+            style="max-width: 650px; width: 100%; max-height: 85vh; display: flex; flex-direction: column; position: relative;">
+            <div class="lightbox-close-btn" onclick="ChateauAchievements.closeModal()" title="Fermer"
+                style="position: absolute; top: 15px; right: 15px;">&times;</div>
+            <h2
+                style="color: var(--clr-gold-bright); font-size: 1.6rem; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
+                🏆 Galerie des Succès</h2>
+            <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 10px;">Progression : <strong
+                    id="ach-modal-progress" style="color: var(--clr-gold-bright);">0/6</strong> déverrouillés</p>
+            <div id="achievements-modal-content" class="achievements-modal-grid"></div>
         </div>
     </div>
 
@@ -4106,6 +4245,212 @@
         });
 
         /* ─────────────────────────────────────────────────────────────
+           MOTEUR SONORE CHIPTUNE & FÉERIQUE (Web Audio API)
+        ────────────────────────────────────────────────────────────── */
+        const ChateauAudio = {
+            ctx: null,
+            muted: localStorage.getItem('escapeGame_audioMuted') === 'true',
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+                this.updateIcon();
+            },
+            toggleMute() {
+                this.muted = !this.muted;
+                localStorage.setItem('escapeGame_audioMuted', this.muted);
+                this.updateIcon();
+                if (!this.muted) {
+                    this.init();
+                    this.playSuccess();
+                }
+            },
+            updateIcon() {
+                const icon = document.getElementById('audio-icon');
+                if (icon) icon.textContent = this.muted ? '🔇' : '🔊';
+            },
+            _playTone(freq, type, dur, gainVal = 0.1, freqEnd = null) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    if (freqEnd !== null) {
+                        osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), this.ctx.currentTime + dur);
+                    }
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + dur);
+                } catch (e) { }
+            },
+            playClick() { this._playTone(600, 'sine', 0.03, 0.05, 300); },
+            playLockTick() { this._playTone(850, 'triangle', 0.02, 0.04, 400); },
+            playSuccess() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this._playTone(freq, 'sine', 0.35, 0.12);
+                    }, idx * 70);
+                });
+            },
+            playError() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                this._playTone(150, 'sawtooth', 0.25, 0.15, 60);
+                setTimeout(() => this._playTone(130, 'sawtooth', 0.25, 0.15, 50), 100);
+            },
+            playLaser() { this._playTone(1100, 'square', 0.15, 0.06, 180); },
+            playHit() { this._playTone(180, 'triangle', 0.15, 0.12, 40); },
+            playBossHit() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                this._playTone(320, 'sawtooth', 0.22, 0.12, 50);
+                this._playTone(140, 'square', 0.18, 0.1, 40);
+            },
+            playBreak() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                [400, 320, 240, 160].forEach((freq, idx) => {
+                    setTimeout(() => this._playTone(freq, 'sawtooth', 0.2, 0.15, freq * 0.5), idx * 80);
+                });
+            },
+            playVictory() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const notes = [523.25, 659.25, 783.99, 659.25, 1046.50];
+                const delays = [0, 120, 240, 360, 500];
+                const durs = [0.2, 0.2, 0.2, 0.2, 0.6];
+                notes.forEach((freq, i) => {
+                    setTimeout(() => this._playTone(freq, 'sine', durs[i], 0.14), delays[i]);
+                });
+            }
+        };
+
+        /* ─────────────────────────────────────────────────────────────
+           TRAÎNÉE D'ÉTOILLES AU CURSEUR / TACTILE
+        ────────────────────────────────────────────────────────────── */
+        const ChateauCursor = {
+            lastTime: 0,
+            init() {
+                const spawn = (x, y) => {
+                    const now = performance.now();
+                    if (now - this.lastTime < 35) return;
+                    this.lastTime = now;
+                    const el = document.createElement('div');
+                    el.className = 'cursor-star';
+                    el.textContent = ['✦', '✧', '★', '◇'][Math.floor(Math.random() * 4)];
+                    el.style.left = x + 'px';
+                    el.style.top = y + 'px';
+                    el.style.color = Math.random() < 0.5 ? '#facc15' : '#c9a84c';
+                    el.style.fontSize = (10 + Math.random() * 8) + 'px';
+                    document.body.appendChild(el);
+                    requestAnimationFrame(() => {
+                        el.style.transform = `translate(${(Math.random() - 0.5) * 36}px, ${-20 - Math.random() * 25}px) scale(0.2) rotate(${(Math.random() - 0.5) * 180}deg)`;
+                        el.style.opacity = '0';
+                    });
+                    setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
+                };
+                window.addEventListener('mousemove', (e) => spawn(e.clientX, e.clientY), { passive: true });
+                window.addEventListener('touchmove', (e) => {
+                    if (e.touches && e.touches[0]) spawn(e.touches[0].clientX, e.touches[0].clientY);
+                }, { passive: true });
+            }
+        };
+
+        /* ─────────────────────────────────────────────────────────────
+           SYSTÈME DE SUCCÈS (ACHIEVEMENTS)
+        ────────────────────────────────────────────────────────────── */
+        const ChateauAchievements = {
+            list: [
+                { id: 'lynx', title: 'Mémoire amoureuse', desc: 'Résoudre l\'énigme 12 sans cliquer sur une mauvaise case', icon: '🎯' },
+                { id: 'speed', title: 'Coup de foudre', desc: 'Résoudre une énigme rapidement en moins de 5 minutes', icon: '⚡' },
+                { id: 'zero_fault', title: 'Parfaite moitié', desc: 'Résoudre une énigme sans faire d\'erreur', icon: '✨' },
+                { id: 'intouchable', title: 'Intouchable', desc: 'Sortir du combat indemne', icon: '🛡️' },
+                { id: 'orgasme_finish', title: 'L\'Amour Vaincra', desc: 'Donner le coup de grâce en utilisant l\'orgasme 💋', icon: '💋' },
+                { id: 'curieux', title: 'Curieux', desc: 'Utiliser un indice', icon: '🔍' }
+            ],
+            unlocked: new Set(JSON.parse(localStorage.getItem('escapeGame_achievements') || '[]')),
+            unlock(id) {
+                if (this.unlocked.has(id)) return;
+                const ach = this.list.find(a => a.id === id);
+                if (!ach) return;
+                this.unlocked.add(id);
+                localStorage.setItem('escapeGame_achievements', JSON.stringify([...this.unlocked]));
+                ChateauAudio.playSuccess();
+                this.updateCount();
+                this.showToast(ach);
+            },
+            updateCount() {
+                const el = document.getElementById('achievements-count');
+                if (el) el.textContent = this.unlocked.size;
+            },
+            showToast(ach) {
+                const toast = document.createElement('div');
+                toast.className = 'achievement-toast';
+                toast.innerHTML = `
+                    <div class="achievement-toast-icon">${ach.icon}</div>
+                    <div>
+                        <div class="achievement-toast-title">🏆 Succès Déverrouillé !</div>
+                        <div style="font-weight:700; color:#fff; font-size:0.86rem;">${ach.title}</div>
+                        <div class="achievement-toast-desc">${ach.desc}</div>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.animation = 'toast-slide-out 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
+                }, 4500);
+            },
+            showModal() {
+                const modal = document.getElementById('achievements-modal');
+                const content = document.getElementById('achievements-modal-content');
+                const progress = document.getElementById('ach-modal-progress');
+                if (!modal || !content) return;
+                if (progress) progress.textContent = `${this.unlocked.size}/${this.list.length}`;
+                content.innerHTML = this.list.map(ach => {
+                    const isUnlocked = this.unlocked.has(ach.id);
+                    return `
+                        <div class="achievement-item ${isUnlocked ? 'unlocked' : ''}">
+                            <div class="ach-icon" style="font-size: 2.2rem;">${isUnlocked ? ach.icon : '🔒'}</div>
+                            <div>
+                                <div style="font-weight: 800; font-size: 0.96rem; color: ${isUnlocked ? 'var(--clr-gold-bright)' : 'var(--text-primary)'}; margin-bottom: 4px;">
+                                    ${ach.title}
+                                </div>
+                                <div style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.3;">
+                                    ${ach.desc}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                modal.style.display = 'flex';
+                ChateauAudio.playClick();
+            },
+            closeModal() {
+                const modal = document.getElementById('achievements-modal');
+                if (modal) modal.style.display = 'none';
+                ChateauAudio.playClick();
+            }
+        };
+
+        /* ─────────────────────────────────────────────────────────────
            INIT
         ────────────────────────────────────────────────────────────── */
         function init() {
@@ -4119,6 +4464,9 @@
             if (typeof initStars === 'function') {
                 initStars('stars-canvas', { count: 120, twinkle: true });
             }
+            ChateauAudio.updateIcon();
+            ChateauCursor.init();
+            ChateauAchievements.updateCount();
 
             // Guard: no enigmes
             if (!enigmes.length) {
@@ -4578,6 +4926,9 @@
         function renderEnigma(index) {
             const e = enigmes[index];
             if (!e) return;
+            window._currentEnigmaStartTime = performance.now();
+            window._errorsAtEnigmaStart = totalErrorsCount;
+            window._mosaicHadError = false;
 
             if (window._geoWatchId) { navigator.geolocation.clearWatch(window._geoWatchId); window._geoWatchId = null; }
             if (window._proximityTimer) { clearInterval(window._proximityTimer); window._proximityTimer = null; }
@@ -5194,6 +5545,7 @@
                 } else {
                     updateStatsVisibility();
                 }
+                ChateauAchievements.unlock('curieux');
             }
 
             const enigme = enigmes.find(e => e.id === enigmeId);
@@ -5353,6 +5705,7 @@
         function selectWheelItem(item, idx) {
             const wheel = item.closest('.counter-wheel');
             if (wheel) {
+                ChateauAudio.playLockTick();
                 wheel.scrollTo({
                     top: idx * 48,
                     behavior: 'smooth'
@@ -5431,6 +5784,7 @@
         function selectSlotsWheelItem(item) {
             const wheel = item.closest('.counter-wheel');
             if (wheel) {
+                ChateauAudio.playLockTick();
                 const items = Array.from(wheel.querySelectorAll('.counter-item'));
                 const idx = items.indexOf(item);
                 if (idx !== -1) {
@@ -5584,10 +5938,10 @@
             if (_clockMode === 'hour') {
                 let h = Math.round(deg / 30) % 12;
                 if (h === 0) h = 12;
-                _clockHours = h;
+                if (_clockHours !== h) { _clockHours = h; ChateauAudio.playLockTick(); }
             } else {
                 let m = Math.round(deg / 6) % 60;
-                _clockMinutes = m;
+                if (_clockMinutes !== m) { _clockMinutes = m; ChateauAudio.playLockTick(); }
             }
             updateClockDisplay();
         }
@@ -5778,7 +6132,7 @@
             if (keyE) keyE.classList.add('success-active');
 
             // Display success feedback
-            showFeedback('success', '✨ Magnifique ! L\'accord parfait A & E a retenti pendant 1 seconde. ✨');
+            showFeedback('success', '✨ Magnifique ! L\'accord A & E a retenti pendant 1 seconde. ✨');
 
             // Call handleSuccess after 4 seconds
             setTimeout(() => {
@@ -6552,6 +6906,7 @@
             const grid = document.getElementById('mosaic-grid');
 
             if (Number(isValid) === 1) {
+                ChateauAudio.playClick();
                 tileEl.classList.add('valid-clicked');
                 if (grid) grid.classList.add('has-valid-clicked');
                 updateMosaicBackgroundAttenuation();
@@ -6559,6 +6914,7 @@
                 const allValid = document.querySelectorAll('.mosaic-tile[data-valid="1"]');
                 const clickedValid = document.querySelectorAll('.mosaic-tile.valid-clicked');
                 if (allValid.length > 0 && allValid.length === clickedValid.length) {
+                    if (!window._mosaicHadError) ChateauAchievements.unlock('lynx');
                     document.querySelectorAll('.mosaic-tile').forEach(t => t.classList.add('disabled'));
                     allValid.forEach(t => t.classList.add('mosaic-win-pulse'));
                     showFeedback('success', '✅ Space invader trouvé ! Bien joué.');
@@ -6579,6 +6935,7 @@
                     showFeedback('success', `✨ Élément validé ! (${clickedValid.length} / ${allValid.length})`);
                 }
             } else {
+                window._mosaicHadError = true;
                 showFeedback('error', '❌ Mauvaise case ! La grille a été réinitialisée. Une erreur a été ajoutée !');
                 if (grid) grid.classList.remove('has-valid-clicked');
                 const allTiles = document.querySelectorAll('.mosaic-tile');
@@ -6598,6 +6955,11 @@
             if (!$fb) return;
             $fb.className = 'feedback ' + type;
             $fb.textContent = message;
+            if (type === 'success') {
+                ChateauAudio.playSuccess();
+            } else if (type === 'error') {
+                ChateauAudio.playError();
+            }
             if (type === 'error' && message.includes('❌')) {
                 totalErrorsCount++;
                 localStorage.setItem(LS_KEY_ERRORS_TOTAL, totalErrorsCount);
@@ -6616,6 +6978,13 @@
            SUCCESS SCREEN & ADVANCE
         ────────────────────────────────────────────────────────────── */
         function handleSuccess() {
+            ChateauAudio.playSuccess();
+            if (window._currentEnigmaStartTime && (performance.now() - window._currentEnigmaStartTime) / 1000 < 300) {
+                ChateauAchievements.unlock('speed');
+            }
+            if (window._errorsAtEnigmaStart !== undefined && totalErrorsCount === window._errorsAtEnigmaStart) {
+                ChateauAchievements.unlock('zero_fault');
+            }
             if (currentIndex === 0) {
                 renderEnigma1SuccessScreen();
                 return;
@@ -7769,9 +8138,11 @@ Ménager</span>
                     cd: [0, 0, 0, 0], trail: [], anim: 0,
                     shield: { active: false, timer: 0, healAccum: 0 }
                 },
+                hitStopTimer: 0, zoomEffect: 0,
                 malus: {
                     x: cw / 2, y: ch * 0.18, w: 45, h: 60,
                     hp: malusHP, maxHp: malusHP,
+                    breakMax: Math.round(malusHP * 0.45), breakHp: 0, isStunned: false, stunTimer: 0,
                     atkTimer: 2.5, hurt: 0, anim: 0,
                     moveTarget: cw / 2, moveTimer: 0, phase: 0,
                     spiralAngle: 0, isPaused: false, pauseTimer: 0,
@@ -7870,6 +8241,7 @@ Ménager</span>
             if (eva.cd[idx] > 0 || (eva.atk && idx !== 3)) return;
 
             if (idx === 0) {
+                ChateauAudio.playClick();
                 // ⚡ Éclair d'Amour — cone check ±15°
                 eva.cd[0] = 0.8;
                 eva.atk = { type: 'lightning', t: 0, dur: 0.3, dmg: 1 };
@@ -7894,11 +8266,13 @@ Ménager</span>
                     }
                 }
             } else if (idx === 1) {
+                ChateauAudio.playClick();
                 // 🧴 Lancer d'Alcoo Ménager — straight shot
                 eva.cd[1] = 2;
                 eva.atk = { type: 'bottle', t: 0, dur: 0.4, dmg: 3 };
                 bf.projectiles.push({ type: 'bottle', x: eva.x, y: eva.y - 30, vx: 0, vy: -bf.H * 0.95, t: 0, dur: 1.5, dmg: 3, r: 10, hit: false, spin: 0 });
             } else if (idx === 2) {
+                ChateauAudio.playLaser();
                 // 🌙 Laku Noc — moon blade (10 dmg, large hitbox)
                 eva.cd[2] = 15;
                 eva.atk = { type: 'moon', t: 0, dur: 0.8, dmg: 10 };
@@ -7908,6 +8282,7 @@ Ménager</span>
             } else if (idx === 3) {
                 // 💋 Orgasme — reflect orbs back toward Malus
                 if (eva.orgasme && eva.orgasme.active) return;
+                ChateauAudio.playSuccess();
                 eva.cd[3] = 18;
                 eva.orgasme = { active: true, timer: 5 };
                 eva.atk = null;
@@ -7996,6 +8371,14 @@ Ménager</span>
                         });
                     }
                 }
+            } else if (pattern === 'laser') {
+                bf.projectiles.push({ type: 'laser', x: malus.x, y: malus.y + 30, targetX: eva.x, t: 0, chargeDur: 1.0, fireDur: 1.2, dur: 2.2, dmg: 1, hit: false });
+                ChateauAudio.playLockTick();
+            } else if (pattern === 'echo') {
+                const count = malus.phase === 2 ? 2 : 1;
+                for (let i = 0; i < count; i++) {
+                    bf.projectiles.push({ type: 'echo', x: malus.x + (i === 0 ? -35 : 35), y: malus.y + 10, vx: (i === 0 ? -30 : 30), vy: 45, r: 16, hp: 1, t: 0, dur: 14 });
+                }
             }
             for (let i = 0; i < 4; i++)
                 bfParticle(malus.x + (Math.random() - 0.5) * 40, malus.y + 30,
@@ -8015,6 +8398,8 @@ Ménager</span>
         function bfUpdate(dt) {
             const { eva, malus, W, H } = bf;
             if (bf.introTimer > 0) { bf.introTimer -= dt; return; }
+            if (bf.hitStopTimer > 0) { bf.hitStopTimer -= dt; return; }
+            if (bf.zoomEffect && bf.zoomEffect > 0) bf.zoomEffect = Math.max(0, bf.zoomEffect - dt * 0.15);
 
             // ── Eva Movement ──
             eva.dir = bf.input.moveX;
@@ -8093,6 +8478,8 @@ Ménager</span>
                             : ['#c4263d', '#8b1a2e', '#4a0f1a', '#ef4444'][i % 4], 6);
                 }
                 if (malus.phase === 2) {
+                    bf.zoomEffect = 0.08;
+                    bf.hitStopTimer = 0.4;
                     malus.phase2IntroQueue = ['pentagram'];
                     malus.currentPattern = 'heart';
                     malus.isPaused = false;
@@ -8102,61 +8489,72 @@ Ménager</span>
 
             malus.hurt = Math.max(0, malus.hurt - dt);
             malus.anim += dt;
-            malus.moveTimer -= dt;
-            if (malus.moveTimer <= 0) {
-                malus.moveTarget = 40 + Math.random() * (W - 80);
-                malus.moveTimer = malus.phase === 2 ? 0.3 + Math.random() * 0.4
-                    : malus.phase === 1 ? 0.8 + Math.random() : 1.5 + Math.random() * 2;
-            }
-            const ms = malus.phase === 2 ? 240 : malus.phase === 1 ? 160 : 90;
-            if (Math.abs(malus.x - malus.moveTarget) > 5)
-                malus.x += Math.sign(malus.moveTarget - malus.x) * ms * dt;
+            if (malus.isStunned) {
+                malus.stunTimer -= dt;
+                malus.hurt = 0.1;
+                if (Math.random() < 0.4) {
+                    bfParticle(malus.x + (Math.random() - 0.5) * 30, malus.y - 25, (Math.random() - 0.5) * 30, -15 - Math.random() * 20, 0.6, '#facc15', 3.5);
+                }
+                if (malus.stunTimer <= 0) malus.isStunned = false;
+            } else {
+                malus.moveTimer -= dt;
+                if (malus.moveTimer <= 0) {
+                    malus.moveTarget = 40 + Math.random() * (W - 80);
+                    malus.moveTimer = malus.phase === 2 ? 0.3 + Math.random() * 0.4
+                        : malus.phase === 1 ? 0.8 + Math.random() : 1.5 + Math.random() * 2;
+                }
+                const ms = malus.phase === 2 ? 240 : malus.phase === 1 ? 160 : 90;
+                if (Math.abs(malus.x - malus.moveTarget) > 5)
+                    malus.x += Math.sign(malus.moveTarget - malus.x) * ms * dt;
 
-            // ── Malus Attacks (3 phases) ──
-            if (malus.phase === 2) {
-                // Phase 2: starts with heart -> pentagram -> fast patterns + halved pauses
-                if (malus.isPaused) {
-                    malus.pauseTimer -= dt;
-                    if (malus.pauseTimer <= 0) {
-                        malus.isPaused = false;
-                        if (malus.phase2IntroQueue && malus.phase2IntroQueue.length > 0) {
-                            malus.currentPattern = malus.phase2IntroQueue.shift();
-                        } else {
-                            const patterns = ['aimed', 'spiral', 'sun', 'spread3', 'wave', 'heart', 'pentagram'];
-                            malus.patternIndex = (malus.patternIndex + 1) % patterns.length;
-                            malus.currentPattern = patterns[malus.patternIndex];
+                // ── Malus Attacks (3 phases) ──
+                if (malus.phase === 2) {
+                    // Phase 2: starts with heart -> pentagram -> fast patterns + halved pauses
+                    if (malus.isPaused) {
+                        malus.pauseTimer -= dt;
+                        if (malus.pauseTimer <= 0) {
+                            malus.isPaused = false;
+                            if (malus.phase2IntroQueue && malus.phase2IntroQueue.length > 0) {
+                                malus.currentPattern = malus.phase2IntroQueue.shift();
+                            } else {
+                                const patterns = ['aimed', 'spiral', 'sun', 'spread3', 'wave', 'laser', 'heart', 'pentagram', 'echo'];
+                                malus.patternIndex = (malus.patternIndex + 1) % patterns.length;
+                                malus.currentPattern = patterns[malus.patternIndex];
+                            }
+                            bf.flash = 0.1; bf.flashColor = '#c4263d';
                         }
-                        bf.flash = 0.1; bf.flashColor = '#c4263d';
+                    } else {
+                        malus.atkTimer -= dt;
+                        if (malus.atkTimer <= 0) {
+                            malus.atkTimer = 0.1 + Math.random() * 0.18;
+                            bfMalusAttack(malus.currentPattern);
+                            if (Math.random() < 0.12) {
+                                malus.isPaused = true;
+                                malus.pauseTimer = 0.2 + Math.random() * 0.9;
+                            }
+                        }
+                    }
+                } else if (malus.phase === 1) {
+                    // Phase 1: faster + spiral/sun patterns
+                    malus.atkTimer -= dt;
+                    malus.spiralAngle = (malus.spiralAngle || 0) + dt * 3;
+                    if (malus.atkTimer <= 0) {
+                        malus.atkTimer = 0.45 + Math.random() * 0.5;
+                        const r = Math.random();
+                        if (r < 0.2) bfMalusAttack('spiral');
+                        else if (r < 0.38) bfMalusAttack('sun');
+                        else if (r < 0.55) bfMalusAttack('spread3');
+                        else if (r < 0.7) bfMalusAttack('laser');
+                        else if (r < 0.85) bfMalusAttack('echo');
+                        else bfMalusAttack('aimed');
                     }
                 } else {
+                    // Phase 0: normal
                     malus.atkTimer -= dt;
                     if (malus.atkTimer <= 0) {
-                        malus.atkTimer = 0.1 + Math.random() * 0.18;
-                        bfMalusAttack(malus.currentPattern);
-                        if (Math.random() < 0.12) {
-                            malus.isPaused = true;
-                            malus.pauseTimer = 0.2 + Math.random() * 0.9;
-                        }
+                        malus.atkTimer = 1.6 + Math.random() * 0.6;
+                        bfMalusAttack('aimed');
                     }
-                }
-            } else if (malus.phase === 1) {
-                // Phase 1: faster + spiral/sun patterns
-                malus.atkTimer -= dt;
-                malus.spiralAngle = (malus.spiralAngle || 0) + dt * 3;
-                if (malus.atkTimer <= 0) {
-                    malus.atkTimer = 0.45 + Math.random() * 0.5;
-                    const r = Math.random();
-                    if (r < 0.25) bfMalusAttack('spiral');
-                    else if (r < 0.45) bfMalusAttack('sun');
-                    else if (r < 0.65) bfMalusAttack('spread3');
-                    else bfMalusAttack('aimed');
-                }
-            } else {
-                // Phase 0: normal
-                malus.atkTimer -= dt;
-                if (malus.atkTimer <= 0) {
-                    malus.atkTimer = 1.6 + Math.random() * 0.6;
-                    bfMalusAttack('aimed');
                 }
             }
 
@@ -8222,6 +8620,40 @@ Ménager</span>
                         }
                     }
                 }
+                if (p.type === 'laser') {
+                    if (p.t > p.chargeDur && p.t <= p.chargeDur + p.fireDur && !p.hit && eva.inv <= 0 && !eva.shield.active) {
+                        if (Math.abs(eva.x - p.targetX) < 22) {
+                            p.hit = true;
+                            eva.hp -= p.dmg; eva.inv = 1.0;
+                            bf.shake = 0.4; bf.flash = 0.2; bf.flashColor = '#ef4444';
+                            bf.dmgTexts.push({ x: eva.x, y: eva.y - 35, text: '-1', color: '#ef4444', t: 0.9 });
+                            ChateauAudio.playError();
+                            if (eva.hp <= 0) bfEndGame(false);
+                        }
+                    }
+                    if (Math.abs(p.t - p.chargeDur) < 0.04) ChateauAudio.playLaser();
+                }
+                if (p.type === 'echo') {
+                    p.x += p.vx * dt; p.y += p.vy * dt;
+                    if (p.x < 30 || p.x > W - 30) p.vx *= -1;
+                    if (p.y > H - 80 || p.y < 40) p.vy *= -1;
+                    bf.projectiles.forEach(ep => {
+                        if (ep.type === 'lightning' && ep.hit && Math.abs(ep.x - p.x) < 35) { p.hp -= 1; }
+                        if (ep.type === 'bottle' && !ep.hit && Math.abs(ep.x - p.x) < 28 && Math.abs(ep.y - p.y) < 28) { ep.hit = true; p.hp -= 3; }
+                        if (ep.type === 'moon' && !ep.hit && Math.abs(ep.x - p.x) < 45 && Math.abs(ep.y - p.y) < 45) { p.hp -= 10; }
+                    });
+                    if (p.hp <= 0) {
+                        eva.hp = Math.min(eva.maxHp, eva.hp + 1);
+                        bf.dmgTexts.push({ x: p.x, y: p.y - 20, text: '+1 ♥ ÉCHO !', color: '#4ade80', t: 1.2 });
+                        ChateauAudio.playSuccess();
+                        for (let i = 0; i < 16; i++) {
+                            const a = (i / 16) * Math.PI * 2;
+                            bfParticle(p.x, p.y, Math.cos(a) * 60, Math.sin(a) * 60, 0.6, '#4ade80', 4);
+                        }
+                        return false;
+                    }
+                    if (Math.random() < 0.2) bfParticle(p.x, p.y, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, 0.4, '#4ade80', 3);
+                }
                 return true;
             });
 
@@ -8256,13 +8688,40 @@ Ménager</span>
 
         function bfHitMalus(dmg) {
             if (!bf) return;
-            bf.malus.hp = Math.max(0, bf.malus.hp - dmg);
+            const actualDmg = bf.malus.isStunned ? dmg * 2 : dmg;
+            bf.malus.hp = Math.max(0, bf.malus.hp - actualDmg);
             bf.malus.hurt = 0.3;
             bf.shake = Math.max(bf.shake, 0.15);
-            bf.dmgTexts.push({ x: bf.malus.x, y: bf.malus.y - 40, text: '-' + dmg, color: '#facc15', t: 0.9 });
+            bf.dmgTexts.push({ x: bf.malus.x, y: bf.malus.y - 40, text: '-' + actualDmg + (bf.malus.isStunned ? ' (BREAK!)' : ''), color: '#facc15', t: 0.9 });
             for (let i = 0; i < 6; i++)
                 bfParticle(bf.malus.x + (Math.random() - 0.5) * 30, bf.malus.y, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120, 0.5, '#c4263d', 4);
-            if (bf.malus.hp <= 0) bfEndGame(true);
+
+            if (!bf.malus.isStunned && bf.malus.hp > 0) {
+                bf.malus.breakHp += dmg;
+                if (bf.malus.breakHp >= bf.malus.breakMax && bf.malus.breakMax > 0) {
+                    bf.malus.isStunned = true;
+                    bf.malus.stunTimer = 3.5;
+                    bf.malus.breakHp = 0;
+                    bf.shake = Math.max(bf.shake, 0.5);
+                    bf.flash = 0.35; bf.flashColor = '#facc15';
+                    bf.dmgTexts.push({ x: bf.malus.x, y: bf.malus.y - 68, text: '💥 BREAK ! ×2 DÉGÂTS !', color: '#facc15', t: 1.5 });
+                    ChateauAudio.playSuccess();
+                } else {
+                    ChateauAudio.playBossHit();
+                }
+            } else {
+                ChateauAudio.playBossHit();
+            }
+
+            if (bf.malus.hp <= 0) {
+                if (bf.eva && bf.eva.orgasme && bf.eva.orgasme.active) {
+                    ChateauAchievements.unlock('orgasme_finish');
+                }
+                if (bf.eva && bf.eva.hp >= bf.eva.maxHp) {
+                    ChateauAchievements.unlock('intouchable');
+                }
+                bfEndGame(true);
+            }
         }
 
         function bfParticle(x, y, vx, vy, life, color, size) {
@@ -8347,6 +8806,11 @@ Ménager</span>
             const { ctx, W, H, eva, malus, shake, time } = bf;
             ctx.save();
             if (shake > 0) ctx.translate((Math.random() - 0.5) * shake * 15, (Math.random() - 0.5) * shake * 15);
+            if (bf.zoomEffect && bf.zoomEffect > 0) {
+                const zScale = 1 + bf.zoomEffect;
+                ctx.translate(W * (1 - zScale) / 2, H * (1 - zScale) / 2);
+                ctx.scale(zScale, zScale);
+            }
 
             // Background with phase-dependent coloring
             const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -8452,6 +8916,8 @@ Ménager</span>
                 else if (p.type === 'lightning') bfDrawLightning(ctx, p, eva, malus);
                 else if (p.type === 'bottle') bfDrawBottle(ctx, p);
                 else if (p.type === 'moon') bfDrawMoonBlade(ctx, p);
+                else if (p.type === 'laser') bfDrawLaser(ctx, p, H);
+                else if (p.type === 'echo') bfDrawEcho(ctx, p, time);
             });
 
             // Damage texts
@@ -8780,6 +9246,53 @@ Ménager</span>
             ctx.restore();
         }
 
+        function bfDrawLaser(ctx, p, H) {
+            ctx.save();
+            if (p.t <= p.chargeDur) {
+                const ratio = p.t / p.chargeDur;
+                ctx.strokeStyle = `rgba(239, 68, 68, ${0.3 + ratio * 0.5})`;
+                ctx.lineWidth = 1 + ratio * 2;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.targetX, H);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            } else if (p.t <= p.chargeDur + p.fireDur) {
+                const fRatio = (p.t - p.chargeDur) / p.fireDur;
+                const alpha = Math.sin(fRatio * Math.PI);
+                ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 20;
+                ctx.strokeStyle = `rgba(239, 68, 68, ${alpha})`;
+                ctx.lineWidth = 28 * alpha;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.targetX, H);
+                ctx.stroke();
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.lineWidth = 8 * alpha;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.targetX, H);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function bfDrawEcho(ctx, p, time) {
+            ctx.save();
+            ctx.shadowColor = '#4ade80'; ctx.shadowBlur = 15;
+            const pulse = 1 + Math.sin(time * 6) * 0.15;
+            ctx.fillStyle = '#4ade80';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r * pulse, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = '700 13px Inter, sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('♥', p.x, p.y);
+            ctx.restore();
+        }
+
         function bfDrawOrgasmeRing(ctx, eva, time) {
             ctx.save();
             const r = 42;
@@ -8898,8 +9411,32 @@ Ménager</span>
             ctx.fillStyle = malus.phase === 2 ? '#fca5a5' : '#ef4444';
             ctx.textAlign = 'right';
             ctx.fillText(`Malus  ${malus.hp}/${malus.maxHp}`, W - pad, y - 4);
-            // Phase indicator
-            if (malus.phase >= 1 && malus.hp > 0) {
+            // Break Bar
+            if (malus.hp > 0 && malus.breakMax > 0) {
+                const bY = y + bh + 3;
+                const bH = 5;
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.beginPath(); ctx.roundRect(mx, bY, bw, bH, 2); ctx.fill();
+                if (malus.isStunned) {
+                    ctx.fillStyle = '#facc15';
+                    ctx.globalAlpha = 0.6 + Math.sin(bf.time * 15) * 0.4;
+                    ctx.beginPath(); ctx.roundRect(mx, bY, bw * (malus.stunTimer / 3.5), bH, 2); ctx.fill();
+                    ctx.globalAlpha = 1;
+                    ctx.font = `800 ${W * 0.017}px Inter, sans-serif`;
+                    ctx.fillStyle = '#facc15';
+                    ctx.fillText('💥 BREAK ! (×2 DÉGÂTS)', W - pad, bY + bH + 11);
+                } else {
+                    ctx.fillStyle = '#eab308';
+                    ctx.beginPath(); ctx.roundRect(mx, bY, bw * Math.min(1, malus.breakHp / malus.breakMax), bH, 2); ctx.fill();
+                    if (malus.phase >= 1) {
+                        ctx.font = `600 ${W * 0.018}px Inter, sans-serif`;
+                        ctx.fillStyle = malus.phase === 2 ? '#fca5a5' : '#f87171';
+                        ctx.globalAlpha = 0.6 + Math.sin(bf.time * 4) * 0.2;
+                        ctx.fillText(malus.phase === 2 ? '🔥 RAGE' : '⚠️ ENRAGÉ', W - pad, bY + bH + 13);
+                        ctx.globalAlpha = 1;
+                    }
+                }
+            } else if (malus.phase >= 1 && malus.hp > 0) {
                 ctx.font = `600 ${W * 0.018}px Inter, sans-serif`;
                 ctx.fillStyle = malus.phase === 2 ? '#fca5a5' : '#f87171';
                 ctx.globalAlpha = 0.6 + Math.sin(bf.time * 4) * 0.2;
