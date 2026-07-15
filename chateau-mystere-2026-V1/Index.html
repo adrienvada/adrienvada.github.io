@@ -1133,6 +1133,88 @@
             box-shadow: 0 4px 15px rgba(201, 168, 76, 0.2) !important;
         }
 
+        /* ────────────────────────── LOCKABLE VALIDATION BUTTON & ANIMATIONS ───────────────────────── */
+        .btn-validate-lockable {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .validate-lock-icon {
+            display: inline-block;
+            font-size: 1.25em;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+        }
+
+        @keyframes lock-vibrate-anim {
+
+            0%,
+            100% {
+                transform: translateX(0) rotate(0deg);
+            }
+
+            15% {
+                transform: translateX(-5px) rotate(-14deg) scale(1.15);
+                color: #ef4444;
+            }
+
+            30% {
+                transform: translateX(5px) rotate(14deg) scale(1.15);
+                color: #ef4444;
+            }
+
+            45% {
+                transform: translateX(-4px) rotate(-8deg);
+            }
+
+            60% {
+                transform: translateX(4px) rotate(8deg);
+            }
+
+            75% {
+                transform: translateX(-2px) rotate(-4deg);
+            }
+        }
+
+        .lock-vibrate {
+            animation: lock-vibrate-anim 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes lock-unlock-magic {
+            0% {
+                transform: scale(1) rotate(0deg);
+                filter: drop-shadow(0 0 0px transparent);
+            }
+
+            30% {
+                transform: scale(1.45) rotate(-15deg);
+                filter: drop-shadow(0 0 15px #fef08a);
+            }
+
+            60% {
+                transform: scale(1.65) rotate(10deg);
+                filter: drop-shadow(0 0 25px #4ade80);
+            }
+
+            100% {
+                transform: scale(1.25) rotate(0deg);
+                filter: drop-shadow(0 0 15px #4ade80);
+            }
+        }
+
+        .lock-unlock-anim {
+            animation: lock-unlock-magic 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .btn-validate-success {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            border-color: #34d399 !important;
+            box-shadow: 0 0 28px rgba(52, 211, 153, 0.65) !important;
+            color: #ffffff !important;
+        }
+
         /* Choice buttons for type "choice" */
         .choices-grid {
             display: flex;
@@ -1346,6 +1428,35 @@
             color: #05050f;
             border-color: var(--clr-gold-bright);
             box-shadow: 0 0 12px rgba(201, 168, 76, 0.4);
+        }
+
+        .btn-mosaic-light {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: var(--font-ui);
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-mosaic-light:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .btn-mosaic-light.active {
+            background: rgba(250, 204, 21, 0.25);
+            color: #fde047;
+            border-color: #facc15;
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.4);
         }
 
         .mosaic-grid-wrapper {
@@ -3703,6 +3814,129 @@
             opacity: 0.5;
             filter: grayscale(1);
         }
+
+        /* ─────────────────────────────────────────────────────────────
+           PORTAL SHOCKWAVE & GOLDEN SCAN (PROPOSITION 1)
+        ────────────────────────────────────────────────────────────── */
+        .portal-shockwave-container {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .portal-bg-glow {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(242, 208, 107, 0.28) 0%, rgba(201, 168, 76, 0.12) 45%, transparent 80%);
+            opacity: 0;
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: -1;
+        }
+
+        .portal-ring {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 3px solid rgba(242, 208, 107, 0.45);
+            box-shadow: 0 0 35px 10px rgba(242, 208, 107, 0.35), inset 0 0 20px rgba(255, 232, 152, 0.25);
+            opacity: 0;
+            transform: scale(1);
+        }
+
+        .portal-scan-beam {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: -30px;
+            height: 18px;
+            background: linear-gradient(to bottom, transparent, rgba(255, 232, 152, 0.8), rgba(242, 208, 107, 0.65), transparent);
+            box-shadow: 0 0 40px 14px rgba(242, 208, 107, 0.5);
+            opacity: 0;
+        }
+
+        .portal-active .portal-bg-glow {
+            opacity: 1;
+            transition: opacity 0.2s ease-in;
+        }
+
+        .portal-active .portal-ring {
+            animation: portal-ring-expand 0.55s cubic-bezier(0.1, 0.85, 0.2, 1) forwards;
+        }
+
+        .portal-active .portal-scan-beam {
+            animation: portal-scan-sweep 0.65s cubic-bezier(0.25, 1, 0.5, 1) 0.1s forwards;
+        }
+
+        @keyframes portal-ring-expand {
+            0% {
+                opacity: 0.65;
+                transform: scale(1);
+                border-color: rgba(242, 208, 107, 0.55);
+                border-width: 4px;
+            }
+
+            50% {
+                opacity: 0.4;
+                border-color: rgba(242, 208, 107, 0.35);
+                border-width: 2px;
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(140);
+                border-color: rgba(242, 208, 107, 0.1);
+                border-width: 1px;
+            }
+        }
+
+        @keyframes portal-scan-sweep {
+            0% {
+                opacity: 0;
+                top: -30px;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 0.9;
+            }
+
+            100% {
+                opacity: 0;
+                top: 105%;
+            }
+        }
+
+        .enigma-portal-reveal {
+            animation: portal-card-reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes portal-card-reveal {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+                box-shadow: 0 0 65px 20px rgba(242, 208, 107, 0.75);
+                border-color: #ffe898;
+            }
+
+            40% {
+                box-shadow: 0 0 50px 14px rgba(242, 208, 107, 0.55);
+                border-color: var(--clr-gold-bright);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), 0 0 35px rgba(201, 168, 76, 0.15), inset 0 0 50px rgba(5, 4, 10, 0.9);
+                border-color: rgba(201, 168, 76, 0.45);
+            }
+        }
     </style>
 </head>
 
@@ -4021,7 +4255,7 @@
                 type: "slots",
                 titre: "La Machine à Délices",
                 description: "",
-                fruits: ["Abricot", "Fraise", "Cerise", "Banane", "Pomme", "Pêche", "Citron"],
+                fruits: ["Abricot", "Fraise", "Cerise", "Banane", "Pomme", "Orange", "Citron"],
                 reponseAttendue: ["abricot-fraise-cerise"],
                 indices: [
                     "Remarque les petits numéros au dessus de chaque case.",
@@ -4250,6 +4484,8 @@
         const ChateauAudio = {
             ctx: null,
             muted: localStorage.getItem('escapeGame_audioMuted') === 'true',
+            lastUnlockTime: 0,
+            lastErrorTime: 0,
             init() {
                 if (!this.ctx) {
                     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -4261,20 +4497,18 @@
                 this.updateIcon();
             },
             toggleMute() {
+                this.init();
                 this.muted = !this.muted;
                 localStorage.setItem('escapeGame_audioMuted', this.muted);
                 this.updateIcon();
-                if (!this.muted) {
-                    this.init();
-                    this.playSuccess();
-                }
+                this.playClick(true);
             },
             updateIcon() {
                 const icon = document.getElementById('audio-icon');
                 if (icon) icon.textContent = this.muted ? '🔇' : '🔊';
             },
-            _playTone(freq, type, dur, gainVal = 0.1, freqEnd = null) {
-                if (this.muted) return;
+            _playTone(freq, type, dur, gainVal = 0.1, freqEnd = null, forcePlay = false) {
+                if (this.muted && !forcePlay) return;
                 this.init();
                 if (!this.ctx) return;
                 try {
@@ -4293,20 +4527,39 @@
                     osc.stop(this.ctx.currentTime + dur);
                 } catch (e) { }
             },
-            playClick() { this._playTone(600, 'sine', 0.03, 0.05, 300); },
+            playClick(forcePlay = false) { this._playTone(600, 'sine', 0.03, 0.05, 300, forcePlay); },
             playLockTick() { this._playTone(850, 'triangle', 0.02, 0.04, 400); },
-            playSuccess() {
+            playSuccess(force = false) {
                 if (this.muted) return;
-                this.init();
-                if (!this.ctx) return;
-                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-                notes.forEach((freq, idx) => {
-                    setTimeout(() => {
-                        this._playTone(freq, 'sine', 0.35, 0.12);
-                    }, idx * 70);
-                });
+                const now = Date.now();
+                const playWav = force || (now - this.lastUnlockTime > 1500);
+                if (playWav) {
+                    this.lastUnlockTime = now;
+                    try {
+                        const audio = new Audio('assets/sons/unlocked.wav');
+                        audio.volume = 0.85;
+                        audio.play().catch(e => { });
+                    } catch (e) { }
+                }
             },
-            playError() {
+            playError(force = false) {
+                if (this.muted) return;
+                const now = Date.now();
+                const playWav = force || (now - this.lastErrorTime > 1200);
+                if (playWav) {
+                    this.lastErrorTime = now;
+                    try {
+                        const audio = new Audio('assets/sons/locked.wav');
+                        audio.volume = 0.85;
+                        audio.play().catch(e => { });
+                    } catch (e) { }
+                }
+            },
+            playAchievement() {
+                if (this.muted) return;
+                this.playClick();
+            },
+            playChiptuneError() {
                 if (this.muted) return;
                 this.init();
                 if (!this.ctx) return;
@@ -4393,7 +4646,7 @@
                 if (!ach) return;
                 this.unlocked.add(id);
                 localStorage.setItem('escapeGame_achievements', JSON.stringify([...this.unlocked]));
-                ChateauAudio.playSuccess();
+                ChateauAudio.playAchievement();
                 this.updateCount();
                 this.showToast(ach);
             },
@@ -4583,6 +4836,8 @@
         }
 
         function startGame() {
+            ChateauAudio.playSuccess(true);
+            triggerPortalTransition();
             startTime = Date.now();
             localStorage.setItem(LS_KEY_START, startTime);
             localStorage.setItem(LS_KEY_INDEX, 0);
@@ -4972,8 +5227,8 @@
                          placeholder="Code sérologique révélé…"
                          autocomplete="off" autocorrect="off" spellcheck="false">
                 </div>
-                <button class="btn btn-primary" id="btn-validate" onclick="validateAnswer()" style="margin-top: 10px; width: 100%;">
-                  Valider ma réponse
+                <button class="btn btn-primary btn-validate-lockable" id="btn-validate" onclick="validateAnswer()" style="margin-top: 10px; width: 100%;">
+                  <span class="validate-lock-icon">🔒</span> <span class="validate-text">Valider ma réponse</span>
                 </button>
               </div>
 
@@ -4992,8 +5247,8 @@
             <div class="date-picker-group">
               <input type="date" class="date-picker-input" id="date-input">
             </div>
-            <button class="btn btn-primary" id="btn-validate" onclick="validateDateAnswer()">
-              Valider la date
+            <button class="btn btn-primary btn-validate-lockable" id="btn-validate" onclick="validateDateAnswer()">
+              <span class="validate-lock-icon">🔒</span> <span class="validate-text">Valider la date</span>
             </button>
           `;
                     break;
@@ -5022,8 +5277,8 @@
                      placeholder="Ta réponse…"
                      autocomplete="off" autocorrect="off" spellcheck="false">
             </div>
-            <button class="btn btn-primary" id="btn-validate" onclick="validateAnswer()">
-              Valider ma réponse
+            <button class="btn btn-primary btn-validate-lockable" id="btn-validate" onclick="validateAnswer()">
+              <span class="validate-lock-icon">🔒</span> <span class="validate-text">Valider ma réponse</span>
             </button>
           `;
                     break;
@@ -5047,21 +5302,21 @@
                 </div>
               </div>
             </div>
-            <button class="btn btn-primary" id="btn-validate" onclick="validateCounterAnswer()">
-              Valider ma réponse
+            <button class="btn btn-primary btn-validate-lockable" id="btn-validate" onclick="validateCounterAnswer()">
+              <span class="validate-lock-icon">🔒</span> <span class="validate-text">Valider ma réponse</span>
             </button>
           `;
                     break;
 
                 case 'slots': {
-                    const fruits = e.fruits || ["Abricot", "Fraise", "Cerise", "Banane", "Pomme", "Pêche", "Citron"];
+                    const fruits = e.fruits || ["Abricot", "Fraise", "Cerise", "Banane", "Pomme", "Orange", "Citron"];
                     const fruitEmojis = {
                         "Abricot": "🍑",
                         "Fraise": "🍓",
                         "Cerise": "🍒",
                         "Banane": "🍌",
                         "Pomme": "🍏",
-                        "Pêche": "🍑",
+                        "Orange": "🍊",
                         "Citron": "🍋"
                     };
                     const shuffleArray = (arr) => {
@@ -5109,8 +5364,8 @@
                 </div>
               </div>
             </div>
-            <button class="btn btn-primary" id="btn-validate" onclick="validateSlotsAnswer()">
-              Valider ma réponse
+            <button class="btn btn-primary btn-validate-lockable" id="btn-validate" onclick="validateSlotsAnswer()">
+              <span class="validate-lock-icon">🔒</span> <span class="validate-text">Valider ma réponse</span>
             </button>
           `;
                     break;
@@ -5135,8 +5390,8 @@
                 <button class="clock-mode-btn" id="btn-mode-minute" onclick="setClockMode('minute')">⏱️ Minutes</button>
               </div>
 
-              <button class="btn btn-primary" id="btn-validate" onclick="validateClockAnswer()" style="margin-top: 18px; width: 100%; max-width: 320px;">
-                Valider cette durée
+              <button class="btn btn-primary btn-validate-lockable" id="btn-validate" onclick="validateClockAnswer()" style="margin-top: 18px; width: 100%; max-width: 320px;">
+                <span class="validate-lock-icon">🔒</span> <span class="validate-text">Valider cette durée</span>
               </button>
             </div>
           `;
@@ -5264,6 +5519,7 @@
                 <span>Zoom grille :</span>
               </div>
               <div class="mosaic-zoom-btns">
+                <button class="btn-mosaic-light" id="btn-mosaic-light" onclick="toggleMosaicLight(this)" title="Allumer / Éteindre la lumière">💡 Lumière</button>
                 <button class="btn-mosaic-zoom active" id="btn-zoom-1" onclick="setMosaicGridZoom(1, this)" title="Vue standard">x1</button>
                 <button class="btn-mosaic-zoom" id="btn-zoom-2" onclick="setMosaicGridZoom(2, this)" title="Zoom x2">x2</button>
               </div>
@@ -5312,8 +5568,8 @@
               <input type="text" class="char-input" data-index="8" maxlength="1" style="width: 40px; height: 50px; text-align: center; font-size: 1.5rem; border: 1px solid var(--border-subtle); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-primary); outline: none;">
               <input type="hidden" id="answer-input">
             </div>
-            <button class="btn btn-primary" id="btn-validate" onclick="validateAnswer()">
-              Valider ma réponse
+            <button class="btn btn-primary btn-validate-lockable" id="btn-validate" onclick="validateAnswer()">
+              <span class="validate-lock-icon">🔒</span> <span class="validate-text">Valider ma réponse</span>
             </button>
           `;
                     } else {
@@ -5323,8 +5579,8 @@
                      placeholder="Ta réponse…"
                      autocomplete="off" autocorrect="off" spellcheck="false">
             </div>
-            <button class="btn btn-primary" id="btn-validate" onclick="validateAnswer()">
-              Valider ma réponse
+            <button class="btn btn-primary btn-validate-lockable" id="btn-validate" onclick="validateAnswer()">
+              <span class="validate-lock-icon">🔒</span> <span class="validate-text">Valider ma réponse</span>
             </button>
           `;
                     }
@@ -5420,7 +5676,10 @@
             if (e.type === 'carousel') initCarouselSmartLoader();
 
             // Init mosaic progressive background attenuation
-            if (e.type === 'mosaic') updateMosaicBackgroundAttenuation();
+            if (e.type === 'mosaic') {
+                window._mosaicLightOn = false;
+                updateMosaicBackgroundAttenuation();
+            }
 
             // Init counter picker
             if (e.type === 'counter') {
@@ -5511,6 +5770,7 @@
         }
 
         function confirmHint(enigmeId, hintIndex, btn) {
+            ChateauAudio.playClick();
             if (btn.classList.contains('confirming')) return;
             btn.classList.add('confirming');
             btn.onclick = null;
@@ -5521,6 +5781,7 @@
         }
 
         function cancelHint(enigmeId, hintIndex, element) {
+            ChateauAudio.playClick();
             const btn = element.closest('.hint-tab');
             if (btn) {
                 const labels = ['Indice 1', 'Indice 2', 'Solution'];
@@ -5531,6 +5792,7 @@
         }
 
         function revealHint(enigmeId, hintIndex) {
+            ChateauAudio.playClick();
             if (!hintsUsed[enigmeId]) hintsUsed[enigmeId] = [];
             if (!hintsUsed[enigmeId].includes(hintIndex)) {
                 hintsUsed[enigmeId].push(hintIndex);
@@ -5612,8 +5874,37 @@
         }
 
         /* ─────────────────────────────────────────────────────────────
-           VALIDATE ANSWER
+           VALIDATE ANSWER & LOCK FEEDBACK
         ────────────────────────────────────────────────────────────── */
+        function triggerLockValidationFeedback(isCorrect, btn) {
+            if (!btn) btn = document.getElementById('btn-validate');
+            if (btn && btn.classList.contains('btn-validate-lockable')) {
+                const icon = btn.querySelector('.validate-lock-icon');
+                if (isCorrect) {
+                    ChateauAudio.playSuccess(true);
+                    if (icon) {
+                        icon.textContent = '🔓';
+                        icon.classList.remove('lock-vibrate');
+                        void icon.offsetWidth;
+                        icon.classList.add('lock-unlock-anim');
+                    }
+                    btn.classList.add('btn-validate-success');
+                } else {
+                    ChateauAudio.playError(true);
+                    if (icon) {
+                        icon.textContent = '🔒';
+                        icon.classList.remove('lock-vibrate');
+                        void icon.offsetWidth;
+                        icon.classList.add('lock-vibrate');
+                    }
+                    if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+                }
+            } else {
+                if (isCorrect) ChateauAudio.playSuccess();
+                else ChateauAudio.playError();
+            }
+        }
+
         function validateAnswer() {
             const input = document.getElementById('answer-input');
             if (!input) return;
@@ -5641,14 +5932,16 @@
                 isCorrect = answer === expected.trim().toUpperCase();
             }
 
+            const btn = document.getElementById('btn-validate');
             if (isCorrect) {
+                triggerLockValidationFeedback(true, btn);
                 showFeedback('success', '✅ Bonne réponse ! Bien joué.');
                 input.disabled = true;
                 document.querySelectorAll('.char-input').forEach(inp => inp.disabled = true);
-                const btn = document.getElementById('btn-validate');
                 if (btn) btn.disabled = true;
                 setTimeout(() => handleSuccess(), 1000);
             } else {
+                triggerLockValidationFeedback(false, btn);
                 showFeedback('error', '❌ Attention, une erreur vient d\'être ajoutée ! Plus il y a d\'erreurs, plus cela complique une des étapes finales !');
                 input.classList.add('error');
                 setTimeout(() => input.classList.remove('error'), 600);
@@ -5661,7 +5954,9 @@
 
         function validateDateAnswer() {
             const input = document.getElementById('date-input');
+            const btn = document.getElementById('btn-validate');
             if (!input || !input.value) {
+                triggerLockValidationFeedback(false, btn);
                 showFeedback('error', '📅 Sélectionne une date dans le calendrier.');
                 return;
             }
@@ -5673,13 +5968,14 @@
             const acceptedDates = Array.isArray(expected) ? expected : [expected];
 
             if (acceptedDates.includes(answer)) {
+                triggerLockValidationFeedback(true, btn);
                 showFeedback('success', '✅ Bonne date ! Bien joué.');
                 input.disabled = true;
                 input.classList.add('correct');
-                const btn = document.getElementById('btn-validate');
                 if (btn) btn.disabled = true;
                 setTimeout(() => handleSuccess(), 1000);
             } else {
+                triggerLockValidationFeedback(false, btn);
                 showFeedback('error', '❌ Attention, une erreur vient d\'être ajoutée ! Plus il y a d\'erreurs, plus cela complique une des étapes finales !');
                 input.classList.add('error');
                 setTimeout(() => input.classList.remove('error'), 600);
@@ -5739,11 +6035,13 @@
             const btn = document.getElementById('btn-validate');
 
             if (isCorrect) {
+                triggerLockValidationFeedback(true, btn);
                 showFeedback('success', '✅ Bonne réponse ! Le code est correct.');
                 if (picker) picker.style.pointerEvents = 'none';
                 if (btn) btn.disabled = true;
                 setTimeout(() => handleSuccess(), 1000);
             } else {
+                triggerLockValidationFeedback(false, btn);
                 showFeedback('error', '❌ Le code est incorrect ! Une erreur vient d\'être ajoutée.');
                 if (picker) {
                     picker.classList.add('error');
@@ -5829,11 +6127,13 @@
             const btn = document.getElementById('btn-validate');
 
             if (isCorrect) {
+                triggerLockValidationFeedback(true, btn);
                 showFeedback('success', '🎰 Trop forte, jackpot ! La combinaison de mes préférences est la bonne. 😍');
                 if (picker) picker.style.pointerEvents = 'none';
                 if (btn) btn.disabled = true;
                 setTimeout(() => handleSuccess(), 1000);
             } else {
+                triggerLockValidationFeedback(false, btn);
                 showFeedback('error', '❌ Combinaison incorrecte ! Une erreur vient d\'être ajoutée.');
                 if (picker) {
                     picker.classList.add('error');
@@ -5979,15 +6279,17 @@
         }
 
         function validateClockAnswer() {
+            const btn = document.getElementById('btn-validate');
             const totalMinutes = _clockHours * 60 + _clockMinutes;
             if (totalMinutes >= 120 && totalMinutes <= 154) {
+                triggerLockValidationFeedback(true, btn);
                 showFeedback('success', '✅ Durée correcte ! Bien calculé.');
                 const container = document.querySelector('.clock-puzzle-container');
                 if (container) container.style.pointerEvents = 'none';
-                const btn = document.getElementById('btn-validate');
                 if (btn) btn.disabled = true;
                 setTimeout(() => handleSuccess(), 1500);
             } else {
+                triggerLockValidationFeedback(false, btn);
                 showFeedback('error', '❌ Incorrect ! Vérifiez bien les heures d\'envoi des deux messages sur l\'image.');
                 const card = document.querySelector('.enigma-card');
                 if (card) {
@@ -6886,6 +7188,12 @@
         function updateMosaicBackgroundAttenuation() {
             const grid = document.getElementById('mosaic-grid');
             if (!grid) return;
+            if (window._mosaicLightOn) {
+                grid.style.setProperty('--bg-opacity', '1');
+                grid.style.setProperty('--bg-saturate', '1');
+                grid.style.setProperty('--bg-brightness', '1');
+                return;
+            }
             const clickedValid = document.querySelectorAll('.mosaic-tile.valid-clicked').length;
             const step = Math.min(30, clickedValid);
             const t = step / 30; // varie de 0 (0 étape) à 1 (30 étapes)
@@ -6897,6 +7205,20 @@
             grid.style.setProperty('--bg-opacity', opacity);
             grid.style.setProperty('--bg-saturate', saturate);
             grid.style.setProperty('--bg-brightness', brightness);
+        }
+
+        function toggleMosaicLight(btn) {
+            if (typeof ChateauAudio !== 'undefined' && ChateauAudio.playClick) ChateauAudio.playClick();
+            window._mosaicLightOn = !window._mosaicLightOn;
+            if (!btn) btn = document.getElementById('btn-mosaic-light');
+            if (btn) {
+                if (window._mosaicLightOn) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            }
+            updateMosaicBackgroundAttenuation();
         }
 
         function handleMosaicClick(tileIndex, isValid) {
@@ -6925,14 +7247,23 @@
                         btnContainer.id = 'mosaic-next-btn-container';
                         btnContainer.style.textAlign = 'center';
                         btnContainer.style.margin = '25px auto 10px';
-                        btnContainer.innerHTML = `<button class="btn btn-primary" style="padding: 16px 36px; font-size: 1.15rem; box-shadow: 0 0 30px rgba(0, 255, 136, 0.6); border-color: #00ff88; animation: float 3s ease-in-out infinite; background: linear-gradient(135deg, #10b981, #059669); color: #fff;" onclick="handleSuccess()">Passer à l'énigme suivante ↗</button>`;
+                        btnContainer.style.opacity = '0';
+                        btnContainer.style.pointerEvents = 'none';
+                        btnContainer.style.transform = 'translateY(15px)';
+                        btnContainer.style.transition = 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+                        btnContainer.innerHTML = `<button class="btn btn-primary" style="padding: 16px 36px; font-size: 1.15rem; box-shadow: 0 0 30px rgba(0, 255, 136, 0.6); border-color: #00ff88; animation: float 3s ease-in-out infinite; background: linear-gradient(135deg, #10b981, #059669); color: #fff;" onclick="handleSuccess(true)">Passer à l'énigme suivante ↗</button>`;
                         const gridWrapper = document.getElementById('mosaic-grid-wrapper');
                         if (gridWrapper && gridWrapper.parentNode) {
                             gridWrapper.parentNode.insertBefore(btnContainer, gridWrapper.nextSibling);
                         }
+                        setTimeout(() => {
+                            btnContainer.style.opacity = '1';
+                            btnContainer.style.pointerEvents = 'auto';
+                            btnContainer.style.transform = 'translateY(0)';
+                        }, 1800);
                     }
                 } else {
-                    showFeedback('success', `✨ Élément validé ! (${clickedValid.length} / ${allValid.length})`);
+                    showFeedback('success', `✨ Élément validé ! (${clickedValid.length} / ${allValid.length})`, false);
                 }
             } else {
                 window._mosaicHadError = true;
@@ -6950,15 +7281,23 @@
             }
         }
 
-        function showFeedback(type, message) {
+        function showFeedback(type, message, playSound = true) {
             const $fb = document.getElementById('feedback');
             if (!$fb) return;
             $fb.className = 'feedback ' + type;
             $fb.textContent = message;
-            if (type === 'success') {
-                ChateauAudio.playSuccess();
-            } else if (type === 'error') {
-                ChateauAudio.playError();
+            if (playSound && type === 'success') {
+                if (message.includes('Autorisation GPS accordée')) {
+                    ChateauAudio.playAchievement();
+                } else if (!message.includes('Élément validé !')) {
+                    ChateauAudio.playSuccess();
+                }
+            } else if (playSound && type === 'error') {
+                if (message.includes('Accès au GPS bloqué')) {
+                    ChateauAudio.playChiptuneError();
+                } else {
+                    ChateauAudio.playError();
+                }
             }
             if (type === 'error' && message.includes('❌')) {
                 totalErrorsCount++;
@@ -6977,8 +7316,10 @@
         /* ─────────────────────────────────────────────────────────────
            SUCCESS SCREEN & ADVANCE
         ────────────────────────────────────────────────────────────── */
-        function handleSuccess() {
-            ChateauAudio.playSuccess();
+        function handleSuccess(fromButton = false) {
+            if (fromButton) {
+                ChateauAudio.playSuccess(true);
+            }
             if (window._currentEnigmaStartTime && (performance.now() - window._currentEnigmaStartTime) / 1000 < 300) {
                 ChateauAchievements.unlock('speed');
             }
@@ -6986,11 +7327,13 @@
                 ChateauAchievements.unlock('zero_fault');
             }
             if (currentIndex === 0) {
+                triggerPortalTransition();
                 renderEnigma1SuccessScreen();
                 return;
             }
             const currentEnigma = enigmes[currentIndex];
             if (currentEnigma && currentEnigma.succes) {
+                triggerPortalTransition();
                 renderSuccessScreen(currentEnigma.succes);
             } else {
                 advanceToNext();
@@ -7023,9 +7366,9 @@
                         </div>
                     </div>
  
-                    <!-- Next Button (initially hidden) -->
-                    <div id="enigma1-btn-box" style="opacity: 0; transform: translateY(15px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); margin-top: 30px;">
-                        <button class="btn btn-primary" style="padding: 16px 36px; font-size: 1.1rem; box-shadow: 0 0 25px rgba(201, 168, 76, 0.4);" onclick="advanceToNext()">Passer à l'énigme suivante ↗</button>
+                    <!-- Next Button (initially hidden and not cliquable) -->
+                    <div id="enigma1-btn-box" style="opacity: 0; pointer-events: none; transform: translateY(15px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); margin-top: 30px;">
+                        <button class="btn btn-primary" style="padding: 16px 36px; font-size: 1.1rem; box-shadow: 0 0 25px rgba(201, 168, 76, 0.4);" onclick="advanceToNext(true)">Passer à l'énigme suivante ↗</button>
                     </div>
                 </div>
             `;
@@ -7073,6 +7416,7 @@
                     const btnBox = document.getElementById('enigma1-btn-box');
                     if (btnBox) {
                         btnBox.style.opacity = '1';
+                        btnBox.style.pointerEvents = 'auto';
                         btnBox.style.transform = 'translateY(0)';
                     }
                 }, 3400);
@@ -7249,15 +7593,80 @@
                     <h1 class="enigma-title" style="color: var(--clr-gold-bright);">${titleText}</h1>
                     ${imageHtml}
                     ${descText}
-                    <div style="margin-top: 20px;">
-                        <button class="btn btn-primary" onclick="advanceToNext()">${btnText}</button>
+                    <div id="success-screen-btn-box" style="margin-top: 20px; opacity: 0; pointer-events: none; transform: translateY(15px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);">
+                        <button class="btn btn-primary" onclick="advanceToNext(true)">${btnText}</button>
                     </div>
                 </div>
             `;
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            setTimeout(() => {
+                const box = document.getElementById('success-screen-btn-box');
+                if (box) {
+                    box.style.opacity = '1';
+                    box.style.pointerEvents = 'auto';
+                    box.style.transform = 'translateY(0)';
+                }
+            }, 1800);
         }
 
-        function advanceToNext() {
+        function triggerPortalTransition() {
+            let overlay = document.getElementById('portal-transition-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'portal-transition-overlay';
+                overlay.className = 'portal-shockwave-container';
+                overlay.innerHTML = `
+                    <div class="portal-ring"></div>
+                    <div class="portal-scan-beam"></div>
+                    <div class="portal-bg-glow"></div>
+                `;
+                document.body.appendChild(overlay);
+            }
+            const syncOverlayToMain = () => {
+                const appEl = document.getElementById('app');
+                if (appEl && overlay) {
+                    const rect = appEl.getBoundingClientRect();
+                    overlay.style.top = rect.top + 'px';
+                    overlay.style.left = rect.left + 'px';
+                    overlay.style.width = rect.width + 'px';
+                    overlay.style.height = Math.max(rect.height, window.innerHeight) + 'px';
+                }
+            };
+            syncOverlayToMain();
+            overlay.classList.remove('portal-active');
+            void overlay.offsetWidth; // Force reflow
+            overlay.classList.add('portal-active');
+
+            setTimeout(() => {
+                syncOverlayToMain();
+                const card = document.querySelector('.enigma-card');
+                if (card) {
+                    card.classList.remove('enigma-portal-reveal');
+                    void card.offsetWidth;
+                    card.classList.add('enigma-portal-reveal');
+                    if (card._portalTimer) clearTimeout(card._portalTimer);
+                    card._portalTimer = setTimeout(() => {
+                        card.style.transition = 'none';
+                        card.style.animation = 'none';
+                        card.classList.remove('enigma-portal-reveal');
+                        void card.offsetWidth;
+                        card.style.transition = '';
+                    }, 750);
+                }
+            }, 60);
+
+            if (overlay._timer) clearTimeout(overlay._timer);
+            overlay._timer = setTimeout(() => {
+                overlay.classList.remove('portal-active');
+            }, 900);
+        }
+
+        function advanceToNext(fromButton = false) {
+            if (fromButton) {
+                ChateauAudio.playSuccess(true);
+            }
+            triggerPortalTransition();
             currentIndex++;
             localStorage.setItem(LS_KEY_INDEX, currentIndex);
 
@@ -7275,6 +7684,7 @@
            DEBUG — SKIP & JUMP
         ────────────────────────────────────────────────────────────── */
         function skipStep() {
+            ChateauAudio.playSuccess(true);
             advanceToNext();
         }
 
@@ -7495,6 +7905,8 @@
             const totalH = Math.floor(elapsed / 3600000);
             const totalM = Math.floor((elapsed % 3600000) / 60000);
             const totalHintsCount = Object.values(hintsUsed).reduce((sum, arr) => sum + arr.length, 0);
+            const unlockedAchCount = ChateauAchievements.unlocked.size;
+            const totalAchCount = ChateauAchievements.list.length;
 
             $app.innerHTML = `
         <div class="lock-screen">
@@ -7512,17 +7924,21 @@
                 <div class="stat-value">${totalH}h ${String(totalM).padStart(2, '0')}m</div>
                 <div class="stat-label">Temps total</div>
               </div>
-              <div class="stat" style="flex: 1;">
+              <div class="stat" style="flex: 1; min-width: 100px;">
                 <div class="stat-value">${enigmes.length}</div>
                 <div class="stat-label">Énigmes</div>
               </div>
-              <div class="stat" style="flex: 1;">
+              <div class="stat" style="flex: 1; min-width: 100px;">
                 <div class="stat-value">${totalHintsCount}</div>
                 <div class="stat-label">Indices</div>
               </div>
-              <div class="stat" style="flex: 1;">
+              <div class="stat" style="flex: 1; min-width: 100px;">
                 <div class="stat-value">${totalErrorsCount}</div>
                 <div class="stat-label">Erreurs</div>
+              </div>
+              <div class="stat" style="flex: 1; min-width: 130px; cursor: pointer; border-color: rgba(254, 240, 138, 0.5);" onclick="ChateauAchievements.showModal()" title="Consulter la galerie des succès">
+                <div class="stat-value">🏆 ${unlockedAchCount}/${totalAchCount}</div>
+                <div class="stat-label">Succès débloqués</div>
               </div>
             </div>
 
@@ -8031,6 +8447,8 @@
         let bf = null;
 
         function startBossFight() {
+            ChateauAudio.playSuccess(true);
+            triggerPortalTransition();
             // Show difficulty selection overlay
             const menu = document.createElement('div');
             menu.className = 'bf-difficulty-menu';
@@ -8068,6 +8486,8 @@
         }
 
         function _bfPickDiff(diff) {
+            ChateauAudio.playSuccess(true);
+            triggerPortalTransition();
             const menu = document.getElementById('bf-difficulty-menu');
             if (menu) menu.remove();
             _startBossFightActual(diff);
@@ -8282,7 +8702,7 @@ Ménager</span>
             } else if (idx === 3) {
                 // 💋 Orgasme — reflect orbs back toward Malus
                 if (eva.orgasme && eva.orgasme.active) return;
-                ChateauAudio.playSuccess();
+                ChateauAudio.playAchievement();
                 eva.cd[3] = 18;
                 eva.orgasme = { active: true, timer: 5 };
                 eva.atk = null;
@@ -8320,7 +8740,7 @@ Ménager</span>
                 }
                 malus.spiralAngle = (malus.spiralAngle || 0) + 0.6;
             } else if (pattern === 'sun') {
-                const count = malus.phase === 2 ? 14 : 8;
+                const count = malus.phase === 3 ? 14 : malus.phase === 2 ? 11 : 8;
                 for (let i = 0; i < count; i++) {
                     const a = (i / count) * Math.PI * 2;
                     bf.projectiles.push({
@@ -8374,11 +8794,6 @@ Ménager</span>
             } else if (pattern === 'laser') {
                 bf.projectiles.push({ type: 'laser', x: malus.x, y: malus.y + 30, targetX: eva.x, t: 0, chargeDur: 1.0, fireDur: 1.2, dur: 2.2, dmg: 1, hit: false });
                 ChateauAudio.playLockTick();
-            } else if (pattern === 'echo') {
-                const count = malus.phase === 2 ? 2 : 1;
-                for (let i = 0; i < count; i++) {
-                    bf.projectiles.push({ type: 'echo', x: malus.x + (i === 0 ? -35 : 35), y: malus.y + 10, vx: (i === 0 ? -30 : 30), vy: 45, r: 16, hp: 1, t: 0, dur: 14 });
-                }
             }
             for (let i = 0; i < 4; i++)
                 bfParticle(malus.x + (Math.random() - 0.5) * 40, malus.y + 30,
@@ -8465,19 +8880,21 @@ Ménager</span>
 
             // ── Malus AI ──
             const prevPhase = malus.phase;
-            malus.phase = malus.hp <= malus.maxHp * 0.1 ? 2 : malus.hp <= malus.maxHp * 0.5 ? 1 : 0;
+            malus.phase = malus.hp <= malus.maxHp * 0.1 ? 3 : malus.hp <= malus.maxHp * 0.5 ? 2 : malus.hp <= malus.maxHp * 0.75 ? 1 : 0;
             // Phase transition effect
             if (malus.phase > prevPhase) {
                 bf.shake = 0.8; bf.flash = 0.5;
-                bf.flashColor = malus.phase === 2 ? '#c4263d' : '#8b1a2e';
+                bf.flashColor = malus.phase === 3 ? '#ef4444' : malus.phase === 2 ? '#c4263d' : '#8b1a2e';
                 for (let i = 0; i < 35; i++) {
                     const a = (i / 35) * Math.PI * 2, spd = 80 + Math.random() * 180;
                     bfParticle(malus.x, malus.y, Math.cos(a) * spd, Math.sin(a) * spd, 1.2,
-                        malus.phase === 2
+                        malus.phase === 3
                             ? ['#ef4444', '#dc2626', '#f87171', '#fca5a5'][i % 4]
-                            : ['#c4263d', '#8b1a2e', '#4a0f1a', '#ef4444'][i % 4], 6);
+                            : malus.phase === 2
+                                ? ['#dc2626', '#f87171', '#ef4444', '#fca5a5'][i % 4]
+                                : ['#c4263d', '#8b1a2e', '#4a0f1a', '#ef4444'][i % 4], 6);
                 }
-                if (malus.phase === 2) {
+                if (malus.phase === 3) {
                     bf.zoomEffect = 0.08;
                     bf.hitStopTimer = 0.4;
                     malus.phase2IntroQueue = ['pentagram'];
@@ -8500,16 +8917,17 @@ Ménager</span>
                 malus.moveTimer -= dt;
                 if (malus.moveTimer <= 0) {
                     malus.moveTarget = 40 + Math.random() * (W - 80);
-                    malus.moveTimer = malus.phase === 2 ? 0.3 + Math.random() * 0.4
-                        : malus.phase === 1 ? 0.8 + Math.random() : 1.5 + Math.random() * 2;
+                    malus.moveTimer = malus.phase === 3 ? 0.3 + Math.random() * 0.35
+                        : malus.phase === 2 ? 0.5 + Math.random() * 0.4
+                            : malus.phase === 1 ? 0.8 + Math.random() * 0.6 : 1.4 + Math.random() * 1.5;
                 }
-                const ms = malus.phase === 2 ? 240 : malus.phase === 1 ? 160 : 90;
+                const ms = malus.phase === 3 ? 250 : malus.phase === 2 ? 200 : malus.phase === 1 ? 150 : 90;
                 if (Math.abs(malus.x - malus.moveTarget) > 5)
                     malus.x += Math.sign(malus.moveTarget - malus.x) * ms * dt;
 
-                // ── Malus Attacks (3 phases) ──
-                if (malus.phase === 2) {
-                    // Phase 2: starts with heart -> pentagram -> fast patterns + halved pauses
+                // ── Malus Attacks (4 phases) ──
+                if (malus.phase === 3) {
+                    // Phase 3 (10% -> 0%): ultimate rage stage! starts with heart -> pentagram -> fast rotation
                     if (malus.isPaused) {
                         malus.pauseTimer -= dt;
                         if (malus.pauseTimer <= 0) {
@@ -8517,7 +8935,7 @@ Ménager</span>
                             if (malus.phase2IntroQueue && malus.phase2IntroQueue.length > 0) {
                                 malus.currentPattern = malus.phase2IntroQueue.shift();
                             } else {
-                                const patterns = ['aimed', 'spiral', 'sun', 'spread3', 'wave', 'laser', 'heart', 'pentagram', 'echo'];
+                                const patterns = ['aimed', 'spiral', 'sun', 'spread3', 'wave', 'laser', 'heart', 'pentagram'];
                                 malus.patternIndex = (malus.patternIndex + 1) % patterns.length;
                                 malus.currentPattern = patterns[malus.patternIndex];
                             }
@@ -8526,7 +8944,7 @@ Ménager</span>
                     } else {
                         malus.atkTimer -= dt;
                         if (malus.atkTimer <= 0) {
-                            malus.atkTimer = 0.1 + Math.random() * 0.18;
+                            malus.atkTimer = 0.1 + Math.random() * 0.16;
                             bfMalusAttack(malus.currentPattern);
                             if (Math.random() < 0.12) {
                                 malus.isPaused = true;
@@ -8534,25 +8952,37 @@ Ménager</span>
                             }
                         }
                     }
-                } else if (malus.phase === 1) {
-                    // Phase 1: faster + spiral/sun patterns
+                } else if (malus.phase === 2) {
+                    // Phase 2 (50% -> 10%): fast attacks + spiral/sun/spread3/laser/echo/wave
                     malus.atkTimer -= dt;
-                    malus.spiralAngle = (malus.spiralAngle || 0) + dt * 3;
+                    malus.spiralAngle = (malus.spiralAngle || 0) + dt * 4;
                     if (malus.atkTimer <= 0) {
-                        malus.atkTimer = 0.45 + Math.random() * 0.5;
+                        malus.atkTimer = 0.38 + Math.random() * 0.42;
                         const r = Math.random();
                         if (r < 0.2) bfMalusAttack('spiral');
                         else if (r < 0.38) bfMalusAttack('sun');
-                        else if (r < 0.55) bfMalusAttack('spread3');
-                        else if (r < 0.7) bfMalusAttack('laser');
-                        else if (r < 0.85) bfMalusAttack('echo');
+                        else if (r < 0.56) bfMalusAttack('spread3');
+                        else if (r < 0.74) bfMalusAttack('laser');
+                        else if (r < 0.9) bfMalusAttack('wave');
+                        else bfMalusAttack('aimed');
+                    }
+                } else if (malus.phase === 1) {
+                    // Phase 1 (75% -> 50%): faster + spiral/sun/spread3
+                    malus.atkTimer -= dt;
+                    malus.spiralAngle = (malus.spiralAngle || 0) + dt * 3;
+                    if (malus.atkTimer <= 0) {
+                        malus.atkTimer = 0.55 + Math.random() * 0.5;
+                        const r = Math.random();
+                        if (r < 0.25) bfMalusAttack('spiral');
+                        else if (r < 0.48) bfMalusAttack('sun');
+                        else if (r < 0.72) bfMalusAttack('spread3');
                         else bfMalusAttack('aimed');
                     }
                 } else {
-                    // Phase 0: normal
+                    // Phase 0 (100% -> 75%): normal
                     malus.atkTimer -= dt;
                     if (malus.atkTimer <= 0) {
-                        malus.atkTimer = 1.6 + Math.random() * 0.6;
+                        malus.atkTimer = 1.5 + Math.random() * 0.6;
                         bfMalusAttack('aimed');
                     }
                 }
@@ -8627,32 +9057,11 @@ Ménager</span>
                             eva.hp -= p.dmg; eva.inv = 1.0;
                             bf.shake = 0.4; bf.flash = 0.2; bf.flashColor = '#ef4444';
                             bf.dmgTexts.push({ x: eva.x, y: eva.y - 35, text: '-1', color: '#ef4444', t: 0.9 });
-                            ChateauAudio.playError();
+                            ChateauAudio.playChiptuneError();
                             if (eva.hp <= 0) bfEndGame(false);
                         }
                     }
                     if (Math.abs(p.t - p.chargeDur) < 0.04) ChateauAudio.playLaser();
-                }
-                if (p.type === 'echo') {
-                    p.x += p.vx * dt; p.y += p.vy * dt;
-                    if (p.x < 30 || p.x > W - 30) p.vx *= -1;
-                    if (p.y > H - 80 || p.y < 40) p.vy *= -1;
-                    bf.projectiles.forEach(ep => {
-                        if (ep.type === 'lightning' && ep.hit && Math.abs(ep.x - p.x) < 35) { p.hp -= 1; }
-                        if (ep.type === 'bottle' && !ep.hit && Math.abs(ep.x - p.x) < 28 && Math.abs(ep.y - p.y) < 28) { ep.hit = true; p.hp -= 3; }
-                        if (ep.type === 'moon' && !ep.hit && Math.abs(ep.x - p.x) < 45 && Math.abs(ep.y - p.y) < 45) { p.hp -= 10; }
-                    });
-                    if (p.hp <= 0) {
-                        eva.hp = Math.min(eva.maxHp, eva.hp + 1);
-                        bf.dmgTexts.push({ x: p.x, y: p.y - 20, text: '+1 ♥ ÉCHO !', color: '#4ade80', t: 1.2 });
-                        ChateauAudio.playSuccess();
-                        for (let i = 0; i < 16; i++) {
-                            const a = (i / 16) * Math.PI * 2;
-                            bfParticle(p.x, p.y, Math.cos(a) * 60, Math.sin(a) * 60, 0.6, '#4ade80', 4);
-                        }
-                        return false;
-                    }
-                    if (Math.random() < 0.2) bfParticle(p.x, p.y, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, 0.4, '#4ade80', 3);
                 }
                 return true;
             });
@@ -8670,7 +9079,7 @@ Ménager</span>
             if (Math.random() < 0.1 + malus.phase * 0.08)
                 bfParticle(malus.x + (Math.random() - 0.5) * 40, malus.y + (Math.random() - 0.5) * 50,
                     (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 12, 0.5,
-                    malus.phase === 2 ? '#ef4444' : '#2a0a20', 3);
+                    malus.phase === 3 ? '#ef4444' : malus.phase === 2 ? '#dc2626' : malus.phase === 1 ? '#c4263d' : '#2a0a20', 3);
             // Floating runes
             bf.runes.forEach(r => {
                 r.y -= r.speed * dt;
@@ -8688,7 +9097,7 @@ Ménager</span>
 
         function bfHitMalus(dmg) {
             if (!bf) return;
-            const actualDmg = bf.malus.isStunned ? dmg * 2 : dmg;
+            const actualDmg = dmg;
             bf.malus.hp = Math.max(0, bf.malus.hp - actualDmg);
             bf.malus.hurt = 0.3;
             bf.shake = Math.max(bf.shake, 0.15);
@@ -8700,12 +9109,12 @@ Ménager</span>
                 bf.malus.breakHp += dmg;
                 if (bf.malus.breakHp >= bf.malus.breakMax && bf.malus.breakMax > 0) {
                     bf.malus.isStunned = true;
-                    bf.malus.stunTimer = 3.5;
+                    bf.malus.stunTimer = 1.5;
                     bf.malus.breakHp = 0;
                     bf.shake = Math.max(bf.shake, 0.5);
                     bf.flash = 0.35; bf.flashColor = '#facc15';
-                    bf.dmgTexts.push({ x: bf.malus.x, y: bf.malus.y - 68, text: '💥 BREAK ! ×2 DÉGÂTS !', color: '#facc15', t: 1.5 });
-                    ChateauAudio.playSuccess();
+                    bf.dmgTexts.push({ x: bf.malus.x, y: bf.malus.y - 68, text: '💥 BREAK ! IMMOBILISÉ !', color: '#facc15', t: 1.5 });
+                    ChateauAudio.playAchievement();
                 } else {
                     ChateauAudio.playBossHit();
                 }
@@ -8814,7 +9223,9 @@ Ménager</span>
 
             // Background with phase-dependent coloring
             const bg = ctx.createLinearGradient(0, 0, 0, H);
-            if (malus.phase === 2) {
+            if (malus.phase === 3) {
+                bg.addColorStop(0, '#220306'); bg.addColorStop(0.5, '#1e050f'); bg.addColorStop(1, '#0f0105');
+            } else if (malus.phase === 2) {
                 bg.addColorStop(0, '#1a0508'); bg.addColorStop(0.5, '#180612'); bg.addColorStop(1, '#0a0205');
             } else if (malus.phase === 1) {
                 bg.addColorStop(0, '#0f0118'); bg.addColorStop(0.5, '#120a1f'); bg.addColorStop(1, '#060510');
@@ -8860,7 +9271,7 @@ Ménager</span>
 
             // Energy pillars at edges
             const pA = 0.03 + malus.phase * 0.015 + Math.sin(time * 1.5) * 0.01;
-            const pC = malus.phase === 2 ? `rgba(239,68,68,${pA})` : `rgba(201,168,76,${pA})`;
+            const pC = malus.phase === 3 ? `rgba(239,68,68,${pA * 1.5})` : malus.phase === 2 ? `rgba(239,68,68,${pA})` : `rgba(201,168,76,${pA})`;
             let lg = ctx.createLinearGradient(0, 0, 15, 0);
             lg.addColorStop(0, pC); lg.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = lg; ctx.fillRect(0, 0, 15, H);
@@ -8891,13 +9302,13 @@ Ménager</span>
             // Boss aura (phase 1+)
             if (malus.phase >= 1 && malus.hp > 0) {
                 ctx.save();
-                const aSize = malus.phase === 2 ? 70 : 50;
-                const aAlpha = malus.phase === 2 ? 0.15 + Math.sin(time * 5) * 0.08 : 0.08 + Math.sin(time * 3) * 0.04;
+                const aSize = malus.phase === 3 ? 80 : malus.phase === 2 ? 65 : 50;
+                const aAlpha = malus.phase === 3 ? 0.2 + Math.sin(time * 6) * 0.1 : malus.phase === 2 ? 0.14 + Math.sin(time * 5) * 0.07 : 0.08 + Math.sin(time * 3) * 0.04;
                 ctx.globalAlpha = aAlpha;
                 ctx.globalCompositeOperation = 'lighter';
                 const ag = ctx.createRadialGradient(malus.x, malus.y, 5, malus.x, malus.y, aSize);
-                ag.addColorStop(0, malus.phase === 2 ? '#ef4444' : '#c4263d');
-                ag.addColorStop(0.5, malus.phase === 2 ? 'rgba(220,38,38,0.3)' : 'rgba(196,38,61,0.2)');
+                ag.addColorStop(0, malus.phase === 3 ? '#ef4444' : malus.phase === 2 ? '#dc2626' : '#c4263d');
+                ag.addColorStop(0.5, malus.phase === 3 ? 'rgba(239,68,68,0.4)' : malus.phase === 2 ? 'rgba(220,38,38,0.3)' : 'rgba(196,38,61,0.2)');
                 ag.addColorStop(1, 'rgba(0,0,0,0)');
                 ctx.fillStyle = ag;
                 ctx.beginPath(); ctx.arc(malus.x, malus.y, aSize, 0, Math.PI * 2); ctx.fill();
@@ -8917,7 +9328,6 @@ Ménager</span>
                 else if (p.type === 'bottle') bfDrawBottle(ctx, p);
                 else if (p.type === 'moon') bfDrawMoonBlade(ctx, p);
                 else if (p.type === 'laser') bfDrawLaser(ctx, p, H);
-                else if (p.type === 'echo') bfDrawEcho(ctx, p, time);
             });
 
             // Damage texts
@@ -8935,15 +9345,15 @@ Ménager</span>
             // HUD
             bfDrawHUD(ctx, W, eva, malus);
 
-            // Phase 2 danger pulse
-            if (malus.phase === 2 && malus.hp > 0) {
-                const dp = 0.03 + Math.sin(time * 3) * 0.02;
+            // Phase 3 danger pulse
+            if (malus.phase === 3 && malus.hp > 0) {
+                const dp = 0.04 + Math.sin(time * 4) * 0.025;
                 ctx.fillStyle = `rgba(239,68,68,${dp})`;
                 ctx.fillRect(0, 0, W, H);
             }
 
             // Vignette
-            const vigS = 0.4 + malus.phase * 0.1;
+            const vigS = 0.35 + malus.phase * 0.12;
             const vig = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75);
             vig.addColorStop(0, 'rgba(0,0,0,0)');
             vig.addColorStop(1, `rgba(0,0,0,${vigS})`);
@@ -9045,16 +9455,16 @@ Ménager</span>
             const fy = Math.sin(time * 2) * 6;
             ctx.translate(malus.x, malus.y + fy);
             if (malus.hurt > 0) ctx.globalAlpha = 0.5 + Math.sin(time * 30) * 0.3;
-            ctx.shadowColor = malus.phase === 2 ? '#ef4444' : '#c4263d';
-            ctx.shadowBlur = malus.phase === 2 ? 35 : 25;
+            ctx.shadowColor = malus.phase === 3 ? '#ef4444' : malus.phase === 2 ? '#f87171' : '#c4263d';
+            ctx.shadowBlur = malus.phase === 3 ? 40 : malus.phase === 2 ? 30 : 20;
             const ag = ctx.createRadialGradient(0, 0, 5, 0, 0, 38);
-            ag.addColorStop(0, malus.phase === 2 ? '#dc2626' : malus.phase === 1 ? '#8b1a2e' : '#2a0a30');
-            ag.addColorStop(0.5, malus.phase === 2 ? '#450a0a' : '#1a0520');
+            ag.addColorStop(0, malus.phase === 3 ? '#ef4444' : malus.phase === 2 ? '#dc2626' : malus.phase === 1 ? '#8b1a2e' : '#2a0a30');
+            ag.addColorStop(0.5, malus.phase === 3 ? '#7f1d1d' : malus.phase === 2 ? '#450a0a' : '#1a0520');
             ag.addColorStop(1, 'rgba(10,2,15,0)');
             ctx.fillStyle = ag;
             // Body
             ctx.beginPath();
-            const bp = malus.phase === 2 ? 16 : 12;
+            const bp = malus.phase === 3 ? 18 : malus.phase === 2 ? 16 : 12;
             for (let i = 0; i < bp; i++) {
                 const a = (i / bp) * Math.PI * 2;
                 const r = 28 + Math.sin(time * (3 + malus.phase * 2) + i * 1.5) * (7 + malus.phase * 3);
@@ -9063,20 +9473,20 @@ Ménager</span>
             }
             ctx.closePath(); ctx.fill();
             // Core
-            ctx.fillStyle = malus.phase === 2 ? '#7f1d1d' : malus.phase === 1 ? '#4a0f1a' : '#0d0418';
+            ctx.fillStyle = malus.phase === 3 ? '#991b1b' : malus.phase === 2 ? '#7f1d1d' : malus.phase === 1 ? '#4a0f1a' : '#0d0418';
             ctx.beginPath(); ctx.ellipse(0, 0, 20, 25, 0, 0, Math.PI * 2); ctx.fill();
             // Eyes (track Eva)
             const eAngle = Math.atan2(bf.eva.y - (malus.y + fy), bf.eva.x - malus.x);
             const lkX = Math.cos(eAngle) * 1.5, lkY = Math.sin(eAngle) * 0.8;
-            ctx.shadowColor = malus.phase === 2 ? '#fca5a5' : '#ef4444';
-            ctx.shadowBlur = malus.phase === 2 ? 20 : 12;
-            ctx.fillStyle = malus.hurt > 0 ? '#fff' : (malus.phase === 2 ? '#fca5a5' : '#ef4444');
-            const eS = malus.phase === 2 ? 4.5 : 3.5;
+            ctx.shadowColor = malus.phase === 3 ? '#fca5a5' : malus.phase === 2 ? '#ef4444' : '#f87171';
+            ctx.shadowBlur = malus.phase === 3 ? 25 : malus.phase === 2 ? 18 : 12;
+            ctx.fillStyle = malus.hurt > 0 ? '#fff' : (malus.phase === 3 ? '#fff' : malus.phase === 2 ? '#fca5a5' : '#ef4444');
+            const eS = malus.phase === 3 ? 5 : malus.phase === 2 ? 4.2 : 3.5;
             ctx.beginPath(); ctx.ellipse(-7 + lkX, -4 + lkY, eS, eS * 0.7, 0, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.ellipse(7 + lkX, -4 + lkY, eS, eS * 0.7, 0, 0, Math.PI * 2); ctx.fill();
             // Tendrils
             const tc = 4 + malus.phase * 2;
-            ctx.strokeStyle = malus.phase === 2 ? 'rgba(239,68,68,0.5)' : malus.phase === 1 ? 'rgba(196,38,61,0.5)' : 'rgba(74,16,37,0.3)';
+            ctx.strokeStyle = malus.phase === 3 ? 'rgba(239,68,68,0.7)' : malus.phase === 2 ? 'rgba(239,68,68,0.5)' : malus.phase === 1 ? 'rgba(196,38,61,0.5)' : 'rgba(74,16,37,0.3)';
             ctx.lineWidth = 1.5; ctx.shadowBlur = 4;
             for (let i = 0; i < tc; i++) {
                 const a = (i / tc) * Math.PI + Math.PI * 0.5;
@@ -9088,7 +9498,7 @@ Ménager</span>
                 ctx.stroke();
             }
             // Pause indicator
-            if (malus.phase === 2 && malus.isPaused) {
+            if (malus.phase === 3 && malus.isPaused) {
                 ctx.globalAlpha = 0.5 + Math.sin(time * 8) * 0.3;
                 ctx.fillStyle = '#ef4444';
                 ctx.font = `bold ${bf.W * 0.035}px Inter, sans-serif`;
@@ -9098,7 +9508,7 @@ Ménager</span>
             // Name
             if (malus.hp > 0) {
                 ctx.shadowBlur = 0; ctx.globalAlpha = 0.6;
-                ctx.fillStyle = malus.phase === 2 ? '#fca5a5' : '#c4263d';
+                ctx.fillStyle = malus.phase === 3 ? '#fff' : malus.phase === 2 ? '#fca5a5' : '#c4263d';
                 ctx.font = `600 ${bf.W * 0.025}px Cinzel, serif`;
                 ctx.textAlign = 'center';
                 ctx.fillText('MALUS', 0, 45);
@@ -9278,21 +9688,6 @@ Ménager</span>
             ctx.restore();
         }
 
-        function bfDrawEcho(ctx, p, time) {
-            ctx.save();
-            ctx.shadowColor = '#4ade80'; ctx.shadowBlur = 15;
-            const pulse = 1 + Math.sin(time * 6) * 0.15;
-            ctx.fillStyle = '#4ade80';
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.r * pulse, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#fff';
-            ctx.font = '700 13px Inter, sans-serif';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText('♥', p.x, p.y);
-            ctx.restore();
-        }
-
         function bfDrawOrgasmeRing(ctx, eva, time) {
             ctx.save();
             const r = 42;
@@ -9402,13 +9797,14 @@ Ménager</span>
             ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.beginPath(); ctx.roundRect(mx, y, bw, bh, 4); ctx.fill();
             const mg = ctx.createLinearGradient(mx, 0, mx + bw, 0);
-            if (malus.phase === 2) { mg.addColorStop(0, '#ef4444'); mg.addColorStop(1, '#dc2626'); }
+            if (malus.phase === 3) { mg.addColorStop(0, '#ef4444'); mg.addColorStop(1, '#991b1b'); }
+            else if (malus.phase === 2) { mg.addColorStop(0, '#ef4444'); mg.addColorStop(1, '#dc2626'); }
             else { mg.addColorStop(0, '#c4263d'); mg.addColorStop(1, '#8b1a2e'); }
             ctx.fillStyle = mg;
             ctx.beginPath(); ctx.roundRect(mx, y, bw * Math.max(0, malus.hp / malus.maxHp), bh, 4); ctx.fill();
-            ctx.strokeStyle = malus.phase === 2 ? 'rgba(239,68,68,0.5)' : 'rgba(196,38,61,0.4)';
+            ctx.strokeStyle = malus.phase >= 2 ? 'rgba(239,68,68,0.5)' : 'rgba(196,38,61,0.4)';
             ctx.beginPath(); ctx.roundRect(mx, y, bw, bh, 4); ctx.stroke();
-            ctx.fillStyle = malus.phase === 2 ? '#fca5a5' : '#ef4444';
+            ctx.fillStyle = malus.phase === 3 ? '#fff' : malus.phase === 2 ? '#fca5a5' : '#ef4444';
             ctx.textAlign = 'right';
             ctx.fillText(`Malus  ${malus.hp}/${malus.maxHp}`, W - pad, y - 4);
             // Break Bar
@@ -9420,27 +9816,29 @@ Ménager</span>
                 if (malus.isStunned) {
                     ctx.fillStyle = '#facc15';
                     ctx.globalAlpha = 0.6 + Math.sin(bf.time * 15) * 0.4;
-                    ctx.beginPath(); ctx.roundRect(mx, bY, bw * (malus.stunTimer / 3.5), bH, 2); ctx.fill();
+                    ctx.beginPath(); ctx.roundRect(mx, bY, bw * (malus.stunTimer / 1.5), bH, 2); ctx.fill();
                     ctx.globalAlpha = 1;
                     ctx.font = `800 ${W * 0.017}px Inter, sans-serif`;
                     ctx.fillStyle = '#facc15';
-                    ctx.fillText('💥 BREAK ! (×2 DÉGÂTS)', W - pad, bY + bH + 11);
+                    ctx.fillText('💥 BREAK ! IMMOBILISÉ', W - pad, bY + bH + 11);
                 } else {
                     ctx.fillStyle = '#eab308';
                     ctx.beginPath(); ctx.roundRect(mx, bY, bw * Math.min(1, malus.breakHp / malus.breakMax), bH, 2); ctx.fill();
                     if (malus.phase >= 1) {
                         ctx.font = `600 ${W * 0.018}px Inter, sans-serif`;
-                        ctx.fillStyle = malus.phase === 2 ? '#fca5a5' : '#f87171';
+                        ctx.fillStyle = malus.phase === 3 ? '#ef4444' : malus.phase === 2 ? '#fca5a5' : '#f87171';
                         ctx.globalAlpha = 0.6 + Math.sin(bf.time * 4) * 0.2;
-                        ctx.fillText(malus.phase === 2 ? '🔥 RAGE' : '⚠️ ENRAGÉ', W - pad, bY + bH + 13);
+                        const phaseText = malus.phase === 3 ? '💀 ULTIME' : malus.phase === 2 ? '🔥 RAGE' : '⚠️ ENRAGÉ';
+                        ctx.fillText(phaseText, W - pad, bY + bH + 13);
                         ctx.globalAlpha = 1;
                     }
                 }
             } else if (malus.phase >= 1 && malus.hp > 0) {
                 ctx.font = `600 ${W * 0.018}px Inter, sans-serif`;
-                ctx.fillStyle = malus.phase === 2 ? '#fca5a5' : '#f87171';
+                ctx.fillStyle = malus.phase === 3 ? '#ef4444' : malus.phase === 2 ? '#fca5a5' : '#f87171';
                 ctx.globalAlpha = 0.6 + Math.sin(bf.time * 4) * 0.2;
-                ctx.fillText(malus.phase === 2 ? '🔥 RAGE' : '⚠️ ENRAGÉ', W - pad, y + bh + 14);
+                const phaseText = malus.phase === 3 ? '💀 ULTIME' : malus.phase === 2 ? '🔥 RAGE' : '⚠️ ENRAGÉ';
+                ctx.fillText(phaseText, W - pad, y + bh + 14);
                 ctx.globalAlpha = 1;
             }
             // Difficulty badge (centred top)
