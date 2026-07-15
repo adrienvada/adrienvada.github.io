@@ -2069,9 +2069,9 @@
 
         .bf-atk-buttons {
             display: flex;
-            gap: 6px;
+            gap: 12px;
             pointer-events: auto;
-            align-items: flex-end;
+            align-items: flex-start;
         }
 
         .bf-btn-wrap {
@@ -2079,6 +2079,12 @@
             flex-direction: column;
             align-items: center;
             gap: 2px;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .bf-btn-wrap.on-cd {
+            /* Keep pointer-events active to allow scale feedback during cooldown */
         }
 
         .bf-btn-label {
@@ -2092,7 +2098,7 @@
             text-transform: uppercase;
             text-align: center;
             line-height: 1.2;
-            max-width: 56px;
+            max-width: 58px;
             word-break: break-word;
         }
 
@@ -2116,6 +2122,8 @@
             -webkit-backdrop-filter: blur(6px);
         }
 
+        .bf-btn-wrap:active .bf-btn,
+        .bf-btn-bear-wrap:active .bf-btn,
         .bf-btn:active {
             transform: scale(0.82);
         }
@@ -2138,6 +2146,30 @@
         .bf-btn-shield {
             border-color: rgba(244, 114, 182, 0.55);
             box-shadow: 0 0 14px rgba(244, 114, 182, 0.2);
+        }
+
+        .bf-btn-expresso {
+            border-color: rgba(245, 158, 11, 0.55);
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.2);
+        }
+
+        .bf-btn-bear {
+            border-color: rgba(251, 113, 133, 0.55);
+            box-shadow: 0 0 14px rgba(251, 113, 133, 0.2);
+        }
+
+        .bf-btn-bear-wrap {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 10;
         }
 
         .bf-cd-overlay {
@@ -2167,7 +2199,7 @@
 
         .bf-btn.on-cd {
             opacity: 0.35;
-            pointer-events: none;
+            /* Keep pointer-events active to allow scale feedback during cooldown */
         }
 
         .bf-btn.on-cd .bf-cd-text {
@@ -8767,13 +8799,16 @@
                         </div>
                         <div class="bf-atk-buttons">
                             <div class="bf-btn-wrap">
+                                <button class="bf-btn bf-btn-expresso" id="bf-btn-expresso">☕</button>
+                                <span class="bf-btn-label" style="color:#f59e0b">Expresso</span>
+                            </div>
+                            <div class="bf-btn-wrap">
                                 <button class="bf-btn bf-btn-lightning" id="bf-btn-lightning">⚡</button>
                                 <span class="bf-btn-label" style="color:#facc15">Éclair d'Amour</span>
                             </div>
                             <div class="bf-btn-wrap">
                                 <button class="bf-btn bf-btn-bottle" id="bf-btn-bottle">🧴</button>
-                                <span class="bf-btn-label" style="color:#a78bfa">Alcool
-Ménager</span>
+                                <span class="bf-btn-label" style="color:#a78bfa">Alcool Ménager</span>
                             </div>
                             <div class="bf-btn-wrap">
                                 <button class="bf-btn bf-btn-moon" id="bf-btn-moon">🌙</button>
@@ -8784,6 +8819,10 @@ Ménager</span>
                                 <span class="bf-btn-label" style="color:#f472b6">Orgasme</span>
                             </div>
                         </div>
+                    </div>
+                    <div class="bf-btn-bear-wrap" id="bf-btn-wrap-bear">
+                        <button class="bf-btn bf-btn-bear" id="bf-btn-bear">🧸</button>
+                        <span class="bf-btn-label" style="color:#fb7185; max-width: 65px;">Ours de Protection</span>
                     </div>
                 </div>
             `;
@@ -8815,14 +8854,16 @@ Ménager</span>
                 ctx, canvas, W: cw, H: ch, running: true, time: 0,
                 shake: 0, flash: 0, flashColor: '#fff', introTimer: 1.5,
                 difficulty: diff, diffLabel,
+                bear: null,
                 qtes: [], // <-- AJOUT : Tableau pour stocker les pastilles actives
                 qteSpawnTimer: 2.0 + Math.random() * 5, // <-- AJOUT : Délai avant la 1ère pastil
                 eva: {
                     x: cw / 2, y: ch * 0.78, w: 28, h: 48,
                     speed: cw * 0.5, hp: evaMaxHp, maxHp: evaMaxHp,
                     dir: 0, facing: 1, inv: 0, atk: null,
-                    cd: [0, 0, 0, 0], trail: [], anim: 0,
-                    shield: { active: false, timer: 0, healAccum: 0 }
+                    cd: [0, 0, 0, 0, 0, 0], trail: [], anim: 0,
+                    shield: { active: false, timer: 0, healAccum: 0 },
+                    expresso: null
                 },
                 hitStopTimer: 0, zoomEffect: 0,
                 malus: {
@@ -8894,21 +8935,25 @@ Ménager</span>
                 document.addEventListener('mousemove', (e) => { if (joyActive) jMove(e); });
                 document.addEventListener('mouseup', () => { if (joyActive) { joyActive = false; if (knob) knob.style.transform = ''; if (bf) bf.input.moveX = 0; } });
             }
-            ['lightning', 'bottle', 'moon', 'shield'].forEach((t, i) => {
+            ['lightning', 'bottle', 'moon', 'shield', 'expresso', 'bear'].forEach((t, i) => {
                 const btn = document.getElementById('bf-btn-' + t);
                 if (btn) {
-                    btn.addEventListener('touchstart', (e) => { e.preventDefault(); bfDoAttack(i); }, { passive: false });
-                    btn.addEventListener('click', () => bfDoAttack(i));
+                    const wrap = btn.parentElement;
+                    const targetEl = wrap || btn;
+                    targetEl.addEventListener('touchstart', (e) => { e.preventDefault(); bfDoAttack(i); }, { passive: false });
+                    targetEl.addEventListener('click', () => bfDoAttack(i));
                 }
             });
             const kd = (e) => {
                 if (!bf || !bf.running) return;
                 if (e.key === 'ArrowLeft' || e.key === 'a') bf.input.moveX = -1;
                 if (e.key === 'ArrowRight' || e.key === 'd') bf.input.moveX = 1;
-                if (e.key === '1' || e.key === 'j') bfDoAttack(0);
-                if (e.key === '2' || e.key === 'k') bfDoAttack(1);
-                if (e.key === '3' || e.key === 'l') bfDoAttack(2);
-                if (e.key === '4' || e.key === 'h') bfDoAttack(3);
+                if (e.key === '1' || e.key === 'u') bfDoAttack(4); // Expresso (tout à gauche)
+                if (e.key === '2' || e.key === 'j') bfDoAttack(0); // Éclair d'amour
+                if (e.key === '3' || e.key === 'k') bfDoAttack(1); // Alcool ménager
+                if (e.key === '4' || e.key === 'l') bfDoAttack(2); // Laku Noc
+                if (e.key === '5' || e.key === 'h') bfDoAttack(3); // Orgasme
+                if (e.key === '6' || e.key === 'i' || e.key === 'b') bfDoAttack(5); // Ours de protection
             };
             const ku = (e) => {
                 if (!bf) return;
@@ -8946,24 +8991,22 @@ Ménager</span>
                             if (qte.progress > 0.82 && qte.progress < 1.0) {
                                 qte.state = 'success';
 
-                                // 1. Récompense : Uniquement Laku Noc (2) ou Orgasme (3)
-                                const skills = [2, 3];
-                                const chosenSkill = skills[Math.floor(Math.random() * skills.length)];
-                                bf.eva.cd[chosenSkill] = 0;
-
-                                // 2. Préparer le texte et la couleur spécifiques pour la clarté
-                                const isLakuNoc = (chosenSkill === 2);
-                                const skillLabel = isLakuNoc ? '🌙 LAKU NOC PRÊT !' : '💋 ORGASME PRÊT !';
-                                const skillColor = isLakuNoc ? '#93c5fd' : '#f472b6'; // Bleu ou Rose
-
-                                // 3. Animation du bouton rechargé
-                                const skillNames = ['lightning', 'bottle', 'moon', 'shield'];
-                                const btn = document.getElementById('bf-btn-' + skillNames[chosenSkill]);
-                                if (btn) {
-                                    btn.classList.remove('bf-ready-flash');
-                                    void btn.offsetWidth;
-                                    btn.classList.add('bf-ready-flash');
+                                const meta = qte.meta || { type: 'skill', skillIdx: 2, icon: '🌙', color: '#93c5fd', label: '🌙 LAKU NOC PRÊT !' };
+                                if (meta.type === 'skill') {
+                                    bf.eva.cd[meta.skillIdx] = 0;
+                                    const skillNames = ['lightning', 'bottle', 'moon', 'shield', 'expresso', 'bear'];
+                                    const btn = document.getElementById('bf-btn-' + skillNames[meta.skillIdx]);
+                                    if (btn) {
+                                        btn.classList.remove('bf-ready-flash');
+                                        void btn.offsetWidth;
+                                        btn.classList.add('bf-ready-flash');
+                                    }
+                                } else if (meta.type === 'hp') {
+                                    bf.eva.hp = Math.min(bf.eva.maxHp, bf.eva.hp + 1);
                                 }
+
+                                const skillLabel = meta.label;
+                                const skillColor = meta.color;
 
                                 // 4. Effets visuels et sonores explicites
                                 ChateauAudio.playAchievement();
@@ -9032,11 +9075,12 @@ Ménager</span>
                 bf.projectiles.push({ type: 'bottle', x: eva.x, y: eva.y - 30, vx: 0, vy: -bf.H * 0.95, t: 0, dur: 1.5, dmg: 3, r: 10, hit: false, spin: 0 });
             } else if (idx === 2) {
                 ChateauAudio.playLaser();
-                // 🌙 Laku Noc — moon blade (10 dmg, large hitbox)
+                // 🌙 Laku Noc — moon blade (10 dmg OR 5% max hp, large hitbox)
+                const dmgValue = Math.max(10, Math.ceil(malus.maxHp * 0.05));
                 eva.cd[2] = 15;
-                eva.atk = { type: 'moon', t: 0, dur: 0.8, dmg: 10 };
+                eva.atk = { type: 'moon', t: 0, dur: 0.8, dmg: dmgValue };
                 eva.shout = { text: 'Laku noć !', t: 1.3, color: '#93c5fd' };
-                bf.projectiles.push({ type: 'moon', x: eva.x, y: eva.y - 30, vx: 0, vy: -bf.H * 0.85, t: 0, dur: 0.8, dmg: 10, r: 40, hit: false });
+                bf.projectiles.push({ type: 'moon', x: eva.x, y: eva.y - 30, vx: 0, vy: -bf.H * 0.85, t: 0, dur: 0.8, dmg: dmgValue, r: 40, hit: false });
                 bf.shake = 0.3; bf.flash = 0.2; bf.flashColor = '#93c5fd';
             } else if (idx === 3) {
                 // 💋 Orgasme — reflect orbs back toward Malus
@@ -9052,6 +9096,33 @@ Ménager</span>
                         Math.cos(a) * 70, Math.sin(a) * 70, 1.0,
                         ['#f472b6', '#ec4899', '#fb7185', '#fda4af', '#fff'][i % 5], 5);
                 }
+            } else if (idx === 4) {
+                if (eva.expresso && eva.expresso.active) return;
+                ChateauAudio.playAchievement();
+                eva.cd[4] = 18;
+                eva.expresso = { active: true, timer: 6 };
+                eva.shout = { text: 'Expresso ! ☕', t: 1.2, color: '#f59e0b' };
+                bf.flash = 0.15; bf.flashColor = '#f59e0b';
+                for (let i = 0; i < 20; i++) {
+                    const a = (i / 20) * Math.PI * 2;
+                    bfParticle(eva.x + Math.cos(a) * 20, eva.y + Math.sin(a) * 20,
+                        Math.cos(a) * 80, Math.sin(a) * 80, 0.8,
+                        ['#f59e0b', '#d97706', '#fbbf24', '#fef08a'][i % 4], 4);
+                }
+            } else if (idx === 5) {
+                if (bf.bear && bf.bear.active) return;
+                ChateauAudio.playAchievement();
+                eva.cd[5] = 0; // Le cooldown ne démarre que quand l'ours meurt
+                bf.bear = { x: eva.x, y: eva.y, hp: 1, maxHp: 1, active: true };
+                eva.shout = { text: 'Ours protecteur ! 🧸', t: 1.3, color: '#fb7185' };
+                bf.dmgTexts.push({ x: bf.bear.x, y: bf.bear.y - 45, text: '🧸 Ours déployé !', color: '#fb7185', t: 1.2 });
+                bf.shake = 0.15; bf.flash = 0.15; bf.flashColor = '#fb7185';
+                for (let i = 0; i < 24; i++) {
+                    const a = (i / 24) * Math.PI * 2;
+                    bfParticle(bf.bear.x + Math.cos(a) * 20, bf.bear.y + Math.sin(a) * 20,
+                        Math.cos(a) * 60, Math.sin(a) * 60, 0.7,
+                        ['#fb7185', '#f43f5e', '#fda4af', '#fff'][i % 4], 4);
+                }
             }
             updateBFBtns();
         }
@@ -9060,8 +9131,9 @@ Ménager</span>
             if (!bf) return;
             const { eva, malus, W, H } = bf;
             const sp = H * 0.42;
+            const target = (bf.bear && bf.bear.active) ? bf.bear : eva;
             if (pattern === 'aimed') {
-                const dx = eva.x - malus.x, dy = eva.y - malus.y;
+                const dx = target.x - malus.x, dy = target.y - malus.y;
                 const d = Math.sqrt(dx * dx + dy * dy) || 1;
                 bf.projectiles.push({ type: 'orb', x: malus.x, y: malus.y + 30, vx: (dx / d) * sp, vy: (dy / d) * sp, r: 8, dmg: 1, t: 0, dur: 3 });
             } else if (pattern === 'spread3') {
@@ -9089,7 +9161,7 @@ Ménager</span>
                     });
                 }
             } else if (pattern === 'wave') {
-                const dx = eva.x - malus.x, dy = eva.y - malus.y;
+                const dx = target.x - malus.x, dy = target.y - malus.y;
                 const d = Math.sqrt(dx * dx + dy * dy) || 1;
                 for (let i = -2; i <= 2; i++) {
                     bf.projectiles.push({
@@ -9131,7 +9203,7 @@ Ménager</span>
                     }
                 }
             } else if (pattern === 'laser') {
-                bf.projectiles.push({ type: 'laser', x: malus.x, y: malus.y + 30, targetX: eva.x, t: 0, chargeDur: 1.0, fireDur: 1.2, dur: 2.2, dmg: 1, hit: false });
+                bf.projectiles.push({ type: 'laser', x: malus.x, y: malus.y + 30, targetX: target.x, t: 0, chargeDur: 1.0, fireDur: 1.2, dur: 2.2, dmg: 1, hit: false });
                 ChateauAudio.playLockTick();
             }
             for (let i = 0; i < 4; i++)
@@ -9157,7 +9229,8 @@ Ménager</span>
 
             // ── Eva Movement ──
             eva.dir = bf.input.moveX;
-            eva.x += eva.dir * eva.speed * dt;
+            const currentSpeed = eva.speed * (eva.expresso && eva.expresso.active ? 1.5 : 1.0);
+            eva.x += eva.dir * currentSpeed * dt;
             eva.x = Math.max(20, Math.min(W - 20, eva.x));
             if (eva.dir !== 0) eva.facing = eva.dir > 0 ? 1 : -1;
             eva.inv = Math.max(0, eva.inv - dt);
@@ -9166,11 +9239,11 @@ Ménager</span>
             if (Math.abs(eva.dir) > 0.1) eva.trail.push({ x: eva.x, y: eva.y, a: 0.4 });
             eva.trail = eva.trail.filter(p => (p.a -= dt * 1.5) > 0);
             if (eva.atk) { eva.atk.t += dt; if (eva.atk.t >= eva.atk.dur) eva.atk = null; }
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 6; i++) {
                 const prev = eva.cd[i];
                 eva.cd[i] = Math.max(0, eva.cd[i] - dt);
                 if (prev > 0 && eva.cd[i] <= 0) {
-                    const names = ['lightning', 'bottle', 'moon', 'shield'];
+                    const names = ['lightning', 'bottle', 'moon', 'shield', 'expresso', 'bear'];
                     const btn = document.getElementById('bf-btn-' + names[i]);
                     if (btn) { btn.classList.remove('bf-ready-flash'); void btn.offsetWidth; btn.classList.add('bf-ready-flash'); }
                 }
@@ -9188,10 +9261,10 @@ Ménager</span>
                     bf.dmgTexts.push({ x: eva.x + (Math.random() - 0.5) * 20, y: eva.y - 45, text: '+1 ♥', color: '#f472b6', t: 1.0 });
                 }
                 // Pulse particles around Eva
-                if (Math.random() < 0.5) {
+                if (Math.random() < 0.15) {
                     const a = Math.random() * Math.PI * 2;
                     bfParticle(eva.x + Math.cos(a) * 40, eva.y + Math.sin(a) * 40,
-                        Math.cos(a) * 15 + (Math.random() - 0.5) * 10, Math.sin(a) * 15 - Math.random() * 8, 0.6, '#f472b6', 2.5);
+                        Math.cos(a) * 15 + (Math.random() - 0.5) * 10, Math.sin(a) * 15 - Math.random() * 8, 0.5, '#f472b6', 2.5);
                 }
                 // Reflect any orbs that enter the circular hitbox (r=42)
                 bf.projectiles.forEach(p => {
@@ -9207,12 +9280,27 @@ Ménager</span>
                         p.vx = (tdx / td) * spd; p.vy = (tdy / td) * spd;
                         p.dmg = 1; p.dur = p.t + 2;
                         // Splash particles
-                        for (let i = 0; i < 8; i++)
-                            bfParticle(p.x, p.y, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120, 0.4, '#f472b6', 3);
+                        for (let i = 0; i < 4; i++)
+                            bfParticle(p.x, p.y, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100, 0.35, '#f472b6', 3);
                     }
                 });
                 if (eva.orgasme.timer <= 0) {
                     eva.orgasme = null;
+                }
+            }
+
+            // ── Expresso Update ──
+            if (eva.expresso && eva.expresso.active) {
+                eva.expresso.timer -= dt;
+                for (let i = 0; i < 6; i++) {
+                    if (i !== 4 && eva.cd[i] > 0) eva.cd[i] = Math.max(0, eva.cd[i] - dt);
+                }
+                if (Math.random() < 0.18) {
+                    bfParticle(eva.x + (Math.random() - 0.5) * 24, eva.y + 15 + (Math.random() - 0.5) * 15,
+                        (Math.random() - 0.5) * 40, 25 + Math.random() * 40, 0.4, '#f59e0b', 3);
+                }
+                if (eva.expresso.timer <= 0) {
+                    eva.expresso = null;
                 }
             }
             updateBFBtns();
@@ -9345,6 +9433,20 @@ Ménager</span>
                     }
                     if (p.wave) p.vx += Math.sin(bf.time * 9 + p.waveOff) * 250 * dt;
                     p.x += p.vx * dt; p.y += p.vy * dt;
+                    // Hit Bear
+                    if (!p.reflected && bf.bear && bf.bear.active && Math.abs(p.x - bf.bear.x) < 28 && Math.abs(p.y - bf.bear.y) < 32) {
+                        bf.bear.hp -= p.dmg;
+                        bf.shake = 0.15;
+                        bf.dmgTexts.push({ x: bf.bear.x, y: bf.bear.y - 30, text: '-' + p.dmg, color: '#fb7185', t: 0.8 });
+                        for (let i = 0; i < 8; i++) bfParticle(bf.bear.x, bf.bear.y, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100, 0.4, '#fb7185', 3);
+                        if (bf.bear.hp <= 0) {
+                            bf.bear.active = false;
+                            bf.bear = null;
+                            eva.cd[5] = 22; // Le cooldown ne démarre que quand l'ours est mort
+                            bf.dmgTexts.push({ x: eva.x, y: eva.y - 40, text: '🧸 Ours détruit...', color: '#888', t: 1.0 });
+                        }
+                        return false;
+                    }
                     // Hit Eva
                     if (eva.inv <= 0 && !eva.shield.active && Math.abs(p.x - eva.x) < 22 && Math.abs(p.y - eva.y) < 28) {
                         eva.hp -= p.dmg; eva.inv = 1.0;
@@ -9396,14 +9498,30 @@ Ménager</span>
                     }
                 }
                 if (p.type === 'laser') {
-                    if (p.t > p.chargeDur && p.t <= p.chargeDur + p.fireDur && !p.hit && eva.inv <= 0 && !eva.shield.active) {
-                        if (Math.abs(eva.x - p.targetX) < 22) {
-                            p.hit = true;
-                            eva.hp -= p.dmg; eva.inv = 1.0;
-                            bf.shake = 0.4; bf.flash = 0.2; bf.flashColor = '#ef4444';
-                            bf.dmgTexts.push({ x: eva.x, y: eva.y - 35, text: '-1', color: '#ef4444', t: 0.9 });
-                            ChateauAudio.playChiptuneError();
-                            if (eva.hp <= 0) bfEndGame(false);
+                    if (p.t > p.chargeDur && p.t <= p.chargeDur + p.fireDur && !p.hit) {
+                        if (bf.bear && bf.bear.active) {
+                            if (Math.abs(bf.bear.x - p.targetX) < 26) {
+                                p.hit = true;
+                                bf.bear.hp -= p.dmg;
+                                bf.shake = 0.2; bf.flash = 0.1; bf.flashColor = '#fb7185';
+                                bf.dmgTexts.push({ x: bf.bear.x, y: bf.bear.y - 30, text: '-1', color: '#fb7185', t: 0.8 });
+                                for (let i = 0; i < 8; i++) bfParticle(bf.bear.x, bf.bear.y, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 120, 0.4, '#fb7185', 3);
+                                if (bf.bear.hp <= 0) {
+                                    bf.bear.active = false;
+                                    bf.bear = null;
+                                    eva.cd[5] = 22;
+                                    bf.dmgTexts.push({ x: eva.x, y: eva.y - 40, text: '🧸 Ours détruit...', color: '#888', t: 1.0 });
+                                }
+                            }
+                        } else if (eva.inv <= 0 && !eva.shield.active) {
+                            if (Math.abs(eva.x - p.targetX) < 22) {
+                                p.hit = true;
+                                eva.hp -= p.dmg; eva.inv = 1.0;
+                                bf.shake = 0.4; bf.flash = 0.2; bf.flashColor = '#ef4444';
+                                bf.dmgTexts.push({ x: eva.x, y: eva.y - 35, text: '-1', color: '#ef4444', t: 0.9 });
+                                ChateauAudio.playChiptuneError();
+                                if (eva.hp <= 0) bfEndGame(false);
+                            }
                         }
                     }
                     if (Math.abs(p.t - p.chargeDur) < 0.04) ChateauAudio.playLaser();
@@ -9443,14 +9561,28 @@ Ménager</span>
             // ── Update QTE (Événements rythmiques) ──
             bf.qteSpawnTimer -= dt;
             if (bf.qteSpawnTimer <= 0) {
-                // Nouvelle pastille toutes les 4 à 8 secondes (plus dynamique)
-                bf.qteSpawnTimer = 10 + Math.random() * 5;
+                bf.qteSpawnTimer = 4.5 + Math.random() * 3.5;
+                const qteTypes = [
+                    { type: 'skill', skillIdx: 2, icon: '🌙', color: '#93c5fd', label: '🌙 LAKU NOC PRÊT !' },
+                    { type: 'skill', skillIdx: 3, icon: '💋', color: '#f472b6', label: '💋 ORGASME PRÊT !' },
+                    { type: 'hp', icon: '❤️', color: '#22c55e', label: '+1 PV ❤️' }
+                ];
+                const meta = qteTypes[Math.floor(Math.random() * qteTypes.length)];
+                let qteX = W / 2, qteY = H / 2;
+                for (let tryIdx = 0; tryIdx < 25; tryIdx++) {
+                    qteX = 40 + Math.random() * (W - 80);
+                    qteY = 40 + Math.random() * (H - 180); // Évite le joystick et les boutons du bas
+                    // Exclusion de la zone du bouton de l'ours (à droite vers le milieu de l'écran)
+                    const inBearZone = (qteX > W - 125) && (qteY > H * 0.3 && qteY < H * 0.7);
+                    if (!inBearZone) break;
+                }
                 bf.qtes.push({
-                    x: 40 + Math.random() * (W - 80),
-                    y: 40 + Math.random() * (H - 180), // Évite de spawn sur le joystick
+                    x: qteX,
+                    y: qteY,
                     progress: 0,
-                    duration: 1.2, // 2 secondes pour cliquer
-                    state: 'active'
+                    duration: 1.2,
+                    state: 'active',
+                    meta: meta
                 });
             }
 
@@ -9508,7 +9640,7 @@ Ménager</span>
         }
 
         function bfParticle(x, y, vx, vy, life, color, size) {
-            if (bf) bf.particles.push({ x, y, vx, vy, t: life, maxT: life, color, size });
+            if (bf && bf.particles.length < 120) bf.particles.push({ x, y, vx, vy, t: life, maxT: life, color, size });
         }
 
         function bfEndGame(win) {
@@ -9558,28 +9690,68 @@ Ménager</span>
 
         function updateBFBtns() {
             if (!bf) return;
-            const names = ['lightning', 'bottle', 'moon', 'shield'];
-            const maxCds = [0.8, 2, 15, 30];
+            const names = ['lightning', 'bottle', 'moon', 'shield', 'expresso', 'bear'];
+            const maxCds = [0.8, 2, 15, 18, 18, 22];
             const orgActive = bf.eva.orgasme && bf.eva.orgasme.active;
+            const expActive = bf.eva.expresso && bf.eva.expresso.active;
+            const bearActive = bf.bear && bf.bear.active;
+            if (!bf._cachedBtns) {
+                bf._cachedBtns = names.map(n => {
+                    const btn = document.getElementById('bf-btn-' + n);
+                    if (!btn) return null;
+                    let ov = btn.querySelector('.bf-cd-overlay');
+                    if (!ov) { ov = document.createElement('div'); ov.className = 'bf-cd-overlay'; btn.appendChild(ov); }
+                    let cdText = btn.querySelector('.bf-cd-text');
+                    if (!cdText) { cdText = document.createElement('div'); cdText.className = 'bf-cd-text'; btn.appendChild(cdText); }
+                    return { btn, wrap: btn.parentElement, ov, cdText };
+                });
+            }
             names.forEach((n, i) => {
-                const btn = document.getElementById('bf-btn-' + n);
-                if (!btn) return;
+                const cache = bf._cachedBtns[i];
+                if (!cache) return;
                 const cd = bf.eva.cd[i];
                 const blocked = orgActive && i !== 3;
-                btn.classList.toggle('on-cd', cd > 0 || (i === 3 && orgActive));
-                let ov = btn.querySelector('.bf-cd-overlay');
-                if (!ov) { ov = document.createElement('div'); ov.className = 'bf-cd-overlay'; btn.appendChild(ov); }
-                ov.style.height = cd > 0 ? (cd / maxCds[i] * 100) + '%' : blocked ? '100%' : '0';
-                let cdText = btn.querySelector('.bf-cd-text');
-                if (!cdText) { cdText = document.createElement('div'); cdText.className = 'bf-cd-text'; btn.appendChild(cdText); }
-                if (cd > 0) {
-                    cdText.textContent = cd >= 10 ? Math.ceil(cd) + 's' : cd.toFixed(1) + 's';
-                    cdText.style.display = 'flex';
-                } else if (blocked) {
-                    cdText.textContent = '🛡️';
-                    cdText.style.display = 'flex';
+                const isOnCd = cd > 0 || (i === 3 && orgActive) || (i === 4 && expActive) || (i === 5 && bearActive);
+                if (cache.isOnCd !== isOnCd) {
+                    cache.isOnCd = isOnCd;
+                    cache.btn.classList.toggle('on-cd', isOnCd);
+                    if (cache.wrap) cache.wrap.classList.toggle('on-cd', isOnCd);
+                }
+                let targetHeight;
+                if (i === 5 && bearActive) {
+                    targetHeight = '100%';
+                } else if (i === 4 && expActive && cd <= 0) {
+                    targetHeight = '100%';
                 } else {
-                    cdText.style.display = 'none';
+                    targetHeight = cd > 0 ? (Math.round((cd / maxCds[i]) * 100)) + '%' : blocked ? '100%' : '0';
+                }
+                if (cache.lastHeight !== targetHeight) {
+                    cache.lastHeight = targetHeight;
+                    cache.ov.style.height = targetHeight;
+                }
+
+                let targetText = '';
+                let targetDisplay = 'none';
+                if (cd > 0) {
+                    targetText = cd >= 10 ? Math.ceil(cd) + 's' : cd.toFixed(1) + 's';
+                    targetDisplay = 'flex';
+                } else if (i === 5 && bearActive) {
+                    targetText = `${Math.ceil(bf.bear.hp)}PV`;
+                    targetDisplay = 'flex';
+                } else if (i === 4 && expActive) {
+                    targetText = '☕';
+                    targetDisplay = 'flex';
+                } else if (blocked) {
+                    targetText = '💋';
+                    targetDisplay = 'flex';
+                }
+                if (cache.lastText !== targetText) {
+                    cache.lastText = targetText;
+                    cache.cdText.textContent = targetText;
+                }
+                if (cache.lastDisplay !== targetDisplay) {
+                    cache.lastDisplay = targetDisplay;
+                    cache.cdText.style.display = targetDisplay;
                 }
             });
         }
@@ -9694,6 +9866,8 @@ Ménager</span>
             bfDrawMalus(ctx, malus, time);
             bfDrawEva(ctx, eva, time);
             if (eva.orgasme && eva.orgasme.active) bfDrawOrgasmeRing(ctx, eva, time);
+            if (bf.bear && bf.bear.active) bfDrawBear(ctx, bf.bear, time);
+            if (eva.expresso && eva.expresso.active) bfDrawExpressoAura(ctx, eva, time);
 
             // Draw projectiles
             bf.projectiles.forEach(p => {
@@ -9781,16 +9955,62 @@ Ménager</span>
                     ctx.stroke();
 
                     // 3. Icône indicative au centre
-                    ctx.fillStyle = isSweetSpot ? '#fff' : 'rgba(201, 168, 76, 1)';
-                    ctx.font = '14px "Inter", sans-serif';
+                    const meta = qte.meta || { icon: '✨', color: 'rgba(201, 168, 76, 1)' };
+                    ctx.fillStyle = isSweetSpot ? '#fff' : meta.color;
+                    ctx.font = '16px "Inter", sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText('✨', qte.x, qte.y);
+                    ctx.fillText(meta.icon || '✨', qte.x, qte.y);
 
                     ctx.restore();
                 });
             }
             ctx.globalAlpha = 1;
+            ctx.restore();
+        }
+
+        function bfDrawBear(ctx, bear, time) {
+            ctx.save();
+            const fy = Math.sin(time * 3) * 4;
+            ctx.translate(bear.x, bear.y + fy);
+            ctx.shadowColor = '#fb7185'; ctx.shadowBlur = 20;
+            ctx.font = `bold ${Math.round(bf.W * 0.08)}px sans-serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('🧸', 0, 0);
+
+            ctx.strokeStyle = 'rgba(251, 113, 133, 0.6)';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, 30 + Math.sin(time * 6) * 3, 0, Math.PI * 2);
+            ctx.stroke();
+
+            const barW = 36, barH = 5;
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(-barW / 2, -35, barW, barH);
+            ctx.fillStyle = '#fb7185';
+            ctx.fillRect(-barW / 2, -35, barW * Math.max(0, bear.hp / bear.maxHp), barH);
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+            ctx.strokeRect(-barW / 2, -35, barW, barH);
+
+            ctx.restore();
+        }
+
+        function bfDrawExpressoAura(ctx, eva, time) {
+            ctx.save();
+            ctx.translate(eva.x, eva.y);
+            ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+            ctx.lineWidth = 3;
+            ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 15;
+            for (let i = 0; i < 3; i++) {
+                const r = 24 + i * 8 + (time * 40 % 15);
+                const a = 1 - ((r - 24) / 30);
+                if (a > 0) {
+                    ctx.globalAlpha = a;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, r, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
             ctx.restore();
         }
 
