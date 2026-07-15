@@ -8900,15 +8900,21 @@ Ménager</span>
                             e.preventDefault(); // On bloque le comportement par défaut (scroll, etc)
 
                             // Vérifier si le timing est bon (la fin du timer)
+                            // Vérifier si le timing est bon (la fin du timer)
                             if (qte.progress > 0.82 && qte.progress < 1.0) {
                                 qte.state = 'success';
 
-                                // Récompense : reset cooldown aléatoire (1 = bottle, 2 = moon, 3 = shield)
-                                const skills = [1, 2, 3];
+                                // 1. Récompense : Uniquement Laku Noc (2) ou Orgasme (3)
+                                const skills = [2, 3];
                                 const chosenSkill = skills[Math.floor(Math.random() * skills.length)];
                                 bf.eva.cd[chosenSkill] = 0;
 
-                                // Animation du bouton rechargé
+                                // 2. Préparer le texte et la couleur spécifiques pour la clarté
+                                const isLakuNoc = (chosenSkill === 2);
+                                const skillLabel = isLakuNoc ? '🌙 LAKU NOC PRÊT !' : '💋 ORGASME PRÊT !';
+                                const skillColor = isLakuNoc ? '#93c5fd' : '#f472b6'; // Bleu ou Rose
+
+                                // 3. Animation du bouton rechargé
                                 const skillNames = ['lightning', 'bottle', 'moon', 'shield'];
                                 const btn = document.getElementById('bf-btn-' + skillNames[chosenSkill]);
                                 if (btn) {
@@ -8917,13 +8923,20 @@ Ménager</span>
                                     btn.classList.add('bf-ready-flash');
                                 }
 
-                                // Effets visuels et sonores
+                                // 4. Effets visuels et sonores explicites
                                 ChateauAudio.playAchievement();
-                                for (let p = 0; p < 12; p++) {
+
+                                // Particules de la couleur du sort sur le QTE
+                                for (let p = 0; p < 15; p++) {
                                     const a = Math.random() * Math.PI * 2;
-                                    bfParticle(qte.x, qte.y, Math.cos(a) * 80, Math.sin(a) * 80, 0.6, '#10b981', 3);
+                                    bfParticle(qte.x, qte.y, Math.cos(a) * 80, Math.sin(a) * 80, 0.8, skillColor, 4);
                                 }
-                                bf.dmgTexts.push({ x: qte.x, y: qte.y - 20, text: 'PARFAIT !', color: '#10b981', t: 1.0 });
+
+                                // Texte clair au-dessus d'Eva (qui dure un peu plus longtemps : 1.5s)
+                                bf.dmgTexts.push({ x: bf.eva.x, y: bf.eva.y - 50, text: skillLabel, color: skillColor, t: 1.5 });
+
+                                // Petit feedback "Parfait" sur la pastille elle-même
+                                bf.dmgTexts.push({ x: qte.x, y: qte.y - 15, text: 'PARFAIT !', color: '#10b981', t: 0.8 });
                             } else {
                                 // Échec (cliqué trop tôt)
                                 qte.state = 'failed';
