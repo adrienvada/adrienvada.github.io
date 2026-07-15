@@ -125,9 +125,9 @@
         .hero-bg {
             position: fixed;
             inset: 0;
-            z-index: 0;
+            z-index: -2;
             background: radial-gradient(circle at 50% 30%, #1a103c 0%, #0a081a 60%, #05050f 100%);
-            background-image: url('assets\chateau_bg.jpeg');
+            background-image: url('assets/chateau_bg.jpeg');
             background-size: cover;
             background-position: center top;
             filter: brightness(0.65) saturate(0.8);
@@ -141,6 +141,34 @@
             position: absolute;
             inset: 0;
             background: linear-gradient(to bottom, rgba(5, 5, 15, 0.1) 0%, rgba(5, 5, 15, 0.4) 45%, rgba(5, 5, 15, 0.8) 100%);
+        }
+
+        /* ────────────────────────── NÉBULEUSE (Idée 8) ────────────────────────── */
+        .nebula-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 30%, rgba(201, 168, 76, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(37, 99, 235, 0.15) 0%, transparent 40%);
+            filter: blur(40px);
+            opacity: 0.8;
+            animation: nebula-drift 15s infinite alternate ease-in-out;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        @keyframes nebula-drift {
+            0% {
+                transform: scale(1) translate(0, 0) rotate(0deg);
+            }
+
+            50% {
+                transform: scale(1.2) translate(-3vw, 5vh) rotate(5deg);
+            }
+
+            100% {
+                transform: scale(1.1) translate(4vw, -2vh) rotate(-5deg);
+            }
         }
 
         /* ────────────────────────── POUR-TOI SPECIAL ANIMATIONS & STYLES ────────────────────────── */
@@ -426,6 +454,10 @@
             -webkit-backdrop-filter: blur(16px);
         }
 
+        #header.header-bubble-active {
+            z-index: 300 !important;
+        }
+
         .header-inner {
             display: flex;
             align-items: center;
@@ -671,7 +703,7 @@
         /* ────────────────────────── MAIN CONTENT  ──────────────────────────────── */
         #app {
             position: relative;
-            z-index: 1;
+            z-index: 200;
             max-width: 480px;
             margin: 0 auto;
             padding: calc(var(--safe-top) + 72px) var(--gap-md) calc(var(--safe-bottom) + var(--gap-xl));
@@ -681,17 +713,34 @@
         /* ────────────────────────── ENIGMA CARD ───────────────────────────────── */
         .enigma-card {
             position: relative;
-            background: #000000;
+            background: #00000090;
             backdrop-filter: blur(24px) saturate(1.4);
             -webkit-backdrop-filter: blur(24px) saturate(1.4);
             border: 2px solid rgba(201, 168, 76, 0.45);
             border-radius: var(--radius-lg);
             padding: var(--gap-xl) var(--gap-lg);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), 0 0 35px rgba(201, 168, 76, 0.15), inset 0 0 50px rgba(5, 4, 10, 0.9);
-            animation: reveal-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+            animation: portal-reveal 1.2s cubic-bezier(0.77, 0, 0.175, 1) both;
             overflow: hidden;
             transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             will-change: transform, box-shadow;
+        }
+
+        @keyframes portal-reveal {
+            0% {
+                opacity: 0;
+                clip-path: circle(0% at 50% 50%);
+                transform: scale(0.9) translateY(20px);
+                filter: blur(10px);
+            }
+
+            100% {
+                opacity: 1;
+                clip-path: circle(150% at 50% 50%);
+                /* S'ouvre bien au-delà des bords */
+                transform: scale(1) translateY(0);
+                filter: blur(0px);
+            }
         }
 
         /* Bordure supérieure fluorescente métallique */
@@ -4089,6 +4138,11 @@
 </head>
 
 <body>
+    <!-- ═══════════════════════ BACKGROUNDS & STARS (Idée 8) ═══════════════════════ -->
+    <div class="hero-bg" id="hero-bg"></div> <!-- Le château tout au fond -->
+    <div class="nebula-bg"></div> <!-- La nébuleuse par dessus -->
+    <canvas id="stars-canvas"></canvas> <!-- Les étoiles devant le reste -->
+
     <!-- ═══════════════════════ PAGE DE GARDE (SPLASH COUNTDOWN) ═══════════════════════ -->
     <div id="splash-countdown" class="splash-overlay">
         <div class="splash-content">
@@ -4323,6 +4377,49 @@
         // Initialisation au chargement du DOM
         document.addEventListener('DOMContentLoaded', initSplashCountdown);
 
+        //initialisation du parallax
+        function initParallax() {
+            const card = document.querySelector('.enigma-card');
+            const bg = document.getElementById('hero-bg');
+            if (!card) return;
+
+            const handleMove = (clientX, clientY) => {
+                // Calcul du centre de l'écran
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+
+                // Force du mouvement (plus le diviseur est petit, plus ça bouge)
+                const rotateX = ((clientY - centerY) / centerY) * -8; // Max 8 degrés
+                const rotateY = ((clientX - centerX) / centerX) * 8;
+
+                // Applique la rotation 3D sur la carte (elle "flotte" vers l'utilisateur)
+                card.style.transform = `translateY(-5px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                card.style.boxShadow = `${-rotateY * 2}px ${rotateX * 2}px 40px rgba(0, 0, 0, 0.9), 0 0 45px rgba(242, 208, 107, 0.3)`;
+
+                // Mouvement subtil inverse sur le fond pour accentuer la profondeur
+                if (bg) {
+                    bg.style.transform = `scale(1.1) translate(${rotateY * -1.5}px, ${rotateX * 1.5}px)`;
+                }
+            };
+
+            // Pour l'ordinateur (Souris)
+            window.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+
+            // Pour le mobile (Gyroscope)
+            window.addEventListener('deviceorientation', (e) => {
+                if (!e.gamma || !e.beta) return;
+                // On convertit les degrés d'inclinaison en pixels simulés
+                let simX = window.innerWidth / 2 + (e.gamma * 5);
+                let simY = window.innerHeight / 2 + ((e.beta - 45) * 5); // 45° est l'angle de prise en main naturel
+                handleMove(simX, simY);
+            });
+
+            // Remise à zéro quand on quitte
+            window.addEventListener('mouseleave', () => {
+                card.style.transform = `translateY(0) rotateX(0) rotateY(0)`;
+                if (bg) bg.style.transform = `scale(1.1) translate(0px, 0px)`;
+            });
+        }
         /* ─────────────────────────────────────────────────────────────
            DONNÉES DES ÉNIGMES
         ────────────────────────────────────────────────────────────── */
@@ -6208,6 +6305,8 @@
             if (e.type === 'proximity') {
                 setTimeout(() => initProximity(e), 100);
             }
+
+            initParallax();
         }
 
         /* ─────────────────────────────────────────────────────────────
@@ -7957,6 +8056,13 @@
                 $header.classList.remove('header-flash-active');
                 void $header.offsetWidth;
                 $header.classList.add('header-flash-active');
+
+                // --- NOUVEAU : Header au premier plan temporairement ---
+                $header.classList.add('header-bubble-active');
+                if ($header._bubbleTimer) clearTimeout($header._bubbleTimer);
+                $header._bubbleTimer = setTimeout(() => {
+                    $header.classList.remove('header-bubble-active');
+                }, 6000);
             }
         }
 
@@ -7994,13 +8100,20 @@
                 $header.classList.remove('header-flash-active');
                 void $header.offsetWidth;
                 $header.classList.add('header-flash-active');
+
+                // --- NOUVEAU : Header au premier plan temporairement ---
+                $header.classList.add('header-bubble-active');
+                if ($header._bubbleTimer) clearTimeout($header._bubbleTimer);
+                $header._bubbleTimer = setTimeout(() => {
+                    $header.classList.remove('header-bubble-active');
+                }, 9000);
             }
         }
 
         function triggerHangmanErrorNotifyBubble() {
             const badge = document.getElementById('errors-badge');
             const contentSpan = document.getElementById('errors-badge-content');
-            const $header = document.getElementById('main-header');
+            const headerEl = document.getElementById('header'); // Corrigé : c'était "main-header"
             if (!badge || !contentSpan) return;
             badge.classList.remove('hidden');
             badge.classList.remove('header-error-animated');
@@ -8029,10 +8142,17 @@
                 }
             }, 8000);
 
-            if ($header) {
-                $header.classList.remove('header-flash-active');
-                void $header.offsetWidth;
-                $header.classList.add('header-flash-active');
+            if (headerEl) {
+                headerEl.classList.remove('header-flash-active');
+                void headerEl.offsetWidth;
+                headerEl.classList.add('header-flash-active');
+
+                // --- NOUVEAU : Header au premier plan temporairement ---
+                headerEl.classList.add('header-bubble-active');
+                if (headerEl._bubbleTimer) clearTimeout(headerEl._bubbleTimer);
+                headerEl._bubbleTimer = setTimeout(() => {
+                    headerEl.classList.remove('header-bubble-active');
+                }, 9000);
             }
         }
 
@@ -8066,10 +8186,161 @@
                 }
             }, 8000);
 
-            if ($header) {
+            if ($header) {/* ─────────────────────────────────────────────────────────────
+           POUSSIÈRES 3D (Remplacement des étoiles)
+        ────────────────────────────────────────────────────────────── */
+                let starsAnimationActive = true;
+                function initStars(canvasId, options = {}) {
+                    const canvas = document.getElementById(canvasId);
+                    if (!canvas) return;
+                    const ctx = canvas.getContext('2d');
+                    const count = options.count || 200; // Un peu plus de particules pour l'effet poussière
+                    const particles = [];
+
+                    // Centre de l'écran pour la fuite de perspective
+                    let cx = window.innerWidth / 2;
+                    let cy = window.innerHeight / 2;
+
+                    function resize() {
+                        canvas.width = window.innerWidth;
+                        canvas.height = window.innerHeight;
+                        cx = canvas.width / 2;
+                        cy = canvas.height / 2;
+                    }
+                    let resizeTicking = false;
+                    const onResize = () => {
+                        if (!resizeTicking) {
+                            window.requestAnimationFrame(() => {
+                                resize();
+                                resizeTicking = false;
+                            });
+                            resizeTicking = true;
+                        }
+                    };
+                    window.addEventListener('resize', onResize);
+                    resize();
+
+                    // Paramètres de l'espace 3D
+                    const focalLength = 600; // Distance de l'objectif (champ de vision)
+                    const maxZ = 2000; // Profondeur maximale avant de faire disparaître la poussière
+
+                    for (let i = 0; i < count; i++) {
+                        particles.push({
+                            x: (Math.random() - 0.5) * canvas.width * 3, // Répartition large sur X
+                            y: (Math.random() - 0.5) * canvas.height * 3, // Répartition large sur Y
+                            z: Math.random() * maxZ, // Profondeur aléatoire
+                            baseSize: Math.random() * 2.5 + 0.5, // Taille de base
+                            opacity: Math.random() * 0.8 + 0.1, // Opacité de base
+
+                            // Vecteurs de vitesse (dérive très lente)
+                            vx: (Math.random() - 0.5) * 0.4,
+                            vy: (Math.random() - 0.5) * 0.4,
+                            vz: (Math.random() - 0.5) * 1.5 - 0.5, // Dérive principalement vers la caméra
+
+                            // Décalage pour l'oscillation organique (courants d'air)
+                            phaseX: Math.random() * Math.PI * 2,
+                            phaseY: Math.random() * Math.PI * 2
+                        });
+                    }
+
+                    function animate() {
+                        if (!starsAnimationActive) return;
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                        const time = Date.now() * 0.001; // Temps en secondes
+
+                        for (let i = 0; i < count; i++) {
+                            const p = particles[i];
+
+                            // Simulation des courants d'air avec une fonction sinusoïdale très douce
+                            const driftX = Math.sin(time * 0.5 + p.phaseX) * 0.5;
+                            const driftY = Math.cos(time * 0.3 + p.phaseY) * 0.5;
+
+                            // Mouvement dans l'espace 3D
+                            p.x += p.vx + driftX;
+                            p.y += p.vy + driftY;
+                            p.z += p.vz;
+
+                            // Recyclage : si la poussière passe derrière la caméra (Z < 1) ou va trop loin
+                            if (p.z < 1) {
+                                p.z = maxZ;
+                                p.x = (Math.random() - 0.5) * canvas.width * 3;
+                                p.y = (Math.random() - 0.5) * canvas.height * 3;
+                            } else if (p.z > maxZ) {
+                                p.z = 1;
+                            }
+
+                            // Projection 3D -> 2D (Perspective mathématique)
+                            const scale = focalLength / (focalLength + p.z);
+                            const screenX = cx + p.x * scale;
+                            const screenY = cy + p.y * scale;
+                            const size = Math.max(0.1, p.baseSize * scale);
+
+                            // Ne dessiner que si la particule est visible à l'écran
+                            if (screenX >= -50 && screenX <= canvas.width + 50 && screenY >= -50 && screenY <= canvas.height + 50) {
+
+                                // Fondu basé sur la profondeur (les particules lointaines sont sombres)
+                                const depthFade = Math.max(0, 1 - (p.z / maxZ));
+                                let finalOpacity = p.opacity * depthFade;
+
+                                // --- AJOUT : Boost de luminosité derrière la carte ---
+                                // On vérifie si la particule est dans la zone centrale (environ 500px de large et 700px de haut)
+                                const isBehindCard = Math.abs(screenX - cx) < 250 && Math.abs(screenY - cy) < 350;
+
+                                if (isBehindCard) {
+                                    // On multiplie l'opacité par 3 pour les rendre très lumineuses (sans dépasser 1 = 100% opaque)
+                                    finalOpacity = Math.min(1, finalOpacity * 3);
+
+                                    // Optionnel : on grossit légèrement les particules normales dans cette zone pour accentuer l'effet
+                                    if (!p.isBokeh && size > 1) {
+                                        ctx.shadowBlur = size * 4; // Lueur (glow) deux fois plus intense
+                                    }
+                                }
+
+                                ctx.beginPath();
+                                ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+
+                                // Teinte crème/dorée pâle pour évoquer de la poussière éclairée
+                                ctx.fillStyle = `rgba(245, 237, 224, ${finalOpacity})`;
+
+                                // Les grosses particules proches attrapent la lumière (glow)
+                                if (size > 1.5) {
+                                    ctx.shadowBlur = size * 2.5;
+                                    ctx.shadowColor = `rgba(201, 168, 76, ${finalOpacity})`;
+                                } else {
+                                    ctx.shadowBlur = 0;
+                                }
+
+                                ctx.fill();
+                            }
+                        }
+                        requestAnimationFrame(animate);
+                    }
+
+                    window.pauseStars = () => {
+                        starsAnimationActive = false;
+                    };
+
+                    window.resumeStars = () => {
+                        if (!starsAnimationActive) {
+                            starsAnimationActive = true;
+                            animate();
+                        }
+                    };
+
+                    starsAnimationActive = true;
+                    animate();
+                }
                 $header.classList.remove('header-flash-active');
                 void $header.offsetWidth;
                 $header.classList.add('header-flash-active');
+
+                // --- NOUVEAU : Header au premier plan temporairement ---
+                $header.classList.add('header-bubble-active');
+                if ($header._bubbleTimer) clearTimeout($header._bubbleTimer);
+                $header._bubbleTimer = setTimeout(() => {
+                    $header.classList.remove('header-bubble-active');
+                }, 9000);
             }
         }
 
@@ -8897,18 +9168,26 @@
                 }, speed);
             }, initialDelay);
         }
-
+        /* ─────────────────────────────────────────────────────────────
+           POUSSIÈRES 3D CINÉMATOGRAPHIQUES (Ralenties + Effet Bokeh)
+        ────────────────────────────────────────────────────────────── */
         let starsAnimationActive = true;
         function initStars(canvasId, options = {}) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            const count = options.count || 100;
-            const stars = [];
+            const count = options.count || 180; // Nombre de particules
+            const particles = [];
+
+            // Centre de l'écran pour la fuite de perspective
+            let cx = window.innerWidth / 2;
+            let cy = window.innerHeight / 2;
 
             function resize() {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
+                cx = canvas.width / 2;
+                cy = canvas.height / 2;
             }
             let resizeTicking = false;
             const onResize = () => {
@@ -8923,32 +9202,102 @@
             window.addEventListener('resize', onResize);
             resize();
 
+            // Paramètres de l'espace 3D
+            const focalLength = 800; // Plus c'est grand, plus l'effet de rapprochement est fort
+            const maxZ = 1200; // Réduit (avant 2000) pour forcer les particules à être plus proches
+
             for (let i = 0; i < count; i++) {
-                stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    size: Math.random() * 1.5 + 0.5,
-                    opacity: Math.random() * 0.8 + 0.2,
-                    speed: Math.random() * 0.02 + 0.005,
-                    twinkleSpeed: Math.random() * 0.03 + 0.01,
-                    twinkleVal: Math.random() * Math.PI
+                // Détermine si cette particule est une grosse poussière floue au premier plan (environ 8% des cas)
+                const isBokeh = Math.random() > 0.92;
+
+                particles.push({
+                    isBokeh: isBokeh,
+                    x: (Math.random() - 0.5) * canvas.width * 3,
+                    y: (Math.random() - 0.5) * canvas.height * 3,
+                    z: Math.random() * maxZ,
+
+                    // Les particules Bokeh sont gigantesques, les normales légèrement plus grosses qu'avant
+                    baseSize: isBokeh ? Math.random() * 25 + 15 : Math.random() * 3 + 1,
+
+                    // Les particules normales sont plus opaques et visibles, les Bokeh sont très transparentes
+                    opacity: isBokeh ? Math.random() * 0.1 + 0.05 : Math.random() * 0.6 + 0.3,
+
+                    // Vecteurs de vitesse (BEAUCOUP plus lents qu'avant)
+                    vx: (Math.random() - 0.5) * 0.15,
+                    vy: (Math.random() - 0.5) * 0.15,
+
+                    // Dérive vers la caméra (les Bokeh vont un peu plus vite car elles sont censées être tout près de l'objectif)
+                    vz: isBokeh ? (Math.random() * -0.5 - 0.5) : (Math.random() * -0.3 - 0.1),
+
+                    // Décalage pour l'oscillation organique (courants d'air)
+                    phaseX: Math.random() * Math.PI * 2,
+                    phaseY: Math.random() * Math.PI * 2
                 });
             }
 
             function animate() {
                 if (!starsAnimationActive) return;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const starCount = stars.length;
-                for (let i = 0; i < starCount; i++) {
-                    const star = stars[i];
-                    star.twinkleVal += star.twinkleSpeed;
-                    const currentOpacity = star.opacity * (0.6 + 0.4 * Math.sin(star.twinkleVal));
-                    ctx.fillStyle = `rgba(255, 255, 255, ${currentOpacity})`;
-                    ctx.fillRect(star.x - star.size, star.y - star.size, star.size * 2, star.size * 2);
-                    star.y -= star.speed;
-                    if (star.y < 0) {
-                        star.y = canvas.height;
-                        star.x = Math.random() * canvas.width;
+
+                // Temps ralenti par 2 (0.0005 au lieu de 0.001)
+                const time = Date.now() * 0.0005;
+
+                for (let i = 0; i < count; i++) {
+                    const p = particles[i];
+
+                    // Courants d'air très doux
+                    const driftX = Math.sin(time + p.phaseX) * 0.3;
+                    const driftY = Math.cos(time * 0.8 + p.phaseY) * 0.3;
+
+                    // Mouvement
+                    p.x += p.vx + driftX;
+                    p.y += p.vy + driftY;
+                    p.z += p.vz;
+
+                    // Recyclage : si la poussière passe derrière la caméra
+                    if (p.z < 1) {
+                        p.z = maxZ;
+                        p.x = (Math.random() - 0.5) * canvas.width * 3;
+                        p.y = (Math.random() - 0.5) * canvas.height * 3;
+                    } else if (p.z > maxZ) {
+                        p.z = 1;
+                    }
+
+                    // Projection 3D -> 2D
+                    const scale = focalLength / (focalLength + p.z);
+                    const screenX = cx + p.x * scale;
+                    const screenY = cy + p.y * scale;
+                    const size = Math.max(0.1, p.baseSize * scale);
+
+                    // Marge de dessin augmentée pour les très grosses particules (Bokeh)
+                    const margin = p.isBokeh ? 150 : 50;
+
+                    if (screenX >= -margin && screenX <= canvas.width + margin && screenY >= -margin && screenY <= canvas.height + margin) {
+
+                        const depthFade = Math.max(0, 1 - (p.z / maxZ));
+                        const finalOpacity = p.opacity * depthFade;
+
+                        ctx.beginPath();
+                        ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+
+                        if (p.isBokeh) {
+                            // Effet flou de profondeur de champ (Gros blur, faible opacité)
+                            ctx.fillStyle = `rgba(245, 237, 224, ${finalOpacity})`;
+                            ctx.shadowBlur = size * 1.2;
+                            ctx.shadowColor = `rgba(255, 255, 255, ${finalOpacity})`;
+                        } else {
+                            // Poussière normale (Plus dorée/contrastée)
+                            ctx.fillStyle = `rgba(245, 237, 224, ${finalOpacity})`;
+                            if (size > 1.5) {
+                                ctx.shadowBlur = size * 2;
+                                ctx.shadowColor = `rgba(201, 168, 76, ${finalOpacity})`;
+                            } else {
+                                ctx.shadowBlur = 0;
+                            }
+                        }
+
+                        ctx.fill();
+                        ctx.shadowBlur = 0; // Réinitialisation vitale pour les performances
                     }
                 }
                 requestAnimationFrame(animate);
@@ -8968,7 +9317,6 @@
             starsAnimationActive = true;
             animate();
         }
-
         /* ─────────────────────────────────────────────────────────────
            BOSS FIGHT ENGINE ⚔️
         ────────────────────────────────────────────────────────────── */
