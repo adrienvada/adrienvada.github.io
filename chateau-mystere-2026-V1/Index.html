@@ -11256,42 +11256,61 @@
         document.addEventListener('DOMContentLoaded', init);
 
         /* ─────────────────────────────────────────────────────────────
-   PWA INSTALLATION LOGIC (Mis à jour pour iOS)
-────────────────────────────────────────────────────────────── */
+    PWA INSTALLATION LOGIC (Persistence améliorée)
+ ────────────────────────────────────────────────────────────── */
         let deferredPrompt;
         const installBtn = document.getElementById('pwa-install-btn');
         const iosHint = document.getElementById('ios-install-hint');
 
-        // 1. Détection iOS pour afficher l'astuce manuelle
+        // 1. Vérifier si l'app est déjà installée
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        // 2. Détection iOS pour afficher l'astuce manuelle
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
         if (isIOS && !isStandalone && iosHint) {
             iosHint.classList.remove('hidden');
         }
 
-        // 2. Gestion pour Android / Chrome (Desktop)
+        // 3. Gestion de l'événement d'installation
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            if (installBtn) installBtn.classList.remove('hidden');
+
+            // Si on n'est pas déjà en mode standalone, on montre le bouton
+            if (!isStandalone && installBtn) {
+                installBtn.classList.remove('hidden');
+            }
         });
 
+        // 4. Action au clic
         if (installBtn) {
             installBtn.addEventListener('click', async () => {
                 if (!deferredPrompt) return;
+
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') installBtn.classList.add('hidden');
+
+                if (outcome === 'accepted') {
+                    installBtn.classList.add('hidden');
+                    if (iosHint) iosHint.classList.add('hidden');
+                }
                 deferredPrompt = null;
             });
         }
 
+        // 5. Nettoyage après installation réussie
         window.addEventListener('appinstalled', () => {
             if (installBtn) installBtn.classList.add('hidden');
             if (iosHint) iosHint.classList.add('hidden');
             deferredPrompt = null;
         });
+
+        // 6. ASTUCE : Si l'utilisateur est sur Android et a déjà installé le raccourci, 
+        // on s'assure que le bouton ne réapparaît jamais au rafraîchissement
+        if (isStandalone && installBtn) {
+            installBtn.classList.add('hidden');
+        }
     </script>
 
 </body>
