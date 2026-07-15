@@ -8773,6 +8773,8 @@ Ménager</span>
                 ctx, canvas, W: cw, H: ch, running: true, time: 0,
                 shake: 0, flash: 0, flashColor: '#fff', introTimer: 1.5,
                 difficulty: diff, diffLabel,
+                qtes: [], // <-- AJOUT : Tableau pour stocker les pastilles actives
+                qteSpawnTimer: 2.0 + Math.random() * 5, // <-- AJOUT : Délai avant la 1ère pastil
                 eva: {
                     x: cw / 2, y: ch * 0.78, w: 28, h: 48,
                     speed: cw * 0.5, hp: evaMaxHp, maxHp: evaMaxHp,
@@ -8874,6 +8876,66 @@ Ménager</span>
             window.addEventListener('keydown', kd);
             window.addEventListener('keyup', ku);
             bf._kd = kd; bf._ku = ku;
+            // --- GESTION DES CLICS POUR LES PASTILLES RYTHMIQUES (QTE) ---
+            const canvas = document.getElementById('bf-canvas');
+            if (canvas) {
+                const handleQteTap = (e) => {
+                    if (!bf || !bf.running) return;
+                    // On ne fait un preventDefault que si on a touché une pastille pour ne pas bloquer les autres actions
+                    const rect = canvas.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                    // Convertir la position de l'écran vers les coordonnées internes du jeu
+                    const x = (clientX - rect.left) * (bf.W / rect.width);
+                    const y = (clientY - rect.top) * (bf.H / rect.height);
+
+                    // Vérifier si on a touché un QTE actif
+                    for (let i = bf.qtes.length - 1; i >= 0; i--) {
+                        let qte = bf.qtes[i];
+                        if (qte.state !== 'active') continue;
+
+                        let dist = Math.sqrt((x - qte.x) ** 2 + (y - qte.y) ** 2);
+                        if (dist < 35) { // Zone de clic
+                            e.preventDefault(); // On bloque le comportement par défaut (scroll, etc)
+
+                            // Vérifier si le timing est bon (la fin du timer)
+                            if (qte.progress > 0.82 && qte.progress < 1.0) {
+                                qte.state = 'success';
+
+                                // Récompense : reset cooldown aléatoire (1 = bottle, 2 = moon, 3 = shield)
+                                const skills = [1, 2, 3];
+                                const chosenSkill = skills[Math.floor(Math.random() * skills.length)];
+                                bf.eva.cd[chosenSkill] = 0;
+
+                                // Animation du bouton rechargé
+                                const skillNames = ['lightning', 'bottle', 'moon', 'shield'];
+                                const btn = document.getElementById('bf-btn-' + skillNames[chosenSkill]);
+                                if (btn) {
+                                    btn.classList.remove('bf-ready-flash');
+                                    void btn.offsetWidth;
+                                    btn.classList.add('bf-ready-flash');
+                                }
+
+                                // Effets visuels et sonores
+                                ChateauAudio.playAchievement();
+                                for (let p = 0; p < 12; p++) {
+                                    const a = Math.random() * Math.PI * 2;
+                                    bfParticle(qte.x, qte.y, Math.cos(a) * 80, Math.sin(a) * 80, 0.6, '#10b981', 3);
+                                }
+                                bf.dmgTexts.push({ x: qte.x, y: qte.y - 20, text: 'PARFAIT !', color: '#10b981', t: 1.0 });
+                            } else {
+                                // Échec (cliqué trop tôt)
+                                qte.state = 'failed';
+                                ChateauAudio.playError();
+                                bf.dmgTexts.push({ x: qte.x, y: qte.y - 20, text: 'Trop tôt !', color: '#ef4444', t: 0.8 });
+                            }
+                        }
+                    }
+                };
+                canvas.addEventListener('mousedown', handleQteTap);
+                canvas.addEventListener('touchstart', handleQteTap, { passive: false });
+            }
         }
 
         function bfDoAttack(idx) {
@@ -9214,6 +9276,12 @@ Ménager</span>
             bf.projectiles = bf.projectiles.filter(p => {
                 p.t += dt;
                 if (p.t > p.dur) return false;
+                // --- AJOUT : Le point de départ du laser suit Malus ---
+                if (p.type === 'laser') {
+                    p.x = malus.x;
+                    p.y = malus.y + 30; // 30 pixels plus bas pour correspondre au sprite de Malus
+                }
+                // ------------------------------------------------------
                 if (p.type === 'orb') {
                     if (p.spiral) {
                         p.baseAngle += dt * 2.2;
@@ -9315,6 +9383,35 @@ Ménager</span>
             });
             // Nebula drift
             bf.nebulae.forEach(n => { n.phase += dt * 0.15; n.x += Math.sin(n.phase) * n.drift * dt; });
+            // ... (fin de la gestion des projectiles de Malus)
+
+            // ── Update QTE (Événements rythmiques) ──
+            bf.qteSpawnTimer -= dt;
+            if (bf.qteSpawnTimer <= 0) {
+                // Nouvelle pastille toutes les 4 à 8 secondes (plus dynamique)
+                bf.qteSpawnTimer = 10 + Math.random() * 5;
+                bf.qtes.push({
+                    x: 40 + Math.random() * (W - 80),
+                    y: 40 + Math.random() * (H - 180), // Évite de spawn sur le joystick
+                    progress: 0,
+                    duration: 1.2, // 2 secondes pour cliquer
+                    state: 'active'
+                });
+            }
+
+            bf.qtes = bf.qtes.filter(qte => {
+                if (qte.state === 'active') {
+                    qte.progress += dt / qte.duration;
+                    if (qte.progress >= 1.0) {
+                        // Temps écoulé, la pastille disparaît
+                        bf.dmgTexts.push({ x: qte.x, y: qte.y - 20, text: 'Raté...', color: '#888', t: 0.7 });
+                        return false;
+                    }
+                    return true;
+                }
+                return false;
+            });
+
         }
 
         function bfHitMalus(dmg) {
@@ -9597,6 +9694,46 @@ Ménager</span>
                 ctx.globalAlpha = bf.flash * 1.5;
                 ctx.fillStyle = bf.flashColor;
                 ctx.fillRect(0, 0, W, H);
+            }
+
+            // ── Dessin des QTE (Pastilles rythmiques) ──
+            if (bf.qtes) {
+                bf.qtes.forEach(qte => {
+                    if (qte.state !== 'active') return;
+
+                    const { ctx } = bf;
+                    ctx.save();
+
+                    // 1. Cercle cible intérieur (fixe)
+                    const isSweetSpot = qte.progress > 0.82;
+                    ctx.beginPath();
+                    ctx.arc(qte.x, qte.y, 16, 0, Math.PI * 2);
+                    ctx.fillStyle = isSweetSpot ? 'rgba(16, 185, 129, 0.4)' : 'rgba(0, 0, 0, 0.5)';
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = isSweetSpot ? '#10b981' : 'rgba(201, 168, 76, 0.8)';
+                    ctx.stroke();
+
+                    // 2. Anneau extérieur qui rétrécit
+                    const maxRadius = 70;
+                    const currentRadius = 16 + (maxRadius - 16) * (1 - qte.progress);
+
+                    ctx.beginPath();
+                    ctx.arc(qte.x, qte.y, currentRadius, 0, Math.PI * 2);
+                    ctx.lineWidth = 3;
+                    // Passe du blanc au vert fluo quand c'est le bon moment de cliquer
+                    ctx.strokeStyle = isSweetSpot ? '#10b981' : 'rgba(255, 255, 255, 0.8)';
+                    ctx.stroke();
+
+                    // 3. Icône indicative au centre
+                    ctx.fillStyle = isSweetSpot ? '#fff' : 'rgba(201, 168, 76, 1)';
+                    ctx.font = '14px "Inter", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('✨', qte.x, qte.y);
+
+                    ctx.restore();
+                });
             }
             ctx.globalAlpha = 1;
             ctx.restore();
