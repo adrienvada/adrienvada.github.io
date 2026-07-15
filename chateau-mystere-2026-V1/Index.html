@@ -3977,7 +3977,7 @@
                 </div>
                 <div id="audio-toggle-btn" class="step-badge"
                     style="border-color: rgba(201, 168, 76, 0.4); color: var(--text-secondary); cursor: pointer; padding: 6px 10px;"
-                    onclick="ChateauAudio.toggleMute()" title="Activer/Désactiver les effets sonores">
+                    onclick="ChateauAudio.showMenu(event)" title="Régler le volume sonore (Musique & SFX)">
                     <span id="audio-icon" style="font-size: 0.9rem;">🔊</span>
                 </div>
             </div>
@@ -4007,6 +4007,59 @@
             style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
             <img id="lightbox-img" src="" alt="Enigma Image" onclick="toggleImageZoom(event)"
                 style="max-width: 95%; max-height: 95vh; border-radius: 8px; box-shadow: 0 0 30px rgba(201, 168, 76, 0.4); object-fit: contain; transform: scale(1) translate(0px, 0px); transition: transform 0.3s ease; cursor: zoom-in; transform-origin: center center;">
+        </div>
+    </div>
+
+    <!-- ═══════════════════════ AUDIO SETTINGS MODAL ═══════════════════════ -->
+    <div id="audio-settings-modal" onclick="if(event.target===this) ChateauAudio.closeMenu()"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 8, 22, 0.92); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 20px;">
+        <div class="enigma-card"
+            style="max-width: 460px; width: 100%; display: flex; flex-direction: column; position: relative; border: 1px solid rgba(201, 168, 76, 0.4); box-shadow: var(--shadow-gold), var(--shadow-card); background: var(--bg-card-solid); border-radius: var(--radius-lg); padding: 28px;">
+            <div class="lightbox-close-btn" onclick="ChateauAudio.closeMenu()" title="Fermer"
+                style="position: absolute; top: 16px; right: 16px; cursor: pointer;">&times;</div>
+            <h2
+                style="color: var(--clr-gold-bright); font-size: 1.5rem; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; font-family: var(--font-display);">
+                🔊 Réglages Audio</h2>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 24px;">Ajustez l'ambiance sonore
+                et les effets de l'aventure.</p>
+
+            <!-- Music Volume Slider -->
+            <div
+                style="margin-bottom: 20px; background: rgba(15, 16, 53, 0.6); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span
+                        style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--clr-cream); font-family: var(--font-ui);">
+                        <span style="font-size: 1.2rem;">🎵</span> Musique d'ambiance
+                    </span>
+                    <span id="music-vol-display"
+                        style="color: var(--clr-gold-bright); font-weight: 700; font-family: var(--font-ui); background: rgba(201, 168, 76, 0.15); padding: 3px 10px; border-radius: 6px; font-size: 0.9rem;">30%</span>
+                </div>
+                <input type="range" id="music-vol-slider" min="0" max="100" value="30"
+                    oninput="ChateauAudio.setMusicVolume(this.value)"
+                    style="width: 100%; accent-color: var(--clr-gold); cursor: pointer; height: 6px; border-radius: 3px;">
+            </div>
+
+            <!-- SFX Volume Slider -->
+            <div
+                style="margin-bottom: 26px; background: rgba(15, 16, 53, 0.6); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span
+                        style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--clr-cream); font-family: var(--font-ui);">
+                        <span style="font-size: 1.2rem;">🔔</span> Effets sonores (SFX)
+                    </span>
+                    <span id="sfx-vol-display"
+                        style="color: var(--clr-gold-bright); font-weight: 700; font-family: var(--font-ui); background: rgba(201, 168, 76, 0.15); padding: 3px 10px; border-radius: 6px; font-size: 0.9rem;">50%</span>
+                </div>
+                <input type="range" id="sfx-vol-slider" min="0" max="100" value="50"
+                    oninput="ChateauAudio.setSfxVolume(this.value)"
+                    style="width: 100%; accent-color: var(--clr-gold); cursor: pointer; height: 6px; border-radius: 3px;">
+            </div>
+
+            <!-- Mute / Unmute Toggle Button -->
+            <button id="audio-menu-mute-btn" class="btn btn-primary" onclick="ChateauAudio.toggleMuteFromMenu()"
+                style="width: 100%; justify-content: center; font-weight: 600; padding: 14px; font-size: 1rem; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 8px;">
+                <span>🔇</span> <span>Couper tout le son</span>
+            </button>
         </div>
     </div>
 
@@ -4484,6 +4537,11 @@
         const ChateauAudio = {
             ctx: null,
             muted: localStorage.getItem('escapeGame_audioMuted') === 'true',
+            musicVolume: localStorage.getItem('escapeGame_musicVolume') !== null ? parseFloat(localStorage.getItem('escapeGame_musicVolume')) / 100 : 0.30,
+            sfxVolume: localStorage.getItem('escapeGame_sfxVolume') !== null ? parseFloat(localStorage.getItem('escapeGame_sfxVolume')) / 100 : 0.50,
+            ambientAudio: null,
+            currentLoopFile: null,
+            _interactionListenerAdded: false,
             lastUnlockTime: 0,
             lastErrorTime: 0,
             init() {
@@ -4494,23 +4552,154 @@
                 if (this.ctx && this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
+                if (!this.ambientAudio) {
+                    this.ambientAudio = new Audio();
+                    this.ambientAudio.loop = true;
+                    this.updateMusicVolume();
+                }
+                if (!this._interactionListenerAdded) {
+                    this._interactionListenerAdded = true;
+                    const startOnInteract = () => {
+                        if (this.ctx && this.ctx.state === 'suspended') {
+                            this.ctx.resume();
+                        }
+                        this.tryPlayAmbience();
+                    };
+                    window.addEventListener('click', startOnInteract, { passive: true });
+                    window.addEventListener('touchstart', startOnInteract, { passive: true });
+                    window.addEventListener('keydown', startOnInteract, { passive: true });
+                }
                 this.updateIcon();
+            },
+            getLoopFileForEnigma(index) {
+                let id = typeof index === 'number' ? index + 1 : (typeof currentIndex === 'number' ? currentIndex + 1 : 1);
+                if (typeof enigmes !== 'undefined' && typeof index === 'number' && enigmes[index] && enigmes[index].id) {
+                    id = enigmes[index].id;
+                } else if (typeof enigmes !== 'undefined' && typeof currentIndex === 'number' && enigmes[currentIndex] && enigmes[currentIndex].id) {
+                    id = enigmes[currentIndex].id;
+                }
+                if (id < 4) return 'assets/sons/boucle 1.mp3';
+                if (id < 8) return 'assets/sons/boucle 2.mp3';
+                if (id < 15) return 'assets/sons/boucle 3.mp3';
+                if (id === 15) return 'assets/sons/boucle 4 boss.mp3';
+                return 'assets/sons/boucle 5 final.mp3';
+            },
+            updateAmbience(index) {
+                this.init();
+                const targetFile = this.getLoopFileForEnigma(index);
+                if (this.currentLoopFile !== targetFile) {
+                    this.currentLoopFile = targetFile;
+                    if (this.ambientAudio) {
+                        this.ambientAudio.src = targetFile;
+                        this.ambientAudio.loop = true;
+                        this.tryPlayAmbience();
+                    }
+                } else {
+                    this.tryPlayAmbience();
+                }
+            },
+            tryPlayAmbience() {
+                if (!this.ambientAudio || !this.currentLoopFile) return;
+                this.updateMusicVolume();
+                if (this.muted || this.musicVolume <= 0) {
+                    this.ambientAudio.pause();
+                } else {
+                    if (this.ambientAudio.paused) {
+                        this.ambientAudio.play().catch(e => {
+                            // En attente d'une interaction utilisateur globale pour déclencher l'audio
+                        });
+                    }
+                }
+            },
+            updateMusicVolume() {
+                if (this.ambientAudio) {
+                    this.ambientAudio.volume = this.muted ? 0 : this.musicVolume;
+                }
             },
             toggleMute() {
                 this.init();
                 this.muted = !this.muted;
                 localStorage.setItem('escapeGame_audioMuted', this.muted);
                 this.updateIcon();
+                this.tryPlayAmbience();
                 this.playClick(true);
+                this.syncMenuUI();
+            },
+            toggleMuteFromMenu() {
+                this.toggleMute();
+            },
+            setMusicVolume(val) {
+                const vol = Math.max(0, Math.min(100, parseInt(val, 10))) / 100;
+                this.musicVolume = vol;
+                localStorage.setItem('escapeGame_musicVolume', Math.round(vol * 100));
+                if (vol > 0 && this.muted) {
+                    this.muted = false;
+                    localStorage.setItem('escapeGame_audioMuted', this.muted);
+                    this.updateIcon();
+                }
+                this.updateMusicVolume();
+                this.tryPlayAmbience();
+                const disp = document.getElementById('music-vol-display');
+                if (disp) disp.textContent = Math.round(vol * 100) + '%';
+                this.syncMenuUI();
+            },
+            setSfxVolume(val) {
+                const vol = Math.max(0, Math.min(100, parseInt(val, 10))) / 100;
+                this.sfxVolume = vol;
+                localStorage.setItem('escapeGame_sfxVolume', Math.round(vol * 100));
+                if (vol > 0 && this.muted) {
+                    this.muted = false;
+                    localStorage.setItem('escapeGame_audioMuted', this.muted);
+                    this.updateIcon();
+                }
+                const disp = document.getElementById('sfx-vol-display');
+                if (disp) disp.textContent = Math.round(vol * 100) + '%';
+                this.playClick(true);
+                this.syncMenuUI();
+            },
+            showMenu(e) {
+                if (e) e.stopPropagation();
+                this.init();
+                const modal = document.getElementById('audio-settings-modal');
+                if (!modal) return;
+                this.syncMenuUI();
+                modal.style.display = 'flex';
+            },
+            closeMenu() {
+                const modal = document.getElementById('audio-settings-modal');
+                if (modal) modal.style.display = 'none';
+            },
+            syncMenuUI() {
+                const musicSlider = document.getElementById('music-vol-slider');
+                const musicDisp = document.getElementById('music-vol-display');
+                if (musicSlider && document.activeElement !== musicSlider) musicSlider.value = Math.round(this.musicVolume * 100);
+                if (musicDisp) musicDisp.textContent = Math.round(this.musicVolume * 100) + '%';
+
+                const sfxSlider = document.getElementById('sfx-vol-slider');
+                const sfxDisp = document.getElementById('sfx-vol-display');
+                if (sfxSlider && document.activeElement !== sfxSlider) sfxSlider.value = Math.round(this.sfxVolume * 100);
+                if (sfxDisp) sfxDisp.textContent = Math.round(this.sfxVolume * 100) + '%';
+
+                const muteBtn = document.getElementById('audio-menu-mute-btn');
+                if (muteBtn) {
+                    muteBtn.innerHTML = this.muted
+                        ? `<span>🔊</span> <span>Réactiver le son</span>`
+                        : `<span>🔇</span> <span>Couper tout le son</span>`;
+                }
             },
             updateIcon() {
                 const icon = document.getElementById('audio-icon');
                 if (icon) icon.textContent = this.muted ? '🔇' : '🔊';
             },
+            _getSfxMult() {
+                return this.muted ? 0 : (this.sfxVolume !== undefined ? this.sfxVolume : 0.5) / 0.5;
+            },
             _playTone(freq, type, dur, gainVal = 0.1, freqEnd = null, forcePlay = false) {
                 if (this.muted && !forcePlay) return;
                 this.init();
                 if (!this.ctx) return;
+                const mult = forcePlay && this.muted ? 1 : this._getSfxMult();
+                if (mult <= 0 && !forcePlay) return;
                 try {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
@@ -4519,7 +4708,7 @@
                     if (freqEnd !== null) {
                         osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), this.ctx.currentTime + dur);
                     }
-                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal * mult, this.ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
@@ -4530,28 +4719,34 @@
             playClick(forcePlay = false) { this._playTone(600, 'sine', 0.03, 0.05, 300, forcePlay); },
             playLockTick() { this._playTone(850, 'triangle', 0.02, 0.04, 400); },
             playSuccess(force = false) {
-                if (this.muted) return;
+                if (this.muted && !force) return;
                 const now = Date.now();
                 const playWav = force || (now - this.lastUnlockTime > 1500);
                 if (playWav) {
                     this.lastUnlockTime = now;
                     try {
                         const audio = new Audio('assets/sons/unlocked.wav');
-                        audio.volume = 0.85;
-                        audio.play().catch(e => { });
+                        const mult = force && this.muted ? 1 : (this.muted ? 0 : (this.sfxVolume !== undefined ? this.sfxVolume / 0.7 : 1));
+                        audio.volume = Math.min(1, Math.max(0, 0.85 * mult));
+                        if (audio.volume > 0 || force) {
+                            audio.play().catch(e => { });
+                        }
                     } catch (e) { }
                 }
             },
             playError(force = false) {
-                if (this.muted) return;
+                if (this.muted && !force) return;
                 const now = Date.now();
                 const playWav = force || (now - this.lastErrorTime > 1200);
                 if (playWav) {
                     this.lastErrorTime = now;
                     try {
                         const audio = new Audio('assets/sons/locked.wav');
-                        audio.volume = 0.85;
-                        audio.play().catch(e => { });
+                        const mult = force && this.muted ? 1 : (this.muted ? 0 : (this.sfxVolume !== undefined ? this.sfxVolume / 0.7 : 1));
+                        audio.volume = Math.min(1, Math.max(0, 0.85 * mult));
+                        if (audio.volume > 0 || force) {
+                            audio.play().catch(e => { });
+                        }
                     } catch (e) { }
                 }
             },
@@ -4833,6 +5028,7 @@
             if (twEl && typeof typewriter === 'function') {
                 typewriter(twEl, "Mon amour, pour notre anniversaire de rencontre, je t'ai préparé un Escape Game secret. \n Prends ton temps. \n Ou pas. \n Seule. Ou avec de l'aide. \n Fais comme tu veux. \n \n Ou comme tu peux...", 35, 400);
             }
+            ChateauAudio.updateAmbience(0);
         }
 
         function startGame() {
@@ -5181,6 +5377,7 @@
         function renderEnigma(index) {
             const e = enigmes[index];
             if (!e) return;
+            ChateauAudio.updateAmbience(index);
             window._currentEnigmaStartTime = performance.now();
             window._errorsAtEnigmaStart = totalErrorsCount;
             window._mosaicHadError = false;
@@ -6362,8 +6559,11 @@
                 osc.connect(gainNode);
                 gainNode.connect(ctx.destination);
 
+                const sfxMult = typeof ChateauAudio !== 'undefined' ? ChateauAudio._getSfxMult() : 1;
+                if (sfxMult <= 0) return;
+
                 gainNode.gain.setValueAtTime(0, ctx.currentTime);
-                gainNode.gain.linearRampToValueAtTime(0.35, ctx.currentTime + 0.02);
+                gainNode.gain.linearRampToValueAtTime(0.35 * sfxMult, ctx.currentTime + 0.02);
 
                 osc.start();
                 activeOscillators[noteId] = { osc, gainNode, freq };
@@ -7906,6 +8106,7 @@
         ────────────────────────────────────────────────────────────── */
         function renderTemporalLock() {
             showHeader();
+            ChateauAudio.updateAmbience(typeof currentIndex === 'number' ? currentIndex : enigmes.length);
             if ($stepCur) $stepCur.textContent = enigmes.length;
             if ($progress) $progress.style.width = '100%';
 
@@ -8027,6 +8228,7 @@
         ────────────────────────────────────────────────────────────── */
         function renderVictory() {
             showHeader();
+            ChateauAudio.updateAmbience(enigmes.length);
             if ($stepCur) $stepCur.textContent = enigmes.length;
             if ($progress) $progress.style.width = '100%';
 
