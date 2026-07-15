@@ -466,6 +466,56 @@
             animation: header-chrono-spawn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
+        @keyframes header-hint-spawn {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+                filter: brightness(3);
+            }
+
+            50% {
+                transform: scale(1.25);
+                opacity: 1;
+                filter: brightness(2);
+                text-shadow: 0 0 25px var(--clr-gold-bright), 0 0 50px rgba(242, 208, 107, 0.8);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+                filter: brightness(1);
+            }
+        }
+
+        .header-hint-animated {
+            animation: header-hint-spawn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes header-error-spawn {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+                filter: brightness(3);
+            }
+
+            50% {
+                transform: scale(1.25);
+                opacity: 1;
+                filter: brightness(2);
+                text-shadow: 0 0 25px var(--error-red), 0 0 50px rgba(239, 68, 68, 0.8);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+                filter: brightness(1);
+            }
+        }
+
+        .header-error-animated {
+            animation: header-error-spawn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
         @keyframes header-flash-glow {
             0% {
                 border-bottom-color: rgba(255, 255, 255, 0.08);
@@ -2832,6 +2882,17 @@
             }
         }
 
+        @keyframes gem-pop-in {
+            0% {
+                opacity: 0;
+                transform: scale(0.7);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
         .gems-selection-display {
             display: flex;
             align-items: center;
@@ -2843,6 +2904,11 @@
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
             max-width: 300px;
+            width: fit-content;
+            min-width: 80px;
+            min-height: 66px;
+            box-sizing: border-box;
+            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .gem-slot {
@@ -3540,13 +3606,13 @@
                 <div id="chrono" class="chrono">72:00:00</div>
             </div>
             <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
-                <div id="errors-badge" class="step-badge"
+                <div id="errors-badge" class="step-badge hidden"
                     style="border-color: rgba(239, 68, 68, 0.3); color: var(--text-secondary); position: relative;"
                     title="Nombre total d'erreurs commises">
                     <span id="errors-badge-content" style="display: inline-flex; align-items: center; gap: 4px;">❌ <span
                             id="error-total-count" style="color: var(--error-red); font-weight: 700;">0</span></span>
                 </div>
-                <div id="hints-badge" class="step-badge"
+                <div id="hints-badge" class="step-badge hidden"
                     style="border-color: rgba(201, 168, 76, 0.3); color: var(--text-secondary); position: relative;"
                     title="Nombre total d'indices utilisés">
                     <span id="hints-badge-content" style="display: inline-flex; align-items: center; gap: 4px;">💡 <span
@@ -3554,7 +3620,8 @@
                             style="color: var(--clr-gold-bright); font-weight: 700;">0</span></span>
                 </div>
                 <div id="step-badge" class="step-badge">
-                    Étape <span class="current" id="step-current">1</span>/<span id="step-total">1</span>
+                    Étape <span class="current" id="step-current">1</span><span id="step-total-wrap" class="hidden"
+                        style="display: inline-block;">/<span id="step-total">1</span></span>
                 </div>
             </div>
         </div>
@@ -3634,7 +3701,7 @@
                 ],
                 succes: {
                     titre: "La plus belle  ",
-                    description: "C'était bien Eva !",
+                    description: "Bravo mon amour, c'était bien Eva 😉 !",
                     image: "assets/enigme2_cadre_eva.jpeg",
                     bouton: "Énigme suivante ↗"
                 }
@@ -3645,7 +3712,7 @@
                 id: 3,
                 type: "carousel",
                 titre: "Dans le cadre...",
-                description: "Cela semble être un des personnages principaux de l'enquête. Il séit sous plusieurs alias. Nous avons reconstitué un dossier.",
+                description: "Cela semble être un des personnages principaux de l'enquête. Il sévit sous plusieurs alias. Nous avons reconstitué un dossier. Un indice supplémentaire est caché pour nous aider à trouver la solution.",
                 image: null,
                 images: [
                     "assets/Enigme Eva jeune/Compress/1 - Petite.jpeg",
@@ -3690,7 +3757,7 @@
                 reponseAttendue: ["Kikinette", "kikinette", "KIKINETTE", "Kikinete", "kikinete", "Kikinete"],
                 indices: [
                     "Les instigateurs ont eu une idée très mignonounette",
-                    "Un indice dans le cadre",
+                    "Le titre de l'énigme nous indique que l'indice est dans le cadre du qr code 🧐",
                     "Appelle Sonja"
                 ],
                 succes: {
@@ -3708,9 +3775,9 @@
                 titre: "Duet",
                 description: "Parfait accord",
                 indices: [
+                    "Le piano est un instrument qui nous connecte.",
                     "Connais-tu le nom des notes dans ta langue de naissance ?",
-                    "Le piano est le seul instrument que nous ayons pratiqué tous les deux.",
-                    "L'accord A & E."
+                    "L'accord A & E : Do & Mi"
                 ]
             },
 
@@ -3719,11 +3786,11 @@
                 id: 5,
                 type: "text",
                 titre: "Mesure à Cinq Temps",
-                description: "Sous la carte son",
-                image: "assets/enigme9_carteson.jpeg",
+                description: "Il faut un indice supplémentaire pour nous aider à trouver la solution.",
+                image: "assets/enigme5_carte_son.jpeg",
                 reponseAttendue: ["4:21", "4min21s", "quatre minutes vingt et une secondes", "4minutes 21secondes", "quatre minutes vingt et une secondes", "4 minutes 21 secondes", "quatre vingt vingt et une secondes"],
                 indices: [
-                    "Regarde sous ma carte dans les étagères.",
+                    "Regarde sous ma carte son (le truc rouge) dans les étagères.",
                     "Un pentagramme avec le prénom Eva : Penteva ?",
                     "La durée du morceau est 4:21"
                 ]
@@ -3739,7 +3806,7 @@
                 reponseAttendue: [],
                 indices: [
                     "Parmi cette selection, certaines oeuvres ont un point commun",
-                    "C'est d'être passé par nos mains, ensemble ♥️",
+                    "C'est d'être passé par nos mains, nos yeux, ou nos oreilles, ensemble ♥️",
                     "Et en plus elles forment un space invader..."
                 ],
                 tiles: [
@@ -3829,7 +3896,7 @@
                 id: 8,
                 type: "text",
                 titre: "Là où tu dors",
-                description: "Il faut rentrer un code...",
+                description: "Il faut trouver un indice supplémentaire et entrer un code...",
                 image: "assets/enigme6_carte_tente.jpeg",
                 reponseAttendue: ["51□18-145"],
                 indices: [
@@ -3876,7 +3943,7 @@
                 indices: [
                     "Pense à son surnom",
                     "Rouen et ses clochers...",
-                    "Dans la ville aux cent clochers, il y en a un en plus que seule toi connaît... 100 + 1 = ..."
+                    "Rouen, la ville \"aux cent clochers\", en contient un de plus que seule toi connaît... 100 + 🍆 = ..."
                 ]
             },
 
@@ -3899,10 +3966,10 @@
             {
                 id: 12,
                 type: "gems",
-                titre: "Coupe 2024",
+                titre: "",
                 debugTitre: "Coupe des champions",
                 description: "",
-                image: "assets/enigme5_coupe.jpeg",
+                image: "assets/enigme12_coupe.jpeg",
                 reponseAttendue: ["rouge", "bleu"],
                 gems: [
                     { id: "noir", emoji: "⬛", label: "Noir", top: 7, left: 45 },
@@ -4194,11 +4261,39 @@
 
         function updateChronoVisibility(forceShow = false) {
             const $wrap = document.getElementById('header-chrono-wrap');
-            if (!$wrap) return;
-            if (currentIndex === 0 && !forceShow && !window._enigma1ChronoUnlocked) {
-                $wrap.classList.add('hidden');
-            } else {
-                $wrap.classList.remove('hidden');
+            const $totalWrap = document.getElementById('step-total-wrap');
+            if ($wrap) {
+                if (currentIndex === 0 && !forceShow && !window._enigma1ChronoUnlocked) {
+                    $wrap.classList.add('hidden');
+                } else {
+                    $wrap.classList.remove('hidden');
+                }
+            }
+            if ($totalWrap) {
+                if (currentIndex === 0 && !forceShow && !window._enigma1ChronoUnlocked) {
+                    $totalWrap.classList.add('hidden');
+                } else {
+                    $totalWrap.classList.remove('hidden');
+                }
+            }
+        }
+
+        function updateStatsVisibility(forceShowHints = false, forceShowErrors = false) {
+            const $hintsBadge = document.getElementById('hints-badge');
+            if ($hintsBadge) {
+                if (totalHintsCount > 0 || forceShowHints) {
+                    $hintsBadge.classList.remove('hidden');
+                } else {
+                    $hintsBadge.classList.add('hidden');
+                }
+            }
+            const $errorsBadge = document.getElementById('errors-badge');
+            if ($errorsBadge) {
+                if (totalErrorsCount > 0 || forceShowErrors) {
+                    $errorsBadge.classList.remove('hidden');
+                } else {
+                    $errorsBadge.classList.add('hidden');
+                }
             }
         }
 
@@ -4211,6 +4306,7 @@
             if ($hc) $hc.textContent = totalHintsCount;
             const $ec = document.getElementById('error-total-count');
             if ($ec) $ec.textContent = totalErrorsCount;
+            updateStatsVisibility();
         }
 
         function startChrono() {
@@ -4738,12 +4834,12 @@
                      title="${g.label}"></div>
               `).join('')}
             </div>
-            <div class="gems-selection-display" id="gems-selection">
-              <div class="gem-slot" id="gem-slot-0">?</div>
-              <div class="gem-slot-separator">+</div>
-              <div class="gem-slot" id="gem-slot-1">?</div>
+            <div class="gems-selection-display" id="gems-selection" style="display: none;">
+              <div class="gem-slot" id="gem-slot-0" style="display: none;">?</div>
+              <div class="gem-slot-separator" id="gem-slot-sep" style="display: none;">+</div>
+              <div class="gem-slot" id="gem-slot-1" style="display: none;">?</div>
             </div>
-            <button class="gems-reset-btn" onclick="resetGems()">↺ Réinitialiser</button>
+            <button class="gems-reset-btn" id="gems-reset-btn" onclick="resetGems()" style="display: none;">↺ Réinitialiser</button>
           `;
                     break;
 
@@ -5015,6 +5111,7 @@
             // Init gems puzzle
             if (e.type === 'gems') {
                 window._gemsSelected = [];
+                updateGemsUI();
             }
 
             // Init proximity puzzle
@@ -5094,6 +5191,8 @@
                 if (totalHintsCount === 1 && !localStorage.getItem(LS_KEY_HINT_BUBBLE)) {
                     localStorage.setItem(LS_KEY_HINT_BUBBLE, '1');
                     triggerHintNotifyBubble();
+                } else {
+                    updateStatsVisibility();
                 }
             }
 
@@ -5376,7 +5475,7 @@
             const btn = document.getElementById('btn-validate');
 
             if (isCorrect) {
-                showFeedback('success', '🎰 Jackpot ! La combinaison est correcte.');
+                showFeedback('success', '🎰 Trop forte, jackpot ! La combinaison de mes préférences est la bonne. 😍');
                 if (picker) picker.style.pointerEvents = 'none';
                 if (btn) btn.disabled = true;
                 setTimeout(() => handleSuccess(), 1000);
@@ -5689,6 +5788,7 @@
 
         function initHangmanPuzzle(enigme) {
             window._hangmanGuessed = new Set(['-']);
+            window._hangmanFirstErrorTriggered = false;
             const targetWord = (enigme.reponseAttendue || '').toUpperCase();
 
             const $wordContainer = document.getElementById('hangman-word-display');
@@ -5751,13 +5851,18 @@
             } else {
                 if (btn) btn.classList.add('guessed-wrong');
 
-                totalErrorsCount++;
+                totalErrorsCount += 2;
                 localStorage.setItem(LS_KEY_ERRORS_TOTAL, totalErrorsCount);
                 const $ec = document.getElementById('error-total-count');
                 if ($ec) $ec.textContent = totalErrorsCount;
-                if (totalErrorsCount === 1 && !localStorage.getItem(LS_KEY_ERROR_BUBBLE)) {
+                if ((totalErrorsCount === 1 || totalErrorsCount === 2) && !localStorage.getItem(LS_KEY_ERROR_BUBBLE)) {
                     localStorage.setItem(LS_KEY_ERROR_BUBBLE, '1');
-                    triggerErrorNotifyBubble();
+                }
+                updateStatsVisibility();
+
+                if (!window._hangmanFirstErrorTriggered) {
+                    window._hangmanFirstErrorTriggered = true;
+                    triggerHangmanErrorNotifyBubble();
                 }
 
                 const heartEl = document.getElementById('hangman-heart');
@@ -5774,7 +5879,7 @@
                 if (heartWrapper) {
                     const floatEl = document.createElement('div');
                     floatEl.className = 'hangman-error-float';
-                    floatEl.textContent = '+1 Erreur';
+                    floatEl.textContent = '+2 Erreurs';
                     heartWrapper.appendChild(floatEl);
                     setTimeout(() => {
                         floatEl.remove();
@@ -6069,6 +6174,8 @@
                 slot.classList.add('filled');
             }
 
+            updateGemsUI();
+
             // If 2 gems selected, validate after short delay
             if (window._gemsSelected.length === 2) {
                 setTimeout(() => validateGems(), 500);
@@ -6093,10 +6200,12 @@
                     }
                 });
                 showFeedback('success', '✅ Bonne combinaison ! Les pierres s\'illuminent.');
-                // Disable all gems
+                // Disable all gems & reset btn
                 document.querySelectorAll('.gem-hotspot').forEach(el => {
                     el.style.pointerEvents = 'none';
                 });
+                const resetBtn = document.getElementById('gems-reset-btn');
+                if (resetBtn) resetBtn.style.pointerEvents = 'none';
                 setTimeout(() => handleSuccess(), 1200);
             } else {
                 // Mark gems as wrong
@@ -6128,6 +6237,70 @@
                 if (slot) {
                     slot.textContent = '?';
                     slot.classList.remove('filled');
+                }
+            }
+            const resetBtn = document.getElementById('gems-reset-btn');
+            if (resetBtn) resetBtn.style.pointerEvents = '';
+            updateGemsUI();
+        }
+
+        function updateGemsUI() {
+            const container = document.getElementById('gems-selection');
+            const slot0 = document.getElementById('gem-slot-0');
+            const sep = document.getElementById('gem-slot-sep');
+            const slot1 = document.getElementById('gem-slot-1');
+            const resetBtn = document.getElementById('gems-reset-btn');
+
+            if (!container || !slot0 || !sep || !slot1 || !resetBtn) return;
+
+            const count = (window._gemsSelected || []).length;
+
+            if (count === 0) {
+                container.style.display = 'none';
+                container.style.animation = '';
+                resetBtn.style.display = 'none';
+                resetBtn.style.animation = '';
+                slot0.style.display = 'none';
+                slot0.style.animation = '';
+                sep.style.display = 'none';
+                sep.style.animation = '';
+                slot1.style.display = 'none';
+                slot1.style.animation = '';
+            } else if (count === 1) {
+                if (container.style.display === 'none') {
+                    container.style.display = 'flex';
+                    container.style.animation = 'gem-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                }
+                if (resetBtn.style.display === 'none') {
+                    resetBtn.style.display = 'block';
+                    resetBtn.style.animation = 'gem-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                }
+                if (slot0.style.display === 'none') {
+                    slot0.style.display = 'flex';
+                    slot0.style.animation = 'gem-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                }
+                sep.style.display = 'none';
+                slot1.style.display = 'none';
+            } else if (count >= 2) {
+                if (container.style.display === 'none') {
+                    container.style.display = 'flex';
+                    container.style.animation = 'gem-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                }
+                if (resetBtn.style.display === 'none') {
+                    resetBtn.style.display = 'block';
+                    resetBtn.style.animation = 'gem-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                }
+                if (slot0.style.display === 'none') {
+                    slot0.style.display = 'flex';
+                    slot0.style.animation = 'gem-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                }
+                if (sep.style.display === 'none') {
+                    sep.style.display = 'block';
+                    sep.style.animation = 'gem-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                }
+                if (slot1.style.display === 'none') {
+                    slot1.style.display = 'flex';
+                    slot1.style.animation = 'gem-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
                 }
             }
         }
@@ -6433,6 +6606,8 @@
                 if (totalErrorsCount === 1 && !localStorage.getItem(LS_KEY_ERROR_BUBBLE)) {
                     localStorage.setItem(LS_KEY_ERROR_BUBBLE, '1');
                     triggerErrorNotifyBubble();
+                } else {
+                    updateStatsVisibility();
                 }
             }
         }
@@ -6562,6 +6737,12 @@
                     }
                 }, 5000);
             }
+            const $totalWrap = document.getElementById('step-total-wrap');
+            if ($totalWrap) {
+                $totalWrap.classList.remove('header-chrono-animated');
+                void $totalWrap.offsetWidth;
+                $totalWrap.classList.add('header-chrono-animated');
+            }
             if ($header) {
                 $header.classList.remove('header-flash-active');
                 void $header.offsetWidth;
@@ -6573,6 +6754,11 @@
             const badge = document.getElementById('hints-badge');
             const contentSpan = document.getElementById('hints-badge-content');
             if (!badge || !contentSpan) return;
+            badge.classList.remove('hidden');
+            badge.classList.remove('header-hint-animated');
+            void badge.offsetWidth;
+            badge.classList.add('header-hint-animated');
+
             contentSpan.classList.remove('badge-highlight-animated');
             void contentSpan.offsetWidth;
             contentSpan.classList.add('badge-highlight-animated');
@@ -6582,7 +6768,7 @@
                 bubble = document.createElement('div');
                 bubble.id = 'hint-notify-bubble';
                 bubble.className = 'stat-notify-bubble';
-                bubble.innerHTML = `<div style="font-family: var(--font-ui); font-weight: 700; color: var(--clr-gold-bright); margin-bottom: 4px;">💡 Premier indice !</div><div>Attention : plus le nombre d'indices utilisés est important, plus une des étapes finales sera difficile !</div>`;
+                bubble.innerHTML = `<div style="font-family: var(--font-ui); font-weight: 700; color: var(--clr-gold-bright); margin-bottom: 4px;">💡 Premier indice !</div><div>Attention : plus le nombre d'indices utilisés est important, plus une des étapes finales sera difficile ! 😇</div>`;
                 badge.appendChild(bubble);
             }
             setTimeout(() => {
@@ -6593,12 +6779,62 @@
                     setTimeout(() => bubble.remove(), 800);
                 }
             }, 8000);
+
+            if ($header) {
+                $header.classList.remove('header-flash-active');
+                void $header.offsetWidth;
+                $header.classList.add('header-flash-active');
+            }
+        }
+
+        function triggerHangmanErrorNotifyBubble() {
+            const badge = document.getElementById('errors-badge');
+            const contentSpan = document.getElementById('errors-badge-content');
+            const $header = document.getElementById('main-header');
+            if (!badge || !contentSpan) return;
+            badge.classList.remove('hidden');
+            badge.classList.remove('header-error-animated');
+            void badge.offsetWidth;
+            badge.classList.add('header-error-animated');
+
+            contentSpan.classList.remove('badge-highlight-animated');
+            void contentSpan.offsetWidth;
+            contentSpan.classList.add('badge-highlight-animated');
+
+            let bubble = document.getElementById('error-notify-bubble');
+            if (bubble) bubble.remove();
+
+            bubble = document.createElement('div');
+            bubble.id = 'error-notify-bubble';
+            bubble.className = 'stat-notify-bubble error-style';
+            bubble.innerHTML = `<div style="font-family: var(--font-ui); font-weight: 700; color: var(--error-red); margin-bottom: 4px;">⚠️ Attention !</div><div>Pour cette épreuve, 2 erreurs sont comptabilisées par tentative erronée. Eh oui ! Sinon c'est trop facile mon amour ♥️</div>`;
+            badge.appendChild(bubble);
+
+            setTimeout(() => {
+                if (bubble && bubble.parentNode) {
+                    bubble.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                    bubble.style.opacity = '0';
+                    bubble.style.transform = 'translateY(-10px)';
+                    setTimeout(() => bubble.remove(), 800);
+                }
+            }, 8000);
+
+            if ($header) {
+                $header.classList.remove('header-flash-active');
+                void $header.offsetWidth;
+                $header.classList.add('header-flash-active');
+            }
         }
 
         function triggerErrorNotifyBubble() {
             const badge = document.getElementById('errors-badge');
             const contentSpan = document.getElementById('errors-badge-content');
             if (!badge || !contentSpan) return;
+            badge.classList.remove('hidden');
+            badge.classList.remove('header-error-animated');
+            void badge.offsetWidth;
+            badge.classList.add('header-error-animated');
+
             contentSpan.classList.remove('badge-highlight-animated');
             void contentSpan.offsetWidth;
             contentSpan.classList.add('badge-highlight-animated');
@@ -6608,7 +6844,7 @@
                 bubble = document.createElement('div');
                 bubble.id = 'error-notify-bubble';
                 bubble.className = 'stat-notify-bubble error-style';
-                bubble.innerHTML = `<div style="font-family: var(--font-ui); font-weight: 700; color: var(--error-red); margin-bottom: 4px;">❌ Première erreur !</div><div>Attention : plus le nombre d'erreurs commises est important, plus une des étapes finales sera difficile !</div>`;
+                bubble.innerHTML = `<div style="font-family: var(--font-ui); font-weight: 700; color: var(--error-red); margin-bottom: 4px;">❌ Première erreur !</div><div>Attention : plus le nombre d'erreurs commises est important, plus une des étapes finales sera difficile ! 😈</div>`;
                 badge.appendChild(bubble);
             }
             setTimeout(() => {
@@ -6619,6 +6855,12 @@
                     setTimeout(() => bubble.remove(), 800);
                 }
             }, 8000);
+
+            if ($header) {
+                $header.classList.remove('header-flash-active');
+                void $header.offsetWidth;
+                $header.classList.add('header-flash-active');
+            }
         }
 
         function renderSuccessScreen(succes) {
