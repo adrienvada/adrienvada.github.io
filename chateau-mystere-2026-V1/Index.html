@@ -4976,7 +4976,13 @@
         ────────────────────────────────────────────────────────────── */
         function renderWelcome() {
             $app.innerHTML = `
-        <div class="welcome-screen">
+        <!-- Overlay d'interaction pour débloquer l'audio -->
+        <div id="start-overlay" style="position: fixed; inset: 0; z-index: 9999; background: var(--bg-deep); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.8s ease;" onclick="startWelcomeSequence(this)">
+            <div style="font-size: 4rem; margin-bottom: 20px; filter: drop-shadow(0 0 15px rgba(201, 168, 76, 0.6)); animation: float-slow 3s ease-in-out infinite alternate;">💌</div>
+            <div style="font-family: var(--font-display); color: var(--clr-gold-bright); font-size: 1.2rem; letter-spacing: 3px; text-transform: uppercase; animation: pulse-glow 2s infinite;">Toucher pour ouvrir</div>
+        </div>
+
+        <div class="welcome-screen" id="welcome-content" style="display: none;">
           <p class="title-eyebrow reveal" data-delay="1">Une aventure secrète pour notre anniversaire</p>
           <p class="welcome-text reveal" data-delay="1" id="welcome-tw"></p>
 
@@ -4986,7 +4992,6 @@
             <div class="ornament-line"></div>
           </div>
 
-          <!-- Sceau cliquable centré au milieu de la page -->
           <div class="seal-interactive reveal" data-delay="2" onclick="startGame()" role="button" tabindex="0" title="Cliquer pour commencer l'aventure">
             <div class="seal-container">
               <img src="assets/unlock_seal.jpg" alt="Commencer le jeu" class="seal-img" onerror="this.src='assets/chateau%20de%20loin.jpg'">
@@ -4994,15 +4999,6 @@
             <p class="seal-prompt">Alors prête ?</p>
           </div>
 
-          <!-- Welcome rules en dessous (désactivées pour l'instant)
-          <ul class="welcome-rules reveal" data-delay="3">
-            <li>Résous chaque énigme pour débloquer la suivante et découvrir ses mystères</li>
-            <li>Le chrono démarre dès que tu appuies sur le sceau pour commencer</li>
-            <li>Des indices progressifs sont à ta disposition en cas de besoin</li>
-          </ul>
-          -->
-
-          <!-- Joyeux anniversaire tout en bas de la page avec cœur métal doré animé -->
           <div class="footer-anniversary reveal" data-delay="4">
             <div class="heart-metal-container">
               <svg class="heart-svg" viewBox="0 0 24 24" fill="url(#gold-metal-grad)" stroke="#ffe898" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
@@ -5022,13 +5018,25 @@
           </div>
         </div>
       `;
+        }
 
-            // Start typewriter animation for welcome text
-            const twEl = document.getElementById('welcome-tw');
-            if (twEl && typeof typewriter === 'function') {
-                typewriter(twEl, "Mon amour, pour notre anniversaire de rencontre, je t'ai préparé un Escape Game secret. \n Prends ton temps. \n Ou pas. \n Seule. Ou avec de l'aide. \n Fais comme tu veux. \n \n Ou comme tu peux...", 35, 400);
-            }
+        function startWelcomeSequence(overlay) {
+            // On lance la musique dès le clic (qui est maintenant autorisé par le navigateur)
             ChateauAudio.updateAmbience(0);
+
+            // Effet de fondu sur l'enveloppe
+            overlay.style.opacity = '0';
+
+            setTimeout(() => {
+                overlay.remove();
+                document.getElementById('welcome-content').style.display = 'block';
+
+                // Lancement de l'animation d'écriture une fois l'écran révélé
+                const twEl = document.getElementById('welcome-tw');
+                if (twEl && typeof typewriter === 'function') {
+                    typewriter(twEl, "Mon amour, pour notre anniversaire de rencontre, je t'ai préparé un Escape Game secret. \n Prends ton temps. \n Ou pas. \n Seule. Ou avec de l'aide. \n Fais comme tu veux. \n \n Ou comme tu peux...", 35, 400);
+                }
+            }, 800);
         }
 
         function startGame() {
