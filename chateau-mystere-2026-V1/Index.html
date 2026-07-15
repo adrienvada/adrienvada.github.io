@@ -6252,7 +6252,7 @@
                 input.disabled = true;
                 document.querySelectorAll('.char-input').forEach(inp => inp.disabled = true);
                 if (btn) btn.disabled = true;
-                setTimeout(() => handleSuccess(), 1000);
+                setTimeout(() => handleSuccess(), 600);
             } else {
                 triggerLockValidationFeedback(false, btn);
                 showFeedback('error', '❌ Attention, une erreur vient d\'être ajoutée ! Plus il y a d\'erreurs, plus cela complique une des étapes finales !');
@@ -6286,7 +6286,7 @@
                 input.disabled = true;
                 input.classList.add('correct');
                 if (btn) btn.disabled = true;
-                setTimeout(() => handleSuccess(), 1000);
+                setTimeout(() => handleSuccess(), 600);
             } else {
                 triggerLockValidationFeedback(false, btn);
                 showFeedback('error', '❌ Attention, une erreur vient d\'être ajoutée ! Plus il y a d\'erreurs, plus cela complique une des étapes finales !');
@@ -6352,7 +6352,7 @@
                 showFeedback('success', '✅ Bonne réponse ! Le code est correct.', false);
                 if (picker) picker.style.pointerEvents = 'none';
                 if (btn) btn.disabled = true;
-                setTimeout(() => handleSuccess(), 1000);
+                setTimeout(() => handleSuccess(), 600);
             } else {
                 triggerLockValidationFeedback(false, btn);
                 showFeedback('error', '❌ Le code est incorrect ! Une erreur vient d\'être ajoutée.');
@@ -6444,7 +6444,7 @@
                 showFeedback('success', '🎰 Trop forte, jackpot ! La combinaison de mes préférences est la bonne. 😍', false);
                 if (picker) picker.style.pointerEvents = 'none';
                 if (btn) btn.disabled = true;
-                setTimeout(() => handleSuccess(), 1000);
+                setTimeout(() => handleSuccess(), 600);
             } else {
                 triggerLockValidationFeedback(false, btn);
                 showFeedback('error', '❌ Combinaison incorrecte ! Une erreur vient d\'être ajoutée.');
@@ -7468,7 +7468,7 @@
                 showFeedback('success', '✅ Bonne réponse ! Bien joué.');
                 // Disable all
                 document.querySelectorAll('.btn-choice').forEach(b => { b.disabled = true; b.style.pointerEvents = 'none'; });
-                setTimeout(() => handleSuccess(), 1000);
+                setTimeout(() => handleSuccess(), 600);
             } else {
                 btn.classList.add('wrong');
                 showFeedback('error', '❌ Mauvais choix. Essaie encore.');
@@ -7645,9 +7645,7 @@
            SUCCESS SCREEN & ADVANCE
         ────────────────────────────────────────────────────────────── */
         function handleSuccess(fromButton = false) {
-            if (fromButton) {
-                ChateauAudio.playSuccess(true);
-            }
+
             if (window._currentEnigmaStartTime && (performance.now() - window._currentEnigmaStartTime) / 1000 < 300) {
                 ChateauAchievements.unlock('speed');
             }
@@ -7993,7 +7991,7 @@
         function advanceToNext(fromButton = false) {
             if (fromButton) {
                 if (window._successSoundPlayedForIndex !== currentIndex) {
-                    ChateauAudio.playSuccess(true);
+                    setTimeout(() => ChateauAudio.playSuccess(true), 250);
                 } else {
                     ChateauAudio.playClick(true);
                 }
