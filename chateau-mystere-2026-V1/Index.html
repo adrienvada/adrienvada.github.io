@@ -2799,6 +2799,42 @@
             margin-top: var(--gap-md);
         }
 
+        /* ───────────────────────── BOUTON PWA ───────────────────────── */
+        .btn-install-pwa {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 35px;
+            padding: 12px 28px;
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--clr-gold-bright);
+            background: rgba(201, 168, 76, 0.08);
+            border: 1px solid rgba(201, 168, 76, 0.4);
+            border-radius: var(--radius-xl);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .btn-install-pwa:hover {
+            background: rgba(201, 168, 76, 0.2);
+            border-color: var(--clr-gold-bright);
+            box-shadow: 0 0 25px rgba(242, 208, 107, 0.3);
+            transform: translateY(-2px);
+            color: #fff;
+        }
+
+        .btn-install-pwa.hidden {
+            display: none !important;
+        }
+
         .splash-content {
             text-align: center;
             animation: reveal-in 1s ease-out;
@@ -4149,6 +4185,16 @@
             <p class="splash-title">Ouverture du cadeau dans :</p>
             <div class="splash-timer" id="splash-timer">--h --m --s</div>
             <p class="splash-subtitle">Le 16 juillet 2026 à 22h22</p>
+
+            <!-- Bouton d'installation PWA -->
+            <button id="pwa-install-btn" class="btn-install-pwa hidden">
+                <span style="font-size: 1.2rem;">✨</span> Installer l'Expérience
+            </button>
+            <!-- Texte pour iOS -->
+            <p id="ios-install-hint" class="splash-subtitle hidden"
+                style="font-size: 0.75rem; margin-top: 15px; color: var(--text-muted);">
+                Sur iPhone : Touchez le bouton "Partager" ⇪ puis "Sur l'écran d'accueil"
+            </p>
 
             <!-- Bouton Debug (visible uniquement si DEBUG = true) -->
             <button id="splash-debug-btn" class="btn btn-primary"
@@ -11206,6 +11252,44 @@
            BOOT 🚀
         ────────────────────────────────────────────────────────────── */
         document.addEventListener('DOMContentLoaded', init);
+
+        /* ─────────────────────────────────────────────────────────────
+   PWA INSTALLATION LOGIC (Mis à jour pour iOS)
+────────────────────────────────────────────────────────────── */
+        let deferredPrompt;
+        const installBtn = document.getElementById('pwa-install-btn');
+        const iosHint = document.getElementById('ios-install-hint');
+
+        // 1. Détection iOS pour afficher l'astuce manuelle
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+        if (isIOS && !isStandalone && iosHint) {
+            iosHint.classList.remove('hidden');
+        }
+
+        // 2. Gestion pour Android / Chrome (Desktop)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (installBtn) installBtn.classList.remove('hidden');
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') installBtn.classList.add('hidden');
+                deferredPrompt = null;
+            });
+        }
+
+        window.addEventListener('appinstalled', () => {
+            if (installBtn) installBtn.classList.add('hidden');
+            if (iosHint) iosHint.classList.add('hidden');
+            deferredPrompt = null;
+        });
     </script>
 
 </body>
