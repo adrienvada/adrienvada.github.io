@@ -2717,6 +2717,62 @@
             margin-top: var(--gap-lg);
         }
 
+        /* ───────────────────────── SPLASH COUNTDOWN ───────────────────────── */
+        .splash-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-deep);
+            /* Reprend ton fond bleu nuit très profond */
+            z-index: 999999;
+            /* Toujours au-dessus du reste */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .splash-subtitle {
+            font-family: var(--font-ui);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: var(--gap-md);
+        }
+
+        .splash-content {
+            text-align: center;
+            animation: reveal-in 1s ease-out;
+        }
+
+        .splash-title {
+            font-family: var(--font-body);
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: var(--gap-md);
+            letter-spacing: 0.08em;
+        }
+
+        .splash-timer {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--clr-gold-bright);
+            text-shadow: 0 0 20px rgba(242, 208, 107, 0.4), 0 0 40px rgba(201, 168, 76, 0.2);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 3px;
+        }
+
+        .splash-hidden {
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+
         /* ────────────────────────── DATE PICKER ──────────────────────────── */
         .date-picker-group {
             display: flex;
@@ -4027,8 +4083,20 @@
 </head>
 
 <body>
-    <canvas id="stars-canvas"></canvas>
-    <div class="hero-bg" id="hero-bg"></div>
+    <!-- ═══════════════════════ PAGE DE GARDE (SPLASH COUNTDOWN) ═══════════════════════ -->
+    <div id="splash-countdown" class="splash-overlay">
+        <div class="splash-content">
+            <p class="splash-title">Ouverture du cadeau dans :</p>
+            <div class="splash-timer" id="splash-timer">--h --m --s</div>
+            <p class="splash-subtitle">Le 16 juillet 2026 à 22h22</p>
+
+            <!-- Bouton Debug (visible uniquement si DEBUG = true) -->
+            <button id="splash-debug-btn" class="btn btn-primary"
+                style="display: none; margin: 30px auto 0; font-size: 0.75rem; padding: 8px 16px; background: #ef4444; border-color: #ef4444; color: white;">
+                ⚡ Debug : Simuler l'ouverture
+            </button>
+        </div>
+    </div>
 
     <!-- ═══════════════════════ FIXED HEADER ═══════════════════════ -->
     <header id="header" class="hidden">
@@ -4178,6 +4246,76 @@
     <!-- ═══════════════════════ JAVASCRIPT ══════════════════════════ -->
     <script>
         'use strict';
+        /* ─────────────────────────────────────────────────────────────
+   SPLASH COUNTDOWN (Page de garde)
+────────────────────────────────────────────────────────────── */
+        // 16 juillet 2026 à 22h22 (Heure de Paris / CEST)
+        const CADEAU_DATE = new Date('2026-07-16T22:22:00+02:00').getTime();
+
+        function initSplashCountdown() {
+            const splash = document.getElementById('splash-countdown');
+            const timerEl = document.getElementById('splash-timer');
+            const debugBtn = document.getElementById('splash-debug-btn');
+            if (!splash || !timerEl) return;
+
+            let interval;
+
+            // Fonction pour faire disparaître l'écran proprement
+            function forceSplashClose() {
+                if (interval) clearInterval(interval);
+                splash.classList.add('splash-hidden');
+                setTimeout(() => {
+                    if (splash.parentNode) splash.remove();
+                }, 1500); // 1.5s correspond à la durée de la transition CSS
+            }
+
+            // Afficher le bouton si le mode DEBUG global de ton code est actif (?debug=true dans l'URL)
+            if (typeof DEBUG !== 'undefined' && DEBUG === true && debugBtn) {
+                debugBtn.style.display = 'block';
+                debugBtn.addEventListener('click', forceSplashClose);
+            }
+
+            function updateSplash() {
+                const now = Date.now();
+                const diff = CADEAU_DATE - now;
+
+                if (diff <= 0) {
+                    // Fin naturelle du timer
+                    forceSplashClose();
+                    return true;
+                }
+
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+
+                timerEl.textContent =
+                    String(h).padStart(2, '0') + 'h ' +
+                    String(m).padStart(2, '0') + 'm ' +
+                    String(s).padStart(2, '0') + 's';
+
+                return false;
+            }
+
+            // Premier calcul au chargement
+            const isPassed = updateSplash();
+
+            if (isPassed) {
+                // La date est déjà passée, on retire le splash instantanément
+                splash.style.display = 'none';
+                splash.remove();
+            } else {
+                // Déclenchement de la boucle
+                interval = setInterval(() => {
+                    if (updateSplash()) clearInterval(interval);
+                }, 1000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initSplashCountdown);
+
+        // Initialisation au chargement du DOM
+        document.addEventListener('DOMContentLoaded', initSplashCountdown);
 
         /* ─────────────────────────────────────────────────────────────
            DONNÉES DES ÉNIGMES
