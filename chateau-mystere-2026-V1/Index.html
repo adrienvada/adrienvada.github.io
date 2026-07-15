@@ -4103,7 +4103,7 @@
                         <span style="font-size: 1.2rem;">🎵</span> Musique d'ambiance
                     </span>
                     <span id="music-vol-display"
-                        style="color: var(--clr-gold-bright); font-weight: 700; font-family: var(--font-ui); background: rgba(201, 168, 76, 0.15); padding: 3px 10px; border-radius: 6px; font-size: 0.9rem;">30%</span>
+                        style="color: var(--clr-gold-bright); font-weight: 700; font-family: var(--font-ui); background: rgba(201, 168, 76, 0.15); padding: 3px 10px; border-radius: 6px; font-size: 0.9rem;">50%</span>
                 </div>
                 <input type="range" id="music-vol-slider" min="0" max="100" value="30"
                     oninput="ChateauAudio.setMusicVolume(this.value)"
@@ -4608,7 +4608,7 @@
         const ChateauAudio = {
             ctx: null,
             muted: localStorage.getItem('escapeGame_audioMuted') === 'true',
-            musicVolume: localStorage.getItem('escapeGame_musicVolume') !== null ? parseFloat(localStorage.getItem('escapeGame_musicVolume')) / 100 : 0.30,
+            musicVolume: localStorage.getItem('escapeGame_musicVolume') !== null ? parseFloat(localStorage.getItem('escapeGame_musicVolume')) / 100 : 0.50,
             sfxVolume: localStorage.getItem('escapeGame_sfxVolume') !== null ? parseFloat(localStorage.getItem('escapeGame_sfxVolume')) / 100 : 0.50,
             ambientAudio: null,
             currentLoopFile: null,
