@@ -2955,6 +2955,19 @@
             border-radius: 12px;
             display: inline-block;
             margin-top: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            user-select: none;
+        }
+
+        .jardin-resonance:hover {
+            background: rgba(201, 168, 76, 0.15);
+            box-shadow: 0 0 8px rgba(201, 168, 76, 0.3);
+            transform: scale(1.03);
+        }
+
+        .jardin-resonance:active {
+            transform: scale(0.98);
         }
 
         .jardin-currency {
@@ -4915,7 +4928,8 @@
             <button class="jardin-close-btn" onclick="closeJardinGame()">✕</button>
             <h1 class="jardin-title">Le Jardin des Souvenirs</h1>
             <div>
-                <span class="jardin-resonance" id="jardin-resonance-level">Niveau de Résonance : I</span>
+                <span class="jardin-resonance" id="jardin-resonance-level" onclick="openJardinResonanceModal()"
+                    title="Cliquez pour voir les détails du niveau de résonance actuel">Niveau de Résonance : I</span>
             </div>
             <div class="jardin-currency">
                 <span id="jardin-global-energy">0</span> ✨ Énergie Pure
@@ -5069,6 +5083,59 @@
 
         <div style="font-size: 0.7rem; color: #475569; text-align: center; margin-top: 10px;">
             Cultivez la nostalgie. Évoluez à l'infini.
+        </div>
+    </div>
+
+
+    <!-- ═══════════════════════ JARDIN RESONANCE DETAILS MODAL ═══════════════════════ -->
+    <div id="jardin-resonance-modal" onclick="if(event.target===this) closeJardinResonanceModal()"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 8, 22, 0.85); z-index: 2000000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 20px;">
+        <div class="enigma-card"
+            style="max-width: 550px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; position: relative; border: 1px solid var(--clr-gold); overflow: hidden; background: linear-gradient(135deg, #0f172a, #020617); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);">
+            <div class="lightbox-close-btn" onclick="closeJardinResonanceModal()" title="Fermer"
+                style="position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.5rem; color: var(--text-secondary); transition: color 0.2s;">
+                &times;</div>
+
+            <h2 id="jardin-res-modal-title"
+                style="color: var(--clr-gold-bright); font-size: 1.6rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; font-family: var(--font-display);">
+                🪴 Résonance Actuelle : <span id="jardin-res-modal-roman">I</span>
+            </h2>
+
+            <p
+                style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.4; margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 12px;">
+                La résonance du Jardin des Souvenirs augmente votre connexion avec les échos du passé. Chaque niveau
+                apporte de puissants bonus pour votre récolte et vos statistiques, mais intensifie la complexité et les
+                exigences de la culture.
+            </p>
+
+            <div style="flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-bottom: 15px;">
+                <!-- BONUSES SECTION -->
+                <h3
+                    style="color: #10b981; font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--font-display);">
+                    ✨ Bénéfices Actuels
+                </h3>
+                <ul id="jardin-res-bonuses-list"
+                    style="list-style: none; padding: 0; margin: 0 0 20px 0; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Filled dynamically -->
+                </ul>
+
+                <!-- PENALTIES SECTION -->
+                <h3
+                    style="color: #f43f5e; font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--font-display);">
+                    ⚠️ Contraintes & Résistances
+                </h3>
+                <ul id="jardin-res-penalties-list"
+                    style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Filled dynamically -->
+                </ul>
+            </div>
+
+            <div style="text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 15px;">
+                <button class="btn btn-primary" onclick="closeJardinResonanceModal()"
+                    style="font-family: var(--font-ui); font-weight: 600; padding: 8px 24px; border-radius: var(--radius-sm); border: 1px solid var(--clr-gold); background: transparent; color: var(--clr-gold); cursor: pointer; transition: all 0.2s;">
+                    Compris
+                </button>
+            </div>
         </div>
     </div>
 
@@ -5608,6 +5675,170 @@
                     totalEnergyEl.textContent = `${Math.floor(jardinState.energy).toLocaleString()} ✨`;
                 }
             }
+        }
+
+        function openJardinResonanceModal() {
+            const prestige = (typeof jardinState !== 'undefined' && jardinState.prestigeLevel) || 1;
+            const ROMAN_NUMERALS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+            const roman = ROMAN_NUMERALS[prestige] || "I";
+
+            const titleEl = document.getElementById('jardin-res-modal-roman');
+            if (titleEl) titleEl.textContent = roman;
+
+            const bonusesList = document.getElementById('jardin-res-bonuses-list');
+            const penaltiesList = document.getElementById('jardin-res-penalties-list');
+
+            if (bonusesList && penaltiesList) {
+                // Build bonuses items
+                let bonusesHTML = '';
+
+                // 1. PV Max Eva
+                bonusesHTML += `
+                    <li style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; align-items: start; gap: 10px;">
+                        <span style="font-size: 1.2rem; filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.5));">❤️</span>
+                        <div>
+                            <strong style="color: #34d399; font-size: 0.9rem; display: block; font-family: var(--font-display);">Énergie Vitale d'Eva</strong>
+                            <span style="color: #e2e8f0; font-size: 0.85rem;">Octroie <strong>+${prestige} PV Max</strong> à Eva dans l'aventure principale.</span>
+                        </div>
+                    </li>
+                `;
+
+                // 2. Yield multiplier
+                const yieldPct = (prestige - 1) * 50;
+                const yieldMult = (1 + (prestige - 1) * 0.5).toFixed(1);
+                bonusesHTML += `
+                    <li style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; align-items: start; gap: 10px;">
+                        <span style="font-size: 1.2rem; filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.5));">✨</span>
+                        <div>
+                            <strong style="color: #34d399; font-size: 0.9rem; display: block; font-family: var(--font-display);">Rendement de la Récolte</strong>
+                            <span style="color: #e2e8f0; font-size: 0.85rem;">Multiplie les fragments de souvenirs récoltés par <strong>x${yieldMult}</strong> (+${yieldPct}%).</span>
+                        </div>
+                    </li>
+                `;
+
+                // 3. Missions reward
+                bonusesHTML += `
+                    <li style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; align-items: start; gap: 10px;">
+                        <span style="font-size: 1.2rem; filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.5));">📋</span>
+                        <div>
+                            <strong style="color: #34d399; font-size: 0.9rem; display: block; font-family: var(--font-display);">Récompenses de Mission</strong>
+                            <span style="color: #e2e8f0; font-size: 0.85rem;">Multiplie l'énergie pure gagnée lors des missions de nuit par <strong>x${prestige}</strong> (Récompenses actuelles : ${50 * prestige} ou ${100 * prestige} ✨).</span>
+                        </div>
+                    </li>
+                `;
+
+                bonusesList.innerHTML = bonusesHTML;
+
+                // Build penalties items
+                let penaltiesHTML = '';
+
+                // 1. Shop Cost Multiplier
+                const costPct = Math.round((prestige - 1) * 15);
+                penaltiesHTML += `
+                    <li style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; align-items: start; gap: 10px;">
+                        <span style="font-size: 1.2rem; filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.5));">🪙</span>
+                        <div>
+                            <strong style="color: #fb7185; font-size: 0.9rem; display: block; font-family: var(--font-display);">Inflation du Magasin</strong>
+                            <span style="color: #e2e8f0; font-size: 0.85rem;">Les coûts du magasin (pots, graines, auto-arrosage, faux) augmentent de <strong>+${costPct}%</strong>.</span>
+                        </div>
+                    </li>
+                `;
+
+                // 2. Day Duration
+                const dayLength = (prestige >= 5) ? '20 secondes' : '30 secondes';
+                const dayStatus = (prestige >= 5) ? '<span style="color: #fb7185; font-weight: bold;">(Actif)</span>' : '<span style="color: #64748b;">(À partir du niveau V)</span>';
+                penaltiesHTML += `
+                    <li style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; align-items: start; gap: 10px;">
+                        <span style="font-size: 1.2rem; filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.5));">⏱️</span>
+                        <div>
+                            <strong style="color: #fb7185; font-size: 0.9rem; display: block; font-family: var(--font-display);">Durée du Jour</strong>
+                            <span style="color: #e2e8f0; font-size: 0.85rem;">Le temps imparti pour s'occuper du jardin est de <strong>${dayLength}</strong>. ${dayStatus}</span>
+                        </div>
+                    </li>
+                `;
+
+                // 3. Pest squish reward
+                const squishPct = Math.round((prestige - 1) * 5);
+                penaltiesHTML += `
+                    <li style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; align-items: start; gap: 10px;">
+                        <span style="font-size: 1.2rem; filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.5));">🐛</span>
+                        <div>
+                            <strong style="color: #fb7185; font-size: 0.9rem; display: block; font-family: var(--font-display);">Rendement des Nuisibles</strong>
+                            <span style="color: #e2e8f0; font-size: 0.85rem;">Les fragments gagnés en écrasant les insectes sont réduits de <strong>-${squishPct}%</strong> (Gain actuel : ${Math.max(1, Math.round(100 * (1.0 - (prestige - 1) * 0.05)))}%).</span>
+                        </div>
+                    </li>
+                `;
+
+                // 4. Pest spawn chance
+                const spawnChance = Math.round(15 + (prestige - 1) * 2);
+                penaltiesHTML += `
+                    <li style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; align-items: start; gap: 10px;">
+                        <span style="font-size: 1.2rem; filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.5));">🕷️</span>
+                        <div>
+                            <strong style="color: #fb7185; font-size: 0.9rem; display: block; font-family: var(--font-display);">Invasions Parasitaires</strong>
+                            <span style="color: #e2e8f0; font-size: 0.85rem;">Chaque plantation a <strong>${spawnChance}%</strong> (+2% par niveau) de chance d'être envahie par un insecte dès <strong>${Math.max(5, 25 - (prestige - 1) * 2)}%</strong> de croissance.</span>
+                        </div>
+                    </li>
+                `;
+
+                // 5. Water hold duration
+                const holdTime = 300 + (prestige - 1) * 30;
+                penaltiesHTML += `
+                    <li style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; align-items: start; gap: 10px;">
+                        <span style="font-size: 1.2rem; filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.5));">💧</span>
+                        <div>
+                            <strong style="color: #fb7185; font-size: 0.9rem; display: block; font-family: var(--font-display);">Résistance à l'Arrosage</strong>
+                            <span style="color: #e2e8f0; font-size: 0.85rem;">Nécessite de maintenir le clic pendant <strong>${holdTime} ms</strong> (+30ms par niveau) pour arroser manuellement chaque pot.</span>
+                        </div>
+                    </li>
+                `;
+
+                // 6. Freshness decay
+                const decayPct = Math.round((2.0 - (prestige - 1) * 0.05) * 100);
+                penaltiesHTML += `
+                    <li style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; align-items: start; gap: 10px;">
+                        <span style="font-size: 1.2rem; filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.5));">🥀</span>
+                        <div>
+                            <strong style="color: #fb7185; font-size: 0.9rem; display: block; font-family: var(--font-display);">Flétrissement des Récoltes</strong>
+                            <span style="color: #e2e8f0; font-size: 0.85rem;">Le temps de maintien avant que la plante ne fane à maturité est réduit à <strong>${decayPct}%</strong> du temps de pousse standard.</span>
+                        </div>
+                    </li>
+                `;
+
+                // 7. Exhausted pots (VII+)
+                const arideStatus = (prestige >= 7) ? '<span style="color: #fb7185; font-weight: bold;">(Actif)</span>' : '<span style="color: #64748b;">(À partir du niveau VII)</span>';
+                penaltiesHTML += `
+                    <li style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; align-items: start; gap: 10px;">
+                        <span style="font-size: 1.2rem; filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.5));">🍂</span>
+                        <div>
+                            <strong style="color: #fb7185; font-size: 0.9rem; display: block; font-family: var(--font-display);">Épuisement de la Terre</strong>
+                            <span style="color: #e2e8f0; font-size: 0.85rem;">Récolter les graines de Souvenir ou Nacre laisse le pot dans l'état <strong>aride</strong> jusqu'au lendemain. ${arideStatus}</span>
+                        </div>
+                    </li>
+                `;
+
+                // 8. Weather instability (IX+)
+                const weatherStatus = (prestige >= 9) ? '<span style="color: #fb7185; font-weight: bold;">(Actif)</span>' : '<span style="color: #64748b;">(À partir du niveau IX)</span>';
+                penaltiesHTML += `
+                    <li style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; align-items: start; gap: 10px;">
+                        <span style="font-size: 1.2rem; filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.5));">🌪️</span>
+                        <div>
+                            <strong style="color: #fb7185; font-size: 0.9rem; display: block; font-family: var(--font-display);">Instabilité Temporelle</strong>
+                            <span style="color: #e2e8f0; font-size: 0.85rem;">À 10 secondes de la fin du jour, la météo change de manière imprévisible. ${weatherStatus}</span>
+                        </div>
+                    </li>
+                `;
+
+                penaltiesList.innerHTML = penaltiesHTML;
+            }
+
+            const modal = document.getElementById('jardin-resonance-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeJardinResonanceModal() {
+            const modal = document.getElementById('jardin-resonance-modal');
+            if (modal) modal.style.display = 'none';
         }
 
         function jardinUpdateGlobalUI() {
