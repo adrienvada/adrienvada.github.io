@@ -2817,6 +2817,562 @@
             margin-top: var(--gap-md);
         }
 
+        /* ───────────────────────── JARDIN DES SOUVENIRS MINI-GAME ───────────────────────── */
+        .jardin-teaser-trigger {
+            margin: 25px auto 0;
+            background: rgba(15, 16, 53, 0.6);
+            border: 1px solid var(--clr-gold);
+            color: var(--clr-gold-bright);
+            padding: 10px 22px;
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(201, 168, 76, 0.1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .jardin-teaser-trigger:hover {
+            background: var(--clr-gold);
+            color: var(--bg-deep);
+            box-shadow: 0 0 15px rgba(201, 168, 76, 0.4);
+            transform: scale(1.05);
+        }
+
+        .jardin-game-modal {
+            position: fixed;
+            inset: 0;
+            background: #0a0f1d;
+            z-index: 1000000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            overflow-y: auto;
+            color: #e2e8f0;
+            font-family: var(--font-ui);
+        }
+
+        .jardin-game-modal.active {
+            display: flex;
+        }
+
+        .jardin-header {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+            padding-bottom: 15px;
+            position: relative;
+        }
+
+        .jardin-close-btn {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .jardin-title {
+            font-family: var(--font-display);
+            color: var(--clr-gold-bright);
+            font-size: 1.6rem;
+            text-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
+        }
+
+        .jardin-resonance {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            color: var(--clr-gold);
+            border: 1px solid var(--clr-gold);
+            padding: 2px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .jardin-currency {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 10px;
+            font-family: var(--font-display);
+        }
+
+        .jardin-container {
+            width: 100%;
+            max-width: 500px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .jardin-screen {
+            width: 100%;
+            display: none;
+            flex-direction: column;
+            animation: jardinFadeIn 0.3s ease-out forwards;
+        }
+
+        .jardin-screen.active {
+            display: flex;
+        }
+
+        @keyframes jardinFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .jardin-timer-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+            border: 1px solid rgba(201, 168, 76, 0.2);
+        }
+
+        .jardin-timer-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--clr-gold-dim), var(--clr-gold));
+            box-shadow: 0 0 8px var(--clr-gold);
+            transition: width 0.1s linear;
+        }
+
+        .jardin-stats {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            background: rgba(20, 27, 45, 0.6);
+            border: 1px solid rgba(201, 168, 76, 0.15);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .jardin-stat-box {
+            text-align: center;
+        }
+
+        .jardin-stat-label {
+            font-size: 0.7rem;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .jardin-stat-val {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .jardin-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+        }
+
+        .jardin-pot {
+            aspect-ratio: 1;
+            background: rgba(20, 27, 45, 0.8);
+            border: 1px solid rgba(201, 168, 76, 0.25);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+        }
+
+        .jardin-pot:hover {
+            border-color: var(--clr-gold);
+            box-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .jardin-pot:active {
+            transform: scale(0.95);
+        }
+
+        .jardin-pot-emoji {
+            font-size: 2.8rem;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+            transition: transform 0.2s ease;
+        }
+
+        .jardin-pot.grow .jardin-pot-emoji {
+            animation: jardinSway 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes jardinSway {
+            0% {
+                transform: rotate(-5deg) scale(1);
+            }
+
+            100% {
+                transform: rotate(5deg) scale(1.05);
+            }
+        }
+
+        .jardin-pot-status {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--clr-gold);
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        /* Night Screen Card & Shop */
+        .jardin-night-card {
+            background: rgba(20, 27, 45, 0.8);
+            border: 1px solid rgba(201, 168, 76, 0.25);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(201, 168, 76, 0.05);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            animation: jardinFadeIn 0.4s ease-out;
+        }
+
+        .jardin-bilan-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .jardin-shop {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .jardin-shop-title {
+            font-family: var(--font-display);
+            color: var(--clr-gold-bright);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            border-left: 3px solid var(--clr-gold);
+            padding-left: 8px;
+        }
+
+        .jardin-shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 15, 29, 0.6);
+            border: 1px solid rgba(201, 168, 76, 0.15);
+            border-radius: 8px;
+            padding: 10px 14px;
+            transition: all 0.2s ease;
+        }
+
+        .jardin-shop-item:hover {
+            border-color: rgba(201, 168, 76, 0.4);
+            background: rgba(15, 22, 42, 0.8);
+        }
+
+        .jardin-shop-btn {
+            background: var(--clr-gold-dim);
+            border: 1px solid var(--clr-gold);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-family: var(--font-ui);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .jardin-shop-btn:hover:not(:disabled) {
+            background: var(--clr-gold);
+            color: #0a0f1d;
+            box-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
+        }
+
+        .jardin-shop-btn:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #475569;
+            cursor: not-allowed;
+        }
+
+        .jardin-action-btn {
+            margin-top: 15px;
+            background: linear-gradient(135deg, var(--clr-gold), var(--clr-gold-bright));
+            color: #0a0f1d;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-weight: bold;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(201, 168, 76, 0.2);
+            width: 100%;
+        }
+
+        .jardin-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(242, 208, 107, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .jardin-action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Pot Progress Bar styling */
+        .jardin-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            width: 0%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            box-shadow: 0 0 6px #34d399;
+            transition: width 0.1s linear;
+        }
+
+        /* Particle Explosion styles */
+        .jardin-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1100000;
+            font-size: 1.5rem;
+            animation: particleFly 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+
+        @keyframes particleFly {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.4);
+                opacity: 0;
+            }
+        }
+
+        /* Floating Text styles */
+        .jardin-float {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1100000;
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.6rem;
+            color: var(--clr-gold-bright);
+            text-shadow: 0 0 8px rgba(242, 208, 107, 0.6), 0 0 15px rgba(0, 0, 0, 0.9);
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translate(-50%, -50%) scale(0.6);
+                opacity: 0;
+            }
+
+            15% {
+                transform: translate(-50%, -100%) scale(1.1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -200%) scale(0.8);
+                opacity: 0;
+            }
+        }
+
+        /* Weather banner */
+        .jardin-weather-banner {
+            width: 100%;
+            background: rgba(20, 27, 45, 0.7);
+            border: 1px dashed var(--clr-gold-dim);
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+        }
+
+        .jardin-weather-banner.averse {
+            border-color: #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);
+        }
+
+        .jardin-weather-banner.soleil {
+            border-color: var(--clr-gold-bright);
+            box-shadow: 0 0 10px rgba(242, 208, 107, 0.15);
+        }
+
+        .jardin-weather-banner.terreau {
+            border-color: #854d0e;
+            box-shadow: 0 0 10px rgba(133, 77, 14, 0.15);
+        }
+
+        /* Shake animation for Pest */
+        .pest-shake {
+            animation: shake 0.4s infinite;
+            border-color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.05) !important;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.2) !important;
+        }
+
+        @keyframes shake {
+            0% {
+                transform: translate(1px, 1px) rotate(0deg);
+            }
+
+            10% {
+                transform: translate(-1px, -2px) rotate(-1deg);
+            }
+
+            20% {
+                transform: translate(-3px, 0px) rotate(1deg);
+            }
+
+            30% {
+                transform: translate(0px, 2px) rotate(0deg);
+            }
+
+            40% {
+                transform: translate(1px, -1px) rotate(1deg);
+            }
+
+            50% {
+                transform: translate(-1px, 2px) rotate(-1deg);
+            }
+
+            60% {
+                transform: translate(-3px, 1px) rotate(0deg);
+            }
+
+            70% {
+                transform: translate(2px, 1px) rotate(-1deg);
+            }
+
+            80% {
+                transform: translate(-1px, -1px) rotate(1deg);
+            }
+
+            90% {
+                transform: translate(2px, 2px) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(1px, -2px) rotate(-1deg);
+            }
+        }
+
+        /* Rare plant visual glow */
+        .rare-plant {
+            border-color: var(--clr-gold-bright) !important;
+            box-shadow: 0 0 15px rgba(242, 208, 107, 0.4), inset 0 0 10px rgba(242, 208, 107, 0.2) !important;
+            background: linear-gradient(135deg, rgba(20, 27, 45, 0.8), rgba(201, 168, 76, 0.05)) !important;
+            position: relative;
+        }
+
+        .rare-plant::before {
+            content: '✨';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            font-size: 0.8rem;
+            animation: blink 1s infinite alternate;
+        }
+
+        @keyframes blink {
+            from {
+                opacity: 0.3;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         /* ───────────────────────── BOUTON FULLSCREEN DISCRET ───────────────────────── */
         #fullscreen-toggle-btn {
             position: fixed;
@@ -4208,6 +4764,10 @@
             <div class="splash-timer" id="splash-timer">--h --m --s</div>
             <p class="splash-subtitle">Le 16 juillet 2026 à 22h22</p>
 
+            <!-- Teaser for Clicker game -->
+            <button class="jardin-teaser-trigger" onclick="openJardinGame()">Cultiver le Jardin des Souvenirs
+                🪴</button>
+
             <!-- Bouton Debug (visible uniquement si DEBUG = true) -->
             <button id="splash-debug-btn" class="btn btn-primary"
                 style="display: none; margin: 30px auto 0; font-size: 0.75rem; padding: 8px 16px; background: #ef4444; border-color: #ef4444; color: white;">
@@ -4221,6 +4781,113 @@
             </button>
         </div>
     </div>
+
+    <!-- ═══════════════════════ JARDIN DES SOUVENIRS MINI-GAME MODAL ═══════════════════════ -->
+    <div id="jardin-modal" class="jardin-game-modal">
+        <div class="jardin-header">
+            <button class="jardin-close-btn" onclick="closeJardinGame()">✕</button>
+            <h1 class="jardin-title">Le Jardin des Souvenirs</h1>
+            <div>
+                <span class="jardin-resonance" id="jardin-resonance-level">Niveau de Résonance : I</span>
+            </div>
+            <div class="jardin-currency">
+                <span id="jardin-global-energy">0</span> ✨ Énergie Pure
+            </div>
+        </div>
+
+        <div class="jardin-container">
+            <!-- DAY SCREEN -->
+            <div class="jardin-screen active" id="jardin-day-screen">
+                <div style="width: 100%; text-align: center;">
+                    <div style="font-family: var(--font-display); font-size: 1.1rem; color: var(--clr-gold);">Journée
+                        active : <span id="jardin-timer-val">30.0</span>s</div>
+                    <div class="jardin-timer-bar-bg">
+                        <div class="jardin-timer-bar-fill" id="jardin-timer-bar"></div>
+                    </div>
+                </div>
+
+                <div class="jardin-weather-banner" id="jardin-weather-banner" style="margin-top: 12px;">
+                    <span id="jardin-weather-icon">🌧️</span>
+                    <span id="jardin-weather-text">Météo : Chargement...</span>
+                </div>
+
+                <div class="jardin-stats">
+                    <div class="jardin-stat-box">
+                        <div class="jardin-stat-label">Fragments Récoltés</div>
+                        <div class="jardin-stat-val" id="jardin-day-fragments">0</div>
+                    </div>
+                    <div class="jardin-stat-box">
+                        <div class="jardin-stat-label">Graines Actuelles</div>
+                        <div class="jardin-stat-val" id="jardin-stat-seed-type">🌱 Simple</div>
+                    </div>
+                </div>
+
+                <div class="jardin-grid" id="jardin-grid">
+                    <!-- dynamic pots -->
+                </div>
+            </div>
+
+            <!-- NIGHT SCREEN -->
+            <div class="jardin-screen" id="jardin-night-screen">
+                <div class="jardin-night-card">
+                    <div
+                        style="font-family: var(--font-display); color: var(--clr-gold-bright); font-size: 1.4rem; margin-bottom: 15px;">
+                        🌙 La Nuit s'installe...</div>
+
+                    <div class="jardin-bilan-row">
+                        <span style="color: #94a3b8;">Fragments accumulés ce jour</span>
+                        <span style="font-weight: 600;" id="jardin-bilan-fragments">+0</span>
+                    </div>
+                    <div class="jardin-bilan-row">
+                        <span style="color: #94a3b8;">Énergie Pure totale</span>
+                        <span style="font-weight: 600; color: var(--clr-gold-bright);" id="jardin-bilan-total-energy">0
+                            ✨</span>
+                    </div>
+
+                    <div class="jardin-shop">
+                        <div class="jardin-shop-title">Boutique Mystique</div>
+
+                        <div class="jardin-shop-item">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Agrandir le Jardin 🪴</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-pots">Ajouter un pot
+                                    (Max: 9)</div>
+                            </div>
+                            <button class="jardin-shop-btn" id="jardin-btn-buy-pot" onclick="jardinBuyPot()">10
+                                ✨</button>
+                        </div>
+
+                        <div class="jardin-shop-item">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Qualité des Graines 🍒</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-seeds">Graine Lunaire
+                                    (Mult x5)</div>
+                            </div>
+                            <button class="jardin-shop-btn" id="jardin-btn-buy-seed" onclick="jardinUpgradeSeeds()">50
+                                ✨</button>
+                        </div>
+
+                        <div class="jardin-shop-item">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Auto-Arrosage 💧</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-water">Arrosage
+                                    automatique</div>
+                            </div>
+                            <button class="jardin-shop-btn" id="jardin-btn-buy-water" onclick="jardinBuyAutoWater()">250
+                                ✨</button>
+                        </div>
+                    </div>
+
+                    <button class="jardin-action-btn" onclick="jardinStartDay()">Lancer le Jour</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="font-size: 0.7rem; color: #475569; text-align: center; margin-top: 10px;">
+            Cultivez la nostalgie. Évoluez à l'infini.
+        </div>
+    </div>
+
 
     <!-- Bouton Plein Écran Discret (disponible tout au long du jeu) -->
     <button id="fullscreen-toggle-btn" class="hidden" onclick="ChateauFullscreen.toggle()"
@@ -4505,6 +5172,625 @@
         }
 
         document.addEventListener('DOMContentLoaded', initSplashCountdown);
+
+        /* ─────────────────────────────────────────────────────────────
+           JARDIN DES SOUVENIRS - GAME MOTOR
+        ────────────────────────────────────────────────────────────── */
+        const JARDIN_WEATHER_TYPES = [
+            { id: 'averse', name: 'Averse', emoji: '🌧️', text: 'Arrosage automatique aujourd\'hui !' },
+            { id: 'soleil', name: 'Soleil', emoji: '☀️', text: 'Pousse 2x plus rapide, rendement -20%.' },
+            { id: 'terreau', name: 'Terreau', emoji: '🪱', text: '50% de chance de doubler vos gains à la récolte.' }
+        ];
+        let currentDailyWeather = null;
+
+        const jardinState = {
+            energy: 0,
+            fragmentsToday: 0,
+            potsCount: 3,
+            seedLevel: 1, // 1: Simple, 2: Lunaire, 3: Nacre, 4: Souvenir
+            autoWater: false,
+            pots: [],
+            active: false
+        };
+
+        const JARDIN_SEEDS = [
+            { name: "Simple 🌱", emoji: "🌱", grownEmoji: "🌿", mult: 1, duration: 1500 },
+            { name: "Lunaire 🌿", emoji: "🌿", grownEmoji: "🌸", mult: 5, duration: 1800 },
+            { name: "Nacre 🌸", emoji: "🌸", grownEmoji: "⭐", mult: 25, duration: 2200 },
+            { name: "Souvenir 🍒", emoji: "🍒", grownEmoji: "✨", mult: 125, duration: 2500 }
+        ];
+
+        window.hidden_skin_level = 1;
+
+        // Synth audio context
+        let jardinAudioCtx = null;
+        function playJardinSound(type) {
+            try {
+                if (!jardinAudioCtx) {
+                    jardinAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (jardinAudioCtx.state === 'suspended') {
+                    jardinAudioCtx.resume();
+                }
+                const osc = jardinAudioCtx.createOscillator();
+                const gain = jardinAudioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(jardinAudioCtx.destination);
+
+                if (type === 'plant') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(220, jardinAudioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(440, jardinAudioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.15, jardinAudioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, jardinAudioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(jardinAudioCtx.currentTime + 0.15);
+                } else if (type === 'water') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, jardinAudioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(900, jardinAudioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.1, jardinAudioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, jardinAudioCtx.currentTime + 0.2);
+                    osc.start();
+                    osc.stop(jardinAudioCtx.currentTime + 0.2);
+                } else if (type === 'harvest') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, jardinAudioCtx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, jardinAudioCtx.currentTime + 0.08);
+                    osc.frequency.setValueAtTime(783.99, jardinAudioCtx.currentTime + 0.16);
+                    osc.frequency.exponentialRampToValueAtTime(1200, jardinAudioCtx.currentTime + 0.35);
+                    gain.gain.setValueAtTime(0.15, jardinAudioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, jardinAudioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(jardinAudioCtx.currentTime + 0.4);
+                } else if (type === 'upgrade') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, jardinAudioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(600, jardinAudioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.08, jardinAudioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, jardinAudioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(jardinAudioCtx.currentTime + 0.4);
+                } else if (type === 'squish') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, jardinAudioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(40, jardinAudioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.2, jardinAudioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, jardinAudioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(jardinAudioCtx.currentTime + 0.15);
+                } else if (type === 'jackpot') {
+                    const now = jardinAudioCtx.currentTime;
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                    osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+                    osc.frequency.exponentialRampToValueAtTime(1500, now + 0.45);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.setValueAtTime(0.2, now + 0.24);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start();
+                    osc.stop(now + 0.5);
+                }
+            } catch (e) { }
+        }
+
+        function openJardinGame() {
+            const modal = document.getElementById('jardin-modal');
+            modal.classList.add('active');
+            jardinState.active = true;
+
+            // Load State
+            const saved = localStorage.getItem('jardin_souvenirs_state');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    jardinState.energy = parsed.energy || 0;
+                    jardinState.potsCount = parsed.potsCount || 3;
+                    jardinState.seedLevel = parsed.seedLevel || 1;
+                    jardinState.autoWater = parsed.autoWater || false;
+                } catch (e) { }
+            }
+            jardinUpdateGlobalUI();
+            jardinStartDay();
+        }
+
+        function closeJardinGame() {
+            const modal = document.getElementById('jardin-modal');
+            modal.classList.remove('active');
+            jardinState.active = false;
+            clearInterval(jardinTimerInterval);
+            jardinState.pots.forEach(p => {
+                if (p.timer) cancelAnimationFrame(p.timer);
+            });
+        }
+
+        function jardinUpdateGlobalUI() {
+            const energyEl = document.getElementById('jardin-global-energy');
+            if (energyEl) energyEl.textContent = Math.floor(jardinState.energy).toLocaleString();
+
+            const badge = document.getElementById('jardin-resonance-level');
+            let skinLevel = 1;
+
+            if (jardinState.energy >= 5000) {
+                skinLevel = 3;
+                if (badge) {
+                    badge.textContent = "Niveau de Résonance : III";
+                    badge.style.color = "#ff6b81";
+                    badge.style.borderColor = "#ff6b81";
+                }
+            } else if (jardinState.energy >= 500) {
+                skinLevel = 2;
+                if (badge) {
+                    badge.textContent = "Niveau de Résonance : II";
+                    badge.style.color = "#3b82f6";
+                    badge.style.borderColor = "#3b82f6";
+                }
+            } else {
+                skinLevel = 1;
+                if (badge) {
+                    badge.textContent = "Niveau de Résonance : I";
+                    badge.style.color = "var(--clr-gold-bright)";
+                    badge.style.borderColor = "var(--clr-gold)";
+                }
+            }
+            window.hidden_skin_level = skinLevel;
+        }
+
+        let jardinTimerInterval = null;
+        let jardinTimeLeft = 30.0;
+
+        function jardinStartDay() {
+            // Pick random weather
+            const weatherIndex = Math.floor(Math.random() * JARDIN_WEATHER_TYPES.length);
+            currentDailyWeather = JARDIN_WEATHER_TYPES[weatherIndex];
+
+            const banner = document.getElementById('jardin-weather-banner');
+            if (banner) {
+                banner.className = `jardin-weather-banner ${currentDailyWeather.id}`;
+                document.getElementById('jardin-weather-icon').textContent = currentDailyWeather.emoji;
+                document.getElementById('jardin-weather-text').textContent = `Météo : ${currentDailyWeather.name} (${currentDailyWeather.text})`;
+            }
+
+            jardinTimeLeft = 30.0;
+            jardinState.fragmentsToday = 0;
+            document.getElementById('jardin-day-fragments').textContent = "0";
+
+            const currentSeed = JARDIN_SEEDS[jardinState.seedLevel - 1];
+            document.getElementById('jardin-stat-seed-type').textContent = currentSeed.name;
+
+            document.getElementById('jardin-night-screen').classList.remove('active');
+            document.getElementById('jardin-day-screen').classList.add('active');
+
+            jardinSetupGrid();
+
+            clearInterval(jardinTimerInterval);
+            jardinTimerInterval = setInterval(() => {
+                jardinTimeLeft -= 0.1;
+                if (jardinTimeLeft <= 0) {
+                    jardinTimeLeft = 0;
+                    jardinEndDay();
+                }
+                document.getElementById('jardin-timer-val').textContent = jardinTimeLeft.toFixed(1);
+                document.getElementById('jardin-timer-bar').style.width = `${(jardinTimeLeft / 30) * 100}%`;
+            }, 100);
+        }
+
+        function jardinEndDay() {
+            clearInterval(jardinTimerInterval);
+
+            // Cancel any pending animations
+            jardinState.pots.forEach(p => {
+                if (p.timer) cancelAnimationFrame(p.timer);
+            });
+
+            // Commit fragments to Energy Pure
+            jardinState.energy += jardinState.fragmentsToday;
+
+            // Save to localStorage strictly at night phase
+            localStorage.setItem('jardin_souvenirs_state', JSON.stringify({
+                energy: jardinState.energy,
+                potsCount: jardinState.potsCount,
+                seedLevel: jardinState.seedLevel,
+                autoWater: jardinState.autoWater
+            }));
+
+            jardinUpdateGlobalUI();
+
+            document.getElementById('jardin-bilan-fragments').textContent = `+${jardinState.fragmentsToday.toLocaleString()}`;
+            document.getElementById('jardin-bilan-total-energy').textContent = `${Math.floor(jardinState.energy).toLocaleString()} ✨`;
+
+            jardinUpdateShopUI();
+
+            document.getElementById('jardin-day-screen').classList.remove('active');
+            document.getElementById('jardin-night-screen').classList.add('active');
+        }
+
+        function jardinSetupGrid() {
+            const grid = document.getElementById('jardin-grid');
+            grid.innerHTML = '';
+            jardinState.pots = [];
+
+            for (let i = 0; i < jardinState.potsCount; i++) {
+                const pot = {
+                    id: i,
+                    state: 'empty',
+                    progress: 0,
+                    timer: null,
+                    isRare: false,
+                    hasPest: false,
+                    pestSpawned: false
+                };
+                jardinState.pots.push(pot);
+
+                const card = document.createElement('div');
+                card.className = 'jardin-pot';
+                card.id = `jardin-pot-${i}`;
+                card.innerHTML = `
+                    <div class="jardin-pot-emoji">🕳️</div>
+                    <div class="jardin-pot-status">Planter</div>
+                    <div class="jardin-progress-bar"></div>
+                `;
+
+                card.addEventListener('click', (e) => jardinHandlePotClick(i, card, e));
+                grid.appendChild(card);
+            }
+        }
+
+        function getCoords(e, card) {
+            let x = e ? e.clientX : 0;
+            let y = e ? e.clientY : 0;
+            if (!x || !y) {
+                const rect = card.getBoundingClientRect();
+                x = rect.left + rect.width / 2;
+                y = rect.top + rect.height / 2;
+            }
+            return { x, y };
+        }
+
+        function jardinHandlePotClick(index, card, event) {
+            const pot = jardinState.pots[index];
+            const seed = JARDIN_SEEDS[jardinState.seedLevel - 1];
+            const coords = getCoords(event, card);
+
+            if (pot.state === 'empty') {
+                pot.state = 'planted';
+                pot.isRare = Math.random() < 0.03; // 3% mutation chance (Jackpot)
+                playJardinSound('plant');
+                jardinUpdatePotUI(pot, card);
+
+                const isAverse = currentDailyWeather && currentDailyWeather.id === 'averse';
+                if (jardinState.autoWater || isAverse) {
+                    setTimeout(() => {
+                        if (pot.state === 'planted') {
+                            jardinWaterPot(pot, card, seed);
+                        }
+                    }, 300);
+                }
+            } else if (pot.state === 'planted') {
+                jardinWaterPot(pot, card, seed);
+            } else if (pot.state === 'pest') {
+                // Squish insect!
+                playJardinSound('squish');
+                card.classList.remove('pest-shake');
+
+                const bonusAmt = Math.max(5, Math.round(seed.mult * 5));
+                jardinState.fragmentsToday += bonusAmt;
+                document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
+
+                jardinCreateExplosion(coords.x, coords.y, '🐛');
+                jardinCreateFloatingText(coords.x, coords.y, `+${bonusAmt} 🐛`);
+
+                // Resume growing
+                jardinWaterPot(pot, card, seed, pot.progress);
+            } else if (pot.state === 'ready') {
+                pot.state = 'empty';
+                pot.progress = 0;
+
+                let yieldAmt = seed.mult;
+
+                // Sunshine weather: -20% yield
+                if (currentDailyWeather && currentDailyWeather.id === 'soleil') {
+                    yieldAmt = Math.max(1, Math.round(yieldAmt * 0.8));
+                }
+
+                // Soil weather: 50% chance to double yield
+                let doubleYield = false;
+                if (currentDailyWeather && currentDailyWeather.id === 'terreau') {
+                    if (Math.random() < 0.5) {
+                        yieldAmt *= 2;
+                        doubleYield = true;
+                    }
+                }
+
+                // Jackpot: Rare plant x50 yield
+                const isRare = pot.isRare;
+                if (isRare) {
+                    yieldAmt *= 50;
+                }
+
+                jardinState.fragmentsToday += yieldAmt;
+                document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
+
+                if (isRare) {
+                    playJardinSound('jackpot');
+                    jardinCreateMassiveExplosion(coords.x, coords.y, seed.grownEmoji);
+                    jardinCreateFloatingText(coords.x, coords.y, `+${yieldAmt} (JACKPOT ! ✨)`);
+                } else {
+                    playJardinSound('harvest');
+                    jardinCreateExplosion(coords.x, coords.y, seed.grownEmoji);
+
+                    let harvestText = `+${yieldAmt}`;
+                    if (doubleYield) harvestText += " (x2! 🪱)";
+                    jardinCreateFloatingText(coords.x, coords.y, harvestText);
+                }
+
+                // Reset pot properties
+                pot.isRare = false;
+                pot.hasPest = false;
+                pot.pestSpawned = false;
+
+                jardinUpdatePotUI(pot, card);
+            }
+        }
+
+        function jardinWaterPot(pot, card, seed, resumePct = 0) {
+            pot.state = 'growing';
+            if (resumePct === 0) {
+                playJardinSound('water');
+            }
+            jardinUpdatePotUI(pot, card);
+
+            const bar = card.querySelector('.jardin-progress-bar');
+            let start = null;
+
+            // Soleil: pousse 2x plus vite
+            const duration = (currentDailyWeather && currentDailyWeather.id === 'soleil') ? (seed.duration / 2) : seed.duration;
+            const startElapsed = (resumePct / 100) * duration;
+
+            // Determine pest triggering parameters
+            if (resumePct === 0) {
+                pot.hasPest = Math.random() < 0.15;
+                if (pot.hasPest) {
+                    pot.pestTriggerPct = 25 + Math.random() * 50; // between 25% and 75%
+                    pot.pestSpawned = false;
+                }
+            }
+
+            function animate(timestamp) {
+                if (jardinTimeLeft <= 0) return;
+                if (!start) start = timestamp - startElapsed;
+                const elapsed = timestamp - start;
+                const pct = Math.min((elapsed / duration) * 100, 100);
+
+                pot.progress = pct;
+                bar.style.width = `${pct}%`;
+
+                // Pest trigger check
+                if (pot.hasPest && !pot.pestSpawned && pct >= pot.pestTriggerPct) {
+                    pot.pestSpawned = true;
+                    pot.state = 'pest';
+                    jardinUpdatePotUI(pot, card);
+                    return; // Stop animation loop
+                }
+
+                if (pct < 100) {
+                    pot.timer = requestAnimationFrame(animate);
+                } else {
+                    pot.state = 'ready';
+                    jardinUpdatePotUI(pot, card);
+                }
+            }
+            pot.timer = requestAnimationFrame(animate);
+        }
+
+        function jardinUpdatePotUI(pot, card) {
+            const emojiEl = card.querySelector('.jardin-pot-emoji');
+            const statusEl = card.querySelector('.jardin-pot-status');
+            const barEl = card.querySelector('.jardin-progress-bar');
+            const seed = JARDIN_SEEDS[jardinState.seedLevel - 1];
+
+            card.className = 'jardin-pot';
+            barEl.style.width = '0%';
+            card.classList.remove('pest-shake');
+            card.classList.remove('rare-plant');
+
+            if (pot.isRare) {
+                card.classList.add('rare-plant');
+            }
+
+            if (pot.state === 'empty') {
+                emojiEl.textContent = '🕳️';
+                statusEl.textContent = 'Planter';
+            } else if (pot.state === 'planted') {
+                card.classList.add('needs-water');
+                emojiEl.textContent = pot.isRare ? '🌱✨' : '🌱';
+                statusEl.textContent = 'Arroser';
+            } else if (pot.state === 'growing') {
+                card.classList.add('grow');
+                emojiEl.textContent = pot.isRare ? `${seed.emoji}✨` : seed.emoji;
+                statusEl.textContent = 'Pousse...';
+                barEl.style.width = `${pot.progress}%`;
+            } else if (pot.state === 'pest') {
+                card.classList.add('pest-shake');
+                emojiEl.textContent = '🐛';
+                statusEl.textContent = 'Nuisible !';
+                barEl.style.width = `${pot.progress}%`;
+            } else if (pot.state === 'ready') {
+                card.classList.add('ready-harvest');
+                emojiEl.textContent = pot.isRare ? `${seed.grownEmoji}✨` : seed.grownEmoji;
+                statusEl.textContent = pot.isRare ? 'JACKPOT !' : 'Récolter !';
+            }
+        }
+
+        function getJardinPotCost() {
+            return Math.floor(10 * Math.pow(4, jardinState.potsCount - 3));
+        }
+
+        function getJardinSeedCost() {
+            if (jardinState.seedLevel >= JARDIN_SEEDS.length) return Infinity;
+            return Math.floor(50 * Math.pow(6, jardinState.seedLevel - 1));
+        }
+
+        function getJardinWaterCost() {
+            return jardinState.autoWater ? Infinity : 250;
+        }
+
+        function jardinUpdateShopUI() {
+            const potCost = getJardinPotCost();
+            const btnPot = document.getElementById('jardin-btn-buy-pot');
+            const descPot = document.getElementById('jardin-desc-pots');
+
+            if (jardinState.potsCount >= 9) {
+                descPot.textContent = "Limite max atteinte (9 pots)";
+                btnPot.textContent = "Max";
+                btnPot.disabled = true;
+            } else {
+                descPot.textContent = `Ajouter un pot (Actuel: ${jardinState.potsCount})`;
+                btnPot.textContent = `${potCost} ✨`;
+                btnPot.disabled = jardinState.energy < potCost;
+            }
+
+            const seedCost = getJardinSeedCost();
+            const btnSeed = document.getElementById('jardin-btn-buy-seed');
+            const descSeed = document.getElementById('jardin-desc-seeds');
+
+            if (jardinState.seedLevel >= JARDIN_SEEDS.length) {
+                descSeed.textContent = "Cerise du Souvenir max !";
+                btnSeed.textContent = "Max";
+                btnSeed.disabled = true;
+            } else {
+                const nextSeed = JARDIN_SEEDS[jardinState.seedLevel];
+                descSeed.textContent = `${nextSeed.name.split(' ')[0]} (Mult x${nextSeed.mult})`;
+                btnSeed.textContent = `${seedCost} ✨`;
+                btnSeed.disabled = jardinState.energy < seedCost;
+            }
+
+            const waterCost = getJardinWaterCost();
+            const btnWater = document.getElementById('jardin-btn-buy-water');
+            const descWater = document.getElementById('jardin-desc-water');
+
+            if (jardinState.autoWater) {
+                descWater.textContent = "Auto-arrosage activé !";
+                btnWater.textContent = "Acheté";
+                btnWater.disabled = true;
+            } else {
+                descWater.textContent = "Arrose après plantation";
+                btnWater.textContent = `${waterCost} ✨`;
+                btnWater.disabled = jardinState.energy < waterCost;
+            }
+        }
+
+        function jardinBuyPot() {
+            const cost = getJardinPotCost();
+            if (jardinState.energy >= cost && jardinState.potsCount < 9) {
+                jardinState.energy -= cost;
+                jardinState.potsCount++;
+                playJardinSound('upgrade');
+                jardinUpdateGlobalUI();
+                jardinUpdateShopUI();
+            }
+        }
+
+        function jardinUpgradeSeeds() {
+            const cost = getJardinSeedCost();
+            if (jardinState.energy >= cost && jardinState.seedLevel < JARDIN_SEEDS.length) {
+                jardinState.energy -= cost;
+                jardinState.seedLevel++;
+                playJardinSound('upgrade');
+                jardinUpdateGlobalUI();
+                jardinUpdateShopUI();
+            }
+        }
+
+        function jardinBuyAutoWater() {
+            const cost = getJardinWaterCost();
+            if (jardinState.energy >= cost && !jardinState.autoWater) {
+                jardinState.energy -= cost;
+                jardinState.autoWater = true;
+                playJardinSound('upgrade');
+                jardinUpdateGlobalUI();
+                jardinUpdateShopUI();
+            }
+        }
+
+        function jardinCreateExplosion(x, y, emoji) {
+            const num = 12;
+            for (let i = 0; i < num; i++) {
+                const p = document.createElement('div');
+                p.className = 'jardin-particle';
+                p.textContent = Math.random() > 0.5 ? emoji : '✨';
+
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 40 + Math.random() * 80;
+                const tx = `${Math.cos(angle) * dist}px`;
+                const ty = `${Math.sin(angle) * dist}px`;
+                const rot = `${Math.random() * 360}deg`;
+
+                p.style.setProperty('--tx', tx);
+                p.style.setProperty('--ty', ty);
+                p.style.setProperty('--rot', rot);
+                p.style.left = `${x}px`;
+                p.style.top = `${y}px`;
+
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 800);
+            }
+        }
+
+        function jardinCreateMassiveExplosion(x, y, emoji) {
+            const num = 45;
+            for (let i = 0; i < num; i++) {
+                const p = document.createElement('div');
+                p.className = 'jardin-particle';
+                p.textContent = Math.random() > 0.6 ? emoji : (Math.random() > 0.5 ? '✨' : '⭐');
+                p.style.fontSize = `${1.2 + Math.random() * 1.5}rem`;
+
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 50 + Math.random() * 200;
+                const tx = `${Math.cos(angle) * dist}px`;
+                const ty = `${Math.sin(angle) * dist}px`;
+                const rot = `${Math.random() * 720 - 360}deg`;
+
+                p.style.setProperty('--tx', tx);
+                p.style.setProperty('--ty', ty);
+                p.style.setProperty('--rot', rot);
+                p.style.left = `${x}px`;
+                p.style.top = `${y}px`;
+                p.style.textShadow = '0 0 10px rgba(242, 208, 107, 0.8)';
+
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 1000);
+            }
+        }
+
+        function jardinCreateFloatingText(x, y, text) {
+            const el = document.createElement('div');
+            el.className = 'jardin-float';
+            el.textContent = text;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function initJardinGameOnLoad() {
+            const saved = localStorage.getItem('jardin_souvenirs_state');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    jardinState.energy = parsed.energy || 0;
+                    jardinState.potsCount = parsed.potsCount || 3;
+                    jardinState.seedLevel = parsed.seedLevel || 1;
+                    jardinState.autoWater = parsed.autoWater || false;
+                } catch (e) { }
+            }
+            jardinUpdateGlobalUI();
+        }
+
+        document.addEventListener('DOMContentLoaded', initJardinGameOnLoad);
 
         // Initialisation au chargement du DOM
         document.addEventListener('DOMContentLoaded', initSplashCountdown);
