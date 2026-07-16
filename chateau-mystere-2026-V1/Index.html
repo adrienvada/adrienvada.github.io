@@ -5373,9 +5373,9 @@
 
         const JARDIN_SEEDS = [
             { name: "Simple 🌱", emoji: "🌱", grownEmoji: "🌿", mult: 1, duration: 5000 },
-            { name: "Lunaire 🌿", emoji: "🌿", grownEmoji: "🌸", mult: 3, duration: 8000 },
-            { name: "Nacre 🌸", emoji: "🌸", grownEmoji: "⭐", mult: 15, duration: 12000 },
-            { name: "Souvenir 🍒", emoji: "🍒", grownEmoji: "✨", mult: 80, duration: 18000 }
+            { name: "Lunaire 🌿", emoji: "🌿", grownEmoji: "🌸", mult: 5, duration: 8000 },
+            { name: "Nacre 🌸", emoji: "🌸", grownEmoji: "⭐", mult: 30, duration: 12000 },
+            { name: "Souvenir 🍒", emoji: "🍒", grownEmoji: "✨", mult: 180, duration: 18000 }
         ];
 
         window.hidden_skin_level = 1;
@@ -5729,31 +5729,19 @@
             grid.addEventListener('mousemove', (e) => {
                 if (jardinIsSwiping) processSwipeEvent(e);
             });
-            window.addEventListener('mouseup', () => {
-                jardinIsSwiping = false;
-                lastSwipedPotIndex = -1;
-                if (jardinState.currentlyWateringPot) {
-                    const card = document.getElementById(`jardin-pot-${jardinState.currentlyWateringPot.id}`);
-                    jardinStopWatering(jardinState.currentlyWateringPot, card);
-                }
-            });
 
             grid.addEventListener('touchstart', (e) => {
                 jardinIsSwiping = true;
                 lastSwipedPotIndex = -1;
+                if (e.cancelable) e.preventDefault();
                 processSwipeEvent(e);
-            }, { passive: true });
+            }, { passive: false });
             grid.addEventListener('touchmove', (e) => {
-                if (jardinIsSwiping) processSwipeEvent(e);
-            }, { passive: true });
-            window.addEventListener('touchend', () => {
-                jardinIsSwiping = false;
-                lastSwipedPotIndex = -1;
-                if (jardinState.currentlyWateringPot) {
-                    const card = document.getElementById(`jardin-pot-${jardinState.currentlyWateringPot.id}`);
-                    jardinStopWatering(jardinState.currentlyWateringPot, card);
+                if (jardinIsSwiping) {
+                    if (e.cancelable) e.preventDefault();
+                    processSwipeEvent(e);
                 }
-            });
+            }, { passive: false });
         }
 
         function getCoords(e, card) {
@@ -6327,6 +6315,31 @@
                 } catch (e) { }
             }
             jardinUpdateGlobalUI();
+
+            // Bind global window events once on load, active check included
+            window.addEventListener('mouseup', () => {
+                if (!jardinState.active) return;
+                jardinIsSwiping = false;
+                lastSwipedPotIndex = -1;
+                if (jardinState.currentlyWateringPot) {
+                    const card = document.getElementById(`jardin-pot-${jardinState.currentlyWateringPot.id}`);
+                    if (card) {
+                        jardinStopWatering(jardinState.currentlyWateringPot, card);
+                    }
+                }
+            });
+
+            window.addEventListener('touchend', () => {
+                if (!jardinState.active) return;
+                jardinIsSwiping = false;
+                lastSwipedPotIndex = -1;
+                if (jardinState.currentlyWateringPot) {
+                    const card = document.getElementById(`jardin-pot-${jardinState.currentlyWateringPot.id}`);
+                    if (card) {
+                        jardinStopWatering(jardinState.currentlyWateringPot, card);
+                    }
+                }
+            });
         }
 
         document.addEventListener('DOMContentLoaded', initJardinGameOnLoad);
