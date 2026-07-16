@@ -3,17 +3,22 @@
 
 <head>
     <!-- À ajouter en haut de ton <head> -->
-    <base href="/chateau-mystere-2026-v1/">
+    <base href="./">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- PWA Settings -->
     <meta name="theme-color" content="#0a0f1d">
     <meta name="description" content="Joyeux anniversaire">
 
-    <meta name="mobile-web-app-capable" content="yes">
+    <!-- iOS support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="À nos 2 ans ♥️">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
+
+    <!-- Android/Universal PWA -->
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
     <title>À nos 2 ans ♥️</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -4354,6 +4359,70 @@
     <!-- ═══════════════════════ JAVASCRIPT ══════════════════════════ -->
     <script>
         'use strict';
+        // Polyfill transparent pour localStorage en cas de SecurityError (ex: Firefox en local file://)
+        let safeStorageFallback = {};
+        let isStorageFallbackActive = false;
+        let storageTarget;
+        try {
+            const testKey = '__storage_test__';
+            window.localStorage.setItem(testKey, testKey);
+            window.localStorage.removeItem(testKey);
+            storageTarget = window.localStorage;
+        } catch (e) {
+            console.warn("Storage access denied or not supported. Using in-memory fallback.", e);
+            isStorageFallbackActive = true;
+            storageTarget = {
+                getItem(key) {
+                    return safeStorageFallback[key] !== undefined ? safeStorageFallback[key] : null;
+                },
+                setItem(key, value) {
+                    safeStorageFallback[key] = String(value);
+                },
+                removeItem(key) {
+                    delete safeStorageFallback[key];
+                },
+                clear() {
+                    safeStorageFallback = {};
+                }
+            };
+        }
+
+        const localStorage = new Proxy(storageTarget, {
+            get(target, prop) {
+                if (isStorageFallbackActive) {
+                    if (prop === 'getItem') return (k) => target.getItem(k);
+                    if (prop === 'setItem') return (k, v) => target.setItem(k, v);
+                    if (prop === 'removeItem') return (k) => target.removeItem(k);
+                    if (prop === 'clear') return () => target.clear();
+                    return safeStorageFallback[prop] !== undefined ? safeStorageFallback[prop] : null;
+                }
+                return target[prop];
+            },
+            set(target, prop, value) {
+                if (isStorageFallbackActive) {
+                    safeStorageFallback[prop] = String(value);
+                    return true;
+                }
+                target[prop] = value;
+                return true;
+            },
+            ownKeys(target) {
+                if (isStorageFallbackActive) {
+                    return Reflect.ownKeys(safeStorageFallback);
+                }
+                return Reflect.ownKeys(target);
+            },
+            getOwnPropertyDescriptor(target, prop) {
+                if (isStorageFallbackActive) {
+                    return {
+                        enumerable: true,
+                        configurable: true,
+                        value: safeStorageFallback[prop]
+                    };
+                }
+                return Reflect.getOwnPropertyDescriptor(target, prop);
+            }
+        });
         /* ─────────────────────────────────────────────────────────────
    SPLASH COUNTDOWN (Page de garde)
 ────────────────────────────────────────────────────────────── */
@@ -5356,6 +5425,11 @@
 
             if (savedDone === 'victory') {
                 renderVictory();
+                return;
+            }
+
+            if (savedDone === 'lock') {
+                renderTemporalLock();
                 return;
             }
 
@@ -8233,163 +8307,6 @@
                     setTimeout(() => bubble.remove(), 800);
                 }
             }, 8000);
-
-            if ($header) {/* ─────────────────────────────────────────────────────────────
-           POUSSIÈRES 3D (Remplacement des étoiles)
-        ────────────────────────────────────────────────────────────── */
-                let starsAnimationActive = true;
-                function initStars(canvasId, options = {}) {
-                    const canvas = document.getElementById(canvasId);
-                    if (!canvas) return;
-                    const ctx = canvas.getContext('2d');
-                    const count = options.count || 200; // Un peu plus de particules pour l'effet poussière
-                    const particles = [];
-
-                    // Centre de l'écran pour la fuite de perspective
-                    let cx = window.innerWidth / 2;
-                    let cy = window.innerHeight / 2;
-
-                    function resize() {
-                        canvas.width = window.innerWidth;
-                        canvas.height = window.innerHeight;
-                        cx = canvas.width / 2;
-                        cy = canvas.height / 2;
-                    }
-                    let resizeTicking = false;
-                    const onResize = () => {
-                        if (!resizeTicking) {
-                            window.requestAnimationFrame(() => {
-                                resize();
-                                resizeTicking = false;
-                            });
-                            resizeTicking = true;
-                        }
-                    };
-                    window.addEventListener('resize', onResize);
-                    resize();
-
-                    // Paramètres de l'espace 3D
-                    const focalLength = 600; // Distance de l'objectif (champ de vision)
-                    const maxZ = 2000; // Profondeur maximale avant de faire disparaître la poussière
-
-                    for (let i = 0; i < count; i++) {
-                        particles.push({
-                            x: (Math.random() - 0.5) * canvas.width * 3, // Répartition large sur X
-                            y: (Math.random() - 0.5) * canvas.height * 3, // Répartition large sur Y
-                            z: Math.random() * maxZ, // Profondeur aléatoire
-                            baseSize: Math.random() * 2.5 + 0.5, // Taille de base
-                            opacity: Math.random() * 0.8 + 0.1, // Opacité de base
-
-                            // Vecteurs de vitesse (dérive très lente)
-                            vx: (Math.random() - 0.5) * 0.4,
-                            vy: (Math.random() - 0.5) * 0.4,
-                            vz: (Math.random() - 0.5) * 1.5 - 0.5, // Dérive principalement vers la caméra
-
-                            // Décalage pour l'oscillation organique (courants d'air)
-                            phaseX: Math.random() * Math.PI * 2,
-                            phaseY: Math.random() * Math.PI * 2
-                        });
-                    }
-
-                    function animate() {
-                        if (!starsAnimationActive) return;
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                        const time = Date.now() * 0.001; // Temps en secondes
-
-                        for (let i = 0; i < count; i++) {
-                            const p = particles[i];
-
-                            // Simulation des courants d'air avec une fonction sinusoïdale très douce
-                            const driftX = Math.sin(time * 0.5 + p.phaseX) * 0.5;
-                            const driftY = Math.cos(time * 0.3 + p.phaseY) * 0.5;
-
-                            // Mouvement dans l'espace 3D
-                            p.x += p.vx + driftX;
-                            p.y += p.vy + driftY;
-                            p.z += p.vz;
-
-                            // Recyclage : si la poussière passe derrière la caméra (Z < 1) ou va trop loin
-                            if (p.z < 1) {
-                                p.z = maxZ;
-                                p.x = (Math.random() - 0.5) * canvas.width * 3;
-                                p.y = (Math.random() - 0.5) * canvas.height * 3;
-                            } else if (p.z > maxZ) {
-                                p.z = 1;
-                            }
-
-                            // Projection 3D -> 2D (Perspective mathématique)
-                            const scale = focalLength / (focalLength + p.z);
-                            const screenX = cx + p.x * scale;
-                            const screenY = cy + p.y * scale;
-                            const size = Math.max(0.1, p.baseSize * scale);
-
-                            // Ne dessiner que si la particule est visible à l'écran
-                            if (screenX >= -50 && screenX <= canvas.width + 50 && screenY >= -50 && screenY <= canvas.height + 50) {
-
-                                // Fondu basé sur la profondeur (les particules lointaines sont sombres)
-                                const depthFade = Math.max(0, 1 - (p.z / maxZ));
-                                let finalOpacity = p.opacity * depthFade;
-
-                                // --- AJOUT : Boost de luminosité derrière la carte ---
-                                // On vérifie si la particule est dans la zone centrale (environ 500px de large et 700px de haut)
-                                const isBehindCard = Math.abs(screenX - cx) < 250 && Math.abs(screenY - cy) < 350;
-
-                                if (isBehindCard) {
-                                    // On multiplie l'opacité par 3 pour les rendre très lumineuses (sans dépasser 1 = 100% opaque)
-                                    finalOpacity = Math.min(1, finalOpacity * 3);
-
-                                    // Optionnel : on grossit légèrement les particules normales dans cette zone pour accentuer l'effet
-                                    if (!p.isBokeh && size > 1) {
-                                        ctx.shadowBlur = size * 4; // Lueur (glow) deux fois plus intense
-                                    }
-                                }
-
-                                ctx.beginPath();
-                                ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
-
-                                // Teinte crème/dorée pâle pour évoquer de la poussière éclairée
-                                ctx.fillStyle = `rgba(245, 237, 224, ${finalOpacity})`;
-
-                                // Les grosses particules proches attrapent la lumière (glow)
-                                if (size > 1.5) {
-                                    ctx.shadowBlur = size * 2.5;
-                                    ctx.shadowColor = `rgba(201, 168, 76, ${finalOpacity})`;
-                                } else {
-                                    ctx.shadowBlur = 0;
-                                }
-
-                                ctx.fill();
-                            }
-                        }
-                        requestAnimationFrame(animate);
-                    }
-
-                    window.pauseStars = () => {
-                        starsAnimationActive = false;
-                    };
-
-                    window.resumeStars = () => {
-                        if (!starsAnimationActive) {
-                            starsAnimationActive = true;
-                            animate();
-                        }
-                    };
-
-                    starsAnimationActive = true;
-                    animate();
-                }
-                $header.classList.remove('header-flash-active');
-                void $header.offsetWidth;
-                $header.classList.add('header-flash-active');
-
-                // --- NOUVEAU : Header au premier plan temporairement ---
-                $header.classList.add('header-bubble-active');
-                if ($header._bubbleTimer) clearTimeout($header._bubbleTimer);
-                $header._bubbleTimer = setTimeout(() => {
-                    $header.classList.remove('header-bubble-active');
-                }, 9000);
-            }
         }
 
         function renderSuccessScreen(succes) {
@@ -8927,7 +8844,9 @@
             tCtx.font = "bold 34px 'Cinzel', serif";
             tCtx.textAlign = 'center';
             tCtx.textBaseline = 'middle';
-            tCtx.letterSpacing = "6px";
+            if ('letterSpacing' in tCtx) {
+                tCtx.letterSpacing = "6px";
+            }
             tCtx.fillText("VIENS SEULE", width / 2, height / 2);
 
             const imgData = tCtx.getImageData(0, 0, width, height);
@@ -11254,6 +11173,15 @@
            BOOT 🚀
         ────────────────────────────────────────────────────────────── */
         document.addEventListener('DOMContentLoaded', init);
+
+        // Enregistrement du Service Worker pour la compatibilité PWA (Android / Chrome)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((reg) => console.log('Service Worker enregistré avec succès :', reg.scope))
+                    .catch((err) => console.error('Échec de l\'enregistrement du Service Worker :', err));
+            });
+        }
 
         /* ─────────────────────────────────────────────────────────────
     PWA INSTALLATION LOGIC (Persistence améliorée)
