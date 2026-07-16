@@ -443,7 +443,7 @@
             top: 0;
             left: 0;
             right: 0;
-            z-index: 100;
+            z-index: 1000;
             padding: calc(var(--safe-top) + var(--gap-sm)) var(--gap-md) var(--gap-sm);
             background: linear-gradient(180deg, #0a0f1dee 0%, #0a0f1dcc 70%, transparent 100%);
             backdrop-filter: blur(16px);
@@ -451,7 +451,7 @@
         }
 
         #header.header-bubble-active {
-            z-index: 300 !important;
+            z-index: 1100 !important;
         }
 
         .header-inner {
@@ -704,6 +704,7 @@
             margin: 0 auto;
             padding: calc(var(--safe-top) + 72px) var(--gap-md) calc(var(--safe-bottom) + var(--gap-xl));
             min-height: 100dvh;
+            perspective: 1000px;
         }
 
         /* ────────────────────────── ENIGMA CARD ───────────────────────────────── */
@@ -717,9 +718,10 @@
             padding: var(--gap-xl) var(--gap-lg);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), 0 0 35px rgba(201, 168, 76, 0.15), inset 0 0 50px rgba(5, 4, 10, 0.9);
             animation: portal-reveal 1.2s cubic-bezier(0.77, 0, 0.175, 1) both;
-            overflow: hidden;
+            overflow: visible;
             transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             will-change: transform, box-shadow;
+            transform-style: preserve-3d;
         }
 
         @keyframes portal-reveal {
@@ -787,6 +789,7 @@
             text-shadow: 0 0 10px rgba(242, 208, 107, 0.5);
             position: relative;
             z-index: 2;
+            transform: translateZ(15px);
         }
 
         .enigma-title {
@@ -804,6 +807,7 @@
             animation: title-fluo-slow 5s ease-in-out infinite alternate;
             position: relative;
             z-index: 2;
+            transform: translateZ(20px);
         }
 
         @keyframes title-fluo-slow {
@@ -827,6 +831,7 @@
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
             position: relative;
             z-index: 2;
+            transform: translateZ(20px);
         }
 
         .enigma-image {
@@ -835,12 +840,15 @@
             margin-bottom: var(--gap-lg);
             object-fit: cover;
             cursor: zoom-in;
-            transition: transform 0.3s ease, filter 0.3s ease;
+            transform: translateZ(35px);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
         }
 
         .enigma-image:hover {
-            transform: scale(1.015);
+            transform: translateZ(50px) scale(1.02);
             filter: brightness(1.08);
+            box-shadow: 0 15px 35px rgba(242, 208, 107, 0.25);
         }
 
         /* ───────────────────────── ENIGMA CAROUSEL ───────────────────────── */
@@ -853,6 +861,13 @@
             background: rgba(15, 16, 53, 0.65);
             border: 1px solid rgba(201, 168, 76, 0.4);
             box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+            transform: translateZ(35px);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .enigma-carousel:hover {
+            transform: translateZ(50px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(242, 208, 107, 0.25);
         }
 
         .carousel-main-wrapper {
