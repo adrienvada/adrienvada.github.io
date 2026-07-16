@@ -3022,6 +3022,62 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             width: 100%;
+            touch-action: none;
+            /* Prevent scrolling during swipe/drag */
+            user-select: none;
+            /* Prevent text selection during swipe */
+        }
+
+        .jardin-grid.jardin-grid-medium {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .jardin-grid.jardin-grid-medium .jardin-pot {
+            padding: 8px;
+        }
+
+        .jardin-grid.jardin-grid-medium .jardin-pot-emoji {
+            font-size: 1.9rem;
+        }
+
+        .jardin-grid.jardin-grid-medium .jardin-pot-status {
+            font-size: 0.6rem;
+        }
+
+        .jardin-grid.jardin-grid-small {
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .jardin-grid.jardin-grid-small .jardin-pot {
+            padding: 5px;
+        }
+
+        .jardin-grid.jardin-grid-small .jardin-pot-emoji {
+            font-size: 1.4rem;
+        }
+
+        .jardin-grid.jardin-grid-small .jardin-pot-status {
+            font-size: 0.55rem;
+        }
+
+        .jardin-grid.jardin-grid-tiny {
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+        }
+
+        .jardin-grid.jardin-grid-tiny .jardin-pot {
+            padding: 3px;
+        }
+
+        .jardin-grid.jardin-grid-tiny .jardin-pot-emoji {
+            font-size: 1.1rem;
+        }
+
+        .jardin-grid.jardin-grid-tiny .jardin-pot-status {
+            font-size: 0.45rem;
+            margin-top: 2px;
         }
 
         .jardin-pot {
@@ -3202,6 +3258,19 @@
             background: linear-gradient(90deg, #10b981, #34d399);
             box-shadow: 0 0 6px #34d399;
             transition: width 0.1s linear;
+        }
+
+        .jardin-water-gauge {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background: rgba(59, 130, 246, 0.45);
+            box-shadow: inset 0 2px 10px rgba(59, 130, 246, 0.6);
+            transition: height 0.05s linear;
+            pointer-events: none;
+            z-index: 2;
         }
 
         /* Particle Explosion styles */
@@ -4848,11 +4917,21 @@
                         <div class="jardin-stat-label">Fragments Récoltés</div>
                         <div class="jardin-stat-val" id="jardin-day-fragments">0</div>
                     </div>
-                    <div class="jardin-stat-box">
-                        <div class="jardin-stat-label">Graines Actuelles</div>
-                        <div class="jardin-stat-val" id="jardin-stat-seed-type">🌱 Simple</div>
+                    <div class="jardin-stat-box" style="flex: 1.5;">
+                        <div class="jardin-stat-label">Stock Graines</div>
+                        <div class="jardin-stat-val" id="jardin-stat-seeds-stock"
+                            style="font-size: 0.85rem; display: flex; gap: 8px; justify-content: center; margin-top: 4px;">
+                            <span>🌱 ∞</span>
+                            <span style="color: #a7f3d0;">🌿 <span id="jardin-stock-lunaire">0</span></span>
+                            <span style="color: #c084fc;">🌸 <span id="jardin-stock-nacre">0</span></span>
+                            <span style="color: #f472b6;">🍒 <span id="jardin-stock-souvenir">0</span></span>
+                        </div>
                     </div>
                 </div>
+                <button class="btn btn-primary" id="jardin-scythe-btn" onclick="jardinUseScythe()"
+                    style="display: none; margin: 10px auto; width: 100%; font-size: 0.95rem; padding: 10px 14px; gap: 8px; justify-content: center; align-items: center; box-shadow: 0 0 10px rgba(167, 139, 250, 0.4); border-color: #a78bfa; background: #6d28d9; border-radius: 8px; cursor: pointer; color: #fff; font-weight: bold;">
+                    💫 Faux Cosmique (Actionner Tout)
+                </button>
 
                 <div class="jardin-grid" id="jardin-grid">
                     <!-- dynamic pots -->
@@ -4883,20 +4962,40 @@
                             <div>
                                 <div style="font-weight: 600; font-size: 0.9rem;">Agrandir le Jardin 🪴</div>
                                 <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-pots">Ajouter un pot
-                                    (Max: 9)</div>
+                                    (Max: 48)</div>
                             </div>
-                            <button class="jardin-shop-btn" id="jardin-btn-buy-pot" onclick="jardinBuyPot()">10
+                            <button class="jardin-shop-btn" id="jardin-btn-buy-pot" onclick="jardinBuyPot()">20
                                 ✨</button>
                         </div>
 
                         <div class="jardin-shop-item">
                             <div>
-                                <div style="font-weight: 600; font-size: 0.9rem;">Qualité des Graines 🍒</div>
-                                <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-seeds">Graine Lunaire
-                                    (Mult x5)</div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Graines Lunaires 🌿 (x10)</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-qty-lunaire">Stock: 0
+                                </div>
                             </div>
-                            <button class="jardin-shop-btn" id="jardin-btn-buy-seed" onclick="jardinUpgradeSeeds()">50
-                                ✨</button>
+                            <button class="jardin-shop-btn" id="jardin-btn-buy-seed-lunaire"
+                                onclick="jardinBuySeeds('lunaire', 15)">15 ✨</button>
+                        </div>
+
+                        <div class="jardin-shop-item">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Graines Nacre 🌸 (x10)</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-qty-nacre">Stock: 0
+                                </div>
+                            </div>
+                            <button class="jardin-shop-btn" id="jardin-btn-buy-seed-nacre"
+                                onclick="jardinBuySeeds('nacre', 80)">80 ✨</button>
+                        </div>
+
+                        <div class="jardin-shop-item">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Graines Souvenir 🍒 (x10)</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-qty-souvenir">Stock: 0
+                                </div>
+                            </div>
+                            <button class="jardin-shop-btn" id="jardin-btn-buy-seed-souvenir"
+                                onclick="jardinBuySeeds('souvenir', 400)">400 ✨</button>
                         </div>
 
                         <div class="jardin-shop-item">
@@ -4905,7 +5004,17 @@
                                 <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-water">Arrosage
                                     automatique</div>
                             </div>
-                            <button class="jardin-shop-btn" id="jardin-btn-buy-water" onclick="jardinBuyAutoWater()">250
+                            <button class="jardin-shop-btn" id="jardin-btn-buy-water" onclick="jardinBuyAutoWater()">500
+                                ✨</button>
+                        </div>
+
+                        <div class="jardin-shop-item">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Faux Cosmique 💫</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-scythe">Récolte, plante
+                                    et arrose tout en 1 clic !</div>
+                            </div>
+                            <button class="jardin-shop-btn" id="jardin-btn-buy-scythe" onclick="jardinBuyScythe()">5000
                                 ✨</button>
                         </div>
                     </div>
@@ -5252,15 +5361,21 @@
             potsCount: 3,
             seedLevel: 1, // 1: Simple, 2: Lunaire, 3: Nacre, 4: Souvenir
             autoWater: false,
+            hasScythe: false,
+            seedsInventory: {
+                lunaire: 0,
+                nacre: 0,
+                souvenir: 0
+            },
             pots: [],
             active: false
         };
 
         const JARDIN_SEEDS = [
-            { name: "Simple 🌱", emoji: "🌱", grownEmoji: "🌿", mult: 1, duration: 1500 },
-            { name: "Lunaire 🌿", emoji: "🌿", grownEmoji: "🌸", mult: 5, duration: 1800 },
-            { name: "Nacre 🌸", emoji: "🌸", grownEmoji: "⭐", mult: 25, duration: 2200 },
-            { name: "Souvenir 🍒", emoji: "🍒", grownEmoji: "✨", mult: 125, duration: 2500 }
+            { name: "Simple 🌱", emoji: "🌱", grownEmoji: "🌿", mult: 1, duration: 5000 },
+            { name: "Lunaire 🌿", emoji: "🌿", grownEmoji: "🌸", mult: 3, duration: 8000 },
+            { name: "Nacre 🌸", emoji: "🌸", grownEmoji: "⭐", mult: 15, duration: 12000 },
+            { name: "Souvenir 🍒", emoji: "🍒", grownEmoji: "✨", mult: 80, duration: 18000 }
         ];
 
         window.hidden_skin_level = 1;
@@ -5353,8 +5468,13 @@
                     jardinState.potsCount = parsed.potsCount || 3;
                     jardinState.seedLevel = parsed.seedLevel || 1;
                     jardinState.autoWater = parsed.autoWater || false;
+                    jardinState.hasScythe = parsed.hasScythe || false;
+                    jardinState.seedsInventory = parsed.seedsInventory || { lunaire: 0, nacre: 0, souvenir: 0 };
                 } catch (e) { }
+            } else {
+                jardinState.seedsInventory = { lunaire: 0, nacre: 0, souvenir: 0 };
             }
+            jardinUpdateSeedsStockUI();
             jardinUpdateGlobalUI();
             jardinStartDay();
         }
@@ -5424,12 +5544,18 @@
             document.getElementById('jardin-day-fragments').textContent = "0";
 
             const currentSeed = JARDIN_SEEDS[jardinState.seedLevel - 1];
-            document.getElementById('jardin-stat-seed-type').textContent = currentSeed.name;
+            // No longer displaying single current seed label, just update stock UI
+            jardinUpdateSeedsStockUI();
 
             document.getElementById('jardin-night-screen').classList.remove('active');
             document.getElementById('jardin-day-screen').classList.add('active');
 
             jardinSetupGrid();
+
+            const scytheBtn = document.getElementById('jardin-scythe-btn');
+            if (scytheBtn) {
+                scytheBtn.style.display = jardinState.hasScythe ? 'flex' : 'none';
+            }
 
             clearInterval(jardinTimerInterval);
             jardinTimerInterval = setInterval(() => {
@@ -5459,7 +5585,9 @@
                 energy: jardinState.energy,
                 potsCount: jardinState.potsCount,
                 seedLevel: jardinState.seedLevel,
-                autoWater: jardinState.autoWater
+                autoWater: jardinState.autoWater,
+                hasScythe: jardinState.hasScythe,
+                seedsInventory: jardinState.seedsInventory
             }));
 
             jardinUpdateGlobalUI();
@@ -5473,12 +5601,66 @@
             document.getElementById('jardin-night-screen').classList.add('active');
         }
 
+        let jardinIsSwiping = false;
+        let lastSwipedPotIndex = -1;
+
+        function processSwipeEvent(e) {
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const element = document.elementFromPoint(clientX, clientY);
+            let potCard = element ? element.closest('.jardin-pot') : null;
+            if (potCard) {
+                const index = parseInt(potCard.dataset.index, 10);
+                if (!isNaN(index)) {
+                    const pot = jardinState.pots[index];
+                    // If we moved to a different pot, stop watering the old one
+                    if (jardinState.currentlyWateringPot && jardinState.currentlyWateringPot !== pot) {
+                        const oldCard = document.getElementById(`jardin-pot-${jardinState.currentlyWateringPot.id}`);
+                        jardinStopWatering(jardinState.currentlyWateringPot, oldCard);
+                    }
+
+                    if (index !== lastSwipedPotIndex) {
+                        lastSwipedPotIndex = index;
+                        if (pot.state === 'planted') {
+                            jardinStartWatering(pot, potCard);
+                        } else {
+                            jardinHandlePotClick(index, potCard, { clientX, clientY });
+                        }
+                    }
+                }
+            } else {
+                // Not over a pot card, stop watering
+                if (jardinState.currentlyWateringPot) {
+                    const oldCard = document.getElementById(`jardin-pot-${jardinState.currentlyWateringPot.id}`);
+                    jardinStopWatering(jardinState.currentlyWateringPot, oldCard);
+                }
+            }
+        }
+
         function jardinSetupGrid() {
             const grid = document.getElementById('jardin-grid');
             grid.innerHTML = '';
             jardinState.pots = [];
 
-            for (let i = 0; i < jardinState.potsCount; i++) {
+            // Apply responsive grid size classes based on pot count
+            grid.classList.remove('jardin-grid-medium', 'jardin-grid-small', 'jardin-grid-tiny');
+            const count = jardinState.potsCount;
+            if (count > 24) {
+                grid.classList.add('jardin-grid-tiny');
+            } else if (count > 12) {
+                grid.classList.add('jardin-grid-small');
+            } else if (count > 6) {
+                grid.classList.add('jardin-grid-medium');
+            }
+
+            for (let i = 0; i < count; i++) {
                 const pot = {
                     id: i,
                     state: 'empty',
@@ -5493,15 +5675,85 @@
                 const card = document.createElement('div');
                 card.className = 'jardin-pot';
                 card.id = `jardin-pot-${i}`;
+                card.dataset.index = i;
                 card.innerHTML = `
-                    <div class="jardin-pot-emoji">🕳️</div>
-                    <div class="jardin-pot-status">Planter</div>
+                    <div class="jardin-pot-emoji" style="position: relative; z-index: 3;">🕳️</div>
+                    <div class="jardin-pot-status" style="position: relative; z-index: 3;">Planter</div>
                     <div class="jardin-progress-bar"></div>
+                    <div class="jardin-water-gauge"></div>
                 `;
 
                 card.addEventListener('click', (e) => jardinHandlePotClick(i, card, e));
+
+                // Hold to water listeners
+                card.addEventListener('mousedown', () => {
+                    const p = jardinState.pots[i];
+                    jardinStartWatering(p, card);
+                });
+                card.addEventListener('touchstart', () => {
+                    const p = jardinState.pots[i];
+                    jardinStartWatering(p, card);
+                }, { passive: true });
+
+                card.addEventListener('mouseup', () => {
+                    const p = jardinState.pots[i];
+                    jardinStopWatering(p, card);
+                });
+                card.addEventListener('mouseleave', () => {
+                    const p = jardinState.pots[i];
+                    jardinStopWatering(p, card);
+                });
+                card.addEventListener('touchend', () => {
+                    const p = jardinState.pots[i];
+                    jardinStopWatering(p, card);
+                });
+
                 grid.appendChild(card);
             }
+
+            // Remove existing event listeners first to avoid duplication
+            grid.onmousedown = null;
+            grid.onmousemove = null;
+            grid.onmouseup = null;
+            grid.onmouseleave = null;
+            grid.ontouchstart = null;
+            grid.ontouchmove = null;
+            grid.ontouchend = null;
+
+            // Bind Drag & Touch Swipe-to-Harvest listeners
+            grid.addEventListener('mousedown', (e) => {
+                jardinIsSwiping = true;
+                lastSwipedPotIndex = -1;
+                processSwipeEvent(e);
+            });
+            grid.addEventListener('mousemove', (e) => {
+                if (jardinIsSwiping) processSwipeEvent(e);
+            });
+            window.addEventListener('mouseup', () => {
+                jardinIsSwiping = false;
+                lastSwipedPotIndex = -1;
+                if (jardinState.currentlyWateringPot) {
+                    const card = document.getElementById(`jardin-pot-${jardinState.currentlyWateringPot.id}`);
+                    jardinStopWatering(jardinState.currentlyWateringPot, card);
+                }
+            });
+
+            grid.addEventListener('touchstart', (e) => {
+                jardinIsSwiping = true;
+                lastSwipedPotIndex = -1;
+                processSwipeEvent(e);
+            }, { passive: true });
+            grid.addEventListener('touchmove', (e) => {
+                if (jardinIsSwiping) processSwipeEvent(e);
+            }, { passive: true });
+            window.addEventListener('touchend', () => {
+                jardinIsSwiping = false;
+                lastSwipedPotIndex = -1;
+                if (jardinState.currentlyWateringPot) {
+                    const card = document.getElementById(`jardin-pot-${jardinState.currentlyWateringPot.id}`);
+                    jardinStopWatering(jardinState.currentlyWateringPot, card);
+                }
+            });
         }
 
         function getCoords(e, card) {
@@ -5515,14 +5767,92 @@
             return { x, y };
         }
 
+        let waterHoldTimer = null;
+
+        function jardinStartWatering(pot, card) {
+            if (pot.state !== 'planted' || jardinState.autoWater) return;
+
+            jardinState.currentlyWateringPot = pot;
+
+            pot.waterProgress = 0;
+            const gauge = card.querySelector('.jardin-water-gauge');
+            if (gauge) gauge.style.height = '0%';
+
+            let start = null;
+            const holdDuration = 300; // 300ms hold required
+
+            function animateHold(timestamp) {
+                if (jardinTimeLeft <= 0) return;
+                if (!start) start = timestamp;
+                const elapsed = timestamp - start;
+                const pct = Math.min((elapsed / holdDuration) * 100, 100);
+
+                pot.waterProgress = pct;
+                if (gauge) gauge.style.height = `${pct}%`;
+
+                if (pct < 100) {
+                    waterHoldTimer = requestAnimationFrame(animateHold);
+                } else {
+                    waterHoldTimer = null;
+                    if (gauge) gauge.style.height = '0%';
+                    jardinState.currentlyWateringPot = null;
+                    jardinWaterPot(pot, card);
+                }
+            }
+
+            if (waterHoldTimer) cancelAnimationFrame(waterHoldTimer);
+            waterHoldTimer = requestAnimationFrame(animateHold);
+        }
+
+        function jardinStopWatering(pot, card) {
+            if (waterHoldTimer) {
+                cancelAnimationFrame(waterHoldTimer);
+                waterHoldTimer = null;
+            }
+            if (pot.state === 'planted') {
+                pot.waterProgress = 0;
+                const gauge = card.querySelector('.jardin-water-gauge');
+                if (gauge) gauge.style.height = '0%';
+            }
+            if (jardinState.currentlyWateringPot === pot) {
+                jardinState.currentlyWateringPot = null;
+            }
+        }
+
         function jardinHandlePotClick(index, card, event) {
             const pot = jardinState.pots[index];
-            const seed = JARDIN_SEEDS[jardinState.seedLevel - 1];
             const coords = getCoords(event, card);
 
             if (pot.state === 'empty') {
+                // Determine best available seed in inventory
+                let chosenSeedIndex = 0; // default Simple
+                let chosenSeedKey = 'simple';
+
+                if (jardinState.seedsInventory) {
+                    if (jardinState.seedsInventory.souvenir > 0) {
+                        chosenSeedIndex = 3;
+                        chosenSeedKey = 'souvenir';
+                    } else if (jardinState.seedsInventory.nacre > 0) {
+                        chosenSeedIndex = 2;
+                        chosenSeedKey = 'nacre';
+                    } else if (jardinState.seedsInventory.lunaire > 0) {
+                        chosenSeedIndex = 1;
+                        chosenSeedKey = 'lunaire';
+                    }
+                }
+
+                // Consume 1 seed from stock if upgraded
+                if (chosenSeedKey !== 'simple') {
+                    jardinState.seedsInventory[chosenSeedKey]--;
+                    jardinUpdateSeedsStockUI();
+                }
+
+                const seed = JARDIN_SEEDS[chosenSeedIndex];
+                pot.seedIndex = chosenSeedIndex;
                 pot.state = 'planted';
-                pot.isRare = Math.random() < 0.03; // 3% mutation chance (Jackpot)
+
+                // Jackpot: 3% mutation chance, only if 5 or more pots are owned (at least 2 purchased pots)
+                pot.isRare = (jardinState.potsCount >= 5) && (Math.random() < 0.03);
                 playJardinSound('plant');
                 jardinUpdatePotUI(pot, card);
 
@@ -5530,78 +5860,84 @@
                 if (jardinState.autoWater || isAverse) {
                     setTimeout(() => {
                         if (pot.state === 'planted') {
-                            jardinWaterPot(pot, card, seed);
+                            jardinWaterPot(pot, card);
                         }
                     }, 300);
                 }
-            } else if (pot.state === 'planted') {
-                jardinWaterPot(pot, card, seed);
-            } else if (pot.state === 'pest') {
-                // Squish insect!
-                playJardinSound('squish');
-                card.classList.remove('pest-shake');
-
-                const bonusAmt = Math.max(5, Math.round(seed.mult * 5));
-                jardinState.fragmentsToday += bonusAmt;
-                document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
-
-                jardinCreateExplosion(coords.x, coords.y, '🐛');
-                jardinCreateFloatingText(coords.x, coords.y, `+${bonusAmt} 🐛`);
-
-                // Resume growing
-                jardinWaterPot(pot, card, seed, pot.progress);
-            } else if (pot.state === 'ready') {
-                pot.state = 'empty';
-                pot.progress = 0;
-
-                let yieldAmt = seed.mult;
-
-                // Sunshine weather: -20% yield
-                if (currentDailyWeather && currentDailyWeather.id === 'soleil') {
-                    yieldAmt = Math.max(1, Math.round(yieldAmt * 0.8));
-                }
-
-                // Soil weather: 50% chance to double yield
-                let doubleYield = false;
-                if (currentDailyWeather && currentDailyWeather.id === 'terreau') {
-                    if (Math.random() < 0.5) {
-                        yieldAmt *= 2;
-                        doubleYield = true;
+            } else {
+                const seed = JARDIN_SEEDS[pot.seedIndex || 0];
+                if (pot.state === 'planted') {
+                    if (jardinState.autoWater) {
+                        jardinWaterPot(pot, card);
                     }
+                } else if (pot.state === 'pest') {
+                    // Squish insect!
+                    playJardinSound('squish');
+                    card.classList.remove('pest-shake');
+
+                    const bonusAmt = Math.max(5, Math.round(seed.mult * 5));
+                    jardinState.fragmentsToday += bonusAmt;
+                    document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
+
+                    jardinCreateExplosion(coords.x, coords.y, '🐛');
+                    jardinCreateFloatingText(coords.x, coords.y, `+${bonusAmt} 🐛`);
+
+                    // Resume growing
+                    jardinWaterPot(pot, card, pot.progress);
+                } else if (pot.state === 'ready') {
+                    pot.state = 'empty';
+                    pot.progress = 0;
+
+                    let yieldAmt = seed.mult;
+
+                    // Sunshine weather: -20% yield
+                    if (currentDailyWeather && currentDailyWeather.id === 'soleil') {
+                        yieldAmt = Math.max(1, Math.round(yieldAmt * 0.8));
+                    }
+
+                    // Soil weather: 50% chance to double yield
+                    let doubleYield = false;
+                    if (currentDailyWeather && currentDailyWeather.id === 'terreau') {
+                        if (Math.random() < 0.5) {
+                            yieldAmt *= 2;
+                            doubleYield = true;
+                        }
+                    }
+
+                    // Jackpot: Rare plant x50 yield
+                    const isRare = pot.isRare;
+                    if (isRare) {
+                        yieldAmt *= 50;
+                    }
+
+                    jardinState.fragmentsToday += yieldAmt;
+                    document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
+
+                    if (isRare) {
+                        playJardinSound('jackpot');
+                        jardinCreateMassiveExplosion(coords.x, coords.y, seed.grownEmoji);
+                        jardinCreateFloatingText(coords.x, coords.y, `+${yieldAmt} (JACKPOT ! ✨)`);
+                    } else {
+                        playJardinSound('harvest');
+                        jardinCreateExplosion(coords.x, coords.y, seed.grownEmoji);
+
+                        let harvestText = `+${yieldAmt}`;
+                        if (doubleYield) harvestText += " (x2! 🪱)";
+                        jardinCreateFloatingText(coords.x, coords.y, harvestText);
+                    }
+
+                    // Reset pot properties
+                    pot.isRare = false;
+                    pot.hasPest = false;
+                    pot.pestSpawned = false;
+
+                    jardinUpdatePotUI(pot, card);
                 }
-
-                // Jackpot: Rare plant x50 yield
-                const isRare = pot.isRare;
-                if (isRare) {
-                    yieldAmt *= 50;
-                }
-
-                jardinState.fragmentsToday += yieldAmt;
-                document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
-
-                if (isRare) {
-                    playJardinSound('jackpot');
-                    jardinCreateMassiveExplosion(coords.x, coords.y, seed.grownEmoji);
-                    jardinCreateFloatingText(coords.x, coords.y, `+${yieldAmt} (JACKPOT ! ✨)`);
-                } else {
-                    playJardinSound('harvest');
-                    jardinCreateExplosion(coords.x, coords.y, seed.grownEmoji);
-
-                    let harvestText = `+${yieldAmt}`;
-                    if (doubleYield) harvestText += " (x2! 🪱)";
-                    jardinCreateFloatingText(coords.x, coords.y, harvestText);
-                }
-
-                // Reset pot properties
-                pot.isRare = false;
-                pot.hasPest = false;
-                pot.pestSpawned = false;
-
-                jardinUpdatePotUI(pot, card);
             }
         }
 
-        function jardinWaterPot(pot, card, seed, resumePct = 0) {
+        function jardinWaterPot(pot, card, resumePct = 0) {
+            const seed = JARDIN_SEEDS[pot.seedIndex || 0];
             pot.state = 'growing';
             if (resumePct === 0) {
                 playJardinSound('water');
@@ -5615,9 +5951,9 @@
             const duration = (currentDailyWeather && currentDailyWeather.id === 'soleil') ? (seed.duration / 2) : seed.duration;
             const startElapsed = (resumePct / 100) * duration;
 
-            // Determine pest triggering parameters
+            // Determine pest triggering parameters - only if 5 or more pots are owned (at least 2 purchased pots)
             if (resumePct === 0) {
-                pot.hasPest = Math.random() < 0.15;
+                pot.hasPest = (jardinState.potsCount >= 5) && (Math.random() < 0.15);
                 if (pot.hasPest) {
                     pot.pestTriggerPct = 25 + Math.random() * 50; // between 25% and 75%
                     pot.pestSpawned = false;
@@ -5655,7 +5991,7 @@
             const emojiEl = card.querySelector('.jardin-pot-emoji');
             const statusEl = card.querySelector('.jardin-pot-status');
             const barEl = card.querySelector('.jardin-progress-bar');
-            const seed = JARDIN_SEEDS[jardinState.seedLevel - 1];
+            const seed = JARDIN_SEEDS[pot.seedIndex || 0];
 
             card.className = 'jardin-pot';
             barEl.style.width = '0%';
@@ -5690,17 +6026,43 @@
             }
         }
 
+        function jardinUpdateSeedsStockUI() {
+            if (!jardinState.seedsInventory) {
+                jardinState.seedsInventory = { lunaire: 0, nacre: 0, souvenir: 0 };
+            }
+            const sl = document.getElementById('jardin-stock-lunaire');
+            const sn = document.getElementById('jardin-stock-nacre');
+            const ss = document.getElementById('jardin-stock-souvenir');
+            if (sl) sl.textContent = jardinState.seedsInventory.lunaire;
+            if (sn) sn.textContent = jardinState.seedsInventory.nacre;
+            if (ss) ss.textContent = jardinState.seedsInventory.souvenir;
+        }
+
+        function jardinBuySeeds(type, cost) {
+            if (jardinState.energy >= cost) {
+                jardinState.energy -= cost;
+                if (!jardinState.seedsInventory) {
+                    jardinState.seedsInventory = { lunaire: 0, nacre: 0, souvenir: 0 };
+                }
+                jardinState.seedsInventory[type] = (jardinState.seedsInventory[type] || 0) + 10;
+                playJardinSound('upgrade');
+                jardinUpdateGlobalUI();
+                jardinUpdateShopUI();
+                jardinUpdateSeedsStockUI();
+            }
+        }
+
         function getJardinPotCost() {
-            return Math.floor(10 * Math.pow(4, jardinState.potsCount - 3));
+            return Math.floor(20 * Math.pow(3, jardinState.potsCount - 3));
         }
 
         function getJardinSeedCost() {
             if (jardinState.seedLevel >= JARDIN_SEEDS.length) return Infinity;
-            return Math.floor(50 * Math.pow(6, jardinState.seedLevel - 1));
+            return Math.floor(150 * Math.pow(5, jardinState.seedLevel - 1));
         }
 
         function getJardinWaterCost() {
-            return jardinState.autoWater ? Infinity : 250;
+            return jardinState.autoWater ? Infinity : 500;
         }
 
         function jardinUpdateShopUI() {
@@ -5708,8 +6070,8 @@
             const btnPot = document.getElementById('jardin-btn-buy-pot');
             const descPot = document.getElementById('jardin-desc-pots');
 
-            if (jardinState.potsCount >= 9) {
-                descPot.textContent = "Limite max atteinte (9 pots)";
+            if (jardinState.potsCount >= 48) {
+                descPot.textContent = "Limite max atteinte (48 pots)";
                 btnPot.textContent = "Max";
                 btnPot.disabled = true;
             } else {
@@ -5718,20 +6080,22 @@
                 btnPot.disabled = jardinState.energy < potCost;
             }
 
-            const seedCost = getJardinSeedCost();
-            const btnSeed = document.getElementById('jardin-btn-buy-seed');
-            const descSeed = document.getElementById('jardin-desc-seeds');
-
-            if (jardinState.seedLevel >= JARDIN_SEEDS.length) {
-                descSeed.textContent = "Cerise du Souvenir max !";
-                btnSeed.textContent = "Max";
-                btnSeed.disabled = true;
-            } else {
-                const nextSeed = JARDIN_SEEDS[jardinState.seedLevel];
-                descSeed.textContent = `${nextSeed.name.split(' ')[0]} (Mult x${nextSeed.mult})`;
-                btnSeed.textContent = `${seedCost} ✨`;
-                btnSeed.disabled = jardinState.energy < seedCost;
+            if (!jardinState.seedsInventory) {
+                jardinState.seedsInventory = { lunaire: 0, nacre: 0, souvenir: 0 };
             }
+            const slDesc = document.getElementById('jardin-desc-qty-lunaire');
+            const snDesc = document.getElementById('jardin-desc-qty-nacre');
+            const ssDesc = document.getElementById('jardin-desc-qty-souvenir');
+            if (slDesc) slDesc.textContent = `Stock: ${jardinState.seedsInventory.lunaire}`;
+            if (snDesc) snDesc.textContent = `Stock: ${jardinState.seedsInventory.nacre}`;
+            if (ssDesc) ssDesc.textContent = `Stock: ${jardinState.seedsInventory.souvenir}`;
+
+            const btnSL = document.getElementById('jardin-btn-buy-seed-lunaire');
+            const btnSN = document.getElementById('jardin-btn-buy-seed-nacre');
+            const btnSS = document.getElementById('jardin-btn-buy-seed-souvenir');
+            if (btnSL) btnSL.disabled = jardinState.energy < 15;
+            if (btnSN) btnSN.disabled = jardinState.energy < 80;
+            if (btnSS) btnSS.disabled = jardinState.energy < 400;
 
             const waterCost = getJardinWaterCost();
             const btnWater = document.getElementById('jardin-btn-buy-water');
@@ -5746,11 +6110,25 @@
                 btnWater.textContent = `${waterCost} ✨`;
                 btnWater.disabled = jardinState.energy < waterCost;
             }
+
+            const btnScythe = document.getElementById('jardin-btn-buy-scythe');
+            const descScythe = document.getElementById('jardin-desc-scythe');
+            if (btnScythe) {
+                if (jardinState.hasScythe) {
+                    descScythe.textContent = "Faux Cosmique activée !";
+                    btnScythe.textContent = "Acheté";
+                    btnScythe.disabled = true;
+                } else {
+                    descScythe.textContent = "Récolte, plante et arrose tout en 1 clic !";
+                    btnScythe.textContent = "5000 ✨";
+                    btnScythe.disabled = jardinState.energy < 5000;
+                }
+            }
         }
 
         function jardinBuyPot() {
             const cost = getJardinPotCost();
-            if (jardinState.energy >= cost && jardinState.potsCount < 9) {
+            if (jardinState.energy >= cost && jardinState.potsCount < 48) {
                 jardinState.energy -= cost;
                 jardinState.potsCount++;
                 playJardinSound('upgrade');
@@ -5779,6 +6157,101 @@
                 jardinUpdateGlobalUI();
                 jardinUpdateShopUI();
             }
+        }
+
+        function jardinBuyScythe() {
+            if (jardinState.energy >= 5000 && !jardinState.hasScythe) {
+                jardinState.energy -= 5000;
+                jardinState.hasScythe = true;
+                playJardinSound('upgrade');
+                jardinUpdateGlobalUI();
+                jardinUpdateShopUI();
+                const btn = document.getElementById('jardin-scythe-btn');
+                if (btn) btn.style.display = 'flex';
+            }
+        }
+
+        function jardinUseScythe() {
+            if (!jardinState.hasScythe) return;
+            playJardinSound('jackpot');
+
+            for (let i = 0; i < jardinState.potsCount; i++) {
+                const pot = jardinState.pots[i];
+                const card = document.getElementById(`jardin-pot-${i}`);
+                if (!card) continue;
+
+                const seed = JARDIN_SEEDS[pot.seedIndex || 0];
+
+                if (pot.state === 'pest') {
+                    playJardinSound('squish');
+                    card.classList.remove('pest-shake');
+                    const bonusAmt = Math.max(5, Math.round(seed.mult * 5));
+                    jardinState.fragmentsToday += bonusAmt;
+                    document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
+                    const rect = card.getBoundingClientRect();
+                    jardinCreateExplosion(rect.left + rect.width / 2, rect.top + rect.height / 2, '🐛');
+                    jardinCreateFloatingText(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${bonusAmt} 🐛`);
+                    jardinWaterPot(pot, card, pot.progress);
+                }
+
+                if (pot.state === 'ready') {
+                    pot.state = 'empty';
+                    pot.progress = 0;
+                    let yieldAmt = seed.mult;
+                    if (currentDailyWeather && currentDailyWeather.id === 'soleil') {
+                        yieldAmt = Math.max(1, Math.round(yieldAmt * 0.8));
+                    }
+                    if (pot.isRare) {
+                        yieldAmt *= 50;
+                    }
+                    if (currentDailyWeather && currentDailyWeather.id === 'terreau') {
+                        if (Math.random() < 0.5) {
+                            yieldAmt *= 2;
+                        }
+                    }
+                    jardinState.fragmentsToday += yieldAmt;
+                    document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
+                    const rect = card.getBoundingClientRect();
+                    jardinCreateExplosion(rect.left + rect.width / 2, rect.top + rect.height / 2, '✨');
+                    if (pot.isRare) {
+                        playJardinSound('jackpot');
+                        jardinCreateFloatingText(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${yieldAmt} (JACKPOT ! ✨)`);
+                    } else {
+                        jardinCreateFloatingText(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${yieldAmt}`);
+                    }
+                    jardinUpdatePotUI(pot, card);
+                }
+
+                if (pot.state === 'empty') {
+                    // Determine best available seed
+                    let chosenSeedIndex = 0;
+                    let chosenSeedKey = 'simple';
+                    if (jardinState.seedsInventory) {
+                        if (jardinState.seedsInventory.souvenir > 0) {
+                            chosenSeedIndex = 3;
+                            chosenSeedKey = 'souvenir';
+                        } else if (jardinState.seedsInventory.nacre > 0) {
+                            chosenSeedIndex = 2;
+                            chosenSeedKey = 'nacre';
+                        } else if (jardinState.seedsInventory.lunaire > 0) {
+                            chosenSeedIndex = 1;
+                            chosenSeedKey = 'lunaire';
+                        }
+                    }
+                    if (chosenSeedKey !== 'simple') {
+                        jardinState.seedsInventory[chosenSeedKey]--;
+                    }
+                    pot.seedIndex = chosenSeedIndex;
+                    pot.state = 'planted';
+                    pot.isRare = (jardinState.potsCount >= 5) && (Math.random() < 0.03);
+                    jardinUpdatePotUI(pot, card);
+                }
+
+                if (pot.state === 'planted') {
+                    jardinWaterPot(pot, card);
+                }
+            }
+            jardinUpdateSeedsStockUI();
         }
 
         function jardinCreateExplosion(x, y, emoji) {
@@ -9892,7 +10365,8 @@
                 energy: energy,
                 potsCount: potsCount,
                 seedLevel: seedLevel,
-                autoWater: autoWater
+                autoWater: autoWater,
+                hasScythe: typeof jardinState !== 'undefined' ? (jardinState.hasScythe || false) : false
             }));
 
             if (typeof jardinUpdateGlobalUI === 'function') {
@@ -10489,6 +10963,7 @@
                 jardinState.potsCount = 3;
                 jardinState.seedLevel = 1;
                 jardinState.autoWater = false;
+                jardinState.hasScythe = false;
                 jardinState.pots = [];
             }
             window.hidden_skin_level = 1;
