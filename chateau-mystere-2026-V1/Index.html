@@ -2336,6 +2336,37 @@
         .bf-fighter-icon {
             font-size: 2.8rem;
             margin-bottom: 2px;
+            transition: filter 0.3s ease;
+        }
+
+        .skin-aura-green {
+            filter: drop-shadow(0 0 8px #10b981) drop-shadow(0 0 15px #10b981) !important;
+            animation: auraPulseGreen 2s infinite alternate;
+        }
+
+        .skin-aura-gold {
+            filter: drop-shadow(0 0 12px #f2d06b) drop-shadow(0 0 25px #c9a84c) !important;
+            animation: auraPulseGold 2s infinite alternate;
+        }
+
+        @keyframes auraPulseGreen {
+            0% {
+                filter: drop-shadow(0 0 6px #10b981) drop-shadow(0 0 12px #10b981) !important;
+            }
+
+            100% {
+                filter: drop-shadow(0 0 12px #10b981) drop-shadow(0 0 24px #10b981) !important;
+            }
+        }
+
+        @keyframes auraPulseGold {
+            0% {
+                filter: drop-shadow(0 0 8px #f2d06b) drop-shadow(0 0 18px #c9a84c) !important;
+            }
+
+            100% {
+                filter: drop-shadow(0 0 16px #f2d06b) drop-shadow(0 0 35px #c9a84c) !important;
+            }
         }
 
         .bf-fighter-name {
@@ -2701,7 +2732,8 @@
             background: #dc2626;
         }
 
-        #debug-select {
+        #debug-select,
+        #debug-resonance {
             padding: 8px 10px;
             font-size: 0.75rem;
             font-family: var(--font-ui);
@@ -5036,6 +5068,12 @@
         <select id="debug-select" onchange="jumpToEnigma(this.value)" title="Sauter directement à une énigme">
             <option value="">🎯 Aller à...</option>
         </select>
+        <select id="debug-resonance" onchange="debugSetResonance(this.value)" title="Niveau de Résonance (Jardin)">
+            <option value="">🪴 Résonance...</option>
+            <option value="1">Résonance I (0 ✨)</option>
+            <option value="2">Résonance II (500 ✨)</option>
+            <option value="3">Résonance III (5000 ✨)</option>
+        </select>
     </div>
 
     <!-- ═══════════════════════ JAVASCRIPT ══════════════════════════ -->
@@ -5117,9 +5155,32 @@
             const debugBtn = document.getElementById('splash-debug-btn');
             if (!splash || !timerEl) return;
 
+            // 1. Si le joueur a déjà commencé l'aventure principale, on zappe l'écran de garde
+            if (localStorage.getItem('escapeGame_startTime')) {
+                splash.style.display = 'none';
+                splash.remove();
+                return;
+            }
+
             let interval;
 
-            // Fonction pour faire disparaître l'écran proprement
+            // 2. Création dynamique du bouton pour lancer l'aventure (caché par défaut)
+            let startAdventureBtn = document.getElementById('splash-start-adventure-btn');
+            if (!startAdventureBtn) {
+                startAdventureBtn = document.createElement('button');
+                startAdventureBtn.id = 'splash-start-adventure-btn';
+                startAdventureBtn.className = 'btn btn-primary';
+                startAdventureBtn.style.cssText = 'display: none; margin: 25px auto 0; padding: 14px 28px; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4); text-transform: uppercase; letter-spacing: 2px;';
+                startAdventureBtn.innerHTML = 'Ouvrir le cadeau 💌';
+                startAdventureBtn.addEventListener('click', forceSplashClose);
+
+                // On l'insère juste en dessous du bouton "Cultiver le Jardin"
+                const teaserBtn = document.querySelector('.jardin-teaser-trigger');
+                if (teaserBtn && teaserBtn.parentNode) {
+                    teaserBtn.parentNode.insertBefore(startAdventureBtn, teaserBtn.nextSibling);
+                }
+            }
+
             function forceSplashClose() {
                 if (interval) clearInterval(interval);
                 splash.classList.add('splash-hidden');
@@ -5128,7 +5189,7 @@
                 }, 1500); // 1.5s correspond à la durée de la transition CSS
             }
 
-            // Afficher le bouton si le mode DEBUG global de ton code est actif (?debug=true dans l'URL)
+            // Afficher le bouton Debug si le mode DEBUG global est actif
             if (typeof DEBUG !== 'undefined' && DEBUG === true && debugBtn) {
                 debugBtn.style.display = 'block';
                 debugBtn.addEventListener('click', forceSplashClose);
@@ -5139,9 +5200,15 @@
                 const diff = CADEAU_DATE - now;
 
                 if (diff <= 0) {
-                    // Fin naturelle du timer
-                    forceSplashClose();
-                    return true;
+                    // 3. Le temps est écoulé : on fige à zéro et on affiche le bouton pour continuer
+                    timerEl.textContent = '00h 00m 00s';
+                    startAdventureBtn.style.display = 'block';
+
+                    // On ajoute un effet visuel "Validé" sur le chrono
+                    timerEl.style.textShadow = '0 0 20px rgba(16, 185, 129, 0.8), 0 0 40px rgba(16, 185, 129, 0.4)';
+                    timerEl.style.color = '#10b981'; // Vert néon
+
+                    return true; // Renvoie 'true' pour stopper la boucle setInterval
                 }
 
                 const h = Math.floor(diff / 3600000);
@@ -5159,12 +5226,8 @@
             // Premier calcul au chargement
             const isPassed = updateSplash();
 
-            if (isPassed) {
-                // La date est déjà passée, on retire le splash instantanément
-                splash.style.display = 'none';
-                splash.remove();
-            } else {
-                // Déclenchement de la boucle
+            // 4. Si la date n'est pas encore passée, on lance le chronomètre
+            if (!isPassed) {
                 interval = setInterval(() => {
                     if (updateSplash()) clearInterval(interval);
                 }, 1000);
@@ -5319,6 +5382,9 @@
                     badge.textContent = "Niveau de Résonance : III";
                     badge.style.color = "#ff6b81";
                     badge.style.borderColor = "#ff6b81";
+                }
+                if (typeof ChateauAchievements !== 'undefined') {
+                    ChateauAchievements.unlock('main_verte');
                 }
             } else if (jardinState.energy >= 500) {
                 skinLevel = 2;
@@ -6602,7 +6668,8 @@
                 { id: 'zero_fault', title: 'Parfaite moitié', desc: 'Résoudre une énigme sans faire d\'erreur', icon: '✨' },
                 { id: 'intouchable', title: 'Intouchable', desc: 'Sortir du combat indemne', icon: '🛡️' },
                 { id: 'orgasme_finish', title: 'L\'Amour Vaincra', desc: 'Donner le coup de grâce en utilisant l\'orgasme 💋', icon: '💋' },
-                { id: 'curieux', title: 'Curieux', desc: 'Utiliser un indice', icon: '🔍' }
+                { id: 'curieux', title: 'Curieux', desc: 'Utiliser un indice', icon: '🔍' },
+                { id: 'main_verte', title: 'Jardinière de l\'Aube', desc: 'Atteindre le Niveau de Résonance III dans le Jardin.', icon: '🪴' }
             ],
             unlocked: new Set(JSON.parse(localStorage.getItem('escapeGame_achievements') || '[]')),
             unlock(id) {
@@ -7493,11 +7560,42 @@
                     const hpText = (totalErrorsCount > 0 && totalHintsCount > 0)
                         ? `<strong>${totalErrorsCount}</strong> × <strong>${totalHintsCount}</strong> = <strong>${bossHP} PV</strong>`
                         : `Minimum <strong>${bossHP} PV</strong> (aucun malus accumulé)`;
+
+                    // Read resonance level and energy
+                    let resonance = window.hidden_skin_level || 1;
+                    let energy = 0;
+                    try {
+                        const saved = localStorage.getItem('jardin_souvenirs_state');
+                        if (saved) {
+                            const parsed = JSON.parse(saved);
+                            energy = parsed.energy || 0;
+                            if (!window.hidden_skin_level) {
+                                resonance = energy >= 5000 ? 3 : (energy >= 500 ? 2 : 1);
+                            }
+                        } else if (typeof jardinState !== 'undefined') {
+                            energy = jardinState.energy || 0;
+                            if (!window.hidden_skin_level) {
+                                resonance = energy >= 5000 ? 3 : (energy >= 500 ? 2 : 1);
+                            }
+                        }
+                    } catch (e) {
+                        resonance = 1;
+                    }
+
+                    const evaAuraClass = resonance === 3 ? 'skin-aura-gold' : (resonance === 2 ? 'skin-aura-green' : '');
+                    const resonanceBonusText = resonance >= 2
+                        ? `<div class="bf-debug-bonus" style="color:#10b981; font-weight:bold; font-size:0.95rem; margin-top:10px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                            <span>🪴</span> <span>Bonus du Jardin : +2 PV Max (Score : ${energy.toLocaleString()} ✨)</span>
+                           </div>`
+                        : `<div class="bf-debug-bonus" style="color:#64748b; font-size:0.85rem; margin-top:10px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                            <span>🪴</span> <span>Jardin des Souvenirs : Score de ${energy.toLocaleString()} ✨ (Bonus à 500 ✨)</span>
+                           </div>`;
+
                     interactionHtml = `
             <div class="bf-intro">
                 <div class="bf-vs">
                     <div class="bf-fighter">
-                        <div class="bf-fighter-icon">✨</div>
+                        <div class="bf-fighter-icon ${evaAuraClass}">✨</div>
                         <div class="bf-fighter-name eva">Eva</div>
                     </div>
                     <div class="bf-vs-text">VS</div>
@@ -7506,12 +7604,12 @@
                         <div class="bf-fighter-name malus">Malus</div>
                     </div>
                 </div>
-                <div class="bf-hp-info">PV de Malus : ${hpText}</div>
+                <div class="bf-hp-info">PV de Malus : ${hpText} ${resonanceBonusText}</div>
                 <div style="margin-top:12px;font-size:0.78rem;color:var(--text-muted);text-align:left;max-width:320px;margin-left:auto;margin-right:auto;line-height:1.9;">
                     <div>⚡ <strong style="color:#facc15">Éclair d'Amour</strong> — 1 dégât (cône frontal)</div>
-                    <div>🧴 <strong style="color:#a78bfa">Lancer d'Alcoo Ménager</strong> — 3 dégâts (CD 2s)</div>
-                    <div>🌙 <strong style="color:#93c5fd">Laku Noc</strong> — 5 dégâts (CD 15s)</div>
-                    <div>💋 <strong style="color:#f472b6">Orgasme</strong> — Renvoie les projectiles vers Malus (cercle, 5s, CD 30s)</div>
+                    <div>🧴 <strong style="color:#a78bfa">Lancer d'Alcoo Ménager</strong> — 3 dégâts (cooldown 2s)</div>
+                    <div>🌙 <strong style="color:#93c5fd">Laku Noc</strong> — 5 dégâts (cooldown 15s)</div>
+                    <div>💋 <strong style="color:#f472b6">Orgasme</strong> — Renvoie les projectiles vers Malus (cercle, 5s, cooldown 30s)</div>
                 </div>
                 <button class="btn btn-primary" onclick="startBossFight()" style="margin-top:18px;">⚔️ Commencer le combat</button>
                 <div class="bf-kb-hint">Clavier : ← → pour bouger · 1 2 3 4 pour attaquer</div>
@@ -9773,6 +9871,87 @@
                 '<option value="victory">🏆 Victoire</option>';
         }
 
+        function debugSetResonance(val) {
+            if (val === '') return;
+            const level = parseInt(val, 10);
+            const energy = level === 3 ? 5000 : (level === 2 ? 500 : 0);
+
+            let potsCount = 3;
+            let seedLevel = 1;
+            let autoWater = false;
+
+            if (typeof jardinState !== 'undefined') {
+                jardinState.energy = energy;
+                potsCount = jardinState.potsCount || 3;
+                seedLevel = jardinState.seedLevel || 1;
+                autoWater = jardinState.autoWater || false;
+            }
+            window.hidden_skin_level = level;
+
+            localStorage.setItem('jardin_souvenirs_state', JSON.stringify({
+                energy: energy,
+                potsCount: potsCount,
+                seedLevel: seedLevel,
+                autoWater: autoWater
+            }));
+
+            if (typeof jardinUpdateGlobalUI === 'function') {
+                jardinUpdateGlobalUI();
+            }
+
+            window.jardin_eva_bonus_hp = level >= 2 ? 2 : 0;
+
+            const fighterIcons = document.querySelectorAll('.bf-vs .bf-fighter-icon');
+            if (fighterIcons && fighterIcons.length > 0) {
+                const evaIcon = fighterIcons[0];
+                evaIcon.classList.remove('skin-aura-green', 'skin-aura-gold');
+                if (level === 2) {
+                    evaIcon.classList.add('skin-aura-green');
+                } else if (level === 3) {
+                    evaIcon.classList.add('skin-aura-gold');
+                }
+            }
+
+            const hpInfo = document.querySelector('.bf-hp-info');
+            if (hpInfo) {
+                const existingBonus = hpInfo.querySelector('.bf-debug-bonus');
+                if (existingBonus) existingBonus.remove();
+
+                const bonusText = document.createElement('div');
+                bonusText.className = 'bf-debug-bonus';
+                bonusText.style.marginTop = '10px';
+                bonusText.style.display = 'flex';
+                bonusText.style.alignItems = 'center';
+                bonusText.style.justifyContent = 'center';
+                bonusText.style.gap = '6px';
+
+                if (level >= 2) {
+                    bonusText.style.color = '#10b981';
+                    bonusText.style.fontWeight = 'bold';
+                    bonusText.style.fontSize = '0.95rem';
+                    bonusText.innerHTML = `<span>🪴</span> <span>Bonus du Jardin : +2 PV Max (Score : ${energy.toLocaleString()} ✨)</span>`;
+                } else {
+                    bonusText.style.color = '#64748b';
+                    bonusText.style.fontSize = '0.85rem';
+                    bonusText.innerHTML = `<span>🪴</span> <span>Jardin des Souvenirs : Score de ${energy.toLocaleString()} ✨ (Bonus à 500 ✨)</span>`;
+                }
+                hpInfo.appendChild(bonusText);
+            }
+
+            if (bf && bf.eva) {
+                const oldMaxHp = bf.eva.maxHp;
+                const newMaxHp = 5 + (bf.difficulty === 'easy' ? 10 : bf.difficulty === 'normal' ? 5 : 0) + window.jardin_eva_bonus_hp;
+                const diffHp = newMaxHp - oldMaxHp;
+                bf.eva.maxHp = newMaxHp;
+                bf.eva.hp = Math.max(1, bf.eva.hp + diffHp);
+            }
+
+            const debugSel = document.getElementById('debug-resonance');
+            if (debugSel) debugSel.value = '';
+
+            alert(`Résonance modifiée au Niveau ${level === 3 ? 'III' : (level === 2 ? 'II' : 'I')} (${energy} ✨)`);
+        }
+
         function jumpToEnigma(val) {
             if (val === '') return;
             const $sel = document.getElementById('debug-select');
@@ -10302,6 +10481,19 @@
             Object.keys(localStorage)
                 .filter(k => k.startsWith('escapeGame_'))
                 .forEach(k => localStorage.removeItem(k));
+
+            // Réinitialiser le Jardin des Souvenirs
+            localStorage.removeItem('jardin_souvenirs_state');
+            if (typeof jardinState !== 'undefined') {
+                jardinState.energy = 0;
+                jardinState.potsCount = 3;
+                jardinState.seedLevel = 1;
+                jardinState.autoWater = false;
+                jardinState.pots = [];
+            }
+            window.hidden_skin_level = 1;
+            window.jardin_eva_bonus_hp = 0;
+
             currentIndex = 0;
             startTime = null;
             hintsUsed = {};
@@ -10610,6 +10802,74 @@
         function startBossFight() {
             ChateauAudio.playSuccess(true);
             triggerPortalTransition();
+
+            // Read resonance level
+            let resonance = window.hidden_skin_level;
+            if (!resonance) {
+                try {
+                    const saved = localStorage.getItem('jardin_souvenirs_state');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        resonance = parsed.energy >= 5000 ? 3 : (parsed.energy >= 500 ? 2 : 1);
+                    } else {
+                        resonance = 1;
+                    }
+                } catch (e) {
+                    resonance = 1;
+                }
+            }
+
+            // Apply resonance bonus
+            window.jardin_eva_bonus_hp = resonance >= 2 ? 2 : 0;
+
+            // Apply CSS class to Eva's fighter icon in the intro screen (first child of bf-vs)
+            const fighterIcons = document.querySelectorAll('.bf-vs .bf-fighter-icon');
+            if (fighterIcons && fighterIcons.length > 0) {
+                const evaIcon = fighterIcons[0];
+                if (resonance === 2) {
+                    evaIcon.classList.add('skin-aura-green');
+                } else if (resonance === 3) {
+                    evaIcon.classList.add('skin-aura-gold');
+                }
+            }
+
+            // Append extra HP description in .bf-hp-info
+            const hpInfo = document.querySelector('.bf-hp-info');
+            if (hpInfo) {
+                const existing = hpInfo.querySelector('.bf-debug-bonus');
+                if (existing) existing.remove();
+
+                // Get energy score
+                let energy = jardinState.energy || 0;
+                try {
+                    const saved = localStorage.getItem('jardin_souvenirs_state');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        energy = parsed.energy || 0;
+                    }
+                } catch (e) { }
+
+                const bonusText = document.createElement('div');
+                bonusText.className = 'bf-debug-bonus';
+                bonusText.style.marginTop = '10px';
+                bonusText.style.display = 'flex';
+                bonusText.style.alignItems = 'center';
+                bonusText.style.justifyContent = 'center';
+                bonusText.style.gap = '6px';
+
+                if (resonance >= 2) {
+                    bonusText.style.color = '#10b981';
+                    bonusText.style.fontWeight = 'bold';
+                    bonusText.style.fontSize = '0.95rem';
+                    bonusText.innerHTML = `<span>🪴</span> <span>Bonus du Jardin : +2 PV Max (Score : ${energy.toLocaleString()} ✨)</span>`;
+                } else {
+                    bonusText.style.color = '#64748b';
+                    bonusText.style.fontSize = '0.85rem';
+                    bonusText.innerHTML = `<span>🪴</span> <span>Jardin des Souvenirs : Score de ${energy.toLocaleString()} ✨ (Bonus à 500 ✨)</span>`;
+                }
+                hpInfo.appendChild(bonusText);
+            }
+
             // Show difficulty selection overlay
             const menu = document.createElement('div');
             menu.className = 'bf-difficulty-menu';
@@ -10712,7 +10972,8 @@
             const baseHP = Math.max(3, totalErrorsCount * totalHintsCount);
             const easyBonus = diff === 'easy' ? 10 : diff === 'normal' ? 5 : 0;
             const malusMult = diff === 'easy' ? 1 : diff === 'normal' ? 2 : 3;
-            const evaMaxHp = 5 + easyBonus;
+            const resonanceBonus = window.jardin_eva_bonus_hp || 0;
+            const evaMaxHp = 5 + easyBonus + resonanceBonus;
             const malusHP = Math.max(3, baseHP * malusMult);
             const diffLabel = diff === 'easy' ? '🌿 Facile' : diff === 'normal' ? '⚔️ Normal' : '🔥 Difficile';
 
@@ -12020,8 +12281,57 @@
             ctx.save();
             ctx.translate(eva.x, eva.y);
             if (eva.inv > 0 && Math.sin(time * 20) > 0) ctx.globalAlpha = 0.3;
+
+            let resonance = window.hidden_skin_level;
+            if (!resonance) {
+                try {
+                    const saved = localStorage.getItem('jardin_souvenirs_state');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        resonance = parsed.energy >= 5000 ? 3 : (parsed.energy >= 500 ? 2 : 1);
+                    } else {
+                        resonance = 1;
+                    }
+                } catch (e) {
+                    resonance = 1;
+                }
+            }
+
+            // Draw skin aura ring/halo behind Eva's body
+            if (resonance === 2 || resonance === 3) {
+                ctx.save();
+                ctx.strokeStyle = resonance === 3 ? 'rgba(242, 208, 107, 0.4)' : 'rgba(16, 185, 129, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = resonance === 3 ? '#f2d06b' : '#10b981';
+                ctx.shadowBlur = 15;
+
+                // Draw pulsing oval under her feet
+                ctx.beginPath();
+                const pulse = 1.0 + Math.sin(time * 6) * 0.15;
+                ctx.ellipse(0, 16, 14 * pulse, 6 * pulse, 0, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Draw some small floating sparkles rising up
+                ctx.fillStyle = resonance === 3 ? 'rgba(242, 208, 107, 0.8)' : 'rgba(16, 185, 129, 0.8)';
+                ctx.shadowBlur = 4;
+                for (let i = 0; i < 3; i++) {
+                    const sparkX = Math.cos(time * 2 + i) * 12;
+                    const sparkY = 16 - ((time * 20 + i * 15) % 45);
+                    if (sparkY > -25) {
+                        ctx.beginPath();
+                        ctx.arc(sparkX, sparkY, 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                ctx.restore();
+            }
+
             if (eva.shield.active) {
                 ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 10;
+            } else if (resonance === 3) {
+                ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 20;
+            } else if (resonance === 2) {
+                ctx.shadowColor = '#10b981'; ctx.shadowBlur = 12;
             } else {
                 ctx.shadowColor = '#f2d06b'; ctx.shadowBlur = 6;
             }
@@ -12407,16 +12717,47 @@
             // Eva HP
             ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.beginPath(); ctx.roundRect(pad, y, bw, bh, 4); ctx.fill();
+            let resonance = window.hidden_skin_level;
+            if (!resonance) {
+                try {
+                    const saved = localStorage.getItem('jardin_souvenirs_state');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        resonance = parsed.energy >= 5000 ? 3 : (parsed.energy >= 500 ? 2 : 1);
+                    } else {
+                        resonance = 1;
+                    }
+                } catch (e) {
+                    resonance = 1;
+                }
+            }
+
             const eg = ctx.createLinearGradient(pad, 0, pad + bw, 0);
             const orgActive = eva.orgasme && eva.orgasme.active;
-            if (orgActive) { eg.addColorStop(0, '#f472b6'); eg.addColorStop(1, '#ec4899'); }
-            else { eg.addColorStop(0, '#f2d06b'); eg.addColorStop(1, '#c9a84c'); }
+            if (orgActive) {
+                eg.addColorStop(0, '#f472b6'); eg.addColorStop(1, '#ec4899');
+            } else if (resonance === 3) {
+                eg.addColorStop(0, '#fef08a'); eg.addColorStop(1, '#f2d06b');
+            } else if (resonance === 2) {
+                eg.addColorStop(0, '#34d399'); eg.addColorStop(1, '#10b981');
+            } else {
+                eg.addColorStop(0, '#f2d06b'); eg.addColorStop(1, '#c9a84c');
+            }
             ctx.fillStyle = eg;
             ctx.beginPath(); ctx.roundRect(pad, y, bw * Math.max(0, eva.hp / eva.maxHp), bh, 4); ctx.fill();
             ctx.strokeStyle = (eva.orgasme && eva.orgasme.active) ? 'rgba(244,114,182,0.5)' : 'rgba(201,168,76,0.4)';
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.roundRect(pad, y, bw, bh, 4); ctx.stroke();
-            ctx.fillStyle = (eva.orgasme && eva.orgasme.active) ? '#f472b6' : '#f2d06b';
+
+            if (eva.orgasme && eva.orgasme.active) {
+                ctx.fillStyle = '#f472b6';
+            } else if (resonance === 3) {
+                ctx.fillStyle = '#fef08a';
+            } else if (resonance === 2) {
+                ctx.fillStyle = '#34d399';
+            } else {
+                ctx.fillStyle = '#f2d06b';
+            }
             ctx.font = `700 ${W * 0.026}px Inter, sans-serif`;
             ctx.textAlign = 'left';
             ctx.fillText(`Eva  ${eva.hp}/${eva.maxHp}`, pad, y - 4);
