@@ -7,19 +7,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <!-- PWA Settings -->
     <meta name="theme-color" content="#0a0f1d">
     <meta name="description" content="Joyeux anniversaire">
-
-    <!-- iOS support -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="À nos 2 ans ♥️">
-    <link rel="apple-touch-icon" href="assets/icon-192.png">
-
-    <!-- Android/Universal PWA -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <link rel="manifest" href="manifest.json">
     <title>À nos 2 ans ♥️</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2806,40 +2795,44 @@
             margin-top: var(--gap-md);
         }
 
-        /* ───────────────────────── BOUTON PWA ───────────────────────── */
-        .btn-install-pwa {
-            display: inline-flex;
+        /* ───────────────────────── BOUTON FULLSCREEN DISCRET ───────────────────────── */
+        #fullscreen-toggle-btn {
+            position: fixed;
+            bottom: calc(var(--safe-bottom) + 16px);
+            right: 16px;
+            z-index: 9998;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(15, 16, 53, 0.6);
+            border: 1px solid rgba(201, 168, 76, 0.3);
+            color: var(--clr-gold-bright);
+            font-size: 1.1rem;
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            margin-top: 35px;
-            padding: 12px 28px;
-            font-family: var(--font-display);
-            font-size: 0.9rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--clr-gold-bright);
-            background: rgba(201, 168, 76, 0.08);
-            border: 1px solid rgba(201, 168, 76, 0.4);
-            border-radius: var(--radius-xl);
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .btn-install-pwa:hover {
+        #fullscreen-toggle-btn:hover {
             background: rgba(201, 168, 76, 0.2);
             border-color: var(--clr-gold-bright);
-            box-shadow: 0 0 25px rgba(242, 208, 107, 0.3);
-            transform: translateY(-2px);
-            color: #fff;
+            box-shadow: 0 0 15px rgba(242, 208, 107, 0.3);
+            transform: scale(1.08);
         }
 
-        .btn-install-pwa.hidden {
+        #fullscreen-toggle-btn.hidden {
             display: none !important;
+        }
+
+        /* Ajustement du panneau debug si à côté */
+        #debug-panel {
+            right: 68px !important;
         }
 
         .splash-content {
@@ -4193,23 +4186,23 @@
             <div class="splash-timer" id="splash-timer">--h --m --s</div>
             <p class="splash-subtitle">Le 16 juillet 2026 à 22h22</p>
 
-            <!-- Bouton d'installation PWA -->
-            <button id="pwa-install-btn" class="btn-install-pwa hidden">
-                <span style="font-size: 1.2rem;">✨</span> Installer l'Expérience
-            </button>
-            <!-- Texte pour iOS -->
-            <p id="ios-install-hint" class="splash-subtitle hidden"
-                style="font-size: 0.75rem; margin-top: 15px; color: var(--text-muted);">
-                Sur iPhone : Touchez le bouton "Partager" ⇪ puis "Sur l'écran d'accueil"
-            </p>
-
             <!-- Bouton Debug (visible uniquement si DEBUG = true) -->
             <button id="splash-debug-btn" class="btn btn-primary"
                 style="display: none; margin: 30px auto 0; font-size: 0.75rem; padding: 8px 16px; background: #ef4444; border-color: #ef4444; color: white;">
                 ⚡ Debug : Simuler l'ouverture
             </button>
+
+            <!-- Prompt plein écran discret -->
+            <button class="start-fullscreen-prompt" onclick="ChateauFullscreen.toggle()"
+                style="display: block; background: none; border: none; color: var(--text-muted); font-size: 0.75rem; text-decoration: underline; cursor: pointer; margin: 20px auto 0; font-family: var(--font-ui); -webkit-tap-highlight-color: transparent;">
+                Passer en plein écran
+            </button>
         </div>
     </div>
+
+    <!-- Bouton Plein Écran Discret (disponible tout au long du jeu) -->
+    <button id="fullscreen-toggle-btn" class="hidden" onclick="ChateauFullscreen.toggle()"
+        title="Plein écran">⛶</button>
 
     <!-- ═══════════════════════ FIXED HEADER ═══════════════════════ -->
     <header id="header" class="hidden">
@@ -4389,14 +4382,14 @@
 
         const localStorage = new Proxy(storageTarget, {
             get(target, prop) {
-                if (isStorageFallbackActive) {
-                    if (prop === 'getItem') return (k) => target.getItem(k);
-                    if (prop === 'setItem') return (k, v) => target.setItem(k, v);
-                    if (prop === 'removeItem') return (k) => target.removeItem(k);
-                    if (prop === 'clear') return () => target.clear();
+                const val = target[prop];
+                if (typeof val === 'function') {
+                    return val.bind(target);
+                }
+                if (isStorageFallbackActive && prop !== 'clear' && prop !== 'getItem' && prop !== 'setItem' && prop !== 'removeItem') {
                     return safeStorageFallback[prop] !== undefined ? safeStorageFallback[prop] : null;
                 }
-                return target[prop];
+                return val;
             },
             set(target, prop, value) {
                 if (isStorageFallbackActive) {
@@ -5424,11 +5417,13 @@
             }
 
             if (savedDone === 'victory') {
+                showFullscreenButton();
                 renderVictory();
                 return;
             }
 
             if (savedDone === 'lock') {
+                showFullscreenButton();
                 renderTemporalLock();
                 return;
             }
@@ -5440,6 +5435,7 @@
             if (savedIndex !== null) {
                 currentIndex = parseInt(savedIndex, 10);
                 if (currentIndex >= enigmes.length) {
+                    showFullscreenButton();
                     renderVictory();
                     return;
                 }
@@ -5452,6 +5448,7 @@
             }
 
             // Resume
+            showFullscreenButton();
             showHeader();
             startChrono();
             renderEnigma(currentIndex);
@@ -5466,6 +5463,12 @@
         <div id="start-overlay" style="position: fixed; inset: 0; z-index: 9999; background: var(--bg-deep); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.8s ease;" onclick="startWelcomeSequence(this)">
             <div style="font-size: 4rem; margin-bottom: 20px; filter: drop-shadow(0 0 15px rgba(201, 168, 76, 0.6)); animation: float-slow 3s ease-in-out infinite alternate;">💌</div>
             <div style="font-family: var(--font-display); color: var(--clr-gold-bright); font-size: 1.2rem; letter-spacing: 3px; text-transform: uppercase; animation: pulse-glow 2s infinite;">Toucher pour ouvrir</div>
+            
+            <!-- Prompt plein écran discret sur l'enveloppe -->
+            <button class="start-fullscreen-prompt" onclick="event.stopPropagation(); ChateauFullscreen.toggle()"
+                style="background: none; border: none; color: var(--text-muted); font-size: 0.75rem; text-decoration: underline; cursor: pointer; margin-top: 30px; font-family: var(--font-ui); z-index: 10000; -webkit-tap-highlight-color: transparent;">
+                Passer en plein écran
+            </button>
         </div>
 
         <div class="welcome-screen" id="welcome-content" style="display: none;">
@@ -5484,6 +5487,12 @@
             </div>
             <p class="seal-prompt">Alors prête ?</p>
           </div>
+
+          <!-- Prompt plein écran discret sur l'écran du sceau -->
+          <button class="start-fullscreen-prompt" onclick="ChateauFullscreen.toggle()"
+              style="display: block; background: none; border: none; color: var(--text-muted); font-size: 0.75rem; text-decoration: underline; cursor: pointer; margin: 25px auto 0; font-family: var(--font-ui); -webkit-tap-highlight-color: transparent;">
+              Passer en plein écran
+          </button>
 
           <div class="footer-anniversary reveal" data-delay="4">
             <div class="heart-metal-container">
@@ -5526,6 +5535,7 @@
         }
 
         function startGame() {
+            showFullscreenButton();
             ChateauAudio.playSuccess(true);
             triggerPortalTransition();
             startTime = Date.now();
@@ -11170,75 +11180,58 @@
 
 
         /* ─────────────────────────────────────────────────────────────
-           BOOT 🚀
+           BOOT & FULLSCREEN 🚀
         ────────────────────────────────────────────────────────────── */
         document.addEventListener('DOMContentLoaded', init);
 
-        // Enregistrement du Service Worker pour la compatibilité PWA (Android / Chrome)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then((reg) => console.log('Service Worker enregistré avec succès :', reg.scope))
-                    .catch((err) => console.error('Échec de l\'enregistrement du Service Worker :', err));
-            });
+        // Gestion du bouton de plein écran flottant (bas à droite)
+        function showFullscreenButton() {
+            const btn = document.getElementById('fullscreen-toggle-btn');
+            if (btn) btn.classList.remove('hidden');
         }
 
-        /* ─────────────────────────────────────────────────────────────
-    PWA INSTALLATION LOGIC (Persistence améliorée)
- ────────────────────────────────────────────────────────────── */
-        let deferredPrompt;
-        const installBtn = document.getElementById('pwa-install-btn');
-        const iosHint = document.getElementById('ios-install-hint');
-
-        // 1. Vérifier si l'app est déjà installée
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-        // 2. Détection iOS pour afficher l'astuce manuelle
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-        if (isIOS && !isStandalone && iosHint) {
-            iosHint.classList.remove('hidden');
+        function hideFullscreenButton() {
+            const btn = document.getElementById('fullscreen-toggle-btn');
+            if (btn) btn.classList.add('hidden');
         }
 
-        // 3. Gestion de l'événement d'installation
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-
-            // Si on n'est pas déjà en mode standalone, on montre le bouton
-            if (!isStandalone && installBtn) {
-                installBtn.classList.remove('hidden');
-            }
-        });
-
-        // 4. Action au clic
-        if (installBtn) {
-            installBtn.addEventListener('click', async () => {
-                if (!deferredPrompt) return;
-
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-
-                if (outcome === 'accepted') {
-                    installBtn.classList.add('hidden');
-                    if (iosHint) iosHint.classList.add('hidden');
+        // Logique globale du mode plein écran (Fullscreen API)
+        const ChateauFullscreen = {
+            toggle() {
+                const docEl = document.documentElement;
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    if (docEl.requestFullscreen) {
+                        docEl.requestFullscreen().catch(err => {
+                            console.warn(`Impossible d'activer le plein écran: ${err.message}`);
+                        });
+                    } else if (docEl.webkitRequestFullscreen) {
+                        docEl.webkitRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
                 }
-                deferredPrompt = null;
-            });
-        }
-
-        // 5. Nettoyage après installation réussie
-        window.addEventListener('appinstalled', () => {
-            if (installBtn) installBtn.classList.add('hidden');
-            if (iosHint) iosHint.classList.add('hidden');
-            deferredPrompt = null;
-        });
-
-        // 6. ASTUCE : Si l'utilisateur est sur Android et a déjà installé le raccourci, 
-        // on s'assure que le bouton ne réapparaît jamais au rafraîchissement
-        if (isStandalone && installBtn) {
-            installBtn.classList.add('hidden');
-        }
+            },
+            updateButtonState() {
+                const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+                const btn = document.getElementById('fullscreen-toggle-btn');
+                if (btn) {
+                    btn.innerHTML = isFS ? '🗗' : '⛶';
+                }
+                const startBtns = document.querySelectorAll('.start-fullscreen-prompt');
+                startBtns.forEach(el => {
+                    el.textContent = isFS ? 'Quitter le plein écran' : 'Passer en plein écran';
+                });
+            },
+            init() {
+                document.addEventListener('fullscreenchange', () => this.updateButtonState());
+                document.addEventListener('webkitfullscreenchange', () => this.updateButtonState());
+            }
+        };
+        ChateauFullscreen.init();
     </script>
 
 </body>
