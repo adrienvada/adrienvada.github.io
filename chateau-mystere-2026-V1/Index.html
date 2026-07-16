@@ -9,6 +9,7 @@
 
     <meta name="theme-color" content="#0a0f1d">
     <meta name="description" content="Joyeux anniversaire">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='15' y='45' width='70' height='40' rx='5' fill='%238b5a2b' stroke='%23f2d06b' stroke-width='4'/%3E%3Cpath d='M15 45 C15 20, 85 20, 85 45 Z' fill='%23c9a84c' stroke='%23f2d06b' stroke-width='4'/%3E%3Crect x='45' y='40' width='10' height='15' rx='2' fill='%23ffe898' stroke='%237a5f28' stroke-width='2'/%3E%3Ccircle cx='50' cy='45' r='2' fill='%23000'/%3E%3Crect x='25' y='45' width='6' height='40' fill='%23f2d06b'/%3E%3Crect x='69' y='45' width='6' height='40' fill='%23f2d06b'/%3E%3Cpath d='M25 45 C25 25, 31 25, 31 45 Z' fill='%23ffe898'/%3E%3Cpath d='M69 45 C69 25, 75 25, 75 45 Z' fill='%23ffe898'/%3E%3C/svg%3E">
     <title>À nos 2 ans ♥️</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -443,7 +444,7 @@
             top: 0;
             left: 0;
             right: 0;
-            z-index: 1000;
+            z-index: 100;
             padding: calc(var(--safe-top) + var(--gap-sm)) var(--gap-md) var(--gap-sm);
             background: linear-gradient(180deg, #0a0f1dee 0%, #0a0f1dcc 70%, transparent 100%);
             backdrop-filter: blur(16px);
@@ -451,7 +452,7 @@
         }
 
         #header.header-bubble-active {
-            z-index: 1100 !important;
+            z-index: 300 !important;
         }
 
         .header-inner {
@@ -705,6 +706,11 @@
             padding: calc(var(--safe-top) + 72px) var(--gap-md) calc(var(--safe-bottom) + var(--gap-xl));
             min-height: 100dvh;
             perspective: 1000px;
+            pointer-events: none;
+        }
+
+        #app > * {
+            pointer-events: auto;
         }
 
         /* ────────────────────────── ENIGMA CARD ───────────────────────────────── */
