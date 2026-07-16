@@ -4919,6 +4919,9 @@
             </div>
             <div class="jardin-currency">
                 <span id="jardin-global-energy">0</span> ✨ Énergie Pure
+                <button id="jardin-debug-energy-btn"
+                    style="display: none; margin-left: 10px; padding: 2px 8px; font-size: 0.8rem; background: #eab308; color: black; border: none; border-radius: 4px; cursor: pointer; vertical-align: middle; font-weight: bold;"
+                    onclick="debugPromptJardinEnergy()">⚡ Debug</button>
             </div>
         </div>
 
@@ -4971,6 +4974,10 @@
                         style="font-family: var(--font-display); color: var(--clr-gold-bright); font-size: 1.4rem; margin-bottom: 15px;">
                         🌙 La Nuit s'installe...</div>
 
+                    <div id="jardin-mission-container"
+                        style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--neon-green); border-radius: 8px; padding: 12px; margin-bottom: 15px; text-align: center;">
+                    </div>
+
                     <div class="jardin-bilan-row">
                         <span style="color: #94a3b8;">Fragments accumulés ce jour</span>
                         <span style="font-weight: 600;" id="jardin-bilan-fragments">+0</span>
@@ -4988,7 +4995,7 @@
                             <div>
                                 <div style="font-weight: 600; font-size: 0.9rem;">Agrandir le Jardin 🪴</div>
                                 <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-pots">Ajouter un pot
-                                    (Max: 48)</div>
+                                    (Max: 12)</div>
                             </div>
                             <button class="jardin-shop-btn" id="jardin-btn-buy-pot" onclick="jardinBuyPot()">20
                                 ✨</button>
@@ -5041,6 +5048,16 @@
                                     et arrose tout en 1 clic !</div>
                             </div>
                             <button class="jardin-shop-btn" id="jardin-btn-buy-scythe" onclick="jardinBuyScythe()">5000
+                                ✨</button>
+                        </div>
+
+                        <div class="jardin-shop-item" id="jardin-shop-prestige-item">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Ascension (Prestige) ✨</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;" id="jardin-desc-prestige">Recommencer
+                                    avec un multiplicateur permanent.</div>
+                            </div>
+                            <button class="jardin-shop-btn" id="jardin-btn-prestige" onclick="jardinPrestige()">10000
                                 ✨</button>
                         </div>
                     </div>
@@ -5397,7 +5414,9 @@
                 souvenir: 0
             },
             pots: [],
-            active: false
+            active: false,
+            prestigeLevel: 1,
+            mission: null
         };
 
         const JARDIN_SEEDS = [
@@ -5500,13 +5519,19 @@
                     jardinState.autoWater = parsed.autoWater || false;
                     jardinState.hasScythe = parsed.hasScythe || false;
                     jardinState.seedsInventory = parsed.seedsInventory || { lunaire: 0, nacre: 0, souvenir: 0 };
+                    jardinState.prestigeLevel = parsed.prestigeLevel || 1;
+                    jardinState.mission = parsed.mission !== undefined ? parsed.mission : null;
                 } catch (e) { }
             } else {
                 jardinState.seedsInventory = { lunaire: 0, nacre: 0, souvenir: 0 };
                 jardinState.selectedSeedIndex = 0;
+                jardinState.prestigeLevel = 1;
+                jardinState.mission = null;
             }
             jardinUpdateSeedsStockUI();
             jardinUpdateGlobalUI();
+            jardinUpdateMissionUI();
+            updateJardinDebugButton();
             jardinStartDay();
         }
 
@@ -5522,38 +5547,105 @@
             });
         }
 
+        function updateJardinDebugButton() {
+            const dbgBtn = document.getElementById('jardin-debug-energy-btn');
+            if (dbgBtn) {
+                dbgBtn.style.display = (typeof DEBUG !== 'undefined' && DEBUG) ? 'inline-block' : 'none';
+            }
+        }
+
+        function debugPromptJardinEnergy() {
+            // On englobe tout dans un léger délai pour laisser le clic se terminer
+            setTimeout(() => {
+                const val = prompt("Entrez la quantité d'Énergie Pure à ajouter/définir :\n(Mettez un nombre pour ajouter, ou mettez '=' suivi d'un nombre pour définir précisément)");
+                if (val === null) return;
+
+                let exact = false;
+                let cleanVal = val.trim();
+                if (cleanVal.startsWith('=')) {
+                    exact = true;
+                    cleanVal = cleanVal.slice(1).trim();
+                }
+
+                const parsed = parseFloat(cleanVal);
+                if (isNaN(parsed)) {
+                    alert("Valeur invalide.");
+                    return;
+                }
+
+                if (typeof jardinState !== 'undefined') {
+                    if (exact) {
+                        jardinState.energy = parsed;
+                    } else {
+                        jardinState.energy = (jardinState.energy || 0) + parsed;
+                    }
+                    if (jardinState.energy < 0) jardinState.energy = 0;
+
+                    localStorage.setItem('jardin_souvenirs_state', JSON.stringify({
+                        energy: jardinState.energy,
+                        potsCount: jardinState.potsCount || 3,
+                        seedLevel: jardinState.seedLevel || 1,
+                        autoWater: jardinState.autoWater || false,
+                        hasScythe: jardinState.hasScythe || false,
+                        seedsInventory: jardinState.seedsInventory || { lunaire: 0, nacre: 0, souvenir: 0 },
+                        selectedSeedIndex: jardinState.selectedSeedIndex !== undefined ? jardinState.selectedSeedIndex : 0,
+                        prestigeLevel: jardinState.prestigeLevel || 1
+                    }));
+
+                    if (typeof jardinUpdateGlobalUI === 'function') {
+                        jardinUpdateGlobalUI();
+                    }
+                    if (typeof jardinUpdateShopUI === 'function') {
+                        jardinUpdateShopUI();
+                    }
+                    const totalEnergyEl = document.getElementById('jardin-bilan-total-energy');
+                    if (totalEnergyEl) {
+                        totalEnergyEl.textContent = `${Math.floor(jardinState.energy).toLocaleString()} ✨`;
+                    }
+                }
+            }, 50); // Un délai de 50 millisecondes suffit largement
+        }
+
         function jardinUpdateGlobalUI() {
             const energyEl = document.getElementById('jardin-global-energy');
             if (energyEl) energyEl.textContent = Math.floor(jardinState.energy).toLocaleString();
 
             const badge = document.getElementById('jardin-resonance-level');
-            let skinLevel = 1;
+            const prestige = jardinState.prestigeLevel || 1;
+            let skinLevel = Math.min(3, prestige);
 
-            if (jardinState.energy >= 5000) {
-                skinLevel = 3;
-                if (badge) {
-                    badge.textContent = "Niveau de Résonance : III";
-                    badge.style.color = "#ff6b81";
-                    badge.style.borderColor = "#ff6b81";
-                }
-                if (typeof ChateauAchievements !== 'undefined') {
-                    ChateauAchievements.unlock('main_verte');
-                }
-            } else if (jardinState.energy >= 500) {
-                skinLevel = 2;
-                if (badge) {
-                    badge.textContent = "Niveau de Résonance : II";
-                    badge.style.color = "#3b82f6";
-                    badge.style.borderColor = "#3b82f6";
-                }
-            } else {
-                skinLevel = 1;
-                if (badge) {
-                    badge.textContent = "Niveau de Résonance : I";
-                    badge.style.color = "var(--clr-gold-bright)";
-                    badge.style.borderColor = "var(--clr-gold)";
-                }
+            const ROMAN_NUMERALS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+            const roman = ROMAN_NUMERALS[prestige] || "I";
+
+            if (badge) {
+                badge.textContent = `Niveau de Résonance : ${roman}`;
+
+                const prestigeColors = {
+                    1: { color: "var(--clr-gold-bright)", border: "var(--clr-gold)" },
+                    2: { color: "#3b82f6", border: "#3b82f6" },
+                    3: { color: "#ff6b81", border: "#ff6b81" },
+                    4: { color: "#a855f7", border: "#a855f7" },
+                    5: { color: "#10b981", border: "#10b981" },
+                    6: { color: "#f97316", border: "#f97316" },
+                    7: { color: "#06b6d4", border: "#06b6d4" },
+                    8: { color: "#ec4899", border: "#ec4899" },
+                    9: { color: "#eab308", border: "#eab308" },
+                    10: { color: "#f43f5e", border: "#f43f5e" }
+                };
+
+                const style = prestigeColors[prestige] || prestigeColors[1];
+                badge.style.color = style.color;
+                badge.style.borderColor = style.border;
             }
+
+            if (prestige >= 3 && typeof ChateauAchievements !== 'undefined') {
+                ChateauAchievements.unlock('main_verte');
+            }
+
+            if (prestige >= 10 && typeof ChateauAchievements !== 'undefined') {
+                ChateauAchievements.unlock('resonance_max');
+            }
+
             window.hidden_skin_level = skinLevel;
         }
 
@@ -5619,6 +5711,10 @@
                 document.getElementById('jardin-timer-val').textContent = jardinTimeLeft.toFixed(1);
                 document.getElementById('jardin-timer-bar').style.width = `${(jardinTimeLeft / 30) * 100}%`;
             }, 100);
+
+            if (!jardinState.mission || jardinState.mission.completed === true) {
+                jardinGenerateMission();
+            }
         }
 
         function jardinEndDay() {
@@ -5642,10 +5738,13 @@
                 autoWater: jardinState.autoWater,
                 hasScythe: jardinState.hasScythe,
                 seedsInventory: jardinState.seedsInventory,
-                selectedSeedIndex: jardinState.selectedSeedIndex
+                selectedSeedIndex: jardinState.selectedSeedIndex,
+                prestigeLevel: jardinState.prestigeLevel,
+                mission: null
             }));
 
             jardinUpdateGlobalUI();
+            jardinUpdateMissionUI();
 
             document.getElementById('jardin-bilan-fragments').textContent = `+${jardinState.fragmentsToday.toLocaleString()}`;
             document.getElementById('jardin-bilan-total-energy').textContent = `${Math.floor(jardinState.energy).toLocaleString()} ✨`;
@@ -5654,6 +5753,71 @@
 
             document.getElementById('jardin-day-screen').classList.remove('active');
             document.getElementById('jardin-night-screen').classList.add('active');
+        }
+
+        function jardinGenerateMission() {
+            const prestigeLevel = jardinState.prestigeLevel || 1;
+            const isSquish = Math.random() < 0.5;
+            if (isSquish) {
+                const target = 3 + (prestigeLevel * 2);
+                const reward = 50 * prestigeLevel;
+                jardinState.mission = {
+                    type: 'squish',
+                    target: target,
+                    reward: reward,
+                    description: "Écraser " + target + " nuisibles",
+                    progress: 0,
+                    completed: false
+                };
+            } else {
+                const target = 200 * prestigeLevel;
+                const reward = 100 * prestigeLevel;
+                jardinState.mission = {
+                    type: 'fragments',
+                    target: target,
+                    reward: reward,
+                    description: "Récolter " + target + " fragments",
+                    progress: 0,
+                    completed: false
+                };
+            }
+        }
+
+        function jardinCheckMissionProgress(type, amount, x, y) {
+            if (jardinState.mission && !jardinState.mission.completed) {
+                if (jardinState.mission.type === type) {
+                    jardinState.mission.progress += amount;
+                    if (jardinState.mission.progress >= jardinState.mission.target) {
+                        jardinState.mission.completed = true;
+                        jardinState.energy += jardinState.mission.reward;
+                        playJardinSound('upgrade');
+                        jardinCreateFloatingText(x, y, 'Mission Accomplie ! +' + jardinState.mission.reward + ' ✨');
+                        jardinUpdateGlobalUI();
+                    }
+                }
+            }
+        }
+
+        function jardinUpdateMissionUI() {
+            const container = document.getElementById('jardin-mission-container');
+            if (!container) return;
+            const mission = jardinState.mission;
+            if (!mission) {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'block';
+            if (mission.completed) {
+                container.innerHTML = '<span style="color: #10b981; font-weight: bold;">✅ Mission accomplie ! Nouvelle mission demain.</span>';
+            } else {
+                const prog = Math.min(mission.progress, mission.target);
+                container.innerHTML = `
+                    <div style="font-weight: bold; color: var(--clr-gold-bright); margin-bottom: 5px;">📋 Requête de la nuit :</div>
+                    <div style="color: #e2e8f0; margin-bottom: 5px;">${mission.description}</div>
+                    <div style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 5px;">Progression : ${prog} / ${mission.target}</div>
+                    <div style="color: #10b981; font-size: 0.85rem; font-weight: 600;">Récompense : ${mission.reward} ✨</div>
+                `;
+            }
         }
 
         let jardinIsSwiping = false;
@@ -5824,14 +5988,14 @@
             if (gauge) gauge.style.height = '0%';
 
             let start = null;
-            const holdDuration = 300; // 300ms hold required
+            const prestige = (jardinState && jardinState.prestigeLevel) || 1;
+            const holdDuration = 300 + (prestige - 1) * 30; // 30ms extra per Prestige level above 1
 
             function animateHold(timestamp) {
                 if (jardinTimeLeft <= 0) return;
                 if (!start) start = timestamp;
                 const elapsed = timestamp - start;
                 const pct = Math.min((elapsed / holdDuration) * 100, 100);
-
                 pot.waterProgress = pct;
                 if (gauge) gauge.style.height = `${pct}%`;
 
@@ -5919,12 +6083,15 @@
                     playJardinSound('squish');
                     card.classList.remove('pest-shake');
 
-                    const bonusAmt = Math.max(5, Math.round(seed.mult * 5));
+                    const prestige = (jardinState && jardinState.prestigeLevel) || 1;
+                    const bonusAmt = Math.max(1, Math.round(Math.max(5, Math.round(seed.mult * 5)) * (1.0 - ((prestige - 1) * 0.05))));
                     jardinState.fragmentsToday += bonusAmt;
                     document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
 
                     jardinCreateExplosion(coords.x, coords.y, '🐛');
                     jardinCreateFloatingText(coords.x, coords.y, `+${bonusAmt} 🐛`);
+
+                    jardinCheckMissionProgress('squish', 1, coords.x, coords.y);
 
                     // Resume growing
                     jardinWaterPot(pot, card, pot.progress);
@@ -5959,8 +6126,12 @@
                     const freshness = pot.freshness !== undefined ? pot.freshness : 1.0;
                     yieldAmt = Math.max(0, Math.round(yieldAmt * freshness));
 
+                    // Prestige multiplier
+                    yieldAmt = Math.round(yieldAmt * (1 + ((jardinState.prestigeLevel || 1) - 1) * 0.5));
+
                     jardinState.fragmentsToday += yieldAmt;
                     document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
+                    jardinCheckMissionProgress('fragments', yieldAmt, coords.x, coords.y);
 
                     if (isRare) {
                         playJardinSound('jackpot');
@@ -6002,16 +6173,19 @@
 
             // Determine pest triggering parameters - only if 5 or more pots are owned (at least 2 purchased pots)
             if (resumePct === 0) {
-                pot.hasPest = (jardinState.potsCount >= 5) && (Math.random() < 0.15);
+                const prestige = (jardinState && jardinState.prestigeLevel) || 1;
+                const pestChance = 0.15 + (prestige - 1) * 0.02;
+                pot.hasPest = (jardinState.potsCount >= 5) && (Math.random() < pestChance);
                 if (pot.hasPest) {
-                    pot.pestTriggerPct = 25 + Math.random() * 50; // between 25% and 75%
+                    const baseThreshold = Math.max(5, 25 - (prestige - 1) * 2);
+                    pot.pestTriggerPct = baseThreshold + Math.random() * 50; // between baseThreshold% and baseThreshold+50%
                     pot.pestSpawned = false;
                 }
             }
 
             function animate(timestamp) {
                 if (jardinTimeLeft <= 0) return;
-                
+
                 if (pot.state === 'growing') {
                     if (!start) start = timestamp - startElapsed;
                     const elapsed = timestamp - start;
@@ -6040,7 +6214,9 @@
                 } else if (pot.state === 'ready') {
                     if (!pot.readyTime) pot.readyTime = timestamp;
                     const decayElapsed = timestamp - pot.readyTime;
-                    const decayDuration = duration * 2; // decay is twice as slow as growth
+                    const prestige = (jardinState && jardinState.prestigeLevel) || 1;
+                    const decayMult = 2.0 - (prestige - 1) * 0.05;
+                    const decayDuration = duration * decayMult;
                     const linearPct = Math.min(decayElapsed / decayDuration, 1);
                     // Smootherstep: slow at start, fast in middle, very slow at end
                     const curvedPct = linearPct * linearPct * linearPct * (linearPct * (linearPct * 6 - 15) + 10);
@@ -6095,13 +6271,13 @@
             } else if (pot.state === 'ready') {
                 card.classList.add('ready-harvest');
                 emojiEl.textContent = pot.isRare ? `${seed.grownEmoji}✨` : seed.grownEmoji;
-                
+
                 const freshness = pot.freshness !== undefined ? pot.freshness : 1.0;
                 const freshnessPct = Math.round(freshness * 100);
-                
+
                 statusEl.textContent = pot.isRare ? `JACKPOT (${freshnessPct}%)` : `Récolter (${freshnessPct}%)`;
                 barEl.style.width = `${freshness * 100}%`;
-                
+
                 if (freshness > 0.7) {
                     barEl.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
                     barEl.style.boxShadow = '0 0 8px #34d399';
@@ -6172,8 +6348,8 @@
             const btnPot = document.getElementById('jardin-btn-buy-pot');
             const descPot = document.getElementById('jardin-desc-pots');
 
-            if (jardinState.potsCount >= 48) {
-                descPot.textContent = "Limite max atteinte (48 pots)";
+            if (jardinState.potsCount >= 12) {
+                descPot.textContent = "Limite max atteinte (12 pots)";
                 btnPot.textContent = "Max";
                 btnPot.disabled = true;
             } else {
@@ -6226,11 +6402,28 @@
                     btnScythe.disabled = jardinState.energy < 5000;
                 }
             }
+
+            const btnPrestige = document.getElementById('jardin-btn-prestige');
+            const descPrestige = document.getElementById('jardin-desc-prestige');
+            if (btnPrestige) {
+                const prestige = jardinState.prestigeLevel || 1;
+                if (prestige >= 10) {
+                    if (descPrestige) descPrestige.textContent = "Ascension Maximale atteinte (Niveau X)";
+                    btnPrestige.textContent = "Max";
+                    btnPrestige.disabled = true;
+                } else {
+                    const ROMAN_NUMERALS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+                    const nextRoman = ROMAN_NUMERALS[prestige + 1] || "II";
+                    if (descPrestige) descPrestige.textContent = `Accéder au niveau ${nextRoman} (Requis: 10000 ✨). Multiplicateur actuel : x${(1 + (prestige - 1) * 0.5).toFixed(1)}`;
+                    btnPrestige.textContent = "10000 ✨";
+                    btnPrestige.disabled = jardinState.energy < 10000;
+                }
+            }
         }
 
         function jardinBuyPot() {
             const cost = getJardinPotCost();
-            if (jardinState.energy >= cost && jardinState.potsCount < 48) {
+            if (jardinState.energy >= cost && jardinState.potsCount < 12) {
                 jardinState.energy -= cost;
                 jardinState.potsCount++;
                 playJardinSound('upgrade');
@@ -6271,6 +6464,58 @@
                 const btn = document.getElementById('jardin-scythe-btn');
                 if (btn) btn.style.display = 'flex';
             }
+        }
+
+        function jardinPrestige() {
+            if (jardinState.prestigeLevel >= 10) return;
+            if (jardinState.energy < 10000) return;
+
+            jardinState.prestigeLevel = (jardinState.prestigeLevel || 1) + 1;
+
+            // Réinitialise le jardin
+            jardinState.energy = 0;
+            jardinState.potsCount = 3;
+            jardinState.autoWater = false;
+            jardinState.hasScythe = false;
+            jardinState.seedsInventory = { lunaire: 0, nacre: 0, souvenir: 0 };
+            jardinState.selectedSeedIndex = 0;
+            jardinState.seedLevel = 1;
+
+            // Enregistrer l'état réinitialisé
+            localStorage.setItem('jardin_souvenirs_state', JSON.stringify({
+                energy: jardinState.energy,
+                potsCount: jardinState.potsCount,
+                seedLevel: jardinState.seedLevel,
+                autoWater: jardinState.autoWater,
+                hasScythe: jardinState.hasScythe,
+                seedsInventory: jardinState.seedsInventory,
+                selectedSeedIndex: jardinState.selectedSeedIndex,
+                prestigeLevel: jardinState.prestigeLevel,
+                mission: null
+            }));
+
+            // Jouer le son jackpot
+            playJardinSound('jackpot');
+
+            // Particules / Explosions
+            const x = window.innerWidth / 2;
+            const y = window.innerHeight / 2;
+            jardinCreateMassiveExplosion(x, y, '✨');
+            setTimeout(() => { if (typeof jardinCreateMassiveExplosion === 'function') { jardinCreateMassiveExplosion(x - 120, y - 60, '⭐'); } }, 150);
+            setTimeout(() => { if (typeof jardinCreateMassiveExplosion === 'function') { jardinCreateMassiveExplosion(x + 120, y - 60, '✨'); } }, 300);
+            setTimeout(() => { if (typeof jardinCreateMassiveExplosion === 'function') { jardinCreateMassiveExplosion(x, y + 100, '✨'); } }, 450);
+
+            // Mettre à jour l'interface
+            jardinUpdateGlobalUI();
+            jardinUpdateShopUI();
+            jardinUpdateSeedsStockUI();
+
+            // Cacher le bouton de la faux cosmique
+            const scytheBtn = document.getElementById('jardin-scythe-btn');
+            if (scytheBtn) scytheBtn.style.display = 'none';
+
+            // Réinitialiser les pots en cours
+            jardinSetupGrid();
         }
 
         function jardinUseScythe() {
@@ -6317,12 +6562,14 @@
                 if (pot.state === 'pest') {
                     playJardinSound('squish');
                     card.classList.remove('pest-shake');
-                    const bonusAmt = Math.max(5, Math.round(seed.mult * 5));
+                    const prestige = (jardinState && jardinState.prestigeLevel) || 1;
+                    const bonusAmt = Math.max(1, Math.round(Math.max(5, Math.round(seed.mult * 5)) * (1.0 - ((prestige - 1) * 0.05))));
                     jardinState.fragmentsToday += bonusAmt;
                     document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
                     const rect = card.getBoundingClientRect();
                     jardinCreateExplosion(rect.left + rect.width / 2, rect.top + rect.height / 2, '🐛');
                     jardinCreateFloatingText(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${bonusAmt} 🐛`);
+                    jardinCheckMissionProgress('squish', 1, rect.left, rect.top);
                     jardinWaterPot(pot, card, pot.progress);
                 }
 
@@ -6345,9 +6592,13 @@
                     const freshness = pot.freshness !== undefined ? pot.freshness : 1.0;
                     yieldAmt = Math.max(0, Math.round(yieldAmt * freshness));
 
+                    // Prestige multiplier
+                    yieldAmt = Math.round(yieldAmt * (1 + ((jardinState.prestigeLevel || 1) - 1) * 0.5));
+
                     jardinState.fragmentsToday += yieldAmt;
                     document.getElementById('jardin-day-fragments').textContent = jardinState.fragmentsToday.toLocaleString();
                     const rect = card.getBoundingClientRect();
+                    jardinCheckMissionProgress('fragments', yieldAmt, rect.left, rect.top);
                     jardinCreateExplosion(rect.left + rect.width / 2, rect.top + rect.height / 2, '✨');
                     if (pot.isRare) {
                         playJardinSound('jackpot');
@@ -6460,6 +6711,7 @@
                     jardinState.potsCount = parsed.potsCount || 3;
                     jardinState.seedLevel = parsed.seedLevel || 1;
                     jardinState.autoWater = parsed.autoWater || false;
+                    jardinState.prestigeLevel = parsed.prestigeLevel || 1;
                 } catch (e) { }
             }
             jardinUpdateGlobalUI();
@@ -6971,6 +7223,9 @@
                     $debugPanel.classList.toggle('visible', DEBUG);
                     if (DEBUG) initDebugSelect();
                 }
+                if (typeof updateJardinDebugButton === 'function') {
+                    updateJardinDebugButton();
+                }
                 alert(DEBUG ? "🛠️ Mode Debug ACTIVÉ ! (Menu en bas à droite)" : "🔒 Mode Debug DÉSACTIVÉ");
                 renderEnigma(currentIndex);
             }
@@ -7303,7 +7558,8 @@
                 { id: 'intouchable', title: 'Intouchable', desc: 'Sortir du combat indemne', icon: '🛡️' },
                 { id: 'orgasme_finish', title: 'L\'Amour Vaincra', desc: 'Donner le coup de grâce en utilisant l\'orgasme 💋', icon: '💋' },
                 { id: 'curieux', title: 'Curieux', desc: 'Utiliser un indice', icon: '🔍' },
-                { id: 'main_verte', title: 'Jardinière de l\'Aube', desc: 'Atteindre le Niveau de Résonance III dans le Jardin.', icon: '🪴' }
+                { id: 'main_verte', title: 'Jardinière de l\'Aube', desc: 'Atteindre le Niveau de Résonance III dans le Jardin.', icon: '🪴' },
+                { id: 'resonance_max', title: 'Divinité du Souvenir', desc: 'Atteindre le Niveau de Résonance maximal (X) dans le Jardin.', icon: '👑' }
             ],
             unlocked: new Set(JSON.parse(localStorage.getItem('escapeGame_achievements') || '[]')),
             unlock(id) {
@@ -8195,34 +8451,27 @@
                         ? `<strong>${totalErrorsCount}</strong> × <strong>${totalHintsCount}</strong> = <strong>${bossHP} PV</strong>`
                         : `Minimum <strong>${bossHP} PV</strong> (aucun malus accumulé)`;
 
-                    // Read resonance level and energy
-                    let resonance = window.hidden_skin_level || 1;
-                    let energy = 0;
+                    // Read resonance level and prestige level
+                    let prestigeLevel = 1;
                     try {
                         const saved = localStorage.getItem('jardin_souvenirs_state');
                         if (saved) {
                             const parsed = JSON.parse(saved);
-                            energy = parsed.energy || 0;
-                            if (!window.hidden_skin_level) {
-                                resonance = energy >= 5000 ? 3 : (energy >= 500 ? 2 : 1);
-                            }
+                            prestigeLevel = parsed.prestigeLevel || (parsed.energy >= 5000 ? 3 : (parsed.energy >= 500 ? 2 : 1));
                         } else if (typeof jardinState !== 'undefined') {
-                            energy = jardinState.energy || 0;
-                            if (!window.hidden_skin_level) {
-                                resonance = energy >= 5000 ? 3 : (energy >= 500 ? 2 : 1);
-                            }
+                            prestigeLevel = jardinState.prestigeLevel || (jardinState.energy >= 5000 ? 3 : (jardinState.energy >= 500 ? 2 : 1));
                         }
                     } catch (e) {
-                        resonance = 1;
+                        prestigeLevel = 1;
                     }
 
+                    let resonance = window.hidden_skin_level || Math.min(3, prestigeLevel);
+
                     const evaAuraClass = resonance === 3 ? 'skin-aura-gold' : (resonance === 2 ? 'skin-aura-green' : '');
-                    const resonanceBonusText = resonance >= 2
-                        ? `<div class="bf-debug-bonus" style="color:#10b981; font-weight:bold; font-size:0.95rem; margin-top:10px; display:flex; align-items:center; justify-content:center; gap:6px;">
-                            <span>🪴</span> <span>Bonus du Jardin : +2 PV Max (Score : ${energy.toLocaleString()} ✨)</span>
-                           </div>`
-                        : `<div class="bf-debug-bonus" style="color:#64748b; font-size:0.85rem; margin-top:10px; display:flex; align-items:center; justify-content:center; gap:6px;">
-                            <span>🪴</span> <span>Jardin des Souvenirs : Score de ${energy.toLocaleString()} ✨ (Bonus à 500 ✨)</span>
+                    const ROMAN_NUMERALS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+                    const roman = ROMAN_NUMERALS[prestigeLevel] || "I";
+                    const resonanceBonusText = `<div class="bf-debug-bonus" style="color:#10b981; font-weight:bold; font-size:0.95rem; margin-top:10px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                            <span>🪴</span> <span>Bonus du Jardin : +${prestigeLevel} PV Max (Résonance ${roman})</span>
                            </div>`;
 
                     interactionHtml = `
@@ -10516,25 +10765,27 @@
 
             if (typeof jardinState !== 'undefined') {
                 jardinState.energy = energy;
+                jardinState.prestigeLevel = level;
                 potsCount = jardinState.potsCount || 3;
                 seedLevel = jardinState.seedLevel || 1;
                 autoWater = jardinState.autoWater || false;
             }
-            window.hidden_skin_level = level;
+            window.hidden_skin_level = Math.min(3, level);
 
             localStorage.setItem('jardin_souvenirs_state', JSON.stringify({
                 energy: energy,
                 potsCount: potsCount,
                 seedLevel: seedLevel,
                 autoWater: autoWater,
-                hasScythe: typeof jardinState !== 'undefined' ? (jardinState.hasScythe || false) : false
+                hasScythe: typeof jardinState !== 'undefined' ? (jardinState.hasScythe || false) : false,
+                prestigeLevel: level
             }));
 
             if (typeof jardinUpdateGlobalUI === 'function') {
                 jardinUpdateGlobalUI();
             }
 
-            window.jardin_eva_bonus_hp = level >= 2 ? 2 : 0;
+            window.jardin_eva_bonus_hp = level;
 
             const fighterIcons = document.querySelectorAll('.bf-vs .bf-fighter-icon');
             if (fighterIcons && fighterIcons.length > 0) {
@@ -10542,7 +10793,7 @@
                 evaIcon.classList.remove('skin-aura-green', 'skin-aura-gold');
                 if (level === 2) {
                     evaIcon.classList.add('skin-aura-green');
-                } else if (level === 3) {
+                } else if (level >= 3) {
                     evaIcon.classList.add('skin-aura-gold');
                 }
             }
@@ -10560,16 +10811,13 @@
                 bonusText.style.justifyContent = 'center';
                 bonusText.style.gap = '6px';
 
-                if (level >= 2) {
-                    bonusText.style.color = '#10b981';
-                    bonusText.style.fontWeight = 'bold';
-                    bonusText.style.fontSize = '0.95rem';
-                    bonusText.innerHTML = `<span>🪴</span> <span>Bonus du Jardin : +2 PV Max (Score : ${energy.toLocaleString()} ✨)</span>`;
-                } else {
-                    bonusText.style.color = '#64748b';
-                    bonusText.style.fontSize = '0.85rem';
-                    bonusText.innerHTML = `<span>🪴</span> <span>Jardin des Souvenirs : Score de ${energy.toLocaleString()} ✨ (Bonus à 500 ✨)</span>`;
-                }
+                const ROMAN_NUMERALS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+                const roman = ROMAN_NUMERALS[level] || "I";
+
+                bonusText.style.color = '#10b981';
+                bonusText.style.fontWeight = 'bold';
+                bonusText.style.fontSize = '0.95rem';
+                bonusText.innerHTML = `<span>🪴</span> <span>Bonus du Jardin : +${level} PV Max (Résonance ${roman})</span>`;
                 hpInfo.appendChild(bonusText);
             }
 
@@ -10584,7 +10832,9 @@
             const debugSel = document.getElementById('debug-resonance');
             if (debugSel) debugSel.value = '';
 
-            alert(`Résonance modifiée au Niveau ${level === 3 ? 'III' : (level === 2 ? 'II' : 'I')} (${energy} ✨)`);
+            const ROMAN_NUMERALS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+            const roman = ROMAN_NUMERALS[level] || "I";
+            alert(`Résonance modifiée au Niveau ${roman} (${energy} ✨)`);
         }
 
         function jumpToEnigma(val) {
@@ -11126,6 +11376,7 @@
                 jardinState.autoWater = false;
                 jardinState.hasScythe = false;
                 jardinState.pots = [];
+                jardinState.prestigeLevel = 1;
             }
             window.hidden_skin_level = 1;
             window.jardin_eva_bonus_hp = 0;
@@ -11439,32 +11690,35 @@
             ChateauAudio.playSuccess(true);
             triggerPortalTransition();
 
-            // Read resonance level
+            // Read resonance level and prestige level
             let resonance = window.hidden_skin_level;
-            if (!resonance) {
+            let prestigeLevel = 1;
+            if (typeof jardinState !== 'undefined' && jardinState.prestigeLevel) {
+                prestigeLevel = jardinState.prestigeLevel;
+            } else {
                 try {
                     const saved = localStorage.getItem('jardin_souvenirs_state');
                     if (saved) {
                         const parsed = JSON.parse(saved);
-                        resonance = parsed.energy >= 5000 ? 3 : (parsed.energy >= 500 ? 2 : 1);
-                    } else {
-                        resonance = 1;
+                        prestigeLevel = parsed.prestigeLevel || (parsed.energy >= 5000 ? 3 : (parsed.energy >= 500 ? 2 : 1));
                     }
-                } catch (e) {
-                    resonance = 1;
-                }
+                } catch (e) { }
+            }
+            if (!resonance) {
+                resonance = Math.min(3, prestigeLevel);
             }
 
             // Apply resonance bonus
-            window.jardin_eva_bonus_hp = resonance >= 2 ? 2 : 0;
+            window.jardin_eva_bonus_hp = prestigeLevel;
 
             // Apply CSS class to Eva's fighter icon in the intro screen (first child of bf-vs)
             const fighterIcons = document.querySelectorAll('.bf-vs .bf-fighter-icon');
             if (fighterIcons && fighterIcons.length > 0) {
                 const evaIcon = fighterIcons[0];
+                evaIcon.classList.remove('skin-aura-green', 'skin-aura-gold');
                 if (resonance === 2) {
                     evaIcon.classList.add('skin-aura-green');
-                } else if (resonance === 3) {
+                } else if (resonance >= 3) {
                     evaIcon.classList.add('skin-aura-gold');
                 }
             }
@@ -11475,15 +11729,8 @@
                 const existing = hpInfo.querySelector('.bf-debug-bonus');
                 if (existing) existing.remove();
 
-                // Get energy score
-                let energy = jardinState.energy || 0;
-                try {
-                    const saved = localStorage.getItem('jardin_souvenirs_state');
-                    if (saved) {
-                        const parsed = JSON.parse(saved);
-                        energy = parsed.energy || 0;
-                    }
-                } catch (e) { }
+                const ROMAN_NUMERALS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+                const roman = ROMAN_NUMERALS[prestigeLevel] || "I";
 
                 const bonusText = document.createElement('div');
                 bonusText.className = 'bf-debug-bonus';
@@ -11493,16 +11740,10 @@
                 bonusText.style.justifyContent = 'center';
                 bonusText.style.gap = '6px';
 
-                if (resonance >= 2) {
-                    bonusText.style.color = '#10b981';
-                    bonusText.style.fontWeight = 'bold';
-                    bonusText.style.fontSize = '0.95rem';
-                    bonusText.innerHTML = `<span>🪴</span> <span>Bonus du Jardin : +2 PV Max (Score : ${energy.toLocaleString()} ✨)</span>`;
-                } else {
-                    bonusText.style.color = '#64748b';
-                    bonusText.style.fontSize = '0.85rem';
-                    bonusText.innerHTML = `<span>🪴</span> <span>Jardin des Souvenirs : Score de ${energy.toLocaleString()} ✨ (Bonus à 500 ✨)</span>`;
-                }
+                bonusText.style.color = '#10b981';
+                bonusText.style.fontWeight = 'bold';
+                bonusText.style.fontSize = '0.95rem';
+                bonusText.innerHTML = `<span>🪴</span> <span>Bonus du Jardin : +${prestigeLevel} PV Max (Résonance ${roman})</span>`;
                 hpInfo.appendChild(bonusText);
             }
 
@@ -12924,7 +13165,8 @@
                     const saved = localStorage.getItem('jardin_souvenirs_state');
                     if (saved) {
                         const parsed = JSON.parse(saved);
-                        resonance = parsed.energy >= 5000 ? 3 : (parsed.energy >= 500 ? 2 : 1);
+                        const prestige = parsed.prestigeLevel || (parsed.energy >= 5000 ? 3 : (parsed.energy >= 500 ? 2 : 1));
+                        resonance = Math.min(3, prestige);
                     } else {
                         resonance = 1;
                     }
@@ -13359,7 +13601,8 @@
                     const saved = localStorage.getItem('jardin_souvenirs_state');
                     if (saved) {
                         const parsed = JSON.parse(saved);
-                        resonance = parsed.energy >= 5000 ? 3 : (parsed.energy >= 500 ? 2 : 1);
+                        const prestige = parsed.prestigeLevel || (parsed.energy >= 5000 ? 3 : (parsed.energy >= 500 ? 2 : 1));
+                        resonance = Math.min(3, prestige);
                     } else {
                         resonance = 1;
                     }
