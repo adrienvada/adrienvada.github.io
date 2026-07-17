@@ -4916,6 +4916,67 @@
                 right: -70px;
             }
         }
+
+        /* ────────────────────────── MODE PERFORMANCE (ANTI-LAG iOS / MOBILE) ────────────────────────── */
+        /* 1. Remplacement des backdrop-filter par des arrière-plans opaques / semi-transparents élégants */
+        body.perf-mode *,
+        body.perf-mode *::before,
+        body.perf-mode *::after {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        body.perf-mode #image-lightbox,
+        body.perf-mode #audio-settings-modal,
+        body.perf-mode #achievements-modal,
+        body.perf-mode #enigme-modal {
+            background: rgba(5, 8, 22, 0.96) !important;
+        }
+
+        body.perf-mode .enigma-card,
+        body.perf-mode .enigma-nav-bar,
+        body.perf-mode .index-header,
+        body.perf-mode .stat-notify-bubble,
+        body.perf-mode .lightbox-zoom-controls {
+            background: rgba(15, 16, 53, 0.95) !important;
+        }
+
+        /* 2. Simplification drastique des ombres et filtres volumineux (box-shadow, text-shadow, drop-shadow) */
+        body.perf-mode * {
+            box-shadow: none !important;
+            text-shadow: none !important;
+            filter: none !important;
+        }
+
+        /* Maintien d'une bordure contrastée et d'une ombre unie et légère sur les cartes principales */
+        body.perf-mode .enigma-card,
+        body.perf-mode .lightbox-zoom-controls {
+            border: 1px solid rgba(201, 168, 76, 0.4) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8) !important;
+        }
+
+        /* 3. Masquage des éléments pur décoratifs et coûteux en ressources GPU */
+        body.perf-mode #stars-canvas,
+        body.perf-mode .nebula-bg {
+            display: none !important;
+        }
+
+        body.perf-mode .hero-bg {
+            animation: none !important;
+            transform: none !important;
+        }
+
+        /* 4. Coupure des animations CSS infinies lourdes (rotations, flux fluo, pulsations) */
+        body.perf-mode [style*="seal-rotate"],
+        body.perf-mode [style*="fluo-border-flow"],
+        body.perf-mode [style*="title-fluo-slow"],
+        body.perf-mode [style*="pulse-glow"],
+        body.perf-mode .seal-container img,
+        body.perf-mode .title-fluo,
+        body.perf-mode .btn-primary,
+        body.perf-mode .enigma-card {
+            animation: none !important;
+        }
     </style>
 </head>
 
@@ -5205,8 +5266,8 @@
                 </div>
                 <div id="audio-toggle-btn" class="step-badge"
                     style="border-color: rgba(201, 168, 76, 0.4); color: var(--text-secondary); cursor: pointer; padding: 6px 10px;"
-                    onclick="ChateauAudio.showMenu(event)" title="Régler le volume sonore (Musique & SFX)">
-                    <span id="audio-icon" style="font-size: 0.9rem;">🔊</span>
+                    onclick="ChateauAudio.showMenu(event)" title="Ouvrir les paramètres">
+                    <span id="audio-icon" style="font-size: 0.9rem;">🔊 ⚙️</span>
                 </div>
             </div>
         </div>
@@ -5238,7 +5299,7 @@
         </div>
     </div>
 
-    <!-- ═══════════════════════ AUDIO SETTINGS MODAL ═══════════════════════ -->
+    <!-- ═══════════════════════ SETTINGS MODAL ═══════════════════════ -->
     <div id="audio-settings-modal" onclick="if(event.target===this) ChateauAudio.closeMenu()"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 8, 22, 0.92); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 20px;">
         <div class="enigma-card"
@@ -5247,9 +5308,26 @@
                 style="position: absolute; top: 16px; right: 16px; cursor: pointer;">&times;</div>
             <h2
                 style="color: var(--clr-gold-bright); font-size: 1.5rem; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; font-family: var(--font-display);">
-                🔊 Réglages Audio</h2>
+                🔊 ⚙️ Paramètres</h2>
             <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 24px;">Ajustez l'ambiance sonore
-                et les effets de l'aventure.</p>
+                et les performances de l'aventure.</p>
+
+            <!-- Performance Mode Toggle Section -->
+            <div
+                style="margin-bottom: 20px; background: rgba(15, 16, 53, 0.6); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span
+                        style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--clr-cream); font-family: var(--font-ui);">
+                        <span style="font-size: 1.2rem;">⚡</span> Mode Performance (Anti-Lag)
+                    </span>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">Désactive flous, parallaxe et
+                        animations sur iOS</span>
+                </div>
+                <button id="perf-mode-toggle-btn" onclick="ChateauSettings.togglePerformanceMode()"
+                    style="background: rgba(201, 168, 76, 0.15); border: 1px solid rgba(201, 168, 76, 0.4); color: var(--clr-cream); padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; white-space: nowrap; font-family: var(--font-ui);">
+                    Désactivé
+                </button>
+            </div>
 
             <!-- Music Volume Slider -->
             <div
@@ -7084,6 +7162,9 @@
         }
 
         function initParallax() {
+            // Désactiver la parallaxe au gyroscope / souris si le mode performance est actif pour éviter les saccades iOS
+            if (typeof ChateauSettings !== 'undefined' && ChateauSettings.perfMode) return;
+
             // 2. Cibler spécifiquement la carte de l'énigme active (pas celles des modals)
             const card = document.querySelector('#app .enigma-card');
             const bg = document.getElementById('hero-bg');
@@ -7584,6 +7665,80 @@
         });
 
         /* ─────────────────────────────────────────────────────────────
+           GESTION DU MODE PERFORMANCE (ANTI-LAG iOS / MOBILE)
+        ────────────────────────────────────────────────────────────── */
+        const ChateauSettings = {
+            perfMode: localStorage.getItem('escapeGame_perfMode') === 'true',
+            init() {
+                if (this.perfMode) {
+                    document.body.classList.add('perf-mode');
+                } else {
+                    document.body.classList.remove('perf-mode');
+                }
+                this.syncUI();
+                this.applyPerformanceState();
+            },
+            togglePerformanceMode() {
+                this.perfMode = !this.perfMode;
+                localStorage.setItem('escapeGame_perfMode', this.perfMode);
+                if (this.perfMode) {
+                    document.body.classList.add('perf-mode');
+                } else {
+                    document.body.classList.remove('perf-mode');
+                }
+                this.syncUI();
+                this.applyPerformanceState();
+                if (typeof ChateauAudio !== 'undefined' && ChateauAudio.playClick) {
+                    ChateauAudio.playClick(true);
+                }
+            },
+            syncUI() {
+                const btn = document.getElementById('perf-mode-toggle-btn');
+                if (btn) {
+                    if (this.perfMode) {
+                        btn.textContent = 'ACTIVÉ ⚡';
+                        btn.style.background = 'var(--clr-gold)';
+                        btn.style.borderColor = 'var(--clr-gold-bright)';
+                        btn.style.color = '#000';
+                        btn.style.fontWeight = '700';
+                    } else {
+                        btn.textContent = 'Désactivé';
+                        btn.style.background = 'rgba(201, 168, 76, 0.15)';
+                        btn.style.borderColor = 'rgba(201, 168, 76, 0.4)';
+                        btn.style.color = 'var(--clr-cream)';
+                        btn.style.fontWeight = '600';
+                    }
+                }
+            },
+            applyPerformanceState() {
+                // 1. Parallaxe : si mode performance actif, on désactive les écouteurs mousemove / deviceorientation
+                if (this.perfMode) {
+                    if (window._parallaxMoveHandler) {
+                        window.removeEventListener('mousemove', window._parallaxMoveHandler);
+                        window.removeEventListener('deviceorientation', window._parallaxDeviceHandler);
+                        window.removeEventListener('mouseleave', window._parallaxLeaveHandler);
+                    }
+                    const card = document.querySelector('#app .enigma-card');
+                    if (card) {
+                        card.style.transform = 'none';
+                        card.style.boxShadow = '';
+                    }
+                    const bg = document.getElementById('hero-bg');
+                    if (bg) bg.style.transform = 'none';
+                } else {
+                    if (typeof initParallax === 'function') initParallax();
+                }
+
+                // 2. Canvas Stars : couper ou reprendre la boucle requestAnimationFrame
+                if (this.perfMode) {
+                    if (typeof window.pauseStars === 'function') window.pauseStars();
+                } else {
+                    if (typeof window.resumeStars === 'function') window.resumeStars();
+                }
+            }
+        };
+
+        /* ─────────────────────────────────────────────────────────────
            MOTEUR SONORE CHIPTUNE & FÉERIQUE (Web Audio API)
         ────────────────────────────────────────────────────────────── */
         const ChateauAudio = {
@@ -7742,7 +7897,7 @@
             },
             updateIcon() {
                 const icon = document.getElementById('audio-icon');
-                if (icon) icon.textContent = this.muted ? '🔇' : '🔊';
+                if (icon) icon.textContent = (this.muted ? '🔇' : '🔊') + ' ⚙️';
             },
             _getSfxMult() {
                 const vol = this.sfxVolume !== undefined ? this.sfxVolume : 0.5;
@@ -7875,6 +8030,7 @@
             lastTime: 0,
             init() {
                 const spawn = (x, y) => {
+                    if (typeof ChateauSettings !== 'undefined' && ChateauSettings.perfMode) return;
                     const now = performance.now();
                     if (now - this.lastTime < 35) return;
                     this.lastTime = now;
@@ -8002,6 +8158,9 @@
             // Init starfield background
             if (typeof initStars === 'function') {
                 initStars('stars-canvas', { count: 120, twinkle: true });
+            }
+            if (typeof ChateauSettings !== 'undefined') {
+                ChateauSettings.init();
             }
             ChateauAudio.updateIcon();
             ChateauCursor.init();
@@ -12037,6 +12196,10 @@
                 }
             };
 
+            if (typeof ChateauSettings !== 'undefined' && ChateauSettings.perfMode) {
+                starsAnimationActive = false;
+                return;
+            }
             starsAnimationActive = true;
             animate();
         }
