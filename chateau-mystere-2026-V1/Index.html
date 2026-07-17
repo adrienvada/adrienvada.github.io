@@ -1565,6 +1565,8 @@
             border-radius: var(--radius-md);
             margin: 0 auto var(--gap-md);
             position: relative;
+            transform: translateZ(35px);
+            transform-style: flat;
         }
 
         .mosaic-grid-wrapper::-webkit-scrollbar {
@@ -5199,24 +5201,28 @@
 
             <div style="flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-bottom: 15px;">
                 <!-- BONUSES SECTION -->
-                <h3
-                    style="color: #10b981; font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--font-display);">
-                    ✨ Bénéfices Actuels
-                </h3>
-                <ul id="jardin-res-bonuses-list"
-                    style="list-style: none; padding: 0; margin: 0 0 20px 0; display: flex; flex-direction: column; gap: 8px;">
-                    <!-- Filled dynamically -->
-                </ul>
+                <div id="jardin-res-bonuses-section">
+                    <h3
+                        style="color: #10b981; font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--font-display);">
+                        ✨ Bénéfices Actuels
+                    </h3>
+                    <ul id="jardin-res-bonuses-list"
+                        style="list-style: none; padding: 0; margin: 0 0 20px 0; display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Filled dynamically -->
+                    </ul>
+                </div>
 
                 <!-- PENALTIES SECTION -->
-                <h3
-                    style="color: #f43f5e; font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--font-display);">
-                    ⚠️ Contraintes & Résistances
-                </h3>
-                <ul id="jardin-res-penalties-list"
-                    style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
-                    <!-- Filled dynamically -->
-                </ul>
+                <div id="jardin-res-penalties-section">
+                    <h3
+                        style="color: #f43f5e; font-size: 1.1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; font-family: var(--font-display);">
+                        ⚠️ Contraintes & Résistances
+                    </h3>
+                    <ul id="jardin-res-penalties-list"
+                        style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Filled dynamically -->
+                    </ul>
+                </div>
             </div>
 
             <div style="text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 15px;">
@@ -5398,6 +5404,13 @@
             <option value="1">Résonance I (0 ✨)</option>
             <option value="2">Résonance II (500 ✨)</option>
             <option value="3">Résonance III (5000 ✨)</option>
+            <option value="4">Résonance IV (10000 ✨)</option>
+            <option value="5">Résonance V (10000 ✨)</option>
+            <option value="6">Résonance VI (10000 ✨)</option>
+            <option value="7">Résonance VII (10000 ✨)</option>
+            <option value="8">Résonance VIII (10000 ✨)</option>
+            <option value="9">Résonance IX (10000 ✨)</option>
+            <option value="10">Résonance X (10000 ✨)</option>
         </select>
     </div>
 
@@ -5804,6 +5817,18 @@
 
             const bonusesList = document.getElementById('jardin-res-bonuses-list');
             const penaltiesList = document.getElementById('jardin-res-penalties-list');
+            const bonusesSection = document.getElementById('jardin-res-bonuses-section');
+            const penaltiesSection = document.getElementById('jardin-res-penalties-section');
+
+            if (bonusesSection && penaltiesSection) {
+                if (prestige === 1) {
+                    bonusesSection.style.display = 'none';
+                    penaltiesSection.style.display = 'none';
+                } else {
+                    bonusesSection.style.display = 'block';
+                    penaltiesSection.style.display = 'block';
+                }
+            }
 
             if (bonusesList && penaltiesList) {
                 // Build bonuses items
@@ -7162,34 +7187,30 @@
         }
 
         function initParallax() {
-            // Désactiver la parallaxe au gyroscope / souris si le mode performance est actif pour éviter les saccades iOS
             if (typeof ChateauSettings !== 'undefined' && ChateauSettings.perfMode) return;
 
-            // 2. Cibler spécifiquement la carte de l'énigme active (pas celles des modals)
+            if (typeof window._isTouchPaused === 'undefined') {
+                window._isTouchPaused = false;
+                window.addEventListener('touchstart', () => { window._isTouchPaused = true; }, { passive: true });
+                window.addEventListener('touchend', () => { setTimeout(() => { window._isTouchPaused = false; }, 400); }, { passive: true });
+            }
+
             const card = document.querySelector('#app .enigma-card');
             const bg = document.getElementById('hero-bg');
             if (!card) return;
 
-            // 3. Débloque le verrouillage CSS une fois l'apparition terminée
             card.addEventListener('animationend', (e) => {
-                // Empêche le bubbling : on ignore les animations des enfants (boutons, inputs)
                 if (e.target !== card) return;
-
                 card.style.animation = 'none';
-
-                // Supprime la transition CSS pour éviter l'effet "gelée/lag" pendant le mouvement
                 card.style.transition = 'none';
             });
 
-            // 4. Fonctions nommées pour permettre un nettoyage futur
             window._parallaxMoveHandler = (e) => {
                 const centerX = window.innerWidth / 2;
                 const centerY = window.innerHeight / 2;
-
                 const rotateX = ((e.clientY - centerY) / centerY) * -8;
                 const rotateY = ((e.clientX - centerX) / centerX) * -8;
 
-                // Injection du parallax AVEC le scale(1.005) pour compenser la perte du :hover CSS
                 card.style.transform = `translateY(-5px) scale(1.005) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
                 card.style.boxShadow = `${-rotateY * 2}px ${rotateX * 2}px 40px rgba(0, 0, 0, 0.9), 0 0 45px rgba(242, 208, 107, 0.3)`;
 
@@ -7199,6 +7220,7 @@
             };
 
             window._parallaxDeviceHandler = (e) => {
+                if (window._isTouchPaused) return;
                 if (!e.gamma || !e.beta) return;
                 const simX = window.innerWidth / 2 + (e.gamma * 5);
                 const simY = window.innerHeight / 2 + ((e.beta - 45) * 5);
@@ -7206,19 +7228,16 @@
             };
 
             window._parallaxLeaveHandler = () => {
-                // Restaure temporairement la transition pour que le retour au centre soit fluide
                 card.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
                 card.style.transform = `translateY(0) scale(1) rotateX(0) rotateY(0)`;
                 card.style.boxShadow = '';
                 if (bg) bg.style.transform = `scale(1.1) translate(0px, 0px)`;
 
-                // On recoupe la transition une fois le mouvement de retour terminé
                 setTimeout(() => {
                     if (card) card.style.transition = 'none';
                 }, 500);
             };
 
-            // 5. Assignation des nouveaux écouteurs
             window.addEventListener('mousemove', window._parallaxMoveHandler);
             window.addEventListener('deviceorientation', window._parallaxDeviceHandler);
             window.addEventListener('mouseleave', window._parallaxLeaveHandler);
@@ -11271,7 +11290,7 @@
         function debugSetResonance(val) {
             if (val === '') return;
             const level = parseInt(val, 10);
-            const energy = level === 3 ? 5000 : (level === 2 ? 500 : 0);
+            const energy = level === 3 ? 5000 : (level === 2 ? 500 : (level >= 4 ? 10000 : 0));
 
             let potsCount = 3;
             let seedLevel = 1;
