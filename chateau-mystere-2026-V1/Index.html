@@ -717,49 +717,62 @@
         /* ────────────────────────── ENIGMA CARD ───────────────────────────────── */
         .enigma-card {
             position: relative;
-            background: #00000090;
-            backdrop-filter: blur(24px) saturate(1.4);
-            -webkit-backdrop-filter: blur(24px) saturate(1.4);
-            border: 2px solid rgba(201, 168, 76, 0.45);
             border-radius: var(--radius-lg);
             padding: var(--gap-xl) var(--gap-lg);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), 0 0 35px rgba(201, 168, 76, 0.15), inset 0 0 50px rgba(5, 4, 10, 0.9);
-            animation: portal-reveal 1.2s cubic-bezier(0.77, 0, 0.175, 1) both;
+            animation: portal-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
             overflow: visible;
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            will-change: transform, box-shadow;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform;
             transform-style: preserve-3d;
         }
 
-        @keyframes portal-reveal {
-            0% {
-                opacity: 0;
-                clip-path: circle(0% at 50% 50%);
-                transform: scale(0.9) translateY(20px);
-                filter: blur(10px);
-            }
-
-            100% {
-                opacity: 1;
-                clip-path: circle(150% at 50% 50%);
-                /* S'ouvre bien au-delà des bords */
-                transform: scale(1) translateY(0);
-                filter: blur(0px);
-            }
+        .enigma-card:hover {
+            transform: translateY(-3px) scale(1.005);
         }
 
-        /* Bordure supérieure fluorescente métallique */
-        .enigma-card::before {
-            content: '';
+        /* Le calque de fond indépendant avec le flou */
+        .enigma-card-bg {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
+            bottom: 0;
+            border-radius: var(--radius-lg);
+            background: rgba(5, 5, 15, 0.65);
+            backdrop-filter: blur(24px) saturate(1.4);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4);
+            border: 2px solid rgba(201, 168, 76, 0.45);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), inset 0 0 50px rgba(5, 4, 10, 0.9);
+            z-index: -1;
+            /* Force Chrome à ne jamais "perdre" le flou pendant l'effet 3D */
+            transform: translateZ(0);
+            transition: box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        .enigma-card:hover .enigma-card-bg {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 45px rgba(242, 208, 107, 0.3), inset 0 0 60px rgba(201, 168, 76, 0.15);
+        }
+
+        /* La ligne fluo, strictement horizontale et arrêtée avant les angles */
+        /* La ligne fluo avec un fondu aux extrémités pour se fondre dans la bordure dorée */
+        .enigma-card-bg::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            /* La ligne s'arrête avant les coins arrondis */
+            left: var(--radius-lg);
+            right: var(--radius-lg);
             height: 2px;
             background: linear-gradient(90deg, transparent, #c9a84c, #ffe898, #00ffcc, #f2d06b, #c9a84c, transparent);
             background-size: 200% 100%;
             animation: fluo-border-flow 7s linear infinite;
-            z-index: 2;
+
+            /* Le masque magique : transparent aux bords, opaque au milieu, sur une distance de 25px */
+            -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%);
+
+            pointer-events: none;
         }
 
         @keyframes fluo-border-flow {
@@ -779,9 +792,16 @@
             }
         }
 
-        .enigma-card:hover {
-            transform: translateY(-3px) scale(1.005);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 45px rgba(242, 208, 107, 0.3), inset 0 0 60px rgba(201, 168, 76, 0.15);
+        @keyframes portal-reveal {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         .enigma-step {
@@ -2458,6 +2478,9 @@
 
         .luxury-card {
             position: relative;
+            top: -2px;
+            left: -2px;
+            right: -2px;
             background: #000000;
             backdrop-filter: blur(24px) saturate(1.4);
             -webkit-backdrop-filter: blur(24px) saturate(1.4);
@@ -2473,13 +2496,18 @@
         .luxury-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: -2px;
+            left: var(--radius-lg);
+            right: var(--radius-lg);
             height: 2px;
             background: linear-gradient(90deg, transparent, #c9a84c, #ffe898, #00ffcc, #f2d06b, #c9a84c, transparent);
             background-size: 200% 100%;
             animation: fluo-border-flow 7s linear infinite;
+
+            -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0%, black 25px, black calc(100% - 25px), transparent 100%);
+
+            pointer-events: none;
         }
 
         .icon-metallic {
@@ -5569,6 +5597,25 @@
             } catch (e) { }
         }
 
+        function jardinSaveState() {
+            if (typeof jardinState === 'undefined' || !jardinState) return;
+            if (!jardinState.seedsInventory) {
+                jardinState.seedsInventory = { lunaire: 0, nacre: 0, souvenir: 0 };
+            }
+            localStorage.setItem('jardin_souvenirs_state', JSON.stringify({
+                energy: jardinState.energy !== undefined ? jardinState.energy : 0,
+                potsCount: jardinState.potsCount || 3,
+                seedLevel: jardinState.seedLevel || 1,
+                autoWater: jardinState.autoWater || false,
+                hasScythe: jardinState.hasScythe || false,
+                seedsInventory: jardinState.seedsInventory,
+                selectedSeedIndex: jardinState.selectedSeedIndex !== undefined ? jardinState.selectedSeedIndex : 0,
+                prestigeLevel: jardinState.prestigeLevel || 1,
+                mission: jardinState.mission !== undefined ? jardinState.mission : null
+            }));
+        }
+        window.jardinSaveState = jardinSaveState;
+
         function openJardinGame() {
             const modal = document.getElementById('jardin-modal');
             modal.classList.add('active');
@@ -5598,6 +5645,7 @@
             jardinUpdateSeedsStockUI();
             jardinUpdateGlobalUI();
             jardinUpdateMissionUI();
+            if (typeof jardinUpdateShopUI === 'function') jardinUpdateShopUI();
             updateJardinDebugButton();
             jardinStartDay();
         }
@@ -5653,16 +5701,7 @@
                 }
                 if (jardinState.energy < 0) jardinState.energy = 0;
 
-                localStorage.setItem('jardin_souvenirs_state', JSON.stringify({
-                    energy: jardinState.energy,
-                    potsCount: jardinState.potsCount || 3,
-                    seedLevel: jardinState.seedLevel || 1,
-                    autoWater: jardinState.autoWater || false,
-                    hasScythe: jardinState.hasScythe || false,
-                    seedsInventory: jardinState.seedsInventory || { lunaire: 0, nacre: 0, souvenir: 0 },
-                    selectedSeedIndex: jardinState.selectedSeedIndex !== undefined ? jardinState.selectedSeedIndex : 0,
-                    prestigeLevel: jardinState.prestigeLevel || 1
-                }));
+                jardinSaveState();
 
                 if (typeof jardinUpdateGlobalUI === 'function') {
                     jardinUpdateGlobalUI();
@@ -5986,17 +6025,7 @@
             jardinState.energy += jardinState.fragmentsToday;
 
             // Save to localStorage strictly at night phase
-            localStorage.setItem('jardin_souvenirs_state', JSON.stringify({
-                energy: jardinState.energy,
-                potsCount: jardinState.potsCount,
-                seedLevel: jardinState.seedLevel,
-                autoWater: jardinState.autoWater,
-                hasScythe: jardinState.hasScythe,
-                seedsInventory: jardinState.seedsInventory,
-                selectedSeedIndex: jardinState.selectedSeedIndex,
-                prestigeLevel: jardinState.prestigeLevel,
-                mission: null
-            }));
+            jardinSaveState();
 
             jardinUpdateGlobalUI();
             jardinUpdateMissionUI();
@@ -6589,6 +6618,7 @@
                 }
                 jardinState.seedsInventory[type] = (jardinState.seedsInventory[type] || 0) + 10;
                 playJardinSound('upgrade');
+                jardinSaveState();
                 jardinUpdateGlobalUI();
                 jardinUpdateShopUI();
                 jardinUpdateSeedsStockUI();
@@ -6720,6 +6750,7 @@
                 jardinState.energy -= cost;
                 jardinState.potsCount++;
                 playJardinSound('upgrade');
+                jardinSaveState();
                 jardinUpdateGlobalUI();
                 jardinUpdateShopUI();
             }
@@ -6731,6 +6762,7 @@
                 jardinState.energy -= cost;
                 jardinState.seedLevel++;
                 playJardinSound('upgrade');
+                jardinSaveState();
                 jardinUpdateGlobalUI();
                 jardinUpdateShopUI();
             }
@@ -6742,6 +6774,7 @@
                 jardinState.energy -= cost;
                 jardinState.autoWater = true;
                 playJardinSound('upgrade');
+                jardinSaveState();
                 jardinUpdateGlobalUI();
                 jardinUpdateShopUI();
             }
@@ -6754,6 +6787,7 @@
                 jardinState.energy -= scytheCost;
                 jardinState.hasScythe = true;
                 playJardinSound('upgrade');
+                jardinSaveState();
                 jardinUpdateGlobalUI();
                 jardinUpdateShopUI();
                 const btn = document.getElementById('jardin-scythe-btn');
@@ -6777,17 +6811,7 @@
             jardinState.seedLevel = 1;
 
             // Enregistrer l'état réinitialisé
-            localStorage.setItem('jardin_souvenirs_state', JSON.stringify({
-                energy: jardinState.energy,
-                potsCount: jardinState.potsCount,
-                seedLevel: jardinState.seedLevel,
-                autoWater: jardinState.autoWater,
-                hasScythe: jardinState.hasScythe,
-                seedsInventory: jardinState.seedsInventory,
-                selectedSeedIndex: jardinState.selectedSeedIndex,
-                prestigeLevel: jardinState.prestigeLevel,
-                mission: null
-            }));
+            jardinSaveState();
 
             // Jouer le son jackpot
             playJardinSound('jackpot');
@@ -7009,11 +7033,17 @@
                     jardinState.energy = parsed.energy || 0;
                     jardinState.potsCount = parsed.potsCount || 3;
                     jardinState.seedLevel = parsed.seedLevel || 1;
+                    jardinState.selectedSeedIndex = parsed.selectedSeedIndex !== undefined ? parsed.selectedSeedIndex : 0;
                     jardinState.autoWater = parsed.autoWater || false;
+                    jardinState.hasScythe = parsed.hasScythe || false;
+                    jardinState.seedsInventory = parsed.seedsInventory || { lunaire: 0, nacre: 0, souvenir: 0 };
                     jardinState.prestigeLevel = parsed.prestigeLevel || 1;
+                    jardinState.mission = parsed.mission !== undefined ? parsed.mission : null;
                 } catch (e) { }
             }
             jardinUpdateGlobalUI();
+            if (typeof jardinUpdateShopUI === 'function') jardinUpdateShopUI();
+            if (typeof jardinUpdateSeedsStockUI === 'function') jardinUpdateSeedsStockUI();
 
             // Bind global window events once on load, active check included
             window.addEventListener('mouseup', () => {
@@ -7046,48 +7076,71 @@
         // Initialisation au chargement du DOM
         document.addEventListener('DOMContentLoaded', initSplashCountdown);
 
-        //initialisation du parallax
+        // 1. Nettoyage préalable des anciens écouteurs pour éviter l'empilement
+        if (window._parallaxMoveHandler) {
+            window.removeEventListener('mousemove', window._parallaxMoveHandler);
+            window.removeEventListener('deviceorientation', window._parallaxDeviceHandler);
+            window.removeEventListener('mouseleave', window._parallaxLeaveHandler);
+        }
+
         function initParallax() {
-            const card = document.querySelector('.enigma-card');
+            // 2. Cibler spécifiquement la carte de l'énigme active (pas celles des modals)
+            const card = document.querySelector('#app .enigma-card');
             const bg = document.getElementById('hero-bg');
             if (!card) return;
 
-            const handleMove = (clientX, clientY) => {
-                // Calcul du centre de l'écran
+            // 3. Débloque le verrouillage CSS une fois l'apparition terminée
+            card.addEventListener('animationend', (e) => {
+                // Empêche le bubbling : on ignore les animations des enfants (boutons, inputs)
+                if (e.target !== card) return;
+
+                card.style.animation = 'none';
+
+                // Supprime la transition CSS pour éviter l'effet "gelée/lag" pendant le mouvement
+                card.style.transition = 'none';
+            });
+
+            // 4. Fonctions nommées pour permettre un nettoyage futur
+            window._parallaxMoveHandler = (e) => {
                 const centerX = window.innerWidth / 2;
                 const centerY = window.innerHeight / 2;
 
-                // Force du mouvement (plus le diviseur est petit, plus ça bouge)
-                const rotateX = ((clientY - centerY) / centerY) * -8; // Max 8 degrés
-                const rotateY = ((clientX - centerX) / centerX) * 8;
+                const rotateX = ((e.clientY - centerY) / centerY) * -8;
+                const rotateY = ((e.clientX - centerX) / centerX) * -8;
 
-                // Applique la rotation 3D sur la carte (elle "flotte" vers l'utilisateur)
-                card.style.transform = `translateY(-5px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                // Injection du parallax AVEC le scale(1.005) pour compenser la perte du :hover CSS
+                card.style.transform = `translateY(-5px) scale(1.005) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
                 card.style.boxShadow = `${-rotateY * 2}px ${rotateX * 2}px 40px rgba(0, 0, 0, 0.9), 0 0 45px rgba(242, 208, 107, 0.3)`;
 
-                // Mouvement subtil inverse sur le fond pour accentuer la profondeur
                 if (bg) {
                     bg.style.transform = `scale(1.1) translate(${rotateY * -1.5}px, ${rotateX * 1.5}px)`;
                 }
             };
 
-            // Pour l'ordinateur (Souris)
-            window.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
-
-            // Pour le mobile (Gyroscope)
-            window.addEventListener('deviceorientation', (e) => {
+            window._parallaxDeviceHandler = (e) => {
                 if (!e.gamma || !e.beta) return;
-                // On convertit les degrés d'inclinaison en pixels simulés
-                let simX = window.innerWidth / 2 + (e.gamma * 5);
-                let simY = window.innerHeight / 2 + ((e.beta - 45) * 5); // 45° est l'angle de prise en main naturel
-                handleMove(simX, simY);
-            });
+                const simX = window.innerWidth / 2 + (e.gamma * 5);
+                const simY = window.innerHeight / 2 + ((e.beta - 45) * 5);
+                window._parallaxMoveHandler({ clientX: simX, clientY: simY });
+            };
 
-            // Remise à zéro quand on quitte
-            window.addEventListener('mouseleave', () => {
-                card.style.transform = `translateY(0) rotateX(0) rotateY(0)`;
+            window._parallaxLeaveHandler = () => {
+                // Restaure temporairement la transition pour que le retour au centre soit fluide
+                card.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                card.style.transform = `translateY(0) scale(1) rotateX(0) rotateY(0)`;
+                card.style.boxShadow = '';
                 if (bg) bg.style.transform = `scale(1.1) translate(0px, 0px)`;
-            });
+
+                // On recoupe la transition une fois le mouvement de retour terminé
+                setTimeout(() => {
+                    if (card) card.style.transition = 'none';
+                }, 500);
+            };
+
+            // 5. Assignation des nouveaux écouteurs
+            window.addEventListener('mousemove', window._parallaxMoveHandler);
+            window.addEventListener('deviceorientation', window._parallaxDeviceHandler);
+            window.addEventListener('mouseleave', window._parallaxLeaveHandler);
         }
         /* ─────────────────────────────────────────────────────────────
            DONNÉES DES ÉNIGMES
@@ -8886,6 +8939,9 @@
 
             $app.innerHTML = `
         <div class="enigma-card">
+          <!-- Le calque de fond indépendant (qui contient aussi la ligne fluo) -->
+          <div class="enigma-card-bg"></div>
+
           <div class="card-badge">
             <div class="card-num">${index + 1}</div>
             <span class="card-icon">🗝️</span>
@@ -11071,14 +11127,18 @@
             }
             window.hidden_skin_level = Math.min(3, level);
 
-            localStorage.setItem('jardin_souvenirs_state', JSON.stringify({
-                energy: energy,
-                potsCount: potsCount,
-                seedLevel: seedLevel,
-                autoWater: autoWater,
-                hasScythe: typeof jardinState !== 'undefined' ? (jardinState.hasScythe || false) : false,
-                prestigeLevel: level
-            }));
+            if (typeof jardinSaveState === 'function') {
+                jardinSaveState();
+            } else {
+                localStorage.setItem('jardin_souvenirs_state', JSON.stringify({
+                    energy: energy,
+                    potsCount: potsCount,
+                    seedLevel: seedLevel,
+                    autoWater: autoWater,
+                    hasScythe: typeof jardinState !== 'undefined' ? (jardinState.hasScythe || false) : false,
+                    prestigeLevel: level
+                }));
+            }
 
             if (typeof jardinUpdateGlobalUI === 'function') {
                 jardinUpdateGlobalUI();
