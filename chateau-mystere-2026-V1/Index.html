@@ -4972,7 +4972,7 @@
         /* ────────────────────────── CORRECTION BULLES MOBILE ────────────────────────── */
         /* Quand les bulles sont ajoutées directement au body (via JS sur mobile),
            elles utilisent position:fixed et se centrent dans le viewport */
-        body > .stat-notify-bubble {
+        body>.stat-notify-bubble {
             position: fixed !important;
             top: 70px !important;
             left: 16px !important;
@@ -4988,7 +4988,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 25px rgba(201, 168, 76, 0.4) !important;
         }
 
-        body > .stat-notify-bubble.error-style {
+        body>.stat-notify-bubble.error-style {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 25px rgba(239, 68, 68, 0.5) !important;
         }
 
@@ -5227,7 +5227,9 @@
     <!-- ═══════════════════════ JARDIN DES SOUVENIRS MINI-GAME MODAL ═══════════════════════ -->
     <div id="jardin-modal" class="jardin-game-modal">
         <div class="jardin-header">
-            <button class="jardin-close-btn" onclick="closeJardinGame()">✕</button>
+            <button class="jardin-close-btn" onclick="closeJardinGame()"
+                style="display: flex; align-items: center; gap: 4px; font-size: 0.9rem; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.12); border-radius: 6px; padding: 5px 12px; cursor: pointer; font-weight: bold; transition: all 0.2s;">✕
+                Fermer</button>
             <h1 class="jardin-title">Le Jardin des Souvenirs</h1>
             <div>
                 <span class="jardin-resonance" id="jardin-resonance-level" onclick="openJardinResonanceModal()"
@@ -11940,8 +11942,16 @@
             </div>
           </div>
 
-          <div style="margin-top: 30px;">
-            <button class="btn btn-primary" onclick="resetGame()">🔄 Recommencer l'aventure ↗</button>
+          <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 14px; align-items: center; width: 100%; max-width: 420px; margin-left: auto; margin-right: auto;">
+            <button class="btn btn-primary" onclick="openJardinGame()" style="width: 100%; padding: 14px 20px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-color: #34d399; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35); font-size: 1.05rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              🪴 Cultiver le Jardin des Souvenirs
+            </button>
+            <button class="btn btn-primary" onclick="startBossFight()" style="width: 100%; padding: 14px 20px; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); border-color: #c084fc; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.35); font-size: 1.05rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              ⚔️ Combat contre Malus
+            </button>
+            <button class="btn btn-secondary" onclick="resetGame()" style="width: 100%; padding: 12px 20px; margin-top: 4px; font-size: 0.95rem; opacity: 0.9; cursor: pointer;">
+              🔄 Recommencer l'aventure ↗
+            </button>
           </div>
         </div>
       `;
@@ -12532,7 +12542,8 @@
             menu.className = 'bf-difficulty-menu';
             menu.id = 'bf-difficulty-menu';
             menu.innerHTML = `
-                <div class="bf-difficulty-box">
+                <div class="bf-difficulty-box" style="position: relative;">
+                    <button class="bf-close-btn" onclick="closeBossFight()" style="position: absolute; top: 10px; right: 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #e2e8f0; font-size: 0.9rem; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; transition: all 0.2s;">✕</button>
                     <div class="bf-diff-title">⚔️ Choisir la difficulté</div>
                     <div class="bf-diff-subtitle">Le niveau de difficulté affecte les PV d'Eva et la résistance de Malus.</div>
                     <div class="bf-diff-cards">
@@ -12558,9 +12569,53 @@
                             </div>
                         </button>
                     </div>
+
+                    <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.12); text-align: center;">
+                        <button class="btn btn-secondary" onclick="_bfToggleCustomHPInput()" style="font-size: 0.9rem; padding: 8px 16px; border: 1px solid rgba(201, 168, 76, 0.4); background: rgba(201, 168, 76, 0.1); color: #fef08a; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                            ⚙️ Définir les PV de Malus sur-mesure
+                        </button>
+                        <div id="bf-custom-hp-container" style="display: none; margin-top: 12px; animation: jardinFadeIn 0.3s ease-out;">
+                            <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 8px;">Entrez le nombre de PV pour Malus :</p>
+                            <div style="display: flex; gap: 8px; justify-content: center; align-items: center; max-width: 300px; margin: 0 auto;">
+                                <input type="number" id="bf-custom-hp-val" value="50" min="1" max="99999" style="width: 100px; padding: 8px; border-radius: 8px; border: 1px solid rgba(201, 168, 76, 0.6); background: rgba(15, 23, 42, 0.9); color: #fff; text-align: center; font-weight: bold; font-size: 1rem;">
+                                <button class="btn btn-primary" onclick="_bfPickCustomHP()" style="padding: 8px 14px; font-size: 0.88rem; background: linear-gradient(135deg, #d97706, #f59e0b); border-color: #fef08a; cursor: pointer;">
+                                    ⚔️ Lancer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
             document.body.appendChild(menu);
+        }
+
+        function closeBossFight() {
+            const menu = document.getElementById('bf-difficulty-menu');
+            if (menu) menu.remove();
+            bfCleanup();
+            if (typeof currentIndex !== 'undefined' && currentIndex < enigmes.length - 1) {
+                renderEnigma(currentIndex);
+            } else {
+                renderVictory();
+            }
+        }
+
+        function _bfToggleCustomHPInput() {
+            const container = document.getElementById('bf-custom-hp-container');
+            if (container) {
+                container.style.display = container.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function _bfPickCustomHP() {
+            const input = document.getElementById('bf-custom-hp-val');
+            const val = input ? parseInt(input.value, 10) : 50;
+            const customHP = (!isNaN(val) && val > 0) ? val : 50;
+            ChateauAudio.playSuccess(true);
+            triggerPortalTransition();
+            const menu = document.getElementById('bf-difficulty-menu');
+            if (menu) menu.remove();
+            _startBossFightActual('normal', customHP);
         }
 
         function _bfPickDiff(diff) {
@@ -12571,9 +12626,12 @@
             _startBossFightActual(diff);
         }
 
-        function _startBossFightActual(diff) {
+        function _startBossFightActual(diff, customMalusHP) {
             $app.innerHTML = `
-                <div class="bf-wrapper" id="bf-wrapper">
+                <div class="bf-wrapper" id="bf-wrapper" style="position: relative;">
+                    <button onclick="closeBossFight()" style="position: absolute; top: 10px; right: 10px; z-index: 100; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.25); color: #e2e8f0; border-radius: 50%; width: 28px; height: 28px; font-size: 0.85rem; cursor: pointer; backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; box-shadow: 0 2px 8px rgba(0,0,0,0.4);" title="Quitter le combat">
+                        ✕
+                    </button>
                     <canvas id="bf-canvas" class="bf-canvas"></canvas>
                     <div class="bf-controls">
                         <div class="bf-joystick" id="bf-joystick-base">
@@ -12612,10 +12670,10 @@
             wrapper.addEventListener('touchstart', e => { if (e.target === wrapper || e.target.tagName === 'CANVAS') e.preventDefault(); }, { passive: false });
             wrapper.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
             if (window.pauseStars) window.pauseStars();
-            initBFGame(diff);
+            initBFGame(diff, customMalusHP);
         }
 
-        function initBFGame(diff) {
+        function initBFGame(diff, customMalusHP) {
             const canvas = document.getElementById('bf-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
@@ -12631,8 +12689,11 @@
             const malusMult = diff === 'easy' ? 1 : diff === 'normal' ? 2 : 3;
             const resonanceBonus = window.jardin_eva_bonus_hp || 0;
             const evaMaxHp = 5 + easyBonus + resonanceBonus;
-            const malusHP = Math.max(3, baseHP * malusMult);
-            const diffLabel = diff === 'easy' ? '🌿 Facile' : diff === 'normal' ? '⚔️ Normal' : '🔥 Difficile';
+            const calculatedMalusHP = Math.max(3, baseHP * malusMult);
+            const malusHP = (typeof customMalusHP === 'number' && customMalusHP > 0) ? customMalusHP : calculatedMalusHP;
+            const diffLabel = (typeof customMalusHP === 'number' && customMalusHP > 0)
+                ? `⚙️ Custom (${malusHP} PV)`
+                : (diff === 'easy' ? '🌿 Facile' : diff === 'normal' ? '⚔️ Normal' : '🔥 Difficile');
 
             bf = {
                 ctx, canvas, W: cw, H: ch, running: true, time: 0,
@@ -13517,11 +13578,14 @@
                            <button class="btn" onclick="startBossFight()" style="padding:10px 18px;border:1px solid rgba(167,139,250,0.4);background:rgba(124,58,237,0.18);color:#ddd6fe;font-weight:600;border-radius:8px;cursor:pointer;">
                                🔄 Rejouer le combat
                            </button>
+                           <button class="btn btn-secondary" onclick="closeBossFight()" style="padding:10px 18px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#e2e8f0;font-weight:600;border-radius:8px;cursor:pointer;">
+                               🏠 Quitter / Retour
+                           </button>
                            <button class="btn btn-primary" onclick="bfCleanup();handleSuccess();">
                                Passer à l'énigme suivante ↗
                            </button>
                        </div>`
-                    : `<h2>💀 Défaite...</h2><p style="color:var(--text-secondary);margin-bottom:20px;text-align:center;">Eva a été vaincue...</p><button class="btn btn-primary" onclick="startBossFight()">⚔️ Réessayer</button>`;
+                    : `<h2>💀 Défaite...</h2><p style="color:var(--text-secondary);margin-bottom:20px;text-align:center;">Eva a été vaincue...</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button class="btn btn-primary" onclick="startBossFight()">⚔️ Réessayer</button><button class="btn btn-secondary" onclick="closeBossFight()">🏠 Quitter</button></div>`;
                 wrapper.appendChild(ov);
             }, win ? 1500 : 800);
         }
