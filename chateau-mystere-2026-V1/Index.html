@@ -453,7 +453,7 @@
         }
 
         #header.header-bubble-active {
-            z-index: 300 !important;
+            z-index: 99999 !important;
         }
 
         .header-inner {
@@ -2729,6 +2729,44 @@
             display: flex;
         }
 
+        #debug-toggle-min-btn {
+            background: rgba(251, 191, 36, 0.2);
+            border: 1px solid #fbbf24;
+            color: #fbbf24;
+            border-radius: var(--radius-sm);
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            font-family: var(--font-ui);
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        #debug-toggle-min-btn:hover {
+            background: rgba(251, 191, 36, 0.4);
+            border-color: #fef08a;
+            color: #fff;
+        }
+
+        #debug-panel.minimized {
+            padding: 4px 6px !important;
+            gap: 0 !important;
+            width: auto !important;
+            max-width: fit-content !important;
+            left: auto !important;
+            right: 16px !important;
+            background: rgba(15, 12, 20, 0.85) !important;
+            border-color: rgba(251, 191, 36, 0.6) !important;
+        }
+
+        #debug-panel.minimized>*:not(#debug-toggle-min-btn) {
+            display: none !important;
+        }
+
         #debug-btn,
         #debug-reset-btn {
             padding: 8px 12px;
@@ -4225,12 +4263,20 @@
         }
 
         .piano-keyboard {
+            --pk-white-w: 40px;
+            --pk-pad: 10px;
+            --pk-black-w: 24px;
+            --pk-height: 220px;
+            --pk-white-h: 200px;
+            --pk-black-h: 120px;
+
             display: flex;
             position: relative;
-            width: 340px;
-            height: 220px;
+            width: calc(var(--pk-white-w) * 8 + var(--pk-pad) * 2);
+            max-width: 100%;
+            height: var(--pk-height);
             margin: 20px auto;
-            padding: 10px;
+            padding: var(--pk-pad);
             background: rgba(15, 12, 25, 0.65);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -4240,6 +4286,7 @@
             user-select: none;
             -webkit-user-select: none;
             touch-action: none;
+            box-sizing: border-box;
         }
 
         .piano-sound-toggle {
@@ -4293,14 +4340,15 @@
         }
 
         .piano-key.white {
-            width: 40px;
-            height: 200px;
+            width: var(--pk-white-w);
+            height: var(--pk-white-h);
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(201, 168, 76, 0.3);
             border-radius: 0 0 6px 6px;
             z-index: 1;
             position: relative;
             transition: background 0.15s, box-shadow 0.15s;
+            box-sizing: border-box;
         }
 
         .piano-key.white.active {
@@ -4309,14 +4357,35 @@
         }
 
         .piano-key.black {
-            width: 24px;
-            height: 120px;
+            width: var(--pk-black-w);
+            height: var(--pk-black-h);
             background: rgba(10, 8, 16, 0.95);
             border: 1px solid rgba(201, 168, 76, 0.45);
             border-radius: 0 0 4px 4px;
             z-index: 5;
             position: absolute;
             transition: background 0.15s, box-shadow 0.15s;
+            box-sizing: border-box;
+        }
+
+        .piano-key[data-note="A_sharp"] {
+            left: calc(var(--pk-pad) + var(--pk-white-w) * 1 - var(--pk-black-w) / 2) !important;
+        }
+
+        .piano-key[data-note="C_sharp"] {
+            left: calc(var(--pk-pad) + var(--pk-white-w) * 3 - var(--pk-black-w) / 2) !important;
+        }
+
+        .piano-key[data-note="D_sharp"] {
+            left: calc(var(--pk-pad) + var(--pk-white-w) * 4 - var(--pk-black-w) / 2) !important;
+        }
+
+        .piano-key[data-note="F_sharp"] {
+            left: calc(var(--pk-pad) + var(--pk-white-w) * 6 - var(--pk-black-w) / 2) !important;
+        }
+
+        .piano-key[data-note="G_sharp"] {
+            left: calc(var(--pk-pad) + var(--pk-white-w) * 7 - var(--pk-black-w) / 2) !important;
         }
 
         .piano-key.black.active {
@@ -4901,22 +4970,26 @@
         }
 
         /* ────────────────────────── CORRECTION BULLES MOBILE ────────────────────────── */
-        @media (max-width: 550px) {
-            .stat-notify-bubble {
-                width: 250px;
-                /* Légèrement plus compact pour les petits écrans */
-            }
+        /* Quand les bulles sont ajoutées directement au body (via JS sur mobile),
+           elles utilisent position:fixed et se centrent dans le viewport */
+        body > .stat-notify-bubble {
+            position: fixed !important;
+            top: 70px !important;
+            left: 16px !important;
+            right: 16px !important;
+            width: auto !important;
+            max-width: 340px !important;
+            margin: 0 auto !important;
+            font-size: 0.78rem !important;
+            padding: 12px 16px !important;
+            white-space: normal !important;
+            text-align: center !important;
+            z-index: 999999 !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 25px rgba(201, 168, 76, 0.4) !important;
+        }
 
-            /* Le badge d'erreur est très à gauche, on force la bulle à s'étendre vers la droite */
-            #errors-badge .stat-notify-bubble {
-                right: auto;
-                left: -20px;
-            }
-
-            /* Le badge des indices est plus au centre, on le décale juste un peu */
-            #hints-badge .stat-notify-bubble {
-                right: -70px;
-            }
+        body > .stat-notify-bubble.error-style {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 25px rgba(239, 68, 68, 0.5) !important;
         }
 
         /* ────────────────────────── MODE PERFORMANCE (ANTI-LAG iOS / MOBILE) ────────────────────────── */
@@ -4981,8 +5054,11 @@
         }
 
         /* ────────────────────────── DÉSACTIVATION 3D POUR MOBILE ────────────────────────── */
-        @media (pointer: coarse), (max-width: 768px) {
-            body, #app {
+        @media (pointer: coarse),
+        (max-width: 768px) {
+
+            body,
+            #app {
                 perspective: none !important;
             }
 
@@ -5004,6 +5080,114 @@
             .enigma-image:hover,
             .enigma-carousel:hover {
                 transform: none !important;
+            }
+        }
+
+        /* ────────────────────────── CORRECTIONS MOBILE & IPHONE ────────────────────────── */
+        @media (max-width: 600px) {
+
+            /* 1. Correction En-tête & Boutons paramètres en haut à droite */
+            #header {
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+                padding-top: calc(var(--safe-top) + 4px) !important;
+                padding-bottom: 4px !important;
+            }
+
+            .header-inner {
+                max-width: 100%;
+                gap: 4px;
+                flex-wrap: wrap;
+            }
+
+            .chrono {
+                font-size: 1.15rem !important;
+                letter-spacing: 1px !important;
+            }
+
+            .chrono-label {
+                font-size: 0.55rem !important;
+                letter-spacing: 1.5px !important;
+            }
+
+            /* Réduction des espaces entre les badges pour éviter tout débordement sur iPhone */
+            .header-inner>div:last-child {
+                gap: 3px !important;
+                flex-wrap: wrap !important;
+                justify-content: flex-end !important;
+                flex-shrink: 1;
+                min-width: 0;
+            }
+
+            .step-badge {
+                padding: 3px 6px !important;
+                font-size: 0.68rem !important;
+                white-space: nowrap;
+            }
+
+            .step-badge .step-label {
+                display: none !important;
+            }
+
+            #audio-toggle-btn {
+                padding: 3px 6px !important;
+                flex-shrink: 0 !important;
+            }
+
+            /* 2. Correction du Panneau Debug qui dépasse à droite */
+            #debug-panel {
+                left: 16px !important;
+                right: 16px !important;
+                max-width: calc(100vw - 32px) !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                bottom: calc(var(--safe-bottom) + 60px) !important;
+                /* Dégage le bouton plein écran */
+            }
+
+            #debug-panel.minimized {
+                left: auto !important;
+                right: 16px !important;
+                width: auto !important;
+                max-width: fit-content !important;
+            }
+
+            #debug-select,
+            #debug-resonance {
+                max-width: 100% !important;
+                flex: 1 1 120px;
+            }
+
+            /* 3. Adaptation du Piano Duet sur mobile & écran étroit */
+            .piano-container {
+                margin: 12px auto;
+                max-width: 100%;
+            }
+
+            .piano-keyboard {
+                --pk-white-w: 34px;
+                --pk-pad: 6px;
+                --pk-black-w: 20px;
+                --pk-height: 180px;
+                --pk-white-h: 164px;
+                --pk-black-h: 98px;
+                margin: 12px auto;
+            }
+
+            .piano-sound-toggle {
+                padding: 5px 12px;
+                font-size: 0.65rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .piano-keyboard {
+                --pk-white-w: 30px;
+                --pk-pad: 5px;
+                --pk-black-w: 18px;
+                --pk-height: 160px;
+                --pk-white-h: 146px;
+                --pk-black-h: 88px;
             }
         }
     </style>
@@ -5288,8 +5472,9 @@
                             style="color: var(--clr-gold-bright); font-weight: 700;">0</span></span>
                 </div>
                 <div id="step-badge" class="step-badge">
-                    Étape <span class="current" id="step-current">1</span><span id="step-total-wrap" class="hidden"
-                        style="display: inline-block;">/<span id="step-total">1</span></span>
+                    <span class="step-label">Étape </span><span class="current" id="step-current">1</span><span
+                        id="step-total-wrap" class="hidden" style="display: inline-block;">/<span
+                            id="step-total">1</span></span>
                 </div>
                 <div id="achievements-badge" class="step-badge"
                     style="border-color: rgba(201, 168, 76, 0.4); color: var(--text-secondary); cursor: pointer;"
@@ -5420,6 +5605,8 @@
 
     <!-- ═══════════════════════ DEBUG PANEL ════════════════════════ -->
     <div id="debug-panel">
+        <button id="debug-toggle-min-btn" onclick="toggleDebugMinimize()"
+            title="Réduire / Agrandir le panneau de debug">➖</button>
         <button id="debug-btn" onclick="skipStep()" title="Passer à l'énigme suivante">⚡ Passer</button>
         <button id="debug-reset-btn" onclick="resetGame()" title="Réinitialiser la partie et les énigmes">🔄
             Réinitialiser</button>
@@ -11069,7 +11256,7 @@
                 bubble.id = 'hint-notify-bubble';
                 bubble.className = 'stat-notify-bubble';
                 bubble.innerHTML = `<div style="font-family: var(--font-ui); font-weight: 700; color: var(--clr-gold-bright); margin-bottom: 4px;">💡 Premier indice !</div><div>Attention : plus le nombre d'indices utilisés est important, plus une des étapes finales sera difficile ! 😇</div>`;
-                badge.appendChild(bubble);
+                if (window.innerWidth <= 600) { document.body.appendChild(bubble); } else { badge.appendChild(bubble); }
             }
             setTimeout(() => {
                 if (bubble && bubble.parentNode) {
@@ -11115,7 +11302,7 @@
             bubble.id = 'error-notify-bubble';
             bubble.className = 'stat-notify-bubble error-style';
             bubble.innerHTML = `<div style="font-family: var(--font-ui); font-weight: 700; color: var(--error-red); margin-bottom: 4px;">⚠️ Attention !</div><div>Pour cette épreuve, 2 erreurs sont comptabilisées par tentative erronée. Eh oui ! Sinon c'est trop facile mon amour ♥️</div>`;
-            badge.appendChild(bubble);
+            if (window.innerWidth <= 600) { document.body.appendChild(bubble); } else { badge.appendChild(bubble); }
 
             setTimeout(() => {
                 if (bubble && bubble.parentNode) {
@@ -11159,7 +11346,7 @@
                 bubble.id = 'error-notify-bubble';
                 bubble.className = 'stat-notify-bubble error-style';
                 bubble.innerHTML = `<div style="font-family: var(--font-ui); font-weight: 700; color: var(--error-red); margin-bottom: 4px;">❌ Première erreur !</div><div>Attention : plus le nombre d'erreurs commises est important, plus une des étapes finales sera difficile ! 😈</div>`;
-                badge.appendChild(bubble);
+                if (window.innerWidth <= 600) { document.body.appendChild(bubble); } else { badge.appendChild(bubble); }
             }
             setTimeout(() => {
                 if (bubble && bubble.parentNode) {
@@ -11169,6 +11356,19 @@
                     setTimeout(() => bubble.remove(), 800);
                 }
             }, 8000);
+
+            const headerEl = document.getElementById('header');
+            if (headerEl) {
+                headerEl.classList.remove('header-flash-active');
+                void headerEl.offsetWidth;
+                headerEl.classList.add('header-flash-active');
+
+                headerEl.classList.add('header-bubble-active');
+                if (headerEl._bubbleTimer) clearTimeout(headerEl._bubbleTimer);
+                headerEl._bubbleTimer = setTimeout(() => {
+                    headerEl.classList.remove('header-bubble-active');
+                }, 9000);
+            }
         }
 
         function renderSuccessScreen(succes) {
@@ -11315,6 +11515,15 @@
                 enigmes.map((e, idx) => `<option value="${idx}">${idx + 1}. ${e.debugTitre || e.titre}</option>`).join('') +
                 '<option value="lock">🔒 Décompte final</option>' +
                 '<option value="victory">🏆 Victoire</option>';
+        }
+
+        function toggleDebugMinimize() {
+            const panel = document.getElementById('debug-panel');
+            const btn = document.getElementById('debug-toggle-min-btn');
+            if (!panel || !btn) return;
+            const isMin = panel.classList.toggle('minimized');
+            btn.innerHTML = isMin ? '🛠️ Debug' : '➖';
+            btn.title = isMin ? 'Agrandir le panneau de debug' : 'Réduire le panneau de debug';
         }
 
         function debugSetResonance(val) {
