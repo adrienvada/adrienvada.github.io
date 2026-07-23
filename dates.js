@@ -41,17 +41,29 @@ const SHOW_DATA = {
       ]
     },
 
-    // ── 12 novembre 2026 : À la barre (Saint-Quentin) [Date unique] ──
+    // ── 12 novembre 2026 : À la barre (Saint-Quentin) [Série] ──
     {
-      type: "single",
+      type: "series",
+      id: "panel-saintquentin",
       dateLabel: "12 nov. 2026",
-      fullDate: "12 novembre 2026",
       title: "À la barre, peine perdue ?",
       location: "Tribunal judiciaire de Saint-Quentin (02)",
-      time: "", // Vide = "Horaire à confirmer"
-      bookingUrl: "",
-      isSchool: false,
-      icsDate: "2026-11-12"
+      shows: [
+        {
+          dateLabel: "12 nov. 2026",
+          time: "14h15",
+          bookingUrl: "",
+          isSchool: false,
+          icsDate: "2026-11-12"
+        },
+        {
+          dateLabel: "12 nov. 2026",
+          time: "20h00",
+          bookingUrl: "",
+          isSchool: false,
+          icsDate: "2026-11-12"
+        }
+      ]
     },
 
     // ── 25 novembre 2026 : À la barre (Le Grand-Quevilly) [Date unique] ──
