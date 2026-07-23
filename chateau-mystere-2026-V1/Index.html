@@ -4979,6 +4979,33 @@
         body.perf-mode .enigma-card {
             animation: none !important;
         }
+
+        /* ────────────────────────── DÉSACTIVATION 3D POUR MOBILE ────────────────────────── */
+        @media (pointer: coarse), (max-width: 768px) {
+            body, #app {
+                perspective: none !important;
+            }
+
+            .enigma-card {
+                transform-style: flat !important;
+                transform: none !important;
+            }
+
+            .enigma-step,
+            .enigma-title,
+            .enigma-description,
+            .enigma-image,
+            .enigma-carousel,
+            .mosaic-grid-wrapper {
+                transform: none !important;
+            }
+
+            .enigma-card:hover,
+            .enigma-image:hover,
+            .enigma-carousel:hover {
+                transform: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -7187,6 +7214,9 @@
         }
 
         function initParallax() {
+            const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 768;
+            if (isMobile) return;
+
             if (typeof ChateauSettings !== 'undefined' && ChateauSettings.perfMode) return;
 
             if (typeof window._isTouchPaused === 'undefined') {
