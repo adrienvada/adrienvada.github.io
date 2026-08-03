@@ -7,6 +7,14 @@
  *    - L'ordre des photos dans la galerie suit l'ordre ci-dessous
  *    - Les photos doivent être placées dans : ressources/images/galerie/
  *    - Exception : profil_1000x1000.jpg est dans : ressources/images/
+ *
+ *  IMPORTANT — vignettes :
+ *    Chaque photo doit avoir une vignette 176x176 dans
+ *    ressources/images/galerie/thumbs/ , au même nom mais en .jpg
+ *    (ex. photo12.jpeg  ->  thumbs/photo12.jpg).
+ *    Sans elle, la bande de miniatures du book affichera un trou.
+ *    Commande pour (re)générer toutes les vignettes, à la racine du site :
+ *      python3 -c "from PIL import Image,ImageOps;import glob,os;[ImageOps.fit(Image.open(f).convert('RGB'),(176,176),Image.LANCZOS,centering=(0.5,0.35)).save('ressources/images/galerie/thumbs/'+os.path.splitext(os.path.basename(f))[0]+'.jpg',quality=78,optimize=True) for f in glob.glob('ressources/images/galerie/*.jpe*g')]"
  * ============================================================
  */
 

@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://adrienvada.github.io/sitemap.xml
+
+Sitemap: https://adrienvada.fr/sitemap.xml

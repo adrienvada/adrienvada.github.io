@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+**/.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Éditeurs
+.vscode/
+.idea/
+
+# Outils de build (CSS Tailwind compilé à la main, cf. README)
+node_modules/
