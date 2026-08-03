@@ -1,6 +1,6 @@
 /** Configuration Tailwind — sert à générer styles.css (voir README-build.md) */
 module.exports = {
-    content: ['./index.html', './404.html', './dates.js', './galerie.js'],
+    content: ['./index.html', './404.html', './dates.js', './galerie.js', './intro.js', './mask-points.js'],
     theme: {
         extend: {
             fontFamily: {

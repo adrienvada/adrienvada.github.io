@@ -58,7 +58,7 @@
       "name": "Adrien Vada",
       "alternateName": "Adrien Vada Djerbetian",
       "jobTitle": "Comédien",
-      "description": "Comédien : théâtre, cinéma et voix.",
+      "description": "Comédien : théâtre, cinéma et voix. Un goût des rôles qui ne se ressemblent pas, et du travail qu'ils demandent — du corps à la prosodie.",
       "url": "https://adrienvada.fr/",
       "image": "https://adrienvada.fr/ressources/images/og-adrien-vada.jpg",
       "email": "mailto:adrien.vada@gmail.com",
@@ -286,6 +286,17 @@
             .md\:col-span-1 {
                 grid-column: span 1 / span 1 !important;
             }
+
+            /* Les sections en bas de page n'ont pas forcément été vues au
+               défilement avant l'impression : .reveal reste alors à
+               opacity:0 (piloté par IntersectionObserver, qui n'a rien à
+               observer sur une page imprimée) et disparaît du PDF. On force
+               leur affichage quel que soit l'état de scroll au moment du clic
+               sur « Imprimer ». */
+            .reveal {
+                opacity: 1 !important;
+                transform: none !important;
+            }
         }
 
         /* ── CV ROWS ─────────────────────────────────────────────────────
@@ -414,10 +425,268 @@
         .date-toggle-chevron.rotated {
             transform: rotate(180deg);
         }
+
+        /* ══════════════════════════════════════════════════════════════
+           OUVERTURE DE SCÈNE — rideau de particules + décodage du nom
+           Une seule fois par session (voir intro.js). Purement décorative :
+           le header réel est déjà dans le DOM et lisible immédiatement par
+           les lecteurs d'écran et les moteurs de recherche.
+           ══════════════════════════════════════════════════════════════ */
+        /* Texte et sceau centrés, le masque occupant tout l'écran derrière eux
+           (il déborde légèrement en haut et en bas : c'est voulu, ça donne le
+           sentiment d'être face à lui plutôt que de le regarder de loin). */
+        #intro-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(ellipse at center, #17140f 0%, #0b0906 62%, #060504 100%);
+            opacity: 1;
+            transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #intro-overlay.intro-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #intro-overlay[hidden] {
+            display: none;
+        }
+
+        #intro-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .intro-stage {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 0 24px;
+            text-align: center;
+        }
+
+        /* ── Un seul emplacement de texte : le rôle en cours (qui se
+           décode normalement) et « ADRIEN VADA » sont superposés exactement
+           au même endroit. Seule leur opacité respective bouge : le rôle
+           s'efface progressivement pendant qu'Adrien Vada apparaît en
+           fondu — le nom REMPLACE les rôles, il ne s'y ajoute pas. */
+        .intro-textstack {
+            position: relative;
+            display: grid;
+            min-height: 1.3em;
+            max-width: 100%;
+        }
+
+        .intro-scramble,
+        .intro-name-fade {
+            grid-area: 1 / 1;
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            /* Calibré sur le rôle le plus long (« TITUS ANDRONICUS »,
+               16 caractères) pour tenir sur une seule ligne dès 320 px. */
+            font-size: clamp(1rem, 4.4vw, 3rem);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            max-width: 100%;
+            color: #f2ece0;
+            text-shadow: 0 0 24px rgba(191, 169, 138, 0.35);
+            transition: opacity 0.26s ease;
+        }
+
+        .intro-name-fade {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-scramble .ch,
+        .intro-name-fade .ch {
+            display: inline-block;
+        }
+
+        .intro-scramble .ch-dim {
+            opacity: 0.4;
+        }
+
+        /* La partie « VADA » reprend directement la typo du logotype du
+           header, dès le départ — elle annonce ce vers quoi le fondu mène. */
+        .intro-name-fade .ch-vada {
+            font-family: 'Cinzel', serif;
+            color: #bfa98a;
+        }
+
+        .intro-cta {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .intro-cta.intro-cta-visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .intro-seal {
+            width: 158px;
+            height: auto;
+        }
+
+        .intro-seal circle {
+            fill: none;
+            stroke: #bfa98a;
+            stroke-width: 1.1;
+        }
+
+        .intro-seal text {
+            fill: #bfa98a;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 6.2px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+        }
+
+        /* Respiration discrète qui invite au clic, une fois le sceau tracé */
+        @keyframes introSealPulse {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 0 rgba(191, 169, 138, 0));
+                transform: scale(1);
+            }
+
+            50% {
+                filter: drop-shadow(0 0 9px rgba(191, 169, 138, 0.5));
+                transform: scale(1.03);
+            }
+        }
+
+        .intro-cta.intro-cta-pulse .intro-seal {
+            animation: introSealPulse 2.4s ease-in-out infinite;
+        }
+
+        .intro-cta-hint {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: #d9cfbe;
+        }
+
+        #intro-skip {
+            position: absolute;
+            bottom: 26px;
+            right: 26px;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #d9cfbe;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(191, 169, 138, 0.3);
+            border-radius: 999px;
+            backdrop-filter: blur(6px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #intro-skip:hover {
+            color: #0b0906;
+            background: #bfa98a;
+            border-color: #bfa98a;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #intro-overlay {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
 <body class="bg-luxury-lightBg text-luxury-textMain font-inter min-h-screen relative overflow-x-hidden">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         OUVERTURE DE SCÈNE (voir intro.js)
+         Purement décorative et facultative : le contenu réel de la page
+         (ci-dessous) existe déjà dans le DOM, indépendamment de cette
+         séquence — rien n'est retardé ni caché aux lecteurs d'écran ou
+         aux moteurs de recherche.
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="intro-overlay">
+        <canvas id="intro-canvas" aria-hidden="true"></canvas>
+        <div class="intro-stage" aria-hidden="true">
+            <!-- Un seul emplacement : le rôle en cours (décodé normalement)
+                 et « Adrien Vada » sont superposés au même endroit — seule
+                 leur opacité respective évolue, le nom remplace les rôles
+                 en fondu plutôt que de leur être concaténé. -->
+            <div class="intro-textstack">
+                <p class="intro-scramble" id="intro-scramble">&nbsp;</p>
+                <p class="intro-name-fade" id="intro-name-fade">
+                    <span class="ch">ADRIEN</span> <span class="ch ch-vada">VADA</span>
+                </p>
+            </div>
+            <!-- Le sceau n'ouvre pas le site tout seul : il faut cliquer dessus -->
+            <div class="intro-cta" id="intro-cta">
+                <svg class="intro-seal" id="intro-seal" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Deux anneaux concentriques qui se tracent l'un après
+                         l'autre, comme un tampon que l'on appose -->
+                    <circle cx="50" cy="50" r="38" pathLength="100"
+                        style="stroke-dasharray:100; stroke-dashoffset:100;" id="intro-seal-ring" />
+                    <circle cx="50" cy="50" r="32.5" pathLength="100"
+                        style="stroke-dasharray:100; stroke-dashoffset:100;" id="intro-seal-ring-inner"
+                        opacity="0.55" />
+                    <text text-anchor="middle" x="50" y="47">ARTISTE</text>
+                    <text text-anchor="middle" x="50" y="58">INTERPRÈTE</text>
+                </svg>
+                <span class="intro-cta-hint">Entrer</span>
+            </div>
+        </div>
+        <button type="button" id="intro-skip">Passer <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+    </div>
+    <script>
+        // Anti-scintillement : masque l'ouverture de scène instantanément,
+        // avant même le premier rendu, si elle a déjà été vue cette session
+        // ou si l'utilisateur préfère moins d'animations.
+        (function () {
+            try {
+                // ?intro=1 dans l'URL force le rejeu (pratique pour régler l'effet)
+                var forced = /[?&]intro=1\b/.test(location.search);
+                var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                var seen = sessionStorage.getItem('avIntroSeen');
+                if (!forced && (reduce || seen)) {
+                    document.getElementById('intro-overlay').hidden = true;
+                } else {
+                    sessionStorage.setItem('avIntroSeen', '1');
+                }
+            } catch (e) {
+                // Navigation privée / stockage bloqué : on montre l'intro sans bloquer le site
+            }
+        })();
+    </script>
 
     <!-- MAIN CONTAINER -->
     <div class="max-w-4xl mx-auto px-4 md:px-6 py-6 relative z-10 flex flex-col min-h-screen justify-between">
@@ -432,9 +701,17 @@
                         Adrien <span class="text-luxury-gold font-cinzel">VADA</span>
                     </h1>
                     <h2
-                        class="text-sm font-normal font-montserrat tracking-[0.2em] text-luxury-textMuted uppercase mt-0.5 mb-2.5">
+                        class="text-sm font-normal font-montserrat tracking-[0.2em] text-luxury-textMuted uppercase mt-0.5 mb-2">
                         Artiste interprète
                     </h2>
+
+                    <!-- Présentation : volontairement brève, elle s'insère dans
+                         la colonne existante sans déplacer les blocs voisins -->
+                    <p class="text-[11px] md:text-xs leading-relaxed text-luxury-textMuted max-w-xl mb-2.5">
+                        Antiochus, Sganarelle, Touchstone, un juge, un accusé : j'aime que les rôles ne se ressemblent
+                        pas, et ce que chaque masque oblige à aller chercher. Le travail me plaît autant que le plateau
+                        — reprendre, préciser, du corps à la prosodie.
+                    </p>
 
                     <!-- Contact : e-mail mis en avant, puis fiches et réseaux -->
                     <div class="border-t border-stone-200/60 pt-2.5 space-y-2">
@@ -1546,6 +1823,8 @@
     <!-- VANILLA JS SCRIPTS -->
     <script src="dates.js"></script>
     <script src="galerie.js"></script>
+    <script src="mask-points.js"></script>
+    <script src="intro.js"></script>
     <script>
         // ════════════════════════════════════════════════════════════════
         //  ÉTAT GLOBAL

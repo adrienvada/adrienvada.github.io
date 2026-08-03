@@ -38,6 +38,68 @@ définies dans `tailwind.config.js`.
 
 ---
 
+## Ouverture de scène (`intro.js` + `mask-points.js`)
+
+Au premier chargement : un **masque de théâtre en particules** tourne lentement
+au centre, pendant que les rôles joués défilent de plus en plus vite. En
+parallèle, « Adrien Vada » — superposé au même endroit que les rôles — apparaît
+en fondu et les remplace peu à peu. Un **sceau** se trace enfin : il faut
+**cliquer dessus pour entrer** (l'intro ne se referme jamais toute seule).
+
+Le nuage de points du masque est dans `mask-points.js` : **fichier généré, à ne
+pas éditer à la main**. Il a été produit hors-ligne à partir du modèle 3D FBX
+fourni, en ne gardant que la surface avant et en pondérant la densité par la
+courbure locale du maillage (dense sur les paupières, le nez et la bouche,
+clairsemé sur les joues). Pour le régénérer il faut le FBX d'origine, le
+convertir en glTF (`fbx2gltf`) puis rééchantillonner — la procédure n'est pas
+automatisée ici.
+
+**Comment la revoir alors qu'on l'a déjà vue ?** Elle ne se joue qu'une fois par
+session de navigation, sinon elle deviendrait pénible. Pour la rejouer :
+
+| Moyen | Comment |
+|---|---|
+| **Le plus simple** | ajouter `?intro=1` à l'URL → `http://localhost:8080/?intro=1` |
+| Fermer l'onglet et le rouvrir | le marqueur est en `sessionStorage`, il meurt avec l'onglet |
+| Depuis la console (F12) | `sessionStorage.removeItem('avIntroSeen')` puis recharger |
+
+Attention : un simple rechargement (F5 / Cmd+R) **ne suffit pas**, le
+`sessionStorage` survit aux rechargements dans le même onglet.
+
+### Régler l'animation
+
+Tout est dans les constantes en haut de `intro.js` :
+
+- `ROLES` — la liste et l'ordre des rôles. Les 2 premiers (Antiochus, Le Juge)
+  se décodent lettre à lettre pour rester lisibles ; les suivants s'emballent.
+- `ACCEL_START_INDEX` — à partir de quel rôle l'accélération démarre (2).
+- `ACCEL_RATE` — brutalité de l'accélération (0.72 ; plus petit = plus violent).
+- `OPENING_STEP_MS` / `OPENING_FRAMES` — rythme des rôles d'ouverture.
+- `updateFade()` — courbe du fondu rôles → nom (exposant 1.6 : le nom reste
+  discret au début, puis prend le dessus sur la seconde moitié).
+- `MAX_INTRO_MS` — garde-fou : au-delà, le voile disparaît quoi qu'il arrive.
+  Ne jamais le descendre sous la durée naturelle de la séquence, sinon
+  l'animation serait coupée avant la fin.
+
+Le script `/private/tmp/.../timing.js` n'est pas versionné ; pour vérifier la
+durée totale après un réglage, le plus simple est de compter à l'œil ou de
+rouvrir avec `?intro=1`.
+
+### Garde-fous en place
+
+L'ouverture ne doit jamais empêcher d'accéder au site. Sont déjà couverts :
+`prefers-reduced-motion` (intro désactivée), clic n'importe où, n'importe quelle
+touche, bouton « Passer », onglet en arrière-plan (le décor attend sans bloquer
+la séquence), et le minuteur de sécurité `MAX_INTRO_MS` (20 s). Le contenu réel
+est dans le DOM dès le départ : les moteurs de recherche et les lecteurs d'écran
+ne voient jamais le voile.
+
+⚠️ Comme la sortie attend désormais un **clic sur le sceau**, `MAX_INTRO_MS` est
+le seul filet en cas de blocage. Ne pas le descendre : il ne doit se déclencher
+que dans les situations anormales, jamais pendant une contemplation tranquille.
+
+---
+
 ## Mettre à jour les dates de représentation
 
 Tout se passe dans `dates.js`.
