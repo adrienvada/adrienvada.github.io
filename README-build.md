@@ -77,6 +77,10 @@ une par une : inutile de les compresser à l'extrême, mais rester sous ~300 Ko.
 | `ressources/images/miniatures/bande-demo-camera.{jpg,webp}` | miniature de la bande démo |
 | `ressources/images/galerie/thumbs/*.jpg` | miniatures du book |
 
+Les **sources** de ces images restent dans le dépôt et ne sont plus servies aux
+visiteurs : `profil2_1080x1080.png` (avatar) et `profil_1000x1000.jpg`
+(vignette de partage + book). Les régénérer si l'on change de portrait.
+
 ---
 
 ## Référencement
