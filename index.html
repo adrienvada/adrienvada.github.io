@@ -1688,12 +1688,6 @@
                                             <div class="flex flex-wrap gap-1" id="filter-places" role="group"
                                                 aria-label="Filtrer par ville"></div>
                                         </div>
-                                        <div class="filter-row flex items-start gap-2" data-row="3">
-                                            <span
-                                                class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Période</span>
-                                            <div class="flex flex-wrap gap-1" id="filter-periods" role="group"
-                                                aria-label="Filtrer par période"></div>
-                                        </div>
                                     </div>
 
                                     <div
@@ -2651,7 +2645,7 @@
         // ════════════════════════════════════════════════════════════════
         //  FILTRES DES DATES — recherche instantanée + puces
         // ════════════════════════════════════════════════════════════════
-        const dateFilters = { q: '', show: null, place: null, period: null };
+        const dateFilters = { q: '', show: null, place: null };
 
         // Normalisation pour la recherche : sans accents ni casse, afin que
         // « saint-lo » trouve « Saint-Lô » et « berenice » trouve « Bérénice ».
@@ -2668,23 +2662,9 @@
             return (entry && entry.city) ? entry.city : '';
         }
 
-        const PERIODS = [
-            { id: '3m', label: '3 mois', months: 3 },
-            { id: '6m', label: '6 mois', months: 6 },
-        ];
-
-        function matchesFilters(title, location, icsDate, city) {
+        function matchesFilters(title, location, city) {
             if (dateFilters.show && title !== dateFilters.show) return false;
             if (dateFilters.place && city !== dateFilters.place) return false;
-            if (dateFilters.period) {
-                const p = PERIODS.find(x => x.id === dateFilters.period);
-                if (p) {
-                    const limit = new Date();
-                    limit.setMonth(limit.getMonth() + p.months);
-                    const t = icsToTime(icsDate);
-                    if (!isNaN(t) && t > limit.getTime()) return false;
-                }
-            }
             if (dateFilters.q) {
                 const hay = norm(title + ' ' + location);
                 // Tous les mots saisis doivent apparaître (recherche « ET »),
@@ -2695,7 +2675,7 @@
         }
 
         function filtersActive() {
-            return !!(dateFilters.q || dateFilters.show || dateFilters.place || dateFilters.period);
+            return !!(dateFilters.q || dateFilters.show || dateFilters.place);
         }
 
         function chipHtml(label, group, value, active) {
@@ -2711,26 +2691,21 @@
 
             const showsEl = document.getElementById('filter-shows');
             const placesEl = document.getElementById('filter-places');
-            const periodsEl = document.getElementById('filter-periods');
             if (!showsEl) return;
 
             showsEl.innerHTML = chipHtml('Tous', 'show', '', !dateFilters.show)
                 + shows.map(s => chipHtml(s, 'show', s, dateFilters.show === s)).join('');
             placesEl.innerHTML = chipHtml('Tous', 'place', '', !dateFilters.place)
                 + places.map(s => chipHtml(s, 'place', s, dateFilters.place === s)).join('');
-            periodsEl.innerHTML = chipHtml('Toutes', 'period', '', !dateFilters.period)
-                + PERIODS.map(p => chipHtml(p.label, 'period', p.id, dateFilters.period === p.id)).join('');
         }
 
         // Combien de rangées de filtres doivent être visibles ?
         //   1 = Spectacle seul (état d'entrée)
         //   2 = + Ville, une fois un spectacle choisi ou une recherche tapée
-        //   3 = + Période, une fois une ville choisie
         // Une rangée déjà utilisée ne se referme jamais : on ne retire pas
         // sous les doigts un filtre que l'utilisateur vient d'activer.
         function neededFilterRows() {
-            if (dateFilters.period || dateFilters.place) return 3;
-            if (dateFilters.show || dateFilters.q) return 2;
+            if (dateFilters.show || dateFilters.q || dateFilters.place) return 2;
             return 1;
         }
 
@@ -2792,7 +2767,7 @@
             });
             reset.addEventListener('click', () => {
                 dateFilters.q = ''; dateFilters.show = null;
-                dateFilters.place = null; dateFilters.period = null;
+                dateFilters.place = null;
                 search.value = ''; clear.classList.add('hidden');
                 buildFilterChips(); renderDates();
             });
@@ -2829,11 +2804,11 @@
             let matchCount = 0;
             const upcoming = split.upcoming.map(show => {
                 if (show.type === 'series' && show.shows) {
-                    const kept = show.shows.filter(r => matchesFilters(show.title, show.location, r.icsDate, show.city));
+                    const kept = show.shows.filter(r => matchesFilters(show.title, show.location, show.city));
                     matchCount += kept.length;
                     return kept.length ? Object.assign({}, show, { shows: kept }) : null;
                 }
-                const ok = matchesFilters(show.title, show.location, show.icsDate, show.city);
+                const ok = matchesFilters(show.title, show.location, show.city);
                 if (ok) matchCount++;
                 return ok ? show : null;
             }).filter(Boolean);
