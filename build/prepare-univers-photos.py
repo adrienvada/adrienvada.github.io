@@ -36,8 +36,18 @@ SRC = os.path.join(ROOT, "ressources", "spectacles")
 OUT = os.path.join(ROOT, "ressources", "images", "univers")
 UNIVERS_JS = os.path.join(ROOT, "univers.js")
 
-MAX_SIDE = 1600
-MAX_BYTES = 260 * 1024
+# Deux qualités, selon l'usage de la photo dans le montage.
+#
+#   Une vignette de trio fait 30 % de la hauteur d'écran ; une photo en
+#   plein cadre en occupe la totalité, souvent agrandie par la parallaxe.
+#   Le même réglage pour les deux, c'était forcément trop peu pour l'une ou
+#   trop pour l'autre : sur les plein-cadre, la compression se voyait — des
+#   aplats sales dans les fonds sombres et les ciels.
+#
+#   Une photo utilisée à la fois en plein cadre et en vignette est traitée
+#   au régime le plus exigeant des deux.
+PLEIN = {"side": 2400, "quality": 90, "floor": 78, "max_bytes": 900 * 1024}
+VIGNETTE = {"side": 1500, "quality": 82, "floor": 66, "max_bytes": 260 * 1024}
 
 # slug de sortie -> dossier source. Les noms de dossiers sont ceux
 # d'Adrien ; les slugs, ceux des URL. Seul endroit où les deux se croisent.
@@ -52,7 +62,11 @@ FOLDERS = {
 
 
 def read_sequences():
-    """{slug: [numéros]} — lus directement dans les `sequence` d'univers.js.
+    """{slug: [[numéros d'un temps], …]} — lus dans les `sequence` d'univers.js.
+
+    Les groupes sont conservés tels quels : leur TAILLE dit comment la photo
+    sera affichée (1 = plein cadre, 2+ = vignette), donc à quelle qualité la
+    préparer.
 
     On ne parse pas le JavaScript : on repère chaque `slug: 'xxx'`, puis on
     ramasse tous les `p: [...]` qui suivent jusqu'au slug suivant. La forme
@@ -70,10 +84,23 @@ def read_sequences():
     out = {}
     for i, (pos, slug) in enumerate(marks):
         end = marks[i + 1][0] if i + 1 < len(marks) else len(src)
-        nums = []
+        groups = []
         for grp in re.findall(r"\bp:\s*\[([0-9,\s]+)\]", src[pos:end]):
-            nums += [int(n) for n in grp.replace(" ", "").split(",") if n]
-        out[slug] = nums
+            nums = [int(n) for n in grp.replace(" ", "").split(",") if n]
+            if nums:
+                groups.append(nums)
+        out[slug] = groups
+    return out
+
+
+def profiles(groups):
+    """{numéro: réglage} — plein cadre l'emporte sur vignette."""
+    out = {}
+    for g in groups:
+        prof = PLEIN if len(g) == 1 else VIGNETTE
+        for n in g:
+            if out.get(n) is not PLEIN:
+                out[n] = prof
     return out
 
 
@@ -99,7 +126,9 @@ def main():
 
     total = 0
     for slug, folder in FOLDERS.items():
-        wanted = sorted(set(sequences.get(slug, [])))
+        groups = sequences.get(slug, [])
+        prof_of = profiles(groups)
+        wanted = sorted(prof_of)
         if not wanted:
             print(f"— {slug} : aucune photo dans son montage (univers.js)")
             continue
@@ -111,24 +140,32 @@ def main():
 
         dest = os.path.join(OUT, slug)
         os.makedirs(dest, exist_ok=True)
-        print(f"\n{slug}  ({len(wanted)} photos : {', '.join(map(str, wanted))})")
+        pleins = [n for n in wanted if prof_of[n] is PLEIN]
+        print(f"\n{slug}  {len(wanted)} photos, dont {len(pleins)} en plein cadre")
 
         for n in wanted:
             if n not in srcs:
                 print(f"  !! photo {n} absente de « {folder} »")
                 continue
+            prof = prof_of[n]
             im = ImageOps.exif_transpose(Image.open(srcs[n])).convert("RGB")
-            im.thumbnail((MAX_SIDE, MAX_SIDE), Image.LANCZOS)
+            im.thumbnail((prof["side"], prof["side"]), Image.LANCZOS)
             p = os.path.join(dest, f"{n}.jpg")
-            # Plafond de poids : une dizaine de photos plein cadre
-            # s'enchaînent, et certaines compressent très mal.
-            for q in (82, 74, 66, 58):
+
+            # On part de la qualité voulue et on ne descend qu'en cas de
+            # dépassement — jamais sous le plancher du profil. Mieux vaut un
+            # fichier un peu lourd qu'un aplat sale en plein écran.
+            q = prof["quality"]
+            while True:
                 im.save(p, quality=q, optimize=True, progressive=True)
-                if os.path.getsize(p) <= MAX_BYTES:
+                if os.path.getsize(p) <= prof["max_bytes"] or q <= prof["floor"]:
                     break
+                q -= 4
+
             total += 1
-            print(f"  {n}.jpg  {im.width}x{im.height}  "
-                  f"{os.path.getsize(p) // 1024} Ko")
+            tag = "PLEIN CADRE" if prof is PLEIN else "vignette"
+            print(f"  {n}.jpg  {im.width}x{im.height}  q{q}  "
+                  f"{os.path.getsize(p) // 1024} Ko  {tag}")
 
         # Photos retirées d'un montage : leur fichier traîne encore ici.
         # On ne le supprime que sur demande explicite — effacer des images

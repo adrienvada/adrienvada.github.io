@@ -1668,6 +1668,34 @@
             transform: none;
         }
 
+        /* Une ligne écrite = une ligne affichée. */
+        .u-line {
+            display: block;
+        }
+
+        /* Dans les citations et les incrustations, la coupe est une décision
+           d'écriture : le vers ne se termine pas là où l'écran manque de
+           place. D'où `nowrap`.
+
+           Pour qu'il tienne quand même, la taille du texte est calculée à
+           partir de --chars — la longueur du vers le plus long, posée par
+           univers.js. `min()` garantit qu'on ne dépasse jamais la taille
+           voulue par le design, et que le texte rétrécit juste assez sur les
+           écrans étroits. Rien n'est mesuré : une mesure suppose une mise en
+           page déjà calculée, et rend zéro sans le dire quand elle échoue.
+
+           0.56em par caractère : c'est la chasse moyenne du Cinzel, prise
+           large. Un vers plus resserré occupera un peu moins que la place
+           réservée — un vers plus large ne débordera pas. */
+        .u-fit {
+            --fit-space: 84vw;
+            font-size: min(var(--fit-max), calc(var(--fit-space) / (var(--chars, 30) * 0.56)));
+        }
+
+        .u-fit .u-line {
+            white-space: nowrap;
+        }
+
         /* ── Intertitre de chapitre ──
            Un chiffre romain et deux mots : ce qui donne au défilé une
            structure d'actes plutôt qu'une suite d'images. */
@@ -1755,11 +1783,12 @@
             padding-bottom: 16svh;
         }
 
+        /* Pas de max-width : les lignes ne se coupent plus toutes seules,
+           c'est fitLines qui ramène le vers le plus long dans la largeur. */
         .u-over p {
             margin: 0;
-            max-width: 18ch;
             font-family: 'Cinzel', serif;
-            font-size: clamp(1.5rem, 4.6vw, 3rem);
+            --fit-max: clamp(1.5rem, 4.6vw, 3rem);
             font-weight: 400;
             line-height: 1.28;
             color: #fff;
@@ -1806,9 +1835,6 @@
         }
 
         @media (max-width: 760px) {
-            .u-over p {
-                max-width: 14ch;
-            }
 
             .u-over--bas {
                 padding-bottom: 12svh;
@@ -1837,12 +1863,13 @@
             pointer-events: none;
         }
 
+        /* Pas de max-width : les vers ne se coupent plus tout seuls, c'est
+           fitLines qui ramène le plus long dans la largeur disponible. */
         .u-quote p {
             position: relative;
             margin: 0;
-            max-width: 22ch;
             font-family: 'Cinzel', serif;
-            font-size: clamp(1.35rem, 4.2vw, 2.6rem);
+            --fit-max: clamp(1.35rem, 4.2vw, 2.6rem);
             font-weight: 400;
             line-height: 1.4;
             color: var(--u-text);

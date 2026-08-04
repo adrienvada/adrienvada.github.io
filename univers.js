@@ -49,8 +49,12 @@
  *  1 photo = plein cadre, 2 = duo, 3 = trio, 4 = quatuor. Les NUMÉROS sont
  *  ceux des fichiers de `ressources/spectacles/<spectacle>/` — le même
  *  langage que les planches-contact.
- *  ⚠️ SEQUENCES dans `build/prepare-univers-photos.py` doit rester
- *  synchronisé : c'est lui qui décide quelles photos sont préparées.
+ *
+ *  CE FICHIER EST LA SEULE SOURCE des numéros de photos :
+ *  `build/prepare-univers-photos.py` vient les lire ici. Changer un montage
+ *  se fait donc ici seulement, puis on relance :
+ *      python3 build/prepare-univers-photos.py
+ *  qui copie les originaux allégés dans `ressources/images/univers/<slug>/`.
  *
  *  DROITS SUR LES TEXTES
  *  ---------------------
@@ -73,16 +77,13 @@ const SHOW_UNIVERSES = {
             accent: '#c0637e', accentInk: '#a34a66', onAccent: '#ffffff',
             line: 'rgba(24,18,21,0.13)', glow: 'rgba(192,99,126,0.30)'
         },
-        synopsis: 'Titus est empereur depuis huit jours. Il aime Bérénice, ' +
-            'et Rome ne veut pas d’une reine. Antiochus les aime tous les deux, ' +
-            'et se tait depuis cinq ans. Personne ici ne fait de mal à personne : ' +
-            'c’est bien ce qui rend la séparation insoutenable.',
+        synopsis: 'Rome, an 79. Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
         sequence: [
-            { chapter: 'I', chapterTitle: 'Le palais' },
+            { chapter: '1h25', chapterTitle: 'La douleur d’une séparation élevé au rang de la tragédie.' },
             {
-                p: [2], c: ['Le cercle blanc, le public tout autour'],
+                p: [2], c: ['Une scénographie en hyper proximité avec le public'],
                 // REMPLISSAGE
-                over: 'Huit jours qu’il est empereur.', overAt: 'bas'
+                over: '« Depuis huit jours je reigne… »', overAt: 'bas'
             },
             { q: 'Dans l’Orient désert quel devint mon ennui !', by: 'Antiochus, acte I' },
             {
@@ -589,13 +590,37 @@ const SHOW_UNIVERSES = {
         return out;
     }
 
-    // Mot à mot, pour la révélation pilotée par le défilement. Les sauts
-    // de ligne sont conservés : un alexandrin se coupe au vers, pas à la
-    // largeur de l'écran.
-    function revealWords(str) {
-        return String(str).split('\n').map(line => line.split(/\s+/).filter(Boolean)
-            .map(w => `<span class="u-rw">${escape(w)}</span>`).join(' ')
-        ).join('<br>');
+    // Mot à mot, pour la révélation pilotée par le défilement.
+    //
+    //  DEUX ÉCRITURES POSSIBLES, au choix :
+    //    'une seule ligne'                      → texte courant
+    //    ['premier vers', 'deuxième vers']      → un vers par entrée
+    //    'premier vers\ndeuxième vers'          → même chose, en plus court
+    //
+    //  Chaque ligne devient un bloc distinct. Dans les citations et les
+    //  incrustations, elle NE SE COUPE PAS : un alexandrin se termine où
+    //  l'auteur l'a voulu, pas où l'écran manque de place (voir fitLines,
+    //  qui ajuste la taille du texte pour que le vers le plus long tienne).
+    function toLines(value) {
+        return Array.isArray(value) ? value.map(String) : String(value).split('\n');
+    }
+
+    // Longueur du vers le plus long, en caractères. C'est elle qui fixe la
+    // taille du texte des blocs à ligne insécable — voir --chars dans le
+    // CSS. On COMPTE plutôt que de MESURER : mesurer suppose une mise en
+    // page déjà calculée, ce qui n'est pas garanti au moment où le panneau
+    // s'ouvre, et une mesure qui échoue rend zéro sans le dire.
+    function longestLine(value) {
+        return toLines(value).reduce((m, l) => Math.max(m, l.length), 0) || 1;
+    }
+
+    function revealWords(value) {
+        const lines = toLines(value);
+        return lines.map(line => {
+            const words = line.split(/\s+/).filter(Boolean)
+                .map(w => `<span class="u-rw">${escape(w)}</span>`).join(' ');
+            return `<span class="u-line">${words || '&nbsp;'}</span>`;
+        }).join('');
     }
 
     function figureHtml(ph, layout, index, title, eager, over) {
@@ -617,7 +642,7 @@ const SHOW_UNIVERSES = {
     function overHtml(beat) {
         if (!beat.over) return '';
         return `<div class="u-over u-reveal u-over--${escape(beat.overAt || 'centre')}">
-            <p>${revealWords(beat.over)}</p>
+            <p class="u-fit" style="--chars:${longestLine(beat.over)}">${revealWords(beat.over)}</p>
             ${beat.overBy ? `<cite>${escape(beat.overBy)}</cite>` : ''}
         </div>`;
     }
@@ -636,7 +661,7 @@ const SHOW_UNIVERSES = {
             }
             if (beat.q) {
                 return `<blockquote class="u-quote u-reveal">
-                    <p>${revealWords(beat.q)}</p>
+                    <p class="u-fit" style="--chars:${longestLine(beat.q)}">${revealWords(beat.q)}</p>
                     ${beat.by ? `<cite>${escape(beat.by)}</cite>` : ''}
                 </blockquote>`;
             }
@@ -765,6 +790,28 @@ const SHOW_UNIVERSES = {
     // du hero, de sorte qu'à l'arrivée de la première photo il ne reste
     // plus rien d'eux. Un texte encore lisible par-dessus la photo
     // brouillerait l'entrée dans l'univers.
+    // Portion parcourue d'un segment [a, b] de la course du hero.
+    const stage = (p, a, b) => clamp01((p - a) / (b - a));
+
+    // Le hero se DÉFAIT PAR COUCHES au lieu d'être retenu en bloc.
+    //
+    //   Retenir tout le hero puis l'effacer d'un coup à la fin donnait
+    //   l'impression de défiler pour rien : l'écran ne changeait pas, le
+    //   geste semblait buter contre une résistance. Ici chaque élément part
+    //   à son tour, du moins essentiel au plus essentiel — la date, puis le
+    //   rôle, puis le synopsis, puis le bouton, puis le titre. Il se passe
+    //   donc quelque chose dès le premier pixel, et l'on comprend qu'on
+    //   avance avant même de voir la première photo.
+    const HERO_EXITS = [
+        ['.u-eyebrow', 0.00, 0.20, 3],
+        ['.u-scroll', 0.00, 0.14, 0],
+        ['.u-meta', 0.06, 0.28, 3],
+        ['.u-synopsis', 0.18, 0.54, 5],
+        ['.u-hero-actions', 0.34, 0.60, 4],   // le bouton part tard : il sert
+        ['.u-author', 0.52, 0.86, 6],
+        ['.u-title', 0.58, 1.00, 8]
+    ];
+
     function fadeHero(h) {
         const wrap = overlay.querySelector('.u-hero-wrap');
         const hero = overlay.querySelector('.u-hero');
@@ -772,13 +819,47 @@ const SHOW_UNIVERSES = {
         const travel = wrap.offsetHeight - h;          // course utile du collage
         if (travel <= 0) return;
         const p = clamp01(overlay.scrollTop / travel); // 0 en haut, 1 décollé
-        const out = clamp01((p - 0.62) / 0.38);        // ne bouge rien avant 62 %
-        hero.style.opacity = String(1 - out);
-        hero.style.transform = `translate3d(0, ${(-out * 7).toFixed(2)}svh, 0) scale(${(1 - out * 0.04).toFixed(4)})`;
-        hero.style.filter = out ? `blur(${(out * 7).toFixed(2)}px)` : '';
-        // Une fois effacé, il ne doit plus intercepter le moindre clic.
-        hero.style.pointerEvents = out > 0.9 ? 'none' : '';
+
+        for (const [sel, a, b, drift] of HERO_EXITS) {
+            const el = hero.querySelector(sel);
+            if (!el) continue;
+            const out = stage(p, a, b);
+            if (!out) {
+                // Tant que rien ne sort, on laisse la main au CSS : c'est lui
+                // qui gère l'ARRIVÉE de ces éléments pendant que le titre
+                // s'écrit. Deux règles sur la même propriété, et l'inline
+                // gagnerait toujours.
+                el.style.opacity = '';
+                el.style.transform = '';
+                el.style.filter = '';
+                el.style.animation = '';
+                continue;
+            }
+            // La flèche se balance en boucle, et une animation l'emporte sur
+            // une opacité en ligne : il faut l'arrêter pour pouvoir l'effacer.
+            el.style.animation = 'none';
+            el.style.opacity = String(1 - out);
+            el.style.transform = `translate3d(0, ${(-out * drift).toFixed(2)}svh, 0)`;
+            el.style.filter = out > 0.05 ? `blur(${(out * 5).toFixed(2)}px)` : '';
+        }
+
+        // Le halo de couleur s'éteint avec le titre, pas avant : c'est lui
+        // qui tient l'écran pendant que le texte se retire.
+        const glow = stage(p, 0.55, 1);
+        hero.style.setProperty('--u-hero-glow', String(1 - glow));
+        // Une fois vidé, le hero ne doit plus intercepter le moindre clic.
+        hero.style.pointerEvents = p > 0.9 ? 'none' : '';
     }
+
+    // ── Les vers tiennent sur une ligne ──────────────────────────────
+    //  Dans une citation ou une incrustation, la coupe est une décision
+    //  d'écriture : un alexandrin ne se termine pas là où l'écran manque de
+    //  place. Ces blocs sont donc en `nowrap`, et leur taille de texte est
+    //  calculée EN CSS à partir de --chars, la longueur du vers le plus
+    //  long (voir .u-fit). Aucune mesure de mise en page n'est faite : une
+    //  mesure suppose un rendu déjà calculé, ce qui n'est pas garanti au
+    //  moment où le panneau s'ouvre, et elle rend zéro sans le dire quand
+    //  elle échoue.
 
     // Révélation mot à mot PILOTÉE PAR LE DÉFILEMENT — et non déclenchée
     // une fois pour toutes à l'entrée dans l'écran. La phrase s'écrit à la
