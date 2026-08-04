@@ -200,9 +200,26 @@
             --glass-border: rgba(255, 255, 255, 0.08);
         }
 
+        /* Fondu doux lors du changement de thème : toutes les couleurs
+           passant par des variables CSS, il suffit de faire transitionner
+           les propriétés qui les consomment. Volontairement générique (le
+           sélecteur universel) mais peu coûteux : seules quelques propriétés
+           colorimétriques sont concernées, jamais transform/opacity/layout.
+           Les règles plus spécifiques plus bas (.glass-card, a, button…)
+           l'emportent naturellement par spécificité CSS et gardent leurs
+           propres transitions (hover, etc.) intactes. */
+        *,
+        *::before,
+        *::after {
+            transition: background-color 0.45s ease, color 0.45s ease, border-color 0.45s ease,
+                fill 0.45s ease, stroke 0.45s ease, box-shadow 0.45s ease, outline-color 0.45s ease;
+        }
+
         body {
+            background-color: rgb(var(--c-bg));
             background-image: var(--page-glow);
             background-attachment: fixed;
+            transition: background-color 0.45s ease;
         }
 
         .glass-card {
@@ -866,11 +883,13 @@
         <!-- HEADER (Light Luxury Style) -->
         <header
             class="glass-card rounded-xl p-4 md:p-5 mb-5 shadow-sm border border-stone-200/50 hover:border-luxury-gold/30 transition duration-500">
-            <!-- Bascule clair / sombre : sur sa propre ligne, à droite, pour
-                 ne jamais chevaucher le portrait ni se lire comme un lien
-                 externe parmi les autres. Jumelle de celle du pied de page ;
-                 libellé et icône posés par applyTheme. -->
-            <div class="flex justify-end mb-2 -mt-1 -mr-1">
+            <!-- Bascule clair / sombre — mobile : sur sa propre ligne en haut à
+                 droite, pour ne jamais chevaucher le portrait ni se lire comme
+                 un lien externe. Sur desktop, une seconde instance prend le
+                 relais plus bas (voir la ligne des liens externes) : masquée
+                 ici via md:hidden. Jumelle de celle du pied de page ; libellé
+                 et icône posés par applyTheme. -->
+            <div class="flex justify-end mb-2 -mt-1 -mr-1 md:hidden">
                 <button type="button" data-theme-toggle aria-pressed="false"
                     class="no-print w-7 h-7 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center hover:border-luxury-gold transition-all duration-300">
                     <i data-theme-toggle-icon class="fa-solid fa-sun text-[12px] text-amber-400"
@@ -933,6 +952,17 @@
                                 <img src="ressources/images/design/logo LinkedIN - Petite.jpeg" alt="" width="11"
                                     height="11" class="h-[11px] w-auto rounded-sm"> LinkedIn
                             </a>
+
+                            <!-- Bascule clair / sombre — desktop : alignée sur
+                                 cette même ligne, poussée à l'extrémité droite
+                                 (ml-auto). Équivalent mobile juste au-dessus,
+                                 masqué ici en dessous de md. -->
+                            <button type="button" data-theme-toggle aria-pressed="false"
+                                class="no-print hidden md:flex md:ml-auto items-center gap-1.5 hover:text-luxury-goldInk transition">
+                                <i data-theme-toggle-icon class="fa-solid fa-sun text-[11px] text-amber-400"
+                                    aria-hidden="true"></i>
+                                <span data-theme-toggle-label>Thème clair</span>
+                            </button>
                         </div>
                     </div>
                 </div>
