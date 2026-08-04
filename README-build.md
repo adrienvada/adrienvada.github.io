@@ -266,44 +266,34 @@ Un spectacle **sans entrée** garde l'ancien tiroir. C'est volontaire pour
 « L'imaginaire forcé » et « Le discours de Cassandre », dont la direction
 visuelle n'est pas arrêtée — ce n'est pas un cas d'erreur à corriger.
 
-### Les photos
+### Les photos — deux dossiers, un seul à éditer
 
-Les **originaux** vivent dans `ressources/spectacles/<spectacle>/` : fichiers
-lourds, aux noms de captation ou d'appareil photo. Ils ne sont **pas servis
-aux visiteurs** et ne doivent pas être modifiés. Ce qui part en ligne, ce sont
-les recadrages produits par :
+| Dossier | Rôle |
+|---|---|
+| `ressources/spectacles/<spectacle>/` | **vos originaux**, numérotés (`bérénice_12.jpg`). Lourds, jamais servis aux visiteurs. C'est le seul endroit où l'on dépose ou remplace une image. |
+| `ressources/images/univers/<slug>/<n>.jpg` | **copies allégées** (1600 px, < 260 Ko) que le site charge. Régénérées par le script, **jamais éditées à la main**. |
+
+Le numéro du fichier est conservé de bout en bout : c'est le langage commun
+entre les planches-contact, le montage et le site.
+
+**`univers.js` est la seule source des numéros.** Le script vient y lire les
+`sequence` — il n'y a aucune liste à tenir en double, donc rien qui puisse
+diverger.
 
 ```bash
 python3 build/prepare-univers-photos.py
 ```
 
-qui sort `ressources/images/univers/<slug>-photo-N.jpg` en 1600×1000, plafonné
-à 260 Ko. La sélection (quels clichés, dans quel ordre, quel centrage
-vertical) est dans le dictionnaire `PICKS` en haut du script : ajouter des
-photos dans un dossier ne suffit pas, il faut les choisir là, relancer, et
-écrire les légendes dans `univers.js`.
+Le script ne prépare que les photos **effectivement au montage**. Une photo
+retirée laisse son fichier derrière elle : il le signale, et `--nettoyer`
+l'efface.
 
-État actuel : Bérénice, Cléophène et Fulguré.e.s ont 5 photos chacun,
-As You Like It une seule (c'est tout ce qu'il y a au dossier — mieux vaut une
-vraie image que quatre ambiances inventées autour d'elle).
+#### Remplacer une photo
 
-**Audiences** et **À la barre** n'ont pas encore de photos : leurs dossiers
-`ressources/spectacles/` sont vides. Leurs entrées sont déjà dans `PICKS`
-(le script les ignore proprement) ; il suffira d'y déposer des images,
-de relancer, d'ajuster les index, puis de pointer les nouveaux chemins
-`audiences-photo-N.jpg` / `alabarre-photo-N.jpg` dans `univers.js`.
-En attendant, ils affichent des **visuels témoins générés** — des ambiances
-abstraites portant la palette, produites par :
-
-```bash
-python3 build/gen-univers.py
-```
-
-Ce script produit des **JPEG, pas des SVG**. La première version générait des
-SVG à filtres (`feTurbulence`, `feGaussianBlur`) : le navigateur les
-rasterisait à chaque composition, ce qui saccadait l'ouverture du panneau et
-le défilement. Ne pas y revenir : le flou et le grain doivent rester calculés
-hors ligne.
+- **Changer l'image derrière un numéro** (retouche, autre prise) : remplacez
+  le fichier dans `ressources/spectacles/…`, relancez le script. Rien d'autre.
+- **Changer quelle photo apparaît** : modifiez le numéro dans la `sequence`
+  de `univers.js`, relancez le script.
 
 **Crédit photo** : le champ `credit` d'un univers s'affiche au pied du
 panneau. Les photos de Cléophène sont d'Arnaud Bertereau — le crédit est déjà
