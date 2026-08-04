@@ -2685,7 +2685,10 @@
                 : '';
 
             let list;
+            let header = '';
             if (dates.length) {
+                header = `<p class="text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat pt-1">
+                        Prochaines représentations</p>`;
                 list = dates.map(p => {
                     const t = performanceTimeStr(p);
                     const school = p.isSchool
@@ -2697,17 +2700,49 @@
                     </div>`;
                 }).join('');
             } else {
-                list = `<p class="text-[11px] text-luxury-textMuted italic py-1">Aucune date à venir pour le moment.</p>`;
+                // Pas de date à venir : le badge du spectacle (« En création »)
+                // indique s'il est en préparation ou s'il n'est plus au répertoire.
+                // Pas d'en-tête ici : l'italique porte l'information à elle seule.
+                const badgeText = li.querySelector('.cv-badge')?.textContent || '';
+                const isEnCreation = /en création/i.test(badgeText);
+                list = isEnCreation
+                    ? `<p class="text-[11px] text-luxury-textMuted italic py-1">Le spectacle est en création.</p>`
+                    : `<p class="text-[11px] text-luxury-textMuted italic py-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span>Le spectacle est arrêté.</span>
+                        <button type="button" data-cv-past-show="${esc(key)}"
+                            class="not-italic text-[10px] font-bold uppercase tracking-wider text-luxury-goldInk hover:underline inline-flex items-center gap-1">
+                            Voir les représentations passées <i class="fa-solid fa-arrow-right text-[9px]" aria-hidden="true"></i></button>
+                    </p>`;
             }
 
             body.innerHTML = `
-                <div class="flex items-start justify-between gap-3 mb-1.5">
-                    <p class="text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat pt-1">
-                        Prochaines représentations</p>
-                    ${linkBtn}
-                </div>
+                ${(header || linkBtn) ? `<div class="flex items-start justify-between gap-3 mb-1.5">${header}${linkBtn}</div>` : ''}
                 ${list}`;
         }
+
+        // Ouvre l'onglet Dates avec le filtre Spectacle déjà positionné,
+        // pour retrouver les représentations passées d'un spectacle arrêté.
+        function goToDatesForShow(showTitle) {
+            dateFilters.show = showTitle;
+            dateFilters.place = null;
+            dateFilters.q = '';
+            const search = document.getElementById('dates-search');
+            if (search) search.value = '';
+            const clear = document.getElementById('dates-search-clear');
+            if (clear) clear.classList.add('hidden');
+            buildFilterChips();
+            revealFilterRows(true);
+            renderDates();
+            openDateSearch(true);
+            showPage('page_dates', true);
+            window.location.hash = 'page_dates';
+            document.getElementById('page_dates')?.scrollIntoView({ block: 'start' });
+        }
+
+        document.addEventListener('click', (e) => {
+            const pastBtn = e.target.closest('[data-cv-past-show]');
+            if (pastBtn) goToDatesForShow(pastBtn.dataset.cvPastShow);
+        });
 
         // ════════════════════════════════════════════════════════════════
         //  TIROIRS GÉNÉRIQUES (archives) — même effet que ceux du CV
