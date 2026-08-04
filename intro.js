@@ -113,9 +113,17 @@
     var pointer = { x: -9999, y: -9999, nx: 0, active: false };
     var rafId = null;
     var running = false;
-    var turbulence = 0;      // 0 → 1, suit l'accélération du défilé de rôles
+    // Turbulence : 0 → 1, suit l'accélération du défilé de rôles. Elle ne
+    // touche PLUS à l'échelle du masque (c'était la source du zoom/dézoom) :
+    // elle ne fait plus que RESSERRER la poussière autour de la surface du
+    // masque. Plus le défilé des rôles s'emballe, plus les particules se
+    // rassemblent et plus la forme devient nette ; à l'apparition d'« Adrien
+    // Vada », la consigne retombe à 0 et la poussière s'éparpille de nouveau.
+    // La valeur consigne saute d'un rôle à l'autre : on ne l'applique jamais
+    // telle quelle mais via une valeur lissée image par image.
+    var turbulenceTarget = 0;
+    var turbulence = 0;
     var shapeBirth = null;   // timestamp d'apparition du masque (effet de matérialisation)
-    var convergeAt = 0;      // timestamp du dernier "appel" (résolution du nom)
     var rotYNudge = 0;       // rotation additionnelle, lissée, suivant le pointeur
 
     // MASK_POINTS (mask-points.js) est un tableau plat [x,y,z, x,y,z, …] ;
@@ -170,12 +178,17 @@
         var base = maskPoints[srcIndex];
         // Dispersion fine autour du point de surface — d'où l'épaisseur
         // "duveteuse" façon poussière plutôt qu'une coque parfaitement lisse.
+        // Le point d'ancrage (bx,by,bz) et l'écart (jx,jy,jz) sont gardés
+        // SÉPARÉS : c'est ce qui permet de resserrer puis de relâcher la
+        // poussière au fil de la séquence (voir `spread` dans stepAndDraw)
+        // sans jamais toucher à l'échelle du masque.
         var jitter = 0.015 + Math.random() * 0.045;
         var ja = Math.random() * Math.PI * 2, jb = Math.random() * Math.PI * 2;
         return {
-            lx: base[0] + Math.cos(ja) * Math.sin(jb) * jitter,
-            ly: base[1] + Math.sin(ja) * Math.sin(jb) * jitter,
-            lz: base[2] + Math.cos(jb) * jitter,
+            bx: base[0], by: base[1], bz: base[2],
+            jx: Math.cos(ja) * Math.sin(jb) * jitter,
+            jy: Math.sin(ja) * Math.sin(jb) * jitter,
+            jz: Math.cos(jb) * jitter,
             r: 0.55 + Math.random() * 1.5,
             twinklePhase: Math.random() * Math.PI * 2,
             twinkleSpeed: 0.5 + Math.random() * 1.2,
@@ -195,8 +208,15 @@
     }
 
     // Matérialisation avec un léger rebond (easeOutBack), puis rotation
-    // lente continue, wobble doux, et une respiration (contraction/release)
-    // synchronisée avec la résolution du nom.
+    // lente continue et wobble doux.
+    //
+    // Il n'y a PLUS de « respiration » (contraction puis retour) au moment où
+    // le nom se résout : cette impulsion était symétrique — le masque
+    // reculait de 20 % puis revenait — ce qui se lisait comme un zoom/dézoom
+    // parasite, en contradiction directe avec le travelling avant qui, lui,
+    // ne recule jamais. Rien ne la remplace : l'arrivée du nom se joue
+    // uniquement sur le texte et le sceau, l'échelle du masque ne bouge plus
+    // que par l'avancée continue de la caméra.
     function shapeScaleEnvelope(nowMs) {
         var scale = 1;
         if (shapeBirth !== null) {
@@ -205,15 +225,35 @@
             var eb = 1 + c3 * Math.pow(e - 1, 3) + c1 * Math.pow(e - 1, 2);
             scale *= Math.max(0, eb);
         }
-        var ce = (nowMs - convergeAt) / 700;
-        if (ce >= 0 && ce < 1) {
-            scale *= 1 - Math.sin(Math.min(1, ce) * Math.PI) * 0.2;
-        }
         if (isDismissed) {
             var fe = Math.min(1, (nowMs - dismissedAt) / FADE_MS);
             scale *= Math.max(0, 1 - fe);
         }
         return scale;
+    }
+
+    // ── TRAVELLING AVANT ─────────────────────────────────────────
+    // Très lent, presque imperceptible image par image, mais nettement
+    // sensible sur la durée : la caméra avance vers le masque. On ne se
+    // contente pas d'agrandir la forme (ce serait un zoom, plat) — on
+    // RACCOURCIT aussi la focale, ce qui accentue la perspective : les
+    // reliefs proches (front, nez, pommettes) s'écartent plus vite que le
+    // reste, exactement comme quand on entre dans le masque.
+    var DOLLY_MS = 16000;        // course complète du travelling
+    var FOCAL_START = 2.6, FOCAL_END = 2.15;
+    var DOLLY_SCALE_GAIN = 0.12; // +12 % d'échelle en fin de course
+
+    // Resserrement maximal de la poussière (fraction de l'écart au repos)
+    // atteint juste avant l'apparition du nom. Plus bas = coque plus nette,
+    // donc éparpillement plus spectaculaire quand « Adrien Vada » arrive.
+    var SPREAD_TIGHT = 0.2;
+
+    function dollyProgress(nowMs) {
+        if (shapeBirth === null) return 0;
+        var t = Math.min(1, Math.max(0, (nowMs - shapeBirth) / DOLLY_MS));
+        // Démarrage en douceur (le masque finit de se matérialiser), puis
+        // avancée régulière : pas de coup d'accélérateur perceptible.
+        return t * t * (3 - 2 * t);
     }
 
     function stepAndDraw(now, dt, tSec) {
@@ -226,6 +266,7 @@
         var rotX = Math.sin(tSec * 0.19) * 0.09;               // ±5° de tangage
         var targetNudge = pointer.active ? pointer.nx * 0.16 : 0; // ±9° au pointeur
         rotYNudge += (targetNudge - rotYNudge) * Math.min(1, dt * 2.2);
+        turbulence += (turbulenceTarget - turbulence) * Math.min(1, dt * 1.6);
 
         var cosY = Math.cos(rotY), sinY = Math.sin(rotY);
         var cosX = Math.cos(rotX), sinX = Math.sin(rotX);
@@ -239,8 +280,12 @@
         // regarder de loin.
         var byHeight = H * 0.40;   // ~120 % de la hauteur d'écran
         var byWidth = W * 0.48;    // ~112 % de la largeur d'écran
-        var shapeScale = Math.min(byHeight, byWidth) * scaleEnv * (1 + turbulence * 0.08);
-        var focal = 2.6;
+        var dolly = dollyProgress(now);
+        var shapeScale = Math.min(byHeight, byWidth) * scaleEnv * (1 + dolly * DOLLY_SCALE_GAIN);
+        // Resserrement de la poussière : 1 = dispersion pleine (état de repos),
+        // SPREAD_TIGHT = au plus serré, en fin de défilé des rôles.
+        var spread = 1 - turbulence * (1 - SPREAD_TIGHT);
+        var focal = FOCAL_START + (FOCAL_END - FOCAL_START) * dolly;
         var cx = W / 2, cy = H * 0.5;
         var springBack = Math.min(1, dt * 4.2);
         var energyDecay = Math.pow(0.9, dt * 60);
@@ -250,11 +295,17 @@
         for (var i = 0; i < particles.length; i++) {
             var p = particles[i];
 
+            // Position locale = ancrage sur la surface + écart de poussière,
+            // ce dernier dosé par le resserrement en cours.
+            var lx = p.bx + p.jx * spread;
+            var ly = p.by + p.jy * spread;
+            var lz = p.bz + p.jz * spread;
+
             // Rotation 3D (Y puis X) autour du centre du ruban
-            var x1 = p.lx * cosY - p.lz * sinY;
-            var z1 = p.lx * sinY + p.lz * cosY;
-            var y1 = p.ly * cosX - z1 * sinX;
-            var z2 = p.ly * sinX + z1 * cosX;
+            var x1 = lx * cosY - lz * sinY;
+            var z1 = lx * sinY + lz * cosY;
+            var y1 = ly * cosX - z1 * sinX;
+            var z2 = ly * sinX + z1 * cosX;
 
             var persp = focal / (focal - z2);
             var sx = cx + x1 * shapeScale * persp;
@@ -280,7 +331,12 @@
             p.offY -= p.offY * springBack;
             p.energy *= energyDecay;
 
-            var depth = Math.max(0, Math.min(1, (persp - 0.62) / 1.35));
+            // La profondeur (luminosité/taille des points) reste calibrée sur
+            // la focale de départ : sinon le travelling écraserait le contraste
+            // entre l'avant et l'arrière du masque au fur et à mesure qu'on
+            // s'approche, et la forme se délaverait.
+            var perspRef = FOCAL_START / (FOCAL_START - z2);
+            var depth = Math.max(0, Math.min(1, (perspRef - 0.62) / 1.35));
             // Scintillement resserré : trop d'amplitude et une partie du
             // masque s'éteignait à chaque image, ce qui hachait la forme.
             var twinkle = 0.82 + 0.18 * Math.sin(tSec * p.twinkleSpeed + p.twinklePhase);
@@ -442,7 +498,7 @@
 
             var role = ROLES[idx];
             var timing = wordTiming(idx, role);
-            turbulence = Math.min(1, idx / ROLES.length);
+            turbulenceTarget = Math.min(1, idx / ROLES.length);
 
             function decode() {
                 scrambleTicker(role, timing, function () {
@@ -467,8 +523,7 @@
         if (isDismissed) return;
         updateFade(ROLES.length);
         nameFadeEl.classList.add('intro-final');
-        turbulence = 0;
-        convergeAt = performance.now();
+        turbulenceTarget = 0;
         setTimeout(showSeal, SEAL_DELAY_MS);
     }
 
