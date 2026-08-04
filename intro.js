@@ -46,8 +46,8 @@
     //    défilent à un rythme lisible ; l'accélération démarre ensuite,
     //    à partir de Touchstone (3e rôle).
     var ROLES = [
-        'ANTIOCHUS', 'LE JUGE', 'TOUCHSTONE', 'TITUS ANDRONICUS',
-        'STEVEN', 'LE PROCUREUR', 'SGANARELLE', "L'ACCUSÉ",
+        'ANTIOCHUS', 'LE JUGE',
+        'STEVEN', 'SGANARELLE', 'TOUCHSTONE', 'TITUS ANDRONICUS', 'LE PROCUREUR', "L'ACCUSÉ",
         'LE GREFFIER', "L'AVOCAT", 'LE NARRATEUR', 'ADRIEN', 'LE JEUNE MEC', 'JEREM'
     ];
     var FINAL_NAME = 'ADRIEN VADA';
