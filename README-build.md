@@ -177,16 +177,51 @@ Chaque entrée porte :
 | `tagline` | une phrase, affichée sous le titre |
 | `photos` | `{ src, caption }`, dans l'ordre du défilement |
 
+Le bouton **« Accéder aux dates »** est posé sous le titre, dès la première
+page : il saute directement au pied du panneau. Sans lui il fallait traverser
+tout le défilé de photos pour savoir quand voir le spectacle — or c'est
+souvent la seule raison de la visite.
+
+**Bouton « précédent » du navigateur.** Chaque couche plein écran (univers,
+book photo, lecteur vidéo, calendrier) ajoute une entrée d'historique, gérée
+au même endroit dans `index.html` (chercher « HISTORIQUE DES COUCHES »). Le
+retour referme la couche au lieu de quitter le site — le réflexe dominant sur
+mobile. La fermer par la croix ou par Échap fait un `history.back()`, pour que
+l'écran et l'historique ne divergent jamais.
+
 Un spectacle **sans entrée** garde l'ancien tiroir. C'est volontaire pour
 « L'imaginaire forcé » et « Le discours de Cassandre », dont la direction
 visuelle n'est pas arrêtée — ce n'est pas un cas d'erreur à corriger.
 
 ⚠️ Les fichiers de `ressources/images/univers/` sont pour l'instant des
-**visuels témoins générés** (des dégradés abstraits portant la palette), pas
-des photos de spectacle. Ils sont produits par `build/gen-univers.py` et sont
-destinés à être remplacés par de vraies photos de plateau (paysage ~1600×1000,
-< 300 Ko) — soit aux mêmes noms, soit en changeant les chemins dans
-`univers.js`.
+**visuels témoins générés** (des ambiances abstraites portant la palette), pas
+des photos de spectacle. Ils sont produits par `build/gen-univers.py` (Pillow,
+comme les vignettes du book) et sont destinés à être remplacés par de vraies
+photos de plateau (paysage ~1600×1000, < 300 Ko) — soit aux mêmes noms, soit
+en changeant les chemins dans `univers.js` :
+
+```bash
+python3 build/gen-univers.py
+```
+
+Le script produit des **JPEG, pas des SVG**. La première version générait des
+SVG à filtres (`feTurbulence`, `feGaussianBlur`) : le navigateur les
+rasterisait à chaque composition, ce qui saccadait l'ouverture du panneau et
+le défilement. Ne pas y revenir : le flou et le grain doivent rester calculés
+hors ligne.
+
+### Fluidité — ce qui a été fait, et pourquoi ne pas le défaire
+
+- Le titre s'affiche **immédiatement** ; les photos n'apparaissent qu'une fois
+  la première *décodée* (`img.decode()`), avec un minuteur de secours de 2,5 s.
+  C'est le décodage, pas le téléchargement, qui faisait tomber l'animation
+  d'ouverture.
+- La **croix et le bouton « Accéder aux dates » restent actifs** pendant ce
+  chargement : on doit toujours pouvoir renoncer.
+- Pas de `backdrop-filter` sur les légendes, qui défilent (il reste sur la
+  croix, immobile).
+- `contain: paint` sur les figures, mais **pas** `content-visibility: auto` :
+  celui-ci faisait s'effondrer leur hauteur.
 
 ---
 

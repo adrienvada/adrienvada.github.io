@@ -1238,12 +1238,66 @@
             }
         }
 
+        /* ── Raccourci vers les dates, dès le titre ── */
+        .u-hero-actions {
+            margin-top: 34px;
+        }
+
+        /* ── Chargement ──
+           Le titre est déjà là, seules les photos attendent. La croix et le
+           raccourci vers les dates restent cliquables : on doit toujours
+           pouvoir renoncer pendant le chargement. */
+        .u-loader {
+            position: absolute;
+            bottom: 34px;
+            left: 50%;
+            width: 18px;
+            height: 18px;
+            margin-left: -9px;
+            border-radius: 50%;
+            border: 2px solid var(--u-line);
+            border-top-color: var(--u-accent);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--dur-base) var(--ease-out);
+        }
+
+        #show-universe.is-loading .u-loader {
+            opacity: 1;
+            animation: u-spin .8s linear infinite;
+        }
+
+        #show-universe.is-loading .u-scroll {
+            opacity: 0;
+            animation: none;
+        }
+
+        #show-universe.is-loading .u-figs,
+        #show-universe.is-loading .u-foot {
+            opacity: 0;
+        }
+
+        .u-figs {
+            transition: opacity 500ms var(--ease-out);
+        }
+
+        @keyframes u-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         /* ── Défilé de photos ── */
         .u-fig {
             margin: 0;
             position: relative;
             height: 86svh;
             overflow: hidden;
+            /* `contain: paint` suffit : le navigateur sait qu'aucun pixel de
+               la figure ne déborde, donc il peut ignorer celles hors écran.
+               Pas de `content-visibility: auto` ici — il faisait s'effondrer
+               la hauteur des figures, et le panneau n'était plus défilable. */
+            contain: paint;
         }
 
         .u-fig+.u-fig {
@@ -1271,7 +1325,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom, var(--u-bg) 0%, transparent 22%, transparent 62%, var(--u-bg) 100%);
+            background: linear-gradient(to bottom, var(--u-bg) 0%, transparent 14%, transparent 76%, var(--u-bg) 100%);
             pointer-events: none;
         }
 
@@ -1285,6 +1339,10 @@
             padding: 0 24px;
         }
 
+        /* Pas de backdrop-filter ici, contrairement à la croix : la légende
+           défile, et un flou d'arrière-plan recalculé à chaque image coûte
+           plus cher que tout le reste du panneau réuni. Un aplat semi-opaque
+           donne le même détachement pour rien. */
         .u-cap span {
             display: inline-block;
             font-family: 'Montserrat', sans-serif;
@@ -1293,9 +1351,8 @@
             letter-spacing: .16em;
             text-transform: uppercase;
             color: var(--u-text);
-            background: color-mix(in srgb, var(--u-bg) 62%, transparent);
+            background: color-mix(in srgb, var(--u-bg) 78%, transparent);
             border: 1px solid var(--u-line);
-            backdrop-filter: blur(8px);
             padding: 8px 16px;
             border-radius: 999px;
             opacity: 0;
@@ -2898,6 +2955,59 @@
         let openModalEl = null;
         let lastFocusedEl = null;
 
+        // ════════════════════════════════════════════════════════════════
+        //  HISTORIQUE DES COUCHES PLEIN ÉCRAN
+        //  Les onglets sont déjà des entrées d'historique (ils passent par
+        //  le hash). Ce qui manquait : les couches qui recouvrent la page —
+        //  univers d'un spectacle, book photo, lecteur vidéo, calendrier.
+        //  Sans elles, « précédent » quitte le site alors que l'utilisateur
+        //  voulait seulement refermer ce qu'il venait d'ouvrir : c'est le
+        //  réflexe dominant sur mobile, où le geste de retour est le
+        //  principal moyen de sortir d'un plein écran.
+        //
+        //  Une couche ouverte = une entrée d'historique de plus, sur la même
+        //  URL (pushState sans changer le hash, sinon on déclencherait un
+        //  changement d'onglet). La fermer, par la croix ou par Échap, fait
+        //  un history.back() : l'historique et l'écran restent d'accord,
+        //  quel que soit le chemin emprunté.
+        // ════════════════════════════════════════════════════════════════
+        let overlayLayer = null;       // 'univers' | 'modal' | null
+        let closingFromHistory = false; // fermeture déclenchée PAR le retour
+
+        function pushOverlayState(name) {
+            overlayLayer = name;
+            history.pushState({ avOverlay: name }, '', location.href);
+        }
+
+        // Appelée par les fermetures « normales ». Si c'est l'historique qui
+        // a provoqué la fermeture, il ne faut évidemment pas reculer encore.
+        function dropOverlayState(name) {
+            if (closingFromHistory || overlayLayer !== name) return;
+            overlayLayer = null;
+            history.back();
+        }
+
+        window.addEventListener('popstate', () => {
+            if (!overlayLayer) return;   // simple changement d'onglet : hashchange s'en charge
+            const layer = overlayLayer;
+            overlayLayer = null;
+            closingFromHistory = true;
+            try {
+                if (layer === 'univers') {
+                    window.closeShowUniverse?.();
+                } else if (openModalEl) {
+                    if (openModalEl.id === 'gallery-modal') closeGallery();
+                    else if (openModalEl.id === 'video-modal') closeVideoModal();
+                    else closeCalendarModal();
+                }
+            } finally {
+                closingFromHistory = false;
+            }
+        });
+
+        window.pushOverlayState = pushOverlayState;
+        window.dropOverlayState = dropOverlayState;
+
         function openModal(modalId, cardId) {
             const modal = document.getElementById(modalId);
             if (!modal) return;
@@ -2914,6 +3024,7 @@
                 }
             });
             openModalEl = modal;
+            pushOverlayState('modal');
             const first = modal.querySelector(FOCUSABLE);
             if (first) first.focus();
         }
@@ -2929,6 +3040,7 @@
             modal.classList.add('pointer-events-none', 'opacity-0');
             openModalEl = null;
             document.body.classList.remove('modal-open');
+            dropOverlayState('modal');
 
             const finish = () => { modal.hidden = true; };
             // Attendre la fin du fondu, avec repli si transitionend ne se déclenche pas
@@ -2973,7 +3085,14 @@
 
             window.addEventListener("hashchange", () => {
                 const newHash = window.location.hash.substring(1);
-                if (newHash && document.getElementById(newHash)) showPage(newHash, true);
+                if (newHash) {
+                    if (document.getElementById(newHash)) showPage(newHash, true);
+                    return;
+                }
+                // Hash vide : on est revenu à l'entrée d'origine, celle d'avant
+                // le premier clic sur un onglet. Sans ce repli, « précédent »
+                // depuis Dates laissait l'URL nue mais l'écran sur Dates.
+                showPage('page_cv', true);
             });
 
             // Raccourcis clavier globaux (modales)

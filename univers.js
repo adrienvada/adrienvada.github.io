@@ -36,11 +36,11 @@ const SHOW_UNIVERSES = {
         },
         tagline: 'Trois personnes qui s’aiment et que rien ne sauve.',
         photos: [
-            { src: 'ressources/images/univers/berenice-1.svg', caption: 'Le blanc de la salle, avant que quelqu’un parle' },
-            { src: 'ressources/images/univers/berenice-2.svg', caption: 'Titus — le pouvoir arrive par la porte' },
-            { src: 'ressources/images/univers/berenice-3.svg', caption: 'Rose : le seul endroit du plateau où l’on saigne' },
-            { src: 'ressources/images/univers/berenice-4.svg', caption: 'Antíochus attend, comme depuis cinq ans' },
-            { src: 'ressources/images/univers/berenice-5.svg', caption: 'Noir final' }
+            { src: 'ressources/images/univers/berenice-1.jpg', caption: 'Le blanc de la salle, avant que quelqu’un parle' },
+            { src: 'ressources/images/univers/berenice-2.jpg', caption: 'Titus — le pouvoir arrive par la porte' },
+            { src: 'ressources/images/univers/berenice-3.jpg', caption: 'Rose : le seul endroit du plateau où l’on saigne' },
+            { src: 'ressources/images/univers/berenice-4.jpg', caption: 'Antíochus attend, comme depuis cinq ans' },
+            { src: 'ressources/images/univers/berenice-5.jpg', caption: 'Noir final' }
         ]
     },
 
@@ -54,11 +54,11 @@ const SHOW_UNIVERSES = {
         },
         tagline: 'Une couronne, deux frères, et du sable dans la bouche.',
         photos: [
-            { src: 'ressources/images/univers/cleophene-1.svg', caption: 'Plein soleil, aucune ombre où se mettre' },
-            { src: 'ressources/images/univers/cleophene-2.svg', caption: 'L’or du trône, la poussière du chemin' },
-            { src: 'ressources/images/univers/cleophene-3.svg', caption: 'Rodogune, contre-jour' },
-            { src: 'ressources/images/univers/cleophene-4.svg', caption: 'La coupe' },
-            { src: 'ressources/images/univers/cleophene-5.svg', caption: 'Le soir tombe sur la dynastie' }
+            { src: 'ressources/images/univers/cleophene-1.jpg', caption: 'Plein soleil, aucune ombre où se mettre' },
+            { src: 'ressources/images/univers/cleophene-2.jpg', caption: 'L’or du trône, la poussière du chemin' },
+            { src: 'ressources/images/univers/cleophene-3.jpg', caption: 'Rodogune, contre-jour' },
+            { src: 'ressources/images/univers/cleophene-4.jpg', caption: 'La coupe' },
+            { src: 'ressources/images/univers/cleophene-5.jpg', caption: 'Le soir tombe sur la dynastie' }
         ]
     },
 
@@ -73,11 +73,11 @@ const SHOW_UNIVERSES = {
         },
         tagline: 'On part se perdre en forêt, on en revient amoureux.',
         photos: [
-            { src: 'ressources/images/univers/asyoulikeit-1.svg', caption: 'Ardenne — tous les verts à la fois' },
-            { src: 'ressources/images/univers/asyoulikeit-2.svg', caption: 'Touchstone entre en criant' },
-            { src: 'ressources/images/univers/asyoulikeit-3.svg', caption: 'Rosalinde en Ganymède' },
-            { src: 'ressources/images/univers/asyoulikeit-4.svg', caption: 'Le grelot et le poignard' },
-            { src: 'ressources/images/univers/asyoulikeit-5.svg', caption: 'Quatre mariages, aucun sérieux' }
+            { src: 'ressources/images/univers/asyoulikeit-1.jpg', caption: 'Ardenne — tous les verts à la fois' },
+            { src: 'ressources/images/univers/asyoulikeit-2.jpg', caption: 'Touchstone entre en criant' },
+            { src: 'ressources/images/univers/asyoulikeit-3.jpg', caption: 'Rosalinde en Ganymède' },
+            { src: 'ressources/images/univers/asyoulikeit-4.jpg', caption: 'Le grelot et le poignard' },
+            { src: 'ressources/images/univers/asyoulikeit-5.jpg', caption: 'Quatre mariages, aucun sérieux' }
         ]
     },
 
@@ -92,11 +92,11 @@ const SHOW_UNIVERSES = {
         },
         tagline: 'La justice se rend en public. Personne ne regarde.',
         photos: [
-            { src: 'ressources/images/univers/audiences-1.svg', caption: 'La salle, avant l’audience' },
-            { src: 'ressources/images/univers/audiences-2.svg', caption: 'Bleu administratif' },
-            { src: 'ressources/images/univers/audiences-3.svg', caption: 'Le prévenu' },
-            { src: 'ressources/images/univers/audiences-4.svg', caption: 'Rouge — ce que le procès recouvre' },
-            { src: 'ressources/images/univers/audiences-5.svg', caption: 'Le délibéré' }
+            { src: 'ressources/images/univers/audiences-1.jpg', caption: 'La salle, avant l’audience' },
+            { src: 'ressources/images/univers/audiences-2.jpg', caption: 'Bleu administratif' },
+            { src: 'ressources/images/univers/audiences-3.jpg', caption: 'Le prévenu' },
+            { src: 'ressources/images/univers/audiences-4.jpg', caption: 'Rouge — ce que le procès recouvre' },
+            { src: 'ressources/images/univers/audiences-5.jpg', caption: 'Le délibéré' }
         ]
     },
 
@@ -109,11 +109,11 @@ const SHOW_UNIVERSES = {
         },
         tagline: 'Juge, accusé, greffier, avocat — et la même voix pour tous.',
         photos: [
-            { src: 'ressources/images/univers/audiences-3.svg', caption: 'La barre' },
-            { src: 'ressources/images/univers/audiences-1.svg', caption: 'Un tribunal vide est un décor' },
-            { src: 'ressources/images/univers/audiences-5.svg', caption: 'Les rôles changent de côté' },
-            { src: 'ressources/images/univers/audiences-2.svg', caption: 'Le code, la loi, la lenteur' },
-            { src: 'ressources/images/univers/audiences-4.svg', caption: 'Peine perdue ?' }
+            { src: 'ressources/images/univers/audiences-3.jpg', caption: 'La barre' },
+            { src: 'ressources/images/univers/audiences-1.jpg', caption: 'Un tribunal vide est un décor' },
+            { src: 'ressources/images/univers/audiences-5.jpg', caption: 'Les rôles changent de côté' },
+            { src: 'ressources/images/univers/audiences-2.jpg', caption: 'Le code, la loi, la lenteur' },
+            { src: 'ressources/images/univers/audiences-4.jpg', caption: 'Peine perdue ?' }
         ]
     },
 
@@ -127,11 +127,11 @@ const SHOW_UNIVERSES = {
         },
         tagline: 'Ce qui reste quand la foudre est passée par vous.',
         photos: [
-            { src: 'ressources/images/univers/fulgurees-1.svg', caption: 'Avant l’orage' },
-            { src: 'ressources/images/univers/fulgurees-2.svg', caption: 'L’éclat' },
-            { src: 'ressources/images/univers/fulgurees-3.svg', caption: 'Brûlure' },
-            { src: 'ressources/images/univers/fulgurees-4.svg', caption: 'La nuit reprend sa place' },
-            { src: 'ressources/images/univers/fulgurees-5.svg', caption: 'Fulguré.e.s' }
+            { src: 'ressources/images/univers/fulgurees-1.jpg', caption: 'Avant l’orage' },
+            { src: 'ressources/images/univers/fulgurees-2.jpg', caption: 'L’éclat' },
+            { src: 'ressources/images/univers/fulgurees-3.jpg', caption: 'Brûlure' },
+            { src: 'ressources/images/univers/fulgurees-4.jpg', caption: 'La nuit reprend sa place' },
+            { src: 'ressources/images/univers/fulgurees-5.jpg', caption: 'Fulguré.e.s' }
         ]
     },
 };
@@ -223,7 +223,19 @@ const SHOW_UNIVERSES = {
             ${info.author ? `<p class="u-author">${escape(info.author)}</p>` : ''}
             ${uni.tagline ? `<p class="u-tagline">${escape(uni.tagline)}</p>` : ''}
             <p class="u-meta">${escape(info.role)}${info.company ? '<br>' + escape(info.company) : ''}</p>
+
+            <!-- Raccourci vers les dates dès le titre : sans lui, il faut
+                 traverser tout le défilé de photos pour savoir quand voir le
+                 spectacle — or c'est souvent la seule raison de la visite. -->
+            <div class="u-hero-actions">
+                <button type="button" class="u-btn" data-u-jump>
+                    ${dates ? 'Accéder aux dates' : 'Voir les représentations'}
+                    <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+                </button>
+            </div>
+
             <span class="u-scroll" aria-hidden="true"><i class="fa-solid fa-arrow-down"></i></span>
+            <span class="u-loader" role="status" aria-label="Chargement des visuels"></span>
         </header>
 
         <div class="u-figs">${figures}</div>
@@ -295,11 +307,38 @@ const SHOW_UNIVERSES = {
         overlay.querySelectorAll('.u-fig, .u-foot').forEach(el => io.observe(el));
     }
 
+    // Le titre s'affiche tout de suite ; les photos n'apparaissent qu'une
+    // fois la première DÉCODÉE. Sans cette attente, l'image se peint au
+    // milieu de l'animation d'ouverture et la fait tomber à ~20 i/s : c'est
+    // le décodage, pas le téléchargement, qui saccadait.
+    // La croix et le bouton « Accéder aux dates » restent actifs pendant ce
+    // temps : on doit toujours pouvoir renoncer.
+    const MAX_WAIT_MS = 2500;
+
+    function awaitFirstPhoto(uni) {
+        const first = uni.photos[0]?.src;
+        if (!first) return Promise.resolve();
+        return Promise.race([
+            new Promise(resolve => {
+                const im = new Image();
+                im.src = first;
+                (im.decode ? im.decode() : Promise.resolve()).then(resolve, resolve);
+                im.onload = im.onerror = resolve;
+            }),
+            // Filet : une image manquante ou un réseau qui traîne ne doit
+            // jamais laisser le panneau bloqué sur son voile de chargement.
+            new Promise(resolve => setTimeout(resolve, MAX_WAIT_MS))
+        ]);
+    }
+
     // ── Ouverture : le panneau se déplie depuis la ligne cliquée ─────
+    let openToken = 0;
+
     function open(li) {
         const uni = universeFor(li);
         if (!uni) return false;
 
+        const token = ++openToken;
         lastFocus = document.activeElement;
         render(li, uni);
         applyPalette(uni.palette);
@@ -310,16 +349,30 @@ const SHOW_UNIVERSES = {
         const r = li.getBoundingClientRect();
         const vw = window.innerWidth, vh = window.innerHeight;
         overlay.hidden = false;
+        overlay.classList.add('is-loading');
         if (!REDUCED) {
+            overlay.style.willChange = 'clip-path';
             overlay.style.clipPath = `inset(${r.top}px ${vw - r.right}px ${vh - r.bottom}px ${r.left}px round 10px)`;
-            // Deux images imposées : sans ce reflow, le navigateur fusionne
-            // l'état de départ et l'état d'arrivée et rien ne s'anime.
+            // Reflow imposé : sans lui, le navigateur fusionne l'état de
+            // départ et l'état d'arrivée et rien ne s'anime.
             void overlay.offsetHeight;
         }
         overlay.classList.add('is-open');
         overlay.style.clipPath = 'inset(0px 0px 0px 0px round 0px)';
 
+        awaitFirstPhoto(uni).then(() => {
+            // Panneau refermé, ou déjà rouvert sur un autre spectacle,
+            // pendant le chargement : ce résultat ne vaut plus rien.
+            if (token !== openToken || !isOpen) return;
+            overlay.classList.remove('is-loading');
+            overlay.style.willChange = '';
+            onScroll();
+        });
+
         document.documentElement.classList.add('u-locked');
+        // Une entrée d'historique de plus : « précédent » referme l'univers
+        // et rend le CV, au lieu de quitter le site (voir index.html).
+        window.pushOverlayState?.('univers');
         isOpen = true;
         overlay.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
@@ -331,10 +384,13 @@ const SHOW_UNIVERSES = {
     function close() {
         if (!isOpen) return;
         isOpen = false;
-        overlay.classList.remove('is-open');
+        openToken++;
+        overlay.classList.remove('is-open', 'is-loading');
+        overlay.style.willChange = '';
         overlay.removeEventListener('scroll', onScroll);
         document.documentElement.classList.remove('u-locked');
         restoreThemeColor();
+        window.dropOverlayState?.('univers');
         const done = () => { overlay.hidden = true; overlay.innerHTML = ''; };
         if (REDUCED) done(); else setTimeout(done, 420);
         lastFocus?.focus?.({ preventScroll: true });
@@ -346,6 +402,18 @@ const SHOW_UNIVERSES = {
 
         overlay.addEventListener('click', (e) => {
             if (e.target.closest('.u-close')) { close(); return; }
+
+            // « Accéder aux dates » : on saute au pied du panneau. Les
+            // photos restent au-dessus, on ne les a pas perdues.
+            if (e.target.closest('[data-u-jump]')) {
+                const foot = overlay.querySelector('.u-foot');
+                if (!foot) return;
+                foot.classList.add('is-in');
+                overlay.querySelectorAll('.u-fig').forEach(f => f.classList.add('is-in'));
+                foot.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+                return;
+            }
+
             const toDates = e.target.closest('[data-u-dates]');
             if (toDates) {
                 const key = toDates.dataset.uDates;
@@ -360,6 +428,7 @@ const SHOW_UNIVERSES = {
 
         // Le CV appelle openShowUniverse() avant de replier son tiroir.
         window.openShowUniverse = open;
+        window.closeShowUniverse = close;
         window.hasShowUniverse = (li) => !!universeFor(li);
     }
 
