@@ -344,11 +344,15 @@ const SHOW_UNIVERSES = {
         applyPalette(uni.palette);
         overlay.dataset.slug = uni.slug;
         scroller = overlay;
-        scroller.scrollTop = 0;
 
         const r = li.getBoundingClientRect();
         const vw = window.innerWidth, vh = window.innerHeight;
         overlay.hidden = false;
+        // APRÈS avoir rendu le panneau visible : tant qu'il est `hidden`, il
+        // n'a pas de boîte de défilement et l'affectation est ignorée. Sans
+        // cela, ouvrir un second spectacle après avoir lu le premier jusqu'aux
+        // dates faisait arriver directement en bas de page.
+        overlay.scrollTop = 0;
         overlay.classList.add('is-loading');
         if (!REDUCED) {
             overlay.style.willChange = 'clip-path';
