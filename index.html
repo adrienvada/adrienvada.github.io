@@ -634,6 +634,42 @@
             transform: rotate(180deg);
         }
 
+        /* ── Recherche des dates : panneau repliable + révélation par étapes ── */
+        .filter-collapse {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+
+        .filter-collapse.is-open {
+            grid-template-rows: 1fr;
+            opacity: 1;
+        }
+
+        .filter-collapse>.filter-collapse-inner {
+            overflow: hidden;
+        }
+
+        /* Chaque rangée reste absente du flux tant qu'elle n'est pas utile,
+           puis se déplie à son tour — d'où l'impression d'un formulaire qui
+           se construit au fil de la recherche plutôt que d'un mur d'options. */
+        .filter-row {
+            display: none;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity 0.32s ease, transform 0.32s ease;
+        }
+
+        .filter-row.is-revealed {
+            display: flex;
+        }
+
+        .filter-row.is-revealed.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         /* ── Barre de filtres des dates ── */
         .filter-chip {
             cursor: pointer;
@@ -1607,52 +1643,70 @@
                             2027</h3>
                     </div>
 
-                    <!-- ── Filtres : recherche instantanée + puces ──
-                         Les puces sont générées par buildFilterChips() à partir
-                         des données réelles : aucune liste à maintenir à la main
-                         quand un spectacle ou un lieu est ajouté dans dates.js. -->
-                    <div class="mb-3 no-print" id="dates-filters">
-                        <div class="relative">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-luxury-textMuted pointer-events-none"
-                                aria-hidden="true"></i>
-                            <input type="search" id="dates-search" autocomplete="off"
-                                placeholder="Rechercher un spectacle, une ville, un lieu…"
-                                aria-label="Rechercher parmi les représentations"
-                                class="w-full pl-8 pr-8 py-2 rounded-lg bg-luxury-surface border border-stone-200 text-xs text-luxury-textMain placeholder:text-luxury-textMuted focus:border-luxury-gold focus:outline-none transition">
-                            <button type="button" id="dates-search-clear" aria-label="Effacer la recherche"
-                                class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk transition">
-                                <i class="fa-solid fa-xmark text-[11px]" aria-hidden="true"></i>
+                    <!-- ── Recherche : repliée derrière une loupe ──
+                         Les rangées de filtres se dévoilent l'une après l'autre
+                         (voir revealFilterRows) : montrer d'emblée trois lignes
+                         de puces ferait passer une simple liste de dates pour un
+                         formulaire. On n'affiche donc que ce dont l'utilisateur
+                         a besoin à l'étape où il se trouve. -->
+                    <div class="no-print" id="dates-filters">
+                        <div class="flex justify-end mb-2">
+                            <button type="button" id="dates-search-open" aria-expanded="false"
+                                aria-controls="dates-search-panel"
+                                class="inline-flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-luxury-textMuted hover:text-luxury-goldInk border border-stone-200 hover:border-luxury-gold rounded-full px-2.5 py-1 transition">
+                                <i class="fa-solid fa-magnifying-glass text-[10px]" aria-hidden="true"></i>
+                                <span id="dates-search-open-label">Rechercher une date</span>
                             </button>
                         </div>
 
-                        <div class="mt-2 space-y-1.5">
-                            <div class="flex items-start gap-2">
-                                <span
-                                    class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Spectacle</span>
-                                <div class="flex flex-wrap gap-1" id="filter-shows" role="group"
-                                    aria-label="Filtrer par spectacle"></div>
-                            </div>
-                            <div class="flex items-start gap-2">
-                                <span
-                                    class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Lieu</span>
-                                <div class="flex flex-wrap gap-1" id="filter-places" role="group"
-                                    aria-label="Filtrer par lieu"></div>
-                            </div>
-                            <div class="flex items-start gap-2">
-                                <span
-                                    class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Période</span>
-                                <div class="flex flex-wrap gap-1" id="filter-periods" role="group"
-                                    aria-label="Filtrer par période"></div>
-                            </div>
-                        </div>
+                        <div class="filter-collapse" id="dates-search-panel">
+                            <div class="filter-collapse-inner">
+                                <div class="pb-3">
+                                    <div class="relative">
+                                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-luxury-textMuted pointer-events-none"
+                                            aria-hidden="true"></i>
+                                        <input type="search" id="dates-search" autocomplete="off"
+                                            placeholder="Spectacle, ville, lieu…"
+                                            aria-label="Rechercher parmi les représentations"
+                                            class="w-full pl-8 pr-8 py-2 rounded-lg bg-luxury-surface border border-stone-200 text-xs text-luxury-textMain placeholder:text-luxury-textMuted focus:border-luxury-gold focus:outline-none transition">
+                                        <button type="button" id="dates-search-clear" aria-label="Effacer la recherche"
+                                            class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk transition">
+                                            <i class="fa-solid fa-xmark text-[11px]" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
 
-                        <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-stone-200/40">
-                            <p class="text-[10px] text-luxury-textMuted font-mono" id="dates-count" aria-live="polite">
-                            </p>
-                            <button type="button" id="dates-reset"
-                                class="hidden text-[10px] uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">
-                                Réinitialiser
-                            </button>
+                                    <div class="mt-2 space-y-1.5">
+                                        <div class="filter-row flex items-start gap-2" data-row="1">
+                                            <span
+                                                class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Spectacle</span>
+                                            <div class="flex flex-wrap gap-1" id="filter-shows" role="group"
+                                                aria-label="Filtrer par spectacle"></div>
+                                        </div>
+                                        <div class="filter-row flex items-start gap-2" data-row="2">
+                                            <span
+                                                class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Ville</span>
+                                            <div class="flex flex-wrap gap-1" id="filter-places" role="group"
+                                                aria-label="Filtrer par ville"></div>
+                                        </div>
+                                        <div class="filter-row flex items-start gap-2" data-row="3">
+                                            <span
+                                                class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Période</span>
+                                            <div class="flex flex-wrap gap-1" id="filter-periods" role="group"
+                                                aria-label="Filtrer par période"></div>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-stone-200/40">
+                                        <p class="text-[10px] text-luxury-textMuted font-mono" id="dates-count"
+                                            aria-live="polite"></p>
+                                        <button type="button" id="dates-reset"
+                                            class="hidden text-[10px] uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">
+                                            Réinitialiser
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -2495,7 +2549,7 @@
             const { upcoming } = splitUpcoming(SHOW_DATA.upcoming);
             const out = [];
             upcoming.forEach(show => {
-                const base = { title: show.title, subtitle: show.subtitle || '', location: show.location };
+                const base = { title: show.title, subtitle: show.subtitle || '', location: show.location, city: show.city || '' };
                 if (show.type === 'series' && show.shows) {
                     show.shows.forEach(r => out.push(Object.assign({}, base, {
                         dateLabel: r.dateLabel, icsDate: r.icsDate, time: r.time, times: r.times,
@@ -2606,22 +2660,12 @@
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         }
 
-        // Extrait la VILLE d'un libellé de lieu, pour que les puces de filtre
-        // restent courtes et homogènes. Deux formes coexistent dans dates.js :
-        //   « Le Forum, Falaise (14) »            -> après la virgule
-        //   « Tribunal judiciaire de Rouen (76) » -> après le dernier « de/du/d' »
-        // Sans ce second cas, on obtenait des puces du type « Tribunal
-        // judiciaire de Rouen » à côté de « Rouen », donc deux entrées pour
-        // la même ville.
-        function placeOf(location) {
-            const s = String(location || '').replace(/\s*\(\d{2,3}\)\s*$/, '').trim();
-            const parts = s.split(',').map(p => p.trim()).filter(Boolean);
-            if (parts.length > 1) return parts[parts.length - 1];
-            // Le préfixe « .* » gourmand force la capture APRÈS le DERNIER
-            // « de / du / d' » : « Hôtel de Ville de Grand-Quevilly » doit
-            // donner « Grand-Quevilly », pas « Ville de Grand-Quevilly ».
-            const m = s.match(/^.*(?:\sde\s|\sdu\s|\sd')\s*(.+)$/i);
-            return m ? m[1].trim() : s;
+        // La ville vient du champ `city` de dates.js (voir l'en-tête de ce
+        // fichier). On extrayait auparavant la ville du libellé du lieu, ce qui
+        // donnait des doublons du type « Rouen » / « Tribunal judiciaire de
+        // Rouen » selon la façon dont le lieu avait été saisi.
+        function placeOf(entry) {
+            return (entry && entry.city) ? entry.city : '';
         }
 
         const PERIODS = [
@@ -2629,9 +2673,9 @@
             { id: '6m', label: '6 mois', months: 6 },
         ];
 
-        function matchesFilters(title, location, icsDate) {
+        function matchesFilters(title, location, icsDate, city) {
             if (dateFilters.show && title !== dateFilters.show) return false;
-            if (dateFilters.place && placeOf(location) !== dateFilters.place) return false;
+            if (dateFilters.place && city !== dateFilters.place) return false;
             if (dateFilters.period) {
                 const p = PERIODS.find(x => x.id === dateFilters.period);
                 if (p) {
@@ -2663,7 +2707,7 @@
         function buildFilterChips() {
             const perfs = upcomingPerformances();
             const shows = [...new Set(perfs.map(p => p.title))];
-            const places = [...new Set(perfs.map(p => placeOf(p.location)))].sort((a, b) => a.localeCompare(b, 'fr'));
+            const places = [...new Set(perfs.map(p => placeOf(p)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'));
 
             const showsEl = document.getElementById('filter-shows');
             const placesEl = document.getElementById('filter-places');
@@ -2678,17 +2722,67 @@
                 + PERIODS.map(p => chipHtml(p.label, 'period', p.id, dateFilters.period === p.id)).join('');
         }
 
+        // Combien de rangées de filtres doivent être visibles ?
+        //   1 = Spectacle seul (état d'entrée)
+        //   2 = + Ville, une fois un spectacle choisi ou une recherche tapée
+        //   3 = + Période, une fois une ville choisie
+        // Une rangée déjà utilisée ne se referme jamais : on ne retire pas
+        // sous les doigts un filtre que l'utilisateur vient d'activer.
+        function neededFilterRows() {
+            if (dateFilters.period || dateFilters.place) return 3;
+            if (dateFilters.show || dateFilters.q) return 2;
+            return 1;
+        }
+
+        let revealedRows = 0;
+
+        function revealFilterRows(instant) {
+            const target = Math.max(revealedRows, neededFilterRows());
+            revealedRows = target;
+            document.querySelectorAll('#dates-filters .filter-row').forEach(row => {
+                const idx = +row.dataset.row;
+                if (idx > target) return;
+                if (row.classList.contains('is-revealed')) return;
+                row.classList.add('is-revealed');
+                // Deux temps : display:flex d'abord, puis l'opacité à la frame
+                // suivante — sinon la transition n'a pas d'état de départ.
+                if (instant) { row.classList.add('is-visible'); return; }
+                requestAnimationFrame(() => requestAnimationFrame(() => row.classList.add('is-visible')));
+            });
+        }
+
+        function openDateSearch(open) {
+            const panel = document.getElementById('dates-search-panel');
+            const btn = document.getElementById('dates-search-open');
+            const label = document.getElementById('dates-search-open-label');
+            if (!panel) return;
+            panel.classList.toggle('is-open', open);
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (label) label.textContent = open ? 'Masquer la recherche' : 'Rechercher une date';
+            if (open) {
+                revealFilterRows(false);
+                setTimeout(() => document.getElementById('dates-search').focus(), 220);
+            }
+        }
+
         function setupDateFilters() {
             const search = document.getElementById('dates-search');
             const clear = document.getElementById('dates-search-clear');
             const reset = document.getElementById('dates-reset');
+            const openBtn = document.getElementById('dates-search-open');
             if (!search) return;
 
             buildFilterChips();
 
+            openBtn.addEventListener('click', () => {
+                const isOpen = document.getElementById('dates-search-panel').classList.contains('is-open');
+                openDateSearch(!isOpen);
+            });
+
             search.addEventListener('input', () => {
                 dateFilters.q = search.value.trim();
                 clear.classList.toggle('hidden', !dateFilters.q);
+                revealFilterRows(false);
                 renderDates();
             });
             clear.addEventListener('click', () => {
@@ -2712,6 +2806,7 @@
                 // Recliquer la puce active la désactive (retour à « Tous »)
                 dateFilters[group] = (dateFilters[group] === value) ? null : value;
                 buildFilterChips();
+                revealFilterRows(false);
                 renderDates();
             });
         }
@@ -2734,11 +2829,11 @@
             let matchCount = 0;
             const upcoming = split.upcoming.map(show => {
                 if (show.type === 'series' && show.shows) {
-                    const kept = show.shows.filter(r => matchesFilters(show.title, show.location, r.icsDate));
+                    const kept = show.shows.filter(r => matchesFilters(show.title, show.location, r.icsDate, show.city));
                     matchCount += kept.length;
                     return kept.length ? Object.assign({}, show, { shows: kept }) : null;
                 }
-                const ok = matchesFilters(show.title, show.location, show.icsDate);
+                const ok = matchesFilters(show.title, show.location, show.icsDate, show.city);
                 if (ok) matchCount++;
                 return ok ? show : null;
             }).filter(Boolean);
@@ -2892,7 +2987,7 @@
                     // n'y applique que les filtres texte / spectacle / lieu.
                     const rows = seasons[seasonName].filter(show => {
                         if (dateFilters.show && !norm(show.title).includes(norm(dateFilters.show))) return false;
-                        if (dateFilters.place && placeOf(show.location) !== dateFilters.place) return false;
+                        if (dateFilters.place && placeOf(show) !== dateFilters.place) return false;
                         if (dateFilters.q) {
                             const hay = norm(show.title + ' ' + show.location);
                             if (!norm(dateFilters.q).split(/\s+/).filter(Boolean).every(w => hay.includes(w))) return false;
