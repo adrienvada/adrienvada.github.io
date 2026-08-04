@@ -389,10 +389,21 @@
                 display: none !important;
             }
 
-            /* Exception : le portrait fait partie du CV imprimé */
+            /* Exceptions : le portrait ET les lignes de spectacle font partie
+               du CV imprimé. Ces dernières sont devenues des <button> depuis
+               l'ajout des tiroirs — sans cette règle, toute la rubrique
+               Théâtre disparaîtrait du PDF. */
             header button,
-            header button * {
+            header button *,
+            .cv-row-toggle,
+            .cv-row-toggle * {
                 display: revert !important;
+            }
+
+            /* Les tiroirs et leur chevron n'ont pas de sens sur papier */
+            .cv-expand-panel,
+            .cv-chevron {
+                display: none !important;
             }
 
             header picture,
@@ -571,6 +582,77 @@
         #gallery-modal :focus-visible,
         #video-modal :focus-visible {
             outline-color: rgb(var(--c-gold-light));
+        }
+
+        /* ── Bio de l'en-tête : visible seulement sur l'onglet CV ──
+           Même technique que les tiroirs de dates : grid-template-rows
+           0fr→1fr anime la hauteur sans la connaître à l'avance. */
+        .bio-collapse {
+            display: grid;
+            grid-template-rows: 1fr;
+            opacity: 1;
+            transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+
+        .bio-collapse.bio-hidden {
+            grid-template-rows: 0fr;
+            opacity: 0;
+        }
+
+        .bio-collapse>.bio-collapse-inner {
+            overflow: hidden;
+        }
+
+        /* ── Tiroirs des spectacles du CV ── */
+        .cv-expand-panel {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .cv-expand-panel.expanded {
+            grid-template-rows: 1fr;
+            opacity: 1;
+        }
+
+        .cv-expand-panel>.cv-expand-inner {
+            overflow: hidden;
+        }
+
+        .cv-row-toggle {
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .cv-chevron {
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .cv-row-toggle[aria-expanded="true"] .cv-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* ── Barre de filtres des dates ── */
+        .filter-chip {
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* La puce active s'inverse : fond doré, texte sombre. Repose sur les
+           mêmes jetons que les boutons dorés, donc lisible dans les 2 thèmes. */
+        .filter-chip[aria-pressed="true"] {
+            background: rgb(var(--c-gold-ink)) !important;
+            border-color: rgb(var(--c-gold-ink)) !important;
+            color: rgb(var(--c-on-gold)) !important;
+        }
+
+        /* Disparition des lignes filtrées : on anime, mais on retire bien
+           l'élément du flux à la fin (display:none via .is-filtered-out
+           appliqué après la transition) pour ne pas laisser de trous. */
+        .date-result {
+            transition: opacity 0.25s ease;
         }
 
         /* ── Smooth expand panels for multi-date series ── */
@@ -907,13 +989,20 @@
                         Artiste interprète
                     </h2>
 
-                    <!-- Présentation : volontairement brève, elle s'insère dans
-                         la colonne existante sans déplacer les blocs voisins -->
-                    <p class="text-[11px] md:text-xs leading-relaxed text-luxury-textMuted max-w-xl mb-2.5">
-                        J'aime que les rôles ne se ressemblent pas, et ce que chaque masque oblige à aller chercher.
-                        <br /> Le travail de préparation me plaît autant que le plateau — reprendre, préciser, du corps
-                        à la prosodie.
-                    </p>
+                    <!-- Présentation : affichée uniquement sur l'onglet CV.
+                         Le repli utilise grid-template-rows 0fr→1fr, qui permet
+                         d'animer la hauteur sans la connaître à l'avance (une
+                         transition sur max-height obligerait à fixer une valeur
+                         arbitraire, et saccaderait au repli). -->
+                    <div class="bio-collapse" id="header-bio">
+                        <div class="bio-collapse-inner">
+                            <p class="text-[11px] md:text-xs leading-relaxed text-luxury-textMuted max-w-xl pb-2.5">
+                                J'aime ce que chaque masque oblige à aller chercher.
+                                <br /> Le travail de préparation me plaît autant que le plateau — reprendre, préciser,
+                                du corps à la prosodie.
+                            </p>
+                        </div>
+                    </div>
 
                     <!-- Contact : e-mail mis en avant, puis fiches et réseaux -->
                     <div class="border-t border-stone-200/60 pt-2.5 space-y-2">
@@ -1049,91 +1138,93 @@
                         </div>
                         <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Théâtre</h3>
                     </div>
-                    <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
-                        <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="min-w-0">
-                                    <div class="cv-title-row">
-                                        <span
-                                            class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2027</span>
-                                        <span
-                                            class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Cassandres
-                                            <span class="text-luxury-textMuted italic font-normal normal-case">(Angelo
-                                                Jossec)</span></span>
+                    <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight" id="cv-theatre-list">
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
+                            <button type="button" class="cv-row-toggle block rounded" aria-expanded="false" aria-controls="cv-panel-0">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <div class="cv-title-row">
+                                            <span
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2027</span>
+                                            <span
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Cassandres <span class="text-luxury-textMuted italic font-normal normal-case">(Angelo Jossec)</span></span>
+                                        </div>
+                                        <p class="cv-role text-[11px] text-luxury-textMain mt-1">
+                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Rôles multiples</p>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Théâtre des Crescite — Angelo Jossec</p>
                                     </div>
-                                    <p class="cv-role text-[11px] text-luxury-textMain mt-1">
-                                        <span class="text-luxury-goldInk font-semibold">Rôle</span> · Rôles multiples
-                                    </p>
-                                    <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
-                                        Théâtre des Crescite — Angelo Jossec
-                                    </p>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                    <span
+                                        class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En création</span>
+                                        <i class="cv-chevron fa-solid fa-chevron-down text-[10px] text-stone-400" aria-hidden="true"></i>
+                                    </div>
                                 </div>
-                                <span
-                                    class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
-                                    création</span>
+                            </button>
+                            <!-- Rempli par fillCvDrawer() au premier dépliage, depuis dates.js -->
+                            <div class="cv-expand-panel" id="cv-panel-0">
+                                <div class="cv-expand-inner">
+                                    <div class="cv-drawer-body mt-2 ml-1 border-l-2 border-luxury-gold/20 pl-3 pb-1"></div>
+                                </div>
                             </div>
                         </li>
-                        <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="min-w-0">
-                                    <div class="cv-title-row">
-                                        <span
-                                            class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
-                                        <span
-                                            class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">L'Imaginaire
-                                            Forcé <span
-                                                class="text-luxury-textMuted italic font-normal normal-case">(d'après
-                                                Molière)</span></span>
-                                    </div>
-                                    <p class="cv-role text-[11px] text-luxury-textMain mt-1">
-                                        <span class="text-luxury-goldInk font-semibold">Rôle</span> · Sganarelle
-                                    </p>
-                                    <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
-                                        Théâtre des Crescite — Angelo Jossec
-                                    </p>
-                                </div>
-                                <span
-                                    class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
-                                    création</span>
-                            </div>
-                        </li>
-                        <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
-                            <a href="https://www.cdn-normandierouen.fr/production/a-la-barre/" target="_blank"
-                                rel="noopener" class="block">
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
+                            <button type="button" class="cv-row-toggle block rounded" aria-expanded="false" aria-controls="cv-panel-1">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
                                                 class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
                                             <span
-                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">À
-                                                La Barre, peine perdue ? <span
-                                                    class="text-luxury-textMuted italic font-normal normal-case">(Ronan
-                                                    Chéneau)</span></span>
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">L&#39;Imaginaire Forcé <span class="text-luxury-textMuted italic font-normal normal-case">(d&#39;après Molière)</span></span>
                                         </div>
                                         <p class="cv-role text-[11px] text-luxury-textMain mt-1">
-                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Juge, accusé,
-                                            greffier, avocat, narrateur
-                                        </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
-                                            CDN de Normandie-Rouen
-                                            <i class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-goldInk"
-                                                aria-hidden="true"></i>
-                                        </p>
+                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Sganarelle</p>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Théâtre des Crescite — Angelo Jossec</p>
                                     </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
                                     <span
-                                        class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
-                                        tournée</span>
+                                        class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En création</span>
+                                        <i class="cv-chevron fa-solid fa-chevron-down text-[10px] text-stone-400" aria-hidden="true"></i>
+                                    </div>
                                 </div>
-                            </a>
+                            </button>
+                            <!-- Rempli par fillCvDrawer() au premier dépliage, depuis dates.js -->
+                            <div class="cv-expand-panel" id="cv-panel-1">
+                                <div class="cv-expand-inner">
+                                    <div class="cv-drawer-body mt-2 ml-1 border-l-2 border-luxury-gold/20 pl-3 pb-1"></div>
+                                </div>
+                            </div>
                         </li>
-                        <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
-                            <a href="https://www.cdn-normandierouen.fr/production/audiences/" target="_blank"
-                                rel="noopener" class="block">
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent" data-cv-show="À la barre, peine perdue ?" data-cv-url="https://www.cdn-normandierouen.fr/production/a-la-barre/">
+                            <button type="button" class="cv-row-toggle block rounded" aria-expanded="false" aria-controls="cv-panel-2">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <div class="cv-title-row">
+                                            <span
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
+                                            <span
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">À La Barre, peine perdue ? <span class="text-luxury-textMuted italic font-normal normal-case">(Ronan Chéneau)</span></span>
+                                        </div>
+                                        <p class="cv-role text-[11px] text-luxury-textMain mt-1">
+                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Juge, accusé, greffier, avocat, narrateur</p>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">CDN de Normandie-Rouen</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                    <span
+                                        class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En tournée</span>
+                                        <i class="cv-chevron fa-solid fa-chevron-down text-[10px] text-stone-400" aria-hidden="true"></i>
+                                    </div>
+                                </div>
+                            </button>
+                            <!-- Rempli par fillCvDrawer() au premier dépliage, depuis dates.js -->
+                            <div class="cv-expand-panel" id="cv-panel-2">
+                                <div class="cv-expand-inner">
+                                    <div class="cv-drawer-body mt-2 ml-1 border-l-2 border-luxury-gold/20 pl-3 pb-1"></div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent" data-cv-show="Audiences" data-cv-url="https://www.cdn-normandierouen.fr/production/audiences/">
+                            <button type="button" class="cv-row-toggle block rounded" aria-expanded="false" aria-controls="cv-panel-3">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
@@ -1143,127 +1234,128 @@
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Audiences</span>
                                         </div>
                                         <p class="cv-role text-[11px] text-luxury-textMain mt-1">
-                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Procureur
-                                            général, juge, accusé, narrateur
-                                        </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
-                                            CDN de Normandie-Rouen / Compagnie du P'tit Ballon — Steeve Brunet
-                                            <i class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-goldInk"
-                                                aria-hidden="true"></i>
-                                        </p>
+                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Procureur général, juge, accusé, narrateur</p>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">CDN de Normandie-Rouen / Compagnie du P&#39;tit Ballon — Steeve Brunet</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        <i class="cv-chevron fa-solid fa-chevron-down text-[10px] text-stone-400" aria-hidden="true"></i>
                                     </div>
                                 </div>
-                            </a>
+                            </button>
+                            <!-- Rempli par fillCvDrawer() au premier dépliage, depuis dates.js -->
+                            <div class="cv-expand-panel" id="cv-panel-3">
+                                <div class="cv-expand-inner">
+                                    <div class="cv-drawer-body mt-2 ml-1 border-l-2 border-luxury-gold/20 pl-3 pb-1"></div>
+                                </div>
+                            </div>
                         </li>
-                        <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
-                            <a href="https://crescite.fr/cleophene/" target="_blank" rel="noopener" class="block">
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent" data-cv-show="Cléophène" data-cv-url="https://crescite.fr/cleophene/">
+                            <button type="button" class="cv-row-toggle block rounded" aria-expanded="false" aria-controls="cv-panel-4">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
                                                 class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
                                             <span
-                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Cléophène
-                                                <span
-                                                    class="text-luxury-textMuted italic font-normal normal-case">(d'après
-                                                    Rodogune, Corneille)</span></span>
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Cléophène <span class="text-luxury-textMuted italic font-normal normal-case">(d&#39;après Rodogune, Corneille)</span></span>
                                         </div>
                                         <p class="cv-role text-[11px] text-luxury-textMain mt-1">
-                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Antiochus
-                                        </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
-                                            Théâtre des Crescite — Angelo Jossec
-                                            <i class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-goldInk"
-                                                aria-hidden="true"></i>
-                                        </p>
+                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Antiochus</p>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Théâtre des Crescite — Angelo Jossec</p>
                                     </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
                                     <span
-                                        class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
-                                        tournée</span>
+                                        class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En tournée</span>
+                                        <i class="cv-chevron fa-solid fa-chevron-down text-[10px] text-stone-400" aria-hidden="true"></i>
+                                    </div>
                                 </div>
-                            </a>
+                            </button>
+                            <!-- Rempli par fillCvDrawer() au premier dépliage, depuis dates.js -->
+                            <div class="cv-expand-panel" id="cv-panel-4">
+                                <div class="cv-expand-inner">
+                                    <div class="cv-drawer-body mt-2 ml-1 border-l-2 border-luxury-gold/20 pl-3 pb-1"></div>
+                                </div>
+                            </div>
                         </li>
-                        <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
-                            <a href="https://compagnie-alchimie.fr/" target="_blank" rel="noopener" class="block">
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent" data-cv-show="Fulguré.e.s" data-cv-url="https://compagnie-alchimie.fr/">
+                            <button type="button" class="cv-row-toggle block rounded" aria-expanded="false" aria-controls="cv-panel-5">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
                                                 class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2023</span>
                                             <span
-                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Fulguré.e.s
-                                                <span
-                                                    class="text-luxury-textMuted italic font-normal normal-case">(Jérémie
-                                                    Fabre)</span></span>
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Fulguré.e.s <span class="text-luxury-textMuted italic font-normal normal-case">(Jérémie Fabre)</span></span>
                                         </div>
                                         <p class="cv-role text-[11px] text-luxury-textMain mt-1">
-                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Adrien / Le
-                                            jeune mec / Jerem
-                                        </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
-                                            Compagnie Alchimie — Amélie Chalmey
-                                            <i class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-goldInk"
-                                                aria-hidden="true"></i>
-                                        </p>
+                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Adrien / Le jeune mec / Jerem</p>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Compagnie Alchimie — Amélie Chalmey</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        <i class="cv-chevron fa-solid fa-chevron-down text-[10px] text-stone-400" aria-hidden="true"></i>
                                     </div>
                                 </div>
-                            </a>
+                            </button>
+                            <!-- Rempli par fillCvDrawer() au premier dépliage, depuis dates.js -->
+                            <div class="cv-expand-panel" id="cv-panel-5">
+                                <div class="cv-expand-inner">
+                                    <div class="cv-drawer-body mt-2 ml-1 border-l-2 border-luxury-gold/20 pl-3 pb-1"></div>
+                                </div>
+                            </div>
                         </li>
-                        <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
-                            <a href="https://crescite.fr/berenice/" target="_blank" rel="noopener" class="block">
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent" data-cv-show="Bérénice" data-cv-url="https://crescite.fr/berenice/">
+                            <button type="button" class="cv-row-toggle block rounded" aria-expanded="false" aria-controls="cv-panel-6">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
                                                 class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
                                             <span
-                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Bérénice
-                                                <span
-                                                    class="text-luxury-textMuted italic font-normal normal-case">(Racine)</span></span>
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Bérénice <span class="text-luxury-textMuted italic font-normal normal-case">(Racine)</span></span>
                                         </div>
                                         <p class="cv-role text-[11px] text-luxury-textMain mt-1">
-                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Antiochus
-                                        </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
-                                            Théâtre des Crescite — Angelo Jossec
-                                            <i class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-goldInk"
-                                                aria-hidden="true"></i>
-                                        </p>
+                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Antiochus</p>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Théâtre des Crescite — Angelo Jossec</p>
                                     </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
                                     <span
-                                        class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
-                                        tournée</span>
+                                        class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En tournée</span>
+                                        <i class="cv-chevron fa-solid fa-chevron-down text-[10px] text-stone-400" aria-hidden="true"></i>
+                                    </div>
                                 </div>
-                            </a>
+                            </button>
+                            <!-- Rempli par fillCvDrawer() au premier dépliage, depuis dates.js -->
+                            <div class="cv-expand-panel" id="cv-panel-6">
+                                <div class="cv-expand-inner">
+                                    <div class="cv-drawer-body mt-2 ml-1 border-l-2 border-luxury-gold/20 pl-3 pb-1"></div>
+                                </div>
+                            </div>
                         </li>
-                        <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
-                            <a href="https://labloomsbury.wixsite.com/compagnie/as-you-like-it" target="_blank"
-                                rel="noopener" class="block">
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent" data-cv-show="As You Like It" data-cv-url="https://labloomsbury.wixsite.com/compagnie/as-you-like-it">
+                            <button type="button" class="cv-row-toggle block rounded" aria-expanded="false" aria-controls="cv-panel-7">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
                                                 class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
                                             <span
-                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">As
-                                                You Like It <span
-                                                    class="text-luxury-textMuted italic font-normal normal-case">(Shakespeare)</span></span>
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">As You Like It <span class="text-luxury-textMuted italic font-normal normal-case">(Shakespeare)</span></span>
                                         </div>
                                         <p class="cv-role text-[11px] text-luxury-textMain mt-1">
-                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Touchstone
-                                        </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
-                                            Compagnie Bloomsbury — Nicolas Gaspar
-                                            <i class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-goldInk"
-                                                aria-hidden="true"></i>
-                                        </p>
+                                            <span class="text-luxury-goldInk font-semibold">Rôle</span> · Touchstone</p>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Compagnie Bloomsbury — Nicolas Gaspar</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        <i class="cv-chevron fa-solid fa-chevron-down text-[10px] text-stone-400" aria-hidden="true"></i>
                                     </div>
                                 </div>
-                            </a>
+                            </button>
+                            <!-- Rempli par fillCvDrawer() au premier dépliage, depuis dates.js -->
+                            <div class="cv-expand-panel" id="cv-panel-7">
+                                <div class="cv-expand-inner">
+                                    <div class="cv-drawer-body mt-2 ml-1 border-l-2 border-luxury-gold/20 pl-3 pb-1"></div>
+                                </div>
+                            </div>
                         </li>
                     </ul>
                 </section>
@@ -1513,6 +1605,55 @@
                         <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain"
                             id="upcoming-season-title">Saison 2026 -
                             2027</h3>
+                    </div>
+
+                    <!-- ── Filtres : recherche instantanée + puces ──
+                         Les puces sont générées par buildFilterChips() à partir
+                         des données réelles : aucune liste à maintenir à la main
+                         quand un spectacle ou un lieu est ajouté dans dates.js. -->
+                    <div class="mb-3 no-print" id="dates-filters">
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-luxury-textMuted pointer-events-none"
+                                aria-hidden="true"></i>
+                            <input type="search" id="dates-search" autocomplete="off"
+                                placeholder="Rechercher un spectacle, une ville, un lieu…"
+                                aria-label="Rechercher parmi les représentations"
+                                class="w-full pl-8 pr-8 py-2 rounded-lg bg-luxury-surface border border-stone-200 text-xs text-luxury-textMain placeholder:text-luxury-textMuted focus:border-luxury-gold focus:outline-none transition">
+                            <button type="button" id="dates-search-clear" aria-label="Effacer la recherche"
+                                class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk transition">
+                                <i class="fa-solid fa-xmark text-[11px]" aria-hidden="true"></i>
+                            </button>
+                        </div>
+
+                        <div class="mt-2 space-y-1.5">
+                            <div class="flex items-start gap-2">
+                                <span
+                                    class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Spectacle</span>
+                                <div class="flex flex-wrap gap-1" id="filter-shows" role="group"
+                                    aria-label="Filtrer par spectacle"></div>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span
+                                    class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Lieu</span>
+                                <div class="flex flex-wrap gap-1" id="filter-places" role="group"
+                                    aria-label="Filtrer par lieu"></div>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span
+                                    class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Période</span>
+                                <div class="flex flex-wrap gap-1" id="filter-periods" role="group"
+                                    aria-label="Filtrer par période"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-stone-200/40">
+                            <p class="text-[10px] text-luxury-textMuted font-mono" id="dates-count" aria-live="polite">
+                            </p>
+                            <button type="button" id="dates-reset"
+                                class="hidden text-[10px] uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">
+                                Réinitialiser
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Dates container rendu dynamiquement par renderDates() depuis dates.js -->
@@ -2253,7 +2394,9 @@
         // ════════════════════════════════════════════════════════════════
         document.addEventListener("DOMContentLoaded", () => {
             initThemeToggle();
+            setupDateFilters();   // avant renderDates : construit les puces
             renderDates();
+            setupCvDrawers();
             initAudioPlayers();
             setupScrollReveal();
             setupGallerySwipe();
@@ -2339,17 +2482,276 @@
             if (btn) btn.setAttribute('aria-expanded', panel && panel.classList.contains('expanded') ? 'true' : 'false');
         }
 
+        // ════════════════════════════════════════════════════════════════
+        //  TIROIRS DU CV — prochaines représentations d'un spectacle
+        //  Les dates ne sont pas dupliquées dans le CV : elles sont lues
+        //  dans dates.js au moment du dépliage, via l'attribut data-cv-show
+        //  qui porte le titre EXACT de l'entrée (pas d'appariement approximatif).
+        // ════════════════════════════════════════════════════════════════
+
+        // Aplatit SHOW_DATA en une liste de représentations à venir
+        function upcomingPerformances() {
+            if (typeof SHOW_DATA === 'undefined') return [];
+            const { upcoming } = splitUpcoming(SHOW_DATA.upcoming);
+            const out = [];
+            upcoming.forEach(show => {
+                const base = { title: show.title, subtitle: show.subtitle || '', location: show.location };
+                if (show.type === 'series' && show.shows) {
+                    show.shows.forEach(r => out.push(Object.assign({}, base, {
+                        dateLabel: r.dateLabel, icsDate: r.icsDate, time: r.time, times: r.times,
+                        isSchool: r.isSchool, bookingUrl: r.bookingUrl
+                    })));
+                } else {
+                    out.push(Object.assign({}, base, {
+                        dateLabel: show.dateLabel || show.date, icsDate: show.icsDate,
+                        time: show.time, times: show.times, isSchool: show.isSchool,
+                        bookingUrl: show.bookingUrl
+                    }));
+                }
+            });
+            return out.sort((a, b) => icsToTime(a.icsDate) - icsToTime(b.icsDate));
+        }
+
+        function performanceTimeStr(p) {
+            if (Array.isArray(p.times) && p.times.length) return p.times.join(' & ');
+            return p.time || '';
+        }
+
+        // Remplit le tiroir d'une entrée de CV (une seule fois)
+        function fillCvDrawer(li) {
+            const body = li.querySelector('.cv-drawer-body');
+            if (!body || body.dataset.filled === '1') return;
+            body.dataset.filled = '1';
+
+            const key = li.dataset.cvShow || '';
+            const url = li.dataset.cvUrl || '';
+            const dates = key ? upcomingPerformances().filter(p => p.title === key) : [];
+
+            const linkBtn = url
+                ? `<a href="${esc(url)}" target="_blank" rel="noopener"
+                       class="flex-shrink-0 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-luxury-goldInk border border-luxury-gold/40 hover:border-luxury-gold hover:bg-luxury-gold/10 px-2 py-1 rounded transition"
+                       aria-label="Page officielle du spectacle ${esc(key || '')} (nouvel onglet)">Page du spectacle
+                       <i class="fa-solid fa-up-right-from-square text-[8px]" aria-hidden="true"></i></a>`
+                : '';
+
+            let list;
+            if (dates.length) {
+                list = dates.map(p => {
+                    const t = performanceTimeStr(p);
+                    const school = p.isSchool
+                        ? ` <span class="text-luxury-warn">· séance scolaire</span>` : '';
+                    return `<div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 py-1 border-b border-stone-200/30 last:border-0">
+                        <span class="font-mono text-[10px] font-bold text-luxury-goldInk whitespace-nowrap">${esc(p.dateLabel)}</span>
+                        <span class="text-[11px] text-luxury-textMain">${esc(p.location)}</span>
+                        <span class="text-[10px] text-luxury-textMuted font-mono">${t ? esc(t) : 'horaire à confirmer'}${school}</span>
+                    </div>`;
+                }).join('');
+            } else {
+                list = `<p class="text-[11px] text-luxury-textMuted italic py-1">Aucune date à venir pour le moment.</p>`;
+            }
+
+            body.innerHTML = `
+                <div class="flex items-start justify-between gap-3 mb-1.5">
+                    <p class="text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat pt-1">
+                        Prochaines représentations</p>
+                    ${linkBtn}
+                </div>
+                ${list}`;
+        }
+
+        function closeAllCvDrawers(except) {
+            document.querySelectorAll('.cv-item').forEach(li => {
+                if (li === except) return;
+                const panel = li.querySelector('.cv-expand-panel');
+                const btn = li.querySelector('.cv-row-toggle');
+                if (panel) panel.classList.remove('expanded');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            });
+        }
+
+        function setupCvDrawers() {
+            document.querySelectorAll('.cv-item .cv-row-toggle').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const li = btn.closest('.cv-item');
+                    const panel = li.querySelector('.cv-expand-panel');
+                    const willOpen = !panel.classList.contains('expanded');
+                    // Un seul tiroir ouvert à la fois : plus lisible qu'un CV
+                    // entièrement déplié, et le repli reste prévisible.
+                    closeAllCvDrawers(li);
+                    if (willOpen) fillCvDrawer(li);
+                    panel.classList.toggle('expanded', willOpen);
+                    btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                });
+            });
+
+            // Refermer en cliquant ailleurs, ou avec Échap
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.cv-item')) closeAllCvDrawers(null);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !openModalEl) closeAllCvDrawers(null);
+            });
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  FILTRES DES DATES — recherche instantanée + puces
+        // ════════════════════════════════════════════════════════════════
+        const dateFilters = { q: '', show: null, place: null, period: null };
+
+        // Normalisation pour la recherche : sans accents ni casse, afin que
+        // « saint-lo » trouve « Saint-Lô » et « berenice » trouve « Bérénice ».
+        function norm(str) {
+            return String(str || '').toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        // Extrait la VILLE d'un libellé de lieu, pour que les puces de filtre
+        // restent courtes et homogènes. Deux formes coexistent dans dates.js :
+        //   « Le Forum, Falaise (14) »            -> après la virgule
+        //   « Tribunal judiciaire de Rouen (76) » -> après le dernier « de/du/d' »
+        // Sans ce second cas, on obtenait des puces du type « Tribunal
+        // judiciaire de Rouen » à côté de « Rouen », donc deux entrées pour
+        // la même ville.
+        function placeOf(location) {
+            const s = String(location || '').replace(/\s*\(\d{2,3}\)\s*$/, '').trim();
+            const parts = s.split(',').map(p => p.trim()).filter(Boolean);
+            if (parts.length > 1) return parts[parts.length - 1];
+            // Le préfixe « .* » gourmand force la capture APRÈS le DERNIER
+            // « de / du / d' » : « Hôtel de Ville de Grand-Quevilly » doit
+            // donner « Grand-Quevilly », pas « Ville de Grand-Quevilly ».
+            const m = s.match(/^.*(?:\sde\s|\sdu\s|\sd')\s*(.+)$/i);
+            return m ? m[1].trim() : s;
+        }
+
+        const PERIODS = [
+            { id: '3m', label: '3 mois', months: 3 },
+            { id: '6m', label: '6 mois', months: 6 },
+        ];
+
+        function matchesFilters(title, location, icsDate) {
+            if (dateFilters.show && title !== dateFilters.show) return false;
+            if (dateFilters.place && placeOf(location) !== dateFilters.place) return false;
+            if (dateFilters.period) {
+                const p = PERIODS.find(x => x.id === dateFilters.period);
+                if (p) {
+                    const limit = new Date();
+                    limit.setMonth(limit.getMonth() + p.months);
+                    const t = icsToTime(icsDate);
+                    if (!isNaN(t) && t > limit.getTime()) return false;
+                }
+            }
+            if (dateFilters.q) {
+                const hay = norm(title + ' ' + location);
+                // Tous les mots saisis doivent apparaître (recherche « ET »),
+                // ce qui permet d'affiner en tapant « berenice saint lo ».
+                if (!norm(dateFilters.q).split(/\s+/).filter(Boolean).every(w => hay.includes(w))) return false;
+            }
+            return true;
+        }
+
+        function filtersActive() {
+            return !!(dateFilters.q || dateFilters.show || dateFilters.place || dateFilters.period);
+        }
+
+        function chipHtml(label, group, value, active) {
+            return `<button type="button" class="filter-chip text-[10px] px-2 py-1 rounded-full border border-stone-200 bg-stone-100 text-luxury-textMuted hover:border-luxury-gold transition"
+                data-filter-group="${group}" data-filter-value="${esc(value)}"
+                aria-pressed="${active ? 'true' : 'false'}">${esc(label)}</button>`;
+        }
+
+        function buildFilterChips() {
+            const perfs = upcomingPerformances();
+            const shows = [...new Set(perfs.map(p => p.title))];
+            const places = [...new Set(perfs.map(p => placeOf(p.location)))].sort((a, b) => a.localeCompare(b, 'fr'));
+
+            const showsEl = document.getElementById('filter-shows');
+            const placesEl = document.getElementById('filter-places');
+            const periodsEl = document.getElementById('filter-periods');
+            if (!showsEl) return;
+
+            showsEl.innerHTML = chipHtml('Tous', 'show', '', !dateFilters.show)
+                + shows.map(s => chipHtml(s, 'show', s, dateFilters.show === s)).join('');
+            placesEl.innerHTML = chipHtml('Tous', 'place', '', !dateFilters.place)
+                + places.map(s => chipHtml(s, 'place', s, dateFilters.place === s)).join('');
+            periodsEl.innerHTML = chipHtml('Toutes', 'period', '', !dateFilters.period)
+                + PERIODS.map(p => chipHtml(p.label, 'period', p.id, dateFilters.period === p.id)).join('');
+        }
+
+        function setupDateFilters() {
+            const search = document.getElementById('dates-search');
+            const clear = document.getElementById('dates-search-clear');
+            const reset = document.getElementById('dates-reset');
+            if (!search) return;
+
+            buildFilterChips();
+
+            search.addEventListener('input', () => {
+                dateFilters.q = search.value.trim();
+                clear.classList.toggle('hidden', !dateFilters.q);
+                renderDates();
+            });
+            clear.addEventListener('click', () => {
+                search.value = ''; dateFilters.q = '';
+                clear.classList.add('hidden');
+                renderDates(); search.focus();
+            });
+            reset.addEventListener('click', () => {
+                dateFilters.q = ''; dateFilters.show = null;
+                dateFilters.place = null; dateFilters.period = null;
+                search.value = ''; clear.classList.add('hidden');
+                buildFilterChips(); renderDates();
+            });
+
+            // Délégation : les puces sont reconstruites à chaque rendu
+            document.getElementById('dates-filters').addEventListener('click', (e) => {
+                const chip = e.target.closest('[data-filter-group]');
+                if (!chip) return;
+                const group = chip.dataset.filterGroup;
+                const value = chip.dataset.filterValue || null;
+                // Recliquer la puce active la désactive (retour à « Tous »)
+                dateFilters[group] = (dateFilters[group] === value) ? null : value;
+                buildFilterChips();
+                renderDates();
+            });
+        }
+
         window.renderedEventsData = [];
 
         function renderDates() {
             window.renderedEventsData = [];
             if (typeof SHOW_DATA === 'undefined') return;
 
-            const { upcoming, past } = splitUpcoming(SHOW_DATA.upcoming);
+            const split = splitUpcoming(SHOW_DATA.upcoming);
+            const past = split.past;
             const upcomingTitle = document.getElementById('upcoming-season-title');
             const upcomingContainer = document.getElementById('upcoming-dates-container');
 
             if (upcomingTitle) upcomingTitle.textContent = SHOW_DATA.currentSeasonTitle || 'Saison en cours';
+
+            // Application des filtres. Pour une série, on ne garde que les
+            // représentations retenues ; la série disparaît si elle n'en a plus.
+            let matchCount = 0;
+            const upcoming = split.upcoming.map(show => {
+                if (show.type === 'series' && show.shows) {
+                    const kept = show.shows.filter(r => matchesFilters(show.title, show.location, r.icsDate));
+                    matchCount += kept.length;
+                    return kept.length ? Object.assign({}, show, { shows: kept }) : null;
+                }
+                const ok = matchesFilters(show.title, show.location, show.icsDate);
+                if (ok) matchCount++;
+                return ok ? show : null;
+            }).filter(Boolean);
+
+            const countEl = document.getElementById('dates-count');
+            const resetEl = document.getElementById('dates-reset');
+            if (countEl) {
+                countEl.textContent = matchCount === 0
+                    ? 'Aucune représentation'
+                    : `${matchCount} représentation${matchCount > 1 ? 's' : ''}`
+                    + (filtersActive() ? ' correspondante' + (matchCount > 1 ? 's' : '') : ' à venir');
+            }
+            if (resetEl) resetEl.classList.toggle('hidden', !filtersActive());
 
             const amberBadge = `<span class="text-[10px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><i class="fa-solid fa-circle-info text-[9px]" aria-hidden="true"></i> Les réservations ne sont pas encore ouvertes</span>`;
             const schoolWarningBadge = `<span class="text-[10px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><i class="fa-solid fa-lock text-[9px]" aria-hidden="true"></i> Accès restreint : contactez-moi directement pour savoir si on peut vous trouver une place ! 😉</span>`;
@@ -2468,7 +2870,9 @@
                     }
                 });
             } else {
-                upcomingHtml = `<p class="text-xs text-luxury-textMuted italic p-2">Aucune date à venir pour le moment.</p>`;
+                upcomingHtml = filtersActive()
+                    ? `<p class="text-xs text-luxury-textMuted italic p-2">Aucune représentation ne correspond à cette recherche.</p>`
+                    : `<p class="text-xs text-luxury-textMuted italic p-2">Aucune date à venir pour le moment.</p>`;
             }
             if (upcomingContainer) upcomingContainer.innerHTML = upcomingHtml;
 
@@ -2484,7 +2888,19 @@
 
                 let archivesHtml = '';
                 Object.keys(seasons).forEach(seasonName => {
-                    const showsHtml = seasons[seasonName].map(show => `
+                    // Les archives ne portent pas d'icsDate exploitable : on
+                    // n'y applique que les filtres texte / spectacle / lieu.
+                    const rows = seasons[seasonName].filter(show => {
+                        if (dateFilters.show && !norm(show.title).includes(norm(dateFilters.show))) return false;
+                        if (dateFilters.place && placeOf(show.location) !== dateFilters.place) return false;
+                        if (dateFilters.q) {
+                            const hay = norm(show.title + ' ' + show.location);
+                            if (!norm(dateFilters.q).split(/\s+/).filter(Boolean).every(w => hay.includes(w))) return false;
+                        }
+                        return true;
+                    });
+                    if (!rows.length) return;   // saison entièrement filtrée : on la masque
+                    const showsHtml = rows.map(show => `
                         <div class="py-1 odd:bg-luxury-stripe px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
                             <span><strong>${esc(show.date)}</strong> : ${esc(show.title)}</span>
                             <span class="text-stone-500 text-[11px] md:text-right">${esc(show.location)}</span>
@@ -2738,6 +3154,14 @@
 
             const pdfBtn = document.getElementById('pdf-download-btn');
             if (pdfBtn) pdfBtn.classList.toggle('invisible', pageId !== 'page_cv');
+
+            // La bio n'a de sens qu'en regard du CV : ailleurs elle se replie
+            // en fondu et rend sa place aux dates et aux démos.
+            const bio = document.getElementById('header-bio');
+            if (bio) bio.classList.toggle('bio-hidden', pageId !== 'page_cv');
+
+            // Un tiroir resté ouvert n'aurait plus de contexte hors du CV
+            closeAllCvDrawers(null);
 
             // Les durées des démos ne sont chargées qu'à l'ouverture de l'onglet Voix
             if (pageId === 'demos_voix') primeAudioMetadata();
