@@ -1134,7 +1134,7 @@
            défilé reprend son cours normal. */
         .u-hero-wrap {
             position: relative;
-            height: 195svh;
+            height: 165svh;
         }
 
         .u-hero {
@@ -1161,16 +1161,19 @@
             animation: u-breathe 9s ease-in-out infinite;
         }
 
+        /* --u-hero-glow est piloté au défilement (fadeHero) : le halo
+           s'éteint avec le titre, en dernier. C'est lui qui tient l'écran
+           pendant que le texte se retire couche par couche. */
         @keyframes u-breathe {
 
             0%,
             100% {
-                opacity: .55;
+                opacity: calc(.55 * var(--u-hero-glow, 1));
                 transform: scale(1);
             }
 
             50% {
-                opacity: .9;
+                opacity: calc(.9 * var(--u-hero-glow, 1));
                 transform: scale(1.06);
             }
         }
