@@ -34,6 +34,13 @@ PICKS = {
     "cleophene": ("cléophène", [3, 4, 11, 17, 19],    0.42),
     "fulgurees": ("fulgurees", [26, 24, 14, 27, 29],  0.45),
     "asyoulikeit": ("ayli",    [0],                   0.30),
+
+    # Dossiers encore vides : le script les ignore sans rien casser, et
+    # Audiences / À la barre gardent leurs visuels témoins. Dès que des
+    # photos y seront déposées, relancer puis AJUSTER ces index — les cinq
+    # premiers par ordre alphabétique ne sont qu'un point de départ.
+    "audiences": ("audiences",   [0, 1, 2, 3, 4],     0.42),
+    "alabarre":  ("à la barre",  [0, 1, 2, 3, 4],     0.42),
 }
 
 # Le dossier « fulgurés » porte un accent ; on le retrouve par tolérance.

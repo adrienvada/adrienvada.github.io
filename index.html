@@ -1287,8 +1287,55 @@
             }
         }
 
-        /* ── Défilé de photos ── */
-        .u-fig {
+        /* ── Défilé de photos ──
+           Trois mises en page alternées (voir composeBeats() dans
+           univers.js) : `full` plein cadre, `duo` deux photos côte à côte,
+           `inset` une photo entière dans son cadre. Toutes les vignettes
+           sont des <button> : le clic ouvre l'agrandissement. */
+        .u-fig-media {
+            display: block;
+            width: 100%;
+            padding: 0;
+            border: 0;
+            background: none;
+            cursor: zoom-in;
+            position: relative;
+        }
+
+        .u-fig-loupe {
+            position: absolute;
+            right: 14px;
+            bottom: 14px;
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            font-size: .72rem;
+            color: var(--u-text);
+            background: color-mix(in srgb, var(--u-bg) 65%, transparent);
+            border: 1px solid var(--u-line);
+            opacity: 0;
+            transform: scale(.9);
+            transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+        }
+
+        .u-fig.is-in .u-fig-loupe {
+            opacity: .75;
+        }
+
+        .u-fig-media:hover .u-fig-loupe {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .u-fig-media:active {
+            transform: scale(.995);
+            transition: transform var(--dur-press) var(--ease-out);
+        }
+
+        /* ── Plein cadre ── */
+        .u-fig--full {
             margin: 0;
             position: relative;
             height: 86svh;
@@ -1308,13 +1355,13 @@
             margin-top: 0;
         }
 
-        .u-fig-media {
+        .u-fig--full .u-fig-media {
             position: absolute;
             inset: 0;
             overflow: hidden;
         }
 
-        .u-fig img {
+        .u-fig--full img {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -1324,8 +1371,8 @@
 
         /* Voile de la couleur du spectacle : lie les photos entre elles et
            les raccorde au fond, même si elles viennent de sources
-           différentes (ce qui sera le cas avec de vraies photos). */
-        .u-fig::after {
+           différentes (ce qui est le cas des vraies photos). */
+        .u-fig--full::after {
             content: '';
             position: absolute;
             inset: 0;
@@ -1333,7 +1380,7 @@
             pointer-events: none;
         }
 
-        .u-cap {
+        .u-fig--full .u-cap {
             position: absolute;
             left: 0;
             right: 0;
@@ -1341,6 +1388,168 @@
             z-index: 2;
             text-align: center;
             padding: 0 24px;
+        }
+
+        /* ── Médaillon : la photo entière, dans son cadre ── */
+        .u-fig--inset {
+            margin: 0;
+            padding: 12svh 7vw;
+            max-width: 1100px;
+            margin-inline: auto;
+        }
+
+        .u-fig--inset .u-fig-media,
+        .u-duo .u-fig-media {
+            overflow: hidden;
+            border-radius: 3px;
+            border: 1px solid var(--u-line);
+            box-shadow: 0 30px 70px -30px rgba(0, 0, 0, .7);
+            opacity: 0;
+            transform: translateY(38px);
+            transition: opacity 900ms var(--ease-out), transform 900ms var(--ease-out);
+        }
+
+        .u-fig--inset.is-in .u-fig-media,
+        .u-duo.is-in .u-fig-media {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* Décalage du second volet : les deux photos ne montent pas
+           d'un bloc, ce qui donnerait une bannière plutôt qu'un regard
+           qui passe de l'une à l'autre. */
+        .u-duo.is-in .u-fig:nth-child(2) .u-fig-media {
+            transition-delay: 140ms;
+        }
+
+        .u-fig--inset img,
+        .u-duo img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        /* ── Duo : deux photos côte à côte ── */
+        .u-duo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5vw;
+            align-items: center;
+            padding: 10svh 7vw;
+            max-width: 1300px;
+            margin-inline: auto;
+        }
+
+        .u-duo .u-fig {
+            margin: 0;
+        }
+
+        /* Le second volet, plus bas : une composition, pas un tableau. */
+        .u-duo .u-fig:nth-child(2) {
+            transform: translateY(7svh);
+        }
+
+        .u-fig--inset .u-cap,
+        .u-duo .u-cap {
+            margin-top: 14px;
+            padding: 0;
+            text-align: left;
+        }
+
+        .u-fig--inset .u-cap span,
+        .u-duo .u-cap span {
+            background: none;
+            border: 0;
+            padding: 0;
+            color: var(--u-muted);
+            letter-spacing: .12em;
+            font-size: .62rem;
+            opacity: 0;
+            transform: none;
+        }
+
+        .u-fig--inset.is-in .u-cap span,
+        .u-duo.is-in .u-cap span {
+            opacity: 1;
+            transition-delay: 260ms;
+        }
+
+        @media (max-width: 720px) {
+
+            /* Deux photos côte à côte deviennent illisibles sous ~360 px
+               de large : le duo repasse en colonne, sans décalage. */
+            .u-duo {
+                grid-template-columns: 1fr;
+                gap: 6svh;
+                padding: 8svh 8vw;
+            }
+
+            .u-duo .u-fig:nth-child(2) {
+                transform: none;
+            }
+
+            .u-fig--inset {
+                padding: 9svh 8vw;
+            }
+        }
+
+        /* ── Citation ── */
+        .u-quote {
+            margin: 0;
+            min-height: 78svh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 10svh 8vw;
+            position: relative;
+        }
+
+        .u-quote::before {
+            content: '';
+            position: absolute;
+            inset: 20% 10%;
+            background: radial-gradient(ellipse 60% 50% at 50% 50%, var(--u-glow), transparent 70%);
+            opacity: .35;
+            pointer-events: none;
+        }
+
+        .u-quote p {
+            position: relative;
+            margin: 0;
+            max-width: 22ch;
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.35rem, 4.2vw, 2.6rem);
+            font-weight: 400;
+            line-height: 1.4;
+            color: var(--u-text);
+            opacity: 0;
+            transform: translateY(26px);
+            transition: opacity 1100ms var(--ease-out), transform 1100ms var(--ease-out);
+        }
+
+        .u-quote cite {
+            position: relative;
+            margin-top: 26px;
+            font-family: 'Montserrat', sans-serif;
+            font-style: normal;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .26em;
+            text-transform: uppercase;
+            color: var(--u-accent-ink);
+            opacity: 0;
+            transition: opacity 900ms var(--ease-out) 400ms;
+        }
+
+        .u-quote.is-in p {
+            opacity: 1;
+            transform: none;
+        }
+
+        .u-quote.is-in cite {
+            opacity: 1;
         }
 
         /* Pas de backdrop-filter ici, contrairement à la croix : la légende
@@ -1496,9 +1705,127 @@
             transition-duration: var(--dur-press);
         }
 
+        /* ── Agrandissement d'une photo ──
+           Le seul endroit où l'image est montrée ENTIÈRE : le défilé la
+           recadre partout ailleurs, et on ne comprend pas toujours ce
+           qu'on regarde. Fond très opaque : c'est la photo qu'on vient
+           voir, pas la page. */
+        .u-zoom {
+            position: fixed;
+            inset: 0;
+            z-index: 5;
+            display: grid;
+            place-items: center;
+            padding: 5vh 6vw;
+            background: color-mix(in srgb, var(--u-bg) 94%, black);
+            opacity: 0;
+            transition: opacity var(--dur-base) var(--ease-out);
+            cursor: zoom-out;
+        }
+
+        .u-zoom[hidden] {
+            display: none;
+        }
+
+        .u-zoom.is-open {
+            opacity: 1;
+        }
+
+        .u-zoom figure {
+            margin: 0;
+            max-width: 100%;
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            cursor: default;
+            transform: scale(.97);
+            transition: transform 420ms var(--ease-out);
+        }
+
+        .u-zoom.is-open figure {
+            transform: none;
+        }
+
+        .u-zoom img {
+            max-width: 100%;
+            max-height: 82svh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 3px;
+        }
+
+        .u-zoom figcaption {
+            font-family: 'Montserrat', sans-serif;
+            font-size: .66rem;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: var(--u-muted);
+            text-align: center;
+        }
+
+        .u-zoom-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 46px;
+            height: 46px;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            color: var(--u-text);
+            background: color-mix(in srgb, var(--u-bg) 55%, transparent);
+            border: 1px solid var(--u-line);
+            cursor: pointer;
+            transition: background var(--dur-base) var(--ease-out),
+                color var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out);
+        }
+
+        .u-zoom-nav:hover {
+            background: var(--u-accent);
+            border-color: var(--u-accent);
+            color: var(--u-on-accent);
+        }
+
+        .u-zoom-nav:active {
+            transform: translateY(-50%) scale(.92);
+            transition-duration: var(--dur-press);
+        }
+
+        .u-zoom-prev {
+            left: 2vw;
+        }
+
+        .u-zoom-next {
+            right: 2vw;
+        }
+
+        @media (max-width: 720px) {
+
+            .u-zoom-prev {
+                left: 8px;
+            }
+
+            .u-zoom-next {
+                right: 8px;
+            }
+
+            .u-zoom {
+                padding: 8vh 4vw;
+            }
+        }
+
         @media (prefers-reduced-motion: reduce) {
 
             #show-universe,
+            .u-zoom,
+            .u-zoom figure,
+            .u-quote p,
+            .u-quote cite,
+            .u-fig-media,
             .u-fig img,
             .u-cap span,
             .u-foot {
@@ -2983,29 +3310,34 @@
         //  un history.back() : l'historique et l'écran restent d'accord,
         //  quel que soit le chemin emprunté.
         // ════════════════════════════════════════════════════════════════
-        let overlayLayer = null;       // 'univers' | 'modal' | null
+        //  Les couches s'empilent : dans un univers de spectacle, on peut
+        //  agrandir une photo. Le retour doit alors refermer l'agrandissement
+        //  et laisser l'univers ouvert — d'où une PILE, et non une seule
+        //  couche courante.
+        const overlayStack = [];        // ex. ['univers', 'u-zoom']
         let closingFromHistory = false; // fermeture déclenchée PAR le retour
 
         function pushOverlayState(name) {
-            overlayLayer = name;
+            overlayStack.push(name);
             history.pushState({ avOverlay: name }, '', location.href);
         }
 
         // Appelée par les fermetures « normales ». Si c'est l'historique qui
         // a provoqué la fermeture, il ne faut évidemment pas reculer encore.
         function dropOverlayState(name) {
-            if (closingFromHistory || overlayLayer !== name) return;
-            overlayLayer = null;
+            if (closingFromHistory || overlayStack[overlayStack.length - 1] !== name) return;
+            overlayStack.pop();
             history.back();
         }
 
         window.addEventListener('popstate', () => {
-            if (!overlayLayer) return;   // simple changement d'onglet : hashchange s'en charge
-            const layer = overlayLayer;
-            overlayLayer = null;
+            if (!overlayStack.length) return;  // changement d'onglet : hashchange s'en charge
+            const layer = overlayStack.pop();
             closingFromHistory = true;
             try {
-                if (layer === 'univers') {
+                if (layer === 'u-zoom') {
+                    window.closeUniverseZoom?.();
+                } else if (layer === 'univers') {
                     window.closeShowUniverse?.();
                 } else if (openModalEl) {
                     if (openModalEl.id === 'gallery-modal') closeGallery();

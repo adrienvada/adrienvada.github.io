@@ -176,6 +176,35 @@ Chaque entrée porte :
 | `palette` | les couleurs du spectacle, injectées en variables `--u-*` sur le panneau. Le reste du site n'est **pas** repeint : le panneau le recouvre. |
 | `tagline` | une phrase, affichée sous le titre |
 | `photos` | `{ src, caption }`, dans l'ordre du défilement |
+| `quotes` | `{ text, speaker }` — `\n` marque une fin de vers |
+| `credit` | photographe, affiché au pied du panneau |
+
+### Le rythme du défilé
+
+`composeBeats()` alterne trois mises en page et glisse une citation entre les
+temps — cinq photos identiques à la suite font un diaporama, pas un récit :
+
+| Mise en page | Ce qu'elle sert |
+|---|---|
+| `full` | plein cadre, recadré en 16:10 — l'ambiance |
+| `duo` | deux photos côte à côte, la seconde décalée vers le bas — le détail |
+| `inset` | une photo entière dans son cadre — la composition |
+
+Avec cinq photos et trois citations, on obtient :
+plein cadre → citation → duo → citation → médaillon → citation → plein cadre.
+Rien à régler à la main : le rythme découle du nombre de photos et de
+citations. Le cycle est dans la constante `LAYOUT_CYCLE`.
+
+**Toutes les photos sont agrandissables au clic** (loupe en bas à droite).
+C'est indispensable : le plein cadre et le duo recadrent, et on ne comprend
+pas toujours ce qu'on regarde. L'agrandissement est le seul endroit où la
+photo est montrée **entière** (`object-fit: contain`), avec flèches, clavier
+et fermeture au clic sur le fond.
+
+⚠️ **Citations : domaine public uniquement.** Racine, Corneille, Shakespeare
+sont libres. Les pièces contemporaines — Fulguré.e.s, Audiences, À la barre —
+n'ont volontairement aucune citation : reproduire leur texte en ligne demande
+l'accord de l'autrice ou de l'auteur.
 
 Le bouton **« Accéder aux dates »** est posé sous le titre, dès la première
 page : il saute directement au pied du panneau. Sans lui il fallait traverser
@@ -215,8 +244,12 @@ As You Like It une seule (c'est tout ce qu'il y a au dossier — mieux vaut une
 vraie image que quatre ambiances inventées autour d'elle).
 
 **Audiences** et **À la barre** n'ont pas encore de photos : leurs dossiers
-sont vides et ils affichent toujours des **visuels témoins générés** — des
-ambiances abstraites portant la palette, produites par :
+`ressources/spectacles/` sont vides. Leurs entrées sont déjà dans `PICKS`
+(le script les ignore proprement) ; il suffira d'y déposer des images,
+de relancer, d'ajuster les index, puis de pointer les nouveaux chemins
+`audiences-photo-N.jpg` / `alabarre-photo-N.jpg` dans `univers.js`.
+En attendant, ils affichent des **visuels témoins générés** — des ambiances
+abstraites portant la palette, produites par :
 
 ```bash
 python3 build/gen-univers.py

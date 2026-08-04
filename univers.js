@@ -24,6 +24,12 @@
  *
  *  credit : nom du ou de la photographe, affiché au pied du panneau.
  *  À renseigner dès que les photos ne sont pas libres de crédit.
+ *
+ *  quotes : citations glissées entre les photos, `\n` = fin de vers.
+ *  ⚠️ Uniquement des textes du DOMAINE PUBLIC (Racine, Corneille,
+ *  Shakespeare). Les pièces contemporaines — Fulguré.e.s, Audiences,
+ *  À la barre — n'en ont volontairement aucune : citer leur texte en
+ *  ligne demande l'accord de l'autrice ou de l'auteur.
  * ============================================================
  */
 
@@ -39,6 +45,11 @@ const SHOW_UNIVERSES = {
             line: 'rgba(24,18,21,0.13)', glow: 'rgba(192,99,126,0.30)'
         },
         tagline: 'Trois personnes qui s’aiment et que rien ne sauve.',
+        quotes: [
+            { text: 'Dans l’Orient désert quel devint mon ennui !', speaker: 'Antiochus, acte I' },
+            { text: 'Pour jamais ! Ah, Seigneur ! songez-vous en vous-même\nCombien ce mot cruel est affreux quand on aime ?', speaker: 'Bérénice, acte IV' },
+            { text: 'Que le jour recommence et que le jour finisse\nSans que jamais Titus puisse voir Bérénice.', speaker: 'Bérénice, acte V' }
+        ],
         photos: [
             { src: 'ressources/images/univers/berenice-photo-1.jpg', caption: 'Le cercle blanc, le public tout autour' },
             { src: 'ressources/images/univers/berenice-photo-2.jpg', caption: 'Assis côte à côte, déjà séparés' },
@@ -58,6 +69,9 @@ const SHOW_UNIVERSES = {
         },
         tagline: 'Une couronne, deux frères, et du sable dans la bouche.',
         credit: 'Arnaud Bertereau',
+        quotes: [
+            { text: 'Tombe sur moi le ciel, pourvu que je me venge !', speaker: 'Cléopâtre — Rodogune, acte II' }
+        ],
         photos: [
             { src: 'ressources/images/univers/cleophene-photo-1.jpg', caption: 'Le sable, et personne pour s’y agenouiller à sa place' },
             { src: 'ressources/images/univers/cleophene-photo-2.jpg', caption: 'La coupe levée' },
@@ -77,6 +91,9 @@ const SHOW_UNIVERSES = {
             line: 'rgba(194,217,75,0.22)', glow: 'rgba(217,79,43,0.35)'
         },
         tagline: 'On part se perdre en forêt, on en revient amoureux.',
+        quotes: [
+            { text: 'Le monde entier est un théâtre, et tous, hommes et femmes, n’en sont que les acteurs.', speaker: 'Jaques, acte II' }
+        ],
         // Une seule photo au dossier pour l'instant : mieux vaut une vraie
         // image que quatre ambiances inventées autour d'elle.
         photos: [
@@ -204,14 +221,74 @@ const SHOW_UNIVERSES = {
         };
     }
 
+    // ── Composition du défilé ────────────────────────────────────────
+    //  Cinq photos identiques plein cadre à la suite, c'est un diaporama,
+    //  pas un récit. On alterne donc les mises en page, et on glisse une
+    //  citation entre les temps : le rythme fait l'immersion autant que
+    //  les images.
+    //
+    //  `full`  — plein cadre, recadré : l'ambiance
+    //  `duo`   — deux photos côte à côte, plus petites : le détail
+    //  `inset` — une photo entière dans son cadre : la composition
+    //
+    //  Les photos plein cadre étant recadrées, on ne voit pas toujours ce
+    //  qu'elles représentent : TOUTES sont agrandissables au clic, et
+    //  s'affichent alors entières.
+    const LAYOUT_CYCLE = ['full', 'duo', 'inset', 'full', 'duo', 'inset'];
+
+    function composeBeats(uni) {
+        const photos = uni.photos.slice();
+        const quotes = (uni.quotes || []).slice();
+        const beats = [];
+        let step = 0;
+
+        while (photos.length) {
+            let layout = LAYOUT_CYCLE[step++ % LAYOUT_CYCLE.length];
+            // `duo` demande deux photos ; sur la dernière, on repasse en plein cadre.
+            if (layout === 'duo' && photos.length < 2) layout = 'full';
+            beats.push({ type: 'photos', layout, items: photos.splice(0, layout === 'duo' ? 2 : 1) });
+            if (quotes.length && photos.length) beats.push({ type: 'quote', quote: quotes.shift() });
+        }
+        // Une citation qui reste ferme le défilé, juste avant les dates.
+        if (quotes.length) beats.push({ type: 'quote', quote: quotes.shift() });
+        return beats;
+    }
+
+    function figureHtml(ph, layout, index, title, eager) {
+        const cap = ph.caption || '';
+        return `<figure class="u-fig u-fig--${layout}">
+            <button type="button" class="u-fig-media" data-u-zoom="${index}"
+                    aria-label="Agrandir : ${escape(cap || title)}">
+                <img src="${escape(ph.src)}" alt="${escape(cap || title)}"
+                     loading="${eager ? 'eager' : 'lazy'}" decoding="async">
+                <span class="u-fig-loupe" aria-hidden="true"><i class="fa-solid fa-expand"></i></span>
+            </button>
+            ${cap ? `<figcaption class="u-cap"><span>${escape(cap)}</span></figcaption>` : ''}
+        </figure>`;
+    }
+
+    function beatsHtml(uni, title) {
+        let index = 0;
+        return composeBeats(uni).map(beat => {
+            if (beat.type === 'quote') {
+                const q = beat.quote;
+                // Les alexandrins se coupent au vers, pas à la largeur de
+                // l'écran : \n dans le texte = fin de vers.
+                return `<blockquote class="u-quote">
+                    <p>${escape(q.text).replace(/\n/g, '<br>')}</p>
+                    ${q.speaker ? `<cite>${escape(q.speaker)}</cite>` : ''}
+                </blockquote>`;
+            }
+            const inner = beat.items
+                .map(ph => figureHtml(ph, beat.layout, index, title, index++ < 3))
+                .join('');
+            return beat.layout === 'duo' ? `<div class="u-duo">${inner}</div>` : inner;
+        }).join('');
+    }
+
     function render(li, uni) {
         const info = rowInfo(li);
-        const figures = uni.photos.map((ph, i) => `
-            <figure class="u-fig" data-i="${i}">
-                <div class="u-fig-media"><img src="${escape(ph.src)}" alt="${escape(ph.caption || info.title)}" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="async"></div>
-                <figcaption class="u-cap"><span>${escape(ph.caption || '')}</span></figcaption>
-            </figure>`).join('');
-
+        const figures = beatsHtml(uni, info.title);
         const dates = datesBlock(info.key);
 
         overlay.innerHTML = `
@@ -251,7 +328,25 @@ const SHOW_UNIVERSES = {
                 <button type="button" class="u-btn u-btn-ghost" data-u-dates="${escape(info.key)}">Voir toutes les dates</button>
             </div>
             ${uni.credit ? `<p class="u-credit">Photographies : ${escape(uni.credit)}</p>` : ''}
-        </footer>`;
+        </footer>
+
+        <!-- Agrandissement : la photo entière, jamais recadrée. C'est le
+             recours quand le plein cadre ne dit pas ce qu'on regarde. -->
+        <div class="u-zoom" hidden role="dialog" aria-modal="true" aria-label="Photo agrandie">
+            <button type="button" class="u-close u-zoom-close" aria-label="Fermer la photo">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="u-zoom-nav u-zoom-prev" aria-label="Photo précédente">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="u-zoom-nav u-zoom-next" aria-label="Photo suivante">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+            </button>
+            <figure>
+                <img alt="" decoding="async">
+                <figcaption></figcaption>
+            </figure>
+        </div>`;
     }
 
     function applyPalette(p) {
@@ -289,7 +384,10 @@ const SHOW_UNIVERSES = {
             const bar = overlay.querySelector('.u-progress span');
             if (bar) bar.style.transform = `scaleX(${total > 0 ? scroller.scrollTop / total : 0})`;
             if (REDUCED) return;
-            overlay.querySelectorAll('.u-fig').forEach(fig => {
+            // Parallaxe réservée au plein cadre : sur une photo présentée
+            // entière dans son cadre, déplacer l'image la recadrerait, ce
+            // qui va justement contre ce qu'on veut y montrer.
+            overlay.querySelectorAll('.u-fig--full').forEach(fig => {
                 const r = fig.getBoundingClientRect();
                 if (r.bottom < -200 || r.top > h + 200) return;
                 // -1 (figure sous l'écran) → +1 (figure au-dessus)
@@ -300,15 +398,63 @@ const SHOW_UNIVERSES = {
         });
     }
 
+    const REVEALED = '.u-fig, .u-duo, .u-quote, .u-foot';
+
     function observeCaptions() {
         if (!('IntersectionObserver' in window)) {
-            overlay.querySelectorAll('.u-fig, .u-foot').forEach(el => el.classList.add('is-in'));
+            overlay.querySelectorAll(REVEALED).forEach(el => el.classList.add('is-in'));
             return;
         }
         const io = new IntersectionObserver((entries) => {
             entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
         }, { threshold: 0.25, root: overlay });
-        overlay.querySelectorAll('.u-fig, .u-foot').forEach(el => io.observe(el));
+        overlay.querySelectorAll(REVEALED).forEach(el => io.observe(el));
+    }
+
+    // ── Agrandissement d'une photo ───────────────────────────────────
+    //  Le défilé recadre : plein cadre en 16:10, en duo, en médaillon.
+    //  L'agrandissement est le seul endroit où la photo est montrée
+    //  ENTIÈRE (object-fit: contain), avec sa légende.
+    let zoomPhotos = [], zoomIndex = 0;
+
+    function zoomEl() { return overlay.querySelector('.u-zoom'); }
+
+    function showZoom(i) {
+        const box = zoomEl();
+        if (!box || !zoomPhotos.length) return;
+        zoomIndex = (i + zoomPhotos.length) % zoomPhotos.length;
+        const ph = zoomPhotos[zoomIndex];
+        const img = box.querySelector('img');
+        const cap = box.querySelector('figcaption');
+        img.src = ph.src;
+        img.alt = ph.caption || '';
+        cap.textContent = ph.caption || '';
+        box.querySelectorAll('.u-zoom-nav').forEach(b => b.hidden = zoomPhotos.length < 2);
+    }
+
+    function openZoom(i) {
+        const box = zoomEl();
+        if (!box) return;
+        showZoom(i);
+        box.hidden = false;
+        void box.offsetHeight;
+        box.classList.add('is-open');
+        window.pushOverlayState?.('u-zoom');
+        box.querySelector('.u-zoom-close')?.focus({ preventScroll: true });
+    }
+
+    function closeZoom() {
+        const box = zoomEl();
+        if (!box || box.hidden) return;
+        box.classList.remove('is-open');
+        window.dropOverlayState?.('u-zoom');
+        const done = () => { if (box.isConnected) { box.hidden = true; box.querySelector('img').src = ''; } };
+        if (REDUCED) done(); else setTimeout(done, 300);
+    }
+
+    function zoomIsOpen() {
+        const box = zoomEl();
+        return !!box && !box.hidden;
     }
 
     // Le titre s'affiche tout de suite ; les photos n'apparaissent qu'une
@@ -348,6 +494,7 @@ const SHOW_UNIVERSES = {
         applyPalette(uni.palette);
         overlay.dataset.slug = uni.slug;
         scroller = overlay;
+        zoomPhotos = uni.photos;   // même ordre que les data-u-zoom du défilé
 
         const r = li.getBoundingClientRect();
         const vw = window.innerWidth, vh = window.innerHeight;
@@ -391,6 +538,9 @@ const SHOW_UNIVERSES = {
 
     function close() {
         if (!isOpen) return;
+        // L'agrandissement est empilé PAR-DESSUS l'univers : le dépiler
+        // d'abord, sinon l'historique garderait une entrée orpheline.
+        closeZoom();
         isOpen = false;
         openToken++;
         overlay.classList.remove('is-open', 'is-loading');
@@ -409,6 +559,19 @@ const SHOW_UNIVERSES = {
         if (!overlay) return;
 
         overlay.addEventListener('click', (e) => {
+            // L'agrandissement d'abord : sa croix porte aussi la classe
+            // .u-close, elle ne doit pas refermer tout l'univers.
+            if (e.target.closest('.u-zoom-close')) { closeZoom(); return; }
+            if (e.target.closest('.u-zoom-prev')) { showZoom(zoomIndex - 1); return; }
+            if (e.target.closest('.u-zoom-next')) { showZoom(zoomIndex + 1); return; }
+            // Clic sur le fond noir de l'agrandissement (pas sur l'image)
+            if (zoomIsOpen() && e.target.closest('.u-zoom') && !e.target.closest('figure')) {
+                closeZoom(); return;
+            }
+
+            const zoomBtn = e.target.closest('[data-u-zoom]');
+            if (zoomBtn) { openZoom(Number(zoomBtn.dataset.uZoom)); return; }
+
             if (e.target.closest('.u-close')) { close(); return; }
 
             // « Accéder aux dates » : on saute au pied du panneau. Les
@@ -417,7 +580,7 @@ const SHOW_UNIVERSES = {
                 const foot = overlay.querySelector('.u-foot');
                 if (!foot) return;
                 foot.classList.add('is-in');
-                overlay.querySelectorAll('.u-fig').forEach(f => f.classList.add('is-in'));
+                overlay.querySelectorAll('.u-fig, .u-duo, .u-quote').forEach(f => f.classList.add('is-in'));
                 foot.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
                 return;
             }
@@ -431,12 +594,20 @@ const SHOW_UNIVERSES = {
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && isOpen) { e.stopPropagation(); close(); }
+            if (!isOpen) return;
+            if (zoomIsOpen()) {
+                if (e.key === 'Escape') { e.stopPropagation(); closeZoom(); }
+                else if (e.key === 'ArrowLeft') showZoom(zoomIndex - 1);
+                else if (e.key === 'ArrowRight') showZoom(zoomIndex + 1);
+                return;
+            }
+            if (e.key === 'Escape') { e.stopPropagation(); close(); }
         }, true);
 
         // Le CV appelle openShowUniverse() avant de replier son tiroir.
         window.openShowUniverse = open;
         window.closeShowUniverse = close;
+        window.closeUniverseZoom = closeZoom;
         window.hasShowUniverse = (li) => !!universeFor(li);
     }
 
