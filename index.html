@@ -1148,7 +1148,6 @@
             align-items: center;
             text-align: center;
             padding: 80px 24px;
-            position: relative;
         }
 
         /* La couleur d'accent respire derrière le titre : c'est ce halo qui
@@ -1643,6 +1642,176 @@
             }
         }
 
+        /* ══ LE TEXTE ══
+           Chaque mot est un <span class="u-rw"> qui s'allume à mesure que le
+           bloc traverse l'écran — la révélation est PILOTÉE PAR LE
+           DÉFILEMENT (updateReveals), pas déclenchée une fois pour toutes à
+           l'entrée dans le cadre. La phrase s'écrit donc à la vitesse de la
+           main, et le lien entre le geste et le texte est ce qui fait
+           l'effet. */
+        .u-rw {
+            display: inline-block;
+            opacity: 0;
+            filter: blur(8px);
+            transform: translateY(11px);
+            transition: opacity 620ms var(--ease-out),
+                filter 620ms var(--ease-out),
+                transform 620ms var(--ease-out);
+        }
+
+        .u-rw.is-lit {
+            opacity: 1;
+            filter: none;
+            transform: none;
+        }
+
+        /* ── Intertitre de chapitre ──
+           Un chiffre romain et deux mots : ce qui donne au défilé une
+           structure d'actes plutôt qu'une suite d'images. */
+        .u-chapter {
+            min-height: 62svh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 8svh 8vw;
+            gap: 22px;
+        }
+
+        .u-chapter-num {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2.4rem, 7vw, 4.4rem);
+            line-height: 1;
+            color: var(--u-accent);
+            opacity: .35;
+        }
+
+        .u-chapter h3 {
+            margin: 0;
+            max-width: 20ch;
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(.7rem, 2.2vw, .92rem);
+            font-weight: 700;
+            letter-spacing: .34em;
+            text-transform: uppercase;
+            color: var(--u-text);
+        }
+
+        /* ── Paragraphe ──
+           Plus long qu'une citation, plus posé : la place d'une note
+           d'intention ou d'un mot du metteur en scène. */
+        .u-text {
+            max-width: 640px;
+            margin-inline: auto;
+            padding: 12svh 8vw;
+        }
+
+        .u-text p {
+            margin: 0;
+            font-size: clamp(1rem, 2.6vw, 1.3rem);
+            font-weight: 300;
+            line-height: 1.8;
+            color: var(--u-text);
+            opacity: .92;
+        }
+
+        /* ── Incrustation : le texte POSÉ SUR la photo ──
+           Réservé au plein cadre. Un voile local sous le texte le rend
+           lisible quelle que soit la photo, sans assombrir toute l'image. */
+        .u-over {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 8vw;
+            pointer-events: none;
+        }
+
+        .u-over--gauche {
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .u-over--centre {
+            align-items: center;
+            text-align: center;
+        }
+
+        .u-over--droite {
+            align-items: flex-end;
+            text-align: right;
+        }
+
+        .u-over--bas {
+            justify-content: flex-end;
+            align-items: flex-start;
+            text-align: left;
+            padding-bottom: 16svh;
+        }
+
+        .u-over p {
+            margin: 0;
+            max-width: 18ch;
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.5rem, 4.6vw, 3rem);
+            font-weight: 400;
+            line-height: 1.28;
+            color: #fff;
+            text-shadow: 0 2px 26px rgba(0, 0, 0, .75), 0 1px 5px rgba(0, 0, 0, .6);
+        }
+
+        .u-over cite {
+            display: block;
+            margin-top: 18px;
+            font-family: 'Montserrat', sans-serif;
+            font-style: normal;
+            font-size: .6rem;
+            font-weight: 700;
+            letter-spacing: .26em;
+            text-transform: uppercase;
+            color: #fff;
+            opacity: 0;
+            text-shadow: 0 1px 10px rgba(0, 0, 0, .8);
+            transition: opacity 800ms var(--ease-out);
+        }
+
+        .u-over.is-lit cite {
+            opacity: .8;
+        }
+
+        /* ── Note en marge d'un groupe ──
+           Là où l'incrustation n'a pas de sens : le texte prend la place
+           laissée libre à côté des vignettes. */
+        .u-aside {
+            grid-column: 1 / -1;
+            margin: 3svh 0 0;
+            max-width: 34ch;
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1rem, 2.4vw, 1.35rem);
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--u-text);
+            opacity: .9;
+        }
+
+        .u-trio .u-aside,
+        .u-quatuor .u-aside {
+            margin-top: 5svh;
+        }
+
+        @media (max-width: 760px) {
+            .u-over p {
+                max-width: 14ch;
+            }
+
+            .u-over--bas {
+                padding-bottom: 12svh;
+            }
+        }
+
         /* ── Citation ── */
         .u-quote {
             margin: 0;
@@ -1674,9 +1843,9 @@
             font-weight: 400;
             line-height: 1.4;
             color: var(--u-text);
-            opacity: 0;
-            transform: translateY(26px);
-            transition: opacity 1100ms var(--ease-out), transform 1100ms var(--ease-out);
+            /* L'apparition est portée par les mots (.u-rw), pas par le
+               bloc : c'est ce qui permet à la phrase de s'écrire au rythme
+               du défilement plutôt que de surgir d'un coup. */
         }
 
         .u-quote cite {
@@ -1690,15 +1859,11 @@
             text-transform: uppercase;
             color: var(--u-accent-ink);
             opacity: 0;
-            transition: opacity 900ms var(--ease-out) 400ms;
+            transition: opacity 900ms var(--ease-out);
         }
 
-        .u-quote.is-in p {
-            opacity: 1;
-            transform: none;
-        }
-
-        .u-quote.is-in cite {
+        /* La signature n'arrive qu'une fois la phrase entièrement écrite. */
+        .u-quote.is-lit cite {
             opacity: 1;
         }
 
@@ -1973,8 +2138,11 @@
             #show-universe,
             .u-zoom,
             .u-zoom figure,
-            .u-quote p,
             .u-quote cite,
+            .u-over cite,
+            .u-rw,
+            .u-ch,
+            .u-wd,
             .u-fig-media,
             .u-fig img,
             .u-cap span,
@@ -1982,6 +2150,7 @@
                 transition: none !important;
                 animation: none !important;
                 transform: none !important;
+                filter: none !important;
                 opacity: 1;
             }
 

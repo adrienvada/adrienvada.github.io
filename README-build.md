@@ -190,9 +190,30 @@ l'ordre. **Le nombre de photos suffit à décider de la mise en page** :
 | `{ p: [12, 7] }` | duo, la seconde décalée vers le bas |
 | `{ p: [1, 9, 11] }` | trio : une haute à gauche, deux empilées à droite |
 | `{ p: [9, 5, 6, 7] }` | quatuor en cascade, lu en diagonale |
-| `{ q: 'texte', by: '…' }` | carton de texte, `\n` = fin de vers |
 
-`c: [...]` porte les légendes, dans l'ordre des photos.
+### Les six emplacements de texte
+
+| Écriture | Où ça tombe |
+|---|---|
+| `{ chapter: 'I', chapterTitle: 'Le palais' }` | intertitre : un chiffre romain et deux mots, qui donnent au défilé une structure d'actes |
+| `{ q: 'phrase', by: 'qui la dit' }` | carton plein écran en Cinzel ; `\n` = fin de vers |
+| `{ text: 'un paragraphe…' }` | prose posée : note d'intention, mot de mise en scène |
+| `{ p:[12], over:'texte', overAt:'bas' }` | **incrustation SUR la photo**. `overAt` : `gauche`, `centre`, `droite`, `bas`. Plein cadre uniquement — sur une vignette de groupe le texte couvrirait toute l'image |
+| `{ p:[12,7], aside:'texte' }` | note en marge, sous les vignettes d'un groupe |
+| `{ p:[12], c:['légende'] }` | légende discrète, en petites capitales |
+
+**Tous s'écrivent mot à mot au rythme du défilement** (`updateReveals`) : chaque
+mot est un `<span class="u-rw">` qui s'allume quand le bloc traverse l'écran.
+La révélation est *pilotée par la position de défilement*, pas déclenchée une
+fois pour toutes par un `IntersectionObserver` — c'est ce lien direct entre le
+geste et le texte qui fait l'effet, et il se perd dès qu'on se contente d'un
+déclencheur.
+
+Le **titre et le synopsis accompagnent le début du défilement**, puis
+s'effacent : ils restent intacts jusqu'à 62 % de la course du hero collé, et
+ont entièrement disparu — opacité, léger recul, flou — quand la première photo
+arrive (`fadeHero`). Un texte encore lisible par-dessus la photo brouillerait
+l'entrée dans l'univers.
 
 Les **numéros** sont ceux des fichiers de `ressources/spectacles/<spectacle>/`
 — le même langage que les planches-contact. ⚠️ Le dictionnaire `SEQUENCES` de

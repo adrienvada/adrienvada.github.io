@@ -4,8 +4,8 @@
  * ============================================================
  *  Au clic sur une ligne du CV, au lieu du simple tiroir de dates,
  *  on ouvre une page plein écran qui prend la palette du spectacle :
- *  le titre s'écrit, le synopsis s'inscrit, puis le montage photo se
- *  déroule et se termine sur les prochaines dates.
+ *  le titre s'écrit, le synopsis s'inscrit, puis le montage se déroule
+ *  et se termine sur les prochaines dates.
  *
  *  AJOUTER / MODIFIER UN UNIVERS
  *  -----------------------------
@@ -23,26 +23,42 @@
  *  synopsis  s'inscrit mot à mot sous le titre. 2 à 4 phrases.
  *  credit    photographe, affiché au pied du panneau.
  *  sequence  LE MONTAGE. Un élément = un temps du défilé, dans l'ordre.
- *              { p: [12] }           une photo, plein cadre
- *              { p: [12, 7] }        duo, la seconde décalée
- *              { p: [1, 9, 11] }     trio, composition asymétrique
- *              { p: [9, 5, 6, 7] }   quatuor, cascade
- *              { q: 'texte', by: '…' }   un carton de texte
- *            `c: [...]` porte les légendes, dans l'ordre des photos.
- *            Les NUMÉROS sont ceux des fichiers de
- *            `ressources/spectacles/<spectacle>/` — le même langage que
- *            les planches-contact. `build/prepare-univers-photos.py`
- *            en tire `ressources/images/univers/<slug>/<n>.jpg`.
- *            ⚠️ SEQUENCES dans ce script Python doit rester synchronisé.
+ *
+ *  LES SIX EMPLACEMENTS DE TEXTE
+ *  -----------------------------
+ *    { chapter: 'I', chapterTitle: 'Le palais' }
+ *        intertitre : un chiffre et deux mots, qui donnent au défilé une
+ *        structure d'actes.
+ *    { q: 'une phrase', by: 'qui la dit' }
+ *        carton plein écran, en Cinzel. `\n` = fin de vers.
+ *    { text: 'un paragraphe…' }
+ *        prose posée, plus longue : note d'intention, mot de mise en scène.
+ *    { p: [12], over: 'texte', overBy: '…', overAt: 'gauche' }
+ *        INCRUSTATION sur la photo. `overAt` : gauche | centre | droite |
+ *        bas. Réservé au plein cadre — sur une vignette de groupe le texte
+ *        couvrirait toute l'image.
+ *    { p: [12, 7], aside: 'texte' }
+ *        note en marge d'un groupe, sous les vignettes.
+ *    { p: [12], c: ['légende'] }
+ *        légende de photo, discrète, en petites capitales.
+ *
+ *  Tous s'écrivent MOT À MOT au rythme du défilement (voir updateReveals).
+ *
+ *  LES PHOTOS
+ *  ----------
+ *  1 photo = plein cadre, 2 = duo, 3 = trio, 4 = quatuor. Les NUMÉROS sont
+ *  ceux des fichiers de `ressources/spectacles/<spectacle>/` — le même
+ *  langage que les planches-contact.
+ *  ⚠️ SEQUENCES dans `build/prepare-univers-photos.py` doit rester
+ *  synchronisé : c'est lui qui décide quelles photos sont préparées.
  *
  *  DROITS SUR LES TEXTES
  *  ---------------------
- *  Les cartons `q:` marqués « REMPLISSAGE » sont de la prose neutre
- *  écrite pour tenir la place — ce ne sont PAS des répliques des pièces.
- *  Les seules vraies citations sont celles du domaine public (Racine,
- *  Corneille, Shakespeare). Reproduire le texte d'une pièce
- *  contemporaine — Fulguré.e.s, Audiences, À la barre — demande
- *  l'accord de l'autrice ou de l'auteur.
+ *  Les textes marqués « REMPLISSAGE » sont de la prose neutre écrite pour
+ *  tenir la place — ce ne sont PAS des répliques des pièces. Les seules
+ *  vraies citations sont celles du domaine public (Racine, Corneille,
+ *  Shakespeare). Reproduire le texte d'une pièce contemporaine —
+ *  Fulguré.e.s, Audiences, À la barre — demande l'accord de l'auteur.
  * ============================================================
  */
 
@@ -61,18 +77,45 @@ const SHOW_UNIVERSES = {
             'et Rome ne veut pas d’une reine. Antiochus les aime tous les deux, ' +
             'et se tait depuis cinq ans. Personne ici ne fait de mal à personne : ' +
             'c’est bien ce qui rend la séparation insoutenable.',
-        quotesAreRealText: true,
         sequence: [
-            { p: [2], c: ['Le cercle blanc, le public tout autour'] },
+            { chapter: 'I', chapterTitle: 'Le palais' },
+            {
+                p: [2], c: ['Le cercle blanc, le public tout autour'],
+                // REMPLISSAGE
+                over: 'Huit jours qu’il est empereur.', overAt: 'bas'
+            },
             { q: 'Dans l’Orient désert quel devint mon ennui !', by: 'Antiochus, acte I' },
-            { p: [3], c: ['Titus'] },
-            { p: [12, 7], c: ['Assis côte à côte, déjà séparés', 'L’étreinte'] },
+            {
+                p: [3], c: ['Titus'],
+                // REMPLISSAGE
+                over: 'Rome ne veut pas d’une reine.', overAt: 'droite'
+            },
+            {
+                p: [12, 7], c: ['Assis côte à côte, déjà séparés', 'L’étreinte'],
+                // REMPLISSAGE
+                aside: 'Ils s’aiment. C’est entendu, et cela ne sert à rien.'
+            },
+            { chapter: 'II', chapterTitle: 'L’adieu' },
             {
                 q: 'Pour jamais ! Ah, Seigneur ! songez-vous en vous-même\n' +
                     'Combien ce mot cruel est affreux quand on aime ?', by: 'Bérénice, acte IV'
             },
-            { p: [1, 9, 11], c: ['', '', ''] },
-            { p: [18], c: ['Ce que Rome exige'] },
+            {
+                p: [1, 9, 11], c: ['', '', ''],
+                // REMPLISSAGE
+                aside: 'Personne ne crie. C’est ce qui est terrible.'
+            },
+            {
+                p: [18], c: ['Ce que Rome exige'],
+                // REMPLISSAGE
+                over: 'Il faut partir.', overAt: 'gauche'
+            },
+            // REMPLISSAGE — la place d'une note d'intention.
+            {
+                text: 'Trois personnes qui s’aiment et que rien ne sauve : ' +
+                    'ni le pouvoir, ni la parole, ni le temps. Racine ne leur laisse ' +
+                    'aucune faute à se reprocher — seulement à se quitter.'
+            },
             {
                 q: 'Que le jour recommence et que le jour finisse\n' +
                     'Sans que jamais Titus puisse voir Bérénice.', by: 'Bérénice, acte V'
@@ -95,17 +138,44 @@ const SHOW_UNIVERSES = {
             'Elle promet le trône à celui qui tuera la femme qu’ils aiment. ' +
             'Le sable monte, la coupe passe de main en main.',
         sequence: [
-            { p: [7], c: ['Le sable, et personne pour s’y agenouiller à sa place'] },
-            // REMPLISSAGE — prose neutre, à remplacer.
+            { chapter: 'I', chapterTitle: 'Le sable' },
+            {
+                p: [7], c: ['Le sable, et personne pour s’y agenouiller à sa place'],
+                // REMPLISSAGE
+                over: 'Deux fils. Une couronne.', overAt: 'bas'
+            },
+            // REMPLISSAGE
             { q: 'Régner, ou n’être plus rien.', by: '' },
-            { p: [10, 17], c: ['', ''] },
-            { p: [21], c: ['La coupe levée'] },
+            {
+                p: [10, 17], c: ['', ''],
+                // REMPLISSAGE
+                aside: 'Elle a promis le trône à celui qui tuera.'
+            },
+            {
+                p: [21], c: ['La coupe levée'],
+                // REMPLISSAGE
+                over: 'Buvez.', overAt: 'centre'
+            },
             { q: 'Tombe sur moi le ciel, pourvu que je me venge !', by: 'Cléopâtre, acte II' },
+            { chapter: 'II', chapterTitle: 'La coupe' },
             { p: [23], c: [''] },
-            { p: [20, 15], c: ['', ''] },
+            {
+                p: [20, 15], c: ['', ''],
+                // REMPLISSAGE
+                aside: 'Le poison passe de main en main, sans que personne le nomme.'
+            },
             // REMPLISSAGE
             { q: 'Le trône est étroit. On y tient à un.', by: '' },
-            { p: [16], c: [''] },
+            // REMPLISSAGE
+            {
+                text: 'Corneille écrit une famille où l’amour est une arme et le sang ' +
+                    'une monnaie. On y avance sur du sable : chaque pas efface le précédent.'
+            },
+            {
+                p: [16], c: [''],
+                // REMPLISSAGE
+                over: 'Il n’y aura pas de témoin.', overAt: 'droite'
+            },
             { p: [18, 13, 9], c: ['', '', ''] },
             { p: [5], c: ['Front contre front'] }
         ]
@@ -125,17 +195,45 @@ const SHOW_UNIVERSES = {
             'comment l’aimer. On y perd son nom, son rang, sa gravité — ' +
             'et on en revient marié.',
         sequence: [
-            { p: [8], c: ['La forêt d’Ardenne, en survêtement'] },
+            { chapter: 'I', chapterTitle: 'La cour' },
+            {
+                p: [8], c: ['La forêt d’Ardenne, en survêtement'],
+                // REMPLISSAGE
+                over: 'On les a chassés. Tant mieux.', overAt: 'bas'
+            },
             {
                 q: 'Le monde entier est un théâtre, et tous, hommes et femmes,\n' +
                     'n’en sont que les acteurs.', by: 'Jaques, acte II'
             },
-            { p: [10, 7], c: ['', ''] },
-            { p: [9], c: [''] },
+            { chapter: 'II', chapterTitle: 'La forêt' },
+            {
+                p: [10, 7], c: ['', ''],
+                // REMPLISSAGE
+                aside: 'Ici, personne n’est tout à fait qui il prétend être.'
+            },
+            {
+                p: [9], c: [''],
+                // REMPLISSAGE
+                over: 'Rosalinde s’appelle Ganymède.', overAt: 'gauche'
+            },
             // REMPLISSAGE
             { q: 'On entre en forêt pour se perdre. C’est le programme.', by: '' },
-            { p: [1, 6], c: ['', ''] },
-            { p: [3], c: [''] },
+            {
+                p: [1, 6], c: ['', ''],
+                // REMPLISSAGE
+                aside: 'Elle lui apprend à l’aimer, en se faisant passer pour un autre.'
+            },
+            {
+                p: [3], c: [''],
+                // REMPLISSAGE
+                over: 'Le bouffon a le dernier mot.', overAt: 'droite'
+            },
+            // REMPLISSAGE
+            {
+                text: 'Shakespeare envoie sa cour dans les bois et lui retire tout : ' +
+                    'le rang, le nom, le sérieux. Il ne reste que le désir, ' +
+                    'et un bouffon pour le commenter.'
+            },
             { p: [4, 5], c: ['', ''] },
             { p: [11, 12], c: ['', ''] }
         ]
@@ -154,11 +252,30 @@ const SHOW_UNIVERSES = {
             'On y juge des gens ordinaires pour des faits ordinaires, ' +
             'dans une langue qui n’est celle de personne.',
         sequence: [
-            { p: [8], c: [''] },
-            // REMPLISSAGE — le texte de Ronan Chéneau n'est pas cité.
+            { chapter: 'I', chapterTitle: 'La salle' },
+            {
+                p: [8], c: [''],
+                // REMPLISSAGE — le texte de Ronan Chéneau n'est pas cité.
+                over: 'L’audience est publique.', overAt: 'bas'
+            },
+            // REMPLISSAGE
             { q: 'La salle est ouverte à tous. Il n’y a personne.', by: '' },
-            { p: [6, 5], c: ['', ''] },
-            { p: [4, 1], c: ['', ''] },
+            {
+                p: [6, 5], c: ['', ''],
+                // REMPLISSAGE
+                aside: 'Des faits ordinaires, dans une langue qui n’est celle de personne.'
+            },
+            { chapter: 'II', chapterTitle: 'Les prévenus' },
+            {
+                p: [4, 1], c: ['', ''],
+                // REMPLISSAGE
+                aside: 'On comparaît debout, on repart assis.'
+            },
+            // REMPLISSAGE
+            {
+                text: 'Ce qui se joue à l’audience n’est pas la vérité mais sa mise ' +
+                    'en forme : ce qu’on peut dire, dans quel ordre, et à qui.'
+            },
             // REMPLISSAGE
             { q: 'On appelle l’affaire suivante.', by: '' },
             { p: [2, 3], c: ['', ''] }
@@ -176,16 +293,44 @@ const SHOW_UNIVERSES = {
             'pour tous. Le procès se rejoue à chaque fois qu’on change de place, ' +
             'et chaque place a ses raisons.',
         sequence: [
-            { p: [19], c: [''] },
-            // REMPLISSAGE — le texte de Ronan Chéneau n'est pas cité.
+            { chapter: 'I', chapterTitle: 'L’ouverture' },
+            {
+                p: [19], c: [''],
+                // REMPLISSAGE — le texte de Ronan Chéneau n'est pas cité.
+                over: 'Le tribunal est un théâtre qui s’ignore.', overAt: 'bas'
+            },
+            // REMPLISSAGE
             { q: 'Levez-vous. Asseyez-vous. Approchez de la barre.', by: '' },
-            { p: [20, 8], c: ['', ''] },
-            { p: [22], c: [''] },
-            { p: [4, 13], c: ['', ''] },
+            {
+                p: [20, 8], c: ['', ''],
+                // REMPLISSAGE
+                aside: 'Chaque place a ses raisons. Toutes se valent, et aucune.'
+            },
+            {
+                p: [22], c: [''],
+                // REMPLISSAGE
+                over: 'Un seul comédien pour tous les rôles.', overAt: 'gauche'
+            },
+            {
+                p: [4, 13], c: ['', ''],
+                // REMPLISSAGE
+                aside: 'On change de robe, on change de camp.'
+            },
+            { chapter: 'II', chapterTitle: 'Le délibéré' },
             // REMPLISSAGE
             { q: 'Qui parle, quand la loi parle ?', by: '' },
             { p: [14, 12], c: ['', ''] },
-            { p: [9, 5, 6, 7], c: ['', '', '', ''] },
+            // REMPLISSAGE
+            {
+                text: 'Rejouer un procès, c’est découvrir qu’il n’a pas un sens mais ' +
+                    'autant de sens que de places. Le comédien les occupe toutes, ' +
+                    'et l’on ne sait plus qui l’on croit.'
+            },
+            {
+                p: [9, 5, 6, 7], c: ['', '', '', ''],
+                // REMPLISSAGE
+                aside: 'Peine perdue ?'
+            },
             { p: [25, 26], c: ['', ''] }
         ]
     },
@@ -202,21 +347,48 @@ const SHOW_UNIVERSES = {
             'La nuit, la vitesse, les corps qui se cherchent sous les néons — ' +
             'et ce qui reste, au matin, quand la foudre est passée.',
         sequence: [
-            { p: [10], c: ['Avant l’orage'] },
-            // REMPLISSAGE — le texte de Jérémie Fabre n'est pas cité.
+            { chapter: 'I', chapterTitle: 'Avant l’orage' },
+            {
+                p: [10], c: ['Avant l’orage'],
+                // REMPLISSAGE — le texte de Jérémie Fabre n'est pas cité.
+                over: 'Ils ont vingt ans.', overAt: 'bas'
+            },
+            // REMPLISSAGE
             { q: 'On n’entend pas la foudre. On la reçoit.', by: '' },
-            { p: [7], c: [''] },
-            { p: [8, 5, 19], c: ['', '', ''] },
-            { p: [23], c: [''] },
+            {
+                p: [7], c: [''],
+                // REMPLISSAGE
+                over: 'La nuit, la vitesse, les néons.', overAt: 'droite'
+            },
+            {
+                p: [8, 5, 19], c: ['', '', ''],
+                // REMPLISSAGE
+                aside: 'Les corps se cherchent et se manquent, très vite.'
+            },
+            { chapter: 'II', chapterTitle: 'L’éclat' },
+            {
+                p: [23], c: [''],
+                // REMPLISSAGE
+                over: 'Puis plus rien.', overAt: 'centre'
+            },
+            // REMPLISSAGE
+            {
+                text: 'La foudre ne prévient pas et ne s’explique pas. ' +
+                    'Ce qui intéresse la pièce, c’est l’après : le matin, ' +
+                    'le travail, les gestes ordinaires qu’il faut bien reprendre.'
+            },
+            {
+                p: [3, 1, 4], c: ['', '', ''],
+                // REMPLISSAGE
+                aside: 'Ce qui reste, au matin.'
+            },
             // REMPLISSAGE
             { q: 'Après, il faut bien se relever et aller travailler.', by: '' },
-            { p: [3, 1, 4], c: ['', '', ''] },
             { p: [2], c: [''] },
             { p: [27, 26], c: ['', ''] }
         ]
     },
 };
-
 
 /* ══════════════════════════════════════════════════════════════
    MOTEUR — ouverture, palette, parallaxe, fermeture
@@ -417,7 +589,16 @@ const SHOW_UNIVERSES = {
         return out;
     }
 
-    function figureHtml(ph, layout, index, title, eager) {
+    // Mot à mot, pour la révélation pilotée par le défilement. Les sauts
+    // de ligne sont conservés : un alexandrin se coupe au vers, pas à la
+    // largeur de l'écran.
+    function revealWords(str) {
+        return String(str).split('\n').map(line => line.split(/\s+/).filter(Boolean)
+            .map(w => `<span class="u-rw">${escape(w)}</span>`).join(' ')
+        ).join('<br>');
+    }
+
+    function figureHtml(ph, layout, index, title, eager, over) {
         const cap = ph.caption || '';
         return `<figure class="u-fig u-fig--${layout}" style="--i:${index}">
             <button type="button" class="u-fig-media" data-u-zoom="${index}"
@@ -426,30 +607,62 @@ const SHOW_UNIVERSES = {
                      loading="${eager ? 'eager' : 'lazy'}" decoding="async">
                 <span class="u-fig-loupe" aria-hidden="true"><i class="fa-solid fa-expand"></i></span>
             </button>
+            ${over || ''}
             ${cap ? `<figcaption class="u-cap"><span>${escape(cap)}</span></figcaption>` : ''}
         </figure>`;
     }
 
+    // Incrustation : du texte POSÉ SUR la photo. Réservé au plein cadre —
+    // sur une vignette de groupe il couvrirait l'image entière.
+    function overHtml(beat) {
+        if (!beat.over) return '';
+        return `<div class="u-over u-reveal u-over--${escape(beat.overAt || 'centre')}">
+            <p>${revealWords(beat.over)}</p>
+            ${beat.overBy ? `<cite>${escape(beat.overBy)}</cite>` : ''}
+        </div>`;
+    }
+
     function beatsHtml(uni, title) {
         let index = 0;
+
         return (uni.sequence || []).map(beat => {
+
+            // ── Cartons de texte, sans photo ──
+            if (beat.chapter || beat.chapterTitle) {
+                return `<div class="u-chapter u-reveal">
+                    ${beat.chapter ? `<span class="u-chapter-num">${escape(beat.chapter)}</span>` : ''}
+                    ${beat.chapterTitle ? `<h3>${revealWords(beat.chapterTitle)}</h3>` : ''}
+                </div>`;
+            }
             if (beat.q) {
-                // Les alexandrins se coupent au vers, pas à la largeur de
-                // l'écran : \n dans le texte = fin de vers.
-                return `<blockquote class="u-quote">
-                    <p>${escape(beat.q).replace(/\n/g, '<br>')}</p>
+                return `<blockquote class="u-quote u-reveal">
+                    <p>${revealWords(beat.q)}</p>
                     ${beat.by ? `<cite>${escape(beat.by)}</cite>` : ''}
                 </blockquote>`;
             }
+            if (beat.text) {
+                return `<div class="u-text u-reveal">
+                    <p>${revealWords(beat.text)}</p>
+                </div>`;
+            }
+
             if (!beat.p || !beat.p.length) return '';
+
+            // ── Photos ──
             const layout = LAYOUT_BY_COUNT[beat.p.length] || 'plein';
             const inner = beat.p.map((n, i) => figureHtml(
                 { src: photoSrc(uni, n), caption: (beat.c && beat.c[i]) || '' },
-                layout, index, title, index++ < 3
+                layout, index, title, index++ < 3,
+                (layout === 'plein' && i === 0) ? overHtml(beat) : ''
             )).join('');
-            return layout === 'plein'
-                ? inner
-                : `<div class="u-group u-${layout}">${inner}</div>`;
+
+            if (layout === 'plein') return inner;
+
+            // Note en marge : la place du texte à côté d'un groupe, là où
+            // l'incrustation n'a pas de sens.
+            const aside = beat.aside
+                ? `<p class="u-aside u-reveal">${revealWords(beat.aside)}</p>` : '';
+            return `<div class="u-group u-${layout}">${inner}${aside}</div>`;
         }).join('');
     }
 
@@ -545,6 +758,54 @@ const SHOW_UNIVERSES = {
 
     // ── Parallaxe + révélation ───────────────────────────────────────
     let lastScrollTop = 0;
+    const clamp01 = (v) => v < 0 ? 0 : v > 1 ? 1 : v;
+
+    // Le titre et le synopsis accompagnent le début du défilement, puis
+    // cèdent la place : ils s'effacent et s'éloignent sur le dernier tiers
+    // du hero, de sorte qu'à l'arrivée de la première photo il ne reste
+    // plus rien d'eux. Un texte encore lisible par-dessus la photo
+    // brouillerait l'entrée dans l'univers.
+    function fadeHero(h) {
+        const wrap = overlay.querySelector('.u-hero-wrap');
+        const hero = overlay.querySelector('.u-hero');
+        if (!wrap || !hero) return;
+        const travel = wrap.offsetHeight - h;          // course utile du collage
+        if (travel <= 0) return;
+        const p = clamp01(overlay.scrollTop / travel); // 0 en haut, 1 décollé
+        const out = clamp01((p - 0.62) / 0.38);        // ne bouge rien avant 62 %
+        hero.style.opacity = String(1 - out);
+        hero.style.transform = `translate3d(0, ${(-out * 7).toFixed(2)}svh, 0) scale(${(1 - out * 0.04).toFixed(4)})`;
+        hero.style.filter = out ? `blur(${(out * 7).toFixed(2)}px)` : '';
+        // Une fois effacé, il ne doit plus intercepter le moindre clic.
+        hero.style.pointerEvents = out > 0.9 ? 'none' : '';
+    }
+
+    // Révélation mot à mot PILOTÉE PAR LE DÉFILEMENT — et non déclenchée
+    // une fois pour toutes à l'entrée dans l'écran. La phrase s'écrit à la
+    // vitesse de la main : c'est ce lien direct entre le geste et le texte
+    // qui fait l'effet, et il se perd dès qu'on se contente d'un
+    // IntersectionObserver.
+    function updateReveals(h) {
+        const start = h * 0.94, end = h * 0.36;
+        overlay.querySelectorAll('.u-reveal').forEach(block => {
+            const r = block.getBoundingClientRect();
+            if (r.bottom < -100 || r.top > h + 100) return;
+            const p = clamp01((start - r.top) / (start - end));
+            const words = block._uWords || (block._uWords = [...block.querySelectorAll('.u-rw')]);
+            if (!words.length) return;
+            // Le dernier mot doit s'allumer un peu avant la fin de la
+            // course, sinon la phrase n'est jamais complète à l'écran.
+            const n = Math.round(clamp01(p * 1.12) * words.length);
+            if (block._uLit === n) return;
+            if (n > (block._uLit || 0)) {
+                for (let i = block._uLit || 0; i < n; i++) words[i].classList.add('is-lit');
+            } else {
+                for (let i = n; i < (block._uLit || 0); i++) words[i].classList.remove('is-lit');
+            }
+            block._uLit = n;
+            block.classList.toggle('is-lit', n >= words.length);
+        });
+    }
 
     function onScroll() {
         // Le geste pousse l'écriture avant même d'avoir bougé la page :
@@ -561,6 +822,9 @@ const SHOW_UNIVERSES = {
             const bar = overlay.querySelector('.u-progress span');
             if (bar) bar.style.transform = `scaleX(${total > 0 ? scroller.scrollTop / total : 0})`;
             if (REDUCED) return;
+
+            fadeHero(h);
+            updateReveals(h);
 
             // Plein cadre : l'image glisse dans son cadre.
             overlay.querySelectorAll('.u-fig--plein').forEach(fig => {
@@ -590,12 +854,16 @@ const SHOW_UNIVERSES = {
         });
     }
 
-    const REVEALED = '.u-fig, .u-group, .u-quote, .u-foot';
+    const REVEALED = '.u-fig, .u-group, .u-quote, .u-chapter, .u-text, .u-foot';
 
     function observeCaptions() {
         if (!('IntersectionObserver' in window)) {
             overlay.querySelectorAll(REVEALED).forEach(el => el.classList.add('is-in'));
             return;
+        }
+        if (REDUCED) {
+            overlay.querySelectorAll('.u-rw').forEach(w => w.classList.add('is-lit'));
+            overlay.querySelectorAll('.u-reveal').forEach(b => b.classList.add('is-lit'));
         }
         const io = new IntersectionObserver((entries) => {
             entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
@@ -776,6 +1044,7 @@ const SHOW_UNIVERSES = {
                 if (!foot) return;
                 foot.classList.add('is-in');
                 overlay.querySelectorAll(REVEALED).forEach(f => f.classList.add('is-in'));
+                overlay.querySelectorAll('.u-rw').forEach(w => w.classList.add('is-lit'));
                 foot.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
                 return;
             }
