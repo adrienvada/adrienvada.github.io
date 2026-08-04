@@ -14,7 +14,7 @@
 const c = (v) => `rgb(var(${v}) / <alpha-value>)`;
 
 module.exports = {
-    content: ['./index.html', './404.html', './dates.js', './galerie.js', './intro.js', './mask-points.js'],
+    content: ['./index.html', './404.html', './dates.js', './galerie.js', './intro.js', './mask-points.js', './univers.js'],
     theme: {
         extend: {
             fontFamily: {

@@ -157,6 +157,129 @@ puis rejoint les archives le lendemain. Le champ `icsDate` (format
 
 ---
 
+## Univers des spectacles (`univers.js`)
+
+Un clic sur une ligne du CV n'ouvre plus un tiroir de dates, mais une **page
+plein écran aux couleurs du spectacle** : titre, ambiance, défilé de photos en
+parallaxe, puis les prochaines représentations. Les dates ne sont pas
+dupliquées : elles restent lues dans `dates.js`.
+
+Tout se configure dans `SHOW_UNIVERSES`, en haut de `univers.js`. **La clé doit
+être exactement la valeur de `data-cv-show`** du `<li class="cv-item">`
+correspondant dans `index.html` — même appariement que pour les dates, pas de
+rapprochement approximatif.
+
+Chaque entrée porte :
+
+| Champ | Rôle |
+|---|---|
+| `palette` | les couleurs du spectacle, injectées en variables `--u-*` sur le panneau. Le reste du site n'est **pas** repeint : le panneau le recouvre. |
+| `tagline` | une phrase, affichée sous le titre |
+| `photos` | `{ src, caption }`, dans l'ordre du défilement |
+| `quotes` | `{ text, speaker }` — `\n` marque une fin de vers |
+| `credit` | photographe, affiché au pied du panneau |
+
+### Le rythme du défilé
+
+`composeBeats()` alterne trois mises en page et glisse une citation entre les
+temps — cinq photos identiques à la suite font un diaporama, pas un récit :
+
+| Mise en page | Ce qu'elle sert |
+|---|---|
+| `full` | plein cadre, recadré en 16:10 — l'ambiance |
+| `duo` | deux photos côte à côte, la seconde décalée vers le bas — le détail |
+| `inset` | une photo entière dans son cadre — la composition |
+
+Avec cinq photos et trois citations, on obtient :
+plein cadre → citation → duo → citation → médaillon → citation → plein cadre.
+Rien à régler à la main : le rythme découle du nombre de photos et de
+citations. Le cycle est dans la constante `LAYOUT_CYCLE`.
+
+**Toutes les photos sont agrandissables au clic** (loupe en bas à droite).
+C'est indispensable : le plein cadre et le duo recadrent, et on ne comprend
+pas toujours ce qu'on regarde. L'agrandissement est le seul endroit où la
+photo est montrée **entière** (`object-fit: contain`), avec flèches, clavier
+et fermeture au clic sur le fond.
+
+⚠️ **Citations : domaine public uniquement.** Racine, Corneille, Shakespeare
+sont libres. Les pièces contemporaines — Fulguré.e.s, Audiences, À la barre —
+n'ont volontairement aucune citation : reproduire leur texte en ligne demande
+l'accord de l'autrice ou de l'auteur.
+
+Le bouton **« Accéder aux dates »** est posé sous le titre, dès la première
+page : il saute directement au pied du panneau. Sans lui il fallait traverser
+tout le défilé de photos pour savoir quand voir le spectacle — or c'est
+souvent la seule raison de la visite.
+
+**Bouton « précédent » du navigateur.** Chaque couche plein écran (univers,
+book photo, lecteur vidéo, calendrier) ajoute une entrée d'historique, gérée
+au même endroit dans `index.html` (chercher « HISTORIQUE DES COUCHES »). Le
+retour referme la couche au lieu de quitter le site — le réflexe dominant sur
+mobile. La fermer par la croix ou par Échap fait un `history.back()`, pour que
+l'écran et l'historique ne divergent jamais.
+
+Un spectacle **sans entrée** garde l'ancien tiroir. C'est volontaire pour
+« L'imaginaire forcé » et « Le discours de Cassandre », dont la direction
+visuelle n'est pas arrêtée — ce n'est pas un cas d'erreur à corriger.
+
+### Les photos
+
+Les **originaux** vivent dans `ressources/spectacles/<spectacle>/` : fichiers
+lourds, aux noms de captation ou d'appareil photo. Ils ne sont **pas servis
+aux visiteurs** et ne doivent pas être modifiés. Ce qui part en ligne, ce sont
+les recadrages produits par :
+
+```bash
+python3 build/prepare-univers-photos.py
+```
+
+qui sort `ressources/images/univers/<slug>-photo-N.jpg` en 1600×1000, plafonné
+à 260 Ko. La sélection (quels clichés, dans quel ordre, quel centrage
+vertical) est dans le dictionnaire `PICKS` en haut du script : ajouter des
+photos dans un dossier ne suffit pas, il faut les choisir là, relancer, et
+écrire les légendes dans `univers.js`.
+
+État actuel : Bérénice, Cléophène et Fulguré.e.s ont 5 photos chacun,
+As You Like It une seule (c'est tout ce qu'il y a au dossier — mieux vaut une
+vraie image que quatre ambiances inventées autour d'elle).
+
+**Audiences** et **À la barre** n'ont pas encore de photos : leurs dossiers
+`ressources/spectacles/` sont vides. Leurs entrées sont déjà dans `PICKS`
+(le script les ignore proprement) ; il suffira d'y déposer des images,
+de relancer, d'ajuster les index, puis de pointer les nouveaux chemins
+`audiences-photo-N.jpg` / `alabarre-photo-N.jpg` dans `univers.js`.
+En attendant, ils affichent des **visuels témoins générés** — des ambiances
+abstraites portant la palette, produites par :
+
+```bash
+python3 build/gen-univers.py
+```
+
+Ce script produit des **JPEG, pas des SVG**. La première version générait des
+SVG à filtres (`feTurbulence`, `feGaussianBlur`) : le navigateur les
+rasterisait à chaque composition, ce qui saccadait l'ouverture du panneau et
+le défilement. Ne pas y revenir : le flou et le grain doivent rester calculés
+hors ligne.
+
+**Crédit photo** : le champ `credit` d'un univers s'affiche au pied du
+panneau. Les photos de Cléophène sont d'Arnaud Bertereau — le crédit est déjà
+en place ; le renseigner pour toute série qui en demande un.
+
+### Fluidité — ce qui a été fait, et pourquoi ne pas le défaire
+
+- Le titre s'affiche **immédiatement** ; les photos n'apparaissent qu'une fois
+  la première *décodée* (`img.decode()`), avec un minuteur de secours de 2,5 s.
+  C'est le décodage, pas le téléchargement, qui faisait tomber l'animation
+  d'ouverture.
+- La **croix et le bouton « Accéder aux dates » restent actifs** pendant ce
+  chargement : on doit toujours pouvoir renoncer.
+- Pas de `backdrop-filter` sur les légendes, qui défilent (il reste sur la
+  croix, immobile).
+- `contain: paint` sur les figures, mais **pas** `content-visibility: auto` :
+  celui-ci faisait s'effondrer leur hauteur.
+
+---
+
 ## Ajouter une photo au book
 
 1. Déposer l'image dans `ressources/images/galerie/`

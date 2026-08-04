@@ -1033,6 +1033,819 @@
                 display: none !important;
             }
         }
+
+        /* ══════════════════════════════════════════════════════════════
+           UNIVERS DES SPECTACLES (voir univers.js)
+
+           Panneau plein écran ouvert depuis une ligne du CV. Il ne réutilise
+           PAS les jetons --c-* du site : chaque spectacle impose sa propre
+           palette, injectée en ligne sur #show-universe sous la forme de
+           variables --u-*. Le reste du site n'en sait rien et n'est pas
+           repeint — le panneau le recouvre entièrement.
+
+           L'ouverture est un clip-path qui part du rectangle exact de la
+           ligne cliquée : la ligne du CV *devient* la page, sans coupure.
+           ══════════════════════════════════════════════════════════════ */
+        html.u-locked,
+        html.u-locked body {
+            overflow: hidden;
+        }
+
+        #show-universe {
+            position: fixed;
+            inset: 0;
+            z-index: 90;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            background: var(--u-bg, #0a0907);
+            color: var(--u-text, #f2ece0);
+            font-family: 'Inter', system-ui, sans-serif;
+            opacity: 0;
+            transition: clip-path 620ms var(--ease-out), opacity var(--dur-base) var(--ease-out);
+            will-change: clip-path;
+        }
+
+        #show-universe.is-open {
+            opacity: 1;
+        }
+
+        #show-universe[hidden] {
+            display: none;
+        }
+
+        /* ── Chrome du panneau ── */
+        .u-close {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 3;
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            font-size: 1rem;
+            color: var(--u-text);
+            background: color-mix(in srgb, var(--u-bg) 55%, transparent);
+            border: 1px solid var(--u-line);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: background var(--dur-base) var(--ease-out),
+                border-color var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out);
+        }
+
+        .u-close:hover {
+            background: var(--u-accent);
+            border-color: var(--u-accent);
+            color: var(--u-on-accent);
+        }
+
+        .u-close:active {
+            transform: scale(0.94);
+            transition-duration: var(--dur-press);
+        }
+
+        .u-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            z-index: 3;
+            background: var(--u-line);
+        }
+
+        .u-progress span {
+            display: block;
+            height: 100%;
+            background: var(--u-accent);
+            transform-origin: 0 50%;
+            transform: scaleX(0);
+        }
+
+        /* ── Hero ── */
+        .u-hero {
+            min-height: 100svh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 80px 24px;
+            position: relative;
+        }
+
+        /* La couleur d'accent respire derrière le titre : c'est ce halo qui
+           fait « entrer » dans l'univers plutôt que lire une fiche. */
+        .u-hero::before {
+            content: '';
+            position: absolute;
+            inset: -10% -20% 20%;
+            background: radial-gradient(ellipse 55% 45% at 50% 45%, var(--u-glow), transparent 70%);
+            pointer-events: none;
+            animation: u-breathe 9s ease-in-out infinite;
+        }
+
+        @keyframes u-breathe {
+
+            0%,
+            100% {
+                opacity: .55;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: .9;
+                transform: scale(1.06);
+            }
+        }
+
+        .u-hero>* {
+            position: relative;
+        }
+
+        .u-eyebrow {
+            font-family: 'Montserrat', sans-serif;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .28em;
+            text-transform: uppercase;
+            color: var(--u-accent-ink);
+            margin-bottom: 22px;
+        }
+
+        .u-title {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: clamp(2.2rem, 9vw, 5.6rem);
+            line-height: 1.02;
+            letter-spacing: -.015em;
+            max-width: 14ch;
+            margin: 0;
+        }
+
+        .u-author {
+            margin: 14px 0 0;
+            font-family: 'Cinzel', serif;
+            font-size: clamp(.8rem, 2vw, 1rem);
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            color: var(--u-muted);
+        }
+
+        .u-tagline {
+            margin: 26px 0 0;
+            max-width: 34ch;
+            font-size: clamp(.95rem, 2.4vw, 1.2rem);
+            font-weight: 300;
+            font-style: italic;
+            line-height: 1.55;
+            color: var(--u-text);
+            opacity: .82;
+        }
+
+        .u-meta {
+            margin: 34px 0 0;
+            font-size: .78rem;
+            line-height: 1.7;
+            color: var(--u-muted);
+        }
+
+        .u-scroll {
+            position: absolute;
+            bottom: 34px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: .8rem;
+            color: var(--u-accent-ink);
+            animation: u-bob 2.4s ease-in-out infinite;
+        }
+
+        @keyframes u-bob {
+
+            0%,
+            100% {
+                transform: translate(-50%, 0);
+                opacity: .5;
+            }
+
+            50% {
+                transform: translate(-50%, 9px);
+                opacity: 1;
+            }
+        }
+
+        /* ── Raccourci vers les dates, dès le titre ── */
+        .u-hero-actions {
+            margin-top: 34px;
+        }
+
+        /* ── Chargement ──
+           Le titre est déjà là, seules les photos attendent. La croix et le
+           raccourci vers les dates restent cliquables : on doit toujours
+           pouvoir renoncer pendant le chargement. */
+        .u-loader {
+            position: absolute;
+            bottom: 34px;
+            left: 50%;
+            width: 18px;
+            height: 18px;
+            margin-left: -9px;
+            border-radius: 50%;
+            border: 2px solid var(--u-line);
+            border-top-color: var(--u-accent);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--dur-base) var(--ease-out);
+        }
+
+        #show-universe.is-loading .u-loader {
+            opacity: 1;
+            animation: u-spin .8s linear infinite;
+        }
+
+        #show-universe.is-loading .u-scroll {
+            opacity: 0;
+            animation: none;
+        }
+
+        #show-universe.is-loading .u-figs,
+        #show-universe.is-loading .u-foot {
+            opacity: 0;
+        }
+
+        .u-figs {
+            transition: opacity 500ms var(--ease-out);
+        }
+
+        @keyframes u-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Défilé de photos ──
+           Trois mises en page alternées (voir composeBeats() dans
+           univers.js) : `full` plein cadre, `duo` deux photos côte à côte,
+           `inset` une photo entière dans son cadre. Toutes les vignettes
+           sont des <button> : le clic ouvre l'agrandissement. */
+        .u-fig-media {
+            display: block;
+            width: 100%;
+            padding: 0;
+            border: 0;
+            background: none;
+            cursor: zoom-in;
+            position: relative;
+        }
+
+        .u-fig-loupe {
+            position: absolute;
+            right: 14px;
+            bottom: 14px;
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            font-size: .72rem;
+            color: var(--u-text);
+            background: color-mix(in srgb, var(--u-bg) 65%, transparent);
+            border: 1px solid var(--u-line);
+            opacity: 0;
+            transform: scale(.9);
+            transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+        }
+
+        .u-fig.is-in .u-fig-loupe {
+            opacity: .75;
+        }
+
+        .u-fig-media:hover .u-fig-loupe {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .u-fig-media:active {
+            transform: scale(.995);
+            transition: transform var(--dur-press) var(--ease-out);
+        }
+
+        /* ── Plein cadre ── */
+        .u-fig--full {
+            margin: 0;
+            position: relative;
+            height: 86svh;
+            overflow: hidden;
+            /* `contain: paint` suffit : le navigateur sait qu'aucun pixel de
+               la figure ne déborde, donc il peut ignorer celles hors écran.
+               Pas de `content-visibility: auto` ici — il faisait s'effondrer
+               la hauteur des figures, et le panneau n'était plus défilable. */
+            contain: paint;
+        }
+
+        /* Pas d'écart entre les figures : leurs fondus se rejoignent et les
+           photos se succèdent en dissolution. Un intervalle de fond visible
+           entre deux images passait pour un défaut d'affichage, surtout en
+           palette claire. */
+        .u-fig+.u-fig {
+            margin-top: 0;
+        }
+
+        .u-fig--full .u-fig-media {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .u-fig--full img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.22);
+            will-change: transform;
+        }
+
+        /* Voile de la couleur du spectacle : lie les photos entre elles et
+           les raccorde au fond, même si elles viennent de sources
+           différentes (ce qui est le cas des vraies photos). */
+        .u-fig--full::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, var(--u-bg) 0%, transparent 9%, transparent 84%, var(--u-bg) 100%);
+            pointer-events: none;
+        }
+
+        .u-fig--full .u-cap {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 8%;
+            z-index: 2;
+            text-align: center;
+            padding: 0 24px;
+        }
+
+        /* ── Médaillon : la photo entière, dans son cadre ── */
+        .u-fig--inset {
+            margin: 0;
+            padding: 12svh 7vw;
+            max-width: 1100px;
+            margin-inline: auto;
+        }
+
+        .u-fig--inset .u-fig-media,
+        .u-duo .u-fig-media {
+            overflow: hidden;
+            border-radius: 3px;
+            border: 1px solid var(--u-line);
+            box-shadow: 0 30px 70px -30px rgba(0, 0, 0, .7);
+            opacity: 0;
+            transform: translateY(38px);
+            transition: opacity 900ms var(--ease-out), transform 900ms var(--ease-out);
+        }
+
+        .u-fig--inset.is-in .u-fig-media,
+        .u-duo.is-in .u-fig-media {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* Décalage du second volet : les deux photos ne montent pas
+           d'un bloc, ce qui donnerait une bannière plutôt qu'un regard
+           qui passe de l'une à l'autre. */
+        .u-duo.is-in .u-fig:nth-child(2) .u-fig-media {
+            transition-delay: 140ms;
+        }
+
+        .u-fig--inset img,
+        .u-duo img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        /* ── Duo : deux photos côte à côte ── */
+        .u-duo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5vw;
+            align-items: center;
+            padding: 10svh 7vw;
+            max-width: 1300px;
+            margin-inline: auto;
+        }
+
+        .u-duo .u-fig {
+            margin: 0;
+        }
+
+        /* Le second volet, plus bas : une composition, pas un tableau. */
+        .u-duo .u-fig:nth-child(2) {
+            transform: translateY(7svh);
+        }
+
+        .u-fig--inset .u-cap,
+        .u-duo .u-cap {
+            margin-top: 14px;
+            padding: 0;
+            text-align: left;
+        }
+
+        .u-fig--inset .u-cap span,
+        .u-duo .u-cap span {
+            background: none;
+            border: 0;
+            padding: 0;
+            color: var(--u-muted);
+            letter-spacing: .12em;
+            font-size: .62rem;
+            opacity: 0;
+            transform: none;
+        }
+
+        .u-fig--inset.is-in .u-cap span,
+        .u-duo.is-in .u-cap span {
+            opacity: 1;
+            transition-delay: 260ms;
+        }
+
+        @media (max-width: 720px) {
+
+            /* Deux photos côte à côte deviennent illisibles sous ~360 px
+               de large : le duo repasse en colonne, sans décalage. */
+            .u-duo {
+                grid-template-columns: 1fr;
+                gap: 6svh;
+                padding: 8svh 8vw;
+            }
+
+            .u-duo .u-fig:nth-child(2) {
+                transform: none;
+            }
+
+            .u-fig--inset {
+                padding: 9svh 8vw;
+            }
+        }
+
+        /* ── Citation ── */
+        .u-quote {
+            margin: 0;
+            min-height: 78svh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 10svh 8vw;
+            position: relative;
+        }
+
+        .u-quote::before {
+            content: '';
+            position: absolute;
+            inset: 20% 10%;
+            background: radial-gradient(ellipse 60% 50% at 50% 50%, var(--u-glow), transparent 70%);
+            opacity: .35;
+            pointer-events: none;
+        }
+
+        .u-quote p {
+            position: relative;
+            margin: 0;
+            max-width: 22ch;
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.35rem, 4.2vw, 2.6rem);
+            font-weight: 400;
+            line-height: 1.4;
+            color: var(--u-text);
+            opacity: 0;
+            transform: translateY(26px);
+            transition: opacity 1100ms var(--ease-out), transform 1100ms var(--ease-out);
+        }
+
+        .u-quote cite {
+            position: relative;
+            margin-top: 26px;
+            font-family: 'Montserrat', sans-serif;
+            font-style: normal;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .26em;
+            text-transform: uppercase;
+            color: var(--u-accent-ink);
+            opacity: 0;
+            transition: opacity 900ms var(--ease-out) 400ms;
+        }
+
+        .u-quote.is-in p {
+            opacity: 1;
+            transform: none;
+        }
+
+        .u-quote.is-in cite {
+            opacity: 1;
+        }
+
+        /* Pas de backdrop-filter ici, contrairement à la croix : la légende
+           défile, et un flou d'arrière-plan recalculé à chaque image coûte
+           plus cher que tout le reste du panneau réuni. Un aplat semi-opaque
+           donne le même détachement pour rien. */
+        .u-cap span {
+            display: inline-block;
+            font-family: 'Montserrat', sans-serif;
+            font-size: .68rem;
+            font-weight: 500;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: var(--u-text);
+            background: color-mix(in srgb, var(--u-bg) 78%, transparent);
+            border: 1px solid var(--u-line);
+            padding: 8px 16px;
+            border-radius: 999px;
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+        }
+
+        .u-fig.is-in .u-cap span {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* ── Pied : les dates ── */
+        .u-foot {
+            padding: 12svh 24px 16svh;
+            max-width: 720px;
+            margin: 0 auto;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 800ms var(--ease-out), transform 800ms var(--ease-out);
+        }
+
+        .u-foot.is-in {
+            opacity: 1;
+            transform: none;
+        }
+
+        .u-foot-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.2rem, 4vw, 1.9rem);
+            font-weight: 700;
+            margin: 0 0 28px;
+            color: var(--u-accent-ink);
+        }
+
+        .u-dates {
+            list-style: none;
+            margin: 0 0 34px;
+            padding: 0;
+            text-align: left;
+        }
+
+        .u-date {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px 12px;
+            padding: 14px 4px;
+            border-bottom: 1px solid var(--u-line);
+        }
+
+        .u-date-when {
+            font-family: ui-monospace, monospace;
+            font-size: .74rem;
+            font-weight: 700;
+            color: var(--u-accent-ink);
+            white-space: nowrap;
+        }
+
+        .u-date-where {
+            font-size: .84rem;
+            flex: 1 1 12ch;
+        }
+
+        .u-date-time {
+            font-family: ui-monospace, monospace;
+            font-size: .72rem;
+            color: var(--u-muted);
+        }
+
+        .u-warn {
+            color: var(--u-accent);
+        }
+
+        .u-empty {
+            color: var(--u-muted);
+            font-size: .85rem;
+            font-style: italic;
+            margin: 0 0 30px;
+        }
+
+        /* Crédit photo — discret, mais jamais absent quand il est dû. */
+        .u-credit {
+            margin: 28px 0 0;
+            font-size: .68rem;
+            letter-spacing: .06em;
+            color: var(--u-muted);
+        }
+
+        .u-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .u-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            text-decoration: none;
+            cursor: pointer;
+            background: var(--u-accent);
+            color: var(--u-on-accent);
+            border: 1px solid var(--u-accent);
+            transition: transform var(--dur-base) var(--ease-out),
+                background var(--dur-base) var(--ease-out),
+                color var(--dur-base) var(--ease-out);
+        }
+
+        .u-btn-ghost {
+            background: transparent;
+            color: var(--u-accent-ink);
+            border-color: var(--u-line);
+        }
+
+        .u-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .u-btn-ghost:hover {
+            background: var(--u-accent);
+            color: var(--u-on-accent);
+            border-color: var(--u-accent);
+        }
+
+        .u-btn:active {
+            transform: scale(0.96);
+            transition-duration: var(--dur-press);
+        }
+
+        /* ── Agrandissement d'une photo ──
+           Le seul endroit où l'image est montrée ENTIÈRE : le défilé la
+           recadre partout ailleurs, et on ne comprend pas toujours ce
+           qu'on regarde. Fond très opaque : c'est la photo qu'on vient
+           voir, pas la page. */
+        .u-zoom {
+            position: fixed;
+            inset: 0;
+            z-index: 5;
+            display: grid;
+            place-items: center;
+            padding: 5vh 6vw;
+            background: color-mix(in srgb, var(--u-bg) 94%, black);
+            opacity: 0;
+            transition: opacity var(--dur-base) var(--ease-out);
+            cursor: zoom-out;
+        }
+
+        .u-zoom[hidden] {
+            display: none;
+        }
+
+        .u-zoom.is-open {
+            opacity: 1;
+        }
+
+        .u-zoom figure {
+            margin: 0;
+            max-width: 100%;
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            cursor: default;
+            transform: scale(.97);
+            transition: transform 420ms var(--ease-out);
+        }
+
+        .u-zoom.is-open figure {
+            transform: none;
+        }
+
+        .u-zoom img {
+            max-width: 100%;
+            max-height: 82svh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 3px;
+        }
+
+        .u-zoom figcaption {
+            font-family: 'Montserrat', sans-serif;
+            font-size: .66rem;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: var(--u-muted);
+            text-align: center;
+        }
+
+        .u-zoom-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 46px;
+            height: 46px;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            color: var(--u-text);
+            background: color-mix(in srgb, var(--u-bg) 55%, transparent);
+            border: 1px solid var(--u-line);
+            cursor: pointer;
+            transition: background var(--dur-base) var(--ease-out),
+                color var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out);
+        }
+
+        .u-zoom-nav:hover {
+            background: var(--u-accent);
+            border-color: var(--u-accent);
+            color: var(--u-on-accent);
+        }
+
+        .u-zoom-nav:active {
+            transform: translateY(-50%) scale(.92);
+            transition-duration: var(--dur-press);
+        }
+
+        .u-zoom-prev {
+            left: 2vw;
+        }
+
+        .u-zoom-next {
+            right: 2vw;
+        }
+
+        @media (max-width: 720px) {
+
+            .u-zoom-prev {
+                left: 8px;
+            }
+
+            .u-zoom-next {
+                right: 8px;
+            }
+
+            .u-zoom {
+                padding: 8vh 4vw;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            #show-universe,
+            .u-zoom,
+            .u-zoom figure,
+            .u-quote p,
+            .u-quote cite,
+            .u-fig-media,
+            .u-fig img,
+            .u-cap span,
+            .u-foot {
+                transition: none !important;
+                animation: none !important;
+                transform: none !important;
+                opacity: 1;
+            }
+
+            .u-hero::before,
+            .u-scroll {
+                animation: none !important;
+            }
+        }
+
+        @media print {
+            #show-universe {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -2451,6 +3264,64 @@
         let openModalEl = null;
         let lastFocusedEl = null;
 
+        // ════════════════════════════════════════════════════════════════
+        //  HISTORIQUE DES COUCHES PLEIN ÉCRAN
+        //  Les onglets sont déjà des entrées d'historique (ils passent par
+        //  le hash). Ce qui manquait : les couches qui recouvrent la page —
+        //  univers d'un spectacle, book photo, lecteur vidéo, calendrier.
+        //  Sans elles, « précédent » quitte le site alors que l'utilisateur
+        //  voulait seulement refermer ce qu'il venait d'ouvrir : c'est le
+        //  réflexe dominant sur mobile, où le geste de retour est le
+        //  principal moyen de sortir d'un plein écran.
+        //
+        //  Une couche ouverte = une entrée d'historique de plus, sur la même
+        //  URL (pushState sans changer le hash, sinon on déclencherait un
+        //  changement d'onglet). La fermer, par la croix ou par Échap, fait
+        //  un history.back() : l'historique et l'écran restent d'accord,
+        //  quel que soit le chemin emprunté.
+        // ════════════════════════════════════════════════════════════════
+        //  Les couches s'empilent : dans un univers de spectacle, on peut
+        //  agrandir une photo. Le retour doit alors refermer l'agrandissement
+        //  et laisser l'univers ouvert — d'où une PILE, et non une seule
+        //  couche courante.
+        const overlayStack = [];        // ex. ['univers', 'u-zoom']
+        let closingFromHistory = false; // fermeture déclenchée PAR le retour
+
+        function pushOverlayState(name) {
+            overlayStack.push(name);
+            history.pushState({ avOverlay: name }, '', location.href);
+        }
+
+        // Appelée par les fermetures « normales ». Si c'est l'historique qui
+        // a provoqué la fermeture, il ne faut évidemment pas reculer encore.
+        function dropOverlayState(name) {
+            if (closingFromHistory || overlayStack[overlayStack.length - 1] !== name) return;
+            overlayStack.pop();
+            history.back();
+        }
+
+        window.addEventListener('popstate', () => {
+            if (!overlayStack.length) return;  // changement d'onglet : hashchange s'en charge
+            const layer = overlayStack.pop();
+            closingFromHistory = true;
+            try {
+                if (layer === 'u-zoom') {
+                    window.closeUniverseZoom?.();
+                } else if (layer === 'univers') {
+                    window.closeShowUniverse?.();
+                } else if (openModalEl) {
+                    if (openModalEl.id === 'gallery-modal') closeGallery();
+                    else if (openModalEl.id === 'video-modal') closeVideoModal();
+                    else closeCalendarModal();
+                }
+            } finally {
+                closingFromHistory = false;
+            }
+        });
+
+        window.pushOverlayState = pushOverlayState;
+        window.dropOverlayState = dropOverlayState;
+
         function openModal(modalId, cardId) {
             const modal = document.getElementById(modalId);
             if (!modal) return;
@@ -2467,6 +3338,7 @@
                 }
             });
             openModalEl = modal;
+            pushOverlayState('modal');
             const first = modal.querySelector(FOCUSABLE);
             if (first) first.focus();
         }
@@ -2482,6 +3354,7 @@
             modal.classList.add('pointer-events-none', 'opacity-0');
             openModalEl = null;
             document.body.classList.remove('modal-open');
+            dropOverlayState('modal');
 
             const finish = () => { modal.hidden = true; };
             // Attendre la fin du fondu, avec repli si transitionend ne se déclenche pas
@@ -2526,7 +3399,14 @@
 
             window.addEventListener("hashchange", () => {
                 const newHash = window.location.hash.substring(1);
-                if (newHash && document.getElementById(newHash)) showPage(newHash, true);
+                if (newHash) {
+                    if (document.getElementById(newHash)) showPage(newHash, true);
+                    return;
+                }
+                // Hash vide : on est revenu à l'entrée d'origine, celle d'avant
+                // le premier clic sur un onglet. Sans ce repli, « précédent »
+                // depuis Dates laissait l'URL nue mais l'écran sur Dates.
+                showPage('page_cv', true);
             });
 
             // Raccourcis clavier globaux (modales)
@@ -2749,6 +3629,16 @@
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const li = btn.closest('.cv-item');
+
+                    // Spectacle doté d'un univers (univers.js) : on ouvre le
+                    // plein écran au lieu du tiroir. Les spectacles sans
+                    // direction visuelle arrêtée gardent le tiroir : c'est le
+                    // repli, pas une exception à traiter.
+                    if (window.hasShowUniverse?.(li)) {
+                        closeAllCvDrawers(null);
+                        if (window.openShowUniverse(li)) return;
+                    }
+
                     const panel = li.querySelector('.cv-expand-panel');
                     const willOpen = !panel.classList.contains('expanded');
                     // Un seul tiroir ouvert à la fois : plus lisible qu'un CV
@@ -3727,6 +4617,12 @@
             return `${min}:${sec < 10 ? '0' : ''}${sec}`;
         }
     </script>
+
+    <!-- Univers des spectacles : panneau plein écran ouvert depuis le CV.
+         Vide au repos ; son contenu est construit à l'ouverture par
+         univers.js (une seule ligne du CV à la fois). -->
+    <div id="show-universe" hidden role="dialog" aria-modal="true" aria-label="Univers du spectacle"></div>
+    <script src="univers.js"></script>
 </body>
 
 </html>
