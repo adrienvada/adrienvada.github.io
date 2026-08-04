@@ -1033,6 +1033,423 @@
                 display: none !important;
             }
         }
+
+        /* ══════════════════════════════════════════════════════════════
+           UNIVERS DES SPECTACLES (voir univers.js)
+
+           Panneau plein écran ouvert depuis une ligne du CV. Il ne réutilise
+           PAS les jetons --c-* du site : chaque spectacle impose sa propre
+           palette, injectée en ligne sur #show-universe sous la forme de
+           variables --u-*. Le reste du site n'en sait rien et n'est pas
+           repeint — le panneau le recouvre entièrement.
+
+           L'ouverture est un clip-path qui part du rectangle exact de la
+           ligne cliquée : la ligne du CV *devient* la page, sans coupure.
+           ══════════════════════════════════════════════════════════════ */
+        html.u-locked,
+        html.u-locked body {
+            overflow: hidden;
+        }
+
+        #show-universe {
+            position: fixed;
+            inset: 0;
+            z-index: 90;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            background: var(--u-bg, #0a0907);
+            color: var(--u-text, #f2ece0);
+            font-family: 'Inter', system-ui, sans-serif;
+            opacity: 0;
+            transition: clip-path 620ms var(--ease-out), opacity var(--dur-base) var(--ease-out);
+            will-change: clip-path;
+        }
+
+        #show-universe.is-open {
+            opacity: 1;
+        }
+
+        #show-universe[hidden] {
+            display: none;
+        }
+
+        /* ── Chrome du panneau ── */
+        .u-close {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 3;
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            font-size: 1rem;
+            color: var(--u-text);
+            background: color-mix(in srgb, var(--u-bg) 55%, transparent);
+            border: 1px solid var(--u-line);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: background var(--dur-base) var(--ease-out),
+                border-color var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out);
+        }
+
+        .u-close:hover {
+            background: var(--u-accent);
+            border-color: var(--u-accent);
+            color: var(--u-on-accent);
+        }
+
+        .u-close:active {
+            transform: scale(0.94);
+            transition-duration: var(--dur-press);
+        }
+
+        .u-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            z-index: 3;
+            background: var(--u-line);
+        }
+
+        .u-progress span {
+            display: block;
+            height: 100%;
+            background: var(--u-accent);
+            transform-origin: 0 50%;
+            transform: scaleX(0);
+        }
+
+        /* ── Hero ── */
+        .u-hero {
+            min-height: 100svh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 80px 24px;
+            position: relative;
+        }
+
+        /* La couleur d'accent respire derrière le titre : c'est ce halo qui
+           fait « entrer » dans l'univers plutôt que lire une fiche. */
+        .u-hero::before {
+            content: '';
+            position: absolute;
+            inset: -10% -20% 20%;
+            background: radial-gradient(ellipse 55% 45% at 50% 45%, var(--u-glow), transparent 70%);
+            pointer-events: none;
+            animation: u-breathe 9s ease-in-out infinite;
+        }
+
+        @keyframes u-breathe {
+
+            0%,
+            100% {
+                opacity: .55;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: .9;
+                transform: scale(1.06);
+            }
+        }
+
+        .u-hero>* {
+            position: relative;
+        }
+
+        .u-eyebrow {
+            font-family: 'Montserrat', sans-serif;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .28em;
+            text-transform: uppercase;
+            color: var(--u-accent-ink);
+            margin-bottom: 22px;
+        }
+
+        .u-title {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: clamp(2.2rem, 9vw, 5.6rem);
+            line-height: 1.02;
+            letter-spacing: -.015em;
+            max-width: 14ch;
+            margin: 0;
+        }
+
+        .u-author {
+            margin: 14px 0 0;
+            font-family: 'Cinzel', serif;
+            font-size: clamp(.8rem, 2vw, 1rem);
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            color: var(--u-muted);
+        }
+
+        .u-tagline {
+            margin: 26px 0 0;
+            max-width: 34ch;
+            font-size: clamp(.95rem, 2.4vw, 1.2rem);
+            font-weight: 300;
+            font-style: italic;
+            line-height: 1.55;
+            color: var(--u-text);
+            opacity: .82;
+        }
+
+        .u-meta {
+            margin: 34px 0 0;
+            font-size: .78rem;
+            line-height: 1.7;
+            color: var(--u-muted);
+        }
+
+        .u-scroll {
+            position: absolute;
+            bottom: 34px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: .8rem;
+            color: var(--u-accent-ink);
+            animation: u-bob 2.4s ease-in-out infinite;
+        }
+
+        @keyframes u-bob {
+
+            0%,
+            100% {
+                transform: translate(-50%, 0);
+                opacity: .5;
+            }
+
+            50% {
+                transform: translate(-50%, 9px);
+                opacity: 1;
+            }
+        }
+
+        /* ── Défilé de photos ── */
+        .u-fig {
+            margin: 0;
+            position: relative;
+            height: 86svh;
+            overflow: hidden;
+        }
+
+        .u-fig+.u-fig {
+            margin-top: 6svh;
+        }
+
+        .u-fig-media {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .u-fig img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.14);
+            will-change: transform;
+        }
+
+        /* Voile de la couleur du spectacle : lie les photos entre elles et
+           les raccorde au fond, même si elles viennent de sources
+           différentes (ce qui sera le cas avec de vraies photos). */
+        .u-fig::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, var(--u-bg) 0%, transparent 22%, transparent 62%, var(--u-bg) 100%);
+            pointer-events: none;
+        }
+
+        .u-cap {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 8%;
+            z-index: 2;
+            text-align: center;
+            padding: 0 24px;
+        }
+
+        .u-cap span {
+            display: inline-block;
+            font-family: 'Montserrat', sans-serif;
+            font-size: .68rem;
+            font-weight: 500;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: var(--u-text);
+            background: color-mix(in srgb, var(--u-bg) 62%, transparent);
+            border: 1px solid var(--u-line);
+            backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: 999px;
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+        }
+
+        .u-fig.is-in .u-cap span {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* ── Pied : les dates ── */
+        .u-foot {
+            padding: 12svh 24px 16svh;
+            max-width: 720px;
+            margin: 0 auto;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 800ms var(--ease-out), transform 800ms var(--ease-out);
+        }
+
+        .u-foot.is-in {
+            opacity: 1;
+            transform: none;
+        }
+
+        .u-foot-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.2rem, 4vw, 1.9rem);
+            font-weight: 700;
+            margin: 0 0 28px;
+            color: var(--u-accent-ink);
+        }
+
+        .u-dates {
+            list-style: none;
+            margin: 0 0 34px;
+            padding: 0;
+            text-align: left;
+        }
+
+        .u-date {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px 12px;
+            padding: 14px 4px;
+            border-bottom: 1px solid var(--u-line);
+        }
+
+        .u-date-when {
+            font-family: ui-monospace, monospace;
+            font-size: .74rem;
+            font-weight: 700;
+            color: var(--u-accent-ink);
+            white-space: nowrap;
+        }
+
+        .u-date-where {
+            font-size: .84rem;
+            flex: 1 1 12ch;
+        }
+
+        .u-date-time {
+            font-family: ui-monospace, monospace;
+            font-size: .72rem;
+            color: var(--u-muted);
+        }
+
+        .u-warn {
+            color: var(--u-accent);
+        }
+
+        .u-empty {
+            color: var(--u-muted);
+            font-size: .85rem;
+            font-style: italic;
+            margin: 0 0 30px;
+        }
+
+        .u-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .u-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            text-decoration: none;
+            cursor: pointer;
+            background: var(--u-accent);
+            color: var(--u-on-accent);
+            border: 1px solid var(--u-accent);
+            transition: transform var(--dur-base) var(--ease-out),
+                background var(--dur-base) var(--ease-out),
+                color var(--dur-base) var(--ease-out);
+        }
+
+        .u-btn-ghost {
+            background: transparent;
+            color: var(--u-accent-ink);
+            border-color: var(--u-line);
+        }
+
+        .u-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .u-btn-ghost:hover {
+            background: var(--u-accent);
+            color: var(--u-on-accent);
+            border-color: var(--u-accent);
+        }
+
+        .u-btn:active {
+            transform: scale(0.96);
+            transition-duration: var(--dur-press);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            #show-universe,
+            .u-fig img,
+            .u-cap span,
+            .u-foot {
+                transition: none !important;
+                animation: none !important;
+                transform: none !important;
+                opacity: 1;
+            }
+
+            .u-hero::before,
+            .u-scroll {
+                animation: none !important;
+            }
+        }
+
+        @media print {
+            #show-universe {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -2779,6 +3196,16 @@
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const li = btn.closest('.cv-item');
+
+                    // Spectacle doté d'un univers (univers.js) : on ouvre le
+                    // plein écran au lieu du tiroir. Les spectacles sans
+                    // direction visuelle arrêtée gardent le tiroir : c'est le
+                    // repli, pas une exception à traiter.
+                    if (window.hasShowUniverse?.(li)) {
+                        closeAllCvDrawers(null);
+                        if (window.openShowUniverse(li)) return;
+                    }
+
                     const panel = li.querySelector('.cv-expand-panel');
                     const willOpen = !panel.classList.contains('expanded');
                     // Un seul tiroir ouvert à la fois : plus lisible qu'un CV
@@ -3757,6 +4184,12 @@
             return `${min}:${sec < 10 ? '0' : ''}${sec}`;
         }
     </script>
+
+    <!-- Univers des spectacles : panneau plein écran ouvert depuis le CV.
+         Vide au repos ; son contenu est construit à l'ouverture par
+         univers.js (une seule ligne du CV à la fois). -->
+    <div id="show-universe" hidden role="dialog" aria-modal="true" aria-label="Univers du spectacle"></div>
+    <script src="univers.js"></script>
 </body>
 
 </html>

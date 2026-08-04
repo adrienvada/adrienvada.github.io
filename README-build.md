@@ -157,6 +157,39 @@ puis rejoint les archives le lendemain. Le champ `icsDate` (format
 
 ---
 
+## Univers des spectacles (`univers.js`)
+
+Un clic sur une ligne du CV n'ouvre plus un tiroir de dates, mais une **page
+plein écran aux couleurs du spectacle** : titre, ambiance, défilé de photos en
+parallaxe, puis les prochaines représentations. Les dates ne sont pas
+dupliquées : elles restent lues dans `dates.js`.
+
+Tout se configure dans `SHOW_UNIVERSES`, en haut de `univers.js`. **La clé doit
+être exactement la valeur de `data-cv-show`** du `<li class="cv-item">`
+correspondant dans `index.html` — même appariement que pour les dates, pas de
+rapprochement approximatif.
+
+Chaque entrée porte :
+
+| Champ | Rôle |
+|---|---|
+| `palette` | les couleurs du spectacle, injectées en variables `--u-*` sur le panneau. Le reste du site n'est **pas** repeint : le panneau le recouvre. |
+| `tagline` | une phrase, affichée sous le titre |
+| `photos` | `{ src, caption }`, dans l'ordre du défilement |
+
+Un spectacle **sans entrée** garde l'ancien tiroir. C'est volontaire pour
+« L'imaginaire forcé » et « Le discours de Cassandre », dont la direction
+visuelle n'est pas arrêtée — ce n'est pas un cas d'erreur à corriger.
+
+⚠️ Les fichiers de `ressources/images/univers/` sont pour l'instant des
+**visuels témoins générés** (des dégradés abstraits portant la palette), pas
+des photos de spectacle. Ils sont produits par `build/gen-univers.py` et sont
+destinés à être remplacés par de vraies photos de plateau (paysage ~1600×1000,
+< 300 Ko) — soit aux mêmes noms, soit en changeant les chemins dans
+`univers.js`.
+
+---
+
 ## Ajouter une photo au book
 
 1. Déposer l'image dans `ressources/images/galerie/`
