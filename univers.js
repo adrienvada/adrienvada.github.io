@@ -59,7 +59,9 @@ const SHOW_UNIVERSES = {
         ]
     },
 
-    'Cléophène': {
+    // Apostrophe DROITE : la clé doit être l'exacte copie du data-cv-show
+    // d'index.html et du title de dates.js, qui l'écrivent ainsi.
+    "Cléophène, d'après Rodogune": {
         slug: 'cleophene',
         // Chaleur désertique : or, brun sombre, une lumière basse.
         palette: {
