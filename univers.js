@@ -4,32 +4,45 @@
  * ============================================================
  *  Au clic sur une ligne du CV, au lieu du simple tiroir de dates,
  *  on ouvre une page plein écran qui prend la palette du spectacle :
- *  titre, ambiance, défilé de photos, puis les prochaines dates.
+ *  le titre s'écrit, le synopsis s'inscrit, puis le montage photo se
+ *  déroule et se termine sur les prochaines dates.
  *
  *  AJOUTER / MODIFIER UN UNIVERS
  *  -----------------------------
  *  La clé de chaque entrée doit être EXACTEMENT la valeur de
  *  `data-cv-show` sur le <li class="cv-item"> correspondant dans
- *  index.html — c'est le même appariement que pour les dates.
- *  Un spectacle sans entrée ici garde l'ancien tiroir : c'est le cas
- *  volontaire de « L'imaginaire forcé » et « Le discours de Cassandre »,
+ *  index.html — même appariement que pour les dates, sans rapprochement
+ *  approximatif. Un spectacle sans entrée ici garde l'ancien tiroir :
+ *  c'est le cas volontaire de « L'imaginaire forcé » et « Cassandres »,
  *  dont la direction visuelle n'est pas arrêtée.
  *
- *  photos : chemins servis tels quels, en 1600x1000 et < 300 Ko.
- *    - `<slug>-photo-N.jpg` = VRAIES photos de plateau, découpées depuis
- *      `ressources/spectacles/` par `build/prepare-univers-photos.py`.
- *    - `<slug>-N.jpg` = visuels témoins générés (`build/gen-univers.py`),
- *      encore en place pour Audiences et À la barre, dont les dossiers
- *      de photos sont vides. À remplacer dès qu'il y aura des images.
+ *  CHAMPS
+ *  ------
+ *  palette   les couleurs du spectacle, injectées en variables --u-*
+ *            sur le seul panneau (le reste du site n'est pas repeint).
+ *  synopsis  s'inscrit mot à mot sous le titre. 2 à 4 phrases.
+ *  credit    photographe, affiché au pied du panneau.
+ *  sequence  LE MONTAGE. Un élément = un temps du défilé, dans l'ordre.
+ *              { p: [12] }           une photo, plein cadre
+ *              { p: [12, 7] }        duo, la seconde décalée
+ *              { p: [1, 9, 11] }     trio, composition asymétrique
+ *              { p: [9, 5, 6, 7] }   quatuor, cascade
+ *              { q: 'texte', by: '…' }   un carton de texte
+ *            `c: [...]` porte les légendes, dans l'ordre des photos.
+ *            Les NUMÉROS sont ceux des fichiers de
+ *            `ressources/spectacles/<spectacle>/` — le même langage que
+ *            les planches-contact. `build/prepare-univers-photos.py`
+ *            en tire `ressources/images/univers/<slug>/<n>.jpg`.
+ *            ⚠️ SEQUENCES dans ce script Python doit rester synchronisé.
  *
- *  credit : nom du ou de la photographe, affiché au pied du panneau.
- *  À renseigner dès que les photos ne sont pas libres de crédit.
- *
- *  quotes : citations glissées entre les photos, `\n` = fin de vers.
- *  ⚠️ Uniquement des textes du DOMAINE PUBLIC (Racine, Corneille,
- *  Shakespeare). Les pièces contemporaines — Fulguré.e.s, Audiences,
- *  À la barre — n'en ont volontairement aucune : citer leur texte en
- *  ligne demande l'accord de l'autrice ou de l'auteur.
+ *  DROITS SUR LES TEXTES
+ *  ---------------------
+ *  Les cartons `q:` marqués « REMPLISSAGE » sont de la prose neutre
+ *  écrite pour tenir la place — ce ne sont PAS des répliques des pièces.
+ *  Les seules vraies citations sont celles du domaine public (Racine,
+ *  Corneille, Shakespeare). Reproduire le texte d'une pièce
+ *  contemporaine — Fulguré.e.s, Audiences, À la barre — demande
+ *  l'accord de l'autrice ou de l'auteur.
  * ============================================================
  */
 
@@ -44,23 +57,31 @@ const SHOW_UNIVERSES = {
             accent: '#c0637e', accentInk: '#a34a66', onAccent: '#ffffff',
             line: 'rgba(24,18,21,0.13)', glow: 'rgba(192,99,126,0.30)'
         },
-        tagline: 'Trois personnes qui s’aiment et que rien ne sauve.',
-        quotes: [
-            { text: 'Dans l’Orient désert quel devint mon ennui !', speaker: 'Antiochus, acte I' },
-            { text: 'Pour jamais ! Ah, Seigneur ! songez-vous en vous-même\nCombien ce mot cruel est affreux quand on aime ?', speaker: 'Bérénice, acte IV' },
-            { text: 'Que le jour recommence et que le jour finisse\nSans que jamais Titus puisse voir Bérénice.', speaker: 'Bérénice, acte V' }
-        ],
-        photos: [
-            { src: 'ressources/images/univers/berenice-photo-1.jpg', caption: 'Le cercle blanc, le public tout autour' },
-            { src: 'ressources/images/univers/berenice-photo-2.jpg', caption: 'Assis côte à côte, déjà séparés' },
-            { src: 'ressources/images/univers/berenice-photo-3.jpg', caption: 'L’étreinte' },
-            { src: 'ressources/images/univers/berenice-photo-4.jpg', caption: 'Ce qui emporte les corps' },
-            { src: 'ressources/images/univers/berenice-photo-5.jpg', caption: 'Rouge — le seul endroit où l’on saigne' }
+        synopsis: 'Titus est empereur depuis huit jours. Il aime Bérénice, ' +
+            'et Rome ne veut pas d’une reine. Antiochus les aime tous les deux, ' +
+            'et se tait depuis cinq ans. Personne ici ne fait de mal à personne : ' +
+            'c’est bien ce qui rend la séparation insoutenable.',
+        quotesAreRealText: true,
+        sequence: [
+            { p: [2], c: ['Le cercle blanc, le public tout autour'] },
+            { q: 'Dans l’Orient désert quel devint mon ennui !', by: 'Antiochus, acte I' },
+            { p: [3], c: ['Titus'] },
+            { p: [12, 7], c: ['Assis côte à côte, déjà séparés', 'L’étreinte'] },
+            {
+                q: 'Pour jamais ! Ah, Seigneur ! songez-vous en vous-même\n' +
+                    'Combien ce mot cruel est affreux quand on aime ?', by: 'Bérénice, acte IV'
+            },
+            { p: [1, 9, 11], c: ['', '', ''] },
+            { p: [18], c: ['Ce que Rome exige'] },
+            {
+                q: 'Que le jour recommence et que le jour finisse\n' +
+                    'Sans que jamais Titus puisse voir Bérénice.', by: 'Bérénice, acte V'
+            },
+            { p: [13, 5, 16], c: ['', '', ''] },
+            { p: [17, 19], c: ['', ''] }
         ]
     },
 
-    // Apostrophe DROITE : la clé doit être l'exacte copie du data-cv-show
-    // d'index.html et du title de dates.js, qui l'écrivent ainsi.
     "Cléophène, d'après Rodogune": {
         slug: 'cleophene',
         // Chaleur désertique : or, brun sombre, une lumière basse.
@@ -69,17 +90,24 @@ const SHOW_UNIVERSES = {
             accent: '#d9a24a', accentInk: '#e6b767', onAccent: '#150c05',
             line: 'rgba(217,162,74,0.20)', glow: 'rgba(217,162,74,0.32)'
         },
-        tagline: 'Une couronne, deux frères, et du sable dans la bouche.',
         credit: 'Arnaud Bertereau',
-        quotes: [
-            { text: 'Tombe sur moi le ciel, pourvu que je me venge !', speaker: 'Cléopâtre — Rodogune, acte II' }
-        ],
-        photos: [
-            { src: 'ressources/images/univers/cleophene-photo-1.jpg', caption: 'Le sable, et personne pour s’y agenouiller à sa place' },
-            { src: 'ressources/images/univers/cleophene-photo-2.jpg', caption: 'La coupe levée' },
-            { src: 'ressources/images/univers/cleophene-photo-3.jpg', caption: 'Les mains sur la tête du fils' },
-            { src: 'ressources/images/univers/cleophene-photo-4.jpg', caption: 'À terre' },
-            { src: 'ressources/images/univers/cleophene-photo-5.jpg', caption: 'Front contre front' }
+        synopsis: 'Une reine a deux fils jumeaux et une couronne pour un seul. ' +
+            'Elle promet le trône à celui qui tuera la femme qu’ils aiment. ' +
+            'Le sable monte, la coupe passe de main en main.',
+        sequence: [
+            { p: [7], c: ['Le sable, et personne pour s’y agenouiller à sa place'] },
+            // REMPLISSAGE — prose neutre, à remplacer.
+            { q: 'Régner, ou n’être plus rien.', by: '' },
+            { p: [10, 17], c: ['', ''] },
+            { p: [21], c: ['La coupe levée'] },
+            { q: 'Tombe sur moi le ciel, pourvu que je me venge !', by: 'Cléopâtre, acte II' },
+            { p: [23], c: [''] },
+            { p: [20, 15], c: ['', ''] },
+            // REMPLISSAGE
+            { q: 'Le trône est étroit. On y tient à un.', by: '' },
+            { p: [16], c: [''] },
+            { p: [18, 13, 9], c: ['', '', ''] },
+            { p: [5], c: ['Front contre front'] }
         ]
     },
 
@@ -92,14 +120,24 @@ const SHOW_UNIVERSES = {
             accent: '#c2d94b', accentInk: '#cfe36a', onAccent: '#0c2013',
             line: 'rgba(194,217,75,0.22)', glow: 'rgba(217,79,43,0.35)'
         },
-        tagline: 'On part se perdre en forêt, on en revient amoureux.',
-        quotes: [
-            { text: 'Le monde entier est un théâtre, et tous, hommes et femmes, n’en sont que les acteurs.', speaker: 'Jaques, acte II' }
-        ],
-        // Une seule photo au dossier pour l'instant : mieux vaut une vraie
-        // image que quatre ambiances inventées autour d'elle.
-        photos: [
-            { src: 'ressources/images/univers/asyoulikeit-photo-1.jpg', caption: 'La forêt d’Ardenne, en survêtement' }
+        synopsis: 'Bannis de la cour, ils partent se cacher dans la forêt d’Ardenne. ' +
+            'Rosalinde s’y déguise en garçon et fait répéter à celui qu’elle aime ' +
+            'comment l’aimer. On y perd son nom, son rang, sa gravité — ' +
+            'et on en revient marié.',
+        sequence: [
+            { p: [8], c: ['La forêt d’Ardenne, en survêtement'] },
+            {
+                q: 'Le monde entier est un théâtre, et tous, hommes et femmes,\n' +
+                    'n’en sont que les acteurs.', by: 'Jaques, acte II'
+            },
+            { p: [10, 7], c: ['', ''] },
+            { p: [9], c: [''] },
+            // REMPLISSAGE
+            { q: 'On entre en forêt pour se perdre. C’est le programme.', by: '' },
+            { p: [1, 6], c: ['', ''] },
+            { p: [3], c: [''] },
+            { p: [4, 5], c: ['', ''] },
+            { p: [11, 12], c: ['', ''] }
         ]
     },
 
@@ -112,30 +150,43 @@ const SHOW_UNIVERSES = {
             accent: '#c8102e', accentInk: '#e2455c', onAccent: '#ffffff',
             line: 'rgba(236,236,239,0.14)', glow: 'rgba(31,58,147,0.40)'
         },
-        tagline: 'La justice se rend en public. Personne ne regarde.',
-        photos: [
-            { src: 'ressources/images/univers/audiences-1.jpg', caption: 'La salle, avant l’audience' },
-            { src: 'ressources/images/univers/audiences-2.jpg', caption: 'Bleu administratif' },
-            { src: 'ressources/images/univers/audiences-3.jpg', caption: 'Le prévenu' },
-            { src: 'ressources/images/univers/audiences-4.jpg', caption: 'Rouge — ce que le procès recouvre' },
-            { src: 'ressources/images/univers/audiences-5.jpg', caption: 'Le délibéré' }
+        synopsis: 'La justice se rend en public, et la salle est vide. ' +
+            'On y juge des gens ordinaires pour des faits ordinaires, ' +
+            'dans une langue qui n’est celle de personne.',
+        sequence: [
+            { p: [8], c: [''] },
+            // REMPLISSAGE — le texte de Ronan Chéneau n'est pas cité.
+            { q: 'La salle est ouverte à tous. Il n’y a personne.', by: '' },
+            { p: [6, 5], c: ['', ''] },
+            { p: [4, 1], c: ['', ''] },
+            // REMPLISSAGE
+            { q: 'On appelle l’affaire suivante.', by: '' },
+            { p: [2, 3], c: ['', ''] }
         ]
     },
 
     'À la barre, peine perdue ?': {
-        slug: 'audiences',
+        slug: 'alabarre',
         palette: {
             bg: '#08080b', surface: '#131620', text: '#ececef', muted: '#9899a4',
             accent: '#c8102e', accentInk: '#e2455c', onAccent: '#ffffff',
             line: 'rgba(236,236,239,0.14)', glow: 'rgba(31,58,147,0.40)'
         },
-        tagline: 'Juge, accusé, greffier, avocat — et la même voix pour tous.',
-        photos: [
-            { src: 'ressources/images/univers/audiences-3.jpg', caption: 'La barre' },
-            { src: 'ressources/images/univers/audiences-1.jpg', caption: 'Un tribunal vide est un décor' },
-            { src: 'ressources/images/univers/audiences-5.jpg', caption: 'Les rôles changent de côté' },
-            { src: 'ressources/images/univers/audiences-2.jpg', caption: 'Le code, la loi, la lenteur' },
-            { src: 'ressources/images/univers/audiences-4.jpg', caption: 'Peine perdue ?' }
+        synopsis: 'Juge, accusé, greffier, avocat, narrateur — et la même voix ' +
+            'pour tous. Le procès se rejoue à chaque fois qu’on change de place, ' +
+            'et chaque place a ses raisons.',
+        sequence: [
+            { p: [19], c: [''] },
+            // REMPLISSAGE — le texte de Ronan Chéneau n'est pas cité.
+            { q: 'Levez-vous. Asseyez-vous. Approchez de la barre.', by: '' },
+            { p: [20, 8], c: ['', ''] },
+            { p: [22], c: [''] },
+            { p: [4, 13], c: ['', ''] },
+            // REMPLISSAGE
+            { q: 'Qui parle, quand la loi parle ?', by: '' },
+            { p: [14, 12], c: ['', ''] },
+            { p: [9, 5, 6, 7], c: ['', '', '', ''] },
+            { p: [25, 26], c: ['', ''] }
         ]
     },
 
@@ -147,13 +198,21 @@ const SHOW_UNIVERSES = {
             accent: '#8fa8ff', accentInk: '#a7bbff', onAccent: '#04050d',
             line: 'rgba(143,168,255,0.20)', glow: 'rgba(255,255,255,0.45)'
         },
-        tagline: 'Ce qui reste quand la foudre est passée par vous.',
-        photos: [
-            { src: 'ressources/images/univers/fulgurees-photo-1.jpg', caption: 'Avant l’orage' },
-            { src: 'ressources/images/univers/fulgurees-photo-2.jpg', caption: 'L’éclat' },
-            { src: 'ressources/images/univers/fulgurees-photo-3.jpg', caption: 'Les rayons' },
-            { src: 'ressources/images/univers/fulgurees-photo-4.jpg', caption: 'Dans la brume, à deux' },
-            { src: 'ressources/images/univers/fulgurees-photo-5.jpg', caption: 'Ce qui reste' }
+        synopsis: 'Ils ont vingt ans et quelque chose leur est tombé dessus. ' +
+            'La nuit, la vitesse, les corps qui se cherchent sous les néons — ' +
+            'et ce qui reste, au matin, quand la foudre est passée.',
+        sequence: [
+            { p: [10], c: ['Avant l’orage'] },
+            // REMPLISSAGE — le texte de Jérémie Fabre n'est pas cité.
+            { q: 'On n’entend pas la foudre. On la reçoit.', by: '' },
+            { p: [7], c: [''] },
+            { p: [8, 5, 19], c: ['', '', ''] },
+            { p: [23], c: [''] },
+            // REMPLISSAGE
+            { q: 'Après, il faut bien se relever et aller travailler.', by: '' },
+            { p: [3, 1, 4], c: ['', '', ''] },
+            { p: [2], c: [''] },
+            { p: [27, 26], c: ['', ''] }
         ]
     },
 };
@@ -223,42 +282,144 @@ const SHOW_UNIVERSES = {
         };
     }
 
-    // ── Composition du défilé ────────────────────────────────────────
-    //  Cinq photos identiques plein cadre à la suite, c'est un diaporama,
-    //  pas un récit. On alterne donc les mises en page, et on glisse une
-    //  citation entre les temps : le rythme fait l'immersion autant que
-    //  les images.
+    // ── Le récit s'écrit ─────────────────────────────────────────────
+    //  Le titre se pose lettre à lettre, vite ; le synopsis s'inscrit
+    //  mot à mot, lentement, en sortant d'un flou. Deux tempos, deux
+    //  natures : une frappe, puis une voix.
     //
-    //  `full`  — plein cadre, recadré : l'ambiance
-    //  `duo`   — deux photos côte à côte, plus petites : le détail
-    //  `inset` — une photo entière dans son cadre : la composition
+    //  Tout est piloté par un compteur en millisecondes que l'on fait
+    //  avancer plus ou moins vite — et NON par des animation-delay CSS,
+    //  qu'on ne pourrait pas accélérer en cours de route. Défiler pousse
+    //  ce compteur : le texte s'écrit plus vite sous le geste, puis
+    //  retrouve son tempo. Le hero reste collé pendant ce temps (voir
+    //  .u-hero-wrap), de sorte que le premier geste écrit la page avant
+    //  de la quitter.
+    const CH_STEP = 34;      // ms par lettre du titre — rapide
+    const WORD_STEP = 108;   // ms par mot du synopsis — doux
+    const BREATH = 320;      // respiration entre le titre et le synopsis
+    const MAX_RATE = 9;
+
+    function splitChars(str) {
+        return String(str).split('').map((ch, i) => ch === ' '
+            ? ' '
+            : `<span class="u-ch" style="--i:${i}">${escape(ch)}</span>`).join('');
+    }
+
+    function splitWords(str) {
+        return String(str).split(/\s+/).filter(Boolean)
+            .map((w, i) => `<span class="u-wd" style="--i:${i}">${escape(w)}</span>`)
+            .join(' ');
+    }
+
+    let writeRaf = 0, writeRate = 1, writeGuard = 0;
+
+    function stopWriting() {
+        if (writeRaf) cancelAnimationFrame(writeRaf);
+        if (writeGuard) clearTimeout(writeGuard);
+        writeRaf = writeGuard = 0;
+    }
+
+    function playWriting() {
+        stopWriting();
+        const chars = [...overlay.querySelectorAll('.u-ch')];
+        const words = [...overlay.querySelectorAll('.u-wd')];
+        const hero = overlay.querySelector('.u-hero');
+        if (!hero) return;
+
+        const finish = () => {
+            stopWriting();
+            chars.forEach(el => el.classList.add('is-lit'));
+            words.forEach(el => el.classList.add('is-lit'));
+            hero.classList.add('is-titled', 'is-written');
+        };
+        if (REDUCED) { finish(); return; }
+
+        // Garde-fou : requestAnimationFrame ne s'exécute pas dans un onglet
+        // en arrière-plan, et certains navigateurs l'étranglent. Un titre
+        // qui resterait invisible serait pire que pas d'animation du tout —
+        // au-delà de ce délai, le texte s'affiche quoi qu'il arrive.
+        const natural = chars.length * CH_STEP + BREATH + words.length * WORD_STEP;
+        writeGuard = setTimeout(finish, natural + 6000);
+
+        let clock = 0, last = performance.now();
+        writeRate = 1;
+        let litChars = 0, litWords = 0;
+
+        const frame = (now) => {
+            writeRaf = 0;
+            clock += Math.min(now - last, 64) * writeRate;   // Math.min : un
+            last = now;                                      // onglet revenu
+            // au premier plan ne doit pas tout écrire d'un coup.
+
+            const nCh = Math.min(chars.length, Math.floor(clock / CH_STEP));
+            while (litChars < nCh) chars[litChars++].classList.add('is-lit');
+
+            const after = clock - chars.length * CH_STEP - BREATH;
+            const nWd = Math.min(words.length, Math.floor(after / WORD_STEP));
+            while (litWords < nWd) words[litWords++].classList.add('is-lit');
+
+            // Le raccourci vers les dates apparaît dès le titre posé :
+            // c'est souvent la seule chose qu'on est venu chercher.
+            if (litChars >= chars.length) hero.classList.add('is-titled');
+
+            // Le tempo forcé par le défilement retombe tout seul.
+            writeRate += (1 - writeRate) * 0.045;
+
+            if (litWords >= words.length && litChars >= chars.length) {
+                hero.classList.add('is-written');
+                stopWriting();
+                return;
+            }
+            if (isOpen) writeRaf = requestAnimationFrame(frame);
+        };
+        writeRaf = requestAnimationFrame(frame);
+    }
+
+    // Appelé par le défilement : pousse le tempo sans jamais le figer.
+    function nudgeWriting(amount) {
+        if (!writeRaf) return;
+        writeRate = Math.min(MAX_RATE, writeRate + amount);
+    }
+
+    // ── Le montage ───────────────────────────────────────────────────
+    //  La séquence est écrite à la main dans SHOW_UNIVERSES : c'est un
+    //  montage, pas un diaporama, et le nombre de photos d'un temps
+    //  suffit à décider de sa mise en page.
     //
-    //  Les photos plein cadre étant recadrées, on ne voit pas toujours ce
-    //  qu'elles représentent : TOUTES sont agrandissables au clic, et
-    //  s'affichent alors entières.
-    const LAYOUT_CYCLE = ['full', 'duo', 'inset', 'full', 'duo', 'inset'];
+    //  1 photo  → `plein`    plein cadre recadré, parallaxe : l'ambiance
+    //  2 photos → `duo`      côte à côte, la seconde décalée
+    //  3 photos → `trio`     une haute à gauche, deux empilées à droite
+    //  4 photos → `quatuor`  cascade en quinconce
+    //
+    //  Duos, trios et quatuors passent dans des cadres de hauteur fixe :
+    //  les photos du dossier mêlent portrait et paysage, et à proportions
+    //  libres un portrait faisait déborder la composition sur deux écrans.
+    //  Elles y sont donc recadrées, comme le plein cadre. D'où la règle :
+    //  TOUTE photo s'agrandit au clic, et n'est montrée entière que là.
+    const LAYOUT_BY_COUNT = { 1: 'plein', 2: 'duo', 3: 'trio', 4: 'quatuor' };
 
-    function composeBeats(uni) {
-        const photos = uni.photos.slice();
-        const quotes = (uni.quotes || []).slice();
-        const beats = [];
-        let step = 0;
+    function photoSrc(uni, n) {
+        return `ressources/images/univers/${uni.slug}/${n}.jpg`;
+    }
 
-        while (photos.length) {
-            let layout = LAYOUT_CYCLE[step++ % LAYOUT_CYCLE.length];
-            // `duo` demande deux photos ; sur la dernière, on repasse en plein cadre.
-            if (layout === 'duo' && photos.length < 2) layout = 'full';
-            beats.push({ type: 'photos', layout, items: photos.splice(0, layout === 'duo' ? 2 : 1) });
-            if (quotes.length && photos.length) beats.push({ type: 'quote', quote: quotes.shift() });
-        }
-        // Une citation qui reste ferme le défilé, juste avant les dates.
-        if (quotes.length) beats.push({ type: 'quote', quote: quotes.shift() });
-        return beats;
+    // Aplatit la séquence en une liste de photos, dans l'ordre du défilé :
+    // c'est elle qui indexe `data-u-zoom` et la navigation de
+    // l'agrandissement.
+    function flatPhotos(uni) {
+        const out = [];
+        (uni.sequence || []).forEach(beat => {
+            if (!beat.p) return;
+            beat.p.forEach((n, i) => out.push({
+                src: photoSrc(uni, n),
+                caption: (beat.c && beat.c[i]) || ''
+            }));
+        });
+        return out;
     }
 
     function figureHtml(ph, layout, index, title, eager) {
         const cap = ph.caption || '';
-        return `<figure class="u-fig u-fig--${layout}">
+        return `<figure class="u-fig u-fig--${layout}" style="--i:${index}">
             <button type="button" class="u-fig-media" data-u-zoom="${index}"
                     aria-label="Agrandir : ${escape(cap || title)}">
                 <img src="${escape(ph.src)}" alt="${escape(cap || title)}"
@@ -271,20 +432,24 @@ const SHOW_UNIVERSES = {
 
     function beatsHtml(uni, title) {
         let index = 0;
-        return composeBeats(uni).map(beat => {
-            if (beat.type === 'quote') {
-                const q = beat.quote;
+        return (uni.sequence || []).map(beat => {
+            if (beat.q) {
                 // Les alexandrins se coupent au vers, pas à la largeur de
                 // l'écran : \n dans le texte = fin de vers.
                 return `<blockquote class="u-quote">
-                    <p>${escape(q.text).replace(/\n/g, '<br>')}</p>
-                    ${q.speaker ? `<cite>${escape(q.speaker)}</cite>` : ''}
+                    <p>${escape(beat.q).replace(/\n/g, '<br>')}</p>
+                    ${beat.by ? `<cite>${escape(beat.by)}</cite>` : ''}
                 </blockquote>`;
             }
-            const inner = beat.items
-                .map(ph => figureHtml(ph, beat.layout, index, title, index++ < 3))
-                .join('');
-            return beat.layout === 'duo' ? `<div class="u-duo">${inner}</div>` : inner;
+            if (!beat.p || !beat.p.length) return '';
+            const layout = LAYOUT_BY_COUNT[beat.p.length] || 'plein';
+            const inner = beat.p.map((n, i) => figureHtml(
+                { src: photoSrc(uni, n), caption: (beat.c && beat.c[i]) || '' },
+                layout, index, title, index++ < 3
+            )).join('');
+            return layout === 'plein'
+                ? inner
+                : `<div class="u-group u-${layout}">${inner}</div>`;
         }).join('');
     }
 
@@ -299,11 +464,12 @@ const SHOW_UNIVERSES = {
         </button>
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
+        <div class="u-hero-wrap">
         <header class="u-hero">
             <p class="u-eyebrow">${escape(info.year)}${info.badge ? ' · ' + escape(info.badge) : ''}</p>
-            <h2 class="u-title">${escape(info.title)}</h2>
+            <h2 class="u-title">${splitChars(info.title)}</h2>
             ${info.author ? `<p class="u-author">${escape(info.author)}</p>` : ''}
-            ${uni.tagline ? `<p class="u-tagline">${escape(uni.tagline)}</p>` : ''}
+            ${uni.synopsis ? `<p class="u-synopsis">${splitWords(uni.synopsis)}</p>` : ''}
             <p class="u-meta">${escape(info.role)}${info.company ? '<br>' + escape(info.company) : ''}</p>
 
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
@@ -319,6 +485,7 @@ const SHOW_UNIVERSES = {
             <span class="u-scroll" aria-hidden="true"><i class="fa-solid fa-arrow-down"></i></span>
             <span class="u-loader" role="status" aria-label="Chargement des visuels"></span>
         </header>
+        </div>
 
         <div class="u-figs">${figures}</div>
 
@@ -376,8 +543,16 @@ const SHOW_UNIVERSES = {
         });
     }
 
-    // ── Parallaxe + révélation des légendes ──────────────────────────
+    // ── Parallaxe + révélation ───────────────────────────────────────
+    let lastScrollTop = 0;
+
     function onScroll() {
+        // Le geste pousse l'écriture avant même d'avoir bougé la page :
+        // c'est ce qui donne l'impression que le récit répond à la main.
+        const moved = Math.abs(overlay.scrollTop - lastScrollTop);
+        lastScrollTop = overlay.scrollTop;
+        if (moved) nudgeWriting(moved / 90);
+
         if (rafId) return;
         rafId = requestAnimationFrame(() => {
             rafId = 0;
@@ -386,10 +561,9 @@ const SHOW_UNIVERSES = {
             const bar = overlay.querySelector('.u-progress span');
             if (bar) bar.style.transform = `scaleX(${total > 0 ? scroller.scrollTop / total : 0})`;
             if (REDUCED) return;
-            // Parallaxe réservée au plein cadre : sur une photo présentée
-            // entière dans son cadre, déplacer l'image la recadrerait, ce
-            // qui va justement contre ce qu'on veut y montrer.
-            overlay.querySelectorAll('.u-fig--full').forEach(fig => {
+
+            // Plein cadre : l'image glisse dans son cadre.
+            overlay.querySelectorAll('.u-fig--plein').forEach(fig => {
                 const r = fig.getBoundingClientRect();
                 if (r.bottom < -200 || r.top > h + 200) return;
                 // -1 (figure sous l'écran) → +1 (figure au-dessus)
@@ -397,10 +571,26 @@ const SHOW_UNIVERSES = {
                 const img = fig.querySelector('img');
                 if (img) img.style.transform = `translate3d(0, ${(t * 9).toFixed(2)}%, 0) scale(1.22)`;
             });
+
+            // Trios et quatuors : chaque vignette avance à sa propre
+            // vitesse. C'est ce décalage — quelques pour cent — qui donne
+            // de la profondeur à une composition plate, plutôt qu'un bloc
+            // d'images qui monte d'un seul tenant.
+            overlay.querySelectorAll('.u-group').forEach(group => {
+                const gr = group.getBoundingClientRect();
+                if (gr.bottom < -200 || gr.top > h + 200) return;
+                const t = (h / 2 - (gr.top + gr.height / 2)) / (h / 2 + gr.height / 2);
+                group.querySelectorAll('.u-fig').forEach((fig, i) => {
+                    const depth = 1 + (i % 3) * 0.9;   // 1, 1.9, 2.8
+                    const img = fig.querySelector('img');
+                    if (img) img.style.transform =
+                        `translate3d(0, ${(t * depth * 2.4).toFixed(2)}%, 0) scale(1.10)`;
+                });
+            });
         });
     }
 
-    const REVEALED = '.u-fig, .u-duo, .u-quote, .u-foot';
+    const REVEALED = '.u-fig, .u-group, .u-quote, .u-foot';
 
     function observeCaptions() {
         if (!('IntersectionObserver' in window)) {
@@ -468,7 +658,7 @@ const SHOW_UNIVERSES = {
     const MAX_WAIT_MS = 2500;
 
     function awaitFirstPhoto(uni) {
-        const first = uni.photos[0]?.src;
+        const first = flatPhotos(uni)[0]?.src;
         if (!first) return Promise.resolve();
         return Promise.race([
             new Promise(resolve => {
@@ -496,7 +686,7 @@ const SHOW_UNIVERSES = {
         applyPalette(uni.palette);
         overlay.dataset.slug = uni.slug;
         scroller = overlay;
-        zoomPhotos = uni.photos;   // même ordre que les data-u-zoom du défilé
+        zoomPhotos = flatPhotos(uni);   // même ordre que les data-u-zoom du défilé
 
         const r = li.getBoundingClientRect();
         const vw = window.innerWidth, vh = window.innerHeight;
@@ -534,6 +724,8 @@ const SHOW_UNIVERSES = {
         overlay.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
         observeCaptions();
+        lastScrollTop = 0;
+        playWriting();
         overlay.querySelector('.u-close')?.focus({ preventScroll: true });
         return true;
     }
@@ -543,6 +735,7 @@ const SHOW_UNIVERSES = {
         // L'agrandissement est empilé PAR-DESSUS l'univers : le dépiler
         // d'abord, sinon l'historique garderait une entrée orpheline.
         closeZoom();
+        stopWriting();
         isOpen = false;
         openToken++;
         overlay.classList.remove('is-open', 'is-loading');
@@ -582,7 +775,7 @@ const SHOW_UNIVERSES = {
                 const foot = overlay.querySelector('.u-foot');
                 if (!foot) return;
                 foot.classList.add('is-in');
-                overlay.querySelectorAll('.u-fig, .u-duo, .u-quote').forEach(f => f.classList.add('is-in'));
+                overlay.querySelectorAll(REVEALED).forEach(f => f.classList.add('is-in'));
                 foot.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
                 return;
             }

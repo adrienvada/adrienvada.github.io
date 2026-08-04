@@ -1126,8 +1126,21 @@
             transform: scaleX(0);
         }
 
-        /* ── Hero ── */
+        /* ── Hero ──
+           Le hero reste COLLÉ pendant environ deux écrans. C'est ce qui
+           permet au premier geste de défilement d'accélérer l'écriture du
+           titre et du synopsis au lieu de les emporter hors de l'écran :
+           on écrit la page avant de la quitter. Passé cette hauteur, le
+           défilé reprend son cours normal. */
+        .u-hero-wrap {
+            position: relative;
+            height: 195svh;
+        }
+
         .u-hero {
+            position: sticky;
+            top: 0;
+            height: 100svh;
             min-height: 100svh;
             display: flex;
             flex-direction: column;
@@ -1194,17 +1207,70 @@
             letter-spacing: .22em;
             text-transform: uppercase;
             color: var(--u-muted);
+            /* L'auteur se pose avec la dernière lettre du titre, pas avant :
+               il appartient au titre, pas au décor. */
+            opacity: 0;
+            transition: opacity 700ms var(--ease-out);
         }
 
-        .u-tagline {
+        .u-hero.is-titled .u-author {
+            opacity: 1;
+        }
+
+        /* ── Le récit s'écrit ──
+           Deux tempos, deux natures. Le titre se POSE : chaque lettre tombe
+           de haut, vite et net, comme une frappe. Le synopsis s'INSCRIT :
+           chaque mot sort d'un flou, lentement, comme une voix. Les durées
+           sont ici, le rythme est piloté en JS (voir playWriting) — un
+           animation-delay CSS ne pourrait pas être accéléré en cours de
+           route par le défilement. */
+        .u-ch {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(-0.32em) scale(1.04);
+            transition: opacity 260ms var(--ease-out), transform 420ms var(--ease-out);
+        }
+
+        .u-ch.is-lit {
+            opacity: 1;
+            transform: none;
+        }
+
+        .u-synopsis {
             margin: 26px 0 0;
-            max-width: 34ch;
-            font-size: clamp(.95rem, 2.4vw, 1.2rem);
+            max-width: 42ch;
+            font-size: clamp(.95rem, 2.3vw, 1.18rem);
             font-weight: 300;
-            font-style: italic;
-            line-height: 1.55;
+            line-height: 1.75;
             color: var(--u-text);
-            opacity: .82;
+        }
+
+        .u-wd {
+            display: inline-block;
+            opacity: 0;
+            filter: blur(7px);
+            transform: translateY(9px);
+            transition: opacity 900ms var(--ease-out),
+                filter 900ms var(--ease-out),
+                transform 900ms var(--ease-out);
+        }
+
+        .u-wd.is-lit {
+            opacity: .88;
+            filter: none;
+            transform: none;
+        }
+
+        /* Le reste du hero attend que le titre soit posé. */
+        .u-meta,
+        .u-hero-actions {
+            opacity: 0;
+            transition: opacity 900ms var(--ease-out);
+        }
+
+        .u-hero.is-titled .u-meta,
+        .u-hero.is-titled .u-hero-actions {
+            opacity: 1;
         }
 
         .u-meta {
@@ -1212,6 +1278,20 @@
             font-size: .78rem;
             line-height: 1.7;
             color: var(--u-muted);
+        }
+
+        /* La flèche n'invite à descendre qu'une fois le récit écrit.
+           L'animation de balancement est coupée tant qu'elle est cachée :
+           ses keyframes portent l'opacité et écraseraient le fondu. */
+        .u-hero .u-scroll {
+            opacity: 0;
+            animation: none;
+            transition: opacity 700ms var(--ease-out);
+        }
+
+        .u-hero.is-written .u-scroll {
+            opacity: 1;
+            animation: u-bob 2.4s ease-in-out infinite;
         }
 
         .u-scroll {
@@ -1335,7 +1415,7 @@
         }
 
         /* ── Plein cadre ── */
-        .u-fig--full {
+        .u-fig--plein {
             margin: 0;
             position: relative;
             height: 86svh;
@@ -1355,13 +1435,13 @@
             margin-top: 0;
         }
 
-        .u-fig--full .u-fig-media {
+        .u-fig--plein .u-fig-media {
             position: absolute;
             inset: 0;
             overflow: hidden;
         }
 
-        .u-fig--full img {
+        .u-fig--plein img {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -1372,7 +1452,7 @@
         /* Voile de la couleur du spectacle : lie les photos entre elles et
            les raccorde au fond, même si elles viennent de sources
            différentes (ce qui est le cas des vraies photos). */
-        .u-fig--full::after {
+        .u-fig--plein::after {
             content: '';
             position: absolute;
             inset: 0;
@@ -1380,7 +1460,7 @@
             pointer-events: none;
         }
 
-        .u-fig--full .u-cap {
+        .u-fig--plein .u-cap {
             position: absolute;
             left: 0;
             right: 0;
@@ -1390,16 +1470,23 @@
             padding: 0 24px;
         }
 
-        /* ── Médaillon : la photo entière, dans son cadre ── */
-        .u-fig--inset {
-            margin: 0;
-            padding: 12svh 7vw;
-            max-width: 1100px;
+        /* ══ GROUPES : duo, trio, quatuor ══
+           Un temps du défilé qui rassemble plusieurs photos. Elles n'entrent
+           jamais d'un bloc : chacune monte avec son propre retard, et le
+           défilement les fait avancer à des vitesses légèrement différentes
+           (voir onScroll). C'est ce décalage — quelques pour cent — qui
+           transforme une planche plate en composition. */
+        .u-group {
+            padding: 11svh 7vw;
             margin-inline: auto;
+            display: grid;
         }
 
-        .u-fig--inset .u-fig-media,
-        .u-duo .u-fig-media {
+        .u-group .u-fig {
+            margin: 0;
+        }
+
+        .u-group .u-fig-media {
             overflow: hidden;
             border-radius: 3px;
             border: 1px solid var(--u-line);
@@ -1409,55 +1496,51 @@
             transition: opacity 900ms var(--ease-out), transform 900ms var(--ease-out);
         }
 
-        .u-fig--inset.is-in .u-fig-media,
-        .u-duo.is-in .u-fig-media {
+        .u-group.is-in .u-fig-media {
             opacity: 1;
             transform: none;
         }
 
-        /* Décalage du second volet : les deux photos ne montent pas
-           d'un bloc, ce qui donnerait une bannière plutôt qu'un regard
-           qui passe de l'une à l'autre. */
-        .u-duo.is-in .u-fig:nth-child(2) .u-fig-media {
-            transition-delay: 140ms;
+        /* Entrée en cascade : chaque volet suit le précédent d'un temps.
+           --i est l'index de la photo dans le défilé, posé par le JS. */
+        .u-group .u-fig:nth-child(2) .u-fig-media {
+            transition-delay: 130ms;
         }
 
-        .u-fig--inset img,
-        .u-duo img {
-            display: block;
+        .u-group .u-fig:nth-child(3) .u-fig-media {
+            transition-delay: 260ms;
+        }
+
+        .u-group .u-fig:nth-child(4) .u-fig-media {
+            transition-delay: 390ms;
+        }
+
+        /* Cadres à HAUTEUR FIXE, exprimée en hauteur d'écran. Les photos du
+           dossier mêlent portrait et paysage : à proportions libres, un
+           portrait dans un trio faisait déborder la composition sur deux
+           écrans. Un cadre stable garde chaque temps lisible d'un seul
+           regard — et l'agrandissement au clic reste là pour montrer la
+           photo entière. */
+        .u-group .u-fig-media {
+            position: relative;
+            height: var(--tile-h, 46svh);
+        }
+
+        .u-group img {
+            position: absolute;
+            inset: 0;
             width: 100%;
-            height: auto;
+            height: 100%;
+            object-fit: cover;
         }
 
-        /* ── Duo : deux photos côte à côte ── */
-        .u-duo {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2.5vw;
-            align-items: center;
-            padding: 10svh 7vw;
-            max-width: 1300px;
-            margin-inline: auto;
-        }
-
-        .u-duo .u-fig {
-            margin: 0;
-        }
-
-        /* Le second volet, plus bas : une composition, pas un tableau. */
-        .u-duo .u-fig:nth-child(2) {
-            transform: translateY(7svh);
-        }
-
-        .u-fig--inset .u-cap,
-        .u-duo .u-cap {
+        .u-group .u-cap {
             margin-top: 14px;
             padding: 0;
             text-align: left;
         }
 
-        .u-fig--inset .u-cap span,
-        .u-duo .u-cap span {
+        .u-group .u-cap span {
             background: none;
             border: 0;
             padding: 0;
@@ -1468,28 +1551,95 @@
             transform: none;
         }
 
-        .u-fig--inset.is-in .u-cap span,
-        .u-duo.is-in .u-cap span {
+        .u-group.is-in .u-cap span {
             opacity: 1;
-            transition-delay: 260ms;
+            transition-delay: 300ms;
         }
 
-        @media (max-width: 720px) {
+        /* ── Duo : deux photos, la seconde plus bas ── */
+        .u-duo {
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5vw;
+            align-items: center;
+            max-width: 1300px;
+            --tile-h: 54svh;
+        }
 
-            /* Deux photos côte à côte deviennent illisibles sous ~360 px
-               de large : le duo repasse en colonne, sans décalage. */
-            .u-duo {
-                grid-template-columns: 1fr;
-                gap: 6svh;
+        .u-duo .u-fig:nth-child(2) {
+            transform: translateY(6svh);
+        }
+
+        /* ── Trio : une haute à gauche, deux empilées à droite ──
+           Le format vertical de la première tranche sur les deux autres :
+           l'œil entre par elle, puis redescend le long de la colonne. Un
+           trio en trois colonnes égales se lirait comme un catalogue. */
+        .u-trio {
+            grid-template-columns: 1.02fr 0.98fr;
+            grid-template-rows: auto auto;
+            gap: 2vw;
+            max-width: 1220px;
+            --tile-h: 30svh;
+        }
+
+        .u-trio .u-fig:nth-child(1) {
+            grid-row: 1 / span 2;
+            align-self: center;
+        }
+
+        /* Hauteur de la colonne de droite : deux vignettes plus l'écart. */
+        .u-trio .u-fig:nth-child(1) .u-fig-media {
+            height: calc(60svh + 2vw);
+        }
+
+        .u-trio .u-fig:nth-child(3) {
+            transform: translateX(5%);
+        }
+
+        /* ── Quatuor : cascade en quinconce ──
+           Quatre photos alignées feraient une planche-contact. Décalées
+           deux à deux, elles se lisent en diagonale — le regard descend au
+           lieu de balayer. */
+        .u-quatuor {
+            grid-template-columns: 1fr 1fr;
+            gap: 2vw;
+            max-width: 1120px;
+            --tile-h: 33svh;
+        }
+
+        .u-quatuor .u-fig:nth-child(2) {
+            transform: translateY(9svh);
+        }
+
+        .u-quatuor .u-fig:nth-child(3) {
+            transform: translateY(-3svh);
+        }
+
+        .u-quatuor .u-fig:nth-child(4) {
+            transform: translateY(6svh);
+        }
+
+        @media (max-width: 760px) {
+
+            /* Côte à côte, les photos deviennent illisibles sous ~360 px de
+               large. Tous les groupes repassent en colonne, sans décalage :
+               le rythme est alors porté par les seuls retards d'entrée. */
+            .u-group {
+                grid-template-columns: 1fr !important;
+                gap: 4svh;
                 padding: 8svh 8vw;
+                --tile-h: 34svh;
             }
 
-            .u-duo .u-fig:nth-child(2) {
-                transform: none;
+            .u-group .u-fig {
+                transform: none !important;
             }
 
-            .u-fig--inset {
-                padding: 9svh 8vw;
+            .u-trio .u-fig:nth-child(1) {
+                grid-row: auto;
+            }
+
+            .u-trio .u-fig:nth-child(1) .u-fig-media {
+                height: 34svh;
             }
         }
 

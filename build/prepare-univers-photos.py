@@ -1,83 +1,100 @@
 #!/usr/bin/env python3
-"""Prépare les photos de plateau pour les univers de spectacle (univers.js).
+"""Prépare les photos de plateau des univers de spectacle (voir univers.js).
 
-Les originaux vivent dans `ressources/spectacles/<spectacle>/` : ce sont des
-fichiers lourds (jusqu'à 8 Mo), aux noms de captation ou d'appareil photo.
-Ils ne sont PAS servis aux visiteurs et ne doivent pas être modifiés.
+Les originaux vivent dans `ressources/spectacles/<spectacle>/`, numérotés
+(`bérénice_12.jpg`). Ce sont des fichiers lourds : ils ne sont PAS servis aux
+visiteurs et ne doivent pas être modifiés.
 
-Ce script en sélectionne quelques-uns, les recadre en 16:10 et les sort en
-`ressources/images/univers/<slug>-photo-N.jpg`, à ~1600x1000 et < 300 Ko.
+Ce script sort `ressources/images/univers/<slug>/<n>.jpg`, redimensionnés et
+plafonnés en poids. **Le numéro est conservé** : c'est lui qui sert de langage
+commun entre les planches-contact, le montage donné par Adrien et les
+séquences de `univers.js`.
+
+Le cadrage n'est PAS forcé en 16:10 : les proportions d'origine sont
+préservées, parce que les mises en page `duo`, `trio`, `quatuor` et
+`medaillon` montrent la photo entière. Seul `plein` recadre, et c'est le
+navigateur qui s'en charge (`object-fit: cover`).
 
     python3 build/prepare-univers-photos.py
 
-Pour changer la sélection : modifier PICKS ci-dessous (les index sont ceux de
-l'ordre alphabétique du dossier, tel que l'affiche `ls`), puis relancer et
-mettre à jour les légendes dans `univers.js`.
-
-`centering` cadre le recadrage vertical : 0.5 = centre, plus petit = on garde
-le haut (utile quand les visages sont hauts dans l'image).
+Seules les photos RÉFÉRENCÉES dans SEQUENCES sont produites : inutile
+d'alourdir le dépôt avec 120 images dont la moitié ne sert pas.
 """
 import os
 import glob
+import re
 from PIL import Image, ImageOps
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 SRC = os.path.join(ROOT, "ressources", "spectacles")
 OUT = os.path.join(ROOT, "ressources", "images", "univers")
 
-W, H = 1600, 1000
+MAX_SIDE = 1600
 MAX_BYTES = 260 * 1024
 
-# slug de sortie -> (dossier source, [index], centrage vertical)
-PICKS = {
-    "berenice":  ("bérénice",  [0, 1, 2, 6, 3],       0.42),
-    "cleophene": ("cléophène", [3, 4, 11, 17, 19],    0.42),
-    "fulgurees": ("fulgurees", [26, 24, 14, 27, 29],  0.45),
-    "asyoulikeit": ("ayli",    [0],                   0.30),
-
-    # Dossiers encore vides : le script les ignore sans rien casser, et
-    # Audiences / À la barre gardent leurs visuels témoins. Dès que des
-    # photos y seront déposées, relancer puis AJUSTER ces index — les cinq
-    # premiers par ordre alphabétique ne sont qu'un point de départ.
-    "audiences": ("audiences",   [0, 1, 2, 3, 4],     0.42),
-    "alabarre":  ("à la barre",  [0, 1, 2, 3, 4],     0.42),
+# slug de sortie -> dossier source
+FOLDERS = {
+    "alabarre":    "à la barre",
+    "audiences":   "audiences",
+    "asyoulikeit": "ayli",
+    "berenice":    "bérénice",
+    "cleophene":   "cléophène",
+    "fulgurees":   "fulgurés",
 }
 
-# Le dossier « fulgurés » porte un accent ; on le retrouve par tolérance.
-ALIASES = {"fulgurees": "fulgurés"}
+# Le montage donné par Adrien : un groupe = un temps du défilé.
+# 1 photo = plein cadre, 2 = duo, 3 = trio, 4 = quatuor.
+# ⚠️ Doit rester synchronisé avec SEQUENCES dans univers.js.
+SEQUENCES = {
+    "alabarre":    [[19], [20, 8], [22], [4, 13], [14, 12], [9, 5, 6, 7], [25, 26]],
+    "audiences":   [[8], [6, 5], [4, 1], [2, 3]],
+    "asyoulikeit": [[8], [10, 7], [9], [1, 6], [3], [4, 5], [11, 12]],
+    "berenice":    [[2], [3], [12, 7], [1, 9, 11], [18], [13, 5, 16], [17, 19]],
+    "cleophene":   [[7], [10, 17], [21], [23], [20, 15], [16], [18, 13, 9], [5]],
+    "fulgurees":   [[10], [7], [8, 5, 19], [23], [3, 1, 4], [2], [27, 26]],
+}
 
 
-def source_files(folder):
-    d = os.path.join(SRC, ALIASES.get(folder, folder))
-    if not os.path.isdir(d):
-        d = os.path.join(SRC, folder)
-    files = [f for f in sorted(glob.glob(os.path.join(d, "*")))
-             if f.lower().endswith((".jpg", ".jpeg", ".png"))]
-    return files
+def source_by_number(folder):
+    """{numéro: chemin} — le suffixe numérique du nom de fichier fait foi."""
+    out = {}
+    for f in glob.glob(os.path.join(SRC, folder, "*")):
+        if not f.lower().endswith((".jpg", ".jpeg", ".png")):
+            continue
+        m = re.search(r"_(\d+)\.[^.]+$", os.path.basename(f))
+        if m:
+            out[int(m.group(1))] = f
+    return out
 
 
 def main():
-    os.makedirs(OUT, exist_ok=True)
-    for slug, (folder, picks, centering) in PICKS.items():
-        files = source_files(folder)
-        if not files:
-            print(f"— {slug} : aucun original, on garde le visuel témoin")
+    total = 0
+    for slug, folder in FOLDERS.items():
+        srcs = source_by_number(folder)
+        if not srcs:
+            print(f"— {slug} : dossier « {folder} » vide ou non numéroté")
             continue
-        for n, idx in enumerate(picks, start=1):
-            if idx >= len(files):
-                print(f"!! {slug} : index {idx} hors du dossier ({len(files)} fichiers)")
+        dest = os.path.join(OUT, slug)
+        os.makedirs(dest, exist_ok=True)
+
+        wanted = sorted({n for group in SEQUENCES.get(slug, []) for n in group})
+        for n in wanted:
+            if n not in srcs:
+                print(f"!! {slug} : photo {n} absente du dossier")
                 continue
-            im = ImageOps.exif_transpose(Image.open(files[idx])).convert("RGB")
-            im = ImageOps.fit(im, (W, H), Image.LANCZOS, centering=(0.5, centering))
-            p = os.path.join(OUT, f"{slug}-photo-{n}.jpg")
-            # Plafond de poids : cinq photos plein cadre s'enchaînent, et
-            # certaines (brume, grain de captation) compressent très mal.
+            im = ImageOps.exif_transpose(Image.open(srcs[n])).convert("RGB")
+            im.thumbnail((MAX_SIDE, MAX_SIDE), Image.LANCZOS)
+            p = os.path.join(dest, f"{n}.jpg")
+            # Plafond de poids : une dizaine de photos plein cadre
+            # s'enchaînent, et certaines compressent très mal.
             for q in (82, 74, 66, 58):
                 im.save(p, quality=q, optimize=True, progressive=True)
                 if os.path.getsize(p) <= MAX_BYTES:
                     break
-            print(f"{os.path.basename(p)}  <- {os.path.basename(files[idx])}"
-                  f"  ({os.path.getsize(p) // 1024} Ko)")
+            total += 1
+            print(f"{slug}/{n}.jpg  {im.width}x{im.height}  "
+                  f"{os.path.getsize(p) // 1024} Ko")
+    print(f"\n{total} photos préparées.")
 
 
 if __name__ == "__main__":

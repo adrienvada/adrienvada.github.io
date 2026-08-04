@@ -179,21 +179,30 @@ Chaque entrée porte :
 | `quotes` | `{ text, speaker }` — `\n` marque une fin de vers |
 | `credit` | photographe, affiché au pied du panneau |
 
-### Le rythme du défilé
+### Le montage
 
-`composeBeats()` alterne trois mises en page et glisse une citation entre les
-temps — cinq photos identiques à la suite font un diaporama, pas un récit :
+`sequence` est écrit à la main : un élément = un temps du défilé, dans
+l'ordre. **Le nombre de photos suffit à décider de la mise en page** :
 
-| Mise en page | Ce qu'elle sert |
+| Écriture | Mise en page |
 |---|---|
-| `full` | plein cadre, recadré en 16:10 — l'ambiance |
-| `duo` | deux photos côte à côte, la seconde décalée vers le bas — le détail |
-| `inset` | une photo entière dans son cadre — la composition |
+| `{ p: [12] }` | plein cadre recadré, parallaxe — l'ambiance |
+| `{ p: [12, 7] }` | duo, la seconde décalée vers le bas |
+| `{ p: [1, 9, 11] }` | trio : une haute à gauche, deux empilées à droite |
+| `{ p: [9, 5, 6, 7] }` | quatuor en cascade, lu en diagonale |
+| `{ q: 'texte', by: '…' }` | carton de texte, `\n` = fin de vers |
 
-Avec cinq photos et trois citations, on obtient :
-plein cadre → citation → duo → citation → médaillon → citation → plein cadre.
-Rien à régler à la main : le rythme découle du nombre de photos et de
-citations. Le cycle est dans la constante `LAYOUT_CYCLE`.
+`c: [...]` porte les légendes, dans l'ordre des photos.
+
+Les **numéros** sont ceux des fichiers de `ressources/spectacles/<spectacle>/`
+— le même langage que les planches-contact. ⚠️ Le dictionnaire `SEQUENCES` de
+`build/prepare-univers-photos.py` doit rester synchronisé : c'est lui qui
+décide quelles photos sont préparées.
+
+Duos, trios et quatuors passent dans des **cadres de hauteur fixe** (`--tile-h`,
+en `svh`). Les photos mêlant portrait et paysage, des proportions libres
+faisaient déborder un trio sur deux écrans. Elles y sont donc recadrées — et
+c'est l'agrandissement au clic qui les montre entières.
 
 **Toutes les photos sont agrandissables au clic** (loupe en bas à droite).
 C'est indispensable : le plein cadre et le duo recadrent, et on ne comprend
@@ -205,6 +214,20 @@ et fermeture au clic sur le fond.
 sont libres. Les pièces contemporaines — Fulguré.e.s, Audiences, À la barre —
 n'ont volontairement aucune citation : reproduire leur texte en ligne demande
 l'accord de l'autrice ou de l'auteur.
+
+### Le récit s'écrit
+
+Le hero reste **collé** pendant environ deux écrans (`.u-hero-wrap`). Pendant
+ce temps le titre se pose lettre à lettre, vite (34 ms), puis le synopsis
+s'inscrit mot à mot, doucement (108 ms), en sortant d'un flou. **Défiler
+accélère l'écriture** au lieu de l'emporter hors de l'écran : le premier geste
+écrit la page avant de la quitter, puis le tempo retombe.
+
+Tout est piloté par un compteur en millisecondes dans `playWriting()`, **et
+non par des `animation-delay` CSS** — on ne pourrait pas les accélérer en
+cours de route. Un garde-fou (`writeGuard`) affiche le texte quoi qu'il arrive
+si `requestAnimationFrame` est étranglé, ce qui arrive dans un onglet en
+arrière-plan : un titre resté invisible serait pire que pas d'animation.
 
 Le bouton **« Accéder aux dates »** est posé sous le titre, dès la première
 page : il saute directement au pied du panneau. Sans lui il fallait traverser
