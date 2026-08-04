@@ -2543,7 +2543,7 @@
             const { upcoming } = splitUpcoming(SHOW_DATA.upcoming);
             const out = [];
             upcoming.forEach(show => {
-                const base = { title: show.title, subtitle: show.subtitle || '', location: show.location, city: show.city || '' };
+                const base = { title: show.title, subtitle: show.subtitle || '', location: show.location, city: show.city };
                 if (show.type === 'series' && show.shows) {
                     show.shows.forEach(r => out.push(Object.assign({}, base, {
                         dateLabel: r.dateLabel, icsDate: r.icsDate, time: r.time, times: r.times,
@@ -2654,12 +2654,31 @@
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         }
 
+        // Repli : déduit la ville du libellé du lieu quand le champ `city`
+        // est absent. Deux formes coexistent dans les anciennes saisies :
+        //   « Le Forum, Falaise (14) »            -> après la virgule
+        //   « Tribunal judiciaire de Rouen (76) » -> après le dernier « de/du/d' »
+        function cityFromLocation(location) {
+            const s = String(location || '').replace(/\s*\(\d{2,3}\)\s*$/, '').trim();
+            if (!s) return '';
+            const parts = s.split(',').map(x => x.trim()).filter(Boolean);
+            if (parts.length > 1) return parts[parts.length - 1];
+            const m = s.match(/^.*(?:\sde\s|\sdu\s|\sd')\s*(.+)$/i);
+            return m ? m[1].trim() : s;
+        }
+
         // La ville vient du champ `city` de dates.js (voir l'en-tête de ce
-        // fichier). On extrayait auparavant la ville du libellé du lieu, ce qui
-        // donnait des doublons du type « Rouen » / « Tribunal judiciaire de
-        // Rouen » selon la façon dont le lieu avait été saisi.
+        // fichier), qui fait autorité : le déduire du libellé produisait des
+        // doublons (« Rouen » à côté de « Tribunal judiciaire de Rouen »)
+        // selon la façon dont le lieu avait été saisi.
+        //
+        // Le repli reste indispensable : index.html et dates.js sont mis en
+        // cache indépendamment par les navigateurs. Un visiteur peut donc
+        // recevoir un index.html récent avec un dates.js encore ancien, sans
+        // champ `city` — sans ce repli, le filtre Ville se retrouverait vide.
         function placeOf(entry) {
-            return (entry && entry.city) ? entry.city : '';
+            if (!entry) return '';
+            return entry.city || cityFromLocation(entry.location);
         }
 
         function matchesFilters(title, location, city) {
@@ -2804,11 +2823,11 @@
             let matchCount = 0;
             const upcoming = split.upcoming.map(show => {
                 if (show.type === 'series' && show.shows) {
-                    const kept = show.shows.filter(r => matchesFilters(show.title, show.location, show.city));
+                    const kept = show.shows.filter(r => matchesFilters(show.title, show.location, placeOf(show)));
                     matchCount += kept.length;
                     return kept.length ? Object.assign({}, show, { shows: kept }) : null;
                 }
-                const ok = matchesFilters(show.title, show.location, show.city);
+                const ok = matchesFilters(show.title, show.location, placeOf(show));
                 if (ok) matchCount++;
                 return ok ? show : null;
             }).filter(Boolean);
