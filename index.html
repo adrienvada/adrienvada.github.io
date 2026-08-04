@@ -2825,10 +2825,48 @@
                 aria-pressed="${active ? 'true' : 'false'}">${esc(label)}</button>`;
         }
 
+        // Toutes les représentations archivées (saison en cours écoulée +
+        // saisons archivées statiques), utilisées pour connaître les villes
+        // où un spectacle a déjà été joué.
+        function archivedEntries() {
+            if (typeof SHOW_DATA === 'undefined') return [];
+            const entries = splitUpcoming(SHOW_DATA.upcoming).past.slice();
+            if (SHOW_DATA.archives) {
+                Object.keys(SHOW_DATA.archives).forEach(name => {
+                    entries.push(...SHOW_DATA.archives[name]);
+                });
+            }
+            return entries;
+        }
+
+        // Le filtre Ville ne doit proposer que les villes où le spectacle
+        // sélectionné va être joué ou a déjà été joué. Sans spectacle
+        // sélectionné, on garde le comportement précédent (villes des
+        // prochaines dates).
+        function placesForShow(perfs, showTitle) {
+            if (!showTitle) {
+                return [...new Set(perfs.map(p => placeOf(p)).filter(Boolean))];
+            }
+            const fromUpcoming = perfs.filter(p => p.title === showTitle).map(p => placeOf(p));
+            // Les entrées d'archives combinent titre + sous-titre (« Cléophène,
+            // d'après Rodogune »), d'où la comparaison par inclusion.
+            const fromArchives = archivedEntries()
+                .filter(e => norm(e.title).includes(norm(showTitle)))
+                .map(e => placeOf(e));
+            return [...new Set([...fromUpcoming, ...fromArchives])].filter(Boolean);
+        }
+
         function buildFilterChips() {
             const perfs = upcomingPerformances();
             const shows = [...new Set(perfs.map(p => p.title))];
-            const places = [...new Set(perfs.map(p => placeOf(p)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'));
+            const places = placesForShow(perfs, dateFilters.show).sort((a, b) => a.localeCompare(b, 'fr'));
+
+            // La ville sélectionnée peut ne plus faire partie des villes
+            // disponibles après un changement de spectacle : on la réinitialise
+            // plutôt que de laisser un filtre actif mais invisible.
+            if (dateFilters.place && !places.includes(dateFilters.place)) {
+                dateFilters.place = null;
+            }
 
             const showsEl = document.getElementById('filter-shows');
             const placesEl = document.getElementById('filter-places');
