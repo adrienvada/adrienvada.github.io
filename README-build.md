@@ -38,6 +38,49 @@ définies dans `tailwind.config.js`.
 
 ---
 
+## Thèmes sombre / clair
+
+Le site est **sombre par défaut**, dans le prolongement de l'ouverture à
+particules. Un bouton en pied de page bascule vers le thème clair ; le choix est
+mémorisé (`localStorage`, clé `avTheme`).
+
+**Toutes les couleurs passent par des variables CSS** définies en haut du
+`<style>` de `index.html`, sous forme de triplets « R V B » (et non de `#hex`) —
+c'est ce qui permet aux modificateurs d'opacité de Tailwind (`border-stone-200/60`,
+`bg-black/25`…) de continuer à fonctionner, via `rgb(var(--x) / <alpha-value>)`
+dans `tailwind.config.js`.
+
+⚠️ **L'échelle `stone` de Tailwind est redéfinie** et ne correspond plus aux
+gris d'origine : elle est devenue sémantique et s'inverse en thème sombre
+(`stone-50` = surface la plus sombre, `stone-800` = texte le plus clair). C'est
+ce qui a permis de basculer tout le site sans réécrire des centaines de classes
+dans le balisage. Conséquence : **ne pas raisonner en « gris clair / gris
+foncé »** en ajoutant du markup, mais en niveaux (50–200 = surfaces et bordures,
+400–800 = textes).
+
+Jetons spécifiques ajoutés :
+
+| Classe | Rôle |
+|---|---|
+| `bg-luxury-bg` | fond de page |
+| `bg-luxury-surface` | surface de carte opaque (ex-`bg-white`) |
+| `bg-luxury-stripe` | rayure une ligne sur deux (ex-`bg-black/[0.015]`) |
+| `text-luxury-onGold` | texte posé SUR un aplat doré — blanc en clair, quasi noir en sombre |
+| `text-luxury-warn` | avertissements (réservations, séances scolaires) |
+| `text-luxury-goldInk` | or assombri pour les petits textes (contraste AA) |
+
+Trois surfaces gardent la palette sombre **quel que soit le thème** : le book
+photo, le lecteur vidéo et l'ouverture de scène. Leurs variables sont
+redéfinies localement (voir le sélecteur `#gallery-modal, #video-modal,
+#intro-overlay`) — sans cela leurs contenus deviendraient illisibles sur noir
+lorsque le site est en thème clair.
+
+**L'impression reste toujours claire**, même quand le site est affiché en
+sombre : le bloc `@media print` réimpose la palette claire à la racine. Un CV
+imprimé sur fond noir gâcherait l'encre et passerait mal en photocopie.
+
+---
+
 ## Ouverture de scène (`intro.js` + `mask-points.js`)
 
 Au premier chargement : un **masque de théâtre en particules** tourne lentement

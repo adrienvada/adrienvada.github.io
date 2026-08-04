@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#0a0907">
     <title>Page introuvable — Adrien Vada</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,11 +18,15 @@
     <link rel="shortcut icon" href="/favicon.ico" />
 
     <style>
+        /* Aligné sur le thème sombre du site (voir index.html) */
         :root {
-            --bg: #FAF9F5;
-            --text: #1A1A1F;
-            --muted: #575761;
-            --gold: #967e5b;
+            --bg: #0a0907;
+            --text: #f2ece0;
+            --muted: #b0a798;
+            --gold: #bfa98a;
+            --card: rgba(255, 255, 255, 0.035);
+            --line: rgba(255, 255, 255, 0.07);
+            color-scheme: dark;
         }
 
         * {
@@ -35,7 +40,11 @@
             align-items: center;
             justify-content: center;
             padding: 24px;
+            /* La couleur de repli doit précéder l'image : la forme courte
+               `background` réinitialise sinon le dégradé. */
             background: var(--bg);
+            background-image: radial-gradient(ellipse 90% 60% at 50% 0%, #17140f 0%, #0b0906 55%, #060504 100%);
+            background-attachment: fixed;
             color: var(--text);
             font-family: 'Montserrat', system-ui, sans-serif;
             text-align: center;
@@ -43,11 +52,12 @@
 
         .card {
             max-width: 520px;
-            background: rgba(255, 255, 255, .85);
-            border: 1px solid rgba(0, 0, 0, .05);
+            background: var(--card);
+            border: 1px solid var(--line);
             border-radius: 14px;
             padding: 40px 32px;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, .04);
+            box-shadow: 0 4px 24px -4px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(8px);
         }
 
         h1 {
@@ -83,7 +93,7 @@
             padding: 11px 22px;
             border-radius: 8px;
             background: var(--gold);
-            color: #fff;
+            color: #0c0a08;
             text-decoration: none;
             font-size: .78rem;
             font-weight: 700;
@@ -93,12 +103,12 @@
         }
 
         a.btn:hover {
-            background: #bfa98a;
+            background: #e0d2ba;
         }
 
         hr {
             border: 0;
-            border-top: 1px solid rgba(0, 0, 0, .07);
+            border-top: 1px solid var(--line);
             margin: 26px 0 16px;
         }
 

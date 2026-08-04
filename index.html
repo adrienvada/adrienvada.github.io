@@ -4,6 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script>
+        // Thème appliqué AVANT le premier rendu : posé plus tard, la page
+        // afficherait un éclair clair avant de basculer en sombre.
+        // Sombre par défaut ; le choix explicite de l'utilisateur prime.
+        (function () {
+            var t = 'dark';
+            try { if (localStorage.getItem('avTheme') === 'light') t = 'light'; } catch (e) { }
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+
+    <meta name="theme-color" content="#0a0907" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#0a0907">
     <meta name="google-site-verification" content="nXR_UIG-2NcBhs6kQGuCqpROfPUAqIfyt67kgJUJH6Q" />
     <link rel="canonical" href="https://adrienvada.fr/" />
     <meta name="description"
@@ -78,22 +92,141 @@
     </script>
 
     <style type="text/css">
+        /* ══════════════════════════════════════════════════════════════
+           THÈMES — toutes les couleurs du site passent par ces variables
+           (voir tailwind.config.js). Triplets « R V B » pour que les
+           modificateurs d'opacité de Tailwind continuent de fonctionner.
+
+           Le thème SOMBRE est celui par défaut : il prolonge l'ambiance de
+           l'ouverture à particules. Le thème clair reste accessible via le
+           bouton du pied de page.
+           ══════════════════════════════════════════════════════════════ */
+        :root,
+        :root[data-theme="dark"] {
+            --c-bg: 10 9 7;
+            --c-surface: 23 20 16;
+            --c-text: 242 236 224;
+            --c-muted: 176 167 152;
+
+            /* Échelle inversée en sombre : 50 = surface la plus sombre,
+               800 = texte le plus clair. */
+            --c-s50: 27 24 19;
+            --c-s100: 33 29 23;
+            --c-s200: 58 51 41;
+            --c-s300: 82 73 59;
+            --c-s400: 138 128 112;
+            --c-s500: 168 157 140;
+            --c-s600: 190 179 161;
+            --c-s700: 214 204 186;
+            --c-s800: 234 226 212;
+
+            --c-gold: 191 169 138;
+            --c-gold-light: 224 210 186;
+            --c-gold-ink: 201 180 148;
+            --c-gold-deep: 214 196 168;
+            --c-on-gold: 12 10 8;
+
+            --c-stripe: rgba(255, 255, 255, 0.035);
+            --c-warn: 240 191 118;
+
+            --glass-bg: rgba(255, 255, 255, 0.035);
+            --glass-border: rgba(255, 255, 255, 0.07);
+            --glass-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.5);
+            --glass-hover-shadow: 0 14px 44px -12px rgba(0, 0, 0, 0.65);
+            --panel-bg: rgba(255, 255, 255, 0.022);
+            --panel-border: rgba(255, 255, 255, 0.05);
+            --row-hover: rgba(255, 255, 255, 0.045);
+            --page-glow: radial-gradient(ellipse 90% 60% at 50% 0%, #17140f 0%, #0b0906 55%, #060504 100%);
+        }
+
+        :root[data-theme="light"] {
+            --c-bg: 250 249 245;
+            --c-surface: 255 255 255;
+            --c-text: 26 26 31;
+            --c-muted: 87 87 97;
+
+            --c-s50: 250 250 249;
+            --c-s100: 245 245 244;
+            --c-s200: 231 229 228;
+            --c-s300: 214 211 209;
+            --c-s400: 168 162 158;
+            --c-s500: 120 113 108;
+            --c-s600: 87 83 78;
+            --c-s700: 68 64 60;
+            --c-s800: 41 37 36;
+
+            --c-gold: 150 126 91;
+            --c-gold-light: 191 169 138;
+            --c-gold-ink: 130 108 74;
+            --c-gold-deep: 107 88 57;
+            --c-on-gold: 255 255 255;
+
+            --c-stripe: rgba(0, 0, 0, 0.015);
+            --c-warn: 180 83 9;
+
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(0, 0, 0, 0.05);
+            --glass-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+            --glass-hover-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.08);
+            --panel-bg: rgba(0, 0, 0, 0.01);
+            --panel-border: rgba(0, 0, 0, 0.03);
+            --row-hover: rgba(0, 0, 0, 0.02);
+            --page-glow: none;
+        }
+
+        /* Surfaces toujours sombres (lightbox, lecteur vidéo, ouverture de
+           scène) : elles gardent la palette sombre quel que soit le thème de
+           la page, sinon leurs contenus deviendraient illisibles sur noir. */
+        #gallery-modal,
+        #video-modal,
+        #intro-overlay {
+            --c-surface: 23 20 16;
+            --c-text: 242 236 224;
+            --c-muted: 176 167 152;
+            --c-s50: 27 24 19;
+            --c-s100: 33 29 23;
+            --c-s200: 58 51 41;
+            --c-s300: 140 130 116;
+            --c-s400: 138 128 112;
+            --c-s500: 168 157 140;
+            --c-s600: 190 179 161;
+            --c-s700: 214 204 186;
+            --c-s800: 234 226 212;
+            --c-gold: 191 169 138;
+            --c-gold-ink: 201 180 148;
+            --c-gold-deep: 214 196 168;
+            --c-on-gold: 12 10 8;
+            --glass-bg: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background-image: var(--page-glow);
+            background-attachment: fixed;
+        }
+
         .glass-card {
-            background: rgba(255, 255, 255, 0.85);
+            background: var(--glass-bg);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
         }
 
         .glass-panel {
-            background: rgba(0, 0, 0, 0.01);
-            border: 1px solid rgba(0, 0, 0, 0.03);
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
         }
 
         /* Fix: force vertical scrollbar to always show to prevent layout shift on tab switch */
         html {
             overflow-y: scroll;
+            background: rgb(var(--c-bg));
+            color-scheme: dark;
+        }
+
+        :root[data-theme="light"] {
+            color-scheme: light;
         }
 
         /* Custom Scrollbar */
@@ -103,16 +236,16 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #FAF9F5;
+            background: rgb(var(--c-bg));
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(150, 126, 91, 0.25);
+            background: rgb(var(--c-gold) / 0.28);
             border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(150, 126, 91, 0.45);
+            background: rgb(var(--c-gold) / 0.5);
         }
 
         /* Hide summary details indicator arrow */
@@ -139,8 +272,8 @@
 
         .glass-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.08);
-            border-color: rgba(150, 126, 91, 0.2);
+            box-shadow: var(--glass-hover-shadow);
+            border-color: rgb(var(--c-gold) / 0.25);
         }
 
         /* Lists interactions */
@@ -150,7 +283,7 @@
 
         ul li.group:has(a):hover {
             transform: translateX(6px);
-            background: rgba(150, 126, 91, 0.04) !important;
+            background: rgb(var(--c-gold) / 0.07) !important;
         }
 
         /* Page active states */
@@ -181,8 +314,46 @@
 
         /* PRINT RULES FOR PDF EXPORT */
         @media print {
+
+            /* Le CV s'imprime TOUJOURS en clair, quel que soit le thème
+               affiché à l'écran : un fond sombre gâcherait l'encre et rendrait
+               le document illisible en photocopie. On réimpose donc la palette
+               claire à la racine plutôt que de surcharger chaque règle. */
+            :root,
+            :root[data-theme="dark"],
+            :root[data-theme="light"] {
+                --c-bg: 255 255 255;
+                --c-surface: 255 255 255;
+                --c-text: 0 0 0;
+                --c-muted: 51 51 51;
+                --c-s50: 255 255 255;
+                --c-s100: 255 255 255;
+                --c-s200: 229 231 235;
+                --c-s300: 209 213 219;
+                --c-s400: 120 113 108;
+                --c-s500: 90 84 80;
+                --c-s600: 68 64 60;
+                --c-s700: 41 37 36;
+                --c-s800: 0 0 0;
+                --c-gold: 120 99 70;
+                --c-gold-light: 150 126 91;
+                --c-gold-ink: 105 87 60;
+                --c-gold-deep: 90 74 50;
+                --c-on-gold: 255 255 255;
+                --c-stripe: transparent;
+                --c-warn: 140 65 10;
+                --glass-bg: transparent;
+                --glass-border: transparent;
+                --glass-shadow: none;
+                --panel-bg: transparent;
+                --panel-border: transparent;
+                --page-glow: none;
+            }
+
+            html,
             body {
                 background: #ffffff !important;
+                background-image: none !important;
                 color: #000000 !important;
                 font-size: 11px !important;
             }
@@ -375,14 +546,14 @@
 
         /* Anneau de focus visible et cohérent au clavier */
         :focus-visible {
-            outline: 2px solid #967e5b;
+            outline: 2px solid rgb(var(--c-gold));
             outline-offset: 2px;
             border-radius: 3px;
         }
 
         #gallery-modal :focus-visible,
         #video-modal :focus-visible {
-            outline-color: #bfa98a;
+            outline-color: rgb(var(--c-gold-light));
         }
 
         /* ── Smooth expand panels for multi-date series ── */
@@ -409,8 +580,9 @@
         }
 
         .date-row-clickable:hover {
-            border-color: rgba(var(--gold-rgb, 183, 153, 98), 0.4) !important;
-            box-shadow: 0 0 0 1px rgba(var(--gold-rgb, 183, 153, 98), 0.1);
+            border-color: rgb(var(--c-gold) / 0.45) !important;
+            box-shadow: 0 0 0 1px rgb(var(--c-gold) / 0.14);
+            background: var(--row-hover);
         }
 
         .date-row-clickable:active {
@@ -627,7 +799,7 @@
     </style>
 </head>
 
-<body class="bg-luxury-lightBg text-luxury-textMain font-inter min-h-screen relative overflow-x-hidden">
+<body class="bg-luxury-bg text-luxury-textMain font-inter min-h-screen relative overflow-x-hidden">
 
     <!-- ══════════════════════════════════════════════════════════════
          OUVERTURE DE SCÈNE (voir intro.js)
@@ -694,6 +866,17 @@
         <!-- HEADER (Light Luxury Style) -->
         <header
             class="glass-card rounded-xl p-4 md:p-5 mb-5 shadow-sm border border-stone-200/50 hover:border-luxury-gold/30 transition duration-500">
+            <!-- Bascule clair / sombre : sur sa propre ligne, à droite, pour
+                 ne jamais chevaucher le portrait ni se lire comme un lien
+                 externe parmi les autres. Jumelle de celle du pied de page ;
+                 libellé et icône posés par applyTheme. -->
+            <div class="flex justify-end mb-2 -mt-1 -mr-1">
+                <button type="button" data-theme-toggle aria-pressed="false"
+                    class="no-print w-7 h-7 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center hover:border-luxury-gold transition-all duration-300">
+                    <i data-theme-toggle-icon class="fa-solid fa-sun text-[12px] text-amber-400"
+                        aria-hidden="true"></i>
+                </button>
+            </div>
             <div class="flex flex-col-reverse md:flex-row items-center md:items-start justify-between gap-4">
                 <!-- Info column -->
                 <div class="w-full md:flex-1 text-center md:text-left">
@@ -716,7 +899,7 @@
                     <!-- Contact : e-mail mis en avant, puis fiches et réseaux -->
                     <div class="border-t border-stone-200/60 pt-2.5 space-y-2">
                         <a href="mailto:adrien.vada@gmail.com"
-                            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-luxury-goldInk text-white text-xs font-bold font-montserrat tracking-wider uppercase hover:bg-luxury-goldDeep transition">
+                            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-luxury-goldInk text-luxury-onGold text-xs font-bold font-montserrat tracking-wider uppercase hover:bg-luxury-goldDeep transition">
                             <i class="fa-solid fa-envelope text-[11px]" aria-hidden="true"></i>
                             adrien.vada@gmail.com
                         </a>
@@ -758,7 +941,7 @@
                 <button type="button" class="relative group flex-shrink-0 flex flex-col items-center"
                     onclick="openGallery(0)" aria-label="Ouvrir le book photo">
                     <span
-                        class="relative block w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border border-stone-200 p-0.5 bg-white transition hover:border-luxury-gold duration-500 shadow-sm">
+                        class="relative block w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border border-stone-200 p-0.5 bg-luxury-surface transition hover:border-luxury-gold duration-500 shadow-sm">
                         <picture>
                             <source
                                 srcset="ressources/images/profil-192.webp 192w, ressources/images/profil-384.webp 384w"
@@ -808,7 +991,7 @@
 
             <!-- Print PDF button right-aligned on desktop -->
             <button type="button" onclick="window.print()" id="pdf-download-btn"
-                class="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded text-xs font-bold uppercase tracking-wider font-montserrat text-white bg-luxury-goldInk hover:bg-luxury-goldDeep transition-all duration-300 hover:scale-105 active:scale-95 group">
+                class="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded text-xs font-bold uppercase tracking-wider font-montserrat text-luxury-onGold bg-luxury-goldInk hover:bg-luxury-goldDeep transition-all duration-300 hover:scale-105 active:scale-95 group">
                 <i class="fas fa-file-pdf text-[11px]" aria-hidden="true"></i> Imprimer / PDF
             </button>
         </nav>
@@ -822,7 +1005,7 @@
                 <!-- Mobile Print PDF link -->
                 <div class="md:hidden mb-2 no-print">
                     <button type="button" onclick="window.print()"
-                        class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded text-xs font-bold uppercase tracking-wider font-montserrat text-white bg-luxury-goldInk transition duration-300">
+                        class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded text-xs font-bold uppercase tracking-wider font-montserrat text-luxury-onGold bg-luxury-goldInk transition duration-300">
                         <i class="fas fa-file-pdf text-xs" aria-hidden="true"></i> Imprimer / Enregistrer en PDF
                     </button>
                 </div>
@@ -838,12 +1021,12 @@
                     </div>
                     <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="min-w-0">
                                     <div class="cv-title-row">
                                         <span
-                                            class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2027</span>
+                                            class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2027</span>
                                         <span
                                             class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Cassandres
                                             <span class="text-luxury-textMuted italic font-normal normal-case">(Angelo
@@ -862,12 +1045,12 @@
                             </div>
                         </li>
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="min-w-0">
                                     <div class="cv-title-row">
                                         <span
-                                            class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
+                                            class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
                                         <span
                                             class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">L'Imaginaire
                                             Forcé <span
@@ -887,14 +1070,14 @@
                             </div>
                         </li>
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
                             <a href="https://www.cdn-normandierouen.fr/production/a-la-barre/" target="_blank"
                                 rel="noopener" class="block">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">À
                                                 La Barre, peine perdue ? <span
@@ -918,14 +1101,14 @@
                             </a>
                         </li>
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
                             <a href="https://www.cdn-normandierouen.fr/production/audiences/" target="_blank"
                                 rel="noopener" class="block">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Audiences</span>
                                         </div>
@@ -943,13 +1126,13 @@
                             </a>
                         </li>
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
                             <a href="https://crescite.fr/cleophene/" target="_blank" rel="noopener" class="block">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Cléophène
                                                 <span
@@ -972,13 +1155,13 @@
                             </a>
                         </li>
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
                             <a href="https://compagnie-alchimie.fr/" target="_blank" rel="noopener" class="block">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2023</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2023</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Fulguré.e.s
                                                 <span
@@ -999,13 +1182,13 @@
                             </a>
                         </li>
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
                             <a href="https://crescite.fr/berenice/" target="_blank" rel="noopener" class="block">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Bérénice
                                                 <span
@@ -1027,14 +1210,14 @@
                             </a>
                         </li>
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
                             <a href="https://labloomsbury.wixsite.com/compagnie/as-you-like-it" target="_blank"
                                 rel="noopener" class="block">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">As
                                                 You Like It <span
@@ -1068,12 +1251,12 @@
                     <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
                         <!-- La Peau des anges -->
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
                             <a href="https://www.imdb.com/fr/title/tt27404051/" target="_blank" rel="noopener"
                                 class="block">
                                 <div class="cv-title-row">
                                     <span
-                                        class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
+                                        class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
                                     <span
                                         class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">La
                                         peau des anges n'est pas si douce</span>
@@ -1087,12 +1270,12 @@
                         </li>
                         <!-- Le Rapt -->
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
                             <a href="https://www.imdb.com/fr/title/tt8957022/" target="_blank" rel="noopener"
                                 class="block">
                                 <div class="cv-title-row">
                                     <span
-                                        class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2019</span>
+                                        class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2019</span>
                                     <span
                                         class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Le
                                         rapt</span>
@@ -1119,10 +1302,10 @@
                     </div>
                     <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-luxury-stripe even:bg-transparent">
                             <div class="cv-title-row">
                                 <span
-                                    class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
+                                    class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
                                 <span class="cv-title inline align-middle font-bold text-luxury-textMain text-xs">Jeu
                                     caméra et casting</span>
                             </div>
@@ -1130,10 +1313,10 @@
                                 Mon Coach Academy</p>
                         </li>
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-luxury-stripe even:bg-transparent">
                             <div class="cv-title-row">
                                 <span
-                                    class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
+                                    class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
                                 <span class="cv-title inline align-middle font-bold text-luxury-textMain text-xs">Voix
                                     en studio professionnel</span>
                             </div>
@@ -1141,10 +1324,10 @@
                                 Coachs Associés</p>
                         </li>
                         <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-black/[0.015] even:bg-transparent">
+                            class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-luxury-stripe even:bg-transparent">
                             <div class="cv-title-row">
                                 <span
-                                    class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-white border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2018 - 2021</span>
+                                    class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2018 - 2021</span>
                                 <span class="cv-title inline align-middle font-bold text-luxury-textMain text-xs">Art
                                     dramatique</span>
                             </div>
@@ -1167,7 +1350,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
                         <!-- Taille -->
                         <div
-                            class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-black/[0.015] even:bg-transparent text-sm">
+                            class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-luxury-stripe even:bg-transparent text-sm">
                             <span
                                 class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Taille</span>
                             <span class="text-sm font-semibold text-luxury-textMain mt-0.5">186 cm</span>
@@ -1175,7 +1358,7 @@
 
                         <!-- Chant -->
                         <div
-                            class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-black/[0.015] even:bg-transparent text-sm">
+                            class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-luxury-stripe even:bg-transparent text-sm">
                             <span
                                 class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Chant</span>
                             <span class="text-sm font-semibold text-luxury-textMain mt-0.5">Baryton-basse</span>
@@ -1183,7 +1366,7 @@
 
                         <!-- Permis -->
                         <div
-                            class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-black/[0.015] even:bg-transparent text-sm">
+                            class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-luxury-stripe even:bg-transparent text-sm">
                             <span
                                 class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Permis</span>
                             <div class="flex gap-3 mt-0.5 items-center">
@@ -1200,7 +1383,7 @@
 
                         <!-- Piano -->
                         <div
-                            class="glass-panel rounded-lg p-2.5 odd:bg-black/[0.015] even:bg-transparent text-sm md:col-span-2 lg:col-span-1">
+                            class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent text-sm md:col-span-2 lg:col-span-1">
                             <span
                                 class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Piano</span>
                             <p class="text-sm font-semibold text-luxury-textMain mt-0.5">Interprétation,
@@ -1212,23 +1395,23 @@
 
                         <!-- Activités physiques -->
                         <div
-                            class="glass-panel rounded-lg p-2.5 odd:bg-black/[0.015] even:bg-transparent text-sm md:col-span-2">
+                            class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent text-sm md:col-span-2">
                             <span
                                 class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1 block">Activités
                                 physiques & sports</span>
                             <div class="flex flex-wrap gap-1">
                                 <span
-                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Boxe
+                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Boxe
                                     anglaise</span>
                                 <span
-                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Karaté</span>
+                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Karaté</span>
                                 <span
-                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Natation</span>
+                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Natation</span>
                                 <span
-                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Escrime
+                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Escrime
                                     artistique</span>
                                 <span
-                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain"
+                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain"
                                     title="Technique d'intervention opérationnelle rapprochée">
                                     <a href="https://fr.wikipedia.org/wiki/Technique_d%27intervention_op%C3%A9rationnelle_rapproch%C3%A9e"
                                         target="_blank" class="hover:underline">TIOR <i
@@ -1236,27 +1419,27 @@
                                             aria-hidden="true"></i></a>
                                 </span>
                                 <span
-                                    class="text-[10px] bg-white border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Tir
+                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Tir
                                     militaire (arme de poing, fusil d'assaut)</span>
                             </div>
                         </div>
 
                         <!-- Expériences pro -->
                         <div
-                            class="glass-panel rounded-lg p-2.5 odd:bg-black/[0.015] even:bg-transparent text-sm md:col-span-2">
+                            class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent text-sm md:col-span-2">
                             <span
                                 class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1 block">Expériences
                                 professionnelles</span>
                             <div class="grid grid-cols-3 gap-1 text-center">
-                                <div class="bg-white border border-stone-200 rounded p-1">
+                                <div class="bg-luxury-surface border border-stone-200 rounded p-1">
                                     <p class="text-[10px] text-luxury-textMain font-semibold">Armée de Terre</p>
                                     <p class="text-[9px] text-luxury-textMuted font-mono">Guyane française</p>
                                 </div>
-                                <div class="bg-white border border-stone-200 rounded p-1">
+                                <div class="bg-luxury-surface border border-stone-200 rounded p-1">
                                     <p class="text-[10px] text-luxury-textMain font-semibold">Gendarmerie</p>
                                     <p class="text-[9px] text-luxury-textMuted font-mono">Normandie</p>
                                 </div>
-                                <div class="bg-white border border-stone-200 rounded p-1">
+                                <div class="bg-luxury-surface border border-stone-200 rounded p-1">
                                     <p class="text-[10px] text-luxury-textMain font-semibold">SNCF</p>
                                     <p class="text-[9px] text-luxury-textMuted font-mono">Île-de-France</p>
                                 </div>
@@ -1265,7 +1448,7 @@
 
                         <!-- Langues -->
                         <div
-                            class="glass-panel rounded-lg p-2.5 odd:bg-black/[0.015] even:bg-transparent md:col-span-1">
+                            class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent md:col-span-1">
                             <span
                                 class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1.5 block">Langues</span>
                             <div class="space-y-1 text-xs">
@@ -1361,7 +1544,7 @@
                                     </span>
                                 </span>
                             </button>
-                            <div class="p-2.5 flex justify-between items-center bg-white border-t border-stone-100">
+                            <div class="p-2.5 flex justify-between items-center bg-luxury-surface border-t border-stone-100">
                                 <div>
                                     <h4 class="text-xs font-bold text-luxury-textMain uppercase tracking-wider">Bande
                                         démo cinéma</h4>
@@ -1397,9 +1580,9 @@
                     <div class="space-y-1.5">
                         <!-- Player 1: L'Oreal -->
                         <div
-                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-luxury-stripe even:bg-transparent">
                             <button type="button" data-audio-toggle="audio-loreal" id="btn-audio-loreal"
-                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-luxury-onGold text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
                                 <i aria-hidden="true" class="fa-solid fa-play text-[10px] pl-0.5"
                                     id="icon-audio-loreal"></i>
                             </button>
@@ -1427,9 +1610,9 @@
 
                         <!-- Player 2: Nexity -->
                         <div
-                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-luxury-stripe even:bg-transparent">
                             <button type="button" data-audio-toggle="audio-nexity" id="btn-audio-nexity"
-                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-luxury-onGold text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
                                 <i aria-hidden="true" class="fa-solid fa-play text-[10px] pl-0.5"
                                     id="icon-audio-nexity"></i>
                             </button>
@@ -1457,9 +1640,9 @@
 
                         <!-- Player 3: Uber -->
                         <div
-                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-luxury-stripe even:bg-transparent">
                             <button type="button" data-audio-toggle="audio-uber" id="btn-audio-uber"
-                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-luxury-onGold text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
                                 <i aria-hidden="true" class="fa-solid fa-play text-[10px] pl-0.5"
                                     id="icon-audio-uber"></i>
                             </button>
@@ -1489,9 +1672,9 @@
 
                         <!-- Player 4: NBA -->
                         <div
-                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-luxury-stripe even:bg-transparent">
                             <button type="button" data-audio-toggle="audio-nba" id="btn-audio-nba"
-                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-luxury-onGold text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
                                 <i aria-hidden="true" class="fa-solid fa-play text-[10px] pl-0.5"
                                     id="icon-audio-nba"></i>
                             </button>
@@ -1521,9 +1704,9 @@
 
                         <!-- Player 5: Se Loger -->
                         <div
-                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-luxury-stripe even:bg-transparent">
                             <button type="button" data-audio-toggle="audio-seloger" id="btn-audio-seloger"
-                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-luxury-onGold text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
                                 <i aria-hidden="true" class="fa-solid fa-play text-[10px] pl-0.5"
                                     id="icon-audio-seloger"></i>
                             </button>
@@ -1566,9 +1749,9 @@
                     <div class="space-y-1.5">
                         <!-- Player 6: Doc Animalier Coachs -->
                         <div
-                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-luxury-stripe even:bg-transparent">
                             <button type="button" data-audio-toggle="audio-docuanimalier" id="btn-audio-docuanimalier"
-                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-luxury-onGold text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
                                 <i aria-hidden="true" class="fa-solid fa-play text-[10px] pl-0.5"
                                     id="icon-audio-docuanimalier"></i>
                             </button>
@@ -1597,9 +1780,9 @@
 
                         <!-- Player 7: Doc Animalier Home Studio -->
                         <div
-                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-luxury-stripe even:bg-transparent">
                             <button type="button" data-audio-toggle="audio-docuhome" id="btn-audio-docuhome"
-                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-luxury-onGold text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
                                 <i aria-hidden="true" class="fa-solid fa-play text-[10px] pl-0.5"
                                     id="icon-audio-docuhome"></i>
                             </button>
@@ -1641,9 +1824,9 @@
                     <div class="space-y-2">
                         <!-- Player 8: Audiobook Les Enfants du Fleuve -->
                         <div
-                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-black/[0.015] even:bg-transparent">
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-luxury-stripe even:bg-transparent">
                             <button type="button" data-audio-toggle="audio-book" id="btn-audio-book"
-                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-white text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-luxury-onGold text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
                                 <i aria-hidden="true" class="fa-solid fa-play text-[10px] pl-0.5"
                                     id="icon-audio-book"></i>
                             </button>
@@ -1677,7 +1860,7 @@
         </main>
 
         <!-- FOOTER : contact + fiches professionnelles -->
-        <footer class="glass-card rounded-xl p-4 mt-5 border border-stone-200/50 bg-white/70 shadow-sm no-print">
+        <footer class="glass-card rounded-xl p-4 mt-5 border border-stone-200/50 bg-luxury-surface/70 shadow-sm no-print">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div class="text-center sm:text-left">
                     <p class="text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
@@ -1712,6 +1895,16 @@
                             rel="noopener" aria-label="Spotify (nouvel onglet)"
                             class="w-7 h-7 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk hover:border-luxury-gold transition-all duration-300">
                             <i class="fa-brands fa-spotify text-[13px]" aria-hidden="true"></i></a></li>
+
+                    <li><span class="block w-px h-5 bg-stone-200 mx-0.5" aria-hidden="true"></span></li>
+
+                    <!-- Bascule clair / sombre : libellé et icône sont posés
+                         par le script (voir applyTheme) pour rester cohérents
+                         avec le thème réellement appliqué. -->
+                    <li><button type="button" data-theme-toggle aria-pressed="false"
+                            class="w-7 h-7 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk hover:border-luxury-gold transition-all duration-300">
+                            <i data-theme-toggle-icon class="fa-solid fa-sun text-[12px] text-amber-400" aria-hidden="true"></i>
+                        </button></li>
                 </ul>
             </div>
         </footer>
@@ -1791,7 +1984,7 @@
         <div class="absolute inset-0 z-0" onclick="closeCalendarModal()" aria-hidden="true"></div>
 
         <!-- Modal card -->
-        <div class="relative z-10 w-full max-w-md bg-white rounded-xl overflow-hidden shadow-2xl border border-stone-200 transform scale-95 transition-all duration-300"
+        <div class="relative z-10 w-full max-w-md bg-luxury-surface rounded-xl overflow-hidden shadow-2xl border border-stone-200 transform scale-95 transition-all duration-300"
             id="calendar-modal-card">
             <!-- Header -->
             <div class="bg-stone-50 px-5 py-3.5 border-b border-stone-200 flex justify-between items-center">
@@ -1914,6 +2107,53 @@
         }
 
         // ════════════════════════════════════════════════════════════════
+        //  THÈME CLAIR / SOMBRE
+        //  L'attribut data-theme est déjà posé par le script du <head> (avant
+        //  le premier rendu) ; on ne s'occupe ici que du bouton et de la
+        //  mémorisation du choix.
+        // ════════════════════════════════════════════════════════════════
+        // Deux boutons pilotent le thème (en-tête et pied de page) : ils sont
+        // tenus synchronisés, un clic sur l'un met l'autre à jour.
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            try { localStorage.setItem('avTheme', theme); } catch (e) { }
+
+            const toLight = theme === 'dark';
+            // Les boutons annoncent l'action à venir, pas l'état courant
+            const action = toLight ? 'Passer au thème clair' : 'Passer au thème sombre';
+
+            document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
+                btn.setAttribute('aria-label', action);
+                btn.setAttribute('title', action);
+                btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+
+                const icon = btn.querySelector('[data-theme-toggle-icon]');
+                if (icon) {
+                    // Soleil jaune / lune bleu nuit : des couleurs propres à
+                    // chaque astre se distinguent d'un coup d'œil, alors qu'un
+                    // soleil en simple contour se confond avec un engrenage.
+                    icon.classList.remove('fa-sun', 'fa-moon', 'text-amber-400', 'text-indigo-300', 'text-luxury-goldInk');
+                    icon.classList.add(toLight ? 'fa-sun' : 'fa-moon', toLight ? 'text-amber-400' : 'text-indigo-300');
+                }
+                const label = btn.querySelector('[data-theme-toggle-label]');
+                if (label) label.textContent = toLight ? 'Thème clair' : 'Thème sombre';
+            });
+
+            const meta = document.querySelector('meta[name="theme-color"]:not([media])');
+            if (meta) meta.setAttribute('content', theme === 'light' ? '#FAF9F5' : '#0a0907');
+        }
+
+        function initThemeToggle() {
+            applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+            document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const now = document.documentElement.getAttribute('data-theme');
+                    applyTheme(now === 'light' ? 'dark' : 'light');
+                });
+            });
+        }
+
+        // ════════════════════════════════════════════════════════════════
         //  MODALES : ouverture/fermeture, piège de focus, verrou de scroll
         // ════════════════════════════════════════════════════════════════
         const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, iframe, [tabindex]:not([tabindex="-1"])';
@@ -1982,6 +2222,7 @@
         //  DÉMARRAGE
         // ════════════════════════════════════════════════════════════════
         document.addEventListener("DOMContentLoaded", () => {
+            initThemeToggle();
             renderDates();
             initAudioPlayers();
             setupScrollReveal();
@@ -2080,8 +2321,8 @@
 
             if (upcomingTitle) upcomingTitle.textContent = SHOW_DATA.currentSeasonTitle || 'Saison en cours';
 
-            const amberBadge = `<span class="text-[10px] text-amber-700 font-normal mt-0.5 flex items-center gap-1"><i class="fa-solid fa-circle-info text-[9px]" aria-hidden="true"></i> Les réservations ne sont pas encore ouvertes</span>`;
-            const schoolWarningBadge = `<span class="text-[10px] text-amber-700 font-normal mt-0.5 flex items-center gap-1"><i class="fa-solid fa-lock text-[9px]" aria-hidden="true"></i> Accès restreint : contactez-moi directement pour savoir si on peut vous trouver une place ! 😉</span>`;
+            const amberBadge = `<span class="text-[10px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><i class="fa-solid fa-circle-info text-[9px]" aria-hidden="true"></i> Les réservations ne sont pas encore ouvertes</span>`;
+            const schoolWarningBadge = `<span class="text-[10px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><i class="fa-solid fa-lock text-[9px]" aria-hidden="true"></i> Accès restreint : contactez-moi directement pour savoir si on peut vous trouver une place ! 😉</span>`;
 
             const getTimeStr = (item) => {
                 if (Array.isArray(item.times) && item.times.length > 0) return item.times.join(' & ');
@@ -2095,8 +2336,8 @@
             // Badge cliquable « ajouter à l'agenda »
             const calBadge = (idx, label, cls) =>
                 `<button type="button" data-cal-index="${idx}"
-                    class="${cls} font-mono font-bold text-white px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap hover:bg-luxury-goldDeep transition-colors inline-flex items-center gap-1 shadow-sm"
-                    aria-label="Ajouter au calendrier : ${esc(label)}">${label} <i class="fa-regular fa-calendar-plus text-[10px] text-white ml-0.5" aria-hidden="true"></i></button>`;
+                    class="${cls} font-mono font-bold text-luxury-onGold px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap hover:bg-luxury-goldDeep transition-colors inline-flex items-center gap-1 shadow-sm"
+                    aria-label="Ajouter au calendrier : ${esc(label)}">${label} <i class="fa-regular fa-calendar-plus text-[10px] text-luxury-onGold ml-0.5" aria-hidden="true"></i></button>`;
 
             let upcomingHtml = '';
             if (upcoming.length > 0) {
@@ -2142,7 +2383,7 @@
                                     class="w-full text-left glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 date-row-clickable">
                                     <span class="flex items-center gap-3 min-w-0 flex-1">
                                         <span class="flex flex-col items-start flex-shrink-0 w-[165px]">
-                                            <span class="font-mono font-bold text-white bg-luxury-goldInk/90 border border-luxury-goldInk px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap shadow-sm">${esc(show.dateLabel || show.date)}</span>
+                                            <span class="font-mono font-bold text-luxury-onGold bg-luxury-goldInk/90 border border-luxury-goldInk px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap shadow-sm">${esc(show.dateLabel || show.date)}</span>
                                         </span>
                                         <span class="min-w-0 flex-1">
                                             <span class="font-bold text-luxury-textMain text-xs leading-tight block">${esc(show.title)}${subtitleHtml}</span>
@@ -2214,13 +2455,13 @@
                 let archivesHtml = '';
                 Object.keys(seasons).forEach(seasonName => {
                     const showsHtml = seasons[seasonName].map(show => `
-                        <div class="py-1 odd:bg-black/[0.008] px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
+                        <div class="py-1 odd:bg-luxury-stripe px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
                             <span><strong>${esc(show.date)}</strong> : ${esc(show.title)}</span>
                             <span class="text-stone-500 text-[11px] md:text-right">${esc(show.location)}</span>
                         </div>`).join('');
 
                     archivesHtml += `
-                    <details class="group bg-black/[0.005] border border-stone-200/50 rounded-lg overflow-hidden transition-all duration-300">
+                    <details class="group bg-luxury-stripe border border-stone-200/50 rounded-lg overflow-hidden transition-all duration-300">
                         <summary class="flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat hover:bg-stone-50 transition-all text-xs">
                             <span class="font-semibold flex items-center gap-2">${esc(seasonName)}</span>
                             <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 group-open:rotate-180 text-stone-500" aria-hidden="true"></i>
