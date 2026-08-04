@@ -15,11 +15,15 @@
  *  volontaire de « L'imaginaire forcé » et « Le discours de Cassandre »,
  *  dont la direction visuelle n'est pas arrêtée.
  *
- *  photos : chemins servis tels quels. Les fichiers actuels de
- *  `ressources/images/univers/` sont des VISUELS TÉMOINS générés
- *  (dégradés abstraits portant la palette), à remplacer par de vraies
- *  photos de plateau — mêmes noms, ou nouveaux noms listés ici.
- *  Format conseillé : paysage 1600x1000, < 300 Ko.
+ *  photos : chemins servis tels quels, en 1600x1000 et < 300 Ko.
+ *    - `<slug>-photo-N.jpg` = VRAIES photos de plateau, découpées depuis
+ *      `ressources/spectacles/` par `build/prepare-univers-photos.py`.
+ *    - `<slug>-N.jpg` = visuels témoins générés (`build/gen-univers.py`),
+ *      encore en place pour Audiences et À la barre, dont les dossiers
+ *      de photos sont vides. À remplacer dès qu'il y aura des images.
+ *
+ *  credit : nom du ou de la photographe, affiché au pied du panneau.
+ *  À renseigner dès que les photos ne sont pas libres de crédit.
  * ============================================================
  */
 
@@ -36,11 +40,11 @@ const SHOW_UNIVERSES = {
         },
         tagline: 'Trois personnes qui s’aiment et que rien ne sauve.',
         photos: [
-            { src: 'ressources/images/univers/berenice-1.jpg', caption: 'Le blanc de la salle, avant que quelqu’un parle' },
-            { src: 'ressources/images/univers/berenice-2.jpg', caption: 'Titus — le pouvoir arrive par la porte' },
-            { src: 'ressources/images/univers/berenice-3.jpg', caption: 'Rose : le seul endroit du plateau où l’on saigne' },
-            { src: 'ressources/images/univers/berenice-4.jpg', caption: 'Antíochus attend, comme depuis cinq ans' },
-            { src: 'ressources/images/univers/berenice-5.jpg', caption: 'Noir final' }
+            { src: 'ressources/images/univers/berenice-photo-1.jpg', caption: 'Le cercle blanc, le public tout autour' },
+            { src: 'ressources/images/univers/berenice-photo-2.jpg', caption: 'Assis côte à côte, déjà séparés' },
+            { src: 'ressources/images/univers/berenice-photo-3.jpg', caption: 'L’étreinte' },
+            { src: 'ressources/images/univers/berenice-photo-4.jpg', caption: 'Ce qui emporte les corps' },
+            { src: 'ressources/images/univers/berenice-photo-5.jpg', caption: 'Rouge — le seul endroit où l’on saigne' }
         ]
     },
 
@@ -53,12 +57,13 @@ const SHOW_UNIVERSES = {
             line: 'rgba(217,162,74,0.20)', glow: 'rgba(217,162,74,0.32)'
         },
         tagline: 'Une couronne, deux frères, et du sable dans la bouche.',
+        credit: 'Arnaud Bertereau',
         photos: [
-            { src: 'ressources/images/univers/cleophene-1.jpg', caption: 'Plein soleil, aucune ombre où se mettre' },
-            { src: 'ressources/images/univers/cleophene-2.jpg', caption: 'L’or du trône, la poussière du chemin' },
-            { src: 'ressources/images/univers/cleophene-3.jpg', caption: 'Rodogune, contre-jour' },
-            { src: 'ressources/images/univers/cleophene-4.jpg', caption: 'La coupe' },
-            { src: 'ressources/images/univers/cleophene-5.jpg', caption: 'Le soir tombe sur la dynastie' }
+            { src: 'ressources/images/univers/cleophene-photo-1.jpg', caption: 'Le sable, et personne pour s’y agenouiller à sa place' },
+            { src: 'ressources/images/univers/cleophene-photo-2.jpg', caption: 'La coupe levée' },
+            { src: 'ressources/images/univers/cleophene-photo-3.jpg', caption: 'Les mains sur la tête du fils' },
+            { src: 'ressources/images/univers/cleophene-photo-4.jpg', caption: 'À terre' },
+            { src: 'ressources/images/univers/cleophene-photo-5.jpg', caption: 'Front contre front' }
         ]
     },
 
@@ -72,12 +77,10 @@ const SHOW_UNIVERSES = {
             line: 'rgba(194,217,75,0.22)', glow: 'rgba(217,79,43,0.35)'
         },
         tagline: 'On part se perdre en forêt, on en revient amoureux.',
+        // Une seule photo au dossier pour l'instant : mieux vaut une vraie
+        // image que quatre ambiances inventées autour d'elle.
         photos: [
-            { src: 'ressources/images/univers/asyoulikeit-1.jpg', caption: 'Ardenne — tous les verts à la fois' },
-            { src: 'ressources/images/univers/asyoulikeit-2.jpg', caption: 'Touchstone entre en criant' },
-            { src: 'ressources/images/univers/asyoulikeit-3.jpg', caption: 'Rosalinde en Ganymède' },
-            { src: 'ressources/images/univers/asyoulikeit-4.jpg', caption: 'Le grelot et le poignard' },
-            { src: 'ressources/images/univers/asyoulikeit-5.jpg', caption: 'Quatre mariages, aucun sérieux' }
+            { src: 'ressources/images/univers/asyoulikeit-photo-1.jpg', caption: 'La forêt d’Ardenne, en survêtement' }
         ]
     },
 
@@ -127,11 +130,11 @@ const SHOW_UNIVERSES = {
         },
         tagline: 'Ce qui reste quand la foudre est passée par vous.',
         photos: [
-            { src: 'ressources/images/univers/fulgurees-1.jpg', caption: 'Avant l’orage' },
-            { src: 'ressources/images/univers/fulgurees-2.jpg', caption: 'L’éclat' },
-            { src: 'ressources/images/univers/fulgurees-3.jpg', caption: 'Brûlure' },
-            { src: 'ressources/images/univers/fulgurees-4.jpg', caption: 'La nuit reprend sa place' },
-            { src: 'ressources/images/univers/fulgurees-5.jpg', caption: 'Fulguré.e.s' }
+            { src: 'ressources/images/univers/fulgurees-photo-1.jpg', caption: 'Avant l’orage' },
+            { src: 'ressources/images/univers/fulgurees-photo-2.jpg', caption: 'L’éclat' },
+            { src: 'ressources/images/univers/fulgurees-photo-3.jpg', caption: 'Les rayons' },
+            { src: 'ressources/images/univers/fulgurees-photo-4.jpg', caption: 'Dans la brume, à deux' },
+            { src: 'ressources/images/univers/fulgurees-photo-5.jpg', caption: 'Ce qui reste' }
         ]
     },
 };
@@ -205,7 +208,7 @@ const SHOW_UNIVERSES = {
         const info = rowInfo(li);
         const figures = uni.photos.map((ph, i) => `
             <figure class="u-fig" data-i="${i}">
-                <div class="u-fig-media"><img src="${escape(ph.src)}" alt="${escape(ph.caption || info.title)}" loading="${i < 2 ? 'eager' : 'lazy'}" decoding="async"></div>
+                <div class="u-fig-media"><img src="${escape(ph.src)}" alt="${escape(ph.caption || info.title)}" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="async"></div>
                 <figcaption class="u-cap"><span>${escape(ph.caption || '')}</span></figcaption>
             </figure>`).join('');
 
@@ -247,6 +250,7 @@ const SHOW_UNIVERSES = {
                 ${info.url ? `<a class="u-btn" href="${escape(info.url)}" target="_blank" rel="noopener">Page du spectacle <i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i></a>` : ''}
                 <button type="button" class="u-btn u-btn-ghost" data-u-dates="${escape(info.key)}">Voir toutes les dates</button>
             </div>
+            ${uni.credit ? `<p class="u-credit">Photographies : ${escape(uni.credit)}</p>` : ''}
         </footer>`;
     }
 
@@ -291,7 +295,7 @@ const SHOW_UNIVERSES = {
                 // -1 (figure sous l'écran) → +1 (figure au-dessus)
                 const t = (h / 2 - (r.top + r.height / 2)) / (h / 2 + r.height / 2);
                 const img = fig.querySelector('img');
-                if (img) img.style.transform = `translate3d(0, ${(t * 9).toFixed(2)}%, 0) scale(1.14)`;
+                if (img) img.style.transform = `translate3d(0, ${(t * 9).toFixed(2)}%, 0) scale(1.22)`;
             });
         });
     }

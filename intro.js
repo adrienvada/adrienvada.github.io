@@ -216,6 +216,25 @@
         return scale;
     }
 
+    // ── TRAVELLING AVANT ─────────────────────────────────────────
+    // Très lent, presque imperceptible image par image, mais nettement
+    // sensible sur la durée : la caméra avance vers le masque. On ne se
+    // contente pas d'agrandir la forme (ce serait un zoom, plat) — on
+    // RACCOURCIT aussi la focale, ce qui accentue la perspective : les
+    // reliefs proches (front, nez, pommettes) s'écartent plus vite que le
+    // reste, exactement comme quand on entre dans le masque.
+    var DOLLY_MS = 16000;        // course complète du travelling
+    var FOCAL_START = 2.6, FOCAL_END = 2.15;
+    var DOLLY_SCALE_GAIN = 0.12; // +12 % d'échelle en fin de course
+
+    function dollyProgress(nowMs) {
+        if (shapeBirth === null) return 0;
+        var t = Math.min(1, Math.max(0, (nowMs - shapeBirth) / DOLLY_MS));
+        // Démarrage en douceur (le masque finit de se matérialiser), puis
+        // avancée régulière : pas de coup d'accélérateur perceptible.
+        return t * t * (3 - 2 * t);
+    }
+
     function stepAndDraw(now, dt, tSec) {
         // Le masque OSCILLE autour de la position de face, il ne tourne pas
         // sur lui-même : un visage ne se reconnaît que de face ou presque.
@@ -239,8 +258,10 @@
         // regarder de loin.
         var byHeight = H * 0.40;   // ~120 % de la hauteur d'écran
         var byWidth = W * 0.48;    // ~112 % de la largeur d'écran
-        var shapeScale = Math.min(byHeight, byWidth) * scaleEnv * (1 + turbulence * 0.08);
-        var focal = 2.6;
+        var dolly = dollyProgress(now);
+        var shapeScale = Math.min(byHeight, byWidth) * scaleEnv * (1 + turbulence * 0.08)
+            * (1 + dolly * DOLLY_SCALE_GAIN);
+        var focal = FOCAL_START + (FOCAL_END - FOCAL_START) * dolly;
         var cx = W / 2, cy = H * 0.5;
         var springBack = Math.min(1, dt * 4.2);
         var energyDecay = Math.pow(0.9, dt * 60);
@@ -280,7 +301,12 @@
             p.offY -= p.offY * springBack;
             p.energy *= energyDecay;
 
-            var depth = Math.max(0, Math.min(1, (persp - 0.62) / 1.35));
+            // La profondeur (luminosité/taille des points) reste calibrée sur
+            // la focale de départ : sinon le travelling écraserait le contraste
+            // entre l'avant et l'arrière du masque au fur et à mesure qu'on
+            // s'approche, et la forme se délaverait.
+            var perspRef = FOCAL_START / (FOCAL_START - z2);
+            var depth = Math.max(0, Math.min(1, (perspRef - 0.62) / 1.35));
             // Scintillement resserré : trop d'amplitude et une partie du
             // masque s'éteignait à chaque image, ce qui hachait la forme.
             var twinkle = 0.82 + 0.18 * Math.sin(tSec * p.twinkleSpeed + p.twinklePhase);

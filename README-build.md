@@ -193,22 +193,44 @@ Un spectacle **sans entrée** garde l'ancien tiroir. C'est volontaire pour
 « L'imaginaire forcé » et « Le discours de Cassandre », dont la direction
 visuelle n'est pas arrêtée — ce n'est pas un cas d'erreur à corriger.
 
-⚠️ Les fichiers de `ressources/images/univers/` sont pour l'instant des
-**visuels témoins générés** (des ambiances abstraites portant la palette), pas
-des photos de spectacle. Ils sont produits par `build/gen-univers.py` (Pillow,
-comme les vignettes du book) et sont destinés à être remplacés par de vraies
-photos de plateau (paysage ~1600×1000, < 300 Ko) — soit aux mêmes noms, soit
-en changeant les chemins dans `univers.js` :
+### Les photos
+
+Les **originaux** vivent dans `ressources/spectacles/<spectacle>/` : fichiers
+lourds, aux noms de captation ou d'appareil photo. Ils ne sont **pas servis
+aux visiteurs** et ne doivent pas être modifiés. Ce qui part en ligne, ce sont
+les recadrages produits par :
+
+```bash
+python3 build/prepare-univers-photos.py
+```
+
+qui sort `ressources/images/univers/<slug>-photo-N.jpg` en 1600×1000, plafonné
+à 260 Ko. La sélection (quels clichés, dans quel ordre, quel centrage
+vertical) est dans le dictionnaire `PICKS` en haut du script : ajouter des
+photos dans un dossier ne suffit pas, il faut les choisir là, relancer, et
+écrire les légendes dans `univers.js`.
+
+État actuel : Bérénice, Cléophène et Fulguré.e.s ont 5 photos chacun,
+As You Like It une seule (c'est tout ce qu'il y a au dossier — mieux vaut une
+vraie image que quatre ambiances inventées autour d'elle).
+
+**Audiences** et **À la barre** n'ont pas encore de photos : leurs dossiers
+sont vides et ils affichent toujours des **visuels témoins générés** — des
+ambiances abstraites portant la palette, produites par :
 
 ```bash
 python3 build/gen-univers.py
 ```
 
-Le script produit des **JPEG, pas des SVG**. La première version générait des
+Ce script produit des **JPEG, pas des SVG**. La première version générait des
 SVG à filtres (`feTurbulence`, `feGaussianBlur`) : le navigateur les
 rasterisait à chaque composition, ce qui saccadait l'ouverture du panneau et
 le défilement. Ne pas y revenir : le flou et le grain doivent rester calculés
 hors ligne.
+
+**Crédit photo** : le champ `credit` d'un univers s'affiche au pied du
+panneau. Les photos de Cléophène sont d'Arnaud Bertereau — le crédit est déjà
+en place ; le renseigner pour toute série qui en demande un.
 
 ### Fluidité — ce qui a été fait, et pourquoi ne pas le défaire
 
