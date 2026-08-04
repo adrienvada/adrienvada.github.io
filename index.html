@@ -129,6 +129,19 @@
             --c-stripe: rgba(255, 255, 255, 0.035);
             --c-warn: 240 191 118;
 
+            /* ── Mouvement ────────────────────────────────────────────
+               Un seul vocabulaire pour tout le site : deux courbes et
+               quatre durées. La sensation « tactile » vient surtout du
+               contraste entre --dur-press (l'enfoncement, quasi immédiat)
+               et --dur-base (le relâchement, qui s'étire). Un aller-retour
+               à durée égale donne au contraire une impression de mollesse. */
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-panel: cubic-bezier(0.4, 0, 0.2, 1);
+            --dur-press: 90ms;
+            --dur-quick: 180ms;
+            --dur-base: 320ms;
+            --dur-panel: 400ms;
+
             --glass-bg: rgba(255, 255, 255, 0.035);
             --glass-border: rgba(255, 255, 255, 0.07);
             --glass-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.5);
@@ -274,17 +287,60 @@
             list-style: none;
         }
 
-        /* Animations ultra-modernes & Interactions */
+        /* ══════════════════════════════════════════════════════════════
+           INTERACTIONS — réponse au survol et au toucher
+           On énumère les propriétés animées plutôt que d'utiliser
+           `transition: all` : `all` fait aussi transitionner des propriétés
+           qu'on ne veut pas voir bouger (largeur, marges recalculées…), ce
+           qui produit des glissements parasites au changement de thème ou
+           de contenu.
+           ══════════════════════════════════════════════════════════════ */
         a,
         button,
+        summary,
         .glass-card,
-        details {
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        .filter-chip,
+        .cv-item,
+        .date-row-clickable,
+        [data-cal-index] {
+            transition:
+                background-color var(--dur-base) var(--ease-out),
+                color var(--dur-base) var(--ease-out),
+                border-color var(--dur-base) var(--ease-out),
+                box-shadow var(--dur-base) var(--ease-out),
+                opacity var(--dur-quick) var(--ease-out),
+                transform var(--dur-base) var(--ease-out);
+            /* Supprime le rectangle gris que les navigateurs mobiles peignent
+               au tap, et le délai de 300 ms hérité du double-tap-zoom. */
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
-        a:active:not(#nav-tabs-container a),
-        button:active {
-            transform: scale(0.96);
+        /* L'enfoncement est presque instantané, le retour s'étire : c'est ce
+           décalage qui donne la sensation de matière sous le doigt. */
+        a:active,
+        button:active,
+        summary:active,
+        .filter-chip:active,
+        [data-cal-index]:active {
+            transition-duration: var(--dur-press);
+        }
+
+        /* Deux amplitudes : marquée sur les petites cibles, discrète sur les
+           grandes surfaces — une carte pleine largeur qui rétrécit de 4 %
+           paraîtrait sauter. */
+        a:active:not(#nav-tabs-container a):not(.cv-row-toggle),
+        button:active:not(.cv-row-toggle):not(summary),
+        .filter-chip:active,
+        [data-cal-index]:active {
+            transform: scale(0.94);
+        }
+
+        .cv-row-toggle:active,
+        summary:active,
+        .date-row-clickable:active,
+        #nav-tabs-container a:active {
+            transform: scale(0.988);
         }
 
         .glass-card:hover {
@@ -293,14 +349,27 @@
             border-color: rgb(var(--c-gold) / 0.25);
         }
 
-        /* Lists interactions */
-        ul li.group {
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        /* Le survol n'a de sens que sur un vrai pointeur : sur mobile il reste
+           « collé » après le tap, l'élément demeurant en état survolé. */
+        @media (hover: hover) {
+            ul li.group:has(a):hover {
+                transform: translateX(6px);
+                background: rgb(var(--c-gold) / 0.07) !important;
+            }
+
+            .cv-item:hover,
+            summary:hover {
+                background: var(--row-hover);
+            }
+
+            .filter-chip:hover {
+                transform: translateY(-1px);
+            }
         }
 
-        ul li.group:has(a):hover {
-            transform: translateX(6px);
-            background: rgb(var(--c-gold) / 0.07) !important;
+        ul li.group {
+            transition: background-color var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out);
         }
 
         /* Page active states */
@@ -591,7 +660,7 @@
             display: grid;
             grid-template-rows: 1fr;
             opacity: 1;
-            transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
         }
 
         .bio-collapse.bio-hidden {
@@ -607,7 +676,7 @@
         .cv-expand-panel {
             display: grid;
             grid-template-rows: 0fr;
-            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
             opacity: 0;
         }
 
@@ -627,7 +696,7 @@
         }
 
         .cv-chevron {
-            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform var(--dur-panel) var(--ease-panel);
         }
 
         .cv-row-toggle[aria-expanded="true"] .cv-chevron {
@@ -639,7 +708,7 @@
             display: grid;
             grid-template-rows: 0fr;
             opacity: 0;
-            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
         }
 
         .filter-collapse.is-open {
@@ -658,7 +727,7 @@
             display: none;
             opacity: 0;
             transform: translateY(-4px);
-            transition: opacity 0.32s ease, transform 0.32s ease;
+            transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
         }
 
         .filter-row.is-revealed {
@@ -691,11 +760,42 @@
             transition: opacity 0.25s ease;
         }
 
+        /* ── Archives : même tiroir que les spectacles du CV ──
+           On n'utilise pas <details> : son contenu vit dans une boîte gérée
+           par le navigateur, dont l'animation reste inégale d'un moteur à
+           l'autre (le pseudo-élément ::details-content qui la rend adressable
+           est très récent). La structure bouton + panneau du CV est prévisible
+           partout, et aria-expanded/aria-controls rend la sémantique et le
+           clavier équivalents. */
+        .drawer-panel {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
+        }
+
+        .drawer-panel.expanded {
+            grid-template-rows: 1fr;
+            opacity: 1;
+        }
+
+        .drawer-panel>.drawer-inner {
+            overflow: hidden;
+        }
+
+        .drawer-chevron {
+            transition: transform var(--dur-panel) var(--ease-panel);
+        }
+
+        .drawer-toggle[aria-expanded="true"] .drawer-chevron {
+            transform: rotate(180deg);
+        }
+
         /* ── Smooth expand panels for multi-date series ── */
         .date-expand-panel {
             display: grid;
             grid-template-rows: 0fr;
-            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
             opacity: 0;
         }
 
@@ -711,7 +811,6 @@
         /* Clickable date row hover effect */
         .date-row-clickable {
             cursor: pointer;
-            transition: all 0.3s ease;
         }
 
         .date-row-clickable:hover {
@@ -726,7 +825,7 @@
 
         /* Chevron rotation for multi-date toggles */
         .date-toggle-chevron {
-            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform var(--dur-panel) var(--ease-panel);
         }
 
         .date-toggle-chevron.rotated {
@@ -917,7 +1016,10 @@
             border-radius: 999px;
             backdrop-filter: blur(6px);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color var(--dur-base) var(--ease-out),
+                color var(--dur-base) var(--ease-out),
+                border-color var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out);
         }
 
         #intro-skip:hover {
@@ -2607,6 +2709,26 @@
                 ${list}`;
         }
 
+        // ════════════════════════════════════════════════════════════════
+        //  TIROIRS GÉNÉRIQUES (archives) — même effet que ceux du CV
+        //  Délégation sur le conteneur : les archives sont re-rendues à
+        //  chaque filtrage, un écouteur par bouton serait perdu.
+        // ════════════════════════════════════════════════════════════════
+        function setupDrawers(container) {
+            if (!container || container.dataset.drawersBound === '1') return;
+            container.dataset.drawersBound = '1';
+
+            container.addEventListener('click', (e) => {
+                const btn = e.target.closest('.drawer-toggle');
+                if (!btn || !container.contains(btn)) return;
+                const panel = document.getElementById(btn.getAttribute('aria-controls'));
+                if (!panel) return;
+                const willOpen = !panel.classList.contains('expanded');
+                panel.classList.toggle('expanded', willOpen);
+                btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            });
+        }
+
         function closeAllCvDrawers(except) {
             document.querySelectorAll('.cv-item').forEach(li => {
                 if (li === except) return;
@@ -2976,6 +3098,7 @@
                 });
 
                 let archivesHtml = '';
+                let seasonIdx = 0;
                 Object.keys(seasons).forEach(seasonName => {
                     // Les archives ne portent pas d'icsDate exploitable : on
                     // n'y applique que les filtres texte / spectacle / lieu.
@@ -2995,18 +3118,25 @@
                             <span class="text-stone-500 text-[11px] md:text-right">${esc(show.location)}</span>
                         </div>`).join('');
 
+                    const panelId = 'archive-panel-' + seasonIdx++;
                     archivesHtml += `
-                    <details class="group bg-luxury-stripe border border-stone-200/50 rounded-lg overflow-hidden transition-all duration-300">
-                        <summary class="flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat hover:bg-stone-50 transition-all text-xs">
+                    <div class="group bg-luxury-stripe border border-stone-200/50 rounded-lg overflow-hidden">
+                        <button type="button" class="drawer-toggle w-full flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat text-xs"
+                            aria-expanded="false" aria-controls="${panelId}">
                             <span class="font-semibold flex items-center gap-2">${esc(seasonName)}</span>
-                            <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 group-open:rotate-180 text-stone-500" aria-hidden="true"></i>
-                        </summary>
-                        <div class="p-2.5 border-t border-stone-200/40 space-y-1 bg-stone-50/50 text-xs text-luxury-textMuted divide-y divide-stone-200/30">
-                            ${showsHtml}
+                            <i class="fa-solid fa-chevron-down text-[10px] text-stone-500 drawer-chevron" aria-hidden="true"></i>
+                        </button>
+                        <div class="drawer-panel" id="${panelId}">
+                            <div class="drawer-inner">
+                                <div class="p-2.5 border-t border-stone-200/40 space-y-1 bg-stone-50/50 text-xs text-luxury-textMuted divide-y divide-stone-200/30">
+                                    ${showsHtml}
+                                </div>
+                            </div>
                         </div>
-                    </details>`;
+                    </div>`;
                 });
                 archivesContainer.innerHTML = archivesHtml;
+                setupDrawers(archivesContainer);
             }
 
             injectEventStructuredData(upcoming);
