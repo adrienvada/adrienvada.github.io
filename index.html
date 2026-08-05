@@ -8,10 +8,17 @@
     <script>
         // Thème appliqué AVANT le premier rendu : posé plus tard, la page
         // afficherait un éclair clair avant de basculer en sombre.
-        // Sombre par défaut ; le choix explicite de l'utilisateur prime.
+        // Choix explicite de l'utilisateur (localStorage) prioritaire ;
+        // sinon on suit la préférence système de l'appareil.
         (function () {
             var t = 'dark';
-            try { if (localStorage.getItem('avTheme') === 'light') t = 'light'; } catch (e) { }
+            var stored = null;
+            try { stored = localStorage.getItem('avTheme'); } catch (e) { }
+            if (stored === 'light' || stored === 'dark') {
+                t = stored;
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                t = 'light';
+            }
             document.documentElement.setAttribute('data-theme', t);
         })();
     </script>
@@ -988,11 +995,17 @@
         }
 
         /* LE TEXTE S'ÉCRIT, MOT À MOT.
-           C'est l'animation des univers, en plus court : chaque mot sort
-           d'un flou, monte de quelques pixels, et arrive TEINTÉ DE LA
-           COULEUR DU SPECTACLE avant de se poser dans le gris. Le murmure
-           annonce ainsi ce qu'on trouvera derrière la ligne — la couleur
-           d'abord, la fluidité ensuite.
+           Chaque mot paraît en fondu, et arrive TEINTÉ DE LA COULEUR DU
+           SPECTACLE avant de se poser dans le gris. Le murmure annonce
+           ainsi ce qu'on trouvera derrière la ligne.
+
+           UN FONDU, ET RIEN D'AUTRE. Les mots sortaient d'un flou, ce qui
+           était plus joli et beaucoup trop cher : le CV portait alors 156
+           éléments floutés — les seuls du site — et `blur` n'est pas une
+           propriété que le compositeur sait animer. Chaque changement de
+           rayon obligeait à repeindre le mot, sur une surface élargie de
+           trois fois le rayon, jusqu'à vingt mots à la fois. `opacity` est
+           au contraire animée par le GPU, sans repeindre quoi que ce soit.
 
            `text-indent` s'hérite, et chaque mot est un bloc en ligne :
            sans le remettre à zéro, tous les mots reculeraient de 1,1 em et
@@ -1001,10 +1014,8 @@
             display: inline-block;
             text-indent: 0;
             opacity: 0;
-            filter: blur(5px);
-            transform: translateY(6px);
             color: var(--cv-accent, currentColor);
-            transition-property: opacity, filter, transform, color;
+            transition-property: opacity, color;
             transition-timing-function: var(--ease-out);
             /* Cette durée-ci est celle du DÉPART : c'est l'état visé qui
                décide, et l'état visé au départ, c'est celui-ci. Le murmure
@@ -1026,22 +1037,18 @@
         .cv-has-universe:has(.cv-row-toggle:focus-visible) .cv-wd,
         .cv-item.is-whispering .cv-wd {
             opacity: 1;
-            filter: none;
-            transform: none;
             color: rgb(var(--c-s500));
             /* La couleur se pose plus lentement que le mot n'arrive :
                la teinte du spectacle reste un instant après lui. */
-            transition-duration: 1280ms, 1280ms, 1280ms, 2880ms;
+            transition-duration: 1280ms, 2880ms;
             transition-delay: calc(var(--i) * var(--wd-step, 120ms));
         }
 
         @media (hover: hover) and (pointer: fine) {
             .cv-has-universe:hover .cv-wd {
                 opacity: 1;
-                filter: none;
-                transform: none;
                 color: rgb(var(--c-s500));
-                transition-duration: 1280ms, 1280ms, 1280ms, 2880ms;
+                transition-duration: 1280ms, 2880ms;
                 /* Balayer la liste ne doit pas mettre huit murmures à
                    s'écrire au passage : il faut s'arrêter pour être
                    entendu. */
@@ -1785,28 +1792,74 @@
             color: var(--u-muted);
         }
 
-        /* ── Chargement ──
+        /* ── Chargement : une lueur, pas un rouage ──
            Le titre est déjà là, seules les photos attendent. La croix et le
            raccourci vers les dates restent cliquables : on doit toujours
-           pouvoir renoncer pendant le chargement. */
+           pouvoir renoncer pendant le chargement.
+
+           C'était un anneau qui tournait — le signe universel de l'attente,
+           et le seul objet mécanique d'un panneau qui n'en compte aucun. À
+           sa place, une lueur qui bat : un cœur de la couleur du spectacle,
+           et un halo qui s'ouvre et s'efface. On n'attend plus une machine,
+           on regarde l'univers s'allumer.
+
+           TRÈS LÉGER, AU SENS PROPRE : les deux animations ne touchent que
+           `transform` et `opacity`, les seules propriétés que le GPU sait
+           animer sans repeindre. Aucun filtre, aucune ombre animée. Le halo
+           est un dégradé radial déjà tramé, qu'on ne fait que redimensionner.
+
+           SA PLACE : centré horizontalement, dans le bas de l'écran. Pas au
+           centre exact — le titre et le synopsis y sont déjà, et le hero a
+           son propre halo derrière eux (voir .u-hero::before) : une seconde
+           lueur au même endroit ferait un empilement illisible. Ici elle
+           occupe la bande vide sous le texte, là où la flèche de défilement
+           reviendra quand il y aura enfin quelque chose à faire défiler. */
         .u-loader {
             position: absolute;
-            bottom: 34px;
+            bottom: 13%;
             left: 50%;
-            width: 18px;
-            height: 18px;
-            margin-left: -9px;
-            border-radius: 50%;
-            border: 2px solid var(--u-line);
-            border-top-color: var(--u-accent);
+            width: 54px;
+            height: 54px;
+            margin-left: -27px;
             opacity: 0;
             pointer-events: none;
-            transition: opacity var(--dur-base) var(--ease-out);
+            transition: opacity var(--dur-panel) var(--ease-out);
+        }
+
+        .u-loader::before,
+        .u-loader::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        /* Le halo : il naît au centre, s'ouvre, et s'efface. */
+        .u-loader::before {
+            inset: 0;
+            background: radial-gradient(circle, var(--u-glow) 0%, transparent 68%);
+            opacity: 0;
+            transform: scale(.3);
+        }
+
+        /* Le cœur : un point de la couleur du spectacle, qui respire.
+           Son halo propre est une ombre FIXE — animée, elle coûterait un
+           repeint par image. */
+        .u-loader::after {
+            inset: 43%;
+            background: var(--u-accent);
+            box-shadow: 0 0 14px var(--u-glow);
         }
 
         #show-universe.is-loading .u-loader {
             opacity: 1;
-            animation: u-spin .8s linear infinite;
+        }
+
+        #show-universe.is-loading .u-loader::before {
+            animation: u-halo 2.4s var(--ease-out) infinite;
+        }
+
+        #show-universe.is-loading .u-loader::after {
+            animation: u-coeur 2.4s ease-in-out infinite;
         }
 
         #show-universe.is-loading .u-scroll {
@@ -1823,9 +1876,33 @@
             transition: opacity 500ms var(--ease-out);
         }
 
-        @keyframes u-spin {
-            to {
-                transform: rotate(360deg);
+        @keyframes u-halo {
+            0% {
+                opacity: 0;
+                transform: scale(.3);
+            }
+
+            30% {
+                opacity: .9;
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes u-coeur {
+
+            0%,
+            100% {
+                opacity: .3;
+                transform: scale(.8);
+            }
+
+            30% {
+                opacity: 1;
+                transform: scale(1);
             }
         }
 
@@ -2733,6 +2810,19 @@
             .u-scroll {
                 animation: none !important;
             }
+
+            /* La lueur ne bat plus, mais elle doit rester lisible : sans
+               cela le cœur se figerait au creux de sa respiration, presque
+               transparent, et l'on ne saurait plus que ça charge. */
+            .u-loader::before {
+                display: none;
+            }
+
+            .u-loader::after {
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
         }
 
         @media print {
@@ -2953,8 +3043,7 @@
             </div>
 
             <!-- Imprimer / PDF — discret, à droite des onglets (voir .pdf-btn) -->
-            <button type="button" onclick="window.print()" id="pdf-download-btn"
-                class="pdf-btn hidden md:inline-flex">
+            <button type="button" onclick="window.print()" id="pdf-download-btn" class="pdf-btn hidden md:inline-flex">
                 <i class="fas fa-file-pdf" aria-hidden="true"></i> Imprimer / PDF
             </button>
         </nav>
@@ -4194,9 +4283,11 @@
         // ════════════════════════════════════════════════════════════════
         // Deux boutons pilotent le thème (en-tête et pied de page) : ils sont
         // tenus synchronisés, un clic sur l'un met l'autre à jour.
-        function applyTheme(theme) {
+        function applyTheme(theme, remember) {
             document.documentElement.setAttribute('data-theme', theme);
-            try { localStorage.setItem('avTheme', theme); } catch (e) { }
+            if (remember) {
+                try { localStorage.setItem('avTheme', theme); } catch (e) { }
+            }
 
             const toLight = theme === 'dark';
             // Les boutons annoncent l'action à venir, pas l'état courant
@@ -4224,13 +4315,28 @@
         }
 
         function initThemeToggle() {
-            applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+            applyTheme(document.documentElement.getAttribute('data-theme') || 'dark', false);
             document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const now = document.documentElement.getAttribute('data-theme');
-                    applyTheme(now === 'light' ? 'dark' : 'light');
+                    applyTheme(now === 'light' ? 'dark' : 'light', true);
                 });
             });
+
+            // Tant que l'utilisateur n'a pas fait de choix explicite (pas de
+            // valeur en mémoire), on suit les changements de préférence
+            // système en direct (ex. bascule automatique jour/nuit du système).
+            if (window.matchMedia) {
+                var mql = window.matchMedia('(prefers-color-scheme: light)');
+                var onSystemChange = function (e) {
+                    var stored = null;
+                    try { stored = localStorage.getItem('avTheme'); } catch (err) { }
+                    if (stored === 'light' || stored === 'dark') return;
+                    applyTheme(e.matches ? 'light' : 'dark', false);
+                };
+                if (mql.addEventListener) mql.addEventListener('change', onSystemChange);
+                else if (mql.addListener) mql.addListener(onSystemChange);
+            }
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -5011,7 +5117,7 @@
                 });
             } else {
                 upcomingHtml = filtersActive()
-                    ? `<p class="text-xs text-luxury-textMuted italic p-2">Aucune représentation ne correspond à cette recherche.</p>`
+                    ? `<p class="text-xs text-luxury-textMuted italic p-2">Aucune représentation à venir ne correspond à cette recherche.</p>`
                     : `<p class="text-xs text-luxury-textMuted italic p-2">Aucune date à venir pour le moment.</p>`;
             }
             if (upcomingContainer) upcomingContainer.innerHTML = upcomingHtml;
