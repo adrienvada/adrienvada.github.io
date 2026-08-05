@@ -1004,12 +1004,13 @@
             filter: blur(5px);
             transform: translateY(6px);
             color: var(--cv-accent, currentColor);
-            transition: opacity var(--dur-base) var(--ease-out),
-                filter var(--dur-base) var(--ease-out),
-                transform var(--dur-base) var(--ease-out),
-                /* La couleur se pose plus lentement que le mot n'arrive :
-                   la teinte du spectacle reste un instant après lui. */
-                color 720ms var(--ease-out);
+            transition-property: opacity, filter, transform, color;
+            transition-timing-function: var(--ease-out);
+            /* Cette durée-ci est celle du DÉPART : c'est l'état visé qui
+               décide, et l'état visé au départ, c'est celui-ci. Le murmure
+               s'écrit lentement et s'efface vite — un effacement aussi lent
+               que l'écriture traînerait derrière le pointeur. */
+            transition-duration: var(--dur-base);
         }
 
         /* TROIS FAÇONS DE LE FAIRE PARAÎTRE.
@@ -1028,7 +1029,10 @@
             filter: none;
             transform: none;
             color: rgb(var(--c-s500));
-            transition-delay: calc(var(--i) * var(--wd-step, 30ms));
+            /* La couleur se pose plus lentement que le mot n'arrive :
+               la teinte du spectacle reste un instant après lui. */
+            transition-duration: 640ms, 640ms, 640ms, 1440ms;
+            transition-delay: calc(var(--i) * var(--wd-step, 60ms));
         }
 
         @media (hover: hover) and (pointer: fine) {
@@ -1037,10 +1041,11 @@
                 filter: none;
                 transform: none;
                 color: rgb(var(--c-s500));
+                transition-duration: 640ms, 640ms, 640ms, 1440ms;
                 /* Balayer la liste ne doit pas mettre huit murmures à
                    s'écrire au passage : il faut s'arrêter pour être
                    entendu. */
-                transition-delay: calc(150ms + var(--i) * var(--wd-step, 30ms));
+                transition-delay: calc(150ms + var(--i) * var(--wd-step, 60ms));
             }
         }
 
