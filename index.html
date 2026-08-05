@@ -1770,6 +1770,21 @@
             margin-top: 34px;
         }
 
+        /* Un spectacle arrêté n'a pas de raccourci : à sa place, une mention.
+           Elle occupe le même rang et paraît au même moment que le bouton
+           qu'elle remplace, mais rien n'y invite au clic — ce n'est pas une
+           action, c'est un état. D'où le gris de service plutôt que l'accent
+           du spectacle, et le retrait du curseur. */
+        .u-hero-note {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--u-muted);
+        }
+
         /* ── Chargement ──
            Le titre est déjà là, seules les photos attendent. La croix et le
            raccourci vers les dates restent cliquables : on doit toujours

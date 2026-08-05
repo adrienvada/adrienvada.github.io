@@ -151,7 +151,7 @@ const SHOW_UNIVERSES = {
         cast: ['Angelo Jossec', 'Manon Rivier', 'Lauren Toulin', 'Johann Abiola',
             'Adrien Vada'],
         credit: 'Arnaud Bertereau',
-        synopsis: ['Royaume de Pyrie, 124 avant Jésus-Christ.',
+        synopsis: ['Royaume de Pyrie, 124 av. J-C.',
             'Lorsqu’un roi meurt et qu’il est père de jumeaux,',
             'lequel des deux est l’aîné et doit prendre sa place ?'],
         sequence: [
@@ -238,21 +238,19 @@ const SHOW_UNIVERSES = {
                 p: [8], c: ['Dans As you like it, le rythme surprend et change à chaque instant. C\'est lui qui doit nous emporter.'],
             },
             {
-                p: [11, 1, 4], c: ['', '', ''],
-            },
-            {
                 q: ['« Un humain au cours de sa vie joue plusieurs rôles,',
                     'ses actes étant les sept âges. »'],
                 by: 'Jaques, ACTE II'
             },
-
-            { p: [7, 5], c: ['', ''] },
+            {
+                p: [11, 1, 4], c: ['Adurey, Touchstone, ACTE V', 'Rosalind, Duke Frederick, Celia, ACTE I', 'Celia, Rosalind, ACTE II'],
+            },
             {
                 text: 'Des comédiens et des musiciens forment un joyeux orchestre. C’est comme une fête ! Et dans toute bonne fête, le rythme, la musique et le paysage sonore priment.'
             },
             {
                 p: [15, 13],
-                c: ['Villa Montebello, Trouville', 'Le Studio, Asnières'],
+                c: ['Château de Villerville', 'Le Studio d\'Asnières'],
             },
         ]
     },
@@ -894,12 +892,20 @@ const SHOW_UNIVERSES = {
 
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
                  traverser tout le défilé de photos pour savoir quand voir le
-                 spectacle — or c'est souvent la seule raison de la visite. -->
+                 spectacle — or c'est souvent la seule raison de la visite.
+
+                 SAUF POUR UN SPECTACLE ARRÊTÉ : il n'y a rien à quoi accéder,
+                 et un bouton d'action promettant des représentations qui
+                 n'existent plus ferait une promesse en l'air. La ligne le dit
+                 simplement, et n'appelle pas le clic. Les représentations
+                 passées restent au pied de l'univers. -->
             <div class="u-hero-actions">
-                <button type="button" class="u-btn" data-u-jump>
-                    ${dates ? 'Accéder aux dates' : enCreation ? 'Le spectacle' : 'Voir les représentations'}
-                    <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
-                </button>
+                ${dates || enCreation
+                ? `<button type="button" class="u-btn" data-u-jump>
+                        ${dates ? 'Accéder aux dates' : 'Le spectacle'}
+                        <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+                    </button>`
+                : `<p class="u-hero-note">Ce spectacle n’est plus à l’affiche</p>`}
             </div>
 
             <span class="u-scroll" aria-hidden="true"><i class="fa-solid fa-arrow-down"></i></span>
