@@ -79,12 +79,12 @@ const SHOW_UNIVERSES = {
         },
         synopsis: 'Rome, an 79. \n Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
         sequence: [
-            { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes en alexandrin de la langue française sur les tensions amoureuses. ' },
+            { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes en alexandrin' },
             { p: [2], c: ['Un triangle amoureux élevé au rang de la tragédie.'] },
             {
                 q: ['« Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice. »'], by: 'Bérénice, acte V'
             },
-            { p: [18], c: ['La scène est une arène en hyper proximité avec le public.'] },
+            { p: [18], c: ['La scène est une arène en hyper proximité avec le public, baignée dans une ambiance sonore et musicale live.'] },
             {
                 p: [12, 5], c: ['Bérénice, Antiochus, Acte III', 'Paulin, Titus, Bérénice, Acte II'],
                 // REMPLISSAGE
@@ -100,7 +100,7 @@ const SHOW_UNIVERSES = {
                 aside: ['« - Il m\'en viendra lui-même assurer en ce lieu.', '- Et je viens donc vous dire un éternel adieu. »']
             },
             {
-                p: [3], c: ['Un travail au plus plus proche de la virtuosité de l\'alexandrin racinien'],
+                p: [3], c: ['Un travail au plus plus proche de l\'alexandrin racinien pour en éprouver la virtuosité.'],
             },
             {
                 q: ['« De mon heureux rival j\'accompagnai les armes', 'J\'espérai de verser mon sang après mes larmes. »'],
@@ -108,9 +108,9 @@ const SHOW_UNIVERSES = {
             },
             { p: [7, 13, 16], c: ['Bérénice, Antiochus, Acte I', 'Antiochus, Paulin, Titus, Acte IV', 'Bérénice, Antiochus, Titus, Acte V'] },
             {
-                text: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes de la langue française sur les tensions amoureuses.'
+                text: 'Un spectacle exigeant qui déconstruit les a priori sur le théâtre classique pour transmettre ce patrimoine universel.'
             },
-            { p: [17, 19], c: ['Lycée La Salle, Rouen', 'Espace Jean Legendre, Compiègnel'] }
+            { p: [17, 19], c: ['Lycée La Salle, Rouen', 'Espace Jean Legendre, Compiègne'] }
         ]
     },
 
