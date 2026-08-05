@@ -82,17 +82,17 @@ const SHOW_UNIVERSES = {
             { chapter: '1h25', chapterTitle: 'Un triangle amoureux élevé au rang de la tragédie.' },
             { p: [2] },
             {
-                q: ['Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice.'], by: 'Bérénice, acte V'
+                q: ['« Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice. »'], by: 'Bérénice, acte V'
             },
             { p: [18] },
             {
-                p: [12, 5], c: ['', ''],
+                p: [12, 5], c: ['Bérénice, Antiochus, Acte III', 'Paulin, Titus, Bérénice, Acte II'],
                 // REMPLISSAGE
                 aside: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »']
             },
             {
-                q: 'Pour jamais ! Ah, Seigneur ! songez-vous en vous-même\n' +
-                    'Combien ce mot cruel est affreux quand on aime ?', by: 'Bérénice, acte IV'
+                q: '« Depuis huit jours je règne ; et jusques à ce jour,\n' +
+                    'Qu\'ai-je fait pour l\'honneur ? J\'ai tout fait pour l\'amour. »', by: 'Titus, acte IV'
             },
             {
                 p: [1, 9, 11], c: ['', '', ''],
@@ -109,9 +109,7 @@ const SHOW_UNIVERSES = {
                 by: 'Antiochus, acte I'
             },
             {
-                text: 'Trois personnes qui s’aiment et que rien ne sauve : ' +
-                    'ni le pouvoir, ni la parole, ni le temps. Racine ne leur laisse ' +
-                    'aucune faute à se reprocher — seulement à se quitter.'
+                text: 'Une mise en scène res serrée, accessible et exigeante, au service d\'un des plus beaux poèmes de la langue française sur les tensions amoureuses.'
             },
             { p: [13, 7, 16], c: ['', '', ''] },
             { p: [17, 19], c: ['', ''] }
@@ -243,12 +241,17 @@ const SHOW_UNIVERSES = {
 
     'Audiences': {
         slug: 'audiences',
-        // Noir institutionnel, bleu-blanc-rouge sourds : la République
-        // vue d'une salle d'audience, sur fond de violence.
+        // Salle de classe plutôt que salle d'audience : Audiences se joue au
+        // collège, et c'est d'abord un outil de transmission. D'où le fond
+        // clair — papier, lumière de salle, lisibilité — et le bleu d'encre
+        // scolaire en accent. Le noir des robes n'a pas disparu : il est
+        // passé dans le texte et les filets, et il est déjà partout dans les
+        // photos. La palette de À la barre, elle, reste noire et rouge :
+        // même sujet, mais pas le même geste.
         palette: {
-            bg: '#08080b', surface: '#131620', text: '#ececef', muted: '#9899a4',
-            accent: '#c8102e', accentInk: '#e2455c', onAccent: '#ffffff',
-            line: 'rgba(236,236,239,0.14)', glow: 'rgba(31,58,147,0.40)'
+            bg: '#edeff1', surface: '#ffffff', text: '#14171c', muted: '#59606b',
+            accent: '#4573c4', accentInk: '#2e5799', onAccent: '#ffffff',
+            line: 'rgba(20,23,28,0.15)', glow: 'rgba(69,115,196,0.20)'
         },
         synopsis: ['Un spectacle de prévention, joué au collège.',
             'Violences sexistes et sexuelles, stéréotypes, consentement —',
