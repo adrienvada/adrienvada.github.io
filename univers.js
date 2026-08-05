@@ -188,15 +188,20 @@ const SHOW_UNIVERSES = {
             accent: '#c2d94b', accentInk: '#cfe36a', onAccent: '#0c2013',
             line: 'rgba(194,217,75,0.22)', glow: 'rgba(217,79,43,0.35)'
         },
-        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes,déguisée en homme, sous le nom de Ganymède.'],
+        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes, déguisée en berger, sous le nom de Ganymède, accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d\'autre membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
         sequence: [
             {
-                p: [8],
-                c: ['Adaptation et mise en scène : Nicolas Gaspar — compagnie La Bloomsbury']
+                chapter: '2h',
+                chapterTitle: 'La comédie shakespearienne traduite et adaptée en spectacle théâtral et musical tout terrain, pour un public dès 12 ans.'
             },
             {
-                chapter: '2h',
-                chapterTitle: 'Spectacle tout terrain, théâtres ou extérieur — dès 12 ans'
+                p: [8],
+                c: ['La pièce oscille entre le trivial et le sublime.']
+            },
+            {
+                p: [14],
+                c: ['La troupe au complet, sous le grand arbre'],
+                over: ['« Ce vaste théâtre', 'universel »'], overAt: 'bas'
             },
             {
                 q: ['« Le monde entier est un théâtre,',
@@ -222,6 +227,10 @@ const SHOW_UNIVERSES = {
                 aside: ['Elle lui apprend à l’aimer', 'en se faisant passer pour un autre.']
             },
             {
+                p: [13], c: [''],
+                over: ['« Le trivial', 'et le sublime »'], overAt: 'droite'
+            },
+            {
                 p: [3], c: ['Rôle · Touchstone, le bouffon'],
                 over: ['« Ce vaste théâtre universel', 'programme plus de pièces tragiques', 'que cette scène où nous jouons. »'], overAt: 'droite'
             },
@@ -231,6 +240,11 @@ const SHOW_UNIVERSES = {
                     'Il ne reste que le désir, et un bouffon pour le commenter.'
             },
             { p: [4, 5], c: ['', ''] },
+            {
+                p: [15, 16],
+                c: ['Les chaises, avant que le public arrive', 'On joue là où l’on peut se poser'],
+                aside: ['Un spectacle tout terrain :', 'théâtres ou extérieur.']
+            },
             { p: [11, 12], c: ['', ''] }
         ]
     },

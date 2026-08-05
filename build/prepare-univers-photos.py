@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """Prépare les photos de plateau des univers de spectacle (voir univers.js).
 
-Les originaux vivent dans `ressources/spectacles/<spectacle>/`, numérotés
-(`bérénice_12.jpg`). Ce sont des fichiers lourds : ils ne sont PAS servis aux
-visiteurs et ne doivent pas être modifiés.
+Les originaux sont numérotés (`ayli_14.jpg`) et vivent HORS DU DÉPÔT, dans
+`Images spectacles/<spectacle>/`, à côté de lui. Ce sont des fichiers lourds
+— une centaine de mégaoctets — qui n'ont pas à être versionnés ni servis aux
+visiteurs.
+
+⚠️ Étant hors du dépôt, ils ne sont plus sauvegardés par git : ce script sait
+les retrouver, il ne sait pas les recréer. Une copie ailleurs s'impose.
 
 Ce script sort `ressources/images/univers/<slug>/<n>.jpg`, redimensionnés et
 plafonnés en poids. **Le numéro est conservé** : c'est lui qui sert de langage
@@ -32,9 +36,33 @@ import re
 from PIL import Image, ImageOps
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-SRC = os.path.join(ROOT, "ressources", "spectacles")
 OUT = os.path.join(ROOT, "ressources", "images", "univers")
 UNIVERS_JS = os.path.join(ROOT, "univers.js")
+
+
+def find_src():
+    """Le dossier des originaux, cherché aux endroits où il a vécu.
+
+    Il était d'abord dans le dépôt (`ressources/spectacles`) ; il est
+    aujourd'hui à côté (`../Images spectacles`). On essaie les deux plutôt
+    que d'inscrire un chemin absolu, qui ne vaudrait que sur cette machine.
+    UNIVERS_PHOTOS permet de passer un autre dossier au besoin.
+    """
+    candidats = [
+        os.environ.get("UNIVERS_PHOTOS"),
+        os.path.join(ROOT, "..", "Images spectacles"),
+        os.path.join(ROOT, "ressources", "spectacles"),
+    ]
+    for c in candidats:
+        if c and os.path.isdir(c):
+            return c
+    raise SystemExit(
+        "Dossier des originaux introuvable. Essayé :\n  " +
+        "\n  ".join(os.path.abspath(c) for c in candidats if c) +
+        "\nIndiquez-le avec UNIVERS_PHOTOS=/chemin/vers/le/dossier")
+
+
+SRC = find_src()
 
 # Deux qualités, selon l'usage de la photo dans le montage.
 #
