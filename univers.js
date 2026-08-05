@@ -217,16 +217,30 @@ const SHOW_UNIVERSES = {
             'Adrien Vada'],
         credit: 'Arnaud Bertereau',
         synopsis: ['Royaume de Pyrie, 124 av. J-C.',
-            'Lorsqu’un roi meurt et qu’il est père de jumeaux,',
-            'lequel des deux est l’aîné et doit prendre sa place ?'],
+            'Lorsqu’un roi meurt et qu’il est père de jumeaux, lequel des deux est l’aîné et doit prendre sa place ?'],
         sequence: [
-            {
-                p: [7],
-                c: ['Adaptation et mise en scène : Angelo Jossec — compagnie Crescite']
-            },
             {
                 chapter: '1h30',
                 chapterTitle: 'Un drame familial de l’amour et de la haine'
+            },
+            {
+                q: ['« Rodogune ? Shakespeare n’a rien écrit de plus beau. »'],
+                by: 'Stendhal, 16 juillet 1804'
+            },
+            {
+                p: [5], c: ['Les Crescite poursuivent le travail de l\'alexandrin entrepris sur Bérénice. Ici, les personnages sont sanguinaires, vils, assoiffés de pouvoir.'],
+            },
+            {
+                q: ['« Je vois dans le hasard tout les biens que j\'espère,', 'Mais ne puis être heureux sans le malheur d\'un frère. »'],
+                by: 'Antiochus, Acte I'
+            }, {
+                p: [9], cadre: { 9: ' ' },
+                c: ['La figure des jumeaux : une incarnation à deux têtes du dilemme cornéliens.'],
+            },
+            {
+                p: [21], cadre: { 21: '20% 00%' },
+                over: ['La scène est à Séleucie. ', 'La guerre entre Parthes et Pyriens dure déjà depuis plusieurs années.'],
+                overAt: 'droite'
             },
             {
                 p: [10, 17], c: ['', ''],
@@ -235,7 +249,7 @@ const SHOW_UNIVERSES = {
                     'qui lui donnera la vie de la princesse parthe.']
             },
             {
-                p: [21], c: ['La coupe'],
+                p: [7], c: [''],
                 over: ['« Cette coupe est suspecte,', 'elle vient de la reine »'], overAt: 'bas'
             },
             {
@@ -258,12 +272,7 @@ const SHOW_UNIVERSES = {
                     'c’est lui qui décide, ce soir-là, lequel des deux comédiens sera l’aîné. ' +
                     'Ce poignard servira.'
             },
-            { p: [18, 13, 9], c: ['', '', ''] },
-            {
-                q: ['« Rodogune ? Shakespeare n’a rien écrit de plus beau. »'],
-                by: 'Stendhal, 16 juillet 1804'
-            },
-            { p: [5], c: ['Front contre front'] }
+            { p: [18, 13, 9], c: ['', '', ''] }
         ]
     },
 
@@ -492,8 +501,8 @@ const SHOW_UNIVERSES = {
                 p: [7], cadre: { 7: '30% 00%' },
                 over: ['« La foudre frappe n\’importe où,', 'n\’importe qui, n\’importe quand :', 'il n\'y a aucun sens à ça.\»'], overAt: 'droite'
             },
-            { p: [8, 26], c: ['', ''], cadre: { 8: 'droite' } },
-            { p: [2], c: ['Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure.'] },
+            { p: [8, 26], c: ['', ''], cadre: { 8: '50% 00%', 26: '90% 00%' } },
+            { p: [2], c: ['Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure.'], cadre: { 2: 'droite' } },
 
             {
                 text: 'Fulguré.e.s est un spectacle qui met à l’épreuve l\'humain dans sa capacité à se débattre et à trouver des réponses face à la peur, à l’incompréhensible et à l’injustice.'
