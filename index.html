@@ -691,6 +691,38 @@
                 font-size: 12px !important;
             }
 
+            /* ── LE PANNEAU PLEIN ÉCRAN N'EST PAS LA PAGE ──
+               Les trois règles ci-dessus rapetissent TOUS les titres du
+               document. Elles sont écrites pour le CV, où chaque ligne
+               gagnée compte. L'univers d'un spectacle, lui, occupe l'écran
+               entier : son titre y est l'événement.
+
+               Sans cette exception, le <h2> du hero tombait à 10 px sur
+               mobile — plus petit que le nom de l'auteur posé juste en
+               dessous, quand il fait 5,6rem sur grand écran. Et comme le
+               rapetissement est en `!important`, il l'emportait sur la
+               règle .u-title quelles que soient sa spécificité et sa place
+               dans la feuille : toute correction écrite là-bas restait
+               lettre morte.
+
+               D'où le `!important` ici : il ne dit pas une préférence, il
+               reprend la main sur un `!important`. Les tailles ne sont pas
+               recopiées — elles sont relues dans les variables posées avec
+               les règles d'origine, pour qu'il n'y ait jamais deux valeurs
+               à tenir d'accord. */
+            #show-universe .u-title {
+                font-size: var(--u-title-size) !important;
+                letter-spacing: var(--u-title-track) !important;
+            }
+
+            #show-universe .u-chapter h3 {
+                font-size: var(--u-chapter-size) !important;
+            }
+
+            #show-universe .u-foot-title {
+                font-size: var(--u-foot-size) !important;
+            }
+
             nav a,
             nav button {
                 font-size: 10px !important;
@@ -931,13 +963,64 @@
                 width: 3px;
             }
 
+            /* ── LA GUIRLANDE ──
+               Le lavis de couleur se retire : à .13 partout et en même
+               temps, huit aplats posés les uns sous les autres finissaient
+               par faire un décor, et le CV se lisait à travers une nappe.
+               Il descend donc à .05 — presque rien, la couleur affleure —
+               et ne monte à .16 qu'à son tour.
+
+               La vague part du haut et descend, une ligne après l'autre :
+               --cv-rang est le rang de la ligne dans le CV, posé par
+               univers.js en ordre de lecture, et c'est lui qui retarde le
+               départ. Chaque pulsation dure plus longtemps que l'intervalle
+               qui sépare deux lignes : plusieurs restent donc allumées
+               ensemble, et l'on voit passer une onde plutôt qu'un point
+               qui saute de ligne en ligne. Les deux tiers du cycle sont du
+               repos — une guirlande respire, elle ne clignote pas.
+
+               Seule l'opacité est animée : le compositeur la traite sans
+               repeindre quoi que ce soit, et le CV en porte une dizaine. */
             .cv-has-universe::after {
-                opacity: .13;
+                opacity: .05;
+                animation: cv-guirlande 8s ease-in-out infinite;
+                animation-delay: calc(var(--cv-rang, 0) * .5s);
             }
 
+            /* Au doigt, la ligne touchée répond tout de suite — et une
+               animation l'emporte sur une opacité déclarée : il faut la
+               couper pour reprendre la main, pas seulement la surcharger. */
             .cv-has-universe:has(.cv-row-toggle:active)::after {
+                animation: none;
                 opacity: .3;
                 transition-duration: var(--dur-press);
+            }
+        }
+
+        @keyframes cv-guirlande {
+
+            0%,
+            100% {
+                opacity: .05;
+            }
+
+            14% {
+                opacity: .16;
+            }
+
+            34% {
+                opacity: .05;
+            }
+        }
+
+        /* Le réglage système « moins d'animations » coupe les durées mais
+           pas les retards : la guirlande s'allumerait ligne à ligne, en
+           saccade. On la remplace par une teinte fixe — à mi-chemin entre
+           le creux et la crête, de sorte que la couleur reste lisible. */
+        @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+            .cv-has-universe::after {
+                animation: none;
+                opacity: .1;
             }
         }
 
@@ -1637,17 +1720,51 @@
             margin-bottom: 22px;
         }
 
+        /* LE TITRE PREND TOUTE LA LARGEUR QU'IL PEUT.
+           Une clamp() en vw ne pouvait pas y suffire : elle ne connaît que
+           l'écran, jamais le titre. « Bérénice » et « La peau des anges
+           n'est pas si douce » recevaient la même taille — l'une perdue au
+           milieu du vide, l'autre en cinq lignes par-dessus le synopsis.
+
+           La taille se déduit donc du titre lui-même, comme les vers des
+           citations (voir .u-fit), par deux mesures que univers.js pose sur
+           l'élément. min() retient la plus petite des trois valeurs, donc
+           la plus prudente ; sur grand écran c'est toujours le plafond du
+           design qui gagne, et rien ne change.
+
+             18vw  LE PLAFOND DU TÉLÉPHONE. Un titre fait de mots courts —
+                 « As You Like It », « Le rapt » — passe les deux mesures
+                 ci-dessous sans effort et va taper le plafond du design,
+                 qui sur 360 px de large vaut trois lignes de 90 px. Ce
+                 plafond-ci suit l'écran et rejoint l'autre vers 500 px : le
+                 grand écran ne le voit jamais.
+
+             --u-title-chars  LE MOT LE PLUS LONG, contre le débordement en
+                 LARGEUR. Un titre se replie entre deux mots, jamais dans un
+                 mot (voir .u-word, insécable) : c'est donc le mot le plus
+                 large qui dit à partir de quand ça sort du cadre.
+
+             --u-title-len  LA LONGUEUR TOTALE, contre le débordement en
+                 HAUTEUR. Un titre de huit mots courts passe le test du mot
+                 le plus long haut la main, puis s'étale sur cinq lignes et
+                 chasse le synopsis de l'écran. On lui accorde trois lignes :
+                 à trois lignes de texte pleines, la taille ne peut pas
+                 dépasser 3 × l'espace disponible divisé par le titre. */
         .u-title {
             font-family: 'Cinzel', serif;
             font-weight: 700;
-            /* Le plancher (3.4rem) et la pente (15vw) sont pensés pour le
-               mobile : à 9vw/2.2rem le titre plafonnait à sa taille plancher
-               sur un téléphone et perdait tout l'impact du desktop. Le
-               plafond (5.6rem) ne change pas — desktop et mobile convergent
-               vers la même taille dès ~600px. */
-            font-size: clamp(3.4rem, 15vw, 5.6rem);
+            /* 56px : les 2 × 24px de padding du hero, et de quoi respirer. */
+            --u-title-space: calc(100vw - 56px);
+            /* 0.58em par signe : la chasse du Cinzel gras, prise large,
+               comme le 0.56 de .u-fit. Un titre plus resserré occupera un
+               peu moins que la place réservée — jamais plus. */
+            --u-title-size: min(5.6rem, 18vw,
+                    calc(var(--u-title-space) / (var(--u-title-chars, 12) * 0.58)),
+                    calc(3 * var(--u-title-space) / (var(--u-title-len, 18) * 0.58)));
+            --u-title-track: -.015em;
+            font-size: var(--u-title-size);
             line-height: 1.02;
-            letter-spacing: -.015em;
+            letter-spacing: var(--u-title-track);
             max-width: 14ch;
             margin: 0;
         }
@@ -2387,7 +2504,10 @@
             margin: 0;
             max-width: 40ch;
             font-family: 'Montserrat', sans-serif;
-            font-size: clamp(.7rem, 2.2vw, .92rem);
+            /* En variable pour que le petit écran puisse la reprendre au
+               rapetissement global des titres — voir #show-universe h3. */
+            --u-chapter-size: clamp(.7rem, 2.2vw, .92rem);
+            font-size: var(--u-chapter-size);
             font-weight: 700;
             letter-spacing: .34em;
             text-transform: uppercase;
@@ -2606,7 +2726,9 @@
 
         .u-foot-title {
             font-family: 'Cinzel', serif;
-            font-size: clamp(1.2rem, 4vw, 1.9rem);
+            /* Même raison qu'au-dessus : reprise sur petit écran. */
+            --u-foot-size: clamp(1.2rem, 4vw, 1.9rem);
+            font-size: var(--u-foot-size);
             font-weight: 700;
             margin: 0 0 28px;
             color: var(--u-accent-ink);

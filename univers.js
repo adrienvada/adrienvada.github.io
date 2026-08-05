@@ -665,6 +665,24 @@ const SHOW_UNIVERSES = {
         ).join(' ');
     }
 
+    // Les deux mesures qui dimensionnent le titre (voir .u-title). On COMPTE
+    // plutôt qu'on ne MESURE, pour la même raison qu'en .u-fit : mesurer
+    // suppose une mise en page déjà calculée — ce qui n'est pas le cas au
+    // moment où le panneau se fabrique — et rend zéro sans le dire.
+    //
+    //   le mot le plus long  ce qui peut déborder en LARGEUR : un titre se
+    //       replie entre deux mots, jamais dans un mot (voir .u-word).
+    //   la longueur totale   ce qui peut déborder en HAUTEUR : « La peau des
+    //       anges n'est pas si douce » n'a que des mots courts, et passerait
+    //       la première mesure à une taille qui lui vaudrait cinq lignes.
+    function titleMetrics(str) {
+        const words = String(str).split(/\s+/).filter(Boolean);
+        return {
+            chars: words.reduce((m, w) => Math.max(m, w.length), 0) || 1,
+            len: String(str).trim().length || 1
+        };
+    }
+
     // Le synopsis accepte les mêmes coupes que le reste : un tableau de
     // lignes, ou des \n. Sans cela, `split(/\s+/)` avalait les retours à la
     // ligne comme de simples espaces — la coupe voulue disparaissait.
@@ -1086,6 +1104,7 @@ const SHOW_UNIVERSES = {
         // vocabulaire du plateau ne lui va pas. `kind` le dit une fois, et
         // le hero comme le pied s'y accordent.
         const isFilm = uni.kind === 'film';
+        const tm = titleMetrics(info.title);
 
         overlay.innerHTML = `
         <button type="button" class="u-close" aria-label="Fermer l’univers du spectacle">
@@ -1096,7 +1115,7 @@ const SHOW_UNIVERSES = {
         <div class="u-hero-wrap">
         <header class="u-hero">
             <p class="u-eyebrow">${escape(info.year)}${info.badge ? ' · ' + escape(info.badge) : ''}</p>
-            <h2 class="u-title">${splitChars(info.title)}</h2>
+            <h2 class="u-title" style="--u-title-chars:${tm.chars};--u-title-len:${tm.len}">${splitChars(info.title)}</h2>
             ${info.author ? `<p class="u-author">${escape(info.author)}</p>` : ''}
             ${uni.synopsis ? `<p class="u-synopsis">${splitWords(uni.synopsis)}</p>` : ''}
             <p class="u-meta">${escape(info.role)}${info.company ? '<br>' + escape(info.company) : ''}</p>
@@ -1653,6 +1672,7 @@ const SHOW_UNIVERSES = {
     //     sommaire : huit lignes, et derrière chacune un monde qui a
     //     déjà sa couleur avant qu'on y entre.
     function markCvRows() {
+        let rang = 0;
         document.querySelectorAll('.cv-item').forEach(li => {
             const uni = universeFor(li);
             if (!uni) return;
@@ -1661,6 +1681,14 @@ const SHOW_UNIVERSES = {
             // peuvent pas être la même couleur — voir Audiences et
             // Fulguré.e.s. Sinon l'accent suffit.
             li.style.setProperty('--cv-accent', uni.cvAccent || uni.palette.accent);
+            // Le rang dans la guirlande (voir .cv-has-universe::after sur
+            // petit écran) : c'est lui qui retarde l'allumage, de sorte que
+            // la couleur descende le CV ligne après ligne. On compte les
+            // lignes À UNIVERS, pas toutes les lignes du CV — ce sont les
+            // seules qui s'allument, et un trou dans la numérotation ferait
+            // sauter la vague. querySelectorAll rend l'ordre du document,
+            // qui est ici l'ordre de lecture : théâtre, puis courts métrages.
+            li.style.setProperty('--cv-rang', rang++);
 
             const icon = li.querySelector('.cv-chevron');
             if (icon) {
