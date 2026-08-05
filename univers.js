@@ -95,7 +95,7 @@ const SHOW_UNIVERSES = {
                     'Qu\'ai-je fait pour l\'honneur ? J\'ai tout fait pour l\'amour. »', by: 'Titus, acte IV'
             },
             {
-                p: [1, 9, 11], c: ['', '', ''],
+                p: [1, 9, 11], c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
                 // REMPLISSAGE
                 aside: 'Personne ne crie. C’est ce qui est terrible.'
             },
@@ -108,11 +108,11 @@ const SHOW_UNIVERSES = {
                 q: ['« De mon heureux rival j\'accompagnai les armes', 'J\'espérai de verser mon sang après mes larmes. »'],
                 by: 'Antiochus, acte I'
             },
+            { p: [7, 13, 16], c: ['Bérénice, Antiochus, Acte I', 'Antiochus, Paulin, Titus, Acte IV', 'Bérénice, Antiochus, Titus, Acte V'] },
             {
                 text: 'Une mise en scène res serrée, accessible et exigeante, au service d\'un des plus beaux poèmes de la langue française sur les tensions amoureuses.'
             },
-            { p: [13, 7, 16], c: ['', '', ''] },
-            { p: [17, 19], c: ['', ''] }
+            { p: [17, 19], c: ['Lycée La Salle, Rouen', 'Espace Jean Legendre, Compiègnel'] }
         ]
     },
 

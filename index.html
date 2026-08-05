@@ -473,8 +473,18 @@
                n'ont pas de sens sur papier : rien n'y est cliquable. */
             .cv-expand-panel,
             .cv-chevron,
-            .cv-has-universe::before {
+            .cv-has-universe::before,
+            .cv-has-universe::after {
                 display: none !important;
+            }
+
+            /* Un univers ouvert bloque le défilement de la page (u-locked).
+               Imprimer dans cet état — au raccourci clavier, puisque le
+               bouton est recouvert — laisserait un overflow:hidden qui
+               tronque le document à la première page. */
+            html.u-locked,
+            html.u-locked body {
+                overflow: visible !important;
             }
 
             header picture,
@@ -716,6 +726,13 @@
               qui redevient exact — elles déplient bien un tiroir. */
         .cv-has-universe .cv-chevron {
             transform: rotate(-45deg);
+            /* Colorée dès le repos : au doigt il n'y a pas de survol, et
+               c'est là que la flèche doit déjà dire qu'elle mène ailleurs.
+               Légèrement en retrait pour ne pas concurrencer le titre. */
+            color: var(--cv-accent);
+            opacity: .75;
+            transition: transform var(--dur-panel) var(--ease-panel),
+                opacity var(--dur-base) var(--ease-out);
         }
 
         .cv-has-universe .cv-row-toggle[aria-expanded="true"] .cv-chevron {
@@ -726,7 +743,7 @@
         .cv-has-universe:hover .cv-chevron,
         .cv-has-universe:focus-within .cv-chevron {
             transform: rotate(-45deg) translateX(3px);
-            color: var(--cv-accent);
+            opacity: 1;
         }
 
         /*  2. LE FILET. Un trait dans la couleur du spectacle, à gauche de
@@ -761,6 +778,63 @@
         .cv-has-universe:focus-within::before {
             opacity: 1;
             transform: scaleY(1);
+        }
+
+        /*  3. L'ÉTAT PRESSÉ. Au doigt, il n'y a pas de survol : sans cette
+               règle, une ligne touchée ne répondait rien jusqu'à l'ouverture
+               du panneau. On reprend l'asymétrie du site — enfoncement quasi
+               immédiat, relâchement qui s'étire — pour que la ligne réponde
+               comme une matière. */
+        .cv-has-universe:has(.cv-row-toggle:active)::before {
+            opacity: 1;
+            transform: scaleY(1);
+            transition-duration: var(--dur-press);
+        }
+
+        .cv-has-universe .cv-row-toggle:active .cv-chevron {
+            transform: rotate(-45deg) translateX(3px);
+            opacity: 1;
+            transition-duration: var(--dur-press);
+        }
+
+        /*  4. LE LAVIS, SUR PETIT ÉCRAN SEULEMENT. Un filet de 2 px se
+               remarque sur une liste large ; sur 380 px de large, il se
+               perd. La couleur traverse alors le début de la ligne en
+               s'évanouissant. Rien n'est déplacé : le lavis est en position
+               absolue, sous le contenu. */
+        .cv-has-universe::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 46%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--cv-accent, transparent), transparent);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--dur-base) var(--ease-out);
+        }
+
+        /* Le contenu passe au-dessus du lavis, sinon le titre serait teinté. */
+        .cv-has-universe .cv-row-toggle {
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 767px) {
+            .cv-has-universe::before {
+                width: 3px;
+            }
+
+            .cv-has-universe::after {
+                opacity: .13;
+            }
+
+            .cv-has-universe:has(.cv-row-toggle:active)::after {
+                opacity: .3;
+                transition-duration: var(--dur-press);
+            }
         }
 
         /* ── Recherche des dates : panneau repliable + révélation par étapes ── */
