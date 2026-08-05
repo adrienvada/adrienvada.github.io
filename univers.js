@@ -397,30 +397,25 @@ const SHOW_UNIVERSES = {
         cvAccent: '#4d5fc4',
         cast: ['Lia Alamichel', 'Amélie Chalmey', 'Adrien Vada'],
         credit: 'Thypa Photographie',
-        synopsis: ['Une fratrie se retrouve dans un village perdu,',
-            'à un moment où tout est chaos.',
-            'Comment survivre à l’imprévisible ?'],
+        synopsis: ['Une fratrie. Un village. Perdu.',
+            'La foudre y a frappé il y a quelques années et y a laissé des survivant.e.s : les fulguré.e.s.',
+            'À l’occasion d’un nouvel an, la fratrie s’y perd et rencontre ses habitants.',
+            'Alors que « tout est chaos », la foudre frappe à nouveau.'],
         sequence: [
             {
-                p: [10],
-                c: ['Texte : Jérémie Fabre — mise en scène : Amélie Chalmey, Cie Alchimie']
+                chapter: '1h15',
+                chapterTitle: 'Spectacle tout public à partir de 14 ans.'
             },
             {
-                // ⚠️ DURÉE À CONFIRMER : ni le site de la compagnie ni le texte
-                // ne l'indiquent. Corriger ici avant toute diffusion.
-                chapter: '1h15',
-                chapterTitle: 'Durée à confirmer'
+                p: [10],
+                c: ['Cette pièce réjouira les amateurs de musique électro, de relations familiales compliquées, et de phénomènes naturels extrêmes.']
             },
             {
                 q: ['« Il n’est pas mort.', 'Il s’est fait FULGURER. »'],
                 by: ''
             },
             {
-                text: 'Cette pièce réjouira les amateurs de musique électro, ' +
-                    'de relations familiales compliquées, et de phénomènes naturels extrêmes.'
-            },
-            {
-                p: [7], c: [''],
+                p: [7], cadre: { 7: 'gauche' },
                 over: ['« La foudre frappe n’importe où,', 'n’importe qui, n’importe quand :', 'il n’y a aucun sens à ça. »'], overAt: 'droite'
             },
             {
@@ -439,7 +434,7 @@ const SHOW_UNIVERSES = {
                     'à l’incompréhensible et à l’injustice.'
             },
             {
-                p: [3, 1, 4], c: ['', '', ''],
+                p: [3, 1, 4], c: ['', '', ''], cadre: { 3: 'droite' },
                 aside: ['« Si tu ne trouves pas de deuxième trou,',
                     'celui de la sortie, la charge est restée dans ton corps.',
                     'Tu n’es plus fulguré·e, tu es FOUDROYÉ·E. »']
@@ -909,7 +904,19 @@ const SHOW_UNIVERSES = {
             </div>
 
             <span class="u-scroll" aria-hidden="true"><i class="fa-solid fa-arrow-down"></i></span>
-            <span class="u-loader" role="status" aria-label="Chargement des visuels"></span>
+            <!-- Le masque neutre : l'objet du plateau, pas le rouage du
+                 navigateur. Un ovoïde lisse, deux yeux, l'arête du nez, pas
+                 de bouche — rien qui exprime, tout qui attend. Tracé ici
+                 plutôt qu'en CSS : une forme se dessine, elle ne se bricole
+                 pas en bordures et rayons. -->
+            <span class="u-loader" role="status" aria-label="Chargement des visuels">
+                <svg viewBox="0 0 100 128" aria-hidden="true" focusable="false">
+                    <path fill-rule="evenodd" d="M50 8C71 8 85 25 85 49c0 33-15 71-35 71S15 82 15 49C15 25 29 8 50 8z
+                        M26 56q10-9 20 0-10 9-20 0z
+                        M54 56q10-9 20 0-10 9-20 0z
+                        M50 63q3 9 0 17-3-8 0-17z" />
+                </svg>
+            </span>
         </header>
         </div>
 

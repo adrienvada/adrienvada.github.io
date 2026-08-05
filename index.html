@@ -1799,9 +1799,9 @@
 
            C'était un anneau qui tournait — le signe universel de l'attente,
            et le seul objet mécanique d'un panneau qui n'en compte aucun. À
-           sa place, une lueur qui bat : un cœur de la couleur du spectacle,
-           et un halo qui s'ouvre et s'efface. On n'attend plus une machine,
-           on regarde l'univers s'allumer.
+           sa place, un MASQUE NEUTRE qui respire dans un halo : l'objet du
+           plateau, celui qui n'exprime rien et attend tout. On n'attend plus
+           une machine, on regarde l'univers s'allumer.
 
            TRÈS LÉGER, AU SENS PROPRE : les deux animations ne touchent que
            `transform` et `opacity`, les seules propriétés que le GPU sait
@@ -1826,28 +1826,25 @@
             transition: opacity var(--dur-panel) var(--ease-out);
         }
 
-        .u-loader::before,
-        .u-loader::after {
+        /* Le halo : il naît derrière le masque, s'ouvre, et s'efface. */
+        .u-loader::before {
             content: '';
             position: absolute;
+            inset: -30%;
             border-radius: 50%;
-        }
-
-        /* Le halo : il naît au centre, s'ouvre, et s'efface. */
-        .u-loader::before {
-            inset: 0;
             background: radial-gradient(circle, var(--u-glow) 0%, transparent 68%);
             opacity: 0;
-            transform: scale(.3);
+            transform: scale(.35);
         }
 
-        /* Le cœur : un point de la couleur du spectacle, qui respire.
-           Son halo propre est une ombre FIXE — animée, elle coûterait un
-           repeint par image. */
-        .u-loader::after {
-            inset: 43%;
-            background: var(--u-accent);
-            box-shadow: 0 0 14px var(--u-glow);
+        /* Le masque, dans la couleur du spectacle. Il respire — il ne
+           tourne pas : un masque de théâtre ne tourne jamais. */
+        .u-loader svg {
+            position: absolute;
+            inset: 4% 18%;
+            width: 64%;
+            height: 92%;
+            fill: var(--u-accent);
         }
 
         #show-universe.is-loading .u-loader {
@@ -1858,7 +1855,7 @@
             animation: u-halo 2.4s var(--ease-out) infinite;
         }
 
-        #show-universe.is-loading .u-loader::after {
+        #show-universe.is-loading .u-loader svg {
             animation: u-coeur 2.4s ease-in-out infinite;
         }
 
@@ -2812,13 +2809,13 @@
             }
 
             /* La lueur ne bat plus, mais elle doit rester lisible : sans
-               cela le cœur se figerait au creux de sa respiration, presque
-               transparent, et l'on ne saurait plus que ça charge. */
+               cela le masque se figerait au creux de sa respiration,
+               presque transparent, et l'on ne saurait plus que ça charge. */
             .u-loader::before {
                 display: none;
             }
 
-            .u-loader::after {
+            .u-loader svg {
                 animation: none !important;
                 opacity: 1 !important;
                 transform: none !important;
