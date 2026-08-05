@@ -404,7 +404,7 @@ const SHOW_UNIVERSES = {
             'Adrien Vada'],
         castNote: 'Jeu et mise en scène collective.',
         credit: 'Arnaud Bertereau',
-        synopsis: ['Inspirés d’affaires réelles, les échanges entre magistrat·es, accusé·es, victimes et avocat·es révèlent la complexité d’une justice en souffrance.'],
+        synopsis: ['Inspirés d’affaires réelles, des extraits de procès révèlent la complexité d’une justice en souffrance face à l\'ampleur des violences conjugales.'],
         sequence: [
             {
                 p: [19], cadre: { 19: '40% 10%' },
