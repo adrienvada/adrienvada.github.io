@@ -88,7 +88,7 @@ const SHOW_UNIVERSES = {
             {
                 p: [12, 5], c: ['Bérénice, Antiochus, Acte III', 'Paulin, Titus, Bérénice, Acte II'],
                 // REMPLISSAGE
-                aside: 'Un des plus beaux rôles féminins.'
+                aside: 'Une des plus belles partitions classique pour un personnage féminin qui sert « d\'exemple à l\'univers ».'
             },
             {
                 q: '« Depuis huit jours je règne ; et jusques à ce jour,\n' +
@@ -97,7 +97,7 @@ const SHOW_UNIVERSES = {
             {
                 p: [1, 9, 11], c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
                 // REMPLISSAGE
-                aside: 'La pureté racinienne montée en thriller psychologique'
+                aside: 'La pureté des émotions transposée en thriller psychologique.'
             },
             {
                 p: [3], c: ['Un travail au plus plus proche de l\'alexandrin racinien pour en éprouver la virtuosité.'],
