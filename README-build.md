@@ -176,11 +176,29 @@ Chaque entrée porte :
 | `palette` | les couleurs du spectacle, injectées en variables `--u-*` sur le panneau. Le reste du site n'est **pas** repeint : le panneau le recouvre. |
 | `title` / `subtitle` | *(facultatif)* quand le titre du CV est trop long pour du Cinzel 5rem — « Cléophène », et « d'après Rodogune » en dessous |
 | `cvAccent` | *(facultatif)* couleur du filet sur la ligne du CV, quand l'accent de l'univers y dirait autre chose que le spectacle |
-| `synopsis` | s'inscrit mot à mot sous le titre. Une chaîne, ou un tableau de lignes |
+| `synopsis` | s'inscrit mot à mot sous le titre. Une chaîne, ou un tableau de lignes. Sert aussi de **murmure** sur la ligne du CV — voir ci-dessous |
 | `cast` | **la distribution**, en générique de fin. Y mettre le nom d'Adrien comme les autres : le moteur le repère et le passe à l'accent, sans le sortir de la liste |
 | `castNote` | *(facultatif)* précision sous la distribution — « * en alternance », « Jeu et mise en scène collective. » |
 | `credit` | photographe, affiché au pied du panneau |
 | `sequence` | **le montage** — voir ci-dessous |
+
+### Le murmure — le synopsis sur la ligne du CV
+
+Au survol d'une ligne de spectacle, son synopsis paraît en gris clair. Au
+doigt, où il n'y a pas de survol, c'est l'**appui maintenu** (400 ms) qui
+l'appelle ; il se tait quand le doigt se lève, et le clic qui suit n'ouvre
+pas l'univers. Un doigt qui glisse annule : le défilement passe avant.
+
+Le texte n'est pas recopié — c'est le `synopsis` de l'univers, relu par
+`addWhisper()`. Le corriger à un seul endroit le corrige partout.
+
+- **Sur grand écran**, il s'inscrit dans le vide de la ligne, entre le titre
+  et le badge. Rien n'est déplacé : la liste reste immobile. Trois lignes
+  tiennent ; au-delà, le texte se dissout par le bas.
+- **Sur petit écran**, ce vide n'existe pas : la ligne s'ouvre par le bas,
+  le temps de l'appui. Au repos elle ne coûte pas un pixel.
+
+Un spectacle sans `synopsis` n'a pas de murmure — rien à corriger.
 
 ### Le montage
 

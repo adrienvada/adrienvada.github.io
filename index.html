@@ -469,9 +469,13 @@
                 display: revert !important;
             }
 
-            /* Les tiroirs, leur chevron et le filet de couleur des univers
-               n'ont pas de sens sur papier : rien n'y est cliquable. */
+            /* Les tiroirs, leur chevron, le filet de couleur des univers et
+               le murmure n'ont pas de sens sur papier : rien n'y est
+               cliquable, et rien ne s'y survole. Le murmure vit DANS la
+               ligne, que la règle du dessus vient de rétablir en bloc —
+               sans cette exception, tous les synopsis s'imprimeraient. */
             .cv-expand-panel,
+            .cv-whisper,
             .cv-chevron,
             .cv-has-universe::before,
             .cv-has-universe::after {
@@ -920,6 +924,169 @@
             .cv-has-universe:has(.cv-row-toggle:active)::after {
                 opacity: .3;
                 transition-duration: var(--dur-press);
+            }
+        }
+
+        /* ── LE MURMURE ───────────────────────────────────────────────────
+           Au survol — ou au toucher maintenu, faute de survol — la ligne
+           laisse entrevoir de quoi parle le spectacle. Le texte est le
+           synopsis de l'univers : une seule source, jamais recopiée.
+
+           Sur grand écran, il s'inscrit dans le vide de la ligne, entre le
+           titre et le badge. Ce vide est réel : la ligne fait 794 px de
+           large et son texte n'en occupe qu'un tiers. Rien n'est donc
+           déplacé — la liste reste parfaitement immobile et les mots
+           paraissent, c'est tout. C'est la suggestion la plus douce qu'on
+           puisse faire.
+
+           Sur petit écran ce vide n'existe pas : le murmure passe à la
+           ligne suivante et la ligne s'ouvre par le bas, le temps que le
+           doigt reste posé.
+
+           Le murmure ne reçoit jamais le pointeur : il est posé DANS le
+           bouton de la ligne, et intercepter le survol le ferait
+           clignoter au moment même où il paraît. */
+        .cv-whisper {
+            pointer-events: none;
+        }
+
+        .cv-whisper p {
+            margin: 0;
+            font-size: 10px;
+            font-style: italic;
+            line-height: 1.4;
+            /* Plus clair que le rôle et que la compagnie : c'est un
+               murmure, il ne doit pas se lire avant eux. Le même gris que
+               les onglets inactifs — le ton de service du site. */
+            color: rgb(var(--c-s500));
+            opacity: 0;
+            transform: translateY(5px);
+            filter: blur(3px);
+            transition: opacity var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out),
+                filter var(--dur-base) var(--ease-out);
+        }
+
+        /* Les coupes du synopsis sont celles de l'auteur : « Rome, an 79. »
+           tient sa ligne. Le reste se replie s'il le faut. */
+        .cv-whisper p span {
+            display: block;
+        }
+
+        /* TROIS FAÇONS DE LE FAIRE PARAÎTRE.
+           Le survol suppose un vrai pointeur : au doigt il reste collé
+           après le tap. Le clavier y a droit aussi — la ligne est un
+           bouton, on peut l'atteindre en tabulant. Et l'appui maintenu,
+           posé par le script, vaut pour les écrans tactiles. */
+        @media (hover: hover) and (pointer: fine) {
+            .cv-has-universe:hover .cv-whisper p {
+                opacity: 1;
+                transform: none;
+                filter: none;
+                /* Balayer la liste ne doit pas allumer huit murmures au
+                   passage : il faut s'arrêter pour être entendu. Le délai
+                   ne vaut qu'à l'apparition — la disparition est immédiate,
+                   sans quoi le murmure suivrait le pointeur d'une ligne. */
+                transition-delay: 220ms;
+            }
+        }
+
+        .cv-has-universe:has(.cv-row-toggle:focus-visible) .cv-whisper p,
+        .cv-item.is-whispering .cv-whisper p {
+            opacity: 1;
+            transform: none;
+            filter: none;
+        }
+
+        @media (min-width: 768px) {
+
+            /* Le murmure prend EXACTEMENT la place laissée libre : posé en
+               troisième larron entre le texte et le badge, c'est le flex
+               qui la lui mesure. Un encadré à position fixe finirait par
+               chevaucher un titre trop long ; ici le chevauchement est
+               impossible par construction. */
+            .cv-whisper {
+                flex: 1 1 0;
+                min-width: 0;
+                align-self: stretch;
+                position: relative;
+                overflow: hidden;
+                /* Le badge ne doit jamais être frôlé par le texte. */
+                padding-right: 14px;
+                /* La fin se dissout au lieu d'être coupée : un synopsis
+                   long — As You Like It — s'efface en bas de la ligne
+                   plutôt que de s'arrêter net sur trois points. */
+                -webkit-mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
+                mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
+            }
+
+            /* Hors du flux : le texte ne peut en aucun cas grandir la ligne. */
+            .cv-whisper-clip {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+            }
+
+            /* Court, le murmure se centre sur la hauteur de la ligne ;
+               long, il la remplit et déborde par le bas, là où le fondu
+               l'attend. Jamais par le haut : une première ligne coupée
+               ne se rattrape pas. */
+            .cv-whisper-clip>p {
+                max-height: 100%;
+                overflow: hidden;
+            }
+        }
+
+        @media (max-width: 767px) {
+
+            .cv-row-toggle>div:has(>.cv-whisper) {
+                flex-wrap: wrap;
+                /* L'écart entre les deux lignes du flex vaudrait 8 px même
+                   murmure fermé : la ligne du CV grandirait sans rien
+                   montrer. La respiration est donc posée dans le murmure. */
+                row-gap: 0;
+            }
+
+            /* Base nulle pour la colonne de texte : sans cela, c'est le
+               badge qui passerait à la ligne quand le titre est long, au
+               lieu du murmure. */
+            .cv-row-toggle>div>.min-w-0 {
+                flex: 1 1 0;
+            }
+
+            /* La ligne s'ouvre par le bas, du même pli que les tiroirs de
+               dates : `0fr → 1fr` anime une hauteur qu'on ne connaît pas
+               d'avance, là où un max-height arbitraire donnerait un départ
+               mou ou une coupe. */
+            .cv-whisper {
+                order: 9;
+                flex-basis: 100%;
+                display: grid;
+                grid-template-rows: 0fr;
+                transition: grid-template-rows var(--dur-panel) var(--ease-panel);
+            }
+
+            .cv-item.is-whispering .cv-whisper {
+                grid-template-rows: 1fr;
+            }
+
+            .cv-whisper-clip {
+                overflow: hidden;
+                min-height: 0;
+            }
+
+            .cv-whisper p {
+                padding-top: 7px;
+            }
+
+            /* L'appui maintenu ne doit réveiller ni la sélection de texte
+               ni le menu de copie du système : ils se déclenchent vers
+               300 ms et prendraient la main juste avant le murmure. */
+            .cv-has-universe .cv-row-toggle {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                user-select: none;
             }
         }
 

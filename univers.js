@@ -208,32 +208,27 @@ const SHOW_UNIVERSES = {
                 chapterTitle: 'La comédie shakespearienne traduite et adaptée en spectacle théâtral et musical tout terrain, pour un public dès 12 ans.'
             },
             {
-                p: [8],
-                c: ['La pièce oscille entre le trivial et le sublime.']
+                p: [3],
+                over: ['« Le monde entier est un théâtre... »'], overAt: 'centre'
             },
             {
-                p: [14],
-                c: ['La troupe au complet, sous le grand arbre'],
-                over: ['« Ce vaste théâtre', 'universel »'], overAt: 'bas'
+                q: ['« ...et tous les hommes et les femmes rien d’autre que des acteurs.', 'Ils ont leurs entrées et leurs sorties. »'],
+                by: 'Jaques, ACTE II'
             },
             {
-                q: ['« Le monde entier est un théâtre,',
-                    'et tous les hommes et les femmes rien d’autre que des acteurs,',
-                    'ils ont leurs sorties et leurs entrées. »'],
-                by: 'Jaques'
+                p: [16, 14, 9], c: ['Extérieur, ACTE I', 'Extérieur, ACTE V', 'Intérieur, ACTE V'],
+                aside: 'Neuf comédiens incarnant gens de cour et paysans réunis dans la même forêt.'
             },
             {
-                p: [10, 7], c: ['', ''],
-                aside: ['Neuf comédiens, gens de cour et paysans,', 'réunis dans la même forêt.']
+                p: [8], c: ['Dans As you like it, le rythme surprend et change à chaque instant. C\'est lui qui doit nous emporter.'],
             },
             {
-                p: [9], c: [''],
-                over: ['« Je rougis,', 'et je cache mon épée. »'], overAt: 'gauche'
+                p: [7, 1, 6], c: ['', '', ''],
             },
             {
                 q: ['« Un humain au cours de sa vie joue plusieurs rôles,',
                     'ses actes étant les sept âges. »'],
-                by: 'Jaques'
+                by: 'Jaques, ACTE II'
             },
             {
                 p: [1, 6], c: ['', ''],
@@ -242,10 +237,6 @@ const SHOW_UNIVERSES = {
             {
                 p: [13], c: [''],
                 over: ['« Le trivial', 'et le sublime »'], overAt: 'droite'
-            },
-            {
-                p: [3], c: ['Rôle · Touchstone, le bouffon'],
-                over: ['« Ce vaste théâtre universel', 'programme plus de pièces tragiques', 'que cette scène où nous jouons. »'], overAt: 'droite'
             },
             {
                 text: 'Rencontres et jeux amoureux jusqu’au mariage : Shakespeare envoie sa ' +
@@ -1319,6 +1310,7 @@ const SHOW_UNIVERSES = {
         window.hasShowUniverse = (li) => !!universeFor(li);
 
         markCvRows();
+        bindLongPress();
     }
 
     // ── Ce que le CV promet ──────────────────────────────────────────
@@ -1350,7 +1342,100 @@ const SHOW_UNIVERSES = {
                 icon.classList.remove('fa-chevron-down');
                 icon.classList.add('fa-arrow-right');
             }
+
+            addWhisper(li, uni);
         });
+    }
+
+    //  3. LE MURMURE. Au survol, la ligne laisse entrevoir de quoi parle
+    //     le spectacle. Le texte est le synopsis de l'univers — relu ici,
+    //     jamais recopié : il n'y a qu'un endroit où le corriger.
+    //
+    //     L'élément se glisse entre la colonne de texte et le badge. Sur
+    //     grand écran il occupe le vide de la ligne ; sur petit il passe
+    //     à la ligne suivante. Une seule place dans le balisage, deux
+    //     mises en page (voir .cv-whisper dans index.html).
+    function addWhisper(li, uni) {
+        if (!uni.synopsis || li.querySelector('.cv-whisper')) return;
+        const lines = toLines(uni.synopsis).map(l => l.trim()).filter(Boolean);
+        if (!lines.length) return;
+
+        const row = li.querySelector('.cv-row-toggle > div');
+        const badges = row && row.lastElementChild;
+        if (!badges) return;
+
+        const el = document.createElement('div');
+        el.className = 'cv-whisper';
+        // Caché aux lecteurs d'écran : l'élément vit DANS le bouton, et son
+        // texte s'ajouterait au nom de la ligne — « Cassandres, Rôle…,
+        // Théâtre des Crescite, Rome an 79, huit jours après la mort… ».
+        // Le synopsis leur est donné en entier dans l'univers, à un clic.
+        el.setAttribute('aria-hidden', 'true');
+        el.innerHTML = `<div class="cv-whisper-clip"><p>${lines.map(l => `<span>${escape(l)}</span>`).join('')
+            }</p></div>`;
+        row.insertBefore(el, badges);
+    }
+
+    // ── L'appui maintenu ─────────────────────────────────────────────
+    //  Le survol n'existe pas au doigt. On lui substitue l'appui tenu :
+    //  au bout de 400 ms sans que le doigt ait bougé, la ligne murmure ;
+    //  elle se tait dès qu'il se lève.
+    //
+    //  Trois précautions. Un doigt qui glisse fait défiler la page : au
+    //  delà de 10 px on abandonne — et les écouteurs sont passifs, le
+    //  défilement n'est jamais retenu. Le relâchement produit ensuite un
+    //  clic, qui ouvrirait l'univers : on l'avale, puisque l'appui avait
+    //  un autre but. Enfin Android propose son menu contextuel sur appui
+    //  long : on le refuse, mais seulement pendant un appui en cours, de
+    //  sorte que le clic droit reste normal partout ailleurs.
+    const PRESS_DELAY = 400;
+    const PRESS_SLOP = 10;
+
+    function bindLongPress() {
+        let timer = 0, row = null, x0 = 0, y0 = 0, shown = false;
+
+        const disarm = () => { clearTimeout(timer); timer = 0; };
+        const hush = () => {
+            if (row) row.classList.remove('is-whispering');
+            row = null;
+        };
+
+        document.addEventListener('touchstart', (e) => {
+            disarm(); hush(); shown = false;
+            const li = e.target.closest?.('.cv-item.cv-has-universe');
+            if (!li || !li.querySelector('.cv-whisper')) return;
+            const t = e.touches[0];
+            row = li; x0 = t.clientX; y0 = t.clientY;
+            timer = setTimeout(() => {
+                timer = 0; shown = true;
+                li.classList.add('is-whispering');
+            }, PRESS_DELAY);
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!row) return;
+            const t = e.touches[0];
+            if (Math.abs(t.clientX - x0) > PRESS_SLOP ||
+                Math.abs(t.clientY - y0) > PRESS_SLOP) {
+                disarm(); hush(); shown = false;
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => { disarm(); hush(); }, { passive: true });
+        document.addEventListener('touchcancel', () => {
+            disarm(); hush(); shown = false;
+        }, { passive: true });
+
+        // Le clic qui suit un appui maintenu n'en est pas un.
+        document.addEventListener('click', (e) => {
+            if (!shown) return;
+            shown = false;
+            if (!e.target.closest?.('.cv-item.cv-has-universe')) return;
+            e.preventDefault();
+            e.stopPropagation();
+        }, true);
+
+        document.addEventListener('contextmenu', (e) => { if (row) e.preventDefault(); });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
