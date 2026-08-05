@@ -148,9 +148,13 @@ def main():
     sequences = read_sequences()
     clean = "--nettoyer" in sys.argv
 
-    unknown = set(sequences) - set(FOLDERS)
+    # On ne s'alarme que pour les univers qui RÉCLAMENT des photos. Ceux
+    # qui n'en ont pas — un spectacle pas encore créé, un court métrage
+    # sans images — n'ont pas besoin d'un dossier source, et le signaler à
+    # chaque passage ferait crier au loup pour rien.
+    unknown = sorted(s for s in set(sequences) - set(FOLDERS) if sequences[s])
     if unknown:
-        print(f"!! slug(s) d'univers.js sans dossier source : {sorted(unknown)}")
+        print(f"!! slug(s) d'univers.js avec des photos mais sans dossier source : {unknown}")
 
     total = 0
     for slug, folder in FOLDERS.items():
