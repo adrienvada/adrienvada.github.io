@@ -1457,7 +1457,7 @@ const SHOW_UNIVERSES = {
         // un mots d'As You Like It couleraient sinon deux fois plus
         // longtemps que les dix-huit d'À la barre.
         el.style.setProperty('--wd-step',
-            Math.min(120, Math.max(28, Math.round(1640 / i))) + 'ms');
+            Math.min(240, Math.max(56, Math.round(3280 / i))) + 'ms');
         row.insertBefore(el, badges);
     }
 

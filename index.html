@@ -1031,8 +1031,8 @@
             color: rgb(var(--c-s500));
             /* La couleur se pose plus lentement que le mot n'arrive :
                la teinte du spectacle reste un instant après lui. */
-            transition-duration: 640ms, 640ms, 640ms, 1440ms;
-            transition-delay: calc(var(--i) * var(--wd-step, 60ms));
+            transition-duration: 1280ms, 1280ms, 1280ms, 2880ms;
+            transition-delay: calc(var(--i) * var(--wd-step, 120ms));
         }
 
         @media (hover: hover) and (pointer: fine) {
@@ -1041,11 +1041,11 @@
                 filter: none;
                 transform: none;
                 color: rgb(var(--c-s500));
-                transition-duration: 640ms, 640ms, 640ms, 1440ms;
+                transition-duration: 1280ms, 1280ms, 1280ms, 2880ms;
                 /* Balayer la liste ne doit pas mettre huit murmures à
                    s'écrire au passage : il faut s'arrêter pour être
                    entendu. */
-                transition-delay: calc(150ms + var(--i) * var(--wd-step, 60ms));
+                transition-delay: calc(150ms + var(--i) * var(--wd-step, 120ms));
             }
         }
 
