@@ -180,7 +180,9 @@ Chaque entrée porte :
 | `cast` | **la distribution**, en générique de fin. Y mettre le nom d'Adrien comme les autres : le moteur le repère et le passe à l'accent, sans le sortir de la liste |
 | `castNote` | *(facultatif)* précision sous la distribution — « * en alternance », « Jeu et mise en scène collective. » |
 | `credit` | photographe, affiché au pied du panneau |
-| `sequence` | **le montage** — voir ci-dessous |
+| `kind` | `'film'` pour un court métrage. Un film n'est pas « à l'affiche », n'a pas de tournée : le pied renvoie à sa fiche au lieu des dates. Absent = spectacle |
+| `role` | *(facultatif)* remplace le rôle lu sur la ligne du CV, quand celle-ci n'en porte pas |
+| `sequence` | **le montage** — voir ci-dessous. `[]` est légitime : un spectacle pas encore créé n'a pas d'images |
 
 ### Le murmure — le synopsis sur la ligne du CV
 
@@ -211,6 +213,24 @@ l'ordre. **Le nombre de photos suffit à décider de la mise en page** :
 | `{ p: [12, 7] }` | duo, la seconde décalée vers le bas |
 | `{ p: [1, 9, 11] }` | trio : une haute à gauche, deux empilées à droite |
 | `{ p: [9, 5, 6, 7] }` | quatuor en cascade, lu en diagonale |
+
+#### Une vidéo
+
+```js
+{ video: 'dQw4w9WgXcQ', c: ['Teaser du spectacle'] }
+```
+
+Un extrait YouTube sur **toute la largeur**, en 16/9. On accepte l'identifiant
+seul ou l'adresse entière — `youtu.be/…`, `watch?v=…`, `/embed/…`, `/shorts/…` :
+ce qu'on a sous la main en copiant depuis YouTube. `c` donne la légende.
+
+**Rien n'est demandé à YouTube avant le clic.** Le bloc n'affiche d'abord que
+l'affiche du film ; le lecteur — un mégaoctet de scripts et ses traceurs —
+n'est fabriqué qu'au moment où l'on veut voir. Le lecteur est ensuite servi
+par `youtube-nocookie.com`.
+
+Une valeur non reconnue est **signalée dans la console** et le bloc est ignoré :
+jamais de lecteur monté sur une adresse qu'on n'a pas comprise.
 
 #### Cadrer une photo
 

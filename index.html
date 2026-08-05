@@ -1903,6 +1903,89 @@
             }
         }
 
+        /* ── LA VIDÉO ─────────────────────────────────────────────────────
+           Un extrait filmé occupe toute la largeur, comme un plein cadre.
+           On garde la proportion 16/9 : une vidéo recadrée n'est plus la
+           vidéo, et l'on ne recadre pas le travail d'un chef opérateur.
+
+           RIEN DE YOUTUBE N'EST CHARGÉ TANT QU'ON N'A PAS CLIQUÉ : ce qu'on
+           voit d'abord est l'affiche du film, une simple image. Le lecteur
+           — un mégaoctet de scripts et ses traceurs — n'est fabriqué qu'au
+           clic (voir data-u-video dans univers.js). */
+        .u-video {
+            position: relative;
+            margin: 0;
+            width: 100%;
+        }
+
+        .u-video-play,
+        .u-video iframe {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border: 0;
+            background: #000;
+        }
+
+        .u-video-play {
+            position: relative;
+            padding: 0;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .u-video-play img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* L'affiche attend en retrait ; elle s'éclaire quand on la vise. */
+            opacity: .82;
+            transition: opacity var(--dur-base) var(--ease-out),
+                transform var(--dur-panel) var(--ease-panel);
+        }
+
+        .u-video-play:hover img,
+        .u-video-play:focus-visible img {
+            opacity: 1;
+            transform: scale(1.02);
+        }
+
+        /* Le bouton de lecture : un rond de la couleur du spectacle, posé
+           au centre. Il grandit à peine sous le pointeur — assez pour
+           répondre, pas assez pour s'agiter. */
+        .u-video-icon {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 68px;
+            height: 68px;
+            margin: -34px 0 0 -34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--u-accent);
+            color: var(--u-on-accent);
+            font-size: 1.1rem;
+            /* La flèche du triangle n'est pas centrée optiquement dans son
+               carré : on la pousse d'un cheveu. */
+            padding-left: 4px;
+            box-shadow: 0 0 40px var(--u-glow);
+            transition: transform var(--dur-base) var(--ease-out);
+        }
+
+        .u-video-play:hover .u-video-icon,
+        .u-video-play:focus-visible .u-video-icon {
+            transform: scale(1.08);
+        }
+
+        .u-video .u-cap {
+            margin-top: 14px;
+            padding: 0 24px;
+            text-align: center;
+            transform: none;
+        }
+
         /* ── Défilé de photos ──
            Trois mises en page alternées (voir composeBeats() dans
            univers.js) : `full` plein cadre, `duo` deux photos côte à côte,
@@ -3070,7 +3153,8 @@
                         <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Théâtre</h3>
                     </div>
                     <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight" id="cv-theatre-list">
-                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
+                            data-cv-show="Cassandres">
                             <button type="button" class="cv-row-toggle block rounded" aria-expanded="false"
                                 aria-controls="cv-panel-0">
                                 <div class="flex items-start justify-between gap-2">
@@ -3108,7 +3192,8 @@
                                 </div>
                             </div>
                         </li>
-                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
+                            data-cv-show="L'imaginaire forcé">
                             <button type="button" class="cv-row-toggle block rounded" aria-expanded="false"
                                 aria-controls="cv-panel-1">
                                 <div class="flex items-start justify-between gap-2">
@@ -3381,43 +3466,59 @@
                             Courts-métrages</h3>
                     </div>
                     <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
+                        <!-- Les courts métrages ouvrent un univers, comme les
+                             spectacles : même structure de ligne, même bouton.
+                             L'adresse IMDb n'est plus le lien de la ligne — elle
+                             devient `data-cv-url`, et paraît au pied de l'univers
+                             sous « Fiche du film ». Ces lignes n'ont pas de tiroir
+                             de dates : un film n'a pas de tournée. -->
                         <!-- La Peau des anges -->
-                        <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
-                            <a href="https://www.imdb.com/fr/title/tt27404051/" target="_blank" rel="noopener"
-                                class="block">
-                                <div class="cv-title-row">
-                                    <span
-                                        class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
-                                    <span
-                                        class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">La
-                                        peau des anges n'est pas si douce</span>
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
+                            data-cv-show="La peau des anges n'est pas si douce"
+                            data-cv-url="https://www.imdb.com/fr/title/tt27404051/">
+                            <button type="button" class="cv-row-toggle block rounded">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <div class="cv-title-row">
+                                            <span
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
+                                            <span
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">La
+                                                peau des anges n'est pas si douce</span>
+                                        </div>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Réalisé par
+                                            Emma Fridé</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        <i class="cv-chevron fa-solid fa-chevron-down text-[10px] text-stone-400"
+                                            aria-hidden="true"></i>
+                                    </div>
                                 </div>
-                                <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
-                                    Réalisé par Emma Fridé <i
-                                        class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-goldInk"
-                                        aria-hidden="true"></i>
-                                </p>
-                            </a>
+                            </button>
                         </li>
                         <!-- Le Rapt -->
-                        <li
-                            class="py-2 hover:bg-stone-50 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent">
-                            <a href="https://www.imdb.com/fr/title/tt8957022/" target="_blank" rel="noopener"
-                                class="block">
-                                <div class="cv-title-row">
-                                    <span
-                                        class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2019</span>
-                                    <span
-                                        class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Le
-                                        rapt</span>
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
+                            data-cv-show="Le rapt"
+                            data-cv-url="https://www.imdb.com/fr/title/tt8957022/">
+                            <button type="button" class="cv-row-toggle block rounded">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <div class="cv-title-row">
+                                            <span
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2019</span>
+                                            <span
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Le
+                                                rapt</span>
+                                        </div>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Réalisé par
+                                            Cécile Dessillons et Ladane Dehdar</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        <i class="cv-chevron fa-solid fa-chevron-down text-[10px] text-stone-400"
+                                            aria-hidden="true"></i>
+                                    </div>
                                 </div>
-                                <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
-                                    Réalisé par Cécile Dessillons et Ladane Dehdar <i
-                                        class="fa-solid fa-up-right-from-square text-[8px] text-stone-400 group-hover:text-luxury-goldInk"
-                                        aria-hidden="true"></i>
-                                </p>
-                            </a>
+                            </button>
                         </li>
                     </ul>
                 </section>
@@ -4738,7 +4839,12 @@
                         if (window.openShowUniverse(li)) return;
                     }
 
+                    // Les lignes de courts métrages n'ont pas de tiroir :
+                    // rien à y mettre, il n'y a pas de dates. Sans ce garde,
+                    // un univers qui refuserait de s'ouvrir ferait planter
+                    // le clic au lieu de ne rien faire.
                     const panel = li.querySelector('.cv-expand-panel');
+                    if (!panel) return;
                     const willOpen = !panel.classList.contains('expanded');
                     // Un seul tiroir ouvert à la fois : plus lisible qu'un CV
                     // entièrement déplié, et le repli reste prévisible.

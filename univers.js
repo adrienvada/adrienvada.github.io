@@ -26,7 +26,14 @@
  *            le souligne tout seul.
  *  castNote  précision sous la distribution : « * en alternance »…
  *  credit    photographe, affiché au pied du panneau.
+ *  kind      'film' pour un court métrage : un film n'est pas « à
+ *            l'affiche », n'a pas de tournée, et son pied de page renvoie à
+ *            sa fiche au lieu des dates. Absent = spectacle.
+ *  role      remplace le rôle lu sur la ligne du CV, quand celle-ci n'en
+ *            porte pas (les courts métrages) ou en dit autre chose.
  *  sequence  LE MONTAGE. Un élément = un temps du défilé, dans l'ordre.
+ *            `sequence: []` est un état légitime : un spectacle qui n'est
+ *            pas encore créé n'a pas d'images à montrer.
  *
  *  LES SIX EMPLACEMENTS DE TEXTE
  *  -----------------------------
@@ -45,6 +52,19 @@
  *        note en marge d'un groupe, sous les vignettes.
  *    { p: [12], c: ['légende'] }
  *        légende de photo, discrète, en petites capitales.
+ *
+ *  UNE VIDÉO
+ *  ---------
+ *    { video: 'dQw4w9WgXcQ', c: ['Teaser du spectacle'] }
+ *        Un extrait YouTube sur toute la largeur, en 16/9. On accepte
+ *        l'identifiant seul ou l'adresse entière — youtu.be, watch?v=,
+ *        /embed/, /shorts/ : ce qu'on a sous la main en copiant depuis
+ *        YouTube. `c` donne la légende, comme pour une photo.
+ *        Une valeur non reconnue est signalée dans la console et le bloc
+ *        est ignoré — jamais de lecteur monté sur une adresse douteuse.
+ *        RIEN N'EST DEMANDÉ À YOUTUBE AVANT LE CLIC : on ne montre que
+ *        l'affiche du film. Le lecteur — un mégaoctet de scripts et ses
+ *        traceurs — n'est fabriqué qu'au moment où l'on veut voir.
  *
  *  LE CADRAGE D'UNE PHOTO
  *  ----------------------
@@ -86,6 +106,45 @@
  */
 
 const SHOW_UNIVERSES = {
+
+    // ── EN CRÉATION ──────────────────────────────────────────────────
+    //  Deux spectacles qui n'existent pas encore. Leur univers n'a donc
+    //  pas de montage : un titre, ce qu'on en sait, et le pied de page.
+    //  `sequence: []` n'est pas un oubli — c'est l'état juste.
+
+    'Cassandres': {
+        slug: 'cassandres',
+        // ⚠️ PALETTE PROVISOIRE. Rien n'est public sur ce spectacle et sa
+        // direction visuelle n'est pas arrêtée : ces couleurs disent le nom,
+        // pas la mise en scène. La cendre et le rouge de l'alerte qu'on
+        // n'écoute pas — à remplacer dès que le plateau existe.
+        palette: {
+            bg: '#0f0e10', surface: '#1b191d', text: '#eeeaea', muted: '#9a9298',
+            accent: '#b8452f', accentInk: '#cf5a41', onAccent: '#ffffff',
+            line: 'rgba(238,234,234,0.14)', glow: 'rgba(184,69,47,0.30)'
+        },
+        // Pas de synopsis : je n'en sais rien, et en inventer un serait pire
+        // que de n'en pas mettre. La page se tient très bien sans — et le
+        // murmure du CV reste muet tant qu'il n'y a rien à murmurer.
+        sequence: []
+    },
+
+    "L'imaginaire forcé": {
+        slug: 'imaginaireforce',
+        title: 'L’Imaginaire forcé',
+        subtitle: 'd’après Le Mariage forcé, de Molière',
+        // La bougie et les tréteaux : l'or chaud d'une salle du XVIIe,
+        // le rouge de la farce, le brun d'un plateau de bois.
+        palette: {
+            bg: '#160f0a', surface: '#241811', text: '#f6ead8', muted: '#b79b7d',
+            accent: '#d4823c', accentInk: '#e39a58', onAccent: '#160f0a',
+            line: 'rgba(212,130,60,0.20)', glow: 'rgba(212,130,60,0.30)'
+        },
+        synopsis: ['Sganarelle veut se marier.',
+            'Il demande conseil à tout le monde,',
+            'et n’écoute personne.'],
+        sequence: []
+    },
 
     'Bérénice': {
         slug: 'berenice',
@@ -448,6 +507,52 @@ const SHOW_UNIVERSES = {
             { p: [27, 26], c: ['', ''] }
         ]
     },
+
+    // ── COURTS MÉTRAGES ──────────────────────────────────────────────
+    //  `kind: 'film'` change le vocabulaire : un film n'est pas « à
+    //  l'affiche », n'a pas de tournée, et son pied de page ne renvoie pas
+    //  aux dates. Le montage viendra quand il y aura des images — ou un
+    //  extrait, avec un bloc { video: … }.
+
+    "La peau des anges n'est pas si douce": {
+        slug: 'peaudesanges',
+        kind: 'film',
+        role: 'Court métrage · 12 minutes',
+        // Vermeer, littéralement : le plâtre clair d'un mur éclairé par la
+        // gauche, l'outremer du turban, et le jaune de plomb-étain en
+        // guise de lueur. La palette du film est celle des tableaux dont
+        // il raconte l'histoire.
+        palette: {
+            bg: '#efe9dd', surface: '#ffffff', text: '#1c1a17', muted: '#6b6357',
+            accent: '#2c4a8f', accentInk: '#223d78', onAccent: '#ffffff',
+            line: 'rgba(28,26,23,0.15)', glow: 'rgba(199,158,58,0.30)'
+        },
+        synopsis: ['L’histoire secrète des trente-deux tableaux',
+            'de Johannes Vermeer.',
+            'Elle est entièrement vraie,',
+            'puisque la cinéaste l’a entièrement imaginée.'],
+        sequence: []
+    },
+
+    'Le rapt': {
+        slug: 'lerapt',
+        kind: 'film',
+        role: 'Rôle · Steven',
+        // Le nord : une mer grise, un ciel bas, une usine. Et l'ocre chaud
+        // de la comédie, qui refuse de se laisser éteindre par le temps
+        // qu'il fait.
+        palette: {
+            bg: '#1a1e1f', surface: '#262c2d', text: '#eceeed', muted: '#98a1a0',
+            accent: '#d08a3c', accentInk: '#e0a058', onAccent: '#1a1e1f',
+            line: 'rgba(236,238,237,0.14)', glow: 'rgba(208,138,60,0.26)'
+        },
+        synopsis: ['Deux ouvrières enlèvent le fils de leur patron',
+            'pour en tirer une rançon.',
+            'Elles se trompent d’homme : c’est un vendeur de ventilation',
+            'qu’elles ramènent — ravi d’échapper à son quotidien.'],
+        cast: ['Cécile Dessillons', 'Ladane Dehdar', 'Adrien Vada'],
+        sequence: []
+    },
 };
 
 /* ══════════════════════════════════════════════════════════════
@@ -511,7 +616,9 @@ const SHOW_UNIVERSES = {
             // sous-titre (champs `title` et `subtitle`).
             title: uni?.title || t.main,
             author: uni?.subtitle ?? t.author,
-            role: txt('.cv-role'),
+            // Les lignes de courts métrages du CV ne portent pas de rôle —
+            // il n'y aurait pas la place. L'univers peut le donner lui-même.
+            role: uni?.role ?? txt('.cv-role'),
             company: txt('.cv-subtitle'),
             badge: txt('.cv-badge'),
             url: li.dataset.cvUrl || '',
@@ -793,10 +900,83 @@ const SHOW_UNIVERSES = {
         </div>`;
     }
 
+    // ── LA VIDÉO ─────────────────────────────────────────────────────
+    //  Un temps du montage peut être un extrait filmé :
+    //
+    //      { video: 'dQw4w9WgXcQ', c: ['Teaser du spectacle'] }
+    //
+    //  On accepte l'identifiant seul ou l'adresse entière — youtu.be,
+    //  watch?v=, /embed/, /shorts/ : c'est ce qu'on a sous la main quand
+    //  on copie depuis YouTube, et rien ne sert de le faire retaper.
+    //
+    //  RIEN NE PART VERS YOUTUBE TANT QU'ON N'A PAS CLIQUÉ. Le bloc
+    //  n'affiche d'abord que l'affiche du film et un bouton ; le lecteur
+    //  n'est fabriqué qu'au clic. Une iframe YouTube pèse un mégaoctet de
+    //  scripts et pose ses traceurs à l'affichage : en poser quatre dans
+    //  un univers ruinerait le défilé qu'on vient tout juste d'alléger.
+    const YT_ID = /^[A-Za-z0-9_-]{11}$/;
+
+    function videoId(uni, raw) {
+        const s = String(raw || '').trim();
+        if (YT_ID.test(s)) return s;
+        const m = s.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/|\/live\/)([A-Za-z0-9_-]{11})/);
+        if (m) return m[1];
+        console.warn(`[univers] ${uni.slug} : vidéo « ${raw} » non reconnue — le bloc est ignoré. ` +
+            `Attendu : un identifiant YouTube de 11 signes, ou l'adresse complète de la vidéo.`);
+        return '';
+    }
+
+    function videoHtml(uni, beat, title) {
+        const id = videoId(uni, beat.video);
+        if (!id) return '';
+        const cap = (beat.c && beat.c[0]) || '';
+        return `<figure class="u-video u-reveal">
+            <button type="button" class="u-video-play" data-u-video="${id}"
+                    aria-label="Lire la vidéo : ${escape(cap || title)}">
+                <img src="https://i.ytimg.com/vi/${id}/maxresdefault.jpg"
+                     data-u-poster="${id}" alt="" loading="lazy" decoding="async">
+                <span class="u-video-icon" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
+            </button>
+            ${cap ? `<figcaption class="u-cap"><span>${escape(cap)}</span></figcaption>` : ''}
+        </figure>`;
+    }
+
+    // L'affiche est demandée en haute définition — le bloc fait toute la
+    // largeur, et le format courant de YouTube (480 px) y serait mou.
+    // `maxresdefault` n'existe pourtant pas pour toutes les vidéos.
+    //
+    // ET SON ABSENCE NE SE SIGNALE PAS : YouTube ne renvoie pas d'erreur,
+    // il rend une vignette grise de 120 × 90 en statut 200. Un repli monté
+    // sur `error` ne se déclencherait donc jamais, et l'on afficherait ce
+    // timbre-poste étiré sur toute la largeur. On mesure ce qui est arrivé
+    // plutôt que d'attendre une erreur qui ne viendra pas.
+    //
+    // Le repli est posé ici et non en attribut `onerror` : pas de script
+    // dans le balisage, et l'attribut retiré interdit toute boucle.
+    const YT_PLACEHOLDER = 120;
+
+    function wireVideoPosters() {
+        overlay.querySelectorAll('img[data-u-poster]').forEach(img => {
+            const secours = () => {
+                const id = img.dataset.uPoster;
+                if (!id || !YT_ID.test(id)) return;
+                img.removeAttribute('data-u-poster');
+                img.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+            };
+            img.addEventListener('error', secours);
+            img.addEventListener('load', () => {
+                if (img.naturalWidth > YT_PLACEHOLDER) return;
+                secours();
+            });
+        });
+    }
+
     function beatsHtml(uni, title) {
         let index = 0;
 
         return (uni.sequence || []).map(beat => {
+
+            if (beat.video) return videoHtml(uni, beat, title);
 
             // ── Cartons de texte, sans photo ──
             if (beat.chapter || beat.chapterTitle) {
@@ -870,6 +1050,10 @@ const SHOW_UNIVERSES = {
         // Sans date à venir, un spectacle peut être arrêté OU pas encore
         // créé : le badge de la ligne du CV est ce qui les distingue.
         const enCreation = window.cvShowIsEnCreation?.(li) || false;
+        // Un film n'est pas « à l'affiche » et n'a pas de tournée : le
+        // vocabulaire du plateau ne lui va pas. `kind` le dit une fois, et
+        // le hero comme le pied s'y accordent.
+        const isFilm = uni.kind === 'film';
 
         overlay.innerHTML = `
         <button type="button" class="u-close" aria-label="Fermer l’univers du spectacle">
@@ -895,12 +1079,17 @@ const SHOW_UNIVERSES = {
                  simplement, et n'appelle pas le clic. Les représentations
                  passées restent au pied de l'univers. -->
             <div class="u-hero-actions">
-                ${dates || enCreation
+                ${isFilm
                 ? `<button type="button" class="u-btn" data-u-jump>
+                        Le film
+                        <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+                    </button>`
+                : dates || enCreation
+                    ? `<button type="button" class="u-btn" data-u-jump>
                         ${dates ? 'Accéder aux dates' : 'Le spectacle'}
                         <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
                     </button>`
-                : `<p class="u-hero-note">Ce spectacle n’est plus à l’affiche</p>`}
+                    : `<p class="u-hero-note">Ce spectacle n’est plus à l’affiche</p>`}
             </div>
 
             <span class="u-scroll" aria-hidden="true"><i class="fa-solid fa-arrow-down"></i></span>
@@ -923,14 +1112,16 @@ const SHOW_UNIVERSES = {
         <div class="u-figs">${figures}</div>
 
         <footer class="u-foot">
-            <h3 class="u-foot-title">${dates ? 'Prochaines représentations'
-                : enCreation ? 'Spectacle en création' : 'Ce spectacle n’est plus à l’affiche'}</h3>
-            ${dates || (enCreation
+            <h3 class="u-foot-title">${isFilm ? 'Le film'
+                : dates ? 'Prochaines représentations'
+                    : enCreation ? 'Spectacle en création' : 'Ce spectacle n’est plus à l’affiche'}</h3>
+            ${isFilm ? '' : dates || (enCreation
                 ? `<p class="u-empty">Les dates de tournée seront annoncées ici.</p>`
                 : `<p class="u-empty">Les représentations passées sont dans l’onglet Dates.</p>`)}
             <div class="u-actions">
-                ${info.url ? `<a class="u-btn" href="${escape(info.url)}" target="_blank" rel="noopener">Page du spectacle <i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i></a>` : ''}
-                <button type="button" class="u-btn u-btn-ghost" data-u-dates="${escape(info.key)}">Voir toutes les dates</button>
+                ${info.url ? `<a class="u-btn" href="${escape(info.url)}" target="_blank" rel="noopener">${isFilm ? 'Fiche du film' : 'Page du spectacle'} <i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i></a>` : ''}
+                ${isFilm || (enCreation && !dates) ? ''
+                : `<button type="button" class="u-btn u-btn-ghost" data-u-dates="${escape(info.key)}">Voir toutes les dates</button>`}
             </div>
             ${castBlock(uni)}
             ${uni.credit ? `<p class="u-credit">Photographies : ${escape(uni.credit)}</p>` : ''}
@@ -1270,6 +1461,7 @@ const SHOW_UNIVERSES = {
         const token = ++openToken;
         lastFocus = document.activeElement;
         render(li, uni);
+        wireVideoPosters();
         applyPalette(uni.palette);
         overlay.dataset.slug = uni.slug;
         scroller = overlay;
@@ -1352,6 +1544,23 @@ const SHOW_UNIVERSES = {
 
             const zoomBtn = e.target.closest('[data-u-zoom]');
             if (zoomBtn) { openZoom(zoomBtn); return; }
+
+            // La vidéo n'existe qu'à partir d'ici : le lecteur remplace
+            // l'affiche, et démarre — on vient de cliquer sur « lire ».
+            const play = e.target.closest('[data-u-video]');
+            if (play) {
+                const id = play.dataset.uVideo;
+                if (!YT_ID.test(id)) return;
+                const frame = document.createElement('iframe');
+                frame.src = `https://www.youtube-nocookie.com/embed/${id}` +
+                    '?autoplay=1&rel=0&modestbranding=1';
+                frame.title = play.getAttribute('aria-label') || 'Vidéo';
+                frame.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen';
+                frame.allowFullscreen = true;
+                frame.loading = 'lazy';
+                play.replaceWith(frame);
+                return;
+            }
 
             if (e.target.closest('.u-close')) { close(); return; }
 
