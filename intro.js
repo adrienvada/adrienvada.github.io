@@ -311,17 +311,17 @@
             var sx = cx + x1 * shapeScale * persp;
             var sy = cy + y1 * shapeScale * persp;
 
-            // Réaction au pointeur : les particules proches s'écartent et
-            // s'illuminent, puis reviennent doucement à leur place — comme
-            // de la poussière qu'on écarte de la main, pas repoussée pour de bon.
+            // Réaction au pointeur : à peine un frémissement — une caresse,
+            // pas un souffle. Les particules proches s'illuminent doucement
+            // et s'écartent à peine, puis reviennent sans à-coup.
             if (pointer.active) {
                 var dx = sx - pointer.x, dy = sy - pointer.y;
                 var dist = Math.sqrt(dx * dx + dy * dy);
-                var influence = 130;
+                var influence = 90;
                 if (dist < influence) {
                     var f = 1 - dist / influence;
-                    p.energy = Math.min(1, p.energy + f * 0.4);
-                    var push = f * f * 30 * dt * 60;
+                    p.energy = Math.min(1, p.energy + f * 0.12);
+                    var push = f * f * 5 * dt * 60;
                     var inv = 1 / (dist || 1);
                     p.offX += dx * inv * push;
                     p.offY += dy * inv * push;
