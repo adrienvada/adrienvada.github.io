@@ -216,7 +216,7 @@ const SHOW_UNIVERSES = {
             'Adrien Vada'],
         castNote: '* en alternance',
         credit: 'Clara Delmas',
-        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes, déguisée en berger, sous le nom de Ganymède, accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d\'autre membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
+        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes. Déguisée en berger sous le nom de Ganymède, elle est accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d\'autre membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
         sequence: [
             {
                 chapter: '2h',
@@ -415,7 +415,7 @@ const SHOW_UNIVERSES = {
                 by: ''
             },
             {
-                p: [7], cadre: { 7: 'gauche' },
+                p: [7], cadre: { 7: '15% 20%' },
                 over: ['« La foudre frappe n’importe où,', 'n’importe qui, n’importe quand :', 'il n’y a aucun sens à ça. »'], overAt: 'droite'
             },
             {
