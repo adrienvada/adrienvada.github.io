@@ -25,6 +25,12 @@
  *            comme les autres — c'est la vérité du plateau — et le moteur
  *            le souligne tout seul.
  *  castNote  précision sous la distribution : « * en alternance »…
+ *  prix      le palmarès, au générique juste avant la distribution. Une
+ *            entrée par ligne ; le point médian sépare la distinction de
+ *            l'endroit où elle a été remise :
+ *              'Prix du jury · Jeju International Film Festival, 2024'
+ *            La distinction prend l'accent, le reste le gris. Sans point
+ *            médian, toute la ligne prend l'accent.
  *  credit    photographe, affiché au pied du panneau.
  *  kind      'film' pour un court métrage : un film n'est pas « à
  *            l'affiche », n'a pas de tournée, et son pied de page renvoie à
@@ -531,6 +537,8 @@ const SHOW_UNIVERSES = {
             'de Johannes Vermeer.',
             'Elle est entièrement vraie,',
             'puisque la cinéaste l’a entièrement imaginée.'],
+        prix: ['Prix du jury · Jeju International Film Festival, 2024',
+            'Meilleur court métrage · Albany International Film Festival, 2023'],
         sequence: []
     },
 
@@ -1020,6 +1028,30 @@ const SHOW_UNIVERSES = {
         }).join('');
     }
 
+    // ── Le palmarès ──────────────────────────────────────────────────
+    //  Les distinctions vivent au générique, pas dans le défilé : ce n'est
+    //  pas un temps du montage, c'est ce qui est arrivé au film après.
+    //
+    //      prix: ['Prix du jury · Jeju International Film Festival, 2024']
+    //
+    //  Le point médian sépare la distinction de l'endroit où elle a été
+    //  remise — le même signe que le CV emploie pour « Rôle · Antiochus ».
+    //  La distinction prend l'accent, le reste le gris. Sans point médian,
+    //  toute la ligne prend l'accent : rien à découper, rien à casser.
+    function prixBlock(uni) {
+        if (!uni.prix || !uni.prix.length) return '';
+        const lignes = uni.prix.map(p => {
+            const i = String(p).indexOf('·');
+            const quoi = i < 0 ? String(p) : String(p).slice(0, i).trim();
+            const ou = i < 0 ? '' : String(p).slice(i + 1).trim();
+            return `<li><span class="u-prix-quoi">${escape(quoi)}</span>${ou ? `<span class="u-prix-ou">${escape(ou)}</span>` : ''}</li>`;
+        }).join('');
+        return `<div class="u-prix">
+            <h4>Palmarès</h4>
+            <ul>${lignes}</ul>
+        </div>`;
+    }
+
     // ── Le générique ─────────────────────────────────────────────────
     //  La distribution ferme l'univers : après les dates, avant le crédit
     //  photo. Le nom d'Adrien est dans la liste comme les autres — c'est
@@ -1123,6 +1155,7 @@ const SHOW_UNIVERSES = {
                 ${isFilm || (enCreation && !dates) ? ''
                 : `<button type="button" class="u-btn u-btn-ghost" data-u-dates="${escape(info.key)}">Voir toutes les dates</button>`}
             </div>
+            ${prixBlock(uni)}
             ${castBlock(uni)}
             ${uni.credit ? `<p class="u-credit">Photographies : ${escape(uni.credit)}</p>` : ''}
         </footer>
