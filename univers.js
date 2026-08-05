@@ -77,24 +77,16 @@ const SHOW_UNIVERSES = {
             accent: '#c0637e', accentInk: '#a34a66', onAccent: '#ffffff',
             line: 'rgba(24,18,21,0.13)', glow: 'rgba(192,99,126,0.30)'
         },
-        synopsis: 'Rome, an 79. Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
+        synopsis: 'Rome, an 79. \n Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
         sequence: [
-            { chapter: '1h25', chapterTitle: 'La douleur d’une séparation élevé au rang de la tragédie.' },
+            { chapter: 'I', chapterTitle: 'Un triangle amoureux élevé au rang de la tragédie.' },
+            { p: [2] },
+            { q: ['« De mon heureux rival j\'accompagnai les armes', 'J\'espérai de verser mon sang après mes larmes. »'], by: 'Antiochus, acte I' },
+            { p: [3] },
             {
-                p: [2], c: ['Une scénographie en hyper proximité avec le public'],
+                p: [12, 7], c: ['', ''],
                 // REMPLISSAGE
-                over: '« Depuis huit jours je reigne… »', overAt: 'bas'
-            },
-            { q: 'Dans l’Orient désert quel devint mon ennui !', by: 'Antiochus, acte I' },
-            {
-                p: [3], c: ['Titus'],
-                // REMPLISSAGE
-                over: 'Rome ne veut pas d’une reine.', overAt: 'droite'
-            },
-            {
-                p: [12, 7], c: ['Assis côte à côte, déjà séparés', 'L’étreinte'],
-                // REMPLISSAGE
-                aside: 'Ils s’aiment. C’est entendu, et cela ne sert à rien.'
+                aside: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »']
             },
             { chapter: 'II', chapterTitle: 'L’adieu' },
             {
@@ -135,49 +127,53 @@ const SHOW_UNIVERSES = {
             line: 'rgba(217,162,74,0.20)', glow: 'rgba(217,162,74,0.32)'
         },
         credit: 'Arnaud Bertereau',
-        synopsis: 'Une reine a deux fils jumeaux et une couronne pour un seul. ' +
-            'Elle promet le trône à celui qui tuera la femme qu’ils aiment. ' +
-            'Le sable monte, la coupe passe de main en main.',
+        synopsis: ['Royaume de Pyrie, 124 avant Jésus-Christ.',
+            'Lorsqu’un roi meurt et qu’il est père de jumeaux,',
+            'lequel des deux est l’aîné et doit prendre sa place ?'],
         sequence: [
-            { chapter: 'I', chapterTitle: 'Le sable' },
             {
-                p: [7], c: ['Le sable, et personne pour s’y agenouiller à sa place'],
-                // REMPLISSAGE
-                over: 'Deux fils. Une couronne.', overAt: 'bas'
+                p: [7],
+                c: ['Adaptation et mise en scène : Angelo Jossec — compagnie Crescite']
             },
-            // REMPLISSAGE
-            { q: 'Régner, ou n’être plus rien.', by: '' },
+            {
+                chapter: '1h30',
+                chapterTitle: 'Un drame familial de l’amour et de la haine'
+            },
             {
                 p: [10, 17], c: ['', ''],
-                // REMPLISSAGE
-                aside: 'Elle a promis le trône à celui qui tuera.'
+                aside: ['La reine n’a jamais prévu de révéler la primogéniture.',
+                    'Elle promet le trône à celui de ses fils',
+                    'qui lui donnera la vie de la princesse parthe.']
             },
             {
-                p: [21], c: ['La coupe levée'],
-                // REMPLISSAGE
-                over: 'Buvez.', overAt: 'centre'
+                p: [21], c: ['La coupe'],
+                over: ['« Cette coupe est suspecte,', 'elle vient de la reine »'], overAt: 'bas'
             },
-            { q: 'Tombe sur moi le ciel, pourvu que je me venge !', by: 'Cléopâtre, acte II' },
-            { chapter: 'II', chapterTitle: 'La coupe' },
+            {
+                q: ['« Tombe sur moi le ciel, pourvu que je me venge ! »'],
+                by: 'Cléophène'
+            },
             { p: [23], c: [''] },
             {
                 p: [20, 15], c: ['', ''],
-                // REMPLISSAGE
-                aside: 'Le poison passe de main en main, sans que personne le nomme.'
-            },
-            // REMPLISSAGE
-            { q: 'Le trône est étroit. On y tient à un.', by: '' },
-            // REMPLISSAGE
-            {
-                text: 'Corneille écrit une famille où l’amour est une arme et le sang ' +
-                    'une monnaie. On y avance sur du sable : chaque pas efface le précédent.'
+                aside: ['Deux jeunes princes vertueux et inexpérimentés,',
+                    'face à deux reines assoiffées de sang,',
+                    'et ils aiment la même femme.']
             },
             {
                 p: [16], c: [''],
-                // REMPLISSAGE
-                over: 'Il n’y aura pas de témoin.', overAt: 'droite'
+                over: ['« Jusqu’où serez-vous', 'semblables ? »'], overAt: 'droite'
+            },
+            {
+                text: 'Au prologue, un spectateur reçoit un poignard et distribue les rôles : ' +
+                    'c’est lui qui décide, ce soir-là, lequel des deux comédiens sera l’aîné. ' +
+                    'Ce poignard servira.'
             },
             { p: [18, 13, 9], c: ['', '', ''] },
+            {
+                q: ['« Rodogune ? Shakespeare n’a rien écrit de plus beau. »'],
+                by: 'Stendhal, 16 juillet 1804'
+            },
             { p: [5], c: ['Front contre front'] }
         ]
     },
@@ -191,49 +187,49 @@ const SHOW_UNIVERSES = {
             accent: '#c2d94b', accentInk: '#cfe36a', onAccent: '#0c2013',
             line: 'rgba(194,217,75,0.22)', glow: 'rgba(217,79,43,0.35)'
         },
-        synopsis: 'Bannis de la cour, ils partent se cacher dans la forêt d’Ardenne. ' +
-            'Rosalinde s’y déguise en garçon et fait répéter à celui qu’elle aime ' +
-            'comment l’aimer. On y perd son nom, son rang, sa gravité — ' +
-            'et on en revient marié.',
+        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes',
+            'déguisée en homme, sous le nom de Ganymède.',
+            'Elle y retrouve Orlando, dont elle est tombée amoureuse.'],
         sequence: [
-            { chapter: 'I', chapterTitle: 'La cour' },
             {
-                p: [8], c: ['La forêt d’Ardenne, en survêtement'],
-                // REMPLISSAGE
-                over: 'On les a chassés. Tant mieux.', overAt: 'bas'
+                p: [8],
+                c: ['Adaptation et mise en scène : Nicolas Gaspar — compagnie La Bloomsbury']
             },
             {
-                q: 'Le monde entier est un théâtre, et tous, hommes et femmes,\n' +
-                    'n’en sont que les acteurs.', by: 'Jaques, acte II'
+                chapter: '2h',
+                chapterTitle: 'Spectacle tout terrain, théâtres ou extérieur — dès 12 ans'
             },
-            { chapter: 'II', chapterTitle: 'La forêt' },
+            {
+                q: ['« Le monde entier est un théâtre,',
+                    'et tous les hommes et les femmes rien d’autre que des acteurs,',
+                    'ils ont leurs sorties et leurs entrées. »'],
+                by: 'Jaques'
+            },
             {
                 p: [10, 7], c: ['', ''],
-                // REMPLISSAGE
-                aside: 'Ici, personne n’est tout à fait qui il prétend être.'
+                aside: ['Neuf comédiens, gens de cour et paysans,', 'réunis dans la même forêt.']
             },
             {
                 p: [9], c: [''],
-                // REMPLISSAGE
-                over: 'Rosalinde s’appelle Ganymède.', overAt: 'gauche'
+                over: ['« Je rougis,', 'et je cache mon épée. »'], overAt: 'gauche'
             },
-            // REMPLISSAGE
-            { q: 'On entre en forêt pour se perdre. C’est le programme.', by: '' },
+            {
+                q: ['« Un humain au cours de sa vie joue plusieurs rôles,',
+                    'ses actes étant les sept âges. »'],
+                by: 'Jaques'
+            },
             {
                 p: [1, 6], c: ['', ''],
-                // REMPLISSAGE
-                aside: 'Elle lui apprend à l’aimer, en se faisant passer pour un autre.'
+                aside: ['Elle lui apprend à l’aimer', 'en se faisant passer pour un autre.']
             },
             {
-                p: [3], c: [''],
-                // REMPLISSAGE
-                over: 'Le bouffon a le dernier mot.', overAt: 'droite'
+                p: [3], c: ['Rôle · Touchstone, le bouffon'],
+                over: ['« Ce vaste théâtre universel', 'programme plus de pièces tragiques', 'que cette scène où nous jouons. »'], overAt: 'droite'
             },
-            // REMPLISSAGE
             {
-                text: 'Shakespeare envoie sa cour dans les bois et lui retire tout : ' +
-                    'le rang, le nom, le sérieux. Il ne reste que le désir, ' +
-                    'et un bouffon pour le commenter.'
+                text: 'Rencontres et jeux amoureux jusqu’au mariage : Shakespeare envoie sa ' +
+                    'cour dans les bois et lui retire tout — le rang, le nom, le sérieux. ' +
+                    'Il ne reste que le désir, et un bouffon pour le commenter.'
             },
             { p: [4, 5], c: ['', ''] },
             { p: [11, 12], c: ['', ''] }
@@ -249,36 +245,45 @@ const SHOW_UNIVERSES = {
             accent: '#c8102e', accentInk: '#e2455c', onAccent: '#ffffff',
             line: 'rgba(236,236,239,0.14)', glow: 'rgba(31,58,147,0.40)'
         },
-        synopsis: 'La justice se rend en public, et la salle est vide. ' +
-            'On y juge des gens ordinaires pour des faits ordinaires, ' +
-            'dans une langue qui n’est celle de personne.',
+        synopsis: ['Un spectacle de prévention, joué au collège.',
+            'Violences sexistes et sexuelles, stéréotypes, consentement —',
+            'à travers le prisme de la justice.'],
         sequence: [
-            { chapter: 'I', chapterTitle: 'La salle' },
             {
-                p: [8], c: [''],
-                // REMPLISSAGE — le texte de Ronan Chéneau n'est pas cité.
-                over: 'L’audience est publique.', overAt: 'bas'
+                p: [8],
+                c: ['Écriture collective, mise en scène : Steeve Brunet — Cie du P’tit Ballon']
             },
-            // REMPLISSAGE
-            { q: 'La salle est ouverte à tous. Il n’y a personne.', by: '' },
+            {
+                chapter: '40 min',
+                chapterTitle: 'Puis 30 minutes de débat — niveaux 4ᵉ et 3ᵉ'
+            },
+            {
+                q: ['Victime. Irréparable. Accusé. Avocat.',
+                    'Émotion. Juge. Défendre. Sursis.',
+                    'Acquitté. Procédure. Peine. Vérité.'],
+                by: 'Les mots de la justice'
+            },
             {
                 p: [6, 5], c: ['', ''],
-                // REMPLISSAGE
-                aside: 'Des faits ordinaires, dans une langue qui n’est celle de personne.'
+                aside: ['Adapté d’À la barre pour le collège,',
+                    'créé en résidence-jumelage au collège Boieldieu, à Rouen,',
+                    'avec tout le niveau de 4ᵉ.']
             },
-            { chapter: 'II', chapterTitle: 'Les prévenus' },
             {
                 p: [4, 1], c: ['', ''],
-                // REMPLISSAGE
-                aside: 'On comparaît debout, on repart assis.'
+                aside: ['Les différents tribunaux, leur composition,',
+                    'le déroulé d’un procès — et ce qu’on y dit vraiment.']
             },
-            // REMPLISSAGE
             {
-                text: 'Ce qui se joue à l’audience n’est pas la vérité mais sa mise ' +
-                    'en forme : ce qu’on peut dire, dans quel ordre, et à qui.'
+                text: 'Un spectacle très léger dans son installation, qui se joue à une ' +
+                    'comédienne et deux comédiens, au sein des établissements scolaires ' +
+                    'comme dans les théâtres. Après la représentation, le débat s’appuie ' +
+                    'sur un violentomètre : « Pourquoi suis-je violent ? »'
             },
-            // REMPLISSAGE
-            { q: 'On appelle l’affaire suivante.', by: '' },
+            {
+                q: ['C’est un outil de prévention.'],
+                by: ''
+            },
             { p: [2, 3], c: ['', ''] }
         ]
     },
@@ -290,47 +295,54 @@ const SHOW_UNIVERSES = {
             accent: '#c8102e', accentInk: '#e2455c', onAccent: '#ffffff',
             line: 'rgba(236,236,239,0.14)', glow: 'rgba(31,58,147,0.40)'
         },
-        synopsis: 'Juge, accusé, greffier, avocat, narrateur — et la même voix ' +
-            'pour tous. Le procès se rejoue à chaque fois qu’on change de place, ' +
-            'et chaque place a ses raisons.',
+        synopsis: ['Inspirés d’affaires réelles, les échanges entre magistrat·es,',
+            'accusé·es, victimes et avocat·es révèlent la complexité',
+            'd’une justice en souffrance.'],
         sequence: [
-            { chapter: 'I', chapterTitle: 'L’ouverture' },
             {
-                p: [19], c: [''],
-                // REMPLISSAGE — le texte de Ronan Chéneau n'est pas cité.
-                over: 'Le tribunal est un théâtre qui s’ignore.', overAt: 'bas'
+                p: [19],
+                c: ['Texte : Ronan Chéneau — CDN de Normandie-Rouen, création 2026']
             },
-            // REMPLISSAGE
-            { q: 'Levez-vous. Asseyez-vous. Approchez de la barre.', by: '' },
+            {
+                chapter: '1h05',
+                chapterTitle: 'Puis 45 minutes de débat — tout public dès 15 ans'
+            },
+            {
+                q: ['« Comment, dans ces conditions,', 'réussir à “rendre justice” ? »'],
+                by: ''
+            },
             {
                 p: [20, 8], c: ['', ''],
-                // REMPLISSAGE
-                aside: 'Chaque place a ses raisons. Toutes se valent, et aucune.'
+                aside: ['Les agressions se dissimulent au cœur du quotidien :',
+                    'dans le couple, la famille, les ami·es, au travail.']
             },
             {
-                p: [22], c: [''],
-                // REMPLISSAGE
-                over: 'Un seul comédien pour tous les rôles.', overAt: 'gauche'
+                p: [22], c: ['Rôle · juge, accusé, greffier, avocat, narrateur'],
+                over: ['« Avant d’entrer dans la fiction,', 'nous allons passer par le réel. »'], overAt: 'gauche'
             },
             {
                 p: [4, 13], c: ['', ''],
-                // REMPLISSAGE
-                aside: 'On change de robe, on change de camp.'
+                aside: ['Créé en 2024 au palais de justice de Rouen.',
+                    'Joué à Avignon dans le tribunal',
+                    'où fut tenu le procès des viols de Mazan.']
             },
-            { chapter: 'II', chapterTitle: 'Le délibéré' },
-            // REMPLISSAGE
-            { q: 'Qui parle, quand la loi parle ?', by: '' },
-            { p: [14, 12], c: ['', ''] },
-            // REMPLISSAGE
             {
-                text: 'Rejouer un procès, c’est découvrir qu’il n’a pas un sens mais ' +
-                    'autant de sens que de places. Le comédien les occupe toutes, ' +
-                    'et l’on ne sait plus qui l’on croit.'
+                q: ['« Not all men, but always a man. »',
+                    'Pas tous les hommes, mais toujours un homme.'],
+                by: ''
+            },
+            { p: [14, 12], c: ['', ''] },
+            {
+                text: 'La justice est imparfaite parce qu’elle est humaine, faite par des ' +
+                    'êtres humains qui ont leurs failles, leurs fatigues, en dépit de leur ' +
+                    'responsabilité immense. Elle répond pourtant à une des vocations les ' +
+                    'plus hautes de notre humanité : briser la loi du plus fort. ' +
+                    'Pour cela, elle doit savoir écouter — il faut lui en donner le temps.'
             },
             {
                 p: [9, 5, 6, 7], c: ['', '', '', ''],
-                // REMPLISSAGE
-                aside: 'Peine perdue ?'
+                aside: ['« Peine perdue, alors ? »',
+                    '« Non, au contraire : on travaille, on continue. »']
             },
             { p: [25, 26], c: ['', ''] }
         ]
@@ -344,47 +356,58 @@ const SHOW_UNIVERSES = {
             accent: '#8fa8ff', accentInk: '#a7bbff', onAccent: '#04050d',
             line: 'rgba(143,168,255,0.20)', glow: 'rgba(255,255,255,0.45)'
         },
-        synopsis: 'Ils ont vingt ans et quelque chose leur est tombé dessus. ' +
-            'La nuit, la vitesse, les corps qui se cherchent sous les néons — ' +
-            'et ce qui reste, au matin, quand la foudre est passée.',
+        synopsis: ['Une fratrie se retrouve dans un village perdu,',
+            'à un moment où tout est chaos.',
+            'Comment survivre à l’imprévisible ?'],
         sequence: [
-            { chapter: 'I', chapterTitle: 'Avant l’orage' },
             {
-                p: [10], c: ['Avant l’orage'],
-                // REMPLISSAGE — le texte de Jérémie Fabre n'est pas cité.
-                over: 'Ils ont vingt ans.', overAt: 'bas'
+                p: [10],
+                c: ['Texte : Jérémie Fabre — mise en scène : Amélie Chalmey, Cie Alchimie']
             },
-            // REMPLISSAGE
-            { q: 'On n’entend pas la foudre. On la reçoit.', by: '' },
+            {
+                // ⚠️ DURÉE À CONFIRMER : ni le site de la compagnie ni le texte
+                // ne l'indiquent. Corriger ici avant toute diffusion.
+                chapter: '1h15',
+                chapterTitle: 'Durée à confirmer'
+            },
+            {
+                q: ['« Il n’est pas mort.', 'Il s’est fait FULGURER. »'],
+                by: ''
+            },
+            {
+                text: 'Cette pièce réjouira les amateurs de musique électro, ' +
+                    'de relations familiales compliquées, et de phénomènes naturels extrêmes.'
+            },
             {
                 p: [7], c: [''],
-                // REMPLISSAGE
-                over: 'La nuit, la vitesse, les néons.', overAt: 'droite'
+                over: ['« La foudre frappe n’importe où,', 'n’importe qui, n’importe quand :', 'il n’y a aucun sens à ça. »'], overAt: 'droite'
             },
             {
                 p: [8, 5, 19], c: ['', '', ''],
-                // REMPLISSAGE
-                aside: 'Les corps se cherchent et se manquent, très vite.'
+                aside: ['La cellule familiale, subterfuge',
+                    'qui permet de passer l’humain au microscope.']
             },
-            { chapter: 'II', chapterTitle: 'L’éclat' },
             {
                 p: [23], c: [''],
-                // REMPLISSAGE
-                over: 'Puis plus rien.', overAt: 'centre'
+                over: ['« Quand la foudre frappe,', 'elle entre en toi en faisant un trou. »'], overAt: 'centre'
             },
-            // REMPLISSAGE
             {
-                text: 'La foudre ne prévient pas et ne s’explique pas. ' +
-                    'Ce qui intéresse la pièce, c’est l’après : le matin, ' +
-                    'le travail, les gestes ordinaires qu’il faut bien reprendre.'
+                text: 'Vivre comme une succession de coups de foudre dont on réchappe en ' +
+                    'boitant, chargé·e·s à bloc, déformé·e·s, sublimé·e·s par la brûlure. ' +
+                    'La capacité à se débattre et à trouver des réponses face à la peur, ' +
+                    'à l’incompréhensible et à l’injustice.'
             },
             {
                 p: [3, 1, 4], c: ['', '', ''],
-                // REMPLISSAGE
-                aside: 'Ce qui reste, au matin.'
+                aside: ['« Si tu ne trouves pas de deuxième trou,',
+                    'celui de la sortie, la charge est restée dans ton corps.',
+                    'Tu n’es plus fulguré·e, tu es FOUDROYÉ·E. »']
             },
-            // REMPLISSAGE
-            { q: 'Après, il faut bien se relever et aller travailler.', by: '' },
+            {
+                q: ['« Je cherche une âme qui pourra m’aider.',
+                    'Je suis d’une génération désenchantée. »'],
+                by: 'Mylène Farmer, en exergue de la pièce'
+            },
             { p: [2], c: [''] },
             { p: [27, 26], c: ['', ''] }
         ]
@@ -478,10 +501,19 @@ const SHOW_UNIVERSES = {
             : `<span class="u-ch" style="--i:${i}">${escape(ch)}</span>`).join('');
     }
 
-    function splitWords(str) {
-        return String(str).split(/\s+/).filter(Boolean)
-            .map((w, i) => `<span class="u-wd" style="--i:${i}">${escape(w)}</span>`)
-            .join(' ');
+    // Le synopsis accepte les mêmes coupes que le reste : un tableau de
+    // lignes, ou des \n. Sans cela, `split(/\s+/)` avalait les retours à la
+    // ligne comme de simples espaces — la coupe voulue disparaissait.
+    // Ici les lignes se replient si l'écran est trop étroit : c'est de la
+    // prose, pas des vers.
+    function splitWords(value) {
+        let i = 0;
+        return toLines(value).map(line => {
+            const words = line.split(/\s+/).filter(Boolean)
+                .map(w => `<span class="u-wd" style="--i:${i++}">${escape(w)}</span>`)
+                .join(' ');
+            return `<span class="u-line">${words || '&nbsp;'}</span>`;
+        }).join('');
     }
 
     let writeRaf = 0, writeRate = 1, writeGuard = 0;
@@ -575,9 +607,11 @@ const SHOW_UNIVERSES = {
         return `ressources/images/univers/${uni.slug}/${n}.jpg`;
     }
 
-    // Aplatit la séquence en une liste de photos, dans l'ordre du défilé :
-    // c'est elle qui indexe `data-u-zoom` et la navigation de
-    // l'agrandissement.
+    // Aplatit la séquence en une liste de photos, dans l'ordre du défilé.
+    // Ne sert qu'à connaître la PREMIÈRE photo, celle qu'on attend avant
+    // d'afficher le montage. L'agrandissement, lui, relit le DOM (zoomList) :
+    // une seconde liste tenue en parallèle finissait par se désaccorder de
+    // ce qui était réellement affiché.
     function flatPhotos(uni) {
         const out = [];
         (uni.sequence || []).forEach(beat => {
@@ -816,9 +850,23 @@ const SHOW_UNIVERSES = {
         const wrap = overlay.querySelector('.u-hero-wrap');
         const hero = overlay.querySelector('.u-hero');
         if (!wrap || !hero) return;
-        const travel = wrap.offsetHeight - h;          // course utile du collage
-        if (travel <= 0) return;
-        const p = clamp01(overlay.scrollTop / travel); // 0 en haut, 1 décollé
+        // Avancement de la SORTIE du hero, mesuré sur sa position à l'écran :
+        // 0 quand il l'occupe entièrement, 1 quand il vient d'en sortir.
+        // On ne se fonde plus sur une course de collage — il n'y en a plus,
+        // le hero fait exactement un écran et la première image suit.
+        const p = clamp01(-wrap.getBoundingClientRect().top / h);
+        if (p <= 0) {
+            // Remonté tout en haut : on rend la main au CSS d'un seul coup,
+            // sinon les éléments resteraient figés sur leur dernier état.
+            for (const [sel] of HERO_EXITS) {
+                const el = hero.querySelector(sel);
+                if (!el) continue;
+                el.style.opacity = el.style.transform = el.style.filter = el.style.animation = '';
+            }
+            hero.style.removeProperty('--u-hero-glow');
+            hero.style.pointerEvents = '';
+            return;
+        }
 
         for (const [sel, a, b, drift] of HERO_EXITS) {
             const el = hero.querySelector(sel);
@@ -956,27 +1004,44 @@ const SHOW_UNIVERSES = {
     //  Le défilé recadre : plein cadre en 16:10, en duo, en médaillon.
     //  L'agrandissement est le seul endroit où la photo est montrée
     //  ENTIÈRE (object-fit: contain), avec sa légende.
-    let zoomPhotos = [], zoomIndex = 0;
+    let zoomIndex = 0, zoomToken = 0;
 
     function zoomEl() { return overlay.querySelector('.u-zoom'); }
 
+    // La liste des photos est relue DANS LE DÉFILÉ, à chaque ouverture.
+    // Elle était auparavant reconstruite en parallèle depuis les données,
+    // et les deux pouvaient se désaccorder : on cliquait sur une photo,
+    // c'en était une autre qui s'agrandissait. Le DOM affiché est la seule
+    // source qui ne puisse pas mentir sur ce qu'on vient de cliquer.
+    function zoomList() {
+        return [...overlay.querySelectorAll('.u-figs [data-u-zoom]')].map(btn => ({
+            src: btn.querySelector('img')?.getAttribute('src') || '',
+            caption: btn.closest('.u-fig')?.querySelector('.u-cap span')?.textContent.trim() || ''
+        }));
+    }
+
     function showZoom(i) {
         const box = zoomEl();
-        if (!box || !zoomPhotos.length) return;
-        zoomIndex = (i + zoomPhotos.length) % zoomPhotos.length;
-        const ph = zoomPhotos[zoomIndex];
+        const list = zoomList();
+        if (!box || !list.length) return;
+        zoomIndex = (i + list.length) % list.length;
+        const ph = list[zoomIndex];
         const img = box.querySelector('img');
         const cap = box.querySelector('figcaption');
         img.src = ph.src;
         img.alt = ph.caption || '';
         cap.textContent = ph.caption || '';
-        box.querySelectorAll('.u-zoom-nav').forEach(b => b.hidden = zoomPhotos.length < 2);
+        box.querySelectorAll('.u-zoom-nav').forEach(b => b.hidden = list.length < 2);
     }
 
-    function openZoom(i) {
+    // On passe le BOUTON cliqué, pas un numéro : sa position dans le défilé
+    // fait foi.
+    function openZoom(btn) {
         const box = zoomEl();
         if (!box) return;
-        showZoom(i);
+        const all = [...overlay.querySelectorAll('.u-figs [data-u-zoom]')];
+        zoomToken++;
+        showZoom(Math.max(0, all.indexOf(btn)));
         box.hidden = false;
         void box.offsetHeight;
         box.classList.add('is-open');
@@ -989,7 +1054,15 @@ const SHOW_UNIVERSES = {
         if (!box || box.hidden) return;
         box.classList.remove('is-open');
         window.dropOverlayState?.('u-zoom');
-        const done = () => { if (box.isConnected) { box.hidden = true; box.querySelector('img').src = ''; } };
+        // Le vidage est différé le temps du fondu. S'il a été rouvert
+        // entre-temps sur une autre photo, ce vidage-là n'a plus lieu d'être :
+        // il effacerait l'image qu'on vient d'ouvrir.
+        const token = ++zoomToken;
+        const done = () => {
+            if (token !== zoomToken || !box.isConnected) return;
+            box.hidden = true;
+            box.querySelector('img').src = '';
+        };
         if (REDUCED) done(); else setTimeout(done, 300);
     }
 
@@ -1035,7 +1108,6 @@ const SHOW_UNIVERSES = {
         applyPalette(uni.palette);
         overlay.dataset.slug = uni.slug;
         scroller = overlay;
-        zoomPhotos = flatPhotos(uni);   // même ordre que les data-u-zoom du défilé
 
         const r = li.getBoundingClientRect();
         const vw = window.innerWidth, vh = window.innerHeight;
@@ -1114,7 +1186,7 @@ const SHOW_UNIVERSES = {
             }
 
             const zoomBtn = e.target.closest('[data-u-zoom]');
-            if (zoomBtn) { openZoom(Number(zoomBtn.dataset.uZoom)); return; }
+            if (zoomBtn) { openZoom(zoomBtn); return; }
 
             if (e.target.closest('.u-close')) { close(); return; }
 

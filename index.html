@@ -1127,19 +1127,19 @@
         }
 
         /* ── Hero ──
-           Le hero reste COLLÉ pendant environ deux écrans. C'est ce qui
-           permet au premier geste de défilement d'accélérer l'écriture du
-           titre et du synopsis au lieu de les emporter hors de l'écran :
-           on écrit la page avant de la quitter. Passé cette hauteur, le
-           défilé reprend son cours normal. */
+           EXACTEMENT un écran, et la première image suit. Le hero a d'abord
+           été collé sur près de deux écrans pour laisser au défilement le
+           temps d'accélérer l'écriture ; mais on défilait alors longtemps
+           sans rien voir venir. Le hero s'en va maintenant comme n'importe
+           quelle section, et c'est en s'en allant qu'il se défait couche par
+           couche (fadeHero) : le geste fait avancer la page ET retire le
+           texte, au lieu de buter sur une retenue. */
         .u-hero-wrap {
             position: relative;
-            height: 165svh;
+            height: 100svh;
         }
 
         .u-hero {
-            position: sticky;
-            top: 0;
             height: 100svh;
             min-height: 100svh;
             display: flex;
@@ -1700,7 +1700,7 @@
            Un chiffre romain et deux mots : ce qui donne au défilé une
            structure d'actes plutôt qu'une suite d'images. */
         .u-chapter {
-            min-height: 62svh;
+            min-height: 44svh;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -1710,17 +1710,20 @@
             gap: 22px;
         }
 
+        /* Le chiffre porte la DURÉE du spectacle : c'est une information
+           qu'on vient chercher, pas un ornement — d'où une opacité qui le
+           laisse lisible. */
         .u-chapter-num {
             font-family: 'Cinzel', serif;
-            font-size: clamp(2.4rem, 7vw, 4.4rem);
+            font-size: clamp(2.6rem, 7.5vw, 5rem);
             line-height: 1;
             color: var(--u-accent);
-            opacity: .35;
+            opacity: .62;
         }
 
         .u-chapter h3 {
             margin: 0;
-            max-width: 20ch;
+            max-width: 40ch;
             font-family: 'Montserrat', sans-serif;
             font-size: clamp(.7rem, 2.2vw, .92rem);
             font-weight: 700;
@@ -2625,7 +2628,7 @@
                             </div>
                         </li>
                         <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
-                            data-cv-show="Fulguré.e.s" data-cv-url="https://compagnie-alchimie.fr/">
+                            data-cv-show="Fulguré.e.s" data-cv-url="https://alchimiecie.wordpress.com/fulgure-e-s/">
                             <button type="button" class="cv-row-toggle block rounded" aria-expanded="false"
                                 aria-controls="cv-panel-5">
                                 <div class="flex items-start justify-between gap-2">
@@ -3713,6 +3716,7 @@
         //  couche courante.
         const overlayStack = [];        // ex. ['univers', 'u-zoom']
         let closingFromHistory = false; // fermeture déclenchée PAR le retour
+        let ownBacks = 0;               // history.back() que NOUS avons demandés
 
         function pushOverlayState(name) {
             overlayStack.push(name);
@@ -3724,10 +3728,17 @@
         function dropOverlayState(name) {
             if (closingFromHistory || overlayStack[overlayStack.length - 1] !== name) return;
             overlayStack.pop();
+            ownBacks++;
             history.back();
         }
 
         window.addEventListener('popstate', () => {
+            // Un history.back() que nous avons nous-mêmes déclenché en
+            // refermant une couche : la pile est déjà à jour, il n'y a rien
+            // à refermer de plus. Sans ce garde-fou, fermer une photo
+            // agrandie dépilait la photo PUIS l'univers qui la contenait —
+            // on se retrouvait au CV en un seul geste.
+            if (ownBacks > 0) { ownBacks--; return; }
             if (!overlayStack.length) return;  // changement d'onglet : hashchange s'en charge
             const layer = overlayStack.pop();
             closingFromHistory = true;
