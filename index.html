@@ -1640,7 +1640,12 @@
         .u-title {
             font-family: 'Cinzel', serif;
             font-weight: 700;
-            font-size: clamp(2.2rem, 9vw, 5.6rem);
+            /* Le plancher (3.4rem) et la pente (15vw) sont pensés pour le
+               mobile : à 9vw/2.2rem le titre plafonnait à sa taille plancher
+               sur un téléphone et perdait tout l'impact du desktop. Le
+               plafond (5.6rem) ne change pas — desktop et mobile convergent
+               vers la même taille dès ~600px. */
+            font-size: clamp(3.4rem, 15vw, 5.6rem);
             line-height: 1.02;
             letter-spacing: -.015em;
             max-width: 14ch;
