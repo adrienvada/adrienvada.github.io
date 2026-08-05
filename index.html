@@ -874,6 +874,11 @@
                mise en page — la liste garde exactement sa forme. */
         .cv-has-universe {
             position: relative;
+            /* LA CRÊTE DE LA GUIRLANDE, à un seul endroit. Elle sert deux
+               fois — au sommet de la vague et sous le doigt — et ces deux
+               valeurs doivent rester la même : on touche exactement ce
+               qu'on voyait passer. */
+            --cv-crete: .16;
         }
 
         .cv-has-universe::before {
@@ -988,12 +993,20 @@
                 animation-delay: calc(var(--cv-rang, 0) * .25s);
             }
 
-            /* Au doigt, la ligne touchée répond tout de suite — et une
-               animation l'emporte sur une opacité déclarée : il faut la
-               couper pour reprendre la main, pas seulement la surcharger. */
+            /* Au doigt, la ligne touchée s'allume à la CRÊTE DE LA
+               GUIRLANDE — la même couleur que la vague, ni plus ni moins :
+               on touche ce qu'on voyait passer.
+
+               Une animation l'emporte sur une opacité déclarée : il faut
+               la couper pour reprendre la main, pas seulement la
+               surcharger. Et le marqueur est posé par le script, pas par
+               `:active` : au doigt, le navigateur reprend `:active` dès
+               qu'il croit reconnaître autre chose qu'un tap, et la couleur
+               retombait alors à zéro sous le doigt. */
+            .cv-item.is-pressed.cv-has-universe::after,
             .cv-has-universe:has(.cv-row-toggle:active)::after {
                 animation: none;
-                opacity: .3;
+                opacity: var(--cv-crete);
                 transition-duration: var(--dur-press);
             }
         }
@@ -1006,7 +1019,7 @@
             }
 
             14% {
-                opacity: .16;
+                opacity: var(--cv-crete);
             }
 
             34% {

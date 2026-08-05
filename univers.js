@@ -404,12 +404,10 @@ const SHOW_UNIVERSES = {
             'Adrien Vada'],
         castNote: 'Jeu et mise en scène collective.',
         credit: 'Arnaud Bertereau',
-        synopsis: ['Inspirés d’affaires réelles, les échanges entre magistrat·es,',
-            'accusé·es, victimes et avocat·es révèlent la complexité',
-            'd’une justice en souffrance.'],
+        synopsis: ['Inspirés d’affaires réelles, les échanges entre magistrat·es, accusé·es, victimes et avocat·es révèlent la complexité d’une justice en souffrance.'],
         sequence: [
             {
-                p: [19],
+                p: [19], cadre: { 19: '40% 10%' },
                 c: ['Texte : Ronan Chéneau — CDN de Normandie-Rouen, création 2026']
             },
             {
@@ -1758,16 +1756,26 @@ const SHOW_UNIVERSES = {
 
         const disarm = () => { clearTimeout(timer); timer = 0; };
         const hush = () => {
-            if (row) row.classList.remove('is-whispering');
+            if (row) row.classList.remove('is-whispering', 'is-pressed');
             row = null;
         };
 
         document.addEventListener('touchstart', (e) => {
             disarm(); hush(); shown = false;
             const li = e.target.closest?.('.cv-item.cv-has-universe');
-            if (!li || !li.querySelector('.cv-whisper')) return;
+            if (!li) return;
+            // L'APPUI EST MARQUÉ ICI, ET NON LAISSÉ À `:active`. Au doigt,
+            // `:active` est repris par le navigateur dès qu'il croit
+            // reconnaître autre chose qu'un tap — un début de défilement,
+            // un appui long — et la couleur retombait alors à zéro sous le
+            // doigt, la guirlande reprenant la main. Ce marqueur-ci ne
+            // dépend que de nous : il tient de touchstart à touchend.
+            li.classList.add('is-pressed');
             const t = e.touches[0];
             row = li; x0 = t.clientX; y0 = t.clientY;
+            // Le murmure, lui, demande un synopsis : sans lui la ligne
+            // s'allume au doigt mais n'a rien à dire (voir Cassandres).
+            if (!li.querySelector('.cv-whisper')) return;
             timer = setTimeout(() => {
                 timer = 0; shown = true;
                 li.classList.add('is-whispering');
