@@ -88,7 +88,7 @@ const SHOW_UNIVERSES = {
             {
                 p: [12, 5], c: ['Bérénice, Antiochus, Acte III', 'Paulin, Titus, Bérénice, Acte II'],
                 // REMPLISSAGE
-                aside: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »']
+                aside: 'Un des plus beaux rôles féminins.'
             },
             {
                 q: '« Depuis huit jours je règne ; et jusques à ce jour,\n' +
@@ -97,14 +97,14 @@ const SHOW_UNIVERSES = {
             {
                 p: [1, 9, 11], c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
                 // REMPLISSAGE
-                aside: ['« - Il m\'en viendra lui-même assurer en ce lieu.', '- Et je viens donc vous dire un éternel adieu. »']
+                aside: 'La pureté racinienne montée en thriller psychologique'
             },
             {
                 p: [3], c: ['Un travail au plus plus proche de l\'alexandrin racinien pour en éprouver la virtuosité.'],
             },
             {
-                q: ['« De mon heureux rival j\'accompagnai les armes', 'J\'espérai de verser mon sang après mes larmes. »'],
-                by: 'Antiochus, acte I'
+                q: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »'],
+                by: 'Bérénice, acte IV'
             },
             { p: [7, 13, 16], c: ['Bérénice, Antiochus, Acte I', 'Antiochus, Paulin, Titus, Acte IV', 'Bérénice, Antiochus, Titus, Acte V'] },
             {

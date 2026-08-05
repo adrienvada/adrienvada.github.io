@@ -823,6 +823,21 @@
         }
 
         @media (max-width: 767px) {
+
+            /* L'AUTEUR TOUJOURS À LA LIGNE.
+               Sur écran étroit, l'incise entre parenthèses — l'auteur —
+               passait à la ligne pour certains spectacles et pas pour
+               d'autres, selon la longueur du titre. Les lignes du CV
+               n'avaient donc pas la même hauteur, et la liste paraissait
+               bancale. On impose le retour pour toutes : la variation
+               restante ne tient plus qu'à la longueur des titres eux-mêmes.
+               Un saut inséré avant l'incise plutôt qu'un display:block —
+               le titre reste en ligne avec le millésime qui le précède. */
+            .cv-title>span::before {
+                content: "\A";
+                white-space: pre;
+            }
+
             .cv-has-universe::before {
                 width: 3px;
             }
