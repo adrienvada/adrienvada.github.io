@@ -79,12 +79,12 @@ const SHOW_UNIVERSES = {
         },
         synopsis: 'Rome, an 79. \n Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
         sequence: [
-            { chapter: '1h25', chapterTitle: 'Un triangle amoureux élevé au rang de la tragédie.' },
-            { p: [2] },
+            { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes en alexandrin de la langue française sur les tensions amoureuses. ' },
+            { p: [2], c: ['Un triangle amoureux élevé au rang de la tragédie.'] },
             {
                 q: ['« Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice. »'], by: 'Bérénice, acte V'
             },
-            { p: [18] },
+            { p: [18], c: ['La scène est une arène en hyper proximité avec le public.'] },
             {
                 p: [12, 5], c: ['Bérénice, Antiochus, Acte III', 'Paulin, Titus, Bérénice, Acte II'],
                 // REMPLISSAGE
@@ -97,12 +97,10 @@ const SHOW_UNIVERSES = {
             {
                 p: [1, 9, 11], c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
                 // REMPLISSAGE
-                aside: 'Personne ne crie. C’est ce qui est terrible.'
+                aside: ['« - Il m\'en viendra lui-même assurer en ce lieu.', '- Et je viens donc vous dire un éternel adieu. »']
             },
             {
-                p: [3], c: ['Ce que Rome exige'],
-                // REMPLISSAGE
-                over: 'Il faut partir.', overAt: 'gauche'
+                p: [3], c: ['Un travail au plus plus proche de la virtuosité de l\'alexandrin racinien'],
             },
             {
                 q: ['« De mon heureux rival j\'accompagnai les armes', 'J\'espérai de verser mon sang après mes larmes. »'],
@@ -110,7 +108,7 @@ const SHOW_UNIVERSES = {
             },
             { p: [7, 13, 16], c: ['Bérénice, Antiochus, Acte I', 'Antiochus, Paulin, Titus, Acte IV', 'Bérénice, Antiochus, Titus, Acte V'] },
             {
-                text: 'Une mise en scène res serrée, accessible et exigeante, au service d\'un des plus beaux poèmes de la langue française sur les tensions amoureuses.'
+                text: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes de la langue française sur les tensions amoureuses.'
             },
             { p: [17, 19], c: ['Lycée La Salle, Rouen', 'Espace Jean Legendre, Compiègnel'] }
         ]

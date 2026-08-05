@@ -1810,8 +1810,48 @@
         }
 
         /* Une ligne écrite = une ligne affichée. */
+        /* ── VOS RETOURS À LA LIGNE, ET CEUX QUE L'ÉCRAN IMPOSE ──
+           Une fin de vers voulue et un repli forcé par la largeur
+           produisent la même chose à l'écran : une ligne qui s'arrête. Il
+           faut donc les distinguer, sans quoi on lit des vers là où il n'y
+           en a pas.
+
+           Deux conventions, chacune là où elle fonctionne. Les citations et
+           les incrustations n'ont besoin de rien : elles sont en `nowrap`,
+           aucun repli n'y est possible. */
         .u-line {
             display: block;
+        }
+
+        /* ALIGNÉ À GAUCHE — l'alinéa de report. Le vers commence à la
+           marge ; s'il déborde, sa suite est décalée. C'est ainsi qu'on
+           compose la poésie depuis toujours, et le lecteur comprend sans
+           qu'on le lui explique que la ligne décalée n'est pas un vers.
+           Suppose une marge gauche stable : sans elle, rien à quoi
+           comparer le décalage. */
+        .u-text .u-line,
+        .u-aside .u-line {
+            padding-left: 2em;
+            text-indent: -2em;
+        }
+
+        /* text-indent est HÉRITÉE, et chaque mot est un bloc en ligne :
+           sans cette remise à zéro, chacun appliquait le retrait à son
+           propre texte et les mots se chevauchaient. */
+        .u-rw,
+        .u-wd,
+        .u-ch,
+        .u-word {
+            text-indent: 0;
+        }
+
+        /* CENTRÉ — l'air. Aucune marge gauche à laquelle se référer : la
+           distinction passe par le rythme. Vos retours reçoivent un peu
+           d'espace au-dessus, un repli forcé garde l'interligne courant.
+           On sent la structure plutôt qu'on ne la voit. */
+        .u-synopsis .u-line+.u-line,
+        .u-chapter h3 .u-line+.u-line {
+            margin-top: .4em;
         }
 
         /* Dans les citations et les incrustations, la coupe est une décision
