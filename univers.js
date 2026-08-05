@@ -217,7 +217,7 @@ const SHOW_UNIVERSES = {
             'Adrien Vada'],
         credit: 'Arnaud Bertereau',
         synopsis: ['Royaume de Pyrie, 124 av. J-C.',
-            'Lorsqu’un roi meurt et qu’il est père de jumeaux, lequel des deux est l’aîné et doit prendre sa place ?'],
+            'Lorsqu’un roi meurt et qu’il est père de jumeaux, lequel des deux est l’aîné et doit prendre sa place ? La reine veuve Cléophène, dépositaire du pouvoir, doit céder sa couronne, et elle seule connaît le secret de son successeur...'],
         sequence: [
             {
                 chapter: '1h30',
@@ -228,51 +228,49 @@ const SHOW_UNIVERSES = {
                 by: 'Stendhal, 16 juillet 1804'
             },
             {
-                p: [5], c: ['Les Crescite poursuivent le travail de l\'alexandrin entrepris sur Bérénice. Ici, les personnages sont sanguinaires, vils, assoiffés de pouvoir.'],
+                p: [5], cadre: { 5: '20% 40%' },
+                c: ['Les Crescite poursuivent le travail de l\'alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir.'],
             },
             {
                 q: ['« Je vois dans le hasard tout les biens que j\'espère,', 'Mais ne puis être heureux sans le malheur d\'un frère. »'],
                 by: 'Antiochus, Acte I'
-            }, {
+            },
+            {
                 p: [9], cadre: { 9: ' ' },
                 c: ['La figure des jumeaux : une incarnation à deux têtes du dilemme cornéliens.'],
             },
             {
-                p: [21], cadre: { 21: '20% 00%' },
-                over: ['La scène est à Séleucie. ', 'La guerre entre Parthes et Pyriens dure déjà depuis plusieurs années.'],
-                overAt: 'droite'
+                p: [20, 15, 17], c: ['', ''], cadre: { 20: '40% 50%', 17: '50% 25%' },
+                aside: ['La princesse Rodogune, fille du roi ennemi, est tenue captives. Les deux princes héritiers l\'aiment, contre la loi de leur mère.']
             },
             {
-                p: [10, 17], c: ['', ''],
-                aside: ['La reine n’a jamais prévu de révéler la primogéniture.',
-                    'Elle promet le trône à celui de ses fils',
-                    'qui lui donnera la vie de la princesse parthe.']
+                q: ['« Je puis, comme je veux, tourner le droit d’aînesse,', 'Et donne à ton rival ton sceptre et ta maîtresse. »'],
+                by: 'Cléophène, Acte IV'
             },
             {
-                p: [7], c: [''],
-                over: ['« Cette coupe est suspecte,', 'elle vient de la reine »'], overAt: 'bas'
+                p: [21], cadre: { 21: '35% 40%' },
+                c: ['La mise en scène, volontairement spectaculaire, dépayse le spectateur dans un univers où sons et lumières soutiennent l\'immersion dans un drame antique épique.'],
+
             },
             {
-                q: ['« Tombe sur moi le ciel, pourvu que je me venge ! »'],
-                by: 'Cléophène'
-            },
-            { p: [23], c: [''] },
-            {
-                p: [20, 15], c: ['', ''],
-                aside: ['Deux jeunes princes vertueux et inexpérimentés,',
-                    'face à deux reines assoiffées de sang,',
-                    'et ils aiment la même femme.']
+                p: [10, 18, 13], c: ['', ''], cadre: { 10: '50% 95%', 18: '50% 25%' },
+                aside: ['Corneille excelle lorqu\'il n\'est pas corseté par les unités ou la bienséance.']
             },
             {
-                p: [16], c: [''],
+                p: [7], cadre: { 7: '70% 70%' }, c: ['La rigueur sur le travail du vers sera la même que sur Bérénice.'],
+
+            },
+            {
+                q: ['« Il vaut mieux mériter le sort le plus étrange.', 'Tombe sur moi le ciel, pourvu que je me venge ! »'],
+                by: 'Cléophène, Acte V'
+            },
+            {
+                p: [23, 16], c: ['', ''], cadre: { 23: '10% 55%', 16: '55% 50%' },
                 over: ['« Jusqu’où serez-vous', 'semblables ? »'], overAt: 'droite'
             },
             {
-                text: 'Au prologue, un spectateur reçoit un poignard et distribue les rôles : ' +
-                    'c’est lui qui décide, ce soir-là, lequel des deux comédiens sera l’aîné. ' +
-                    'Ce poignard servira.'
+                text: 'Dans ce travail de la compagnie Crescite, les rebondissements vont arriver à chaque acte. L\'acte final termine en apothéose quasi burlesque, et donne à cette adaptation de Rodogune de Corneille toute sa dimension shakespearienne.'
             },
-            { p: [18, 13, 9], c: ['', '', ''] }
         ]
     },
 
