@@ -967,8 +967,9 @@
                Le lavis de couleur se retire : à .13 partout et en même
                temps, huit aplats posés les uns sous les autres finissaient
                par faire un décor, et le CV se lisait à travers une nappe.
-               Il descend donc à .05 — presque rien, la couleur affleure —
-               et ne monte à .16 qu'à son tour.
+               Il tombe donc à ZÉRO — la ligne est nue, la couleur n'existe
+               que le temps de son passage — et ne monte à .16 qu'à son
+               tour. Rien ne reste allumé derrière la vague.
 
                La vague part du haut et descend, une ligne après l'autre :
                --cv-rang est le rang de la ligne dans le CV, posé par
@@ -982,9 +983,9 @@
                Seule l'opacité est animée : le compositeur la traite sans
                repeindre quoi que ce soit, et le CV en porte une dizaine. */
             .cv-has-universe::after {
-                opacity: .05;
-                animation: cv-guirlande 8s ease-in-out infinite;
-                animation-delay: calc(var(--cv-rang, 0) * .5s);
+                opacity: 0;
+                animation: cv-guirlande 4s ease-in-out infinite;
+                animation-delay: calc(var(--cv-rang, 0) * .25s);
             }
 
             /* Au doigt, la ligne touchée répond tout de suite — et une
@@ -1001,7 +1002,7 @@
 
             0%,
             100% {
-                opacity: .05;
+                opacity: 0;
             }
 
             14% {
@@ -1009,7 +1010,7 @@
             }
 
             34% {
-                opacity: .05;
+                opacity: 0;
             }
         }
 
@@ -1020,7 +1021,7 @@
         @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
             .cv-has-universe::after {
                 animation: none;
-                opacity: .1;
+                opacity: .08;
             }
         }
 
