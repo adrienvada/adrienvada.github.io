@@ -212,6 +212,36 @@ l'ordre. **Le nombre de photos suffit à décider de la mise en page** :
 | `{ p: [1, 9, 11] }` | trio : une haute à gauche, deux empilées à droite |
 | `{ p: [9, 5, 6, 7] }` | quatuor en cascade, lu en diagonale |
 
+#### Cadrer une photo
+
+Les cadres du défilé recadrent en `object-fit: cover`. Sans mention, c'est le
+**centre du fichier** qui survit — pas forcément le sujet. `cadre` désigne le
+point à garder :
+
+```js
+{ p: [9, 5, 6], cadre: { 9: 'haut', 5: '38% 22%' } }
+```
+
+| Écriture | Effet |
+|---|---|
+| *(rien)* | la photo garde son cadrage centré — **le comportement d'origine** |
+| `'haut'` `'bas'` `'gauche'` `'droite'` `'centre'` | le bord ou le milieu à garder |
+| `'haut gauche'` `'haut droite'` `'bas gauche'` `'bas droite'` | les quatre coins |
+| `'38% 22%'` | viser juste : horizontal puis vertical, de 0 à 100 |
+
+La clé est le **numéro de la photo**, pas son rang dans `p` : rien à compter,
+et l'ordre du montage peut changer sans que le cadrage suive au mauvais
+endroit. Le réglage appartient au **temps du montage** : la même photo peut
+être cadrée autrement dans un autre bloc.
+
+Une valeur non reconnue — faute de frappe, mot inventé, pourcentage au-delà
+de 100 — est **signalée dans la console** (`[univers] cléophène · photo 5 :
+cadre « hault » non reconnu…`) et la photo reste centrée. Rien d'autre que
+les valeurs ci-dessus n'arrive jamais dans la page.
+
+**L'agrandissement au clic n'est pas concerné** : il montre la photo entière,
+jamais recadrée.
+
 ### Les six emplacements de texte
 
 | Écriture | Où ça tombe |

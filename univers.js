@@ -46,6 +46,21 @@
  *    { p: [12], c: ['légende'] }
  *        légende de photo, discrète, en petites capitales.
  *
+ *  LE CADRAGE D'UNE PHOTO
+ *  ----------------------
+ *    { p: [9, 5, 6], cadre: { 9: 'haut', 5: '38% 22%' } }
+ *        Les cadres du défilé recadrent en `object-fit: cover` : sans
+ *        mention, c'est le centre du fichier qui survit, pas le sujet.
+ *        `cadre` désigne le point à garder — par NUMÉRO de photo, jamais
+ *        par rang dans le tableau. Une photo non mentionnée ne bouge pas.
+ *        Le réglage appartient au temps du montage : la même photo peut
+ *        être cadrée autrement plus loin.
+ *        Mots : haut, bas, gauche, droite, centre, et les quatre coins
+ *        (« haut gauche »…). Ou deux pourcentages, horizontal puis
+ *        vertical, pour viser juste. Une valeur non reconnue est signalée
+ *        dans la console et la photo reste centrée.
+ *        L'agrandissement au clic montre toujours la photo entière.
+ *
  *  Tous s'écrivent MOT À MOT au rythme du défilement (voir updateReveals).
  *
  *  LES PHOTOS
@@ -223,7 +238,7 @@ const SHOW_UNIVERSES = {
                 p: [8], c: ['Dans As you like it, le rythme surprend et change à chaque instant. C\'est lui qui doit nous emporter.'],
             },
             {
-                p: [13, 1, 4], c: ['', '', ''],
+                p: [11, 1, 4], c: ['', '', ''],
             },
             {
                 q: ['« Un humain au cours de sa vie joue plusieurs rôles,',
@@ -233,13 +248,12 @@ const SHOW_UNIVERSES = {
 
             { p: [7, 5], c: ['', ''] },
             {
-                text: 'Des comédiens.nes/musiciens.nes forment un joyeux orchestre. C’est comme une fête ! Et dans toute bonne fête, la musique et le paysage sonore priment.'
+                text: 'Des comédiens et des musiciens forment un joyeux orchestre. C’est comme une fête ! Et dans toute bonne fête, le rythme, la musique et le paysage sonore priment.'
             },
             {
-                p: [15, 16],
-                c: ['Les chaises, avant que le public arrive', 'On joue là où l’on peut se poser'],
+                p: [15, 13],
+                c: ['Villa Montebello, Trouville', 'Le Studio, Asnières'],
             },
-            { p: [11, 12], c: ['', ''] }
         ]
     },
 
@@ -649,6 +663,68 @@ const SHOW_UNIVERSES = {
         return `ressources/images/univers/${uni.slug}/${n}.jpg`;
     }
 
+    // ── LE CADRAGE ───────────────────────────────────────────────────
+    //  Les cadres du défilé recadrent en `object-fit: cover`. Sans autre
+    //  indication, c'est le CENTRE GÉOMÉTRIQUE du fichier qui survit — pas
+    //  le sujet. Un visage haut dans un portrait, deux comédiens serrés à
+    //  gauche : la photo est bonne, et le cadre la coupe.
+    //
+    //  `cadre` corrige cela, photo par photo, DANS LE TEMPS CONCERNÉ :
+    //
+    //      { p: [9, 5, 6], cadre: { 9: 'haut', 5: '38% 22%' } }
+    //
+    //  On y lit un numéro de photo, jamais un rang dans un tableau : rien
+    //  à compter, et le réglage appartient au temps du montage, pas à
+    //  l'image — une photo qui revient plus loin peut demander un autre
+    //  cadrage sans que le premier bouge.
+    //
+    //  Les mots sont ceux d'`overAt`, plus les quatre coins. Une valeur
+    //  précise est acceptée quand il faut viser juste : deux pourcentages,
+    //  horizontal puis vertical, comme `object-position`.
+    //
+    //  L'AGRANDISSEMENT N'EST PAS CONCERNÉ : il montre la photo entière,
+    //  dans une autre image qui ne reçoit que la source et la légende.
+    const FRAMES = {
+        'centre': '50% 50%',
+        'haut': '50% 0%',
+        'bas': '50% 100%',
+        'gauche': '0% 50%',
+        'droite': '100% 50%',
+        'haut gauche': '0% 0%',
+        'haut droite': '100% 0%',
+        'bas gauche': '0% 100%',
+        'bas droite': '100% 100%'
+    };
+
+    // Deux pourcentages, et RIEN d'autre : cette valeur finit dans un
+    // attribut `style`. On ne recopie d'ailleurs jamais la chaîne reçue —
+    // on réécrit les deux nombres qu'on y a lus.
+    const FRAME_PAIR = /^(\d{1,3}(?:\.\d+)?)%\s+(\d{1,3}(?:\.\d+)?)%$/;
+
+    function framePos(uni, beat, n) {
+        const raw = beat.cadre && beat.cadre[n];
+        if (raw == null || raw === '') return '';
+        const key = String(raw).trim().replace(/\s+/g, ' ').toLowerCase();
+        if (FRAMES[key]) return FRAMES[key];
+
+        const m = key.match(FRAME_PAIR);
+        if (m) {
+            const x = +m[1], y = +m[2];
+            // Au-delà de 100 %, `cover` laisserait du vide : c'est une
+            // faute de frappe, pas une intention.
+            if (x <= 100 && y <= 100) return `${x}% ${y}%`;
+        }
+
+        // Une valeur non comprise doit s'entendre. Sans ce mot, la photo
+        // resterait centrée et l'on chercherait longtemps pourquoi le
+        // réglage « ne marche pas ».
+        console.warn(`[univers] ${uni.slug} · photo ${n} : cadre « ${raw} » ` +
+            `non reconnu — la photo reste centrée. Attendu : ` +
+            `${Object.keys(FRAMES).join(', ')}, ou deux pourcentages de 0 à 100 ` +
+            `(par exemple « 38% 22% »).`);
+        return '';
+    }
+
     // Aplatit la séquence en une liste de photos, dans l'ordre du défilé.
     // Ne sert qu'à connaître la PREMIÈRE photo, celle qu'on attend avant
     // d'afficher le montage. L'agrandissement, lui, relit le DOM (zoomList) :
@@ -705,6 +781,7 @@ const SHOW_UNIVERSES = {
             <button type="button" class="u-fig-media" data-u-zoom="${index}"
                     aria-label="Agrandir : ${escape(cap || title)}">
                 <img src="${escape(ph.src)}" alt="${escape(cap || title)}"
+                     ${ph.pos ? `style="object-position:${ph.pos}"` : ''}
                      loading="${eager ? 'eager' : 'lazy'}" decoding="async">
                 <span class="u-fig-loupe" aria-hidden="true"><i class="fa-solid fa-expand"></i></span>
             </button>
@@ -752,7 +829,10 @@ const SHOW_UNIVERSES = {
             // ── Photos ──
             const layout = LAYOUT_BY_COUNT[beat.p.length] || 'plein';
             const inner = beat.p.map((n, i) => figureHtml(
-                { src: photoSrc(uni, n), caption: (beat.c && beat.c[i]) || '' },
+                {
+                    src: photoSrc(uni, n), caption: (beat.c && beat.c[i]) || '',
+                    pos: framePos(uni, beat, n)
+                },
                 layout, index, title, index++ < 3,
                 (layout === 'plein' && i === 0) ? overHtml(beat) : ''
             )).join('');
