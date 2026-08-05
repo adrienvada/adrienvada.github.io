@@ -353,12 +353,12 @@ const SHOW_UNIVERSES = {
             'à travers le prisme de la justice.'],
         sequence: [
             {
-                p: [8],
-                c: ['Écriture collective, mise en scène : Steeve Brunet — Cie du P’tit Ballon']
-            },
-            {
                 chapter: '40 min',
                 chapterTitle: 'Puis 30 minutes de débat — niveaux 4ᵉ et 3ᵉ'
+            },
+            {
+                p: [8],
+                c: ['Adapté d’À la barre pour le collège, créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ.']
             },
             {
                 q: ['Victime. Irréparable. Accusé. Avocat.',
@@ -368,26 +368,23 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [6, 5], c: ['', ''],
-                aside: ['Adapté d’À la barre pour le collège,',
-                    'créé en résidence-jumelage au collège Boieldieu, à Rouen,',
-                    'avec tout le niveau de 4ᵉ.']
+                aside: ['Les différents tribunaux, leur composition, le déroulé d’un procès — et ce qu’on y dit vraiment.']
             },
             {
-                p: [4, 1], c: ['', ''],
-                aside: ['Les différents tribunaux, leur composition,',
-                    'le déroulé d’un procès — et ce qu’on y dit vraiment.']
+                p: [4],
+                c: ['Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres.']
             },
             {
-                text: 'Un spectacle très léger dans son installation, qui se joue à une ' +
-                    'comédienne et deux comédiens, au sein des établissements scolaires ' +
-                    'comme dans les théâtres. Après la représentation, le débat s’appuie ' +
-                    'sur un violentomètre : « Pourquoi suis-je violent ? »'
+                p: [1, 2, 3], c: ['', '', ''],
+                aside: ['Après la représentation, le débat s’appuie sur un violentomètre.']
             },
             {
-                q: ['C’est un outil de prévention.'],
-                by: ''
+                q: ['« Pourquoi suis-je violent ? »'],
+                by: 'La question posée au débat'
             },
-            { p: [2, 3], c: ['', ''] }
+            {
+                text: 'C’est un outil de prévention autant qu’un spectacle : ce qui se joue devant les élèves prépare ce qui se dira après.'
+            },
         ]
     },
 
@@ -405,51 +402,44 @@ const SHOW_UNIVERSES = {
         synopsis: ['Inspirés d’affaires réelles, des extraits de procès révèlent la complexité d’une justice en souffrance face à l\'ampleur des violences conjugales.'],
         sequence: [
             {
-                p: [19], cadre: { 19: '40% 10%' },
-                c: ['Texte : Ronan Chéneau — CDN de Normandie-Rouen, création 2026']
-            },
-            {
                 chapter: '1h05',
                 chapterTitle: 'Puis 45 minutes de débat — tout public dès 15 ans'
             },
             {
-                q: ['« Comment, dans ces conditions,', 'réussir à “rendre justice” ? »'],
+                p: [19], cadre: { 19: '40% 10%' },
+                c: ['Créé en 2024 au palais de justice de Rouen, et joué à Avignon dans le tribunal où fut tenu le procès des viols de Mazan.']
+            },
+            {
+                q: ['« Comment, dans ces conditions,', 'réussir à “rendre justice” ? »'],
                 by: ''
             },
             {
                 p: [20, 8], c: ['', ''],
-                aside: ['Les agressions se dissimulent au cœur du quotidien :',
-                    'dans le couple, la famille, les ami·es, au travail.']
+                aside: ['Les agressions se dissimulent au cœur du quotidien : dans le couple, la famille, les ami·es, au travail.']
             },
             {
-                p: [22], c: ['Rôle · juge, accusé, greffier, avocat, narrateur'],
-                over: ['« Avant d’entrer dans la fiction,', 'nous allons passer par le réel. »'], overAt: 'gauche'
+                p: [22],
+                over: ['« Avant d’entrer dans la fiction,', 'nous allons passer par le réel. »'], overAt: 'gauche'
             },
             {
-                p: [4, 13], c: ['', ''],
-                aside: ['Créé en 2024 au palais de justice de Rouen.',
-                    'Joué à Avignon dans le tribunal',
-                    'où fut tenu le procès des viols de Mazan.']
+                p: [4, 13, 14], c: ['', '', ''],
+                aside: ['« Peine perdue, alors ? » — « Non, au contraire : on travaille, on continue. »']
             },
             {
-                q: ['« Not all men, but always a man. »',
+                q: ['« Not all men, but always a man. »',
                     'Pas tous les hommes, mais toujours un homme.'],
                 by: ''
             },
-            { p: [14, 12], c: ['', ''] },
-            {
-                text: 'La justice est imparfaite parce qu’elle est humaine, faite par des ' +
-                    'êtres humains qui ont leurs failles, leurs fatigues, en dépit de leur ' +
-                    'responsabilité immense. Elle répond pourtant à une des vocations les ' +
-                    'plus hautes de notre humanité : briser la loi du plus fort. ' +
-                    'Pour cela, elle doit savoir écouter — il faut lui en donner le temps.'
-            },
             {
                 p: [9, 5, 6, 7], c: ['', '', '', ''],
-                aside: ['« Peine perdue, alors ? »',
-                    '« Non, au contraire : on travaille, on continue. »']
+                aside: ['La justice est imparfaite parce qu’elle est humaine : faite par des gens qui ont leurs failles et leurs fatigues, en dépit d’une responsabilité immense.']
             },
-            { p: [25, 26], c: ['', ''] }
+            {
+                text: 'Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps.'
+            },
+            {
+                p: [25, 26, 12], c: ['', '', ''],
+            },
         ]
     },
 
