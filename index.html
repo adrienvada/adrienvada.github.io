@@ -717,6 +717,13 @@
                 transform: none !important;
             }
 
+            /* La règle ci-dessus coupe les durées, pas les retards : sans
+               cela le murmure s'écrirait toujours mot à mot, en saccade au
+               lieu d'un fondu. Il paraît donc d'un seul tenant. */
+            .cv-wd {
+                transition-delay: 0s !important;
+            }
+
             .glass-card:hover,
             ul li.group:has(a):hover {
                 transform: none !important;
@@ -954,48 +961,87 @@
             margin: 0;
             font-size: 10px;
             font-style: italic;
-            line-height: 1.4;
+            /* De l'air. Une interligne serrée donnait une colonne de
+               journal ; celle-ci laisse le texte respirer comme une
+               strophe. Trois lignes tiennent encore dans la hauteur de la
+               ligne du CV — c'est la contrainte qui fixe le maximum. */
+            line-height: 1.65;
+            letter-spacing: .012em;
             /* Plus clair que le rôle et que la compagnie : c'est un
                murmure, il ne doit pas se lire avant eux. Le même gris que
                les onglets inactifs — le ton de service du site. */
             color: rgb(var(--c-s500));
-            opacity: 0;
-            transform: translateY(5px);
-            filter: blur(3px);
-            transition: opacity var(--dur-base) var(--ease-out),
-                transform var(--dur-base) var(--ease-out),
-                filter var(--dur-base) var(--ease-out);
         }
 
         /* Les coupes du synopsis sont celles de l'auteur : « Rome, an 79. »
-           tient sa ligne. Le reste se replie s'il le faut. */
-        .cv-whisper p span {
+           tient sa ligne.
+
+           ALINÉA DE REPORT : la ligne que l'auteur a voulue commence au
+           fer, celle que l'écran impose rentre d'un cran. Le murmure prend
+           une silhouette de strophe, et l'on distingue d'un coup d'œil une
+           coupe choisie d'une coupe subie — même règle que dans les
+           univers, même raison. */
+        .cv-whisper-line {
             display: block;
+            padding-left: 1.1em;
+            text-indent: -1.1em;
+        }
+
+        /* LE TEXTE S'ÉCRIT, MOT À MOT.
+           C'est l'animation des univers, en plus court : chaque mot sort
+           d'un flou, monte de quelques pixels, et arrive TEINTÉ DE LA
+           COULEUR DU SPECTACLE avant de se poser dans le gris. Le murmure
+           annonce ainsi ce qu'on trouvera derrière la ligne — la couleur
+           d'abord, la fluidité ensuite.
+
+           `text-indent` s'hérite, et chaque mot est un bloc en ligne :
+           sans le remettre à zéro, tous les mots reculeraient de 1,1 em et
+           se chevaucheraient. (Même piège que dans les univers.) */
+        .cv-wd {
+            display: inline-block;
+            text-indent: 0;
+            opacity: 0;
+            filter: blur(5px);
+            transform: translateY(6px);
+            color: var(--cv-accent, currentColor);
+            transition: opacity var(--dur-base) var(--ease-out),
+                filter var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out),
+                /* La couleur se pose plus lentement que le mot n'arrive :
+                   la teinte du spectacle reste un instant après lui. */
+                color 720ms var(--ease-out);
         }
 
         /* TROIS FAÇONS DE LE FAIRE PARAÎTRE.
            Le survol suppose un vrai pointeur : au doigt il reste collé
            après le tap. Le clavier y a droit aussi — la ligne est un
            bouton, on peut l'atteindre en tabulant. Et l'appui maintenu,
-           posé par le script, vaut pour les écrans tactiles. */
-        @media (hover: hover) and (pointer: fine) {
-            .cv-has-universe:hover .cv-whisper p {
-                opacity: 1;
-                transform: none;
-                filter: none;
-                /* Balayer la liste ne doit pas allumer huit murmures au
-                   passage : il faut s'arrêter pour être entendu. Le délai
-                   ne vaut qu'à l'apparition — la disparition est immédiate,
-                   sans quoi le murmure suivrait le pointeur d'une ligne. */
-                transition-delay: 220ms;
-            }
+           posé par le script, vaut pour les écrans tactiles.
+
+           `--i` est le rang du mot : c'est lui qui fait courir l'écriture.
+           Le retard ne vaut qu'à l'apparition ; en repartant, la base
+           n'en porte aucun et le murmure s'efface d'un bloc — un effacement
+           mot à mot traînerait derrière le pointeur. */
+        .cv-has-universe:has(.cv-row-toggle:focus-visible) .cv-wd,
+        .cv-item.is-whispering .cv-wd {
+            opacity: 1;
+            filter: none;
+            transform: none;
+            color: rgb(var(--c-s500));
+            transition-delay: calc(var(--i) * var(--wd-step, 30ms));
         }
 
-        .cv-has-universe:has(.cv-row-toggle:focus-visible) .cv-whisper p,
-        .cv-item.is-whispering .cv-whisper p {
-            opacity: 1;
-            transform: none;
-            filter: none;
+        @media (hover: hover) and (pointer: fine) {
+            .cv-has-universe:hover .cv-wd {
+                opacity: 1;
+                filter: none;
+                transform: none;
+                color: rgb(var(--c-s500));
+                /* Balayer la liste ne doit pas mettre huit murmures à
+                   s'écrire au passage : il faut s'arrêter pour être
+                   entendu. */
+                transition-delay: calc(150ms + var(--i) * var(--wd-step, 30ms));
+            }
         }
 
         @media (min-width: 768px) {

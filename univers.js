@@ -223,31 +223,21 @@ const SHOW_UNIVERSES = {
                 p: [8], c: ['Dans As you like it, le rythme surprend et change à chaque instant. C\'est lui qui doit nous emporter.'],
             },
             {
-                p: [7, 1, 6], c: ['', '', ''],
+                p: [13, 1, 4], c: ['', '', ''],
             },
             {
                 q: ['« Un humain au cours de sa vie joue plusieurs rôles,',
                     'ses actes étant les sept âges. »'],
                 by: 'Jaques, ACTE II'
             },
+
+            { p: [7, 5], c: ['', ''] },
             {
-                p: [1, 6], c: ['', ''],
-                aside: ['Elle lui apprend à l’aimer', 'en se faisant passer pour un autre.']
+                text: 'Des comédiens.nes/musiciens.nes forment un joyeux orchestre. C’est comme une fête ! Et dans toute bonne fête, la musique et le paysage sonore priment.'
             },
-            {
-                p: [13], c: [''],
-                over: ['« Le trivial', 'et le sublime »'], overAt: 'droite'
-            },
-            {
-                text: 'Rencontres et jeux amoureux jusqu’au mariage : Shakespeare envoie sa ' +
-                    'cour dans les bois et lui retire tout — le rang, le nom, le sérieux. ' +
-                    'Il ne reste que le désir, et un bouffon pour le commenter.'
-            },
-            { p: [4, 5], c: ['', ''] },
             {
                 p: [15, 16],
                 c: ['Les chaises, avant que le public arrive', 'On joue là où l’on peut se poser'],
-                aside: ['Un spectacle tout terrain :', 'théâtres ou extérieur.']
             },
             { p: [11, 12], c: ['', ''] }
         ]
@@ -1371,8 +1361,23 @@ const SHOW_UNIVERSES = {
         // Théâtre des Crescite, Rome an 79, huit jours après la mort… ».
         // Le synopsis leur est donné en entier dans l'univers, à un clic.
         el.setAttribute('aria-hidden', 'true');
-        el.innerHTML = `<div class="cv-whisper-clip"><p>${lines.map(l => `<span>${escape(l)}</span>`).join('')
-            }</p></div>`;
+        // Mot à mot, comme le synopsis s'inscrit dans l'univers : `--i` est
+        // le rang du mot, et le CSS en fait un retard. Le compteur court
+        // d'une ligne à l'autre, sinon chaque ligne repartirait de zéro et
+        // les trois s'écriraient en même temps.
+        let i = 0;
+        const html = lines.map(line =>
+            `<span class="cv-whisper-line">` + line.split(/\s+/).filter(Boolean)
+                .map(w => `<span class="cv-wd" style="--i:${i++}">${escape(w)}</span>`)
+                .join(' ') + `</span>`
+        ).join('');
+        el.innerHTML = `<div class="cv-whisper-clip"><p>${html}</p></div>`;
+        // Chaque murmure s'écrit dans le même temps, quelle que soit sa
+        // longueur : c'est une phrase, pas un métronome. Les cinquante et
+        // un mots d'As You Like It couleraient sinon deux fois plus
+        // longtemps que les dix-huit d'À la barre.
+        el.style.setProperty('--wd-step',
+            Math.min(60, Math.max(14, Math.round(820 / i))) + 'ms');
         row.insertBefore(el, badges);
     }
 
