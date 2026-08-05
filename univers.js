@@ -77,6 +77,7 @@ const SHOW_UNIVERSES = {
             accent: '#c0637e', accentInk: '#a34a66', onAccent: '#ffffff',
             line: 'rgba(24,18,21,0.13)', glow: 'rgba(192,99,126,0.30)'
         },
+        credit: 'Olivier Héron',
         synopsis: 'Rome, an 79. \n Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
         sequence: [
             { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes en alexandrin' },
@@ -188,6 +189,7 @@ const SHOW_UNIVERSES = {
             accent: '#c2d94b', accentInk: '#cfe36a', onAccent: '#0c2013',
             line: 'rgba(194,217,75,0.22)', glow: 'rgba(217,79,43,0.35)'
         },
+        credit: 'Clara Delmas',
         synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes, déguisée en berger, sous le nom de Ganymède, accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d\'autre membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
         sequence: [
             {
@@ -319,6 +321,7 @@ const SHOW_UNIVERSES = {
             accent: '#c8102e', accentInk: '#e2455c', onAccent: '#ffffff',
             line: 'rgba(236,236,239,0.14)', glow: 'rgba(31,58,147,0.40)'
         },
+        credit: 'Arnaud Bertereau',
         synopsis: ['Inspirés d’affaires réelles, les échanges entre magistrat·es,',
             'accusé·es, victimes et avocat·es révèlent la complexité',
             'd’une justice en souffrance.'],
@@ -384,6 +387,7 @@ const SHOW_UNIVERSES = {
         // l'univers. Sur le CV il n'a plus rien à éclairer : le filet prend
         // un bleu de nuit franc, plus sombre que la craie d'Audiences.
         cvAccent: '#4d5fc4',
+        credit: 'Thypa Photographie',
         synopsis: ['Une fratrie se retrouve dans un village perdu,',
             'à un moment où tout est chaos.',
             'Comment survivre à l’imprévisible ?'],
