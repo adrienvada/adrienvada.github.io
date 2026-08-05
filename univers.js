@@ -13,7 +13,7 @@
  *  `data-cv-show` sur le <li class="cv-item"> correspondant dans
  *  index.html — même appariement que pour les dates, sans rapprochement
  *  approximatif. Un spectacle sans entrée ici garde l'ancien tiroir :
- *  c'est le cas volontaire de « L'imaginaire forcé » et « Cassandres »,
+ *  c'est le cas volontaire de « L'imaginaire forcé » et « Cassandres »,
  *  dont la direction visuelle n'est pas arrêtée.
  *
  *  CHAMPS
@@ -22,9 +22,9 @@
  *            sur le seul panneau (le reste du site n'est pas repeint).
  *  synopsis  s'inscrit mot à mot sous le titre. 2 à 4 phrases.
  *  cast      la distribution, en générique de fin. Le nom d'Adrien y figure
- *            comme les autres — c'est la vérité du plateau — et le moteur
- *            le souligne tout seul.
- *  castNote  précision sous la distribution : « * en alternance »…
+ *            comme les autres, en dernier, et rien ne l'en distingue :
+ *            c'est un générique, pas une affiche.
+ *  castNote  précision sous la distribution : « * en alternance »…
  *  prix      le palmarès, au générique juste avant la distribution. Une
  *            entrée par ligne ; le point médian sépare la distinction de
  *            l'endroit où elle a été remise :
@@ -32,8 +32,8 @@
  *            La distinction prend l'accent, le reste le gris. Sans point
  *            médian, toute la ligne prend l'accent.
  *  credit    photographe, affiché au pied du panneau.
- *  kind      'film' pour un court métrage : un film n'est pas « à
- *            l'affiche », n'a pas de tournée, et son pied de page renvoie à
+ *  kind      'film' pour un court métrage : un film n'est pas « à
+ *            l'affiche », n'a pas de tournée, et son pied de page renvoie à
  *            sa fiche au lieu des dates. Absent = spectacle.
  *  role      remplace le rôle lu sur la ligne du CV, quand celle-ci n'en
  *            porte pas (les courts métrages) ou en dit autre chose.
@@ -82,7 +82,7 @@
  *        Le réglage appartient au temps du montage : la même photo peut
  *        être cadrée autrement plus loin.
  *        Mots : haut, bas, gauche, droite, centre, et les quatre coins
- *        (« haut gauche »…). Ou deux pourcentages, horizontal puis
+ *        (« haut gauche »…). Ou deux pourcentages, horizontal puis
  *        vertical, pour viser juste. Une valeur non reconnue est signalée
  *        dans la console et la photo reste centrée.
  *        L'agrandissement au clic montre toujours la photo entière.
@@ -103,7 +103,7 @@
  *
  *  DROITS SUR LES TEXTES
  *  ---------------------
- *  Les textes marqués « REMPLISSAGE » sont de la prose neutre écrite pour
+ *  Les textes marqués « REMPLISSAGE » sont de la prose neutre écrite pour
  *  tenir la place — ce ne sont PAS des répliques des pièces. Les seules
  *  vraies citations sont celles du domaine public (Racine, Corneille,
  *  Shakespeare). Reproduire le texte d'une pièce contemporaine —
@@ -168,17 +168,17 @@ const SHOW_UNIVERSES = {
             { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes en alexandrin' },
             { p: [2], c: ['Un triangle amoureux élevé au rang de la tragédie.'] },
             {
-                q: ['« Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice. »'], by: 'Bérénice, acte V'
+                q: ['« Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice. »'], by: 'Bérénice, acte V'
             },
             { p: [18], c: ['La scène est une arène en hyper proximité avec le public, baignée dans une ambiance sonore et musicale live.'] },
             {
                 p: [12, 5], c: ['Bérénice, Antiochus, Acte III', 'Paulin, Titus, Bérénice, Acte II'],
                 // REMPLISSAGE
-                aside: 'Une des plus belles partitions classique pour un personnage féminin qui sert « d\'exemple à l\'univers ».'
+                aside: 'Une des plus belles partitions classique pour un personnage féminin qui sert « d\'exemple à l\'univers ».'
             },
             {
-                q: '« Depuis huit jours je règne ; et jusques à ce jour,\n' +
-                    'Qu\'ai-je fait pour l\'honneur ? J\'ai tout fait pour l\'amour. »', by: 'Titus, acte IV'
+                q: '« Depuis huit jours je règne ; et jusques à ce jour,\n' +
+                    'Qu\'ai-je fait pour l\'honneur ? J\'ai tout fait pour l\'amour. »', by: 'Titus, acte IV'
             },
             {
                 p: [1, 9, 11], c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
@@ -189,7 +189,7 @@ const SHOW_UNIVERSES = {
                 p: [3], c: ['Un travail au plus plus proche de l\'alexandrin racinien pour en éprouver la virtuosité.'],
             },
             {
-                q: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »'],
+                q: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »'],
                 by: 'Bérénice, acte IV'
             },
             { p: [7, 13, 16], c: ['Bérénice, Antiochus, Acte I', 'Antiochus, Paulin, Titus, Acte IV', 'Bérénice, Antiochus, Titus, Acte V'] },
@@ -236,10 +236,10 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [21], c: ['La coupe'],
-                over: ['« Cette coupe est suspecte,', 'elle vient de la reine »'], overAt: 'bas'
+                over: ['« Cette coupe est suspecte,', 'elle vient de la reine »'], overAt: 'bas'
             },
             {
-                q: ['« Tombe sur moi le ciel, pourvu que je me venge ! »'],
+                q: ['« Tombe sur moi le ciel, pourvu que je me venge ! »'],
                 by: 'Cléophène'
             },
             { p: [23], c: [''] },
@@ -251,7 +251,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [16], c: [''],
-                over: ['« Jusqu’où serez-vous', 'semblables ? »'], overAt: 'droite'
+                over: ['« Jusqu’où serez-vous', 'semblables ? »'], overAt: 'droite'
             },
             {
                 text: 'Au prologue, un spectateur reçoit un poignard et distribue les rôles : ' +
@@ -260,7 +260,7 @@ const SHOW_UNIVERSES = {
             },
             { p: [18, 13, 9], c: ['', '', ''] },
             {
-                q: ['« Rodogune ? Shakespeare n’a rien écrit de plus beau. »'],
+                q: ['« Rodogune ? Shakespeare n’a rien écrit de plus beau. »'],
                 by: 'Stendhal, 16 juillet 1804'
             },
             { p: [5], c: ['Front contre front'] }
@@ -289,10 +289,10 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [3],
-                over: ['« Le monde entier est un théâtre... »'], overAt: 'centre'
+                over: ['« Le monde entier est un théâtre... »'], overAt: 'centre'
             },
             {
-                q: ['« ...et tous les hommes et les femmes rien d’autre que des acteurs.', 'Ils ont leurs entrées et leurs sorties. »'],
+                q: ['« ...et tous les hommes et les femmes rien d’autre que des acteurs.', 'Ils ont leurs entrées et leurs sorties. »'],
                 by: 'Jaques, ACTE II'
             },
             {
@@ -303,8 +303,8 @@ const SHOW_UNIVERSES = {
                 p: [8], c: ['Dans As you like it, le rythme surprend et change à chaque instant. C\'est lui qui doit nous emporter.'],
             },
             {
-                q: ['« Un humain au cours de sa vie joue plusieurs rôles,',
-                    'ses actes étant les sept âges. »'],
+                q: ['« Un humain au cours de sa vie joue plusieurs rôles,',
+                    'ses actes étant les sept âges. »'],
                 by: 'Jaques, ACTE II'
             },
             {
@@ -374,7 +374,7 @@ const SHOW_UNIVERSES = {
                 text: 'Un spectacle très léger dans son installation, qui se joue à une ' +
                     'comédienne et deux comédiens, au sein des établissements scolaires ' +
                     'comme dans les théâtres. Après la représentation, le débat s’appuie ' +
-                    'sur un violentomètre : « Pourquoi suis-je violent ? »'
+                    'sur un violentomètre : « Pourquoi suis-je violent ? »'
             },
             {
                 q: ['C’est un outil de prévention.'],
@@ -408,7 +408,7 @@ const SHOW_UNIVERSES = {
                 chapterTitle: 'Puis 45 minutes de débat — tout public dès 15 ans'
             },
             {
-                q: ['« Comment, dans ces conditions,', 'réussir à “rendre justice” ? »'],
+                q: ['« Comment, dans ces conditions,', 'réussir à “rendre justice” ? »'],
                 by: ''
             },
             {
@@ -418,7 +418,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [22], c: ['Rôle · juge, accusé, greffier, avocat, narrateur'],
-                over: ['« Avant d’entrer dans la fiction,', 'nous allons passer par le réel. »'], overAt: 'gauche'
+                over: ['« Avant d’entrer dans la fiction,', 'nous allons passer par le réel. »'], overAt: 'gauche'
             },
             {
                 p: [4, 13], c: ['', ''],
@@ -427,7 +427,7 @@ const SHOW_UNIVERSES = {
                     'où fut tenu le procès des viols de Mazan.']
             },
             {
-                q: ['« Not all men, but always a man. »',
+                q: ['« Not all men, but always a man. »',
                     'Pas tous les hommes, mais toujours un homme.'],
                 by: ''
             },
@@ -441,8 +441,8 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [9, 5, 6, 7], c: ['', '', '', ''],
-                aside: ['« Peine perdue, alors ? »',
-                    '« Non, au contraire : on travaille, on continue. »']
+                aside: ['« Peine perdue, alors ? »',
+                    '« Non, au contraire : on travaille, on continue. »']
             },
             { p: [25, 26], c: ['', ''] }
         ]
@@ -463,9 +463,7 @@ const SHOW_UNIVERSES = {
         cast: ['Lia Alamichel', 'Amélie Chalmey', 'Adrien Vada'],
         credit: 'Thypa Photographie',
         synopsis: ['Une fratrie. Un village. Perdu.',
-            'La foudre y a frappé il y a quelques années et y a laissé des survivant.e.s : les fulguré.e.s.',
-            'À l’occasion d’un nouvel an, la fratrie s’y perd et rencontre ses habitants.',
-            'Alors que « tout est chaos », la foudre frappe à nouveau.'],
+            'La foudre y a frappé il y a quelques années et y a laissé des survivant.e.s : les fulguré.e.s. À l’occasion d’un nouvel an, la fratrie s’y perd et rencontre ses habitants. Alors que « tout est chaos », la foudre frappe à nouveau.'],
         sequence: [
             {
                 chapter: '1h15',
@@ -476,47 +474,36 @@ const SHOW_UNIVERSES = {
                 c: ['Cette pièce réjouira les amateurs de musique électro, de relations familiales compliquées, et de phénomènes naturels extrêmes.']
             },
             {
-                q: ['« Il n’est pas mort.', 'Il s’est fait FULGURER. »'],
+                q: ['« Il n’est pas mort.', 'Il s’est fait FULGURER. »'],
                 by: ''
             },
             {
-                p: [7], cadre: { 7: '15% 20%' },
-                over: ['« La foudre frappe n’importe où,', 'n’importe qui, n’importe quand :', 'il n’y a aucun sens à ça. »'], overAt: 'droite'
+                p: [3, 1, 4], c: ['', '', ''], cadre: { 3: 'droite', 1: 'droite', 4: 'gauche' },
+                aside: ['« Quand la foudre frappe,', 'elle entre en toi en faisant un trou... »']
             },
             {
-                p: [8, 5, 19], c: ['', '', ''],
-                aside: ['La cellule familiale, subterfuge',
-                    'qui permet de passer l’humain au microscope.']
+                p: [23], c: ['La cellule familiale, subterfuge qui permet de passer l’humain au microscope.'], cadre: { 23: 'droite' }
             },
             {
-                p: [23], c: [''],
-                over: ['« Quand la foudre frappe,', 'elle entre en toi en faisant un trou. »'], overAt: 'centre'
+                p: [27, 5, 19], c: ['', '', ''], cadre: { 27: '50% 50%', 19: '60% 00%' },
+                aside: ['« Si tu ne trouves pas de deuxième trou, celui de la sortie, la charge est restée dans ton corps. Tu n’es plus fulguré·e, tu es FOUDROYÉ·E. »']
             },
             {
-                text: 'Vivre comme une succession de coups de foudre dont on réchappe en ' +
-                    'boitant, chargé·e·s à bloc, déformé·e·s, sublimé·e·s par la brûlure. ' +
-                    'La capacité à se débattre et à trouver des réponses face à la peur, ' +
-                    'à l’incompréhensible et à l’injustice.'
+                p: [7], cadre: { 7: '30% 00%' },
+                over: ['« La foudre frappe n\’importe où,', 'n\’importe qui, n\’importe quand :', 'il n\'y a aucun sens à ça.\»'], overAt: 'droite'
             },
+            { p: [8, 26], c: ['', ''], cadre: { 8: 'droite' } },
+            { p: [2], c: ['Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure.'] },
+
             {
-                p: [3, 1, 4], c: ['', '', ''], cadre: { 3: 'droite' },
-                aside: ['« Si tu ne trouves pas de deuxième trou,',
-                    'celui de la sortie, la charge est restée dans ton corps.',
-                    'Tu n’es plus fulguré·e, tu es FOUDROYÉ·E. »']
+                text: 'Fulguré.e.s est un spectacle qui met à l’épreuve l\'humain dans sa capacité à se débattre et à trouver des réponses face à la peur, à l’incompréhensible et à l’injustice.'
             },
-            {
-                q: ['« Je cherche une âme qui pourra m’aider.',
-                    'Je suis d’une génération désenchantée. »'],
-                by: 'Mylène Farmer, en exergue de la pièce'
-            },
-            { p: [2], c: [''] },
-            { p: [27, 26], c: ['', ''] }
         ]
     },
 
     // ── COURTS MÉTRAGES ──────────────────────────────────────────────
-    //  `kind: 'film'` change le vocabulaire : un film n'est pas « à
-    //  l'affiche », n'a pas de tournée, et son pied de page ne renvoie pas
+    //  `kind: 'film'` change le vocabulaire : un film n'est pas « à
+    //  l'affiche », n'a pas de tournée, et son pied de page ne renvoie pas
     //  aux dates. Le montage viendra quand il y aura des images — ou un
     //  extrait, avec un bloc { video: … }.
 
@@ -600,7 +587,7 @@ const SHOW_UNIVERSES = {
     }
 
     // Les titres du CV portent souvent une incise en <span> — l'auteur,
-    // « (Racine) ». En plein écran elle ne peut pas rester dans le titre
+    // « (Racine) ». En plein écran elle ne peut pas rester dans le titre
     // en Cinzel 5rem : on la sépare pour la poser sous le titre.
     function titleParts(li) {
         const el = li.querySelector('.cv-title');
@@ -618,8 +605,8 @@ const SHOW_UNIVERSES = {
         const t = titleParts(li);
         return {
             year: txt('.cv-year'),
-            // Le CV écrit le titre en entier — « Cléophène, d'après
-            // Rodogune ». En Cinzel 5rem c'est trop long : les univers
+            // Le CV écrit le titre en entier — « Cléophène, d'après
+            // Rodogune ». En Cinzel 5rem c'est trop long : les univers
             // peuvent donner un titre court et renvoyer le reste en
             // sous-titre (champs `title` et `subtitle`).
             title: uni?.title || t.main,
@@ -653,12 +640,12 @@ const SHOW_UNIVERSES = {
 
     // Chaque lettre est un bloc, pour tomber une à une. Mais des blocs
     // juxtaposés se coupent n'importe où : le navigateur les traite comme
-    // autant d'éléments indépendants, et « d'après » se retrouvait scindé
-    // en « d'apr / ès ». Les lettres sont donc regroupées par MOT, et c'est
+    // autant d'éléments indépendants, et « d'après » se retrouvait scindé
+    // en « d'apr / ès ». Les lettres sont donc regroupées par MOT, et c'est
     // le mot qui est insécable.
     function splitChars(str) {
         let i = 0;
-        return String(str).split(/\s+/).filter(Boolean).map(word =>
+        return String(str).split(/[^\S ]+/).filter(Boolean).map(word =>
             `<span class="u-word">` + word.split('').map(ch =>
                 `<span class="u-ch" style="--i:${i++}">${escape(ch)}</span>`
             ).join('') + `</span>`
@@ -673,7 +660,7 @@ const SHOW_UNIVERSES = {
     function splitWords(value) {
         let i = 0;
         return toLines(value).map(line => {
-            const words = line.split(/\s+/).filter(Boolean)
+            const words = line.split(/[^\S\u00A0]+/).filter(Boolean)
                 .map(w => `<span class="u-wd" style="--i:${i++}">${escape(w)}</span>`)
                 .join(' ');
             return `<span class="u-line">${words || '&nbsp;'}</span>`;
@@ -825,11 +812,11 @@ const SHOW_UNIVERSES = {
 
         // Une valeur non comprise doit s'entendre. Sans ce mot, la photo
         // resterait centrée et l'on chercherait longtemps pourquoi le
-        // réglage « ne marche pas ».
-        console.warn(`[univers] ${uni.slug} · photo ${n} : cadre « ${raw} » ` +
+        // réglage « ne marche pas ».
+        console.warn(`[univers] ${uni.slug} · photo ${n} : cadre « ${raw} » ` +
             `non reconnu — la photo reste centrée. Attendu : ` +
             `${Object.keys(FRAMES).join(', ')}, ou deux pourcentages de 0 à 100 ` +
-            `(par exemple « 38% 22% »).`);
+            `(par exemple « 38% 22% »).`);
         return '';
     }
 
@@ -877,7 +864,7 @@ const SHOW_UNIVERSES = {
     function revealWords(value) {
         const lines = toLines(value);
         return lines.map(line => {
-            const words = line.split(/\s+/).filter(Boolean)
+            const words = line.split(/[^\S\u00A0]+/).filter(Boolean)
                 .map(w => `<span class="u-rw">${escape(w)}</span>`).join(' ');
             return `<span class="u-line">${words || '&nbsp;'}</span>`;
         }).join('');
@@ -929,7 +916,7 @@ const SHOW_UNIVERSES = {
         if (YT_ID.test(s)) return s;
         const m = s.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/|\/live\/)([A-Za-z0-9_-]{11})/);
         if (m) return m[1];
-        console.warn(`[univers] ${uni.slug} : vidéo « ${raw} » non reconnue — le bloc est ignoré. ` +
+        console.warn(`[univers] ${uni.slug} : vidéo « ${raw} » non reconnue — le bloc est ignoré. ` +
             `Attendu : un identifiant YouTube de 11 signes, ou l'adresse complète de la vidéo.`);
         return '';
     }
@@ -1035,7 +1022,7 @@ const SHOW_UNIVERSES = {
     //      prix: ['Prix du jury · Jeju International Film Festival, 2024']
     //
     //  Le point médian sépare la distinction de l'endroit où elle a été
-    //  remise — le même signe que le CV emploie pour « Rôle · Antiochus ».
+    //  remise — le même signe que le CV emploie pour « Rôle · Antiochus ».
     //  La distinction prend l'accent, le reste le gris. Sans point médian,
     //  toute la ligne prend l'accent : rien à découper, rien à casser.
     function prixBlock(uni) {
@@ -1054,19 +1041,17 @@ const SHOW_UNIVERSES = {
 
     // ── Le générique ─────────────────────────────────────────────────
     //  La distribution ferme l'univers : après les dates, avant le crédit
-    //  photo. Le nom d'Adrien est dans la liste comme les autres — c'est
-    //  la vérité du plateau — mais l'accent le désigne : sur son propre
-    //  site, on doit pouvoir le repérer sans qu'il passe devant la troupe.
-    //  La couleur suffit ; ni le gras ni la taille ne s'en mêlent.
-    const ME = 'Adrien Vada';
-
+    //  photo. Le nom d'Adrien y figure comme les autres, en dernier, et
+    //  RIEN NE L'EN DISTINGUE : ni couleur, ni gras, ni taille. C'est un
+    //  générique, pas une affiche — sur son propre site, se souligner soi-
+    //  même au milieu de sa troupe se remarquerait plus que le reste.
     function castBlock(uni) {
         if (!uni.cast || !uni.cast.length) return '';
         // Chaque nom est insécable : un patronyme coupé en fin de ligne,
         // dans un générique, ne se fait pas. La virgule reste collée au
         // nom qui précède, la seule coupe possible est l'espace d'après.
         const names = uni.cast.map(n =>
-            `<span class="u-cast-name${n === ME ? ' u-cast-me' : ''}">${escape(n)}</span>`
+            `<span class="u-cast-name">${escape(n)}</span>`
         ).join(', ');
         return `<div class="u-cast">
             <h4>Distribution</h4>
@@ -1082,7 +1067,7 @@ const SHOW_UNIVERSES = {
         // Sans date à venir, un spectacle peut être arrêté OU pas encore
         // créé : le badge de la ligne du CV est ce qui les distingue.
         const enCreation = window.cvShowIsEnCreation?.(li) || false;
-        // Un film n'est pas « à l'affiche » et n'a pas de tournée : le
+        // Un film n'est pas « à l'affiche » et n'a pas de tournée : le
         // vocabulaire du plateau ne lui va pas. `kind` le dit une fois, et
         // le hero comme le pied s'y accordent.
         const isFilm = uni.kind === 'film';
@@ -1191,7 +1176,7 @@ const SHOW_UNIVERSES = {
         s.setProperty('--u-line', p.line);
         s.setProperty('--u-glow', p.glow);
         // La barre du navigateur sur mobile suit aussi la palette : c'est
-        // là que se joue vraiment le « le site change de peau ».
+        // là que se joue vraiment le « le site change de peau ».
         document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
             if (!m.dataset.uPrev) m.dataset.uPrev = m.content;
             m.content = p.bg;
@@ -1464,7 +1449,7 @@ const SHOW_UNIVERSES = {
     // fois la première DÉCODÉE. Sans cette attente, l'image se peint au
     // milieu de l'animation d'ouverture et la fait tomber à ~20 i/s : c'est
     // le décodage, pas le téléchargement, qui saccadait.
-    // La croix et le bouton « Accéder aux dates » restent actifs pendant ce
+    // La croix et le bouton « Accéder aux dates » restent actifs pendant ce
     // temps : on doit toujours pouvoir renoncer.
     const MAX_WAIT_MS = 2500;
 
@@ -1528,7 +1513,7 @@ const SHOW_UNIVERSES = {
         });
 
         document.documentElement.classList.add('u-locked');
-        // Une entrée d'historique de plus : « précédent » referme l'univers
+        // Une entrée d'historique de plus : « précédent » referme l'univers
         // et rend le CV, au lieu de quitter le site (voir index.html).
         window.pushOverlayState?.('univers');
         isOpen = true;
@@ -1579,7 +1564,7 @@ const SHOW_UNIVERSES = {
             if (zoomBtn) { openZoom(zoomBtn); return; }
 
             // La vidéo n'existe qu'à partir d'ici : le lecteur remplace
-            // l'affiche, et démarre — on vient de cliquer sur « lire ».
+            // l'affiche, et démarre — on vient de cliquer sur « lire ».
             const play = e.target.closest('[data-u-video]');
             if (play) {
                 const id = play.dataset.uVideo;
@@ -1597,7 +1582,7 @@ const SHOW_UNIVERSES = {
 
             if (e.target.closest('.u-close')) { close(); return; }
 
-            // « Accéder aux dates » : on saute au pied du panneau. Les
+            // « Accéder aux dates » : on saute au pied du panneau. Les
             // photos restent au-dessus, on ne les a pas perdues.
             if (e.target.closest('[data-u-jump]')) {
                 const foot = overlay.querySelector('.u-foot');
@@ -1643,7 +1628,7 @@ const SHOW_UNIVERSES = {
     //  fichier qui sait quelles lignes ont un univers, et la marque suit
     //  donc automatiquement les univers qu'on ajoute ou qu'on retire.
     //
-    //  1. L'ICÔNE. Le chevron annonçait « ceci se déplie » — un tiroir.
+    //  1. L'ICÔNE. Le chevron annonçait « ceci se déplie » — un tiroir.
     //     Or la ligne ouvre une page plein écran. Les lignes dotées d'un
     //     univers portent donc une flèche oblique : on va quelque part.
     //     Les autres gardent leur chevron, qui redevient exact.
@@ -1692,8 +1677,8 @@ const SHOW_UNIVERSES = {
         const el = document.createElement('div');
         el.className = 'cv-whisper';
         // Caché aux lecteurs d'écran : l'élément vit DANS le bouton, et son
-        // texte s'ajouterait au nom de la ligne — « Cassandres, Rôle…,
-        // Théâtre des Crescite, Rome an 79, huit jours après la mort… ».
+        // texte s'ajouterait au nom de la ligne — « Cassandres, Rôle…,
+        // Théâtre des Crescite, Rome an 79, huit jours après la mort… ».
         // Le synopsis leur est donné en entier dans l'univers, à un clic.
         el.setAttribute('aria-hidden', 'true');
         // Mot à mot, comme le synopsis s'inscrit dans l'univers : `--i` est
@@ -1702,7 +1687,7 @@ const SHOW_UNIVERSES = {
         // les trois s'écriraient en même temps.
         let i = 0;
         const html = lines.map(line =>
-            `<span class="cv-whisper-line">` + line.split(/\s+/).filter(Boolean)
+            `<span class="cv-whisper-line">` + line.split(/[^\S\u00A0]+/).filter(Boolean)
                 .map(w => `<span class="cv-wd" style="--i:${i++}">${escape(w)}</span>`)
                 .join(' ') + `</span>`
         ).join('');

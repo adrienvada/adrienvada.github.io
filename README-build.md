@@ -177,7 +177,7 @@ Chaque entrée porte :
 | `title` / `subtitle` | *(facultatif)* quand le titre du CV est trop long pour du Cinzel 5rem — « Cléophène », et « d'après Rodogune » en dessous |
 | `cvAccent` | *(facultatif)* couleur du filet sur la ligne du CV, quand l'accent de l'univers y dirait autre chose que le spectacle |
 | `synopsis` | s'inscrit mot à mot sous le titre. Une chaîne, ou un tableau de lignes. Sert aussi de **murmure** sur la ligne du CV — voir ci-dessous |
-| `cast` | **la distribution**, en générique de fin. Y mettre le nom d'Adrien comme les autres : le moteur le repère et le passe à l'accent, sans le sortir de la liste |
+| `cast` | **la distribution**, en générique de fin. Y mettre le nom d'Adrien comme les autres, en dernier — rien ne l'en distingue : c'est un générique, pas une affiche |
 | `castNote` | *(facultatif)* précision sous la distribution — « * en alternance », « Jeu et mise en scène collective. » |
 | `prix` | *(facultatif)* le **palmarès**, au générique juste avant la distribution. Une entrée par ligne, le point médian séparant la distinction du lieu : `'Prix du jury · Jeju International Film Festival, 2024'`. La distinction prend l'accent, le reste le gris |
 | `credit` | photographe, affiché au pied du panneau |
