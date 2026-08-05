@@ -174,10 +174,13 @@ Chaque entrée porte :
 | Champ | Rôle |
 |---|---|
 | `palette` | les couleurs du spectacle, injectées en variables `--u-*` sur le panneau. Le reste du site n'est **pas** repeint : le panneau le recouvre. |
-| `tagline` | une phrase, affichée sous le titre |
-| `photos` | `{ src, caption }`, dans l'ordre du défilement |
-| `quotes` | `{ text, speaker }` — `\n` marque une fin de vers |
+| `title` / `subtitle` | *(facultatif)* quand le titre du CV est trop long pour du Cinzel 5rem — « Cléophène », et « d'après Rodogune » en dessous |
+| `cvAccent` | *(facultatif)* couleur du filet sur la ligne du CV, quand l'accent de l'univers y dirait autre chose que le spectacle |
+| `synopsis` | s'inscrit mot à mot sous le titre. Une chaîne, ou un tableau de lignes |
+| `cast` | **la distribution**, en générique de fin. Y mettre le nom d'Adrien comme les autres : le moteur le repère et le passe à l'accent, sans le sortir de la liste |
+| `castNote` | *(facultatif)* précision sous la distribution — « * en alternance », « Jeu et mise en scène collective. » |
 | `credit` | photographe, affiché au pied du panneau |
+| `sequence` | **le montage** — voir ci-dessous |
 
 ### Le montage
 
@@ -270,8 +273,8 @@ visuelle n'est pas arrêtée — ce n'est pas un cas d'erreur à corriger.
 
 | Dossier | Rôle |
 |---|---|
-| `ressources/spectacles/<spectacle>/` | **vos originaux**, numérotés (`bérénice_12.jpg`). Lourds, jamais servis aux visiteurs. C'est le seul endroit où l'on dépose ou remplace une image. |
-| `ressources/images/univers/<slug>/<n>.jpg` | **copies allégées** (1600 px, < 260 Ko) que le site charge. Régénérées par le script, **jamais éditées à la main**. |
+| `../Images spectacles/<spectacle>/` | **vos originaux**, numérotés (`bérénice_12.jpg`), **hors du dépôt**. Lourds, jamais servis aux visiteurs. C'est le seul endroit où l'on dépose ou remplace une image. Étant hors du dépôt, ils ne sont **plus sauvegardés par git** : gardez-en une copie ailleurs. |
+| `ressources/images/univers/<slug>/<n>.jpg` | **copies allégées** que le site charge : 2400 px / < 900 Ko en plein cadre, 1500 px / < 260 Ko en vignette. Régénérées par le script, **jamais éditées à la main**. |
 
 Le numéro du fichier est conservé de bout en bout : c'est le langage commun
 entre les planches-contact, le montage et le site.
@@ -291,7 +294,9 @@ l'efface.
 #### Remplacer une photo
 
 - **Changer l'image derrière un numéro** (retouche, autre prise) : remplacez
-  le fichier dans `ressources/spectacles/…`, relancez le script. Rien d'autre.
+  le fichier dans `Images spectacles/…`, relancez le script. Rien d'autre.
+  Le script cherche ce dossier à côté du dépôt, puis à son ancienne place ;
+  `UNIVERS_PHOTOS=/chemin` permet d'en désigner un autre.
 - **Changer quelle photo apparaît** : modifiez le numéro dans la `sequence`
   de `univers.js`, relancez le script.
 

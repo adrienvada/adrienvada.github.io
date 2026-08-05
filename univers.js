@@ -21,6 +21,10 @@
  *  palette   les couleurs du spectacle, injectées en variables --u-*
  *            sur le seul panneau (le reste du site n'est pas repeint).
  *  synopsis  s'inscrit mot à mot sous le titre. 2 à 4 phrases.
+ *  cast      la distribution, en générique de fin. Le nom d'Adrien y figure
+ *            comme les autres — c'est la vérité du plateau — et le moteur
+ *            le souligne tout seul.
+ *  castNote  précision sous la distribution : « * en alternance »…
  *  credit    photographe, affiché au pied du panneau.
  *  sequence  LE MONTAGE. Un élément = un temps du défilé, dans l'ordre.
  *
@@ -77,6 +81,7 @@ const SHOW_UNIVERSES = {
             accent: '#c0637e', accentInk: '#a34a66', onAccent: '#ffffff',
             line: 'rgba(24,18,21,0.13)', glow: 'rgba(192,99,126,0.30)'
         },
+        cast: ['Angelo Jossec', 'Manon Rivier', 'Lauren Toulin', 'Adrien Vada'],
         credit: 'Olivier Héron',
         synopsis: 'Rome, an 79. \n Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
         sequence: [
@@ -128,6 +133,8 @@ const SHOW_UNIVERSES = {
             accent: '#d9a24a', accentInk: '#e6b767', onAccent: '#150c05',
             line: 'rgba(217,162,74,0.20)', glow: 'rgba(217,162,74,0.32)'
         },
+        cast: ['Angelo Jossec', 'Manon Rivier', 'Lauren Toulin', 'Johann Abiola',
+            'Adrien Vada'],
         credit: 'Arnaud Bertereau',
         synopsis: ['Royaume de Pyrie, 124 avant Jésus-Christ.',
             'Lorsqu’un roi meurt et qu’il est père de jumeaux,',
@@ -189,6 +196,10 @@ const SHOW_UNIVERSES = {
             accent: '#c2d94b', accentInk: '#cfe36a', onAccent: '#0c2013',
             line: 'rgba(194,217,75,0.22)', glow: 'rgba(217,79,43,0.35)'
         },
+        cast: ['Alexis Debieuvre*', 'Noémie Fourdan', 'Nicolas Gaspar', 'Nanou Harry',
+            'Clotilde Maurin', 'Laurent Prache*', 'Bastien Spiteri', 'Laurène Thomas',
+            'Adrien Vada'],
+        castNote: '* en alternance',
         credit: 'Clara Delmas',
         synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes, déguisée en berger, sous le nom de Ganymède, accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d\'autre membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
         sequence: [
@@ -321,6 +332,9 @@ const SHOW_UNIVERSES = {
             accent: '#c8102e', accentInk: '#e2455c', onAccent: '#ffffff',
             line: 'rgba(236,236,239,0.14)', glow: 'rgba(31,58,147,0.40)'
         },
+        cast: ['Marion Casabianca', 'Anne Cosmao', 'Rémi Dessenoix', 'Valérie Diome',
+            'Adrien Vada'],
+        castNote: 'Jeu et mise en scène collective.',
         credit: 'Arnaud Bertereau',
         synopsis: ['Inspirés d’affaires réelles, les échanges entre magistrat·es,',
             'accusé·es, victimes et avocat·es révèlent la complexité',
@@ -387,6 +401,7 @@ const SHOW_UNIVERSES = {
         // l'univers. Sur le CV il n'a plus rien à éclairer : le filet prend
         // un bleu de nuit franc, plus sombre que la craie d'Audiences.
         cvAccent: '#4d5fc4',
+        cast: ['Lia Alamichel', 'Amélie Chalmey', 'Adrien Vada'],
         credit: 'Thypa Photographie',
         synopsis: ['Une fratrie se retrouve dans un village perdu,',
             'à un moment où tout est chaos.',
@@ -770,6 +785,29 @@ const SHOW_UNIVERSES = {
         }).join('');
     }
 
+    // ── Le générique ─────────────────────────────────────────────────
+    //  La distribution ferme l'univers : après les dates, avant le crédit
+    //  photo. Le nom d'Adrien est dans la liste comme les autres — c'est
+    //  la vérité du plateau — mais l'accent le désigne : sur son propre
+    //  site, on doit pouvoir le repérer sans qu'il passe devant la troupe.
+    //  La couleur suffit ; ni le gras ni la taille ne s'en mêlent.
+    const ME = 'Adrien Vada';
+
+    function castBlock(uni) {
+        if (!uni.cast || !uni.cast.length) return '';
+        // Chaque nom est insécable : un patronyme coupé en fin de ligne,
+        // dans un générique, ne se fait pas. La virgule reste collée au
+        // nom qui précède, la seule coupe possible est l'espace d'après.
+        const names = uni.cast.map(n =>
+            `<span class="u-cast-name${n === ME ? ' u-cast-me' : ''}">${escape(n)}</span>`
+        ).join(', ');
+        return `<div class="u-cast">
+            <h4>Distribution</h4>
+            <p class="u-cast-names">${names}</p>
+            ${uni.castNote ? `<p class="u-cast-note">${escape(uni.castNote)}</p>` : ''}
+        </div>`;
+    }
+
     function render(li, uni) {
         const info = rowInfo(li, uni);
         const figures = beatsHtml(uni, info.title);
@@ -819,6 +857,7 @@ const SHOW_UNIVERSES = {
                 ${info.url ? `<a class="u-btn" href="${escape(info.url)}" target="_blank" rel="noopener">Page du spectacle <i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i></a>` : ''}
                 <button type="button" class="u-btn u-btn-ghost" data-u-dates="${escape(info.key)}">Voir toutes les dates</button>
             </div>
+            ${castBlock(uni)}
             ${uni.credit ? `<p class="u-credit">Photographies : ${escape(uni.credit)}</p>` : ''}
         </footer>
 
