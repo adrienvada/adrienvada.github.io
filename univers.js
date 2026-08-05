@@ -79,7 +79,7 @@ const SHOW_UNIVERSES = {
         },
         synopsis: 'Rome, an 79. \n Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
         sequence: [
-            { chapter: 'I', chapterTitle: 'Un triangle amoureux élevé au rang de la tragédie.' },
+            { chapter: '1h25', chapterTitle: 'Un triangle amoureux élevé au rang de la tragédie.' },
             { p: [2] },
             { q: ['« De mon heureux rival j\'accompagnai les armes', 'J\'espérai de verser mon sang après mes larmes. »'], by: 'Antiochus, acte I' },
             { p: [3] },
@@ -120,6 +120,11 @@ const SHOW_UNIVERSES = {
 
     "Cléophène, d'après Rodogune": {
         slug: 'cleophene',
+        // Le CV écrit le titre entier ; en Cinzel 5rem il tiendrait sur
+        // trois lignes. Le titre se réduit donc au nom, le reste passe
+        // en sous-titre.
+        title: 'Cléophène',
+        subtitle: 'd’après Rodogune, de Corneille',
         // Chaleur désertique : or, brun sombre, une lumière basse.
         palette: {
             bg: '#150c05', surface: '#241608', text: '#f5e8d2', muted: '#b59878',
@@ -463,13 +468,18 @@ const SHOW_UNIVERSES = {
         return { main: main || el.textContent.trim(), author };
     }
 
-    function rowInfo(li) {
-        const txt = (sel) => li.querySelector(sel)?.textContent.trim() || '';
+    function rowInfo(li, uni) {
+        const txt = (sel) => li.querySelector(sel)?.textContent
+            .replace(/\s+/g, ' ').trim() || '';
         const t = titleParts(li);
         return {
             year: txt('.cv-year'),
-            title: t.main,
-            author: t.author,
+            // Le CV écrit le titre en entier — « Cléophène, d'après
+            // Rodogune ». En Cinzel 5rem c'est trop long : les univers
+            // peuvent donner un titre court et renvoyer le reste en
+            // sous-titre (champs `title` et `subtitle`).
+            title: uni?.title || t.main,
+            author: uni?.subtitle ?? t.author,
             role: txt('.cv-role'),
             company: txt('.cv-subtitle'),
             badge: txt('.cv-badge'),
@@ -495,10 +505,18 @@ const SHOW_UNIVERSES = {
     const BREATH = 320;      // respiration entre le titre et le synopsis
     const MAX_RATE = 9;
 
+    // Chaque lettre est un bloc, pour tomber une à une. Mais des blocs
+    // juxtaposés se coupent n'importe où : le navigateur les traite comme
+    // autant d'éléments indépendants, et « d'après » se retrouvait scindé
+    // en « d'apr / ès ». Les lettres sont donc regroupées par MOT, et c'est
+    // le mot qui est insécable.
     function splitChars(str) {
-        return String(str).split('').map((ch, i) => ch === ' '
-            ? ' '
-            : `<span class="u-ch" style="--i:${i}">${escape(ch)}</span>`).join('');
+        let i = 0;
+        return String(str).split(/\s+/).filter(Boolean).map(word =>
+            `<span class="u-word">` + word.split('').map(ch =>
+                `<span class="u-ch" style="--i:${i++}">${escape(ch)}</span>`
+            ).join('') + `</span>`
+        ).join(' ');
     }
 
     // Le synopsis accepte les mêmes coupes que le reste : un tableau de
@@ -726,9 +744,12 @@ const SHOW_UNIVERSES = {
     }
 
     function render(li, uni) {
-        const info = rowInfo(li);
+        const info = rowInfo(li, uni);
         const figures = beatsHtml(uni, info.title);
         const dates = datesBlock(info.key);
+        // Sans date à venir, un spectacle peut être arrêté OU pas encore
+        // créé : le badge de la ligne du CV est ce qui les distingue.
+        const enCreation = window.cvShowIsEnCreation?.(li) || false;
 
         overlay.innerHTML = `
         <button type="button" class="u-close" aria-label="Fermer l’univers du spectacle">
@@ -749,7 +770,7 @@ const SHOW_UNIVERSES = {
                  spectacle — or c'est souvent la seule raison de la visite. -->
             <div class="u-hero-actions">
                 <button type="button" class="u-btn" data-u-jump>
-                    ${dates ? 'Accéder aux dates' : 'Voir les représentations'}
+                    ${dates ? 'Accéder aux dates' : enCreation ? 'Le spectacle' : 'Voir les représentations'}
                     <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
                 </button>
             </div>
@@ -762,8 +783,11 @@ const SHOW_UNIVERSES = {
         <div class="u-figs">${figures}</div>
 
         <footer class="u-foot">
-            <h3 class="u-foot-title">${dates ? 'Prochaines représentations' : 'Ce spectacle n’est plus à l’affiche'}</h3>
-            ${dates || `<p class="u-empty">Les représentations passées sont dans l’onglet Dates.</p>`}
+            <h3 class="u-foot-title">${dates ? 'Prochaines représentations'
+                : enCreation ? 'Spectacle en création' : 'Ce spectacle n’est plus à l’affiche'}</h3>
+            ${dates || (enCreation
+                ? `<p class="u-empty">Les dates de tournée seront annoncées ici.</p>`
+                : `<p class="u-empty">Les représentations passées sont dans l’onglet Dates.</p>`)}
             <div class="u-actions">
                 ${info.url ? `<a class="u-btn" href="${escape(info.url)}" target="_blank" rel="noopener">Page du spectacle <i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i></a>` : ''}
                 <button type="button" class="u-btn u-btn-ghost" data-u-dates="${escape(info.key)}">Voir toutes les dates</button>

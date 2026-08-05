@@ -1226,6 +1226,13 @@
            sont ici, le rythme est piloté en JS (voir playWriting) — un
            animation-delay CSS ne pourrait pas être accéléré en cours de
            route par le défilement. */
+        /* Le mot est insécable : la coupe n'a lieu qu'entre deux mots,
+           jamais entre deux lettres (voir splitChars). */
+        .u-word {
+            display: inline-block;
+            white-space: nowrap;
+        }
+
         .u-ch {
             display: inline-block;
             opacity: 0;
@@ -3956,6 +3963,20 @@
         }
 
         // Remplit le tiroir d'une entrée de CV (une seule fois)
+        // Un spectacle sans date à venir n'est pas forcément arrêté : il
+        // peut n'être pas encore créé. Seul le badge de la ligne le dit.
+        //
+        // Le texte du badge est réparti sur deux lignes dans le balisage
+        // (« En » puis « création »), et un simple test sur textContent y
+        // lisait « En\n     création » : la comparaison échouait, et tous
+        // les spectacles en création étaient annoncés comme arrêtés.
+        // D'où la normalisation des espaces avant toute comparaison.
+        function isEnCreation(li) {
+            const badge = li?.querySelector('.cv-badge')?.textContent || '';
+            return /en\s+cr[ée]ation/i.test(badge.replace(/\s+/g, ' '));
+        }
+        window.cvShowIsEnCreation = isEnCreation;
+
         function fillCvDrawer(li) {
             const body = li.querySelector('.cv-drawer-body');
             if (!body || body.dataset.filled === '1') return;
@@ -3991,9 +4012,7 @@
                 // Pas de date à venir : le badge du spectacle (« En création »)
                 // indique s'il est en préparation ou s'il n'est plus au répertoire.
                 // Pas d'en-tête ici : l'italique porte l'information à elle seule.
-                const badgeText = li.querySelector('.cv-badge')?.textContent || '';
-                const isEnCreation = /en création/i.test(badgeText);
-                list = isEnCreation
+                list = isEnCreation(li)
                     ? `<p class="text-[11px] text-luxury-textMuted italic py-1">Le spectacle est en création.</p>`
                     : `<p class="text-[11px] text-luxury-textMuted italic py-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span>Le spectacle est arrêté.</span>
