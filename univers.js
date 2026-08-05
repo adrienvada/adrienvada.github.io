@@ -282,6 +282,7 @@ const SHOW_UNIVERSES = {
         // que disent les deux spectacles. Le filet prend donc un bleu de
         // craie : l'école, le tableau, la clarté.
         cvAccent: '#8fbfe8',
+        cast: ['Steeve Brunet', 'Marine Chambrier', 'Adrien Vada'],
         synopsis: ['Un spectacle de prévention, joué au collège.',
             'Violences sexistes et sexuelles, stéréotypes, consentement —',
             'à travers le prisme de la justice.'],

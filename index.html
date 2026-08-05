@@ -579,6 +579,77 @@
             }
         }
 
+        /* ── IMPRIMER / PDF ──────────────────────────────────────────────
+           Une commande, pas une invitation. C'était un aplat doré pleine
+           largeur sur mobile : l'élément le plus fort de la page, posé
+           juste avant le CV — alors qu'il ne fait qu'ouvrir la boîte
+           d'impression du navigateur. Le CV lui-même doit être ce qu'on
+           voit en premier.
+
+           Il devient donc un lien discret : pas d'aplat, texte en gris de
+           service, l'or réservé au survol. Le bouton existe en deux
+           exemplaires — la barre de navigation n'a pas de place pour lui
+           sur écran étroit — mais ils partagent cette seule classe, de
+           sorte qu'ils ne puissent plus diverger comme ils l'avaient fait
+           (deux libellés, deux tailles, deux fers).
+
+           Le `display` reste à Tailwind (`hidden md:inline-flex`) : ce bloc
+           est chargé APRÈS styles.css, y écrire un display écraserait
+           `hidden` et les deux exemplaires paraîtraient ensemble. */
+        .pdf-btn {
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            /* Exactement le gris des onglets inactifs, dans les deux
+               thèmes : le lien ne doit jamais peser plus lourd que la
+               navigation à côté de laquelle il se tient. */
+            color: rgb(var(--c-s500));
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: color var(--dur-base) var(--ease-out),
+                border-color var(--dur-base) var(--ease-out);
+        }
+
+        .pdf-btn:hover,
+        .pdf-btn:focus-visible {
+            color: rgb(var(--c-gold-ink));
+            border-color: rgb(var(--c-s200));
+        }
+
+        /* Le lien se range juste sous la barre d'onglets, du même côté que
+           sur grand écran. La marge est posée ici, et non en classe
+           utilitaire : `space-y-4` de la page l'emporterait en spécificité.
+           Le `display`, lui, reste à Tailwind — un display écrit ici
+           l'emporterait sur `md:hidden` et ferait apparaître l'exemplaire
+           mobile sur grand écran. */
+        #page_cv>.pdf-btn-row {
+            margin-top: -8px;
+        }
+
+        @media (max-width: 767px) {
+
+            /* La cible tactile ne suit pas la taille du texte : le lien
+               reste petit à l'œil, mais la zone qui répond au doigt fait
+               une quarantaine de pixels. Discret n'a pas à vouloir dire
+               difficile à atteindre. */
+            .pdf-btn {
+                position: relative;
+            }
+
+            .pdf-btn::after {
+                content: '';
+                position: absolute;
+                inset: -9px -8px;
+            }
+        }
+
         /* ── CV ROWS ─────────────────────────────────────────────────────
            Les titres et sous-titres passent à la ligne : sur un CV, une
            information tronquée est une information perdue. */
@@ -2648,10 +2719,10 @@
                 </a>
             </div>
 
-            <!-- Print PDF button right-aligned on desktop -->
+            <!-- Imprimer / PDF — discret, à droite des onglets (voir .pdf-btn) -->
             <button type="button" onclick="window.print()" id="pdf-download-btn"
-                class="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded text-xs font-bold uppercase tracking-wider font-montserrat text-luxury-onGold bg-luxury-goldInk hover:bg-luxury-goldDeep transition-all duration-300 hover:scale-105 active:scale-95 group">
-                <i class="fas fa-file-pdf text-[11px]" aria-hidden="true"></i> Imprimer / PDF
+                class="pdf-btn hidden md:inline-flex">
+                <i class="fas fa-file-pdf" aria-hidden="true"></i> Imprimer / PDF
             </button>
         </nav>
 
@@ -2661,11 +2732,12 @@
             <!-- PAGE 1: CV -->
             <div id="page_cv" class="page active space-y-4">
                 <h2 class="sr-only">Curriculum Vitae</h2>
-                <!-- Mobile Print PDF link -->
-                <div class="md:hidden mb-2 no-print">
-                    <button type="button" onclick="window.print()"
-                        class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded text-xs font-bold uppercase tracking-wider font-montserrat text-luxury-onGold bg-luxury-goldInk transition duration-300">
-                        <i class="fas fa-file-pdf text-xs" aria-hidden="true"></i> Imprimer / Enregistrer en PDF
+                <!-- Imprimer / PDF, version mobile : la barre d'onglets prend
+                     toute la largeur sur écran étroit, le bouton ne peut pas
+                     y tenir. Même classe, même allure — seule la place change. -->
+                <div class="pdf-btn-row flex justify-end md:hidden no-print">
+                    <button type="button" onclick="window.print()" class="pdf-btn inline-flex">
+                        <i class="fas fa-file-pdf" aria-hidden="true"></i> Imprimer / PDF
                     </button>
                 </div>
 
