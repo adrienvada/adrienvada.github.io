@@ -5013,6 +5013,19 @@
 
                 let archivesHtml = '';
                 let seasonIdx = 0;
+
+                // TIROIRS DÉJÀ OUVERTS QUAND ON CHERCHE UN SPECTACLE.
+                // On arrive ici par « Voir toutes les dates » d'un spectacle
+                // arrêté : les saisons affichées ne contiennent plus que lui,
+                // et il n'y a donc plus rien à replier. Les laisser fermées
+                // obligerait à cliquer une fois de plus pour retrouver
+                // exactement ce qu'on était venu chercher.
+                //
+                // Sans filtre de spectacle, les archives restent fermées :
+                // ce sont plusieurs saisons entières, et la page servirait
+                // alors de mur plutôt que de sommaire.
+                const seasonsOpen = !!dateFilters.show;
+
                 Object.keys(seasons).forEach(seasonName => {
                     // Les archives ne portent pas d'icsDate exploitable : on
                     // n'y applique que les filtres texte / spectacle / lieu.
@@ -5036,11 +5049,11 @@
                     archivesHtml += `
                     <div class="group bg-luxury-stripe border border-stone-200/50 rounded-lg overflow-hidden">
                         <button type="button" class="drawer-toggle w-full flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat text-xs"
-                            aria-expanded="false" aria-controls="${panelId}">
+                            aria-expanded="${seasonsOpen ? 'true' : 'false'}" aria-controls="${panelId}">
                             <span class="font-semibold flex items-center gap-2">${esc(seasonName)}</span>
                             <i class="fa-solid fa-chevron-down text-[10px] text-stone-500 drawer-chevron" aria-hidden="true"></i>
                         </button>
-                        <div class="drawer-panel" id="${panelId}">
+                        <div class="drawer-panel${seasonsOpen ? ' expanded' : ''}" id="${panelId}">
                             <div class="drawer-inner">
                                 <div class="p-2.5 border-t border-stone-200/40 space-y-1 bg-stone-50/50 text-xs text-luxury-textMuted divide-y divide-stone-200/30">
                                     ${showsHtml}
