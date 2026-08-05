@@ -469,9 +469,11 @@
                 display: revert !important;
             }
 
-            /* Les tiroirs et leur chevron n'ont pas de sens sur papier */
+            /* Les tiroirs, leur chevron et le filet de couleur des univers
+               n'ont pas de sens sur papier : rien n'y est cliquable. */
             .cv-expand-panel,
-            .cv-chevron {
+            .cv-chevron,
+            .cv-has-universe::before {
                 display: none !important;
             }
 
@@ -701,6 +703,64 @@
 
         .cv-row-toggle[aria-expanded="true"] .cv-chevron {
             transform: rotate(180deg);
+        }
+
+        /* ══ CE QUE LA LIGNE DU CV PROMET ══
+           Deux signaux seulement, posés par univers.js sur les lignes qui
+           ouvrent un univers (voir markCvRows). Rien n'est ajouté au
+           balisage : ni mot, ni image, ni hauteur.
+
+           1. LA FLÈCHE. Le chevron disait « ceci se déplie » ; ces lignes
+              ouvrent une page plein écran. Une flèche oblique dit qu'on va
+              quelque part. Les lignes sans univers gardent leur chevron,
+              qui redevient exact — elles déplient bien un tiroir. */
+        .cv-has-universe .cv-chevron {
+            transform: rotate(-45deg);
+        }
+
+        .cv-has-universe .cv-row-toggle[aria-expanded="true"] .cv-chevron {
+            transform: rotate(-45deg);
+            /* Pas de demi-tour : rien ne se replie ici. */
+        }
+
+        .cv-has-universe:hover .cv-chevron,
+        .cv-has-universe:focus-within .cv-chevron {
+            transform: rotate(-45deg) translateX(3px);
+            color: var(--cv-accent);
+        }
+
+        /*  2. LE FILET. Un trait dans la couleur du spectacle, à gauche de
+               la ligne. Presque muet au repos, franc au survol : le CV
+               devient un sommaire où chaque monde a déjà sa couleur avant
+               qu'on y entre. En position absolue, donc sans effet sur la
+               mise en page — la liste garde exactement sa forme. */
+        .cv-has-universe {
+            position: relative;
+        }
+
+        .cv-has-universe::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 7px;
+            bottom: 7px;
+            width: 2px;
+            border-radius: 2px;
+            background: var(--cv-accent, currentColor);
+            /* Assez présent pour qu'on le remarque en balayant la liste,
+               assez discret pour ne pas devenir un décor. Sur fond sombre,
+               en dessous de .3 il disparaissait tout simplement. */
+            opacity: .4;
+            transform: scaleY(.72);
+            transform-origin: 50% 50%;
+            transition: opacity var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out);
+        }
+
+        .cv-has-universe:hover::before,
+        .cv-has-universe:focus-within::before {
+            opacity: 1;
+            transform: scaleY(1);
         }
 
         /* ── Recherche des dates : panneau repliable + révélation par étapes ── */

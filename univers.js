@@ -81,14 +81,15 @@ const SHOW_UNIVERSES = {
         sequence: [
             { chapter: '1h25', chapterTitle: 'Un triangle amoureux élevé au rang de la tragédie.' },
             { p: [2] },
-            { q: ['« De mon heureux rival j\'accompagnai les armes', 'J\'espérai de verser mon sang après mes larmes. »'], by: 'Antiochus, acte I' },
-            { p: [3] },
             {
-                p: [12, 7], c: ['', ''],
+                q: ['Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice.'], by: 'Bérénice, acte V'
+            },
+            { p: [18] },
+            {
+                p: [12, 5], c: ['', ''],
                 // REMPLISSAGE
                 aside: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »']
             },
-            { chapter: 'II', chapterTitle: 'L’adieu' },
             {
                 q: 'Pour jamais ! Ah, Seigneur ! songez-vous en vous-même\n' +
                     'Combien ce mot cruel est affreux quand on aime ?', by: 'Bérénice, acte IV'
@@ -99,21 +100,20 @@ const SHOW_UNIVERSES = {
                 aside: 'Personne ne crie. C’est ce qui est terrible.'
             },
             {
-                p: [18], c: ['Ce que Rome exige'],
+                p: [3], c: ['Ce que Rome exige'],
                 // REMPLISSAGE
                 over: 'Il faut partir.', overAt: 'gauche'
             },
-            // REMPLISSAGE — la place d'une note d'intention.
+            {
+                q: ['« De mon heureux rival j\'accompagnai les armes', 'J\'espérai de verser mon sang après mes larmes. »'],
+                by: 'Antiochus, acte I'
+            },
             {
                 text: 'Trois personnes qui s’aiment et que rien ne sauve : ' +
                     'ni le pouvoir, ni la parole, ni le temps. Racine ne leur laisse ' +
                     'aucune faute à se reprocher — seulement à se quitter.'
             },
-            {
-                q: 'Que le jour recommence et que le jour finisse\n' +
-                    'Sans que jamais Titus puisse voir Bérénice.', by: 'Bérénice, acte V'
-            },
-            { p: [13, 5, 16], c: ['', '', ''] },
+            { p: [13, 7, 16], c: ['', '', ''] },
             { p: [17, 19], c: ['', ''] }
         ]
     },
@@ -1250,6 +1250,37 @@ const SHOW_UNIVERSES = {
         window.closeShowUniverse = close;
         window.closeUniverseZoom = closeZoom;
         window.hasShowUniverse = (li) => !!universeFor(li);
+
+        markCvRows();
+    }
+
+    // ── Ce que le CV promet ──────────────────────────────────────────
+    //  Deux signaux, posés ici plutôt que dans le balisage : c'est ce
+    //  fichier qui sait quelles lignes ont un univers, et la marque suit
+    //  donc automatiquement les univers qu'on ajoute ou qu'on retire.
+    //
+    //  1. L'ICÔNE. Le chevron annonçait « ceci se déplie » — un tiroir.
+    //     Or la ligne ouvre une page plein écran. Les lignes dotées d'un
+    //     univers portent donc une flèche oblique : on va quelque part.
+    //     Les autres gardent leur chevron, qui redevient exact.
+    //
+    //  2. LA COULEUR. Un filet à gauche, dans la couleur du spectacle.
+    //     Presque muet au repos, franc au survol. Le CV devient un
+    //     sommaire : huit lignes, et derrière chacune un monde qui a
+    //     déjà sa couleur avant qu'on y entre.
+    function markCvRows() {
+        document.querySelectorAll('.cv-item').forEach(li => {
+            const uni = universeFor(li);
+            if (!uni) return;
+            li.classList.add('cv-has-universe');
+            li.style.setProperty('--cv-accent', uni.palette.accent);
+
+            const icon = li.querySelector('.cv-chevron');
+            if (icon) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-arrow-right');
+            }
+        });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
