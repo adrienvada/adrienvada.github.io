@@ -146,9 +146,7 @@ const SHOW_UNIVERSES = {
             accent: '#d4823c', accentInk: '#e39a58', onAccent: '#160f0a',
             line: 'rgba(212,130,60,0.20)', glow: 'rgba(212,130,60,0.30)'
         },
-        synopsis: ['Sganarelle veut se marier.',
-            'Il demande conseil à tout le monde,',
-            'et n’écoute personne.'],
+        synopsis: ['Quand la censure académique leur impose Le Mariage Forcé à la place du Malade Imaginaire, des comédiens font déraper la lecture jusqu\'à transformer la classe en un chantier théâtral et musical jubilatoire.'],
         sequence: []
     },
 
@@ -253,7 +251,7 @@ const SHOW_UNIVERSES = {
 
             },
             {
-                p: [10, 18, 13], c: ['', ''], cadre: { 10: '50% 95%', 18: '50% 25%' },
+                p: [10, 13], c: ['', ''], cadre: { 10: '50% 95%' },
                 aside: ['Corneille excelle lorqu\'il n\'est pas corseté par les unités ou la bienséance.']
             },
             {
@@ -270,6 +268,10 @@ const SHOW_UNIVERSES = {
             },
             {
                 text: 'Dans ce travail de la compagnie Crescite, les rebondissements vont arriver à chaque acte. L\'acte final termine en apothéose quasi burlesque, et donne à cette adaptation de Rodogune de Corneille toute sa dimension shakespearienne.'
+            },
+            {
+                video: 'https://www.youtube.com/watch?v=bTr685C1YL8',
+                c: ['Bande annonce — Le Rive Gauche, Saint-Étienne-du-Rouvray']
             },
         ]
     },
@@ -361,29 +363,29 @@ const SHOW_UNIVERSES = {
                 c: ['Adapté d’À la barre pour le collège, créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ.']
             },
             {
-                q: ['Victime. Irréparable. Accusé. Avocat.',
+                q: ['« Victime. Irréparable. Accusé. Avocat.',
                     'Émotion. Juge. Défendre. Sursis.',
-                    'Acquitté. Procédure. Peine. Vérité.'],
-                by: 'Les mots de la justice'
+                    'Acquitté. Procédure. Peine. Vérité. »'],
+                by: 'Les mots de la justice, par les élèves du collège Boieldieu'
             },
             {
                 p: [6, 5], c: ['', ''],
                 aside: ['Les différents tribunaux, leur composition, le déroulé d’un procès — et ce qu’on y dit vraiment.']
             },
             {
-                p: [4],
+                p: [4], cadre: { 4: '65% 00%' },
                 c: ['Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres.']
             },
             {
                 p: [1, 2, 3], c: ['', '', ''],
-                aside: ['Après la représentation, le débat s’appuie sur un violentomètre.']
+                aside: ['Après la représentation, un échange permet d\'effectuer un travail de sensibilisation.']
             },
             {
-                q: ['« Pourquoi suis-je violent ? »'],
+                q: ['« Pourquoi suis-je violent ? »'],
                 by: 'La question posée au débat'
             },
             {
-                text: 'C’est un outil de prévention autant qu’un spectacle : ce qui se joue devant les élèves prépare ce qui se dira après.'
+                text: 'C’est un outil de prévention autant qu’un spectacle : ce qui se joue devant les élèves prépare ce qui se dira après.'
             },
         ]
     },
@@ -407,38 +409,38 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [19], cadre: { 19: '40% 10%' },
-                c: ['Créé en 2024 au palais de justice de Rouen, et joué à Avignon dans le tribunal où fut tenu le procès des viols de Mazan.']
+                c: ['Créé en 2024 au palais de justice de Rouen.']
             },
             {
-                q: ['« Comment, dans ces conditions,', 'réussir à “rendre justice” ? »'],
-                by: ''
+                q: ['« La violence est au plus proche des personnes de leurs relations,', 'au quotidien, au travail, dans la sphère familiale, la plus intime »'],
+                by: 'Marion, III - L’institution judiciaire au défi du réel'
             },
             {
-                p: [20, 8], c: ['', ''],
-                aside: ['Les agressions se dissimulent au cœur du quotidien : dans le couple, la famille, les ami·es, au travail.']
+                p: [20, 8, 5, 9], c: ['Avocate de la partie civile, IV - Le quotidien du sexisme', 'Prévenu, IV - Le quotidien du sexisme', 'Greffier, II - Face aux violences', 'Avocat de la défense, V - La défense des hommes'],
+                aside: ['Comment, dans ces conditions,', 'réussir à “rendre justice” ?']
             },
             {
-                p: [22],
-                over: ['« Avant d’entrer dans la fiction,', 'nous allons passer par le réel. »'], overAt: 'gauche'
+                q: ['« Monsieur, avez-vous quelque chose à ajouter ? »'],
+                by: 'Présidente, VI - Dans le couple '
             },
             {
-                p: [4, 13, 14], c: ['', '', ''],
-                aside: ['« Peine perdue, alors ? » — « Non, au contraire : on travaille, on continue. »']
+                p: [4, 13, 14, 12], c: ['', '', ''],
+                aside: ['Le spectacle, sobre, peut se jouer en tribunal comme en salle municipale ou établissement scolaire : la salle d\'audience est recrée.']
             },
             {
-                q: ['« Not all men, but always a man. »',
-                    'Pas tous les hommes, mais toujours un homme.'],
-                by: ''
+                q: ['« Peine perdue, alors ? » — « Non, au contraire : on travaille, on continue. »'],
+                by: 'Rémi, Anne, X - Conclusion'
             },
             {
-                p: [9, 5, 6, 7], c: ['', '', '', ''],
-                aside: ['La justice est imparfaite parce qu’elle est humaine : faite par des gens qui ont leurs failles et leurs fatigues, en dépit d’une responsabilité immense.']
+                p: [6], c: [''],
+                over: ['« La justice est imparfaite parce qu’elle est humaine... »'],
+                overAt: ' bas'
             },
             {
-                text: 'Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps.'
+                text: '« ... Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps. »  '
             },
             {
-                p: [25, 26, 12], c: ['', '', ''],
+                p: [25, 26], c: ['Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen', 'Débat suivant une représentation au tribunal d\'Avignon', ''],
             },
         ]
     },
