@@ -188,9 +188,7 @@ const SHOW_UNIVERSES = {
             accent: '#c2d94b', accentInk: '#cfe36a', onAccent: '#0c2013',
             line: 'rgba(194,217,75,0.22)', glow: 'rgba(217,79,43,0.35)'
         },
-        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes',
-            'déguisée en homme, sous le nom de Ganymède.',
-            'Elle y retrouve Orlando, dont elle est tombée amoureuse.'],
+        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes,déguisée en homme, sous le nom de Ganymède.'],
         sequence: [
             {
                 p: [8],
@@ -251,6 +249,12 @@ const SHOW_UNIVERSES = {
             accent: '#4573c4', accentInk: '#2e5799', onAccent: '#ffffff',
             line: 'rgba(20,23,28,0.15)', glow: 'rgba(69,115,196,0.20)'
         },
+        // Sur le CV, l'accent ne peut pas servir tel quel : il est sombre
+        // pour porter du texte blanc sur le fond clair de l'univers, et il
+        // paraîtrait alors plus nocturne que Fulguré.e.s — l'inverse de ce
+        // que disent les deux spectacles. Le filet prend donc un bleu de
+        // craie : l'école, le tableau, la clarté.
+        cvAccent: '#8fbfe8',
         synopsis: ['Un spectacle de prévention, joué au collège.',
             'Violences sexistes et sexuelles, stéréotypes, consentement —',
             'à travers le prisme de la justice.'],
@@ -362,6 +366,10 @@ const SHOW_UNIVERSES = {
             accent: '#8fa8ff', accentInk: '#a7bbff', onAccent: '#04050d',
             line: 'rgba(143,168,255,0.20)', glow: 'rgba(255,255,255,0.45)'
         },
+        // L'accent est clair parce qu'il doit se détacher de la nuit de
+        // l'univers. Sur le CV il n'a plus rien à éclairer : le filet prend
+        // un bleu de nuit franc, plus sombre que la craie d'Audiences.
+        cvAccent: '#4d5fc4',
         synopsis: ['Une fratrie se retrouve dans un village perdu,',
             'à un moment où tout est chaos.',
             'Comment survivre à l’imprévisible ?'],
@@ -1274,7 +1282,10 @@ const SHOW_UNIVERSES = {
             const uni = universeFor(li);
             if (!uni) return;
             li.classList.add('cv-has-universe');
-            li.style.setProperty('--cv-accent', uni.palette.accent);
+            // `cvAccent` prime sur l'accent de l'univers quand les deux ne
+            // peuvent pas être la même couleur — voir Audiences et
+            // Fulguré.e.s. Sinon l'accent suffit.
+            li.style.setProperty('--cv-accent', uni.cvAccent || uni.palette.accent);
 
             const icon = li.querySelector('.cv-chevron');
             if (icon) {
