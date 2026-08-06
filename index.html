@@ -1751,27 +1751,36 @@
             }
         }
 
-        /* ── Lueur du bandeau « prochainement » ──
-           Un reflet fait le tour du cadre à intervalle régulier — même
-           logique de respiration que la guirlande du CV (long repos, passage
-           bref) plutôt qu'un halo permanent : une politesse qui signale, pas
-           une réclame qui insiste.
-           Technique : un anneau en dégradé conique, masqué pour n'allumer
-           que le filet de bordure (mask-composite: exclude retire le
-           centre) — jamais l'intérieur de la carte. C'est l'ANGLE du
-           dégradé qui tourne (--shine-angle, via @property), pas le
-           pseudo-élément : la carte est bien plus large que haute, et
-           faire pivoter tout le rectangle projetterait ses coins loin
-           au-dessus et en dessous d'elle — essayé, c'est spectaculairement
-           faux. Sans @property (vieux Firefox), l'angle ne s'anime pas :
-           le reflet flashe alors sur place au lieu de tourner — dégradation
-           correcte, rien ne déborde. */
-        @property --shine-angle {
-            syntax: '<angle>';
-            inherits: false;
-            initial-value: 0deg;
-        }
+        /* ── LE REFLET DU BANDEAU « PROCHAINEMENT » ──
+           Un trait de lumière traverse le cadre, à intervalle régulier.
+           Même respiration que la guirlande du CV : un passage bref, un
+           long repos — une politesse qui signale, pas une réclame.
 
+           POURQUOI PAS UN DÉGRADÉ CONIQUE QUI TOURNE. C'était la version
+           précédente, et elle avait l'air détraquée pour une raison
+           géométrique : un conique avance en ANGLE, et sur une carte de
+           700 px de large pour 40 de haut, l'angle et la position n'ont
+           aucun rapport constant. Au milieu du bord supérieur le faisceau
+           rampe ; vers les coins il file trente fois plus vite. Sa largeur,
+           fixée en degrés, subit le même sort : courte au centre, étirée
+           sur des centaines de pixels près des angles. On voyait donc une
+           lumière qui accélérait sans raison et « s'étalait sur les côtés ».
+
+           UN DÉGRADÉ LINÉAIRE QUI SE DÉPLACE n'a pas ce défaut : le trait
+           garde sa largeur et sa vitesse d'un bout à l'autre. Les bords
+           haut et bas s'allument ensemble au passage, les côtés le temps
+           d'un éclat — c'est un reflet qui glisse sur du verre, et l'œil
+           sait lire ça.
+
+           La technique du cadre est inchangée : le dégradé remplit toute
+           la carte, et un masque ne laisse voir que le filet de bordure
+           (mask-composite: exclude retire le centre). L'intérieur n'est
+           jamais teinté.
+
+           `linear` est délibéré : la moindre courbe de vitesse ramènerait
+           l'accélération qu'on vient de corriger. */
+        /* Le repère du reflet : sans lui, le pseudo-élément absolu se
+           calerait sur un ancêtre positionné quelconque. */
         .next-date-shine {
             position: relative;
         }
@@ -1782,42 +1791,48 @@
             inset: 0;
             border-radius: inherit;
             padding: 1.5px;
-            background: conic-gradient(from var(--shine-angle),
-                    transparent 0deg,
-                    transparent 255deg,
-                    rgb(var(--c-gold-light) / 0.75) 282deg,
-                    #fff 298deg,
-                    rgb(var(--c-gold-light) / 0.75) 314deg,
-                    transparent 341deg,
-                    transparent 360deg);
+            background: linear-gradient(100deg,
+                    transparent 44%,
+                    rgb(var(--c-gold-light) / 0.45) 47.5%,
+                    #fff 50%,
+                    rgb(var(--c-gold-light) / 0.45) 52.5%,
+                    transparent 56%);
+            /* Deux fois et demie la largeur de la carte : le trait a de quoi
+               entrer et sortir du champ sans jamais se montrer au repos. */
+            background-size: 250% 100%;
+            background-repeat: no-repeat;
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
-            filter: drop-shadow(0 0 3px rgb(var(--c-gold-light) / 0.5));
+            filter: drop-shadow(0 0 3px rgb(var(--c-gold-light) / 0.45));
             opacity: 0;
             pointer-events: none;
-            animation: next-date-shine-sweep 8s ease-in-out infinite;
+            animation: next-date-reflet 7s linear infinite;
         }
 
-        @keyframes next-date-shine-sweep {
+        @keyframes next-date-reflet {
+
+            /* Hors champ à droite, éteint. */
             0% {
+                background-position: 100% 0;
                 opacity: 0;
-                --shine-angle: 0deg;
             }
 
-            4% {
+            3% {
                 opacity: 1;
             }
 
-            38% {
+            /* La traversée : 1,2 s pour 7 s de cycle. Assez vif pour qu'on
+               le remarque, assez rare pour qu'on ne s'en lasse pas. */
+            17% {
+                background-position: 0 0;
                 opacity: 1;
-                --shine-angle: 360deg;
             }
 
-            46%,
+            20%,
             100% {
+                background-position: 0 0;
                 opacity: 0;
-                --shine-angle: 360deg;
             }
         }
 

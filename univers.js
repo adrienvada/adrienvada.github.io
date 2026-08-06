@@ -788,8 +788,42 @@ const SHOW_UNIVERSES = {
     let overlay, scroller, lastFocus = null, isOpen = false, rafId = 0;
 
 
+    // ── LE LIEN ENTRE UNE LIGNE DE CV ET SON UNIVERS ─────────────────
+    //  Il repose sur le titre, écrit à deux endroits : `data-cv-show` dans
+    //  index.html, et la clé de SHOW_UNIVERSES. Une égalité stricte les
+    //  reliait — et une ESPACE INSÉCABLE a suffi à les séparer.
+    //
+    //  La typographie française demande une insécable avant « ? », « ! »,
+    //  « : », « ; » et à l'intérieur des guillemets. « À la barre, peine
+    //  perdue ? » en porte donc une. Le jour où un fichier l'a reçue et pas
+    //  l'autre, la ligne a cessé d'ouvrir son univers — sans erreur, sans
+    //  trace, sans rien à voir : deux titres identiques à l'œil qui ne le
+    //  sont pas pour le programme.
+    //
+    //  On compare donc les titres NORMALISÉS : toute espace, quelle que
+    //  soit sa nature (insécable, fine, insécable étroite), vaut une espace
+    //  ordinaire, et les répétitions se réduisent. Le rapprochement devient
+    //  insensible à la typographie — qu'on peut alors corriger d'un côté
+    //  sans casser l'autre.
+    //
+    //  L'index est construit une fois, à la première demande.
+    const ESPACES = /[\s\u00a0\u202f\u2009\u2007\u2060]+/g;
+    const normaliserTitre = (t) => String(t || '').replace(ESPACES, ' ').trim();
+    let indexUnivers = null;
+
     function universeFor(li) {
-        return SHOW_UNIVERSES[li?.dataset?.cvShow || ''] || null;
+        const brut = li?.dataset?.cvShow || '';
+        if (!brut) return null;
+        // Le chemin rapide d'abord : la plupart du temps les deux écritures
+        // coïncident, et on évite alors de construire quoi que ce soit.
+        const direct = SHOW_UNIVERSES[brut];
+        if (direct) return direct;
+        if (!indexUnivers) {
+            indexUnivers = new Map();
+            Object.keys(SHOW_UNIVERSES).forEach(k =>
+                indexUnivers.set(normaliserTitre(k), SHOW_UNIVERSES[k]));
+        }
+        return indexUnivers.get(normaliserTitre(brut)) || null;
     }
 
     // ── Dates : relues dans dates.js, jamais dupliquées ici ──────────
@@ -798,7 +832,11 @@ const SHOW_UNIVERSES = {
         // Le dessin est dans univers-montage.js, partagé avec les pages
         // /spectacles/. Ici, on ne fait que réunir les représentations de
         // ce spectacle — elles restent lues dans dates.js, jamais recopiées.
-        return datesHtml(upcomingPerformances().filter(p => p.title === key));
+        // Même prudence que pour universeFor : dates.js et SHOW_UNIVERSES
+        // écrivent le titre chacun de leur côté, et une insécable de plus
+        // ou de moins ne doit pas vider la liste des dates.
+        const vise = normaliserTitre(key);
+        return datesHtml(upcomingPerformances().filter(p => normaliserTitre(p.title) === vise));
     }
 
     // Les titres du CV portent souvent une incise en <span> — l'auteur,
