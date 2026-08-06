@@ -59,10 +59,30 @@ dix minutes ; les suivantes ont toutes échoué sur un laconique « Page build
 failed ». `actions/checkout` ne prend que le dernier commit : le poids de
 l'historique ne compte plus.
 
+### ⚠️ Une poussée toutes les dix minutes, pas plus
+
 **GitHub Pages n'accepte que 10 publications par heure.** Au-delà, les
-déploiements restent en file et expirent. Une rafale de petits commits poussés
-un par un peut donc bloquer la publication pendant une heure : mieux vaut
-grouper. Si le site semble figé, c'est la première chose à vérifier.
+déploiements ne sont plus pris en charge : ils restent en file et expirent au
+bout de dix minutes, sans autre message que « Page build failed ». Le site
+reste alors figé sur sa dernière version publiée — et rien, dans le dépôt, ne
+laisse deviner pourquoi.
+
+**La règle : au plus une poussée toutes les dix minutes.** Elle découle du
+quota — six par heure laisse une marge confortable pour les imprévus. Committez
+autant que vous voulez, mais **groupez les poussées** : dix commits partent
+aussi vite qu'un seul, alors que dix poussées coûtent dix publications.
+
+Le 6 août 2026, quatorze publications en une heure ont bloqué le site pendant
+plus de deux heures. Le code partait bien à chaque fois ; il n'était
+simplement plus publié.
+
+Avant de pousser, vérifier le compteur :
+
+```bash
+gh api "repos/adrienvada/adrienvada.github.io/deployments?environment=github-pages&per_page=20" --jq '[.[] | select((now - (.created_at | fromdate)) < 3600)] | length'
+```
+
+Si le site semble figé, c'est la première chose à regarder.
 
 Où regarder quand ça coince :
 
