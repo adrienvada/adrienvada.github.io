@@ -33,13 +33,13 @@ cd "$(dirname "$0")/.."
 # mono|chemin      → repli mono, 96 kbps
 # stereo|chemin    → stéréo conservée, VBR ~130 kbps
 FICHIERS=(
-  "mono|ressources/sons/Coachs_associes/VADA - Audiobook Les enfants du fleuve.mp3"
-  "stereo|ressources/sons/Coachs_associes/VADA - Play Off NBA Jeunes.mp3"
-  "stereo|ressources/sons/Coachs_associes/VADA - Publicité espoir espiegle Se Loger.mp3"
-  "stereo|ressources/sons/Coachs_associes/VADA - Publicité intime droit UBER.mp3"
-  "stereo|ressources/sons/Docu animalier.mp3"
-  "stereo|ressources/sons/VADA - Publicité L'Oréal.mp3"
-  "stereo|ressources/sons/VADA - Publicité Nexity.mp3"
+  "mono|ressources/sons/Coachs_associes/vada-audiobook-les-enfants-du-fleuve.mp3"
+  "stereo|ressources/sons/Coachs_associes/vada-play-off-nba-jeunes.mp3"
+  "stereo|ressources/sons/Coachs_associes/vada-publicite-espoir-espiegle-se-loger.mp3"
+  "stereo|ressources/sons/Coachs_associes/vada-publicite-intime-droit-uber.mp3"
+  "stereo|ressources/sons/docu-animalier.mp3"
+  "stereo|ressources/sons/vada-publicite-loreal.mp3"
+  "stereo|ressources/sons/vada-publicite-nexity.mp3"
 )
 
 total_avant=0

@@ -993,18 +993,26 @@
 
         /*  4. LE LAVIS, SUR PETIT ÉCRAN SEULEMENT. Un filet de 2 px se
                remarque sur une liste large ; sur 380 px de large, il se
-               perd. La couleur traverse alors le début de la ligne en
-               s'évanouissant. Rien n'est déplacé : le lavis est en position
-               absolue, sous le contenu. */
+               perd. La couleur traverse alors la ligne en s'évanouissant.
+               Rien n'est déplacé : le lavis est en position absolue, sous
+               le contenu.
+
+               IL VIENT DE LA DROITE, ET C'EST VOULU. Posé à gauche, il
+               passait exactement sous les titres — qui commencent au bord
+               gauche — et les lisait à travers une couleur. À droite il
+               tombe sur la marge, le badge et le chevron : rien à lire, et
+               la lueur désigne l'endroit même où l'on va appuyer. La
+               guirlande gagne des deux côtés — les titres restent nets, et
+               le geste est montré. */
         .cv-has-universe::after {
             content: '';
             position: absolute;
-            left: 0;
+            right: 0;
             top: 0;
             bottom: 0;
             width: 46%;
             border-radius: inherit;
-            background: linear-gradient(90deg, var(--cv-accent, transparent), transparent);
+            background: linear-gradient(270deg, var(--cv-accent, transparent), transparent);
             opacity: 0;
             pointer-events: none;
             transition: opacity var(--dur-base) var(--ease-out);
@@ -3026,7 +3034,7 @@
                                     <div id="progress-audio-loreal"
                                         class="h-full bg-luxury-gold w-0 transition-all duration-100"></div>
                                 </div>
-                                <audio id="audio-loreal" src="ressources/sons/VADA - Publicité L'Oréal.mp3"
+                                <audio id="audio-loreal" src="ressources/sons/vada-publicite-loreal.mp3"
                                     class="hidden" preload="none"></audio>
                             </div>
                         </div>
@@ -3057,7 +3065,7 @@
                                     <div id="progress-audio-nexity"
                                         class="h-full bg-luxury-gold w-0 transition-all duration-100"></div>
                                 </div>
-                                <audio id="audio-nexity" src="ressources/sons/VADA - Publicité Nexity.mp3"
+                                <audio id="audio-nexity" src="ressources/sons/vada-publicite-nexity.mp3"
                                     class="hidden" preload="none"></audio>
                             </div>
                         </div>
@@ -3090,7 +3098,7 @@
                                     </div>
                                 </div>
                                 <audio id="audio-uber"
-                                    src="ressources/sons/Coachs_associes/VADA - Publicité intime droit UBER.mp3"
+                                    src="ressources/sons/Coachs_associes/vada-publicite-intime-droit-uber.mp3"
                                     class="hidden" preload="none"></audio>
                             </div>
                         </div>
@@ -3123,7 +3131,7 @@
                                     </div>
                                 </div>
                                 <audio id="audio-nba"
-                                    src="ressources/sons/Coachs_associes/VADA - Play Off NBA Jeunes.mp3" class="hidden"
+                                    src="ressources/sons/Coachs_associes/vada-play-off-nba-jeunes.mp3" class="hidden"
                                     preload="none"></audio>
                             </div>
                         </div>
@@ -3155,7 +3163,7 @@
                                         class="h-full bg-luxury-gold w-0 transition-all duration-100"></div>
                                 </div>
                                 <audio id="audio-seloger"
-                                    src="ressources/sons/Coachs_associes/VADA - Publicité espoir espiegle Se Loger.mp3"
+                                    src="ressources/sons/Coachs_associes/vada-publicite-espoir-espiegle-se-loger.mp3"
                                     class="hidden" preload="none"></audio>
                             </div>
                         </div>
@@ -3202,7 +3210,7 @@
                                     <div id="progress-audio-docuhome"
                                         class="h-full bg-luxury-gold w-0 transition-all duration-100"></div>
                                 </div>
-                                <audio id="audio-docuhome" src="ressources/sons/Docu animalier.mp3" class="hidden"
+                                <audio id="audio-docuhome" src="ressources/sons/docu-animalier.mp3" class="hidden"
                                     preload="none"></audio>
                             </div>
                         </div>
@@ -3251,7 +3259,7 @@
                                     </div>
                                 </div>
                                 <audio id="audio-book"
-                                    src="ressources/sons/Coachs_associes/VADA - Audiobook Les enfants du fleuve.mp3"
+                                    src="ressources/sons/Coachs_associes/vada-audiobook-les-enfants-du-fleuve.mp3"
                                     class="hidden" preload="none"></audio>
                             </div>
                         </div>
