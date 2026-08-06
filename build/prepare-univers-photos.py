@@ -86,6 +86,7 @@ FOLDERS = {
     "berenice":    "bérénice",
     "cleophene":   "cléophène",
     "fulgurees":   "fulgurés",
+    "lerapt":      "le rapt",
 }
 
 
@@ -199,11 +200,32 @@ def main():
             print(f"  {n}.jpg  {im.width}x{im.height}  q{q}  "
                   f"{os.path.getsize(p) // 1024} Ko  {tag}")
 
+        # L'AFFICHE D'UN FILM : la seule image non numérotée admise. Elle ne
+        # fait pas partie du montage — elle le précède (champ `affiche` de
+        # l'univers) — et se dépose dans le dossier source sous le nom
+        # `affiche.jpg`. Portrait, plein écran : régime PLEIN.
+        for src_aff in glob.glob(os.path.join(SRC, folder, "affiche.*")):
+            im = ImageOps.exif_transpose(Image.open(src_aff)).convert("RGB")
+            im.thumbnail((PLEIN["side"], PLEIN["side"]), Image.LANCZOS)
+            p = os.path.join(dest, "affiche.jpg")
+            q = PLEIN["quality"]
+            while True:
+                im.save(p, quality=q, optimize=True, progressive=True)
+                if os.path.getsize(p) <= PLEIN["max_bytes"] or q <= PLEIN["floor"]:
+                    break
+                q -= 4
+            total += 1
+            print(f"  affiche.jpg  {im.width}x{im.height}  q{q}  "
+                  f"{os.path.getsize(p) // 1024} Ko  AFFICHE")
+
         # Photos retirées d'un montage : leur fichier traîne encore ici.
         # On ne le supprime que sur demande explicite — effacer des images
         # sans le dire est le genre de service qu'on ne rend à personne.
+        # (`isdigit` : l'affiche et tout nom non numéroté ne sont pas des
+        # orphelins, ce sont des invités.)
         orphans = [f for f in os.listdir(dest)
-                   if f.endswith(".jpg") and int(f[:-4]) not in wanted]
+                   if f.endswith(".jpg") and f[:-4].isdigit()
+                   and int(f[:-4]) not in wanted]
         for f in sorted(orphans):
             if clean:
                 os.remove(os.path.join(dest, f))

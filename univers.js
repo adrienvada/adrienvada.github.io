@@ -35,6 +35,11 @@
  *  kind      'film' pour un court métrage : un film n'est pas « à
  *            l'affiche », n'a pas de tournée, et son pied de page renvoie à
  *            sa fiche au lieu des dates. Absent = spectacle.
+ *  affiche   true pour ouvrir la page sur l'affiche du film, entière et
+ *            agrandissable, avant le montage. Le fichier est
+ *            ressources/images/univers/<slug>/affiche.jpg — déposer
+ *            l'original « affiche.jpg » dans le dossier source, le script
+ *            des photos le prépare avec le reste.
  *  role      remplace le rôle lu sur la ligne du CV, quand celle-ci n'en
  *            porte pas (les courts métrages) ou en dit autre chose.
  *  sequence  LE MONTAGE. Un élément = un temps du défilé, dans l'ordre.
@@ -534,21 +539,90 @@ const SHOW_UNIVERSES = {
     'Le rapt': {
         slug: 'lerapt',
         kind: 'film',
+        affiche: true,
         role: 'Rôle · Steven',
-        // Le nord : une mer grise, un ciel bas, une usine. Et l'ocre chaud
-        // de la comédie, qui refuse de se laisser éteindre par le temps
-        // qu'il fait.
+        // La palette est mesurée dans les images du film, et elle suit sa
+        // note d'intention : « des couleurs vertes, marron et terreuses »
+        // qui s'ouvrent vers le « bleu-rosé » de la plage. Le fond est le
+        // sable des dunes, l'accent le rouge de la Fiat et des perruques —
+        // le halo du titre, lui, prend le ciel.
         palette: {
-            bg: '#1a1e1f', surface: '#262c2d', text: '#eceeed', muted: '#98a1a0',
-            accent: '#d08a3c', accentInk: '#e0a058', onAccent: '#1a1e1f',
-            line: 'rgba(236,238,237,0.14)', glow: 'rgba(208,138,60,0.26)'
+            bg: '#eae4d3', surface: '#f7f3e8', text: '#211f18', muted: '#6d6857',
+            accent: '#c2402f', accentInk: '#9d2f1e', onAccent: '#ffffff',
+            line: 'rgba(33,31,24,0.15)', glow: 'rgba(154,180,210,0.40)'
         },
+        // Le rouge de l'univers est celui d'À la barre sur le CV : le filet
+        // prend un corail délavé de soleil — acidulé comme le film, et qui
+        // ne se confond avec aucun voisin.
+        cvAccent: '#de7a5a',
         synopsis: ['Deux ouvrières enlèvent le fils de leur patron',
             'pour en tirer une rançon.',
             'Elles se trompent d’homme : c’est un vendeur de ventilation',
             'qu’elles ramènent — ravi d’échapper à son quotidien.'],
-        cast: ['Cécile Dessillons', 'Ladane Dehdar', 'Adrien Vada'],
-        sequence: []
+        // La distribution du générique de fin du film.
+        cast: ['Cécile Dessillons', 'Ladane Dehdar', 'Ardag Basmadjian',
+            'Angélique Métier', 'Adrien Vada'],
+        sequence: [
+            {
+                chapter: '25 min',
+                chapterTitle: 'Une comédie de Cécile Dessillons et Ladane Dehdar, des routes de campagne aux plages du Nord.'
+            },
+            {
+                p: [1],
+                c: ['Une petite ville du Nord, à l’aube. Deux ouvrières, une Fiat rouge, un plan sans faille.']
+            },
+            {
+                q: ['« Démarre ! Démarre ! Démarre ! »'],
+                by: 'Véronique'
+            },
+            {
+                p: [2, 3],
+                c: ['L’otage. Encore engourdi.', '« Dis bonjour à Papa ! »'],
+                aside: ['« Il a dit “Je ne comprends pas, Fabien est ici”, et il a raccroché. »']
+            },
+            {
+                p: [4],
+                over: ['« Vous êtes qui ?', 'Qu’est-ce que vous me voulez ? »'],
+                overAt: 'gauche', overBy: 'Steven'
+            },
+            {
+                q: ['« J’veux pas rentrer, c’est tout. »'],
+                by: 'Steven'
+            },
+            {
+                p: [5, 6],
+                c: ['« Je vais pisser. »', 'Le muret des confidences.'],
+                aside: ['« Elle et ma mère décident de tout : du mariage, de l’appart, de ma vie, de tout. »']
+            },
+            {
+                p: [7],
+                c: ['« Mangeons, mangeons ! On sait pas qui nous mangera demain… »']
+            },
+            {
+                q: ['« Alors, ça te plaît l’Amérique ? »'],
+                by: 'Véronique'
+            },
+            {
+                p: [8, 9],
+                c: ['Arsen, sa radio, la nuit qui monte.', 'Le lendemain, à l’aube.'],
+                aside: ['« Téléphon, piège à con. »']
+            },
+            {
+                p: [10],
+                over: ['« Un silence profond', 'émane des arbres. »'],
+                overAt: 'droite', overBy: 'Dernière séquence du scénario'
+            },
+            {
+                text: 'Le Rapt évoque cette quête universellement partagée d’un ailleurs ' +
+                    'toujours plus riche, plus gai et plus intense que la morne réalité. ' +
+                    'Voyager vers la liberté, quels que soient les moyens à disposition — ' +
+                    'et la personne que l’on est.'
+            },
+            {
+                video: 'https://youtu.be/I_sibdqLJJQ',
+                c: ['Le film intégral — 25 minutes']
+            },
+        ]
     },
 };
 
@@ -986,10 +1060,29 @@ const SHOW_UNIVERSES = {
         });
     }
 
+    // ── L'AFFICHE ────────────────────────────────────────────────────
+    //  Un film s'ouvre sur son affiche : elle précède le montage, comme au
+    //  cinéma elle précède la séance. Portrait, entière — jamais recadrée :
+    //  une affiche est une composition, on ne coupe pas dedans — posée dans
+    //  la lumière de la palette, et agrandissable comme le reste.
+    //  Le fichier : ressources/images/univers/<slug>/affiche.jpg, préparé
+    //  par le script depuis « affiche.jpg » du dossier source.
+    function afficheHtml(uni, title) {
+        if (!uni.affiche) return '';
+        return `<figure class="u-fig u-affiche" style="--i:0">
+            <button type="button" class="u-fig-media" data-u-zoom="0"
+                    aria-label="Agrandir l’affiche du film">
+                <img src="ressources/images/univers/${uni.slug}/affiche.jpg"
+                     alt="Affiche — ${escape(title)}" loading="eager" decoding="async">
+                <span class="u-fig-loupe" aria-hidden="true"><i class="fa-solid fa-expand"></i></span>
+            </button>
+        </figure>`;
+    }
+
     function beatsHtml(uni, title) {
         let index = 0;
 
-        return (uni.sequence || []).map(beat => {
+        return afficheHtml(uni, title) + (uni.sequence || []).map(beat => {
 
             if (beat.video) return videoHtml(uni, beat, title);
 
@@ -1475,7 +1568,10 @@ const SHOW_UNIVERSES = {
     const MAX_WAIT_MS = 2500;
 
     function awaitFirstPhoto(uni) {
-        const first = flatPhotos(uni)[0]?.src;
+        // Un film s'ouvre sur son affiche : c'est donc elle qu'on attend.
+        const first = uni.affiche
+            ? `ressources/images/univers/${uni.slug}/affiche.jpg`
+            : flatPhotos(uni)[0]?.src;
         if (!first) return Promise.resolve();
         return Promise.race([
             new Promise(resolve => {
