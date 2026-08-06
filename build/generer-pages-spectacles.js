@@ -52,6 +52,12 @@ const path = require('path');
 // séquence en une grille de photos.
 const MONTAGE = require('../univers-montage.js');
 
+// Toute espace — insécable, fine, insécable étroite — vaut une espace
+// ordinaire. Voir universeFor() dans univers.js : c'est la même règle, et
+// elle doit le rester.
+const ESPACES = /[\s\u00a0\u202f\u2009\u2007\u2060]+/g;
+const normaliserTitre = (t) => String(t || '').replace(ESPACES, ' ').trim();
+
 const RACINE = path.join(__dirname, '..');
 const SITE = 'https://adrienvada.fr';
 const SORTIE = path.join(RACINE, 'spectacles');
@@ -599,6 +605,13 @@ function main() {
     const SHOW_UNIVERSES = chargerUnivers();
     const SHOW_DATA = chargerDates();
     const cvParTitre = lireLignesCv();
+    // Les mêmes lignes, indexées sur leur titre normalisé : c'est ce
+    // second jeu de clés qui sauve le rapprochement quand la typographie
+    // diffère d'un fichier à l'autre.
+    Object.keys(cvParTitre).forEach(k => {
+        const n = normaliserTitre(k);
+        if (!(n in cvParTitre)) cvParTitre[n] = cvParTitre[k];
+    });
 
     fs.rmSync(SORTIE, { recursive: true, force: true });
     fs.mkdirSync(SORTIE, { recursive: true });
@@ -608,7 +621,11 @@ function main() {
     Object.keys(SHOW_UNIVERSES).forEach(cle => {
         const uni = SHOW_UNIVERSES[cle];
         if (!uni || !uni.slug) return;
-        const cv = cvParTitre[cle] || {};
+        // Le titre est écrit deux fois — dans index.html et dans
+        // SHOW_UNIVERSES — et une espace insécable a déjà suffi à les
+        // séparer. On rapproche donc sur le titre normalisé, comme le fait
+        // universeFor() dans univers.js.
+        const cv = cvParTitre[cle] || cvParTitre[normaliserTitre(cle)] || {};
         const dossier = path.join(SORTIE, uni.slug);
         fs.mkdirSync(dossier, { recursive: true });
         fs.writeFileSync(path.join(dossier, 'index.html'), pageSpectacle(uni, cle, cv, SHOW_DATA));

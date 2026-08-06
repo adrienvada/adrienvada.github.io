@@ -205,7 +205,7 @@ const UniversMontage = (function () {
         const cap = ph.caption || '';
         return `<figure class="u-fig u-fig--${layout}" style="--i:${index}">
             <button type="button" class="u-fig-media" data-u-zoom="${index}"
-                    aria-label="Agrandir : ${escape(cap || title)}">
+                    aria-label="Agrandir : ${escape(cap || title)}">
                 <img src="${escape(ph.src)}" alt="${escape(cap || title)}"
                      ${ph.pos ? `style="object-position:${ph.pos}"` : ''}
                      loading="${eager ? 'eager' : 'lazy'}" decoding="async">
@@ -285,7 +285,7 @@ const UniversMontage = (function () {
         }
         return `<figure class="u-video u-reveal">
             <button type="button" class="u-video-play" data-u-video="${ref}"
-                    aria-label="Lire la vidéo : ${escape(cap || title)}">
+                    aria-label="Lire la vidéo : ${escape(cap || title)}">
                 <img src="${escape(poster)}"${repli} alt="" loading="lazy" decoding="async">
                 <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
             </button>
@@ -510,7 +510,7 @@ const UniversMontage = (function () {
             </div>
             ${prixBlock(uni)}
             ${castBlock(uni)}
-            ${uni.credit ? `<p class="u-credit">Photographies : ${escape(uni.credit)}</p>` : ''}
+            ${uni.credit ? `<p class="u-credit">Photographies : ${escape(uni.credit)}</p>` : ''}
         </footer>
 
 <!-- Agrandissement : la photo entière, jamais recadrée. C'est le
