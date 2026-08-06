@@ -335,6 +335,13 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
         rel="stylesheet">
     <link rel="stylesheet" href="../../univers.css">
 
+    <!-- Le repli quand le script ne charge pas. Les mots du montage attendent
+         à opacity 0 : sans JavaScript, la page serait un écran vide, et son
+         texte invisible à qui doit l'indexer. Ce <noscript> les rend visibles
+         d'un coup. Il ne coûte rien quand tout va bien : le navigateur ne
+         charge cette feuille que s'il n'exécute pas de script. -->
+    <noscript><link rel="stylesheet" href="../../univers-statique.css"></noscript>
+
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
          #show-universe. Mêmes variables, mêmes valeurs : c'est ce qui donne
          à la page la couleur exacte de son univers. -->
@@ -364,15 +371,24 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     ${jsonld}
 </head>
 
-<!-- La classe u-statique remet le montage à l'état lisible : sur l'accueil,
-     les mots arrivent masqués et c'est le défilement qui les révèle. Sans
-     elle la page serait blanche, et un moteur de recherche ne verrait rien. -->
-<body class="u-statique">
+<!-- La classe u-page-spectacle est le signal que guette univers.js : elle lui
+     dit que le panneau est déjà rempli et qu'il n'a qu'à lui donner vie —
+     l'écriture du titre, la parallaxe, les révélations au défilement,
+     l'agrandissement des photos. C'est le MÊME moteur que sur l'accueil, et
+     c'est pourquoi la page ne se contente pas de ressembler à son univers :
+     elle se comporte comme lui. -->
+<body class="u-page-spectacle">
     ${SPRITE}
     <div id="show-universe">
         <a class="u-retour" href="../../">← Adrien Vada</a>
         ${corps}
     </div>
+
+    <!-- Le moteur, dans l'ordre : le montage d'abord (univers.js s'en sert),
+         puis univers.js, qui reconnaît la classe du <body> et anime le
+         panneau déjà en place. Aucun des deux n'est propre à cette page. -->
+    <script src="../../univers-montage.js"></script>
+    <script src="../../univers.js"></script>
 </body>
 
 </html>
