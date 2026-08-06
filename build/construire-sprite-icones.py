@@ -38,7 +38,12 @@ import re
 import pathlib
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
-FICHIERS = ['index.html', 'univers.js', '404.html']
+# TOUT fichier qui pose une icône doit figurer ici. Un oubli ne casse rien
+# bruyamment : le symbole manquant disparaît simplement du sprite, et l'icône
+# devient un trou à l'écran. C'est arrivé — univers-montage.js manquait à
+# cette liste après que le montage y a déménagé, et les flèches « Accéder aux
+# dates » et de défilement se sont éteintes dans tous les univers.
+FICHIERS = ['index.html', 'univers.js', 'univers-montage.js', '404.html']
 
 
 def paquet():
@@ -208,6 +213,35 @@ def remplacer_balises(texte):
     return motif.sub(rendu, texte)
 
 
+def verifier_couverture(icones):
+    """
+    Le filet de sécurité. On relit TOUT le dépôt — pas seulement la liste
+    FICHIERS — à la recherche de références `href="#i-…"`, et on vérifie que
+    le sprite les couvre toutes.
+
+    Sans ce contrôle, oublier un fichier dans FICHIERS ne produit aucune
+    erreur : le symbole sort simplement du sprite, et l'icône devient un trou
+    que personne ne remarque avant de tomber dessus. C'est précisément ce qui
+    s'est produit quand le montage a déménagé dans univers-montage.js.
+    """
+    poses = set()
+    for p in RACINE.rglob('*'):
+        if p.suffix.lower() not in {'.html', '.js'}: continue
+        if any(x in p.parts for x in ('.git', 'node_modules', 'spectacles')): continue
+        for ref in re.findall(r'href="#(i-(?:solid|regular|brands)-[a-z0-9-]+)"',
+                              p.read_text(encoding='utf-8', errors='ignore')):
+            poses.add(ref)
+    fournis = {f'i-{style}-{nom}' for style, nom in icones}
+    manquants = sorted(poses - fournis)
+    if manquants:
+        raise SystemExit(
+            '  ARRÊT — des icônes sont posées dans le code mais absentes du sprite :\n'
+            + ''.join(f'      {m}\n' for m in manquants)
+            + '  Elles seraient invisibles à l\'écran. Ajoutez le fichier qui les pose\n'
+              '  à la liste FICHIERS en haut de ce script, puis relancez.'
+        )
+
+
 def main():
     icones = icones_utilisees()
     if not icones:
@@ -229,6 +263,8 @@ def main():
         p = RACINE / f
         if p.exists():
             p.write_text(remplacer_balises(p.read_text(encoding='utf-8')), encoding='utf-8')
+
+    verifier_couverture(icones)
 
     restants = sum(len(re.findall(r'<i\s+[^>]*fa-(?:solid|regular|brands)', (RACINE / f).read_text(encoding='utf-8')))
                    for f in FICHIERS if (RACINE / f).exists())
