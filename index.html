@@ -1853,16 +1853,19 @@
             position: absolute;
             inset: 0;
             border-radius: inherit;
-            /* 2,5 px et non 1,5 : le masque ne laisse voir QUE l'épaisseur
-               du filet, et il rogne au passage le halo du drop-shadow. À un
-               pixel et demi, le point passait sans qu'on le voie — mesuré,
-               puis constaté à l'écran. */
-            padding: 2.5px;
+            /* 2 px : le masque ne laisse voir QUE l'épaisseur du filet, et
+               il rogne au passage le halo du drop-shadow. À un pixel et demi,
+               le point passait sans qu'on le voie — mesuré, puis constaté à
+               l'écran. Deux suffisent, et le trait reste fin. */
+            padding: 2px;
+            /* AUCUN BLANC : c'est lui qui rendait le phare clinquant. Le point
+               est entièrement doré — du doré clair au cœur, l'or du thème
+               ensuite — et l'ensemble reste sous les deux tiers d'opacité.
+               Il signale, il n'éclaire pas. */
             background: radial-gradient(closest-side,
-                    #fff 0%,
-                    #fff 18%,
-                    rgb(var(--c-gold-light) / 0.85) 42%,
-                    rgb(var(--c-gold-light) / 0) 74%);
+                    rgb(var(--c-gold-light) / 0.62) 0%,
+                    rgb(var(--c-gold) / 0.42) 34%,
+                    rgb(var(--c-gold) / 0) 72%);
             /* Compact : c'est un point qui se déplace, pas une nappe. Assez
                petit pour que le segment de bordure allumé reste court, assez
                large pour que le point atteigne presque les coins. */
@@ -1872,7 +1875,7 @@
                point passe sans qu'on le voie. Le flou est calé sur la
                taille du point — 4 px, pas 3 fois plus — sinon on retrouve
                la bavure qu'on vient de chasser. */
-            filter: drop-shadow(0 0 4px rgb(var(--c-gold-light) / 0.6));
+            filter: drop-shadow(0 0 3px rgb(var(--c-gold) / 0.3));
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
