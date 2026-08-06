@@ -68,3 +68,24 @@ jobs:
       - name: Déposer
         id: deploiement
         uses: actions/deploy-pages@v4
+        with:
+          # TRENTE MINUTES AU LIEU DE DIX. L'action abandonne par défaut au
+          # bout de dix minutes d'attente — et c'est l'action qui abandonne,
+          # pas GitHub Pages qui échoue : le journal montre un déploiement
+          # passé en `deployment_in_progress`, donc bel et bien pris en
+          # charge, puis annulé par le minuteur.
+          #
+          # Le site pèse 67 Mo, dont 30 pour le château-mystère et 33 pour
+          # les photos et les démos voix. C'est lourd à distribuer, et les
+          # publications réussies de la journée l'ont montré en s'allongeant
+          # sans cesse : 45 s au petit matin, 245 s, 274 s, puis 598 s pour
+          # la dernière — juste avant que le plafond de dix minutes ne coupe
+          # tout. Le minuteur a été atteint par la croissance du site, pas
+          # par une panne.
+          #
+          # Trente minutes ne masquent donc rien : elles rendent à la
+          # publication le temps qu'elle demande. Si l'on veut la raccourcir
+          # pour de bon, c'est le poids qu'il faut viser — le château-mystère
+          # est à lui seul la moitié de la charge, pour une page qui n'a rien
+          # à voir avec le CV.
+          timeout: 1800000
