@@ -169,13 +169,13 @@ const SHOW_UNIVERSES = {
         synopsis: 'Rome, an 79. \n Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
         sequence: [
             { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes en alexandrin' },
-            { p: [2], c: ['Un triangle amoureux élevé au rang de la tragédie.'] },
+            { p: [2], cadre: { 2: '55% 55%' }, c: ['Un triangle amoureux élevé au rang de la tragédie.'] },
             {
                 q: ['« Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice. »'], by: 'Bérénice, acte V'
             },
-            { p: [18], c: ['La scène est une arène en hyper proximité avec le public, baignée dans une ambiance sonore et musicale live.'] },
+            { p: [18], cadre: { 18: '52% 45%' }, c: ['La scène est une arène en hyper proximité avec le public, baignée dans une ambiance sonore et musicale live.'] },
             {
-                p: [12, 5], c: ['Bérénice, Antiochus, Acte III', 'Paulin, Titus, Bérénice, Acte II'],
+                p: [12, 5], cadre: { 12: '58% 15%', 5: '30% 45%' }, c: ['Bérénice, Antiochus, Acte III', 'Paulin, Titus, Bérénice, Acte II'],
                 // REMPLISSAGE
                 aside: 'Une des plus belles partitions classique pour un personnage féminin qui sert « d\'exemple à l\'univers ».'
             },
@@ -184,22 +184,22 @@ const SHOW_UNIVERSES = {
                     'Qu\'ai-je fait pour l\'honneur ? J\'ai tout fait pour l\'amour. »', by: 'Titus, acte IV'
             },
             {
-                p: [1, 9, 11], c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
+                p: [1, 9, 11], cadre: { 1: '48% 15%', 9: '68% 20%', 11: '48% 18%' }, c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
                 // REMPLISSAGE
                 aside: 'La pureté des émotions transposée en thriller psychologique.'
             },
             {
-                p: [3], c: ['Un travail au plus plus proche de l\'alexandrin racinien pour en éprouver la virtuosité.'],
+                p: [3], cadre: { 3: '62% 45%' }, c: ['Un travail au plus plus proche de l\'alexandrin racinien pour en éprouver la virtuosité.'],
             },
             {
                 q: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »'],
                 by: 'Bérénice, acte IV'
             },
-            { p: [7, 13, 16], c: ['Bérénice, Antiochus, Acte I', 'Antiochus, Paulin, Titus, Acte IV', 'Bérénice, Antiochus, Titus, Acte V'] },
+            { p: [7, 13, 16], cadre: { 7: '55% 25%', 13: '60% 40%', 16: '55% 25%' }, c: ['Bérénice, Antiochus, Acte I', 'Antiochus, Paulin, Titus, Acte IV', 'Bérénice, Antiochus, Titus, Acte V'] },
             {
                 text: 'Un spectacle exigeant qui déconstruit les a priori sur le théâtre classique pour transmettre ce patrimoine universel.'
             },
-            { p: [17, 19], c: ['Lycée La Salle, Rouen', 'Espace Jean Legendre, Compiègne'] },
+            { p: [17, 19], cadre: { 17: '50% 55%', 19: '32% 35%' }, c: ['Lycée La Salle, Rouen', 'Espace Jean Legendre, Compiègne'] },
 
             {
                 video: 'https://www.youtube.com/watch?v=5wg0P7-Dt_w',
@@ -236,7 +236,7 @@ const SHOW_UNIVERSES = {
                 by: 'Stendhal, 16 juillet 1804'
             },
             {
-                p: [5], cadre: { 5: '20% 40%' },
+                p: [5], cadre: { 5: '15% 25%' },
                 c: ['Les Crescite poursuivent le travail de l\'alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir.'],
             },
             {
@@ -244,11 +244,11 @@ const SHOW_UNIVERSES = {
                 by: 'Antiochus, Acte I'
             },
             {
-                p: [9], cadre: { 9: ' ' },
+                p: [9], cadre: { 9: '50% 35%' },
                 c: ['La figure des jumeaux : une incarnation à deux têtes du dilemme cornéliens.'],
             },
             {
-                p: [20, 15, 17], c: ['', ''], cadre: { 20: '40% 50%', 17: '50% 25%' },
+                p: [20, 15, 17], cadre: { 20: '42% 30%', 15: '48% 15%', 17: '46% 22%' }, c: ['', ''],
                 aside: ['La princesse Rodogune, fille du roi ennemi, est tenue captives. Les deux princes héritiers l\'aiment, contre la loi de leur mère.']
             },
             {
@@ -256,16 +256,16 @@ const SHOW_UNIVERSES = {
                 by: 'Cléophène, Acte IV'
             },
             {
-                p: [21], cadre: { 21: '35% 40%' },
+                p: [21], cadre: { 21: '38% 32%' },
                 c: ['La mise en scène, volontairement spectaculaire, dépayse le spectateur dans un univers où sons et lumières soutiennent l\'immersion dans un drame antique épique.'],
 
             },
             {
-                p: [10, 13], c: ['', ''], cadre: { 10: '50% 95%' },
+                p: [10, 13], cadre: { 10: '50% 65%', 13: '42% 45%' }, c: ['', ''],
                 aside: ['Corneille excelle lorqu\'il n\'est pas corseté par les unités ou la bienséance.']
             },
             {
-                p: [7], cadre: { 7: '70% 70%' }, c: ['La rigueur sur le travail du vers sera la même que sur Bérénice.'],
+                p: [7], cadre: { 7: '78% 50%' }, c: ['La rigueur sur le travail du vers sera la même que sur Bérénice.'],
 
             },
             {
@@ -273,7 +273,7 @@ const SHOW_UNIVERSES = {
                 by: 'Cléophène, Acte V'
             },
             {
-                p: [23, 16], c: ['', ''], cadre: { 23: '10% 55%', 16: '55% 50%' },
+                p: [23, 16], cadre: { 23: '42% 30%', 16: '48% 55%' }, c: ['', ''],
                 over: ['« Jusqu’où serez-vous', 'semblables ? »'], overAt: 'droite'
             },
             {
@@ -315,11 +315,11 @@ const SHOW_UNIVERSES = {
                 by: 'Jaques, ACTE II'
             },
             {
-                p: [16, 14, 9], c: ['Extérieur, ACTE I', 'Extérieur, ACTE V', 'Intérieur, ACTE V'],
+                p: [16, 14, 9], cadre: { 16: '45% 50%', 14: '50% 65%', 9: '60% 45%' }, c: ['Extérieur, ACTE I', 'Extérieur, ACTE V', 'Intérieur, ACTE V'],
                 aside: 'Neuf comédiens incarnant gens de cour et paysans réunis dans la même forêt.'
             },
             {
-                p: [8], c: ['Dans As you like it, le rythme surprend et change à chaque instant. C\'est lui qui doit nous emporter.'],
+                p: [8], cadre: { 8: '38% 40%' }, c: ['Dans As you like it, le rythme surprend et change à chaque instant. C\'est lui qui doit nous emporter.'],
             },
             {
                 q: ['« Un humain au cours de sa vie joue plusieurs rôles,',
@@ -327,13 +327,13 @@ const SHOW_UNIVERSES = {
                 by: 'Jaques, ACTE II'
             },
             {
-                p: [11, 1, 4], c: ['Adurey, Touchstone, ACTE V', 'Rosalind, Duke Frederick, Celia, ACTE I', 'Celia, Rosalind, ACTE II'],
+                p: [11, 1, 4], cadre: { 11: '48% 32%', 1: '47% 30%', 4: '42% 35%' }, c: ['Adurey, Touchstone, ACTE V', 'Rosalind, Duke Frederick, Celia, ACTE I', 'Celia, Rosalind, ACTE II'],
             },
             {
                 text: 'Des comédiens et des musiciens forment un joyeux orchestre. C’est comme une fête ! Et dans toute bonne fête, le rythme, la musique et le paysage sonore priment.'
             },
             {
-                p: [15, 13],
+                p: [15, 13], cadre: { 15: '50% 70%', 13: '40% 35%' },
                 c: ['Château de Villerville', 'Le Studio d\'Asnières'],
             },
         ]
@@ -369,7 +369,7 @@ const SHOW_UNIVERSES = {
                 chapterTitle: 'Puis 30 minutes de débat — niveaux 4ᵉ et 3ᵉ'
             },
             {
-                p: [8],
+                p: [8], cadre: { 8: '45% 55%' },
                 c: ['Adapté d’À la barre pour le collège, créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ.']
             },
             {
@@ -379,15 +379,15 @@ const SHOW_UNIVERSES = {
                 by: 'Les mots de la justice, par les élèves du collège Boieldieu'
             },
             {
-                p: [6, 5], c: ['', ''],
+                p: [6, 5], cadre: { 6: '42% 20%', 5: '48% 18%' }, c: ['', ''],
                 aside: ['Les différents tribunaux, leur composition, le déroulé d’un procès — et ce qu’on y dit vraiment.']
             },
             {
-                p: [4], cadre: { 4: '65% 00%' },
+                p: [4], cadre: { 4: '35% 22%' },
                 c: ['Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres.']
             },
             {
-                p: [1, 2, 3], c: ['', '', ''],
+                p: [1, 2, 3], cadre: { 1: '48% 30%', 2: '35% 40%', 3: '60% 40%' }, c: ['', '', ''],
                 aside: ['Après la représentation, un échange permet d\'effectuer un travail de sensibilisation.']
             },
             {
@@ -418,7 +418,7 @@ const SHOW_UNIVERSES = {
                 chapterTitle: 'Puis 45 minutes de débat — tout public dès 15 ans'
             },
             {
-                p: [19], cadre: { 19: '40% 10%' },
+                p: [19], cadre: { 19: '45% 25%' },
                 c: ['Créé en 2024 au palais de justice de Rouen.']
             },
             {
@@ -426,7 +426,7 @@ const SHOW_UNIVERSES = {
                 by: 'Marion, III - L’institution judiciaire au défi du réel'
             },
             {
-                p: [20, 8, 5, 9], c: ['Avocate de la partie civile, IV - Le quotidien du sexisme', 'Prévenu, IV - Le quotidien du sexisme', 'Greffier, II - Face aux violences', 'Avocat de la défense, V - La défense des hommes'],
+                p: [20, 8, 5, 9], cadre: { 20: '35% 35%', 8: '15% 18%', 5: '47% 18%', 9: '50% 15%' }, c: ['Avocate de la partie civile, IV - Le quotidien du sexisme', 'Prévenu, IV - Le quotidien du sexisme', 'Greffier, II - Face aux violences', 'Avocat de la défense, V - La défense des hommes'],
                 aside: ['Comment, dans ces conditions,', 'réussir à “rendre justice” ?']
             },
             {
@@ -434,7 +434,7 @@ const SHOW_UNIVERSES = {
                 by: 'Présidente, VI - Dans le couple '
             },
             {
-                p: [4, 13, 14, 12], c: ['', '', ''],
+                p: [4, 13, 14, 12], cadre: { 4: '18% 25%', 13: '30% 15%', 14: '36% 28%', 12: '52% 25%' }, c: ['', '', ''],
                 aside: ['Le spectacle, sobre, peut se jouer en tribunal comme en salle municipale ou établissement scolaire : la salle d\'audience est recrée.']
             },
             {
@@ -442,7 +442,7 @@ const SHOW_UNIVERSES = {
                 by: 'Rémi, Anne, X - Conclusion'
             },
             {
-                p: [6], c: [''],
+                p: [6], cadre: { 6: '27% 18%' }, c: [''],
                 over: ['« La justice est imparfaite parce qu’elle est humaine... »'],
                 overAt: ' bas'
             },
@@ -450,7 +450,7 @@ const SHOW_UNIVERSES = {
                 text: '« ... Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps. »  '
             },
             {
-                p: [25, 26], c: ['Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen', 'Débat suivant une représentation au tribunal d\'Avignon', ''],
+                p: [25, 26], cadre: { 25: '55% 50%', 26: '33% 45%' }, c: ['Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen', 'Débat suivant une représentation au tribunal d\'Avignon', ''],
             },
         ]
     },
@@ -477,7 +477,7 @@ const SHOW_UNIVERSES = {
                 chapterTitle: 'Spectacle tout public à partir de 14 ans.'
             },
             {
-                p: [10],
+                p: [10], cadre: { 10: '47% 35%' },
                 c: ['Cette pièce réjouira les amateurs de musique électro, de relations familiales compliquées, et de phénomènes naturels extrêmes.']
             },
             {
@@ -485,22 +485,22 @@ const SHOW_UNIVERSES = {
                 by: ''
             },
             {
-                p: [3, 1, 4], c: ['', '', ''], cadre: { 3: 'droite', 1: 'droite', 4: 'gauche' },
+                p: [3, 1, 4], cadre: { 3: '80% 25%', 1: '33% 25%', 4: '12% 35%' }, c: ['', '', ''],
                 aside: ['« Quand la foudre frappe,', 'elle entre en toi en faisant un trou... »']
             },
             {
-                p: [23], c: ['La cellule familiale, subterfuge qui permet de passer l’humain au microscope.'], cadre: { 23: 'droite' }
+                p: [23], cadre: { 23: '25% 40%' }, c: ['La cellule familiale, subterfuge qui permet de passer l’humain au microscope.']
             },
             {
-                p: [27, 5, 19], c: ['', '', ''], cadre: { 27: '50% 50%', 19: '60% 00%' },
+                p: [27, 5, 19], cadre: { 27: '52% 30%', 5: '62% 35%', 19: '33% 25%' }, c: ['', '', ''],
                 aside: ['« Si tu ne trouves pas de deuxième trou, celui de la sortie, la charge est restée dans ton corps. Tu n’es plus fulguré·e, tu es FOUDROYÉ·E. »']
             },
             {
-                p: [7], cadre: { 7: '30% 00%' },
+                p: [7], cadre: { 7: '70% 15%' },
                 over: ['« La foudre frappe n\’importe où,', 'n\’importe qui, n\’importe quand :', 'il n\'y a aucun sens à ça.\»'], overAt: 'droite'
             },
-            { p: [8, 26], c: ['', ''], cadre: { 8: '50% 00%', 26: '90% 00%' } },
-            { p: [2], c: ['Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure.'], cadre: { 2: 'droite' } },
+            { p: [8, 26], cadre: { 8: '32% 25%', 26: '72% 28%' }, c: ['', ''] },
+            { p: [2], cadre: { 2: '72% 30%' }, c: ['Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure.'] },
 
             {
                 text: 'Fulguré.e.s est un spectacle qui met à l’épreuve l\'humain dans sa capacité à se débattre et à trouver des réponses face à la peur, à l’incompréhensible et à l’injustice.'
