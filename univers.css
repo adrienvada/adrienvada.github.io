@@ -947,7 +947,7 @@ html.u-locked body {
 
 /* Dans les citations et les incrustations, la coupe est une décision
    d'écriture : le vers ne se termine pas là où l'écran manque de
-   place. D'où `nowrap`.
+   place. D'où `nowrap` — sauf au plancher, voir plus bas.
 
    Pour qu'il tienne quand même, la taille du texte est calculée à
    partir de --chars — la longueur du vers le plus long, posée par
@@ -958,14 +958,26 @@ html.u-locked body {
 
    0.56em par caractère : c'est la chasse moyenne du Cinzel, prise
    large. Un vers plus resserré occupera un peu moins que la place
-   réservée — un vers plus large ne débordera pas. */
+   réservée — un vers plus large ne débordera pas.
+
+   --fit-min : LE PLANCHER. Formule pensée pour des vers courts — un
+   alexandrin de Racine tient en ~50 signes et passe sans effort. Une
+   réplique de dialogue plus longue (60-80 signes, « À la barre »,
+   « L'Homme moderne ») n'a pas cette contrainte de mètre : sans
+   plancher, min() la réduisait sous les 10px sur un téléphone étroit
+   — repérée par Adrien sur un rendu réel, illisible. Le plancher
+   passe devant `nowrap` : une ligne qui le touche a le droit de se
+   replier sur deux lignes plutôt que de rapetisser à l'infini ou de
+   déborder de l'écran. Les vers courts, eux, ne l'atteignent jamais
+   et gardent leur ligne unique comme avant. */
 .u-fit {
     --fit-space: 84vw;
-    font-size: min(var(--fit-max), calc(var(--fit-space) / (var(--chars, 30) * 0.56)));
+    --fit-min: 1rem;
+    font-size: max(var(--fit-min), min(var(--fit-max), calc(var(--fit-space) / (var(--chars, 30) * 0.56))));
 }
 
 .u-fit .u-line {
-    white-space: nowrap;
+    white-space: normal;
 }
 
 /* ── Intertitre de chapitre ──
