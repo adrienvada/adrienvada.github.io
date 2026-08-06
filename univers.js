@@ -568,7 +568,7 @@ const SHOW_UNIVERSES = {
                 chapterTitle: 'Une comédie de Cécile Dessillons et Ladane Dehdar, des routes de campagne aux plages du Nord.'
             },
             {
-                p: [1],
+                p: [1], cadre: { 1: '66% 40%' },
                 c: ['Une petite ville du Nord, à l’aube. Deux ouvrières, une Fiat rouge, un plan sans faille.']
             },
             {
@@ -576,12 +576,12 @@ const SHOW_UNIVERSES = {
                 by: 'Véronique'
             },
             {
-                p: [2, 3],
+                p: [2, 3], cadre: { 2: '58% 30%', 3: '50% 50%' },
                 c: ['L’otage. Encore engourdi.', '« Dis bonjour à Papa ! »'],
                 aside: ['« Il a dit “Je ne comprends pas, Fabien est ici”, et il a raccroché. »']
             },
             {
-                p: [4],
+                p: [4], cadre: { 4: '68% 45%' },
                 over: ['« Vous êtes qui ?', 'Qu’est-ce que vous me voulez ? »'],
                 overAt: 'gauche', overBy: 'Steven'
             },
@@ -590,12 +590,12 @@ const SHOW_UNIVERSES = {
                 by: 'Steven'
             },
             {
-                p: [5, 6],
+                p: [5, 6], cadre: { 5: '45% 30%', 6: '46% 25%' },
                 c: ['« Je vais pisser. »', 'Le muret des confidences.'],
                 aside: ['« Elle et ma mère décident de tout : du mariage, de l’appart, de ma vie, de tout. »']
             },
             {
-                p: [7],
+                p: [7], cadre: { 7: '62% 35%' },
                 c: ['« Mangeons, mangeons ! On sait pas qui nous mangera demain… »']
             },
             {
@@ -603,12 +603,12 @@ const SHOW_UNIVERSES = {
                 by: 'Véronique'
             },
             {
-                p: [8, 9],
+                p: [8, 9], cadre: { 8: '65% 30%', 9: '48% 50%' },
                 c: ['Arsen, sa radio, la nuit qui monte.', 'Le lendemain, à l’aube.'],
                 aside: ['« Téléphon, piège à con. »']
             },
             {
-                p: [10],
+                p: [10], cadre: { 10: '49% 60%' },
                 over: ['« Un silence profond', 'émane des arbres. »'],
                 overAt: 'droite', overBy: 'Dernière séquence du scénario'
             },
