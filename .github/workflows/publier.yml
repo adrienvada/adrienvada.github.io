@@ -1,0 +1,70 @@
+# ============================================================
+#  PUBLICATION DU SITE
+# ============================================================
+#  Le site est statique : il n'y a rien à construire, seulement à
+#  déposer. Ce workflow remplace le bâtisseur historique de GitHub
+#  Pages, qui échouait.
+#
+#  POURQUOI. Le bâtisseur historique reclone le dépôt ENTIER à chaque
+#  publication. Or ce dépôt pèse 441 Mo d'historique pour un site de
+#  67 Mo — les originaux des photos de spectacle y ont vécu avant d'en
+#  sortir, et un objet git ne s'oublie jamais. La dernière publication
+#  réussie a pris 9 min 58, contre une limite de 10 minutes ; toutes
+#  celles d'après ont échoué. Le site est resté figé pendant une heure
+#  sans que rien n'apparaisse dans le dépôt : le code partait bien, il
+#  n'était simplement plus publié.
+#
+#  actions/checkout ne prend QUE le dernier commit (profondeur 1) : le
+#  poids de l'historique cesse d'entrer en ligne de compte. La
+#  publication passe de dix minutes à quelques secondes.
+#
+#  Et surtout : ce workflow a des JOURNAUX. Le bâtisseur historique ne
+#  disait que « Page build failed », sans un mot de plus.
+#
+#  L'historique reste à dégraisser un jour (git filter-repo, puis une
+#  poussée forcée qui réécrit toutes les empreintes) — mais c'est une
+#  opération à faire tête reposée, et elle n'est plus urgente.
+# ============================================================
+name: Publier le site
+
+on:
+  push:
+    branches: [main]
+  # Permet aussi de republier à la main depuis l'onglet Actions,
+  # sans avoir à inventer un commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Une publication à la fois, et on ne coupe pas celle qui est en cours :
+# une interruption en plein dépôt laisserait le site à moitié servi.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - name: Récupérer le dernier commit seulement
+        uses: actions/checkout@v4
+
+      - name: Préparer Pages
+        uses: actions/configure-pages@v5
+
+      - name: Empaqueter le site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Tout le dépôt tel quel : il EST le site. .git et .github
+          # sont écartés d'office par l'action.
+          path: .
+
+      - name: Déposer
+        id: deploiement
+        uses: actions/deploy-pages@v4
