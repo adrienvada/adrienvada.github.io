@@ -248,6 +248,27 @@
     // donc éparpillement plus spectaculaire quand « Adrien Vada » arrive.
     var SPREAD_TIGHT = 0.2;
 
+    // ── LA TAILLE DU GRAIN ───────────────────────────────────────────
+    //  Le masque ne se lisait pas, et ce n'était ni la forme ni le nombre
+    //  de points : les grains faisaient 1,4 px de rayon pour 12 px d'écart,
+    //  soit MOINS DE 5 % DE LA SURFACE COUVERTE. On ne voyait que le
+    //  contour — un nuage projeté s'entasse toujours sur sa silhouette,
+    //  là où la surface devient tangente au regard — et l'intérieur du
+    //  visage restait vide. Les trous des yeux et de la bouche existent
+    //  pourtant bel et bien dans le nuage : ils n'avaient simplement rien
+    //  autour d'eux pour se détacher.
+    //
+    //  Grossir le grain ne coûte RIEN : ce sont les mêmes cercles, au même
+    //  nombre, simplement plus larges. Aucun lien entre particules, aucun
+    //  remplissage, aucun filtre — tout cela aurait coûté cher et, pour
+    //  les liens, refermé les yeux en reliant les deux bords de l'orbite.
+    var DUST_GAIN = 2.7;
+
+    //  Le rayon vise une COUVERTURE CONSTANTE plutôt qu'une taille fixe :
+    //  r ∝ échelle / √nombre. Sans cela le téléphone serait sur-encré —
+    //  il affiche un masque bien plus petit avec à peine moins de points.
+    var GRAIN_REF = 328 / Math.sqrt(3200);
+
     function dollyProgress(nowMs) {
         if (shapeBirth === null) return 0;
         var t = Math.min(1, Math.max(0, (nowMs - shapeBirth) / DOLLY_MS));
@@ -287,6 +308,8 @@
         var spread = 1 - turbulence * (1 - SPREAD_TIGHT);
         var focal = FOCAL_START + (FOCAL_END - FOCAL_START) * dolly;
         var cx = W / 2, cy = H * 0.5;
+        // Calculé une fois par image, pas une fois par grain.
+        var grain = (shapeScale / Math.sqrt(particles.length || 1)) / GRAIN_REF;
         var springBack = Math.min(1, dt * 4.2);
         var energyDecay = Math.pow(0.9, dt * 60);
 
@@ -342,16 +365,23 @@
             var twinkle = 0.82 + 0.18 * Math.sin(tSec * p.twinkleSpeed + p.twinklePhase);
             var glow = Math.min(1, depth + p.energy * 0.7);
 
-            // Plancher relevé (0.14 -> 0.34) : les points en retrait restaient
-            // quasi invisibles, si bien que seule une fraction du masque se
-            // voyait réellement.
-            var alpha = (0.34 + depth * 0.45) * twinkle + p.energy * 0.5;
+            // L'opacité RETOMBE quand le grain grossit : à taille multipliée
+            // par trois, l'encre l'est par neuf, et les recouvrements
+            // viraient à l'aplat blanc. Moins opaque et plus large, un grain
+            // se superpose à ses voisins sans les effacer — c'est ce qui
+            // fait une poussière plutôt qu'une peinture.
+            var alpha = (0.24 + depth * 0.34) * twinkle + p.energy * 0.5;
             alpha = Math.min(1, alpha);
 
             var r = Math.round(191 + (255 - 191) * glow);
             var g = Math.round(169 + (248 - 169) * glow);
             var b = Math.round(138 + (222 - 138) * glow);
-            var radius = (0.75 + depth * 1.35) * (1 + p.energy * 0.8);
+            // `p.r` était tiré au sort à la naissance de chaque particule et
+            // n'avait jamais servi : il entre ici. Des grains fins et des
+            // flocons plus larges dans la même poussière — c'est cette
+            // inégalité qui la rend vivante plutôt que tramée.
+            var radius = (0.75 + depth * 1.35) * DUST_GAIN * p.r * grain
+                * (1 + p.energy * 0.8);
 
             ctx.beginPath();
             ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + alpha.toFixed(3) + ')';
