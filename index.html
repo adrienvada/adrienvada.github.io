@@ -2125,21 +2125,25 @@
                          rang. Séparateurs au même régime que la ligne des liens
                          plus bas : masqués sous `sm`, où l'on retombe à la
                          ligne de toute façon. -->
-                    <div
-                        class="flex flex-wrap items-center justify-center md:justify-start gap-x-2 gap-y-1 mb-2 text-[10px] font-montserrat tracking-wide text-luxury-textMuted">
-                        <span class="font-semibold text-luxury-textMain">186 cm</span>
-                        <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
+                    <div class="bio-collapse" id="header-signature">
+                        <div class="bio-collapse-inner">
+                            <div
+                                class="flex flex-wrap items-center justify-center md:justify-start gap-x-2 gap-y-1 mb-2 text-[10px] font-montserrat tracking-wide text-luxury-textMuted">
+                                <span class="font-semibold text-luxury-textMain">186 cm</span>
+                                <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
-                        <span class="font-semibold text-luxury-textMain">Baryton-basse</span>
-                        <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
+                                <span class="font-semibold text-luxury-textMain">Baryton-basse</span>
+                                <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
-                        <span><span class="font-semibold text-luxury-textMain">Trilingue</span> FR · RU · EN</span>
-                        <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
+                                <span><span class="font-semibold text-luxury-textMain">Trilingue</span> FR · RU · EN</span>
+                                <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
-                        <span>Escrime artistique · Boxe · Tir</span>
-                        <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
+                                <span>Escrime artistique · Boxe · Tir</span>
+                                <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
-                        <span>Permis A/B</span>
+                                <span>Permis A/B</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Présentation : affichée uniquement sur l'onglet CV.
@@ -2172,38 +2176,47 @@
 
                         <div
                             class="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1.5 text-xs text-luxury-textMuted">
-                            <a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html"
-                                target="_blank" rel="noopener"
-                                class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
-                                <img src="ressources/images/design/agencesartistiques.png" alt="" width="11" height="11"
-                                    class="h-[11px] w-auto rounded-sm"> Agences Artistiques
-                            </a>
-                            <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
+                            <!-- Liens externes : repli au même régime que la
+                                 bio et la signature casting, voir header-signature. -->
+                            <div class="bio-collapse" id="header-links">
+                                <div class="bio-collapse-inner">
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                                        <a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html"
+                                            target="_blank" rel="noopener"
+                                            class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
+                                            <img src="ressources/images/design/agencesartistiques.png" alt="" width="11" height="11"
+                                                class="h-[11px] w-auto rounded-sm"> Agences Artistiques
+                                        </a>
+                                        <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
-                            <a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank"
-                                rel="noopener" class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
-                                <img src="ressources/images/design/filmmakers.svg" alt="" width="11" height="11"
-                                    class="h-[11px] w-auto rounded-sm"> Filmmakers
-                            </a>
-                            <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
+                                        <a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank"
+                                            rel="noopener" class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
+                                            <img src="ressources/images/design/filmmakers.svg" alt="" width="11" height="11"
+                                                class="h-[11px] w-auto rounded-sm"> Filmmakers
+                                        </a>
+                                        <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
-                            <a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" rel="noopener"
-                                class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
-                                <img src="ressources/images/design/instagram.svg" alt="" width="11" height="11"
-                                    class="h-[11px] w-auto rounded-sm"> Instagram
-                            </a>
-                            <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
+                                        <a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" rel="noopener"
+                                            class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
+                                            <img src="ressources/images/design/instagram.svg" alt="" width="11" height="11"
+                                                class="h-[11px] w-auto rounded-sm"> Instagram
+                                        </a>
+                                        <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
-                            <a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank"
-                                rel="noopener" class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
-                                <img src="ressources/images/design/linkedin.svg" alt="" width="11" height="11"
-                                    class="h-[11px] w-auto rounded-sm"> LinkedIn
-                            </a>
+                                        <a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank"
+                                            rel="noopener" class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
+                                            <img src="ressources/images/design/linkedin.svg" alt="" width="11" height="11"
+                                                class="h-[11px] w-auto rounded-sm"> LinkedIn
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- Bascule clair / sombre — desktop : alignée sur
                                  cette même ligne, poussée à l'extrémité droite
                                  (ml-auto). Équivalent mobile juste au-dessus,
-                                 masqué ici en dessous de md. -->
+                                 masqué ici en dessous de md. Reste visible hors CV :
+                                 ce n'est pas un contenu du profil, mais un réglage. -->
                             <button type="button" data-theme-toggle aria-pressed="false"
                                 class="no-print hidden md:flex md:ml-auto items-center gap-1.5 hover:text-luxury-goldInk transition">
                                 <svg class="ico text-[11px] text-amber-400" data-theme-toggle-icon aria-hidden="true">
@@ -2259,7 +2272,7 @@
              s'il reste une représentation à venir. Une saison qui se termine
              le fait disparaître toute seule, sans intervention.
              `no-print` : la version imprimée est un CV, pas une affiche. -->
-        <div id="next-date-banner" hidden class="no-print mb-5"></div>
+        <div id="next-date-banner" hidden class="no-print mb-5 bio-collapse"></div>
 
         <!-- NAVIGATION TABS (Splitted buttons) -->
         <!-- Sentinelle : un trait de rien du tout, juste au-dessus de la barre.
@@ -4144,7 +4157,7 @@
                 : '';
 
             bandeau.innerHTML = `
-                <div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <div class="bio-collapse-inner"><div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     <span class="flex items-center gap-1.5 flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
                         <span class="next-date-dot" aria-hidden="true"></span> Prochainement
                     </span>
@@ -4154,7 +4167,7 @@
                         <span class="text-[11px] text-luxury-textMuted font-mono">${esc(quand)}${lieu}</span>
                     </a>
                     ${reserver}
-                </div>`;
+                </div></div>`;
             bandeau.hidden = false;
         }
 
@@ -5026,10 +5039,14 @@
             const pdfBtn = document.getElementById('pdf-download-btn');
             if (pdfBtn) pdfBtn.classList.toggle('invisible', pageId !== 'page_cv');
 
-            // La bio n'a de sens qu'en regard du CV : ailleurs elle se replie
-            // en fondu et rend sa place aux dates et aux démos.
-            const bio = document.getElementById('header-bio');
-            if (bio) bio.classList.toggle('bio-hidden', pageId !== 'page_cv');
+            // La bio, la signature casting, les liens externes et le bandeau
+            // « Prochainement » n'ont de sens qu'en regard du CV : ailleurs
+            // ils se replient en fondu et rendent leur place aux dates et
+            // aux démos. Seuls restent alors la photo, le nom, le métier,
+            // le mail et la barre de navigation.
+            document.querySelectorAll('.bio-collapse').forEach(el => {
+                el.classList.toggle('bio-hidden', pageId !== 'page_cv');
+            });
 
             // Un tiroir resté ouvert n'aurait plus de contexte hors du CV
             closeAllCvDrawers(null);
