@@ -11,3 +11,11 @@
 
 # Outils de build (CSS Tailwind compilé à la main, cf. README)
 node_modules/
+
+# Réglages locaux de Claude Code
+#   settings.local.json est la liste des commandes autorisées SUR CETTE
+#   MACHINE — un réglage de confiance, pas du contenu de site. Il grossit
+#   à chaque autorisation et n'a rien à faire dans un dépôt public.
+#   launch.json, lui, est versionné : c'est la façon de lancer le site en
+#   local, et elle vaut pour toutes les machines.
+.claude/settings.local.json
