@@ -551,10 +551,16 @@ c'est un choix éditorial, et le tri ne le bouscule pas.
 mettez-le à sa place chronologique ; sinon ce n'est pas grave, la page sera
 juste quand même.
 
-Films et spectacles sont **mêlés** selon leur année : c'est un répertoire, pas
-deux listes. Les anciennes sections « EN CRÉATION » et « COURTS MÉTRAGES » ont
-disparu pour cette raison — leur contenu est remonté dans l'en-tête de
-`SHOW_UNIVERSES`, où il vaut pour toutes les entrées.
+**Deux groupes**, sous les intitulés du CV : « Théâtre » puis
+« Courts-métrages », chacun du plus récent au plus ancien. Sans intitulé, un
+2019 venant s'intercaler après un 2022 se lirait comme un tri cassé — c'est le
+titre qui dit que le classement recommence. Le marqueur de groupe est
+`kind: 'film'`, pas `genre`, qui n'est qu'une étiquette descriptive.
+
+L'ancienne section « EN CRÉATION » de `SHOW_UNIVERSES` a disparu : elle
+couvrait Cassandres et L'imaginaire forcé, mais « À la barre » est aussi de
+2026 et vient s'insérer entre eux. Son contenu est remonté dans l'en-tête,
+où il vaut pour toutes les entrées.
 
 ### Le repli sans JavaScript (`univers-statique.css`)
 
