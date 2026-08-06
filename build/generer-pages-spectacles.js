@@ -421,7 +421,7 @@ function pageRepertoire(fiches) {
                      vaut le seul texte, qui ne promet rien. -->
                 ${f.vignette ? `<img src="../${esc(f.vignette)}" alt="" loading="lazy" decoding="async" width="600" height="400">` : ''}
                 <span class="txt">
-                    ${f.annee ? `<span class="annee">${esc(f.annee)}</span>` : ''}
+                    ${f.annee || f.genre ? `<span class="annee">${esc([f.annee, f.genre].filter(Boolean).join(' · '))}</span>` : ''}
                     <span class="nom">${esc(f.titre)}</span>
                     ${f.role ? `<span class="role">${esc(f.role)}</span>` : ''}
                 </span>
@@ -580,7 +580,10 @@ footer { max-width: 46rem; margin: 0 auto; padding-top: 1.5rem; border-top: 1px 
 }
 .repertoire a:hover img { opacity: .78; }
 .repertoire .txt { display: block; padding-top: .6rem; }
-.repertoire .annee { display: block; font-size: .65rem; letter-spacing: .16em; color: var(--accent-ink); }
+.repertoire .annee {
+    display: block; font-size: .65rem; line-height: 1.5; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent-ink);
+}
 .repertoire .nom { display: block; font: 600 1rem/1.25 'Cinzel', Georgia, serif; margin-top: .15rem; }
 .repertoire .role { display: block; font-size: .78rem; color: var(--muted); margin-top: .15rem; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
@@ -615,6 +618,11 @@ function main() {
             role: (uni.role || cv.role || '').replace(/^R[oô]les?\s*·\s*/i, ''),
             vignette: photos[0] ? photos[0].src : '',
             film: uni.kind === 'film',
+            // Le genre voyage avec la fiche : il se lit dans le même souffle
+            // que l'année, exactement comme dans le bandeau du panneau
+            // (voir u-eyebrow dans univers-montage.js). Un répertoire dit
+            // quand ET quoi — « 2024 · Tragédie » choisit mieux qu'une date.
+            genre: uni.genre || '',
             cv: Boolean(cvParTitre[cle])
         });
     });
