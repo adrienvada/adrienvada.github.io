@@ -1,0 +1,75 @@
+/* PAGES SPECTACLE — feuille commune (générée : build/generer-pages-spectacles.js)
+   Les couleurs viennent de chaque page, qui les tient de la palette de son
+   spectacle dans univers.js. Ici, seulement la mise en page. */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+    margin: 0; padding: 0 1.25rem 4rem;
+    background: var(--bg); color: var(--text);
+    font: 400 16px/1.65 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+main { max-width: 46rem; margin: 0 auto; }
+a { color: var(--accent-ink); }
+.retour {
+    display: inline-block; margin: 1.5rem auto 0; max-width: 46rem;
+    font-size: .75rem; letter-spacing: .12em; text-transform: uppercase;
+    text-decoration: none; color: var(--muted);
+}
+.retour:hover { color: var(--accent-ink); }
+.tete { padding: 2.5rem 0 1.5rem; border-bottom: 1px solid var(--line); }
+.annee { margin: 0 0 .75rem; font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-ink); }
+h1 { margin: 0; font: 700 clamp(2rem, 7vw, 3.25rem)/1.05 'Cinzel', Georgia, serif; letter-spacing: -.01em; }
+.sous-titre { margin: .5rem 0 0; font-size: 1rem; font-style: italic; color: var(--muted); }
+.role { margin: 1.25rem 0 0; font-size: .95rem; }
+.role span { color: var(--accent-ink); font-weight: 600; }
+.compagnie { margin: .25rem 0 0; font-size: .85rem; color: var(--muted); }
+.bloc { padding: 2rem 0; border-bottom: 1px solid var(--line); }
+.bloc h2 { margin: 0 0 1rem; font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-ink); font-weight: 700; }
+.synopsis p { margin: 0 0 .5rem; font-size: 1.15rem; line-height: 1.55; }
+ul { margin: 0; padding: 0; list-style: none; }
+.cast li, .palmares li, .dates li { padding: .45rem 0; border-bottom: 1px solid var(--line); }
+.cast li:last-child, .palmares li:last-child, .dates li:last-child { border-bottom: 0; }
+.prix { color: var(--accent-ink); font-weight: 600; }
+.ou { color: var(--muted); }
+.dates li { display: flex; flex-wrap: wrap; gap: .25rem 1rem; align-items: baseline; }
+.quand { font-weight: 600; }
+.note { margin: .5rem 0 0; font-size: .8rem; color: var(--muted); }
+.lien {
+    padding: .15rem .6rem; border-radius: .4rem;
+    background: var(--accent); color: var(--on-accent);
+    font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; text-decoration: none;
+}
+.photos { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; }
+figure { margin: 0; }
+figure img { width: 100%; height: auto; border-radius: .5rem; display: block; background: var(--surface); }
+figcaption { margin-top: .4rem; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cta { padding: 2.5rem 0; text-align: center; }
+.cta a {
+    display: inline-block; padding: .7rem 1.4rem; border-radius: .6rem;
+    background: var(--accent); color: var(--on-accent);
+    font-weight: 700; font-size: .8rem; letter-spacing: .1em;
+    text-transform: uppercase; text-decoration: none;
+}
+footer { max-width: 46rem; margin: 0 auto; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: .8rem; color: var(--muted); text-align: center; }
+
+/* Le répertoire (/spectacles/) */
+.repertoire { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1.25rem; padding: 2rem 0; }
+.repertoire a { display: block; text-decoration: none; color: inherit; }
+/* Le "height: auto" n'est pas décoratif : l'attribut height="400" du balisage
+   agit comme indication de présentation et fixe une hauteur définie. Avec une
+   largeur ET une hauteur définies, l'aspect-ratio n'a plus rien à calculer :
+   les vignettes reprennent le cadrage du fichier — portrait pour les unes,
+   paysage pour les autres — et la grille part en dents de scie. Le repasser
+   à auto redonne la main au ratio. */
+.repertoire img, .repertoire .sans-photo {
+    display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover;
+    border-radius: .5rem; background: var(--surface);
+    transition: opacity .35s ease;
+}
+.repertoire a:hover img { opacity: .78; }
+.repertoire .txt { display: block; padding-top: .6rem; }
+.repertoire .annee { display: block; font-size: .65rem; letter-spacing: .16em; color: var(--accent-ink); }
+.repertoire .nom { display: block; font: 600 1rem/1.25 'Cinzel', Georgia, serif; margin-top: .15rem; }
+.repertoire .role { display: block; font-size: .78rem; color: var(--muted); margin-top: .15rem; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }

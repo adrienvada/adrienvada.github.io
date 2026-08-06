@@ -432,4 +432,130 @@ visiteurs : `profil2_1080x1080.png` (avatar) et `profil_1000x1000.jpg`
 - Les données structurées « fiche artiste » (`Person`) sont dans le `<head>` ;
   les représentations (`TheaterEvent`) sont générées automatiquement depuis
   `dates.js` au chargement — rien à maintenir à la main.
-- Penser à mettre à jour `<lastmod>` dans `sitemap.xml` lors d'une refonte.
+- `sitemap.xml` **n'est plus écrit à la main** : il est régénéré par le script
+  des pages spectacle (ci-dessous), `<lastmod>` compris.
+
+---
+
+## Pages spectacle (`/spectacles/`) — à régénérer
+
+Le site est une page unique dont les univers sont fabriqués par JavaScript :
+un moteur de recherche qui lit `index.html` n'y voit ni synopsis, ni
+distribution, ni palmarès. Une page réelle par spectacle corrige cela.
+
+```bash
+node build/generer-pages-spectacles.js
+```
+
+Écrit `/spectacles/<slug>/index.html` pour chaque entrée de `SHOW_UNIVERSES`,
+la page-répertoire `/spectacles/`, la feuille `/spectacles/spectacle.css`, et
+réécrit `sitemap.xml`.
+
+**À relancer après toute modification de `univers.js`, `dates.js`, ou d'une
+ligne de CV dans `index.html`.** Rien n'y est ressaisi : tout est relu depuis
+ces trois fichiers. Ne jamais modifier un fichier de `/spectacles/` à la main,
+il sera écrasé.
+
+Le lien vers le répertoire, en pied de page d'`index.html`, est le seul chemin
+interne vers ces pages : sans lui, le sitemap les ferait indexer mais elles
+resteraient sans rien qui y mène. Ne pas le retirer.
+
+---
+
+## Icônes (`sprite SVG`) — à régénérer après ajout
+
+Le site n'utilise plus FontAwesome depuis un CDN (100 ko de CSS bloquant le
+rendu, puis 276 ko de polices, pour 41 dessins). Les icônes vivent dans un
+sprite `<symbol>` inséré juste après `<body>`, entre les repères
+`SPRITE-ICONES:DEBUT` / `SPRITE-ICONES:FIN`.
+
+```bash
+npm i @fortawesome/fontawesome-free@6.4.0     # une fois
+python3 build/construire-sprite-icones.py
+```
+
+Le script relève les icônes employées, va chercher leur tracé dans le paquet,
+réécrit le sprite et convertit les éventuelles balises `<i class="fa-…">`
+restantes. Il est **rejouable** : un second passage ne change rien.
+
+**Poser une icône dans le balisage :**
+
+```html
+<svg class="ico text-[11px] text-luxury-goldInk" aria-hidden="true">
+    <use href="#i-solid-masks-theater"></use>
+</svg>
+```
+
+`ico` donne la taille du texte courant (`1em`) et sa couleur (`currentColor`) :
+les classes Tailwind de taille et de couleur continuent donc de piloter
+l'icône exactement comme du temps de la police.
+
+**Changer une icône à l'exécution** : jamais en échangeant des classes — sur un
+SVG, `className` est un `SVGAnimatedString` en lecture seule et l'affectation
+est ignorée en silence. Passer par `setIcon(el, 'solid-pause')`, et par
+`el.setAttribute('class', …)` si les classes doivent changer aussi.
+
+Une icône posée **uniquement** par `setIcon` (jamais écrite dans le balisage)
+doit être ajoutée à la liste `SUPPLEMENT` du script, sinon elle manquera au
+sprite — c'est le cas de la lune de la bascule de thème.
+
+---
+
+## Démos voix — poids des fichiers
+
+Les studios livrent des masters : 320 kbps, stéréo, 48 kHz. C'est ce qu'il faut
+pour archiver, pas pour écouter en 4G dans un couloir de théâtre.
+
+```bash
+bash build/optimiser-sons.sh
+```
+
+Ré-encode les sept démos servies (21,2 Mo → 8,2 Mo). Le script traite chaque
+fichier selon ce qu'il contient réellement : repli mono pour les
+enregistrements dont les deux canaux sont identiques (vérifié, pas supposé),
+VBR stéréo pour les publicités et documentaires, qui ont une nappe musicale.
+
+**Garder les masters ailleurs que dans ce dépôt** : le script écrase les
+fichiers sur place, et un ré-encodage n'est pas réversible.
+
+---
+
+## Le château-mystère
+
+`/chateau-mystere-2026-V1/` est une page privée. Elle reste accessible par son
+adresse directe, mais porte `<meta name="robots" content="noindex, nofollow">`.
+
+Elle n'est **volontairement pas** interdite dans `robots.txt` : un robot doit
+pouvoir entrer pour lire la consigne de désindexation. Un `Disallow` ferait
+l'inverse de ce qu'on cherche — l'adresse resterait indexable depuis un lien
+extérieur, sans qu'aucune consigne ne puisse plus l'en déloger. **Ne pas
+ajouter de `Disallow` sur ce dossier.**
+
+---
+
+## Mesure d'audience
+
+Umami (compte européen), balise dans le `<head>` d'`index.html`. Sans cookie,
+sans identifiant persistant, sans recoupement entre sites : la mesure reste
+dans le cadre que la CNIL exempte de consentement, et le site n'a donc pas de
+bandeau à imposer en premier écran.
+
+Tout passe par **`track(nom, details)`** — aucun appel direct à `umami`
+ailleurs dans le code, pour n'avoir qu'un endroit à changer le jour où l'on
+change d'outil. Si l'outil n'a pas chargé (bloqueur, réseau), `track()` ne fait
+rien : aucune fonctionnalité du site ne dépend de la mesure.
+
+Deux façons de relever un geste :
+
+| Voie | Comment |
+|---|---|
+| **Déclarative** | `data-track="nom"` sur un lien ou un bouton, `data-track-detail="…"` en option. Fonctionne aussi sur ce qui est fabriqué après coup (dates, bandeau, filtres). |
+| **Explicite** | `track('nom', { … })` là où le geste n'est pas un clic. |
+
+Événements en place : `entree` (onglet d'arrivée), `intro` (coupée ou menée au
+sceau, et durée), `univers_ouvert` / `univers_ferme` (spectacle, durée de
+lecture), `demo_ecoute` (jalons 25 / 50 / 75 / 100 %, une seule fois par démo
+et par visite), `date_agenda`, `banner_next_date`.
+
+**Ne jamais transmettre autre chose que ce que la page affiche déjà** : noms de
+spectacle, noms de démo. Rien qui identifie qui que ce soit.

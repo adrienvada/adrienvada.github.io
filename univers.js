@@ -1015,7 +1015,7 @@ const SHOW_UNIVERSES = {
                 <img src="${escape(ph.src)}" alt="${escape(cap || title)}"
                      ${ph.pos ? `style="object-position:${ph.pos}"` : ''}
                      loading="${eager ? 'eager' : 'lazy'}" decoding="async">
-                <span class="u-fig-loupe" aria-hidden="true"><i class="fa-solid fa-expand"></i></span>
+                <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             ${over || ''}
             ${cap ? `<figcaption class="u-cap"><span>${escape(cap)}</span></figcaption>` : ''}
@@ -1092,7 +1092,7 @@ const SHOW_UNIVERSES = {
             <button type="button" class="u-video-play" data-u-video="${ref}"
                     aria-label="Lire la vidéo : ${escape(cap || title)}">
                 <img src="${escape(poster)}"${repli} alt="" loading="lazy" decoding="async">
-                <span class="u-video-icon" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
+                <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
             </button>
             ${cap ? `<figcaption class="u-cap"><span>${escape(cap)}</span></figcaption>` : ''}
         </figure>`;
@@ -1142,7 +1142,7 @@ const SHOW_UNIVERSES = {
                     aria-label="Agrandir l’affiche du film">
                 <img src="ressources/images/univers/${uni.slug}/affiche.jpg"
                      alt="Affiche — ${escape(title)}" loading="eager" decoding="async">
-                <span class="u-fig-loupe" aria-hidden="true"><i class="fa-solid fa-expand"></i></span>
+                <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
         </figure>`;
     }
@@ -1256,7 +1256,7 @@ const SHOW_UNIVERSES = {
 
         overlay.innerHTML = `
         <button type="button" class="u-close" aria-label="Fermer l’univers du spectacle">
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
         </button>
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
@@ -1281,17 +1281,17 @@ const SHOW_UNIVERSES = {
                 ${isFilm
                 ? `<button type="button" class="u-btn" data-u-jump>
                         Le film
-                        <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
                     </button>`
                 : dates || enCreation
                     ? `<button type="button" class="u-btn" data-u-jump>
                         ${dates ? 'Accéder aux dates' : 'Le spectacle'}
-                        <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
                     </button>`
                     : `<p class="u-hero-note">Ce spectacle n’est plus à l’affiche</p>`}
             </div>
 
-            <span class="u-scroll" aria-hidden="true"><i class="fa-solid fa-arrow-down"></i></span>
+            <span class="u-scroll" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span>
             <!-- Le masque neutre : l'objet du plateau, pas le rouage du
                  navigateur. Un ovoïde lisse, deux yeux, l'arête du nez, pas
                  de bouche — rien qui exprime, tout qui attend. Tracé ici
@@ -1318,7 +1318,7 @@ const SHOW_UNIVERSES = {
                 ? `<p class="u-empty">Les dates de tournée seront annoncées ici.</p>`
                 : `<p class="u-empty">Les représentations passées sont dans l’onglet Dates.</p>`)}
             <div class="u-actions">
-                ${info.url ? `<a class="u-btn" href="${escape(info.url)}" target="_blank" rel="noopener">${isFilm ? 'Fiche du film' : 'Page du spectacle'} <i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i></a>` : ''}
+                ${info.url ? `<a class="u-btn" href="${escape(info.url)}" target="_blank" rel="noopener">${isFilm ? 'Fiche du film' : 'Page du spectacle'} <svg class="ico" aria-hidden="true"><use href="#i-solid-up-right-from-square"></use></svg></a>` : ''}
                 ${isFilm || (enCreation && !dates) ? ''
                 : `<button type="button" class="u-btn u-btn-ghost" data-u-dates="${escape(info.key)}">Voir toutes les dates</button>`}
             </div>
@@ -1331,13 +1331,13 @@ const SHOW_UNIVERSES = {
              recours quand le plein cadre ne dit pas ce qu'on regarde. -->
         <div class="u-zoom" hidden role="dialog" aria-modal="true" aria-label="Photo agrandie">
             <button type="button" class="u-close u-zoom-close" aria-label="Fermer la photo">
-                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
             </button>
             <button type="button" class="u-zoom-nav u-zoom-prev" aria-label="Photo précédente">
-                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-chevron-left"></use></svg>
             </button>
             <button type="button" class="u-zoom-nav u-zoom-next" aria-label="Photo suivante">
-                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-chevron-right"></use></svg>
             </button>
             <figure>
                 <img alt="" decoding="async">
@@ -1656,8 +1656,9 @@ const SHOW_UNIVERSES = {
 
     // ── Ouverture : le panneau se déplie depuis la ligne cliquée ─────
     let openToken = 0;
+    let ouvertDepuis = 0;   // horodatage d'ouverture, pour mesurer la lecture
 
-    function open(li) {
+    function open(li, fromHistory) {
         const uni = universeFor(li);
         if (!uni) return false;
 
@@ -1700,8 +1701,20 @@ const SHOW_UNIVERSES = {
         document.documentElement.classList.add('u-locked');
         // Une entrée d'historique de plus : « précédent » referme l'univers
         // et rend le CV, au lieu de quitter le site (voir index.html).
-        window.pushOverlayState?.('univers');
+        // Cette entrée porte désormais UNE ADRESSE : #/univers/berenice. Un
+        // univers cesse d'être un cul-de-sac qu'il fallait avoir sous les yeux
+        // pour en parler — il s'envoie, se met en bio, se colle dans une
+        // candidature. Quand l'ouverture VIENT de l'historique, l'entrée
+        // existe déjà : on l'adopte au lieu d'en créer une seconde, sans quoi
+        // la refermer retomberait sur elle-même.
+        if (fromHistory) window.adoptOverlayState?.('univers');
+        else window.pushOverlayState?.('univers', ROUTE + uni.slug);
         isOpen = true;
+        // Quel univers ouvre-t-on, et lequel n'ouvre-t-on jamais ? La durée est
+        // relevée à la fermeture : ouvrir puis refermer en deux secondes n'est
+        // pas lire (voir close()).
+        ouvertDepuis = Date.now();
+        window.track?.('univers_ouvert', { spectacle: uni.slug, par: fromHistory ? 'historique' : 'cv' });
         overlay.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
         observeCaptions();
@@ -1717,6 +1730,15 @@ const SHOW_UNIVERSES = {
         // d'abord, sinon l'historique garderait une entrée orpheline.
         closeZoom();
         stopWriting();
+        // Combien de temps y est-on resté ? C'est cette durée, pas le nombre
+        // d'ouvertures, qui dit si un univers tient ou si on le referme aussitôt.
+        if (ouvertDepuis) {
+            window.track?.('univers_ferme', {
+                spectacle: overlay?.dataset.slug || '',
+                secondes: Math.round((Date.now() - ouvertDepuis) / 1000)
+            });
+            ouvertDepuis = 0;
+        }
         isOpen = false;
         openToken++;
         overlay.classList.remove('is-open', 'is-loading');
@@ -1728,6 +1750,74 @@ const SHOW_UNIVERSES = {
         const done = () => { overlay.hidden = true; overlay.innerHTML = ''; };
         if (REDUCED) done(); else setTimeout(done, 420);
         lastFocus?.focus?.({ preventScroll: true });
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  L'ADRESSE D'UN UNIVERS
+    //  Chaque spectacle a désormais la sienne : #/univers/berenice.
+    //
+    //  POURQUOI UN FRAGMENT ET PAS UN CHEMIN. Le site est une page unique
+    //  servie telle quelle par GitHub Pages : /univers/berenice réclamerait
+    //  un fichier à cet endroit et rendrait un 404 à froid. Le fragment, lui,
+    //  ne quitte jamais index.html — l'adresse tient sans serveur.
+    //
+    //  POURQUOI ÇA NE HEURTE PAS LES ONGLETS, qui utilisent aussi le fragment
+    //  (#page_cv). Leur gestionnaire ne réagit qu'aux valeurs correspondant à
+    //  un identifiant réel de la page ; « /univers/… » n'en est jamais un, et
+    //  passe donc à travers sans changer d'onglet.
+    // ════════════════════════════════════════════════════════════════════
+    const ROUTE = '#/univers/';
+
+    function slugFromHash() {
+        const h = location.hash || '';
+        return h.startsWith(ROUTE) ? decodeURIComponent(h.slice(ROUTE.length)) : '';
+    }
+
+    // Retrouve la ligne de CV d'un slug. La comparaison se fait sur le dataset
+    // et non par sélecteur : les clés portent apostrophes, accents et points
+    // d'interrogation (« À la barre, peine perdue ? »), qu'il faudrait sinon
+    // échapper — et une seule erreur d'échappement rendrait le spectacle
+    // introuvable, silencieusement.
+    function liForSlug(slug) {
+        if (!slug) return null;
+        const cle = Object.keys(SHOW_UNIVERSES).find(k => SHOW_UNIVERSES[k].slug === slug);
+        if (!cle) return null;
+        return Array.prototype.find.call(
+            document.querySelectorAll('.cv-item'),
+            li => li.dataset.cvShow === cle
+        ) || null;
+    }
+
+    function initRouting() {
+        // Entrée directe : l'adresse a été collée, ouverte depuis une bio,
+        // un message, une candidature.
+        const slugInitial = slugFromHash();
+        if (slugInitial) {
+            // On repose d'abord l'entrée courante sur l'onglet CV. Sans elle,
+            // refermer l'univers ferait un « précédent » qui sortirait du
+            // site : il n'y aurait rien derrière.
+            history.replaceState(null, '', '#page_cv');
+            // Un frame d'attente : `open` mesure la ligne du CV pour en faire
+            // partir le panneau, et cette mesure ne vaut rien tant que la page
+            // n'est pas mise en page.
+            requestAnimationFrame(() => {
+                const li = liForSlug(slugInitial);
+                if (li) open(li);
+                else history.replaceState(null, '', '#page_cv'); // slug inconnu : on reste au CV
+            });
+        }
+
+        // « Suivant » du navigateur vers une adresse d'univers : l'entrée
+        // existe déjà dans l'historique, on ouvre sans en créer une seconde.
+        // Le retour, lui, est déjà traité par le popstate d'index.html qui
+        // referme la couche — d'où le garde-fou `isOpen`, qui évite de
+        // rouvrir ce qu'on vient de fermer.
+        window.addEventListener('hashchange', () => {
+            const slug = slugFromHash();
+            if (!slug || isOpen) return;
+            const li = liForSlug(slug);
+            if (li) open(li, true);
+        });
     }
 
     function init() {
@@ -1810,6 +1900,9 @@ const SHOW_UNIVERSES = {
 
         markCvRows();
         bindLongPress();
+        // Après markCvRows : le routage ouvre un univers, et une ligne doit
+        // déjà porter sa marque pour que le panneau en reprenne la couleur.
+        initRouting();
     }
 
     // ── Ce que le CV promet ──────────────────────────────────────────
@@ -1847,8 +1940,10 @@ const SHOW_UNIVERSES = {
 
             const icon = li.querySelector('.cv-chevron');
             if (icon) {
-                icon.classList.remove('fa-chevron-down');
-                icon.classList.add('fa-arrow-right');
+                // Le chevron « je me déplie » devient une flèche « j'ouvre
+                // autre chose ». Avec le sprite, c'est le dessin visé qui
+                // change, plus la classe qui le nommait.
+                window.setIcon?.(icon, 'solid-arrow-right');
             }
 
             addWhisper(li, uni);
