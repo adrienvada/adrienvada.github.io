@@ -559,6 +559,7 @@
 
     function showSeal() {
         if (isDismissed) return;
+        sceauMontre = true;
         ctaEl.classList.add('intro-cta-visible');
         sealRing.style.transition = 'stroke-dashoffset ' + SEAL_DRAW_MS + 'ms cubic-bezier(0.4,0,0.2,1)';
         sealRingInner.style.transition = 'stroke-dashoffset ' + (SEAL_DRAW_MS - 150) + 'ms cubic-bezier(0.4,0,0.2,1) 0.18s';
@@ -577,12 +578,27 @@
     // ════════════════════════════════════════════════════════════
     var isDismissed = false;
     var dismissedAt = 0;
+    var sceauMontre = false;   // la séquence est-elle allée jusqu'au tampon ?
+    var demarreA = 0;          // début réel de l'intro (0 = elle n'a pas joué)
 
     function dismiss() {
         if (isDismissed) return;
         isDismissed = true;
         dismissedAt = performance.now();
         clearTimeout(tickerTimer);
+
+        // L'ouverture fait-elle fuir ? La réponse tient en deux chiffres :
+        // combien de temps on est resté, et si l'on a vu le sceau — c'est-à-dire
+        // si la séquence est allée à son terme ou si on l'a coupée en route.
+        // Rien n'est envoyé quand l'intro n'a pas joué (mouvement réduit,
+        // deuxième visite dans la session) : ce serait compter des spectateurs
+        // à qui l'on n'a rien montré.
+        if (demarreA) {
+            window.track?.('intro', {
+                fin: sceauMontre ? 'sceau' : 'coupee',
+                secondes: Math.round((dismissedAt - demarreA) / 1000)
+            });
+        }
 
         overlay.classList.add('intro-out');
         document.body.classList.remove('modal-open');
@@ -639,6 +655,7 @@
             return;
         }
         // Empêche la page de défiler derrière le voile
+        demarreA = performance.now();
         document.body.classList.add('modal-open');
         startParticlesWhenReady(0);
         runSequence();
