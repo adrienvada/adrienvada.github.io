@@ -86,6 +86,7 @@ FOLDERS = {
     "berenice":    "bérénice",
     "cleophene":   "cléophène",
     "fulgurees":   "fulgurés",
+    "hommemoderne": "homme moderne",
     "lerapt":      "le rapt",
     "peaudesanges": "peau des anges",
 }

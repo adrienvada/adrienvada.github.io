@@ -547,6 +547,77 @@ const SHOW_UNIVERSES = {
         ]
     },
 
+    "L'Homme moderne": {
+        slug: 'hommemoderne',
+        kind: 'film',
+        subtitle: 'mini-série en quatre épisodes',
+        role: 'Rôle · Arthur',
+        // Le parchemin du générique — un codex de Vinci où l’homme de
+        // Vitruve apprend la modernité — donne le fond ; le peignoir de
+        // Melvin, l’abricot de l’accent ; le pull d’Arthur, le bleu du
+        // halo. La série entière tient dans ce face-à-face de couleurs.
+        palette: {
+            bg: '#e6dbc8', surface: '#f4edde', text: '#241b12', muted: '#6f6252',
+            accent: '#cf8352', accentInk: '#a4602f', onAccent: '#ffffff',
+            line: 'rgba(36,27,18,0.15)', glow: 'rgba(74,108,138,0.38)'
+        },
+        genre: 'Comédie',
+        synopsis: ['Arthur veut devenir un homme moderne. Melvin, coach en peignoir, a la méthode : exercices, carnet, chanson. Quatre séances pour tout réapprendre — à commencer par Magali.'],
+        // Le générique de fin, tel qu’il s’écrit à l’écran : « de et avec ».
+        cast: ['Max Laure', 'Adèle Rawinski', 'Adrien Vada'],
+        castNote: 'Co-scénariste : Louis Mallejac · Générique illustré par Daphné Laure.',
+        sequence: [
+            {
+                chapter: '4 épisodes',
+                chapterTitle: 'La méthode Melvin en quatre séances — du premier date à la cérémonie du carnet, 2022-2023.'
+            },
+            {
+                p: [1], cadre: { 1: '74% 36%' },
+                over: ['« Ah Magali…', 'Oh Magali… »'],
+                overAt: 'gauche', overBy: 'Arthur'
+            },
+            {
+                p: [2, 3], cadre: { 2: '50% 40%', 3: '43% 31%' },
+                c: ['Magali, au ralenti du souvenir.', 'La porte de Melvin — épisode 1, Le date.']
+            },
+            {
+                q: ['« Je sais qu’il y a pas que ça qui compte.', 'Mais c’est important, non — d’assurer ? »'],
+                by: 'Arthur, première séance'
+            },
+            {
+                p: [4, 5], cadre: { 4: '80% 30%', 5: '42% 20%' },
+                c: ['« Donc… je suis moderne. »', 'La séance se termine en chanson.'],
+                aside: ['Un canapé pour cabinet, un carnet pour boussole : Melvin reçoit, Arthur récite.']
+            },
+            {
+                p: [6], cadre: { 6: '33% 55%' },
+                over: ['« J’avais envie d’elle, Melvin. »'],
+                overAt: 'droite', overBy: 'Épisode 3, Prédateur ?'
+            },
+            {
+                q: ['« J’aimerais que tu fasses attention aux femmes que tu croises.', 'Et surtout aux femmes qui t’attirent. »'],
+                by: 'Melvin — l’exercice de la semaine'
+            },
+            {
+                p: [7, 8], cadre: { 7: '20% 25%', 8: '58% 28%' },
+                c: ['Le cabinet, à la nuit tombée.', 'Épisode 4, Le carnet — l’argile avant l’épreuve.']
+            },
+            {
+                text: 'Écrite, tournée et montée à quatre mains avec Max Laure, la série suit ' +
+                    'la méthode séance après séance : des exercices, un carnet — et la ' +
+                    'modernité comme ligne d’arrivée.'
+            },
+            {
+                p: [9, 10], cadre: { 9: '30% 33%', 10: '78% 22%' },
+                c: ['Les concombres de la méthode.', 'Minuit : la cérémonie du carnet.']
+            },
+            {
+                video: 'https://www.youtube.com/watch?v=OT85GdKWsaM',
+                c: ['Épisode 1, Le date — la série commence ici.']
+            },
+        ]
+    },
+
     "La peau des anges n'est pas si douce": {
         slug: 'peaudesanges',
         kind: 'film',

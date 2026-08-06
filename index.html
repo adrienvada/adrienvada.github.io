@@ -51,7 +51,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@200;300;400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@200;300;400;500;600;700&family=Caveat:wght@500;600;700&display=swap"
         rel="stylesheet">
 
     <!-- Tailwind compilé (voir README-build.md : à régénérer après toute
@@ -822,6 +822,33 @@
 
         .bio-collapse>.bio-collapse-inner {
             overflow: hidden;
+        }
+
+        /* ── Bio manuscrite ──
+           Seule touche organique au milieu d'une mise en page très construite :
+           police à main levée, légère bascule et couleur d'encre — comme une
+           ligne glissée au stylo en marge d'un CV très cadré. */
+        .bio-handwritten {
+            font-family: 'Caveat', cursive;
+            font-weight: 600;
+            font-size: 1.3rem;
+            line-height: 1.25;
+            color: rgb(var(--c-gold-ink));
+            transform: rotate(-0.8deg);
+        }
+
+        .bio-handwritten .bio-quote {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85em;
+            color: rgb(var(--c-gold) / 0.5);
+            margin-right: 0.05em;
+        }
+
+        @media (min-width: 768px) {
+            .bio-handwritten {
+                font-size: 1.55rem;
+                transform: rotate(-1deg);
+            }
         }
 
         /* ── Tiroirs des spectacles du CV ── */
@@ -1858,10 +1885,11 @@
                          arbitraire, et saccaderait au repli). -->
                     <div class="bio-collapse" id="header-bio">
                         <div class="bio-collapse-inner">
-                            <p class="text-[11px] md:text-xs leading-relaxed text-luxury-textMuted max-w-xl pb-2.5">
-                                J'aime ce que chaque masque oblige à aller chercher.
-                                <br /> Le travail de préparation me plaît autant que le plateau — reprendre, préciser,
-                                du corps à la prosodie.
+                            <p class="bio-handwritten max-w-xl pb-3 mx-auto md:mx-0">
+                                <span class="bio-quote" aria-hidden="true">&laquo;</span>Ce que j'aime, c'est ce que
+                                chaque masque m'oblige à aller chercher.
+                                <br /> Autant de plaisir à préparer qu'à jouer — reprendre, préciser, jusqu'à ce que
+                                le corps dise ce que le texte tait.<span class="bio-quote" aria-hidden="true">&raquo;</span>
                             </p>
                         </div>
                     </div>
@@ -2323,6 +2351,30 @@
                              devient `data-cv-url`, et paraît au pied de l'univers
                              sous « Fiche du film ». Ces lignes n'ont pas de tiroir
                              de dates : un film n'a pas de tournée. -->
+                        <!-- L'Homme moderne -->
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
+                            data-cv-show="L'Homme moderne"
+                            data-cv-url="https://www.youtube.com/@lhommemoderne5020">
+                            <button type="button" class="cv-row-toggle block rounded">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <div class="cv-title-row">
+                                            <span
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022-23</span>
+                                            <span
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">L'Homme
+                                                moderne <span
+                                                    class="text-luxury-textMuted italic font-normal normal-case">(mini-série)</span></span>
+                                        </div>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">De et avec
+                                            Max Laure</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>
+                                    </div>
+                                </div>
+                            </button>
+                        </li>
                         <!-- La Peau des anges -->
                         <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
                             data-cv-show="La peau des anges n'est pas si douce"
