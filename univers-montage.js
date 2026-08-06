@@ -439,7 +439,12 @@ const UniversMontage = (function () {
 
         <div class="u-hero-wrap">
         <header class="u-hero">
-            <p class="u-eyebrow">${escape(info.year)}${info.badge ? ' · ' + escape(info.badge) : ''}</p>
+            <!-- Année · genre · badge. Le genre se lit dans le même souffle
+                 que la date et l'état de la tournée : c'est la ligne d'une
+                 feuille de salle, et elle dit en trois mots ce qu'on va voir
+                 avant même le titre. Il est pris sur l'univers et non sur la
+                 ligne du CV, qui ne le porte pas. -->
+            <p class="u-eyebrow">${escape(info.year)}${uni.genre ? ' · ' + escape(uni.genre) : ''}${info.badge ? ' · ' + escape(info.badge) : ''}</p>
             <h2 class="u-title" style="--u-title-chars:${tm.chars};--u-title-len:${tm.len}">${splitChars(info.title)}</h2>
             ${info.author ? `<p class="u-author">${escape(info.author)}</p>` : ''}
             ${uni.synopsis ? `<p class="u-synopsis">${splitWords(uni.synopsis)}</p>` : ''}

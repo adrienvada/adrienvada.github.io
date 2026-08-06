@@ -21,6 +21,10 @@
  *  palette   les couleurs du spectacle, injectées en variables --u-*
  *            sur le seul panneau (le reste du site n'est pas repeint).
  *  synopsis  s'inscrit mot à mot sous le titre. 2 à 4 phrases.
+ *  genre     tragédie, comédie, fiction d'anticipation… Il rejoint
+ *            l'année et le badge sur la ligne qui coiffe le titre :
+ *            « 2027 · FICTION D'ANTICIPATION · EN CRÉATION ». Deux ou
+ *            trois mots — c'est une ligne, pas une définition.
  *  cast      la distribution, en générique de fin. Le nom d'Adrien y figure
  *            comme les autres, en dernier, et rien ne l'en distingue :
  *            c'est un générique, pas une affiche.
@@ -136,10 +140,22 @@ const SHOW_UNIVERSES = {
             accent: '#b8452f', accentInk: '#cf5a41', onAccent: '#ffffff',
             line: 'rgba(238,234,234,0.14)', glow: 'rgba(184,69,47,0.30)'
         },
-        // Pas de synopsis : je n'en sais rien, et en inventer un serait pire
-        // que de n'en pas mettre. La page se tient très bien sans — et le
-        // murmure du CV reste muet tant qu'il n'y a rien à murmurer.
-        sequence: []
+        genre: 'Fiction d’anticipation',
+        synopsis: ['Paris, 2077. Pas de guerre nucléaire, pas de fertilité perdue, pas d’intelligence venue d’ailleurs pour nous exterminer ou nous sauver : le monde a seulement continué. Un meurtre étrange, une enquêtrice — et au bout de la piste, notre système agro-alimentaire.'],
+        // Un seul bloc, tant que le plateau n'existe pas : la note
+        // d'intention. Condensée des intentions d'Angelo Jossec, à la
+        // troisième personne — le « je » d'un metteur en scène sur le site
+        // d'un comédien se lirait comme celui d'Adrien.
+        sequence: [
+            {
+                text: 'Sous couvert d’une enquête policière, Cassandre(s) imagine le quotidien ' +
+                    'de la génération 2000 arrivée au terme de son espérance de vie : la forme est ' +
+                    'au service du divertissement quand le fond est l’objet de la diversion. Pour ' +
+                    'que l’anticipation ne soit pas reçue comme de la science-fiction, le spectacle ' +
+                    's’ouvre sur une chronologie de notre développement agro-industriel, de 1850 à ' +
+                    '2077 — un générique qui fait basculer la fiction du côté du probable.'
+            },
+        ]
     },
 
     "L'imaginaire forcé": {
@@ -153,6 +169,7 @@ const SHOW_UNIVERSES = {
             accent: '#d4823c', accentInk: '#e39a58', onAccent: '#160f0a',
             line: 'rgba(212,130,60,0.20)', glow: 'rgba(212,130,60,0.30)'
         },
+        genre: 'Comédie',
         synopsis: ['Quand la censure académique leur impose Le Mariage Forcé à la place du Malade Imaginaire, des comédiens font déraper la lecture jusqu\'à transformer la classe en un chantier théâtral et musical jubilatoire.'],
         sequence: []
     },
@@ -168,6 +185,7 @@ const SHOW_UNIVERSES = {
         },
         cast: ['Angelo Jossec', 'Manon Rivier', 'Lauren Toulin', 'Adrien Vada'],
         credit: 'Olivier Héron',
+        genre: 'Tragédie',
         synopsis: 'Rome, an 79. \n Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
         sequence: [
             { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes en alexandrin' },
@@ -226,6 +244,7 @@ const SHOW_UNIVERSES = {
         cast: ['Angelo Jossec', 'Manon Rivier', 'Lauren Toulin', 'Johann Abiola',
             'Adrien Vada'],
         credit: 'Arnaud Bertereau',
+        genre: 'Tragédie',
         synopsis: ['Royaume de Pyrie, 124 av. J-C.',
             'Lorsqu’un roi meurt et qu’il est père de jumeaux, lequel des deux est l’aîné et doit prendre sa place ? La reine veuve Cléophène, dépositaire du pouvoir, doit céder sa couronne, et elle seule connaît le secret de son successeur...'],
         sequence: [
@@ -302,6 +321,7 @@ const SHOW_UNIVERSES = {
             'Adrien Vada'],
         castNote: '* en alternance',
         credit: 'Clara Delmas',
+        genre: 'Comédie',
         synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes. Déguisée en berger sous le nom de Ganymède, elle est accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d\'autre membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
         sequence: [
             {
@@ -362,9 +382,9 @@ const SHOW_UNIVERSES = {
         // craie : l'école, le tableau, la clarté.
         cvAccent: '#8fbfe8',
         cast: ['Steeve Brunet', 'Marine Chambrier', 'Adrien Vada'],
+        genre: 'Spectacle de prévention',
         synopsis: ['Un spectacle de prévention, joué au collège.',
-            'Violences sexistes et sexuelles, stéréotypes, consentement —',
-            'à travers le prisme de la justice.'],
+            'Violences sexistes et sexuelles, stéréotypes, consentement — à travers le prisme de la justice.'],
         sequence: [
             {
                 chapter: '40 min',
@@ -413,6 +433,7 @@ const SHOW_UNIVERSES = {
             'Adrien Vada'],
         castNote: 'Jeu et mise en scène collective.',
         credit: 'Arnaud Bertereau',
+        genre: 'Théâtre documentaire',
         synopsis: ['Inspirés d’affaires réelles, des extraits de procès révèlent la complexité d’une justice en souffrance face à l\'ampleur des violences conjugales.'],
         sequence: [
             {
@@ -471,6 +492,7 @@ const SHOW_UNIVERSES = {
         cvAccent: '#4d5fc4',
         cast: ['Lia Alamichel', 'Amélie Chalmey', 'Adrien Vada'],
         credit: 'Thypa Photographie',
+        genre: 'Fable contemporaine',
         synopsis: ['Une fratrie. Un village. Perdu.',
             'La foudre y a frappé il y a quelques années et y a laissé des survivant.e.s : les fulguré.e.s. À l’occasion d’un nouvel an, la fratrie s’y perd et rencontre ses habitants. Alors que « tout est chaos », la foudre frappe à nouveau.'],
         sequence: [
@@ -530,11 +552,9 @@ const SHOW_UNIVERSES = {
             accent: '#2c4a8f', accentInk: '#223d78', onAccent: '#ffffff',
             line: 'rgba(28,26,23,0.15)', glow: 'rgba(199,158,58,0.30)'
         },
+        genre: 'Film sur l’art',
         // Le synopsis officiel de la fiche Unifrance, tel quel.
-        synopsis: ['Il était une fois la véritable histoire',
-            'des tableaux de Vermeer. Tout le monde l’a oubliée.',
-            'Certains détails de la vie d’une femme',
-            'doivent rester secrets.'],
+        synopsis: ['Il était une fois la véritable histoire des tableaux de Vermeer. Tout le monde l’a oubliée. Certains détails de la vie d’une femme doivent rester secrets.'],
         // La distribution de l'affiche : luth, viole de gambe, narration.
         cast: ['Constance Grard', 'Louise Pierrard', 'Adrien Vada'],
         castNote: 'Luth, viole de gambe, narration.',
@@ -598,10 +618,8 @@ const SHOW_UNIVERSES = {
         // prend un corail délavé de soleil — acidulé comme le film, et qui
         // ne se confond avec aucun voisin.
         cvAccent: '#de7a5a',
-        synopsis: ['Deux ouvrières enlèvent le fils de leur patron',
-            'pour en tirer une rançon.',
-            'Elles se trompent d’homme : c’est un vendeur de ventilation',
-            'qu’elles ramènent — ravi d’échapper à son quotidien.'],
+        genre: 'Comédie',
+        synopsis: ['Deux ouvrières enlèvent le fils de leur patron pour en tirer une rançon. Elles se trompent d’homme : c’est un vendeur de ventilation ravi d’échapper à son quotidien.'],
         // La distribution du générique de fin du film.
         cast: ['Cécile Dessillons', 'Ladane Dehdar', 'Ardag Basmadjian',
             'Angélique Métier', 'Adrien Vada'],
