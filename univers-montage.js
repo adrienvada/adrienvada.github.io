@@ -76,22 +76,6 @@ const UniversMontage = (function () {
     // on réécrit les deux nombres qu'on y a lus.
     const FRAME_PAIR = /^(\d{1,3}(?:\.\d+)?)%\s+(\d{1,3}(?:\.\d+)?)%$/;
 
-    // ── LA VIDÉO ─────────────────────────────────────────────────────
-    //  Un temps du montage peut être un extrait filmé :
-    //
-    //      { video: 'dQw4w9WgXcQ', c: ['Teaser du spectacle'] }
-    //
-    //  On accepte l'identifiant seul ou l'adresse entière — youtu.be,
-    //  watch?v=, /embed/, /shorts/ : c'est ce qu'on a sous la main quand
-    //  on copie depuis YouTube, et rien ne sert de le faire retaper.
-    //
-    //  RIEN NE PART VERS YOUTUBE TANT QU'ON N'A PAS CLIQUÉ. Le bloc
-    //  n'affiche d'abord que l'affiche du film et un bouton ; le lecteur
-    //  n'est fabriqué qu'au clic. Une iframe YouTube pèse un mégaoctet de
-    //  scripts et pose ses traceurs à l'affichage : en poser quatre dans
-    //  un univers ruinerait le défilé qu'on vient tout juste d'alléger.
-    const YT_ID = /^[A-Za-z0-9_-]{11}$/;
-
     // ── Le montage ───────────────────────────────────────────────────
     //  La séquence est écrite à la main dans SHOW_UNIVERSES : c'est un
     //  montage, pas un diaporama, et le nombre de photos d'un temps
@@ -242,30 +226,73 @@ const UniversMontage = (function () {
         </div>`;
     }
 
-    function videoId(uni, raw) {
+
+    // ── LA VIDÉO ─────────────────────────────────────────────────────
+    //  Un temps du montage peut être un extrait filmé :
+    //
+    //      { video: 'dQw4w9WgXcQ', c: ['Teaser du spectacle'] }
+    //
+    //  On accepte l'identifiant seul ou l'adresse entière — youtu.be,
+    //  watch?v=, /embed/, /shorts/ : c'est ce qu'on a sous la main quand
+    //  on copie depuis YouTube, et rien ne sert de le faire retaper.
+    //
+    //  RIEN NE PART VERS YOUTUBE TANT QU'ON N'A PAS CLIQUÉ. Le bloc
+    //  n'affiche d'abord que l'affiche du film et un bouton ; le lecteur
+    //  n'est fabriqué qu'au clic. Une iframe YouTube pèse un mégaoctet de
+    //  scripts et pose ses traceurs à l'affichage : en poser quatre dans
+    //  un univers ruinerait le défilé qu'on vient tout juste d'alléger.
+    const YT_ID = /^[A-Za-z0-9_-]{11}$/;
+    const VIMEO_ID = /^\d{6,12}$/;
+    // Ce qui peut légitimement finir dans data-u-video — et rien d'autre.
+    const VIDEO_REF = /^(yt:[A-Za-z0-9_-]{11}|vimeo:\d{6,12})$/;
+    // Une jaquette est un nom de fichier du dossier de l'univers, pas un
+    // chemin : pas de « / », pas d'espace, rien qui puisse sortir du dossier.
+    const JAQUETTE_OK = /^[A-Za-z0-9._-]+$/;
+
+    function videoRef(uni, raw) {
         const s = String(raw || '').trim();
-        if (YT_ID.test(s)) return s;
-        const m = s.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/|\/live\/)([A-Za-z0-9_-]{11})/);
-        if (m) return m[1];
-        console.warn(`[univers] ${uni.slug} : vidéo « ${raw} » non reconnue — le bloc est ignoré. ` +
-            `Attendu : un identifiant YouTube de 11 signes, ou l'adresse complète de la vidéo.`);
+        if (YT_ID.test(s)) return 'yt:' + s;
+        let m = s.match(/(?:youtu\.be\/|v=|youtube\.com\/(?:embed|shorts|live)\/)([A-Za-z0-9_-]{11})/);
+        if (m) return 'yt:' + m[1];
+        m = s.match(/vimeo\.com\/(?:video\/)?(\d{6,12})/);
+        if (m) return 'vimeo:' + m[1];
+        if (VIMEO_ID.test(s)) return 'vimeo:' + s;
+        console.warn(`[univers] ${uni.slug} : vidéo « ${raw} » non reconnue — le bloc est ignoré. ` +
+            `Attendu : une adresse YouTube ou Vimeo, ou l'identifiant seul.`);
         return '';
     }
 
     function videoHtml(uni, beat, title) {
-        const id = videoId(uni, beat.video);
-        if (!id) return '';
+        const ref = videoRef(uni, beat.video);
+        if (!ref) return '';
         const cap = (beat.c && beat.c[0]) || '';
+        // La jaquette : l'image montrée avant le clic. YouTube en fournit
+        // une ; Vimeo n'en donne aucune sans appeler ses serveurs — ce qu'on
+        // se refuse à faire avant le clic. Une vidéo Vimeo demande donc sa
+        // jaquette locale (champ `jaquette`, fichier du dossier de
+        // l'univers, préparé par le script comme l'affiche).
+        let poster = '', repli = '';
+        if (beat.jaquette && JAQUETTE_OK.test(String(beat.jaquette))) {
+            poster = `ressources/images/univers/${uni.slug}/${beat.jaquette}`;
+        } else if (ref.startsWith('yt:')) {
+            const id = ref.slice(3);
+            poster = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+            repli = ` data-u-poster="${id}"`;
+        } else {
+            console.warn(`[univers] ${uni.slug} : une vidéo Vimeo demande une ` +
+                `jaquette locale (champ \`jaquette\`) — le bloc est ignoré.`);
+            return '';
+        }
         return `<figure class="u-video u-reveal">
-            <button type="button" class="u-video-play" data-u-video="${id}"
+            <button type="button" class="u-video-play" data-u-video="${ref}"
                     aria-label="Lire la vidéo : ${escape(cap || title)}">
-                <img src="https://i.ytimg.com/vi/${id}/maxresdefault.jpg"
-                     data-u-poster="${id}" alt="" loading="lazy" decoding="async">
+                <img src="${escape(poster)}"${repli} alt="" loading="lazy" decoding="async">
                 <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
             </button>
             ${cap ? `<figcaption class="u-cap"><span>${escape(cap)}</span></figcaption>` : ''}
         </figure>`;
     }
+
 
     // ── L'AFFICHE ────────────────────────────────────────────────────
     //  Un film s'ouvre sur son affiche : elle précède le montage, comme au
@@ -519,9 +546,9 @@ ${statique ? '' : `<!-- Agrandissement : la photo entière, jamais recadrée. C'
 
     return {
         panelHtml, datesHtml, escape, toLines, splitWords, splitChars, titleMetrics, revealWords,
-        longestLine, photoSrc, framePos, figureHtml, overHtml, videoId,
+        longestLine, photoSrc, framePos, figureHtml, overHtml, videoRef,
         videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock,
-        FRAMES, FRAME_PAIR, YT_ID, LAYOUT_BY_COUNT
+        FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT
     };
 })();
 

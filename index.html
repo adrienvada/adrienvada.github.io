@@ -2280,7 +2280,73 @@
                     </ul>
                 </section>
 
-                <!-- SECTION 1.2: PROFIL (Sleek Compact Widgets)
+                <!-- SECTION 1.2: COURTS-MÉTRAGES -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal">
+                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-goldInk border border-stone-200">
+                            <svg class="ico text-[11px]" aria-hidden="true"><use href="#i-solid-film"></use></svg>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">
+                            Courts-métrages</h3>
+                    </div>
+                    <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
+                        <!-- Les courts métrages ouvrent un univers, comme les
+                             spectacles : même structure de ligne, même bouton.
+                             L'adresse IMDb n'est plus le lien de la ligne — elle
+                             devient `data-cv-url`, et paraît au pied de l'univers
+                             sous « Fiche du film ». Ces lignes n'ont pas de tiroir
+                             de dates : un film n'a pas de tournée. -->
+                        <!-- La Peau des anges -->
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
+                            data-cv-show="La peau des anges n'est pas si douce"
+                            data-cv-url="https://www.imdb.com/fr/title/tt27404051/">
+                            <button type="button" class="cv-row-toggle block rounded">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <div class="cv-title-row">
+                                            <span
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
+                                            <span
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">La
+                                                peau des anges n'est pas si douce</span>
+                                        </div>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Réalisé par
+                                            Emma Fridé</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>
+                                    </div>
+                                </div>
+                            </button>
+                        </li>
+                        <!-- Le Rapt -->
+                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
+                            data-cv-show="Le rapt"
+                            data-cv-url="https://www.imdb.com/fr/title/tt8957022/">
+                            <button type="button" class="cv-row-toggle block rounded">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <div class="cv-title-row">
+                                            <span
+                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2019</span>
+                                            <span
+                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Le
+                                                rapt</span>
+                                        </div>
+                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Réalisé par
+                                            Cécile Dessillons et Ladane Dehdar</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>
+                                    </div>
+                                </div>
+                            </button>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- SECTION 1.3: PROFIL (Sleek Compact Widgets)
                      Remontée juste sous le théâtre : c'est la fiche technique
                      de l'interprète — taille, tessiture, langues, armes — et
                      elle décide plus vite qu'un titre de spectacle si on
@@ -2413,72 +2479,6 @@
                             </div>
                         </div>
                     </div>
-                </section>
-
-                <!-- SECTION 1.3: COURTS-MÉTRAGES -->
-                <section class="glass-card rounded-xl p-4 shadow-sm reveal">
-                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
-                        <div
-                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-goldInk border border-stone-200">
-                            <svg class="ico text-[11px]" aria-hidden="true"><use href="#i-solid-film"></use></svg>
-                        </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">
-                            Courts-métrages</h3>
-                    </div>
-                    <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
-                        <!-- Les courts métrages ouvrent un univers, comme les
-                             spectacles : même structure de ligne, même bouton.
-                             L'adresse IMDb n'est plus le lien de la ligne — elle
-                             devient `data-cv-url`, et paraît au pied de l'univers
-                             sous « Fiche du film ». Ces lignes n'ont pas de tiroir
-                             de dates : un film n'a pas de tournée. -->
-                        <!-- La Peau des anges -->
-                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
-                            data-cv-show="La peau des anges n'est pas si douce"
-                            data-cv-url="https://www.imdb.com/fr/title/tt27404051/">
-                            <button type="button" class="cv-row-toggle block rounded">
-                                <div class="flex items-start justify-between gap-2">
-                                    <div class="min-w-0">
-                                        <div class="cv-title-row">
-                                            <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
-                                            <span
-                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">La
-                                                peau des anges n'est pas si douce</span>
-                                        </div>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Réalisé par
-                                            Emma Fridé</p>
-                                    </div>
-                                    <div class="flex items-center gap-2 flex-shrink-0">
-                                        <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>
-                                    </div>
-                                </div>
-                            </button>
-                        </li>
-                        <!-- Le Rapt -->
-                        <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
-                            data-cv-show="Le rapt"
-                            data-cv-url="https://www.imdb.com/fr/title/tt8957022/">
-                            <button type="button" class="cv-row-toggle block rounded">
-                                <div class="flex items-start justify-between gap-2">
-                                    <div class="min-w-0">
-                                        <div class="cv-title-row">
-                                            <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2019</span>
-                                            <span
-                                                class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Le
-                                                rapt</span>
-                                        </div>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Réalisé par
-                                            Cécile Dessillons et Ladane Dehdar</p>
-                                    </div>
-                                    <div class="flex items-center gap-2 flex-shrink-0">
-                                        <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>
-                                    </div>
-                                </div>
-                            </button>
-                        </li>
-                    </ul>
                 </section>
 
                 <!-- SECTION 1.4: FORMATION -->

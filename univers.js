@@ -67,16 +67,18 @@
  *  UNE VIDÉO
  *  ---------
  *    { video: 'dQw4w9WgXcQ', c: ['Teaser du spectacle'] }
- *        Un extrait YouTube sur toute la largeur, en 16/9. On accepte
- *        l'identifiant seul ou l'adresse entière — youtu.be, watch?v=,
- *        /embed/, /shorts/ : ce qu'on a sous la main en copiant depuis
- *        YouTube. `c` donne la légende, comme pour une photo.
+ *    { video: 'https://vimeo.com/799006724', jaquette: 'teaser.jpg' }
+ *        Un extrait YouTube OU Vimeo sur toute la largeur, en 16/9. On
+ *        accepte l'identifiant seul ou l'adresse entière — ce qu'on a sous
+ *        la main en copiant. `c` donne la légende, comme pour une photo.
  *        Une valeur non reconnue est signalée dans la console et le bloc
  *        est ignoré — jamais de lecteur monté sur une adresse douteuse.
- *        RIEN N'EST DEMANDÉ À YOUTUBE AVANT LE CLIC : on ne montre que
- *        l'affiche du film. Le lecteur — un mégaoctet de scripts et ses
- *        traceurs — n'est fabriqué qu'au moment où l'on veut voir.
- *
+ *        RIEN N'EST DEMANDÉ À L'HÉBERGEUR AVANT LE CLIC : on ne montre que
+ *        la jaquette. YouTube en fournit une ; Vimeo non — une vidéo Vimeo
+ *        demande donc `jaquette`, un fichier du dossier de l'univers
+ *        (déposer « teaser.jpg » dans le dossier source, le script le
+ *        prépare comme l'affiche). Le lecteur — un mégaoctet de scripts et
+ *        ses traceurs — n'est fabriqué qu'au moment où l'on veut voir.
  *  LE CADRAGE D'UNE PHOTO
  *  ----------------------
  *    { p: [9, 5, 6], cadre: { 9: 'haut', 5: '38% 22%' } }
@@ -517,7 +519,8 @@ const SHOW_UNIVERSES = {
     "La peau des anges n'est pas si douce": {
         slug: 'peaudesanges',
         kind: 'film',
-        role: 'Court métrage · 12 minutes',
+        affiche: true,
+        role: 'Rôle · Narration',
         // Vermeer, littéralement : le plâtre clair d'un mur éclairé par la
         // gauche, l'outremer du turban, et le jaune de plomb-étain en
         // guise de lueur. La palette du film est celle des tableaux dont
@@ -527,13 +530,53 @@ const SHOW_UNIVERSES = {
             accent: '#2c4a8f', accentInk: '#223d78', onAccent: '#ffffff',
             line: 'rgba(28,26,23,0.15)', glow: 'rgba(199,158,58,0.30)'
         },
-        synopsis: ['L’histoire secrète des trente-deux tableaux',
-            'de Johannes Vermeer.',
-            'Elle est entièrement vraie,',
-            'puisque la cinéaste l’a entièrement imaginée.'],
+        // Le synopsis officiel de la fiche Unifrance, tel quel.
+        synopsis: ['Il était une fois la véritable histoire',
+            'des tableaux de Vermeer. Tout le monde l’a oubliée.',
+            'Certains détails de la vie d’une femme',
+            'doivent rester secrets.'],
+        // La distribution de l'affiche : luth, viole de gambe, narration.
+        cast: ['Constance Grard', 'Louise Pierrard', 'Adrien Vada'],
+        castNote: 'Luth, viole de gambe, narration.',
         prix: ['Prix du jury · Jeju International Film Festival, 2024',
             'Meilleur court métrage · Albany International Film Festival, 2023'],
-        sequence: []
+        sequence: [
+            {
+                chapter: '12 min',
+                chapterTitle: 'Entre documentaire et fiction, un voyage dans les tableaux de Vermeer — La Fémis, 2022.'
+            },
+            {
+                p: [1], cadre: { 1: '50% 35%' },
+                c: ['Au musée, devant « La Laitière ». C’est ici que le secret commence.']
+            },
+            {
+                q: ['« Cette histoire est entièrement vraie,', 'puisque je l’ai imaginée d’un bout à l’autre. »'],
+                by: 'Emma Fridé'
+            },
+            {
+                p: [2, 3], cadre: { 2: '30% 45%', 3: '50% 45%' },
+                c: ['Le globe du « Géographe ».', 'Un visage affleure dans les craquelures.'],
+                aside: ['Le film s’approche des toiles jusqu’à ce que la peinture devienne paysage.']
+            },
+            {
+                p: [4], cadre: { 4: '50% 40%' },
+                over: ['« Lorsqu’il s’agit de la vie d’une femme,', 'certains secrets sont faits pour durer. »'],
+                overAt: 'bas'
+            },
+            {
+                text: 'Faites un voyage romanesque à travers ses peintures : découvrez ' +
+                    'les paysages et les personnages issus de l’imagination du peintre.'
+            },
+            {
+                p: [5], cadre: { 5: '50% 45%' },
+                c: ['La peau des anges, au plus près.']
+            },
+            {
+                video: 'https://vimeo.com/799006724',
+                jaquette: 'teaser.jpg',
+                c: ['Bande-annonce — Le FIFA 41, Montréal']
+            },
+        ]
     },
 
     'Le rapt': {
@@ -638,9 +681,9 @@ const SHOW_UNIVERSES = {
     // se relit sans avoir à vérifier deux cents points d'appel.
     const {
         panelHtml, datesHtml, escape, toLines, splitWords, splitChars, titleMetrics, revealWords,
-        longestLine, photoSrc, framePos, figureHtml, overHtml, videoId,
+        longestLine, photoSrc, framePos, figureHtml, overHtml, videoRef,
         videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock,
-        FRAMES, FRAME_PAIR, YT_ID, LAYOUT_BY_COUNT
+        FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT
     } = UniversMontage;
 
     const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -806,8 +849,6 @@ const SHOW_UNIVERSES = {
         });
         return out;
     }
-
-
 
 
 
@@ -1359,11 +1400,15 @@ const SHOW_UNIVERSES = {
             // l'affiche, et démarre — on vient de cliquer sur « lire ».
             const play = e.target.closest('[data-u-video]');
             if (play) {
-                const id = play.dataset.uVideo;
-                if (!YT_ID.test(id)) return;
+                const ref = play.dataset.uVideo;
+                if (!VIDEO_REF.test(ref)) return;
+                const id = ref.slice(ref.indexOf(':') + 1);
                 const frame = document.createElement('iframe');
-                frame.src = `https://www.youtube-nocookie.com/embed/${id}` +
-                    '?autoplay=1&rel=0&modestbranding=1';
+                // Les deux hébergeurs, chacun sous sa forme la plus sobre :
+                // nocookie pour YouTube, dnt (do not track) pour Vimeo.
+                frame.src = ref.startsWith('yt:')
+                    ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`
+                    : `https://player.vimeo.com/video/${id}?autoplay=1&dnt=1&title=0&byline=0&portrait=0`;
                 frame.title = play.getAttribute('aria-label') || 'Vidéo';
                 frame.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen';
                 frame.allowFullscreen = true;
