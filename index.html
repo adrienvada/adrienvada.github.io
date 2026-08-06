@@ -1727,6 +1727,105 @@
                 animation: none;
             }
         }
+
+        /* ── LE BOUTON « RÉSERVER » PREND SA LIGNE SUR PETIT ÉCRAN ──
+           Le bandeau range trois blocs sur une rangée : la mention
+           « Prochainement », le titre avec sa date, et le bouton. Sur 375 px,
+           le bouton — qui ne se comprime pas, et c'est normal pour une cible
+           tactile — laisse si peu de largeur au titre que « À la barre, peine
+           perdue ? » se casse en TROIS lignes. On lit alors trois fragments
+           empilés au lieu d'un titre.
+
+           Le conteneur enroule déjà (flex-wrap) : il suffit de donner au
+           bouton une base de 100 % pour qu'il descende d'office. Le titre
+           retrouve toute la largeur, et la réservation devient une cible
+           pleine largeur — ce qu'on veut d'une action principale au pouce.
+
+           Invisible tant qu'aucune date n'a de `bookingUrl` : sans lien de
+           billetterie, le bouton n'est pas rendu du tout. */
+        @media (max-width: 767px) {
+            #next-date-banner a[data-track="date_booking"] {
+                flex-basis: 100%;
+                justify-content: center;
+                margin-top: 2px;
+            }
+        }
+
+        /* ── Lueur du bandeau « prochainement » ──
+           Un reflet fait le tour du cadre à intervalle régulier — même
+           logique de respiration que la guirlande du CV (long repos, passage
+           bref) plutôt qu'un halo permanent : une politesse qui signale, pas
+           une réclame qui insiste.
+           Technique : un anneau en dégradé conique, masqué pour n'allumer
+           que le filet de bordure (mask-composite: exclude retire le
+           centre) — jamais l'intérieur de la carte. C'est l'ANGLE du
+           dégradé qui tourne (--shine-angle, via @property), pas le
+           pseudo-élément : la carte est bien plus large que haute, et
+           faire pivoter tout le rectangle projetterait ses coins loin
+           au-dessus et en dessous d'elle — essayé, c'est spectaculairement
+           faux. Sans @property (vieux Firefox), l'angle ne s'anime pas :
+           le reflet flashe alors sur place au lieu de tourner — dégradation
+           correcte, rien ne déborde. */
+        @property --shine-angle {
+            syntax: '<angle>';
+            inherits: false;
+            initial-value: 0deg;
+        }
+
+        .next-date-shine {
+            position: relative;
+        }
+
+        .next-date-shine::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1.5px;
+            background: conic-gradient(from var(--shine-angle),
+                    transparent 0deg,
+                    transparent 255deg,
+                    rgb(var(--c-gold-light) / 0.75) 282deg,
+                    #fff 298deg,
+                    rgb(var(--c-gold-light) / 0.75) 314deg,
+                    transparent 341deg,
+                    transparent 360deg);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            filter: drop-shadow(0 0 3px rgb(var(--c-gold-light) / 0.5));
+            opacity: 0;
+            pointer-events: none;
+            animation: next-date-shine-sweep 8s ease-in-out infinite;
+        }
+
+        @keyframes next-date-shine-sweep {
+            0% {
+                opacity: 0;
+                --shine-angle: 0deg;
+            }
+
+            4% {
+                opacity: 1;
+            }
+
+            38% {
+                opacity: 1;
+                --shine-angle: 360deg;
+            }
+
+            46%,
+            100% {
+                opacity: 0;
+                --shine-angle: 360deg;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .next-date-shine::after {
+                animation: none;
+            }
+        }
     </style>
 </head>
 
@@ -4002,7 +4101,7 @@
                 : '';
 
             bandeau.innerHTML = `
-                <div class="glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     <span class="flex items-center gap-1.5 flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
                         <span class="next-date-dot" aria-hidden="true"></span> Prochainement
                     </span>
