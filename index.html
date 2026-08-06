@@ -2984,7 +2984,7 @@
                                 <svg class="ico text-[10px]" aria-hidden="true">
                                     <use href="#i-solid-magnifying-glass"></use>
                                 </svg>
-                                <span id="dates-search-open-label">Rechercher une date</span>
+                                <span id="dates-search-open-label">Rechercher une représentation</span>
                             </button>
                         </div>
 
@@ -4525,7 +4525,7 @@
             if (!panel) return;
             panel.classList.toggle('is-open', open);
             btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-            if (label) label.textContent = open ? 'Masquer la recherche' : 'Rechercher une date';
+            if (label) label.textContent = open ? 'Masquer la recherche' : 'Rechercher une représentation';
             if (open) {
                 revealFilterRows(false);
             }
