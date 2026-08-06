@@ -1721,7 +1721,13 @@
         @media (max-width: 767px) {
             #nav-barre {
                 position: sticky;
-                top: 0;
+                /* PAS COLLÉE AU BORD : huit pixels de jour au-dessus d'elle.
+                   À zéro, la barre semblait soudée à l'écran — une bande
+                   d'interface plutôt qu'un élément de la page. Ce filet de
+                   vide la fait FLOTTER : on voit le contenu défiler dessous
+                   ET au-dessus, et l'ombre portée trouve enfin de la place
+                   pour se lire. */
+                top: 8px;
                 /* Au-dessus du contenu qui défile dessous, très en dessous des
                    couches plein écran (book, vidéo, univers : 9999 et plus). */
                 z-index: 40;
