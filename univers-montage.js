@@ -105,7 +105,8 @@ const UniversMontage = (function () {
     //  l'auteur l'a voulu, pas où l'écran manque de place (voir fitLines,
     //  qui ajuste la taille du texte pour que le vers le plus long tienne).
     function toLines(value) {
-        return Array.isArray(value) ? value.map(String) : String(value).split('\n');
+        const lines = Array.isArray(value) ? value.map(String) : [String(value)];
+        return lines.flatMap(line => line.split('\n'));
     }
 
     // Le synopsis accepte les mêmes coupes que le reste : un tableau de
