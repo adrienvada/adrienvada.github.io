@@ -582,11 +582,24 @@ function main() {
             slug: uni.slug,
             titre: uni.title || cle,
             annee: cv.annee || '',
+            // L'année en nombre, pour trier. « 2018 - 2021 » donne 2018 : on
+            // range sur le premier millésime venu, faute de mieux.
+            anneeNum: parseInt((cv.annee || '').match(/\d{4}/)?.[0] || '0', 10),
             role: (uni.role || cv.role || '').replace(/^R[oô]les?\s*·\s*/i, ''),
             vignette: photos[0] ? photos[0].src : '',
             cv: Boolean(cvParTitre[cle])
         });
     });
+
+    // ── L'ORDRE DU RÉPERTOIRE ──
+    // Du plus récent au plus ancien, comme se lit un CV. On trie ICI plutôt
+    // que de se fier à l'ordre de SHOW_UNIVERSES : celui-ci est rangé de la
+    // même façon (voir build/ordonner-univers.py), mais une entrée ajoutée à
+    // la va-vite en fin de fichier ne doit pas se retrouver en fin de page.
+    // À année égale, l'ordre du fichier tranche — c'est un choix éditorial,
+    // pas un hasard, et le tri ne doit pas le bousculer.
+    faites.forEach((f, i) => { f.rang = i; });
+    faites.sort((a, b) => (b.anneeNum - a.anneeNum) || (a.rang - b.rang));
 
     fs.writeFileSync(path.join(SORTIE, 'index.html'), pageRepertoire(faites));
 
