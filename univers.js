@@ -383,7 +383,7 @@ const SHOW_UNIVERSES = {
                 aside: ['Les différents tribunaux, leur composition, le déroulé d’un procès — et ce qu’on y dit vraiment.']
             },
             {
-                p: [4], cadre: { 4: '35% 22%' },
+                p: [4], cadre: { 4: '62% 20%' },
                 c: ['Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres.']
             },
             {
@@ -442,9 +442,9 @@ const SHOW_UNIVERSES = {
                 by: 'Rémi, Anne, X - Conclusion'
             },
             {
-                p: [6], cadre: { 6: '27% 18%' }, c: [''],
+                p: [6], cadre: { 6: '57% 28%' }, c: [''],
                 over: ['« La justice est imparfaite parce qu’elle est humaine... »'],
-                overAt: ' bas'
+                overAt: 'bas'
             },
             {
                 text: '« ... Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps. »  '
