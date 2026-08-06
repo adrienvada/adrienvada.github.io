@@ -54,6 +54,13 @@ figcaption { margin-top: .4rem; font-size: .72rem; letter-spacing: .06em; text-t
 footer { max-width: 46rem; margin: 0 auto; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: .8rem; color: var(--muted); text-align: center; }
 
 /* Le répertoire (/spectacles/) */
+.groupe {
+    margin: 2.5rem 0 0; padding-bottom: .5rem;
+    border-bottom: 1px solid var(--line);
+    font: 700 .7rem/1 'Montserrat', system-ui, sans-serif;
+    letter-spacing: .18em; text-transform: uppercase; color: var(--accent-ink);
+}
+.groupe:first-of-type { margin-top: 1.5rem; }
 .repertoire { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1.25rem; padding: 2rem 0; align-items: start; }
 .repertoire a { display: block; text-decoration: none; color: inherit; }
 /* Le "height: auto" n'est pas décoratif : l'attribut height="400" du balisage

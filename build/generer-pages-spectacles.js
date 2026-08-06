@@ -151,7 +151,14 @@ const esc = (v) => String(v == null ? '' : v)
 
 // ── Lecture d'un univers ────────────────────────────────────────────
 
-const lignes = (v) => (Array.isArray(v) ? v : String(v || '').split('\n'))
+// Un synopsis peut être une chaîne OU un tableau — et un élément de tableau
+// peut lui-même contenir des retours à la ligne, comme celui de Cassandres :
+//     synopsis: ['Paris, 2077.\nPas de guerre nucléaire, …']
+// Ne découper que les chaînes laissait donc passer ces retours jusque dans la
+// balise <meta description>, où un saut de ligne n'a rien à faire. On aplatit
+// des deux côtés, comme le fait toLines() dans le moteur de montage.
+const lignes = (v) => (Array.isArray(v) ? v : [v])
+    .flatMap(s => String(s == null ? '' : s).split('\n'))
     .map(s => s.trim()).filter(Boolean);
 
 // Les photos du montage, dans l'ordre où on les rencontre, sans doublon, et
@@ -251,7 +258,7 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     const dates = datesDe(cle, SHOW_DATA);
     const photos = photosDe(uni);
     const urlPage = `${SITE}/spectacles/${uni.slug}/`;
-    const desc = lignes(uni.synopsis).join(' ').slice(0, 300)
+    const desc = lignes(uni.synopsis).join(' ').replace(/\s+/g, ' ').trim().slice(0, 300)
         || `${titre} — avec Adrien Vada.`;
     const photoOg = photos[0] ? `${SITE}/${photos[0].src}` : `${SITE}/ressources/images/og-adrien-vada.jpg`;
     const p = uni.palette || {};
@@ -403,7 +410,7 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
 function pageRepertoire(fiches) {
     const url = `${SITE}/spectacles/`;
     const desc = 'Les spectacles et films d’Adrien Vada : rôles, distributions, dates et photographies.';
-    const items = fiches.map((f, i) => `
+    const carte = (f) => `
         <li>
             <a href="${esc(f.slug)}/">
                 <!-- Pas de repli quand il n'y a pas de photo. Un spectacle en
@@ -419,7 +426,21 @@ function pageRepertoire(fiches) {
                     ${f.role ? `<span class="role">${esc(f.role)}</span>` : ''}
                 </span>
             </a>
-        </li>`).join('');
+        </li>`;
+
+    // ── DEUX GROUPES ──
+    // Le théâtre puis les films, chacun du plus récent au plus ancien. Mêlés,
+    // un 2019 venait s'intercaler entre deux 2022 sans rien qui l'explique :
+    // ça se lisait comme un tri cassé. Les intitulés reprennent ceux du CV.
+    const groupes = [
+        { titre: 'Théâtre', fiches: fiches.filter(f => !f.film) },
+        { titre: 'Courts-métrages', fiches: fiches.filter(f => f.film) }
+    ].filter(g => g.fiches.length);
+
+    const sections = groupes.map(g => `
+        <h2 class="groupe">${esc(g.titre)}</h2>
+        <ul class="repertoire">${g.fiches.map(carte).join('')}
+        </ul>`).join('');
 
     const liste = {
         '@context': 'https://schema.org', '@type': 'ItemList', name: 'Répertoire — Adrien Vada', url,
@@ -469,8 +490,7 @@ ${JSON.stringify(liste, null, 2)}
             <h1>Répertoire</h1>
             <p class="sous-titre">${esc(desc)}</p>
         </header>
-        <ul class="repertoire">${items}
-        </ul>
+        ${sections}
     </main>
     <footer>
         <p><a href="../">adrienvada.fr</a> · <a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a></p>
@@ -538,6 +558,13 @@ figcaption { margin-top: .4rem; font-size: .72rem; letter-spacing: .06em; text-t
 footer { max-width: 46rem; margin: 0 auto; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: .8rem; color: var(--muted); text-align: center; }
 
 /* Le répertoire (/spectacles/) */
+.groupe {
+    margin: 2.5rem 0 0; padding-bottom: .5rem;
+    border-bottom: 1px solid var(--line);
+    font: 700 .7rem/1 'Montserrat', system-ui, sans-serif;
+    letter-spacing: .18em; text-transform: uppercase; color: var(--accent-ink);
+}
+.groupe:first-of-type { margin-top: 1.5rem; }
 .repertoire { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1.25rem; padding: 2rem 0; align-items: start; }
 .repertoire a { display: block; text-decoration: none; color: inherit; }
 /* Le "height: auto" n'est pas décoratif : l'attribut height="400" du balisage
@@ -587,6 +614,7 @@ function main() {
             anneeNum: parseInt((cv.annee || '').match(/\d{4}/)?.[0] || '0', 10),
             role: (uni.role || cv.role || '').replace(/^R[oô]les?\s*·\s*/i, ''),
             vignette: photos[0] ? photos[0].src : '',
+            film: uni.kind === 'film',
             cv: Boolean(cvParTitre[cle])
         });
     });
@@ -599,7 +627,8 @@ function main() {
     // À année égale, l'ordre du fichier tranche — c'est un choix éditorial,
     // pas un hasard, et le tri ne doit pas le bousculer.
     faites.forEach((f, i) => { f.rang = i; });
-    faites.sort((a, b) => (b.anneeNum - a.anneeNum) || (a.rang - b.rang));
+    // Les films après les spectacles, chacun par année décroissante.
+    faites.sort((a, b) => (a.film - b.film) || (b.anneeNum - a.anneeNum) || (a.rang - b.rang));
 
     fs.writeFileSync(path.join(SORTIE, 'index.html'), pageRepertoire(faites));
 
