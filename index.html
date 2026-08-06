@@ -2058,6 +2058,37 @@
             }
         }
 
+        /* ── L'AFFICHE D'UN FILM ──────────────────────────────────────────
+           Elle ouvre la page, comme elle ouvre la séance. ENTIÈRE, jamais
+           recadrée : une affiche est une composition, on ne coupe pas
+           dedans — d'où le contain, à rebours des cadres du défilé. Elle
+           flotte dans la couleur de la palette, son ombre la décolle du
+           fond, et le halo du spectacle l'éclaire par-derrière. */
+        .u-affiche {
+            min-height: 100svh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 9svh 24px;
+        }
+
+        .u-affiche .u-fig-media {
+            position: relative;
+            width: auto;
+            overflow: visible;
+            border-radius: 4px;
+        }
+
+        .u-affiche img {
+            display: block;
+            max-height: 82svh;
+            max-width: min(86vw, 540px);
+            width: auto;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 26px 70px rgba(0, 0, 0, .5), 0 0 130px var(--u-glow);
+        }
+
         /* ── LA VIDÉO ─────────────────────────────────────────────────────
            Un extrait filmé occupe toute la largeur, comme un plein cadre.
            On garde la proportion 16/9 : une vidéo recadrée n'est plus la

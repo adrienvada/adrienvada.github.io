@@ -299,15 +299,22 @@
         // dépassent volontairement le strict ajustement : il déborde un peu du
         // cadre, ce qui donne le sentiment d'être face à lui plutôt que de le
         // regarder de loin.
-        var byHeight = H * 0.40;   // ~120 % de la hauteur d'écran
-        var byWidth = W * 0.48;    // ~112 % de la largeur d'écran
+        // EN PORTRAIT, L'ÉCHELLE BAISSE — ET LE MASQUE REMONTE. Le cadrage
+        // débordant du grand écran y poussait les yeux, le signal le plus
+        // fort d'un visage, exactement sous le nom et le sceau empilés au
+        // centre : réduire seul ne suffisait pas, les yeux convergeaient
+        // encore vers le centre. Plus petit, le visage tient en entier ;
+        // plus haut, ses yeux passent au-dessus du nom et restent visibles.
+        var portrait = W < H && W < 768;
+        var byHeight = H * (portrait ? 0.34 : 0.40);
+        var byWidth = W * (portrait ? 0.42 : 0.48);
         var dolly = dollyProgress(now);
         var shapeScale = Math.min(byHeight, byWidth) * scaleEnv * (1 + dolly * DOLLY_SCALE_GAIN);
         // Resserrement de la poussière : 1 = dispersion pleine (état de repos),
         // SPREAD_TIGHT = au plus serré, en fin de défilé des rôles.
         var spread = 1 - turbulence * (1 - SPREAD_TIGHT);
         var focal = FOCAL_START + (FOCAL_END - FOCAL_START) * dolly;
-        var cx = W / 2, cy = H * 0.5;
+        var cx = W / 2, cy = H * (portrait ? 0.42 : 0.5);
         // Calculé une fois par image, pas une fois par grain.
         var grain = (shapeScale / Math.sqrt(particles.length || 1)) / GRAIN_REF;
         var springBack = Math.min(1, dt * 4.2);
