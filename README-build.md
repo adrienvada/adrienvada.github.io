@@ -143,6 +143,34 @@ Tout est dans les constantes en haut de `intro.js` :
   Ne jamais le descendre sous la durée naturelle de la séquence, sinon
   l'animation serait coupée avant la fin.
 
+### Régler le grain (et pourquoi il ne faut pas le grossir)
+
+Le masque se lit mal si les grains couvrent trop peu de surface — c'est le
+défaut d'origine. **La tentation est de les grossir : c'est le mauvais
+remède.** À trois pixels de diamètre un grain n'est plus une poussière, c'est
+un disque, et l'œil voit des confettis. Ce qui manque n'est pas de l'encre,
+c'est de la **lumière**. Trois leviers, dans cet ordre :
+
+| Constante | Effet | Coût |
+|---|---|---|
+| `particleCount()` | **le bon levier** — plus de grains, aussi fins | linéaire |
+| `HALO_SPAN` (4.2) | largeur du halo autour du cœur ; la lumière croît en carré | nul |
+| les paliers du dégradé dans `buildGrainSprites()` | force du halo | nul |
+| `DUST_GAIN` (1.0) | **taille du cœur — à ne pas monter** | nul, mais ça fait de la craie |
+
+Deux mécanismes portent la lisibilité : chaque grain est une **estampille**
+(un cœur d'un pixel, puis une décrue douce) et non un cercle plein, et les
+estampilles se dessinent en **`lighter`** — là où le nuage s'entasse, les
+halos s'additionnent et la densité devient de la clarté.
+
+`mask-points.js` n'a que 3 201 points, mais ce **n'est plus un plafond** :
+chaque particule s'écarte de son ancre d'un hasard qui lui est propre, donc on
+repasse sur le nuage autant de fois qu'il faut. La silhouette ne bouge pas,
+seule la densité monte.
+
+Mesuré ici : 2,7 ms par image pour 6 400 grains (1,3 ms pour les 3 200 disques
+d'avant), contre un budget de 16,7 ms à 60 i/s.
+
 Le script `/private/tmp/.../timing.js` n'est pas versionné ; pour vérifier la
 durée totale après un réglage, le plus simple est de compter à l'œil ou de
 rouvrir avec `?intro=1`.

@@ -139,11 +139,20 @@
         // Le masque occupant tout l'écran, il lui faut beaucoup de points pour
         // rester lisible : agrandir la forme dilue la densité par unité de
         // surface. On garde un plancher élevé même sur mobile plutôt que
-        // d'économiser — quelques milliers de cercles pleins restent peu
-        // coûteux en Canvas 2D.
+        // d'économiser — quelques milliers d'estampilles restent peu
+        // coûteuses en Canvas 2D.
+        //
+        // LE NOMBRE N'EST PLUS PLAFONNÉ PAR LE NUAGE. mask-points.js n'a que
+        // 3 201 points de surface, et c'était la limite : on ne pouvait pas
+        // épaissir la poussière sans regénérer le modèle 3D, qu'on n'a plus.
+        // Or chaque particule s'écarte déjà de son point d'ancrage d'un
+        // hasard qui lui est propre (voir makeParticle) : deux particules
+        // nées du même point ne se superposent pas, elles forment une petite
+        // grappe autour de lui. On peut donc repasser sur le nuage autant de
+        // fois qu'on veut — la silhouette ne bouge pas d'un pixel, seule la
+        // densité monte. C'est ce qui remplace le grossissement du grain.
         var area = window.innerWidth * window.innerHeight;
-        var target = Math.max(1800, Math.min(3200, Math.round(area / 320)));
-        return maskPoints.length ? Math.min(target, maskPoints.length) : target;
+        return Math.max(3600, Math.min(6400, Math.round(area / 170)));
     }
 
     function resize() {
@@ -201,8 +210,11 @@
         var n = particleCount();
         particles = [];
         if (maskPoints.length) {
-            var order = shuffledIndices(maskPoints.length).slice(0, n);
-            for (var i = 0; i < order.length; i++) particles.push(makeParticle(order[i]));
+            // On repasse sur le nuage en boucle quand il en faut plus que de
+            // points : le mélange garantit qu'un deuxième tour ne redouble
+            // pas les points dans l'ordre où ils ont été tirés au premier.
+            var order = shuffledIndices(maskPoints.length);
+            for (var i = 0; i < n; i++) particles.push(makeParticle(order[i % order.length]));
         }
         shapeBirth = performance.now();
     }
@@ -248,26 +260,91 @@
     // donc éparpillement plus spectaculaire quand « Adrien Vada » arrive.
     var SPREAD_TIGHT = 0.2;
 
-    // ── LA TAILLE DU GRAIN ───────────────────────────────────────────
-    //  Le masque ne se lisait pas, et ce n'était ni la forme ni le nombre
-    //  de points : les grains faisaient 1,4 px de rayon pour 12 px d'écart,
-    //  soit MOINS DE 5 % DE LA SURFACE COUVERTE. On ne voyait que le
-    //  contour — un nuage projeté s'entasse toujours sur sa silhouette,
-    //  là où la surface devient tangente au regard — et l'intérieur du
-    //  visage restait vide. Les trous des yeux et de la bouche existent
-    //  pourtant bel et bien dans le nuage : ils n'avaient simplement rien
-    //  autour d'eux pour se détacher.
+    // ── LA LISIBILITÉ NE VIENT PAS DE LA TAILLE, MAIS DE LA LUMIÈRE ──
+    //  Le masque ne se lisait pas : les grains faisaient 1,4 px de rayon
+    //  pour 12 px d'écart, soit MOINS DE 5 % DE LA SURFACE COUVERTE. On ne
+    //  voyait que le contour — un nuage projeté s'entasse toujours sur sa
+    //  silhouette, là où la surface devient tangente au regard — et
+    //  l'intérieur du visage restait vide.
     //
-    //  Grossir le grain ne coûte RIEN : ce sont les mêmes cercles, au même
-    //  nombre, simplement plus larges. Aucun lien entre particules, aucun
-    //  remplissage, aucun filtre — tout cela aurait coûté cher et, pour
-    //  les liens, refermé les yeux en reliant les deux bords de l'orbite.
-    var DUST_GAIN = 2.7;
+    //  Les grossir a marché, et c'était le mauvais remède : à trois pixels
+    //  de diamètre un grain n'est plus une poussière, c'est un DISQUE, et
+    //  l'œil voit des confettis là où il devrait voir une matière. Ce qui
+    //  manquait n'était pas de l'encre, c'était de la LUMIÈRE. Le grain
+    //  revient donc à sa finesse d'origine, et deux moyens reprennent la
+    //  lisibilité sans coûter un calcul de plus par particule :
+    //
+    //  1. CHAQUE GRAIN EST UNE LUEUR, PAS UN DISQUE. Au lieu d'un cercle
+    //     plein tracé au compas, on estampille une petite image préparée
+    //     une fois pour toutes : un cœur vif d'un pixel, puis une décrue
+    //     douce sur quelques pixels. Le point reste fin — c'est son halo,
+    //     invisible à l'unité, qui porte la forme.
+    //
+    //  2. LES LUEURS S'ADDITIONNENT (`lighter`). Là où le nuage s'entasse —
+    //     la silhouette, l'arête du nez, le bord des orbites — les halos se
+    //     recouvrent et leur lumière S'AJOUTE au lieu de se remplacer : la
+    //     densité devient de la clarté. Là où le nuage est clairsemé, rien
+    //     ne change et le grain reste un grain. C'est exactement le signal
+    //     dont la forme a besoin, et c'est le rendu lui-même qui le produit.
+    //
+    //  3. DEUX FOIS PLUS DE GRAINS. La lumière perdue en revenant au grain
+    //     fin se rattrape par le nombre, pas par la taille : c'est la
+    //     différence entre une poussière et une craie. Voir particleCount().
+    //
+    //  CE QUE ÇA COÛTE, MESURÉ. Par grain, estampiller revient au même que
+    //  tracer un disque au compas — ~0,4 µs dans les deux cas (le gain sur
+    //  la chaîne « rgba(…) » qu'on ne fabrique plus est mangé par la mise à
+    //  l'échelle de l'estampille). C'est donc le doublement du nombre qui
+    //  double la facture : 2,7 ms par image pour 6 400 grains, contre 1,3 ms
+    //  pour les 3 200 disques d'avant. Le budget d'une image à 60 i/s est de
+    //  16,7 ms, et cette animation est seule à l'écran.
+    var DUST_GAIN = 1.0;
 
     //  Le rayon vise une COUVERTURE CONSTANTE plutôt qu'une taille fixe :
     //  r ∝ échelle / √nombre. Sans cela le téléphone serait sur-encré —
     //  il affiche un masque bien plus petit avec à peine moins de points.
     var GRAIN_REF = 328 / Math.sqrt(3200);
+
+    // ── LES ESTAMPILLES ──────────────────────────────────────────────
+    //  Combien de fois le halo déborde du cœur vif. 1 px de cœur, ~3,5 px
+    //  de lueur autour : c'est le halo qui recouvre celui des voisins.
+    var HALO_SPAN = 4.2;
+    //  Le dégradé doré → blanc chaud, en marches. Six suffisent : la teinte
+    //  ne sert qu'à dire la profondeur, l'œil ne compte pas les marches.
+    var GRAIN_TINTS = 6;
+    var grainSprites = null;
+
+    function buildGrainSprites() {
+        // Dessinées à la résolution de l'écran (DPR), puis posées à la
+        // taille voulue : une estampille floue à l'origine resterait floue
+        // en la grossissant, et le cœur perdrait son pixel net.
+        var side = Math.max(16, Math.round(24 * DPR));
+        var mid = side / 2;
+        var out = [];
+        for (var i = 0; i < GRAIN_TINTS; i++) {
+            var t = i / (GRAIN_TINTS - 1);
+            var col = Math.round(191 + (255 - 191) * t) + ',' +
+                Math.round(169 + (248 - 169) * t) + ',' +
+                Math.round(138 + (222 - 138) * t);
+            var c = document.createElement('canvas');
+            c.width = c.height = side;
+            var g = c.getContext('2d');
+            var grd = g.createRadialGradient(mid, mid, 0, mid, mid, mid);
+            // Le cœur tient dans le premier tiers (1 / HALO_SPAN) ; au-delà
+            // c'est la lueur, assez faible pour ne pas se voir seule, assez
+            // présente pour s'additionner quand les grains se pressent.
+            grd.addColorStop(0.00, 'rgba(' + col + ',1)');
+            grd.addColorStop(0.14, 'rgba(' + col + ',0.94)');
+            grd.addColorStop(0.24, 'rgba(' + col + ',0.52)');
+            grd.addColorStop(0.42, 'rgba(' + col + ',0.20)');
+            grd.addColorStop(0.68, 'rgba(' + col + ',0.06)');
+            grd.addColorStop(1.00, 'rgba(' + col + ',0)');
+            g.fillStyle = grd;
+            g.fillRect(0, 0, side, side);
+            out.push(c);
+        }
+        return out;
+    }
 
     function dollyProgress(nowMs) {
         if (shapeBirth === null) return 0;
@@ -321,6 +398,10 @@
         var energyDecay = Math.pow(0.9, dt * 60);
 
         ctx.clearRect(0, 0, W, H);
+        if (!grainSprites) grainSprites = buildGrainSprites();
+        // Les lueurs s'ajoutent au lieu de se recouvrir : c'est de là que
+        // vient la lisibilité de la forme (voir DUST_GAIN plus haut).
+        ctx.globalCompositeOperation = 'lighter';
 
         for (var i = 0; i < particles.length; i++) {
             var p = particles[i];
@@ -372,17 +453,12 @@
             var twinkle = 0.82 + 0.18 * Math.sin(tSec * p.twinkleSpeed + p.twinklePhase);
             var glow = Math.min(1, depth + p.energy * 0.7);
 
-            // L'opacité RETOMBE quand le grain grossit : à taille multipliée
-            // par trois, l'encre l'est par neuf, et les recouvrements
-            // viraient à l'aplat blanc. Moins opaque et plus large, un grain
-            // se superpose à ses voisins sans les effacer — c'est ce qui
-            // fait une poussière plutôt qu'une peinture.
-            var alpha = (0.24 + depth * 0.34) * twinkle + p.energy * 0.5;
+            // L'opacité reste modeste : ce sont les recouvrements qui font
+            // la lumière, et un grain trop opaque ferait blanchir la
+            // silhouette avant que l'intérieur du visage n'apparaisse.
+            var alpha = (0.26 + depth * 0.36) * twinkle + p.energy * 0.5;
             alpha = Math.min(1, alpha);
 
-            var r = Math.round(191 + (255 - 191) * glow);
-            var g = Math.round(169 + (248 - 169) * glow);
-            var b = Math.round(138 + (222 - 138) * glow);
             // `p.r` était tiré au sort à la naissance de chaque particule et
             // n'avait jamais servi : il entre ici. Des grains fins et des
             // flocons plus larges dans la même poussière — c'est cette
@@ -390,11 +466,17 @@
             var radius = (0.75 + depth * 1.35) * DUST_GAIN * p.r * grain
                 * (1 + p.energy * 0.8);
 
-            ctx.beginPath();
-            ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + alpha.toFixed(3) + ')';
-            ctx.arc(sx + p.offX, sy + p.offY, radius, 0, Math.PI * 2);
-            ctx.fill();
+            // Une estampille, posée centrée. `d` est la largeur du HALO ;
+            // le cœur vif, lui, garde le rayon calculé ci-dessus.
+            var d = radius * (2 * HALO_SPAN);
+            var tint = (glow * GRAIN_TINTS) | 0;
+            ctx.globalAlpha = alpha;
+            ctx.drawImage(grainSprites[tint < GRAIN_TINTS ? tint : GRAIN_TINTS - 1],
+                sx + p.offX - d * 0.5, sy + p.offY - d * 0.5, d, d);
         }
+
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
     }
 
     var lastT = null;
