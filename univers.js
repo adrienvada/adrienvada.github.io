@@ -195,6 +195,11 @@ const SHOW_UNIVERSES = {
                 text: 'Un spectacle exigeant qui déconstruit les a priori sur le théâtre classique pour transmettre ce patrimoine universel.'
             },
             { p: [17, 19], c: ['Lycée La Salle, Rouen', 'Espace Jean Legendre, Compiègne'] }
+
+            {
+                video: 'https://www.youtube.com/watch?v=5wg0P7-Dt_w',
+                c: ['Bande annonce — Centre culturel Voltaire, Déville-lès-Rouen']
+            },
         ]
     },
 
@@ -271,7 +276,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 video: 'https://www.youtube.com/watch?v=bTr685C1YL8',
-                c: ['Bande annonce — Le Rive Gauche, Saint-Étienne-du-Rouvray']
+                c: ['Bande annonce — Théâtre l\'Étincelle, Ville de Rouen']
             },
         ]
     },
