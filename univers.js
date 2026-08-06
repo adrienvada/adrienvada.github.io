@@ -156,7 +156,7 @@ const SHOW_UNIVERSES = {
             line: 'rgba(238,234,234,0.14)', glow: 'rgba(184,69,47,0.30)'
         },
         genre: 'Fiction d’anticipation',
-        synopsis: ['Paris, 2077.\nPas de guerre nucléaire, pas de fertilité perdue, pas d’intelligence venue d’ailleurs pour nous exterminer ou nous sauver : le monde a seulement continué. Un meurtre étrange, une enquêtrice — et au bout de la piste, notre système agro-alimentaire.'],
+        synopsis: ['Paris, 2077.\nPas de guerre nucléaire, pas de fertilité perdue, pas d’intelligence venue d’ailleurs pour nous exterminer ou nous sauver : le monde a seulement continué. Un meurtre étrange, une enquêtrice — et au bout de la piste, notre système agro-alimentaire.'],
         // Un seul bloc, tant que le plateau n'existe pas : la note
         // d'intention. Condensée des intentions d'Angelo Jossec, à la
         // troisième personne — le « je » d'un metteur en scène sur le site
@@ -164,7 +164,7 @@ const SHOW_UNIVERSES = {
         sequence: [
             {
                 text: 'Sous couvert d’une enquête policière, Cassandre(s) imagine le quotidien ' +
-                    'de la génération 2000 arrivée au terme de son espérance de vie : la forme est ' +
+                    'de la génération 2000 arrivée au terme de son espérance de vie : la forme est ' +
                     'au service du divertissement quand le fond est l’objet de la diversion. Pour ' +
                     'que l’anticipation ne soit pas reçue comme de la science-fiction, le spectacle ' +
                     's’ouvre sur une chronologie de notre développement agro-industriel, de 1850 à ' +
@@ -189,7 +189,7 @@ const SHOW_UNIVERSES = {
         sequence: []
     },
 
-    'À la barre, peine perdue ?': {
+    'À la barre, peine perdue ?': {
         slug: 'alabarre',
         palette: {
             bg: '#08080b', surface: '#131620', text: '#ececef', muted: '#9899a4',
@@ -220,12 +220,12 @@ const SHOW_UNIVERSES = {
                 aside: ['Comment, dans ces conditions,', 'réussir à “rendre justice” ?']
             },
             {
-                q: ['« Monsieur, avez-vous quelque chose à ajouter ? »'],
+                q: ['« Monsieur, avez-vous quelque chose à ajouter ? »'],
                 by: 'Présidente, VI - Dans le couple '
             },
             {
                 p: [4, 13, 14, 12], cadre: { 4: '18% 25%', 13: '30% 15%', 14: '36% 28%', 12: '52% 25%' }, c: ['', '', ''],
-                aside: ['Le spectacle, sobre, peut se jouer en tribunal comme en salle municipale ou établissement scolaire : la salle d\'audience est recrée.']
+                aside: ['Le spectacle, sobre, peut se jouer en tribunal comme en salle municipale ou établissement scolaire : la salle d\'audience est recrée.']
             },
             {
                 q: ['« Peine perdue, alors ? » — « Non, au contraire : on travaille, on continue. »'],
@@ -233,11 +233,11 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [6], cadre: { 6: '57% 28%' }, c: [''],
-                over: ['« La justice est imparfaite parce qu’elle est humaine... »'],
+                over: ['« La justice est imparfaite parce qu’elle est humaine... »'],
                 overAt: 'bas'
             },
             {
-                text: '« ... Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps. »  '
+                text: '« ... Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps. »  '
             },
             {
                 p: [25, 26], cadre: { 25: '55% 50%', 26: '33% 45%' }, c: ['Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen', 'Débat suivant une représentation au tribunal d\'Avignon', ''],
@@ -297,7 +297,7 @@ const SHOW_UNIVERSES = {
                 aside: ['Après la représentation, un échange permet d\'effectuer un travail de sensibilisation.']
             },
             {
-                q: ['« Pourquoi suis-je violent ? »'],
+                q: ['« Pourquoi suis-je violent ? »'],
                 by: 'La question posée au débat'
             },
             {
@@ -324,14 +324,14 @@ const SHOW_UNIVERSES = {
         credit: 'Arnaud Bertereau',
         genre: 'Tragédie',
         synopsis: ['Royaume de Pyrie, 124 av. J-C.',
-            'Lorsqu’un roi meurt et qu’il est père de jumeaux, lequel des deux est l’aîné et doit prendre sa place ? La reine veuve Cléophène, dépositaire du pouvoir, doit céder sa couronne, et elle seule connaît le secret de son successeur...'],
+            'Lorsqu’un roi meurt et qu’il est père de jumeaux, lequel des deux est l’aîné et doit prendre sa place ? La reine veuve Cléophène, dépositaire du pouvoir, doit céder sa couronne, et elle seule connaît le secret de son successeur...'],
         sequence: [
             {
                 chapter: '1h30',
                 chapterTitle: 'Un drame familial de l’amour et de la haine'
             },
             {
-                q: ['« Rodogune ? Shakespeare n’a rien écrit de plus beau. »'],
+                q: ['« Rodogune ? Shakespeare n’a rien écrit de plus beau. »'],
                 by: 'Stendhal, 16 juillet 1804'
             },
             {
@@ -344,7 +344,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [9], cadre: { 9: '50% 35%' },
-                c: ['La figure des jumeaux : une incarnation à deux têtes du dilemme cornéliens.'],
+                c: ['La figure des jumeaux : une incarnation à deux têtes du dilemme cornéliens.'],
             },
             {
                 p: [20, 15, 17], cadre: { 20: '42% 30%', 15: '48% 15%', 17: '46% 22%' }, c: ['', ''],
@@ -368,12 +368,12 @@ const SHOW_UNIVERSES = {
 
             },
             {
-                q: ['« Il vaut mieux mériter le sort le plus étrange.', 'Tombe sur moi le ciel, pourvu que je me venge ! »'],
+                q: ['« Il vaut mieux mériter le sort le plus étrange.', 'Tombe sur moi le ciel, pourvu que je me venge ! »'],
                 by: 'Cléophène, Acte V'
             },
             {
                 p: [23, 16], cadre: { 23: '42% 30%', 16: '48% 55%' }, c: ['', ''],
-                over: ['« Jusqu’où serez-vous', 'semblables ? »'], overAt: 'droite'
+                over: ['« Jusqu’où serez-vous', 'semblables ? »'], overAt: 'droite'
             },
             {
                 text: 'Dans ce travail de la compagnie Crescite, les rebondissements vont arriver à chaque acte. L\'acte final termine en apothéose quasi burlesque, et donne à cette adaptation de Rodogune de Corneille toute sa dimension shakespearienne.'
@@ -401,7 +401,7 @@ const SHOW_UNIVERSES = {
         credit: 'Thypa Photographie',
         genre: 'Fable contemporaine',
         synopsis: ['Une fratrie. Un village. Perdu.',
-            'La foudre y a frappé il y a quelques années et y a laissé des survivant.e.s : les fulguré.e.s. À l’occasion d’un nouvel an, la fratrie s’y perd et rencontre ses habitants. Alors que « tout est chaos », la foudre frappe à nouveau.'],
+            'La foudre y a frappé il y a quelques années et y a laissé des survivant.e.s : les fulguré.e.s. À l’occasion d’un nouvel an, la fratrie s’y perd et rencontre ses habitants. Alors que « tout est chaos », la foudre frappe à nouveau.'],
         sequence: [
             {
                 chapter: '1h15',
@@ -428,7 +428,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [7], cadre: { 7: '70% 15%' },
-                over: ['« La foudre frappe n\’importe où,', 'n\’importe qui, n\’importe quand :', 'il n\'y a aucun sens à ça.\»'], overAt: 'droite'
+                over: ['« La foudre frappe n\’importe où,', 'n\’importe qui, n\’importe quand :', 'il n\'y a aucun sens à ça.\»'], overAt: 'droite'
             },
             { p: [8, 26], cadre: { 8: '32% 25%', 26: '72% 28%' }, c: ['', ''] },
             { p: [2], cadre: { 2: '72% 30%' }, c: ['Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure.'] },
@@ -465,8 +465,8 @@ const SHOW_UNIVERSES = {
                 aside: 'Une des plus belles partitions classique pour un personnage féminin qui sert « d\'exemple à l\'univers ».'
             },
             {
-                q: '« Depuis huit jours je règne ; et jusques à ce jour,\n' +
-                    'Qu\'ai-je fait pour l\'honneur ? J\'ai tout fait pour l\'amour. »', by: 'Titus, acte IV'
+                q: '« Depuis huit jours je règne ; et jusques à ce jour,\n' +
+                    'Qu\'ai-je fait pour l\'honneur ? J\'ai tout fait pour l\'amour. »', by: 'Titus, acte IV'
             },
             {
                 p: [1, 9, 11], cadre: { 1: '48% 15%', 9: '68% 20%', 11: '48% 18%' }, c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
@@ -477,7 +477,7 @@ const SHOW_UNIVERSES = {
                 p: [3], cadre: { 3: '62% 45%' }, c: ['Un travail au plus plus proche de l\'alexandrin racinien pour en éprouver la virtuosité.'],
             },
             {
-                q: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »'],
+                q: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »'],
                 by: 'Bérénice, acte IV'
             },
             { p: [7, 13, 16], cadre: { 7: '55% 25%', 13: '60% 40%', 16: '55% 25%' }, c: ['Bérénice, Antiochus, Acte I', 'Antiochus, Paulin, Titus, Acte IV', 'Bérénice, Antiochus, Titus, Acte V'] },
@@ -538,7 +538,7 @@ const SHOW_UNIVERSES = {
                 p: [11, 1, 4], cadre: { 11: '48% 32%', 1: '47% 30%', 4: '42% 35%' }, c: ['Adurey, Touchstone, ACTE V', 'Rosalind, Duke Frederick, Celia, ACTE I', 'Celia, Rosalind, ACTE II'],
             },
             {
-                text: 'Des comédiens et des musiciens forment un joyeux orchestre. C’est comme une fête ! Et dans toute bonne fête, le rythme, la musique et le paysage sonore priment.'
+                text: 'Des comédiens et des musiciens forment un joyeux orchestre. C’est comme une fête ! Et dans toute bonne fête, le rythme, la musique et le paysage sonore priment.'
             },
             {
                 p: [15, 13], cadre: { 15: '50% 70%', 13: '40% 35%' },
@@ -562,10 +562,10 @@ const SHOW_UNIVERSES = {
             line: 'rgba(36,27,18,0.15)', glow: 'rgba(74,108,138,0.38)'
         },
         genre: 'Comédie',
-        synopsis: ['Arthur veut devenir un homme moderne. Melvin, coach en peignoir, a la méthode : exercices, carnet, chanson. Quatre séances pour tout réapprendre — à commencer par Magali.'],
+        synopsis: ['Arthur veut devenir un homme moderne. Melvin, coach en peignoir, a la méthode : exercices, carnet, chanson. Quatre séances pour tout réapprendre — à commencer par Magali.'],
         // Le générique de fin, tel qu’il s’écrit à l’écran : « de et avec ».
         cast: ['Max Laure', 'Adèle Rawinski', 'Adrien Vada'],
-        castNote: 'Co-scénariste : Louis Mallejac · Générique illustré par Daphné Laure.',
+        castNote: 'Co-scénariste : Louis Mallejac · Générique illustré par Daphné Laure.',
         sequence: [
             {
                 chapter: '4 épisodes',
@@ -573,7 +573,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [1], cadre: { 1: '74% 36%' },
-                over: ['« Ah Magali…', 'Oh Magali… »'],
+                over: ['« Ah Magali…', 'Oh Magali… »'],
                 overAt: 'gauche', overBy: 'Arthur'
             },
             {
@@ -581,21 +581,21 @@ const SHOW_UNIVERSES = {
                 c: ['Le souvenir de Magali', 'L\'accueil de Melvin — épisode 1, Le date.']
             },
             {
-                q: ['« Je sais qu’il y a pas que ça qui compte.', 'Mais c’est important, non — d’assurer ? »'],
+                q: ['« Je sais qu’il y a pas que ça qui compte.', 'Mais c’est important, non — d’assurer ? »'],
                 by: 'Arthur - épisode 2, Première séance'
             },
             {
                 p: [4, 5], cadre: { 4: '80% 30%', 5: '42% 20%' },
-                c: ['« Donc… je suis moderne. »', 'La séance se termine en chanson.'],
-                aside: ['Un canapé pour cabinet, un carnet pour boussole : Melvin reçoit, Arthur récite.']
+                c: ['« Donc… je suis moderne. »', 'La séance se termine en chanson.'],
+                aside: ['Un canapé pour cabinet, un carnet pour boussole : Melvin reçoit, Arthur récite.']
             },
             {
                 p: [6], cadre: { 6: '33% 55%' },
-                over: ['« J’avais envie d’elle, Melvin. »'],
-                overAt: 'droite', overBy: 'Épisode 3, Prédateur ?'
+                over: ['« J’avais envie d’elle, Melvin. »'],
+                overAt: 'droite', overBy: 'Épisode 3, Prédateur ?'
             },
             {
-                q: ['« J’aimerais que tu fasses attention aux femmes que tu croises.', 'Et surtout aux femmes qui t’attirent. »'],
+                q: ['« J’aimerais que tu fasses attention aux femmes que tu croises.', 'Et surtout aux femmes qui t’attirent. »'],
                 by: 'Melvin — l’exercice de la semaine'
             },
             {
@@ -604,12 +604,12 @@ const SHOW_UNIVERSES = {
             },
             {
                 text: 'Écrite, tournée et montée à quatre mains avec Max Laure, la série suit ' +
-                    'la méthode séance après séance : des exercices, un carnet — et la ' +
+                    'la méthode séance après séance : des exercices, un carnet — et la ' +
                     'modernité comme ligne d’arrivée.'
             },
             {
                 p: [9, 10], cadre: { 9: '30% 33%', 10: '78% 22%' },
-                c: ['Les concombres de la méthode.', 'Minuit : la cérémonie du carnet.']
+                c: ['Les concombres de la méthode.', 'Minuit : la cérémonie du carnet.']
             },
             {
                 video: 'https://www.youtube.com/watch?v=OT85GdKWsaM',
@@ -647,24 +647,24 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [1], cadre: { 1: '50% 35%' },
-                c: ['Au musée, devant « La Laitière ». C’est ici que le secret commence.']
+                c: ['Au musée, devant « La Laitière ». C’est ici que le secret commence.']
             },
             {
-                q: ['« Cette histoire est entièrement vraie,', 'puisque je l’ai imaginée d’un bout à l’autre. »'],
+                q: ['« Cette histoire est entièrement vraie,', 'puisque je l’ai imaginée d’un bout à l’autre. »'],
                 by: 'Emma Fridé'
             },
             {
                 p: [2, 3], cadre: { 2: '30% 45%', 3: '50% 45%' },
-                c: ['Le globe du « Géographe ».', 'Un visage affleure dans les craquelures.'],
+                c: ['Le globe du « Géographe ».', 'Un visage affleure dans les craquelures.'],
                 aside: ['Le film s’approche des toiles jusqu’à ce que la peinture devienne paysage.']
             },
             {
                 p: [4], cadre: { 4: '50% 40%' },
-                over: ['« Lorsqu’il s’agit de la vie d’une femme,', 'certains secrets sont faits pour durer. »'],
+                over: ['« Lorsqu’il s’agit de la vie d’une femme,', 'certains secrets sont faits pour durer. »'],
                 overAt: 'bas'
             },
             {
-                text: 'Faites un voyage romanesque à travers ses peintures : découvrez ' +
+                text: 'Faites un voyage romanesque à travers ses peintures : découvrez ' +
                     'les paysages et les personnages issus de l’imagination du peintre.'
             },
             {
@@ -699,7 +699,7 @@ const SHOW_UNIVERSES = {
         // ne se confond avec aucun voisin.
         cvAccent: '#de7a5a',
         genre: 'Comédie',
-        synopsis: ['Deux ouvrières enlèvent le fils de leur patron pour en tirer une rançon. Elles se trompent d’homme : c’est un vendeur de ventilation ravi d’échapper à son quotidien.'],
+        synopsis: ['Deux ouvrières enlèvent le fils de leur patron pour en tirer une rançon. Elles se trompent d’homme : c’est un vendeur de ventilation ravi d’échapper à son quotidien.'],
         // La distribution du générique de fin du film.
         cast: ['Cécile Dessillons', 'Ladane Dehdar', 'Ardag Basmadjian',
             'Angélique Métier', 'Adrien Vada'],
@@ -713,44 +713,44 @@ const SHOW_UNIVERSES = {
                 c: ['Une petite ville du Nord, à l’aube. Deux ouvrières, une Fiat rouge, un plan sans faille.']
             },
             {
-                q: ['« Démarre ! Démarre ! Démarre ! »'],
+                q: ['« Démarre ! Démarre ! Démarre ! »'],
                 by: 'Véronique'
             },
             {
                 p: [2, 3], cadre: { 2: '58% 30%', 3: '50% 50%' },
-                c: ['L’otage. Encore engourdi.', '« Dis bonjour à Papa ! »'],
-                aside: ['« Il a dit “Je ne comprends pas, Fabien est ici”, et il a raccroché. »']
+                c: ['L’otage. Encore engourdi.', '« Dis bonjour à Papa ! »'],
+                aside: ['« Il a dit “Je ne comprends pas, Fabien est ici”, et il a raccroché. »']
             },
             {
                 p: [4], cadre: { 4: '68% 45%' },
-                over: ['« Vous êtes qui ?', 'Qu’est-ce que vous me voulez ? »'],
+                over: ['« Vous êtes qui ?', 'Qu’est-ce que vous me voulez ? »'],
                 overAt: 'gauche', overBy: 'Steven'
             },
             {
-                q: ['« J’veux pas rentrer, c’est tout. »'],
+                q: ['« J’veux pas rentrer, c’est tout. »'],
                 by: 'Steven'
             },
             {
                 p: [5, 6], cadre: { 5: '45% 30%', 6: '46% 25%' },
-                c: ['« Je vais pisser. »', 'Le muret des confidences.'],
-                aside: ['« Elle et ma mère décident de tout : du mariage, de l’appart, de ma vie, de tout. »']
+                c: ['« Je vais pisser. »', 'Le muret des confidences.'],
+                aside: ['« Elle et ma mère décident de tout : du mariage, de l’appart, de ma vie, de tout. »']
             },
             {
                 p: [7], cadre: { 7: '62% 35%' },
-                c: ['« Mangeons, mangeons ! On sait pas qui nous mangera demain… »']
+                c: ['« Mangeons, mangeons ! On sait pas qui nous mangera demain… »']
             },
             {
-                q: ['« Alors, ça te plaît l’Amérique ? »'],
+                q: ['« Alors, ça te plaît l’Amérique ? »'],
                 by: 'Véronique'
             },
             {
                 p: [8, 9], cadre: { 8: '65% 30%', 9: '48% 50%' },
                 c: ['Arsen, sa radio, la nuit qui monte.', 'Le lendemain, à l’aube.'],
-                aside: ['« Téléphon, piège à con. »']
+                aside: ['« Téléphon, piège à con. »']
             },
             {
                 p: [10], cadre: { 10: '49% 60%' },
-                over: ['« Un silence profond', 'émane des arbres. »'],
+                over: ['« Un silence profond', 'émane des arbres. »'],
                 overAt: 'droite', overBy: 'Dernière séquence du scénario'
             },
             {
@@ -1606,6 +1606,70 @@ const SHOW_UNIVERSES = {
     //     Presque muet au repos, franc au survol. Le CV devient un
     //     sommaire : huit lignes, et derrière chacune un monde qui a
     //     déjà sa couleur avant qu'on y entre.
+    // ── L'ÉCLAT DE LA GUIRLANDE, ÉGALISÉ ─────────────────────────────
+    //  La guirlande allumait toutes les lignes à la même OPACITÉ (.16). Elle
+    //  ne les allumait donc pas au même ÉCLAT : sur fond sombre, le rouge
+    //  profond d'À la barre rendait quatre fois moins que le vert-jaune d'As
+    //  You Like It. La vague était régulière — vérifié image par image — mais
+    //  l'œil sautait les lignes ternes et la lisait en dents de scie.
+    //
+    //  Ce qu'on égalise, c'est donc l'écart de LUMINANCE au fond, pas
+    //  l'opacité. Et le calcul est simple parce que la luminance perçue est
+    //  une somme pondérée des composantes : poser une couleur à l'opacité α
+    //  sur un fond déplace la luminance de exactement
+    //
+    //      Δ = α × | L(accent) − L(fond) |
+    //
+    //  Pour obtenir un Δ constant, il suffit donc de α = CIBLE / écart. Une
+    //  division, une fois par ligne. Rien par image.
+    //
+    //  LES DEUX THÈMES SONT SERVIS PAR LA MÊME FORMULE, et c'est tout
+    //  l'intérêt de partir du fond réel : en thème clair le rapport
+    //  s'INVERSE — le vert-jaune, éclatant sur noir, disparaît sur blanc,
+    //  tandis que le bleu nuit de La peau des anges devient le plus franc.
+    //  Une table de valeurs écrite à la main aurait été juste dans un thème
+    //  et fausse dans l'autre.
+    const ECLAT_CIBLE = 19;      // écart de luminance visé, sur 255
+    const CRETE_MIN = 0.09, CRETE_MAX = 0.42;
+
+    function luminance(r, g, b) { return 0.2126 * r + 0.7152 * g + 0.0722 * b; }
+
+    // Accepte « #rrggbb » et « r, g, b » — les accents viennent des palettes
+    // d'univers (hexadécimal) comme des variables du thème (triplets).
+    function versRgb(c) {
+        const t = String(c).trim();
+        let m = t.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+        if (m) return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+        m = t.match(/(\d+)[,\s]+(\d+)[,\s]+(\d+)/);
+        if (m) return [+m[1], +m[2], +m[3]];
+        return null;
+    }
+
+    function calerLesCretes() {
+        const fond = versRgb(getComputedStyle(document.documentElement)
+            .getPropertyValue('--c-bg')) || [10, 9, 7];
+        const lFond = luminance(fond[0], fond[1], fond[2]);
+        document.querySelectorAll('.cv-has-universe').forEach(li => {
+            const rgb = versRgb(li.style.getPropertyValue('--cv-accent'));
+            if (!rgb) return;
+            const ecart = Math.abs(luminance(rgb[0], rgb[1], rgb[2]) - lFond);
+            // Un accent confondu avec le fond ne se rattrape pas à coups
+            // d'opacité : on plafonne plutôt que de virer à l'aplat.
+            const crete = ecart < 1 ? CRETE_MAX
+                : Math.min(CRETE_MAX, Math.max(CRETE_MIN, ECLAT_CIBLE / ecart));
+            li.style.setProperty('--cv-crete', crete.toFixed(3));
+        });
+    }
+
+    // Le thème peut changer à tout moment, par le bouton comme au chargement.
+    // On observe l'attribut plutôt que de se brancher sur applyTheme() : la
+    // guirlande n'a pas à savoir QUI a changé le thème, seulement qu'il a
+    // changé.
+    function suivreLeTheme() {
+        new MutationObserver(calerLesCretes).observe(document.documentElement,
+            { attributes: true, attributeFilter: ['data-theme'] });
+    }
+
     function markCvRows() {
         let rang = 0;
         document.querySelectorAll('.cv-item').forEach(li => {
@@ -1635,6 +1699,8 @@ const SHOW_UNIVERSES = {
 
             addWhisper(li, uni);
         });
+        calerLesCretes();
+        suivreLeTheme();
     }
 
     //  3. LE MURMURE. Au survol, la ligne laisse entrevoir de quoi parle
