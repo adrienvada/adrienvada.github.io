@@ -1,10 +1,40 @@
 # Notes techniques — adrienvada.fr
 
 Site statique hébergé sur GitHub Pages, servi sur le domaine **adrienvada.fr**
-(fichier `CNAME`). Aucune étape de build n'est nécessaire pour publier : il
-suffit de pousser sur `main`.
+(fichier `CNAME`). Pousser sur `main` publie le site — mais **plusieurs
+fichiers du dépôt sont générés**, et pousser sans les avoir régénérés met en
+ligne une version incohérente.
 
-Une seule exception : **la feuille de style**.
+Rien ne le signale : le site se publie très bien avec un fichier généré
+périmé. Il affiche simplement l'état d'avant.
+
+## Ce qu'il faut relancer, selon ce qu'on a modifié
+
+| Ce que vous modifiez | À relancer | Ce que ça réécrit |
+|---|---|---|
+| une classe Tailwind dans `index.html`, `404.html`, `dates.js`, `galerie.js` | [la commande Tailwind](#régénérer-stylescss-obligatoire-après-modification-des-classes) | `styles.css` |
+| **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml` |
+| une **ligne du CV** dans `index.html` — titre, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
+| le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…` |
+| une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
+
+Chacune a sa section plus bas, avec ce qu'elle fait et pourquoi.
+
+> **Ne modifiez jamais un fichier généré à la main** : la prochaine
+> régénération l'écrasera sans rien dire. La liste est au chapitre
+> [Images générées](#images-générées-à-ne-pas-écraser-sans-les-régénérer)
+> et au chapitre [Pages spectacle](#pages-spectacle-spectacles-à-régénérer).
+>
+> Le piège s'est déjà refermé : une copie de travail de `spectacles/index.html`
+> antérieure à l'ajout des genres, committée telle quelle, aurait effacé les
+> genres du répertoire — sans qu'aucun outil ne proteste. Un passage du
+> générateur remet tout d'aplomb ; le réflexe est de le lancer **avant** de
+> committer, pas après.
+
+Trois scripts de `build/` sont des **opérations uniques**, déjà faites, à ne
+pas relancer : `extraire-css-univers.py`, `extraire-montage.py` et
+`ordonner-univers.py`. Ils ont servi à découper ou réordonner des fichiers une
+fois pour toutes ; leur en-tête le dit.
 
 Pour prévisualiser le site en local (les chemins absolus type `/favicon_io/…`
 ne fonctionnent pas en ouvrant simplement le fichier) :
@@ -12,6 +42,37 @@ ne fonctionnent pas en ouvrant simplement le fichier) :
 ```bash
 npx --yes serve -l 8080 .
 ```
+
+---
+
+## Publier
+
+Pousser sur `main` déclenche `.github/workflows/publier.yml`, qui dépose le
+dépôt tel quel sur GitHub Pages. Quelques secondes.
+
+**Ce n'était pas le cas avant août 2026**, et le changement a une raison. Le
+bâtisseur historique de Pages reclonait le dépôt ENTIER à chaque publication :
+441 Mo d'historique pour un site de 67 — les originaux des photos de spectacle
+y ont vécu avant d'en sortir, et un objet git ne s'oublie jamais. La dernière
+publication réussie par cette voie a pris **9 min 58**, contre une limite de
+dix minutes ; les suivantes ont toutes échoué sur un laconique « Page build
+failed ». `actions/checkout` ne prend que le dernier commit : le poids de
+l'historique ne compte plus.
+
+**GitHub Pages n'accepte que 10 publications par heure.** Au-delà, les
+déploiements restent en file et expirent. Une rafale de petits commits poussés
+un par un peut donc bloquer la publication pendant une heure : mieux vaut
+grouper. Si le site semble figé, c'est la première chose à vérifier.
+
+Où regarder quand ça coince :
+
+```bash
+gh run list --limit 5
+gh api repos/adrienvada/adrienvada.github.io/pages --jq .status
+```
+
+Le workflow a des journaux (`gh run view --log-failed`), là où le bâtisseur
+historique ne disait rien de plus que « Page build failed ».
 
 ---
 
