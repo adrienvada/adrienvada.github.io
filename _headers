@@ -19,6 +19,14 @@
 #  pas plus vocation à être trouvée que les autres. Le site
 #  public, lui, reste indexé normalement — il est servi par
 #  GitHub Pages, qui ne lit pas ce fichier.
+#
+#  ⚠ LE JOUR OÙ adrienvada.fr SERAIT SERVI PAR CLOUDFLARE, il
+#  faudrait SUPPRIMER ce fichier avant de basculer le DNS. La
+#  règle ci-dessous ne connaît pas les noms de domaine : elle
+#  s'applique à tout ce que Cloudflare sert. Le site public
+#  disparaîtrait de Google en quelques jours, sans erreur ni
+#  avertissement nulle part — c'est le genre de panne qu'on ne
+#  voit qu'au trafic, un mois trop tard.
 # ============================================================
 
 /*

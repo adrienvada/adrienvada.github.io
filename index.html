@@ -85,9 +85,18 @@
          Tout passe par track() (voir plus bas) — jamais d'appel direct à
          umami depuis le reste du code, pour n'avoir qu'un endroit à
          changer le jour où l'on change d'outil.
+
+         `data-domains` : la mesure ne compte QUE les visites sur
+         adrienvada.fr. Le même fichier est aussi servi par les aperçus de
+         branche Cloudflare (adresses en .workers.dev) — sans cette
+         restriction, chaque relecture d'une maquette viendrait gonfler les
+         chiffres du vrai site, et les statistiques ne voudraient plus rien
+         dire. Ailleurs que sur le domaine listé, le script se charge et ne
+         compte rien.
          ══════════════════════════════════════════════════════════════ -->
     <script defer src="https://cloud.umami.is/script.js"
-        data-website-id="23c34c7a-c28c-4b5b-b237-a154139b62da"></script>
+        data-website-id="23c34c7a-c28c-4b5b-b237-a154139b62da"
+        data-domains="adrienvada.fr"></script>
 
     <!-- Données structurées : fiche artiste (les représentations sont ajoutées par script depuis dates.js) -->
     <script type="application/ld+json">
