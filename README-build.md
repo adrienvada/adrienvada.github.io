@@ -551,8 +551,10 @@ c'est un choix éditorial, et le tri ne le bouscule pas.
 mettez-le à sa place chronologique ; sinon ce n'est pas grave, la page sera
 juste quand même.
 
-Chaque carte porte **`année · genre`**, comme le bandeau du panneau
-(`u-eyebrow`) : un répertoire dit quand ET quoi. Le `genre` vient de
+Chaque carte porte **`année · genre · badge`**, exactement comme le bandeau du
+panneau (`u-eyebrow`) : un répertoire dit quand, quoi, et où ça en est. Le
+badge (« En création », « En tournée ») vient de la ligne de CV — il explique
+au passage pourquoi un spectacle n'a pas encore de photographie. Le `genre` vient de
 `SHOW_UNIVERSES` ; c'est une étiquette libre (« Tragédie », « Théâtre
 documentaire », « Film sur l'art »), pas une valeur contrainte, et elle ne sert
 jamais au tri.

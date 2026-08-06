@@ -421,7 +421,12 @@ function pageRepertoire(fiches) {
                      vaut le seul texte, qui ne promet rien. -->
                 ${f.vignette ? `<img src="../${esc(f.vignette)}" alt="" loading="lazy" decoding="async" width="600" height="400">` : ''}
                 <span class="txt">
-                    ${f.annee || f.genre ? `<span class="annee">${esc([f.annee, f.genre].filter(Boolean).join(' · '))}</span>` : ''}
+                    ${[f.annee, f.genre, f.badge].some(Boolean)
+        // Espace normale AVANT le point médian, insécable APRÈS : le retour à
+        // la ligne se fait donc devant le point, qui part avec ce qu'il
+        // annonce. Sans ça il restait seul en bout de ligne, à pendre.
+        ? `<span class="annee">${esc([f.annee, f.genre, f.badge].filter(Boolean).join(' ·\u00A0'))}</span>`
+        : ''}
                     <span class="nom">${esc(f.titre)}</span>
                     ${f.role ? `<span class="role">${esc(f.role)}</span>` : ''}
                 </span>
@@ -623,6 +628,11 @@ function main() {
             // (voir u-eyebrow dans univers-montage.js). Un répertoire dit
             // quand ET quoi — « 2024 · Tragédie » choisit mieux qu'une date.
             genre: uni.genre || '',
+            // Le badge dit l'état — « En création », « En tournée ». Il vient
+            // de la ligne de CV et complète le bandeau exactement comme dans
+            // le panneau : année · genre · badge. Il explique au passage
+            // pourquoi deux spectacles n'ont pas encore de photographie.
+            badge: cv.badge || '',
             cv: Boolean(cvParTitre[cle])
         });
     });
