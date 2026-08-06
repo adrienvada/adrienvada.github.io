@@ -109,6 +109,25 @@ session de navigation, sinon elle deviendrait pénible. Pour la rejouer :
 Attention : un simple rechargement (F5 / Cmd+R) **ne suffit pas**, le
 `sessionStorage` survit aux rechargements dans le même onglet.
 
+### Elle ne se joue qu'à la porte d'entrée
+
+L'ouverture est le rideau du site : elle ne vaut que pour qui arrive à
+**l'adresse nue** (`adrienvada.fr/`). Toute adresse qui désigne un endroit
+précis la saute — l'univers d'un spectacle (`#/univers/berenice`), les dates
+(`#page_dates`) : ce lien a été partagé POUR ce qu'il montre, et un directeur
+de casting qui l'ouvre doit voir le spectacle, pas un rideau devant.
+
+`#page_cv` ne compte pas comme adresse profonde : c'est l'onglet par défaut,
+donc l'adresse nue sous un autre nom.
+
+Le test se fait dans le garde en ligne d'`index.html`, **avant** que le routage
+d'`univers.js` ne remplace le fragment par `#page_cv`. `?intro=1` force
+l'ouverture même sur un lien profond, pour pouvoir la régler.
+
+La session est marquée comme « déjà entrée » dans tous les cas, y compris
+quand l'ouverture est sautée : sans cela, revenir à l'adresse nue en cours de
+visite lèverait le rideau au milieu du spectacle.
+
 ### Régler l'animation
 
 Tout est dans les constantes en haut de `intro.js` :

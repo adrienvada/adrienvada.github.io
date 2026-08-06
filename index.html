@@ -3302,19 +3302,38 @@
     </div>
     <script>
         // Anti-scintillement : masque l'ouverture de scène instantanément,
-        // avant même le premier rendu, si elle a déjà été vue cette session
-        // ou si l'utilisateur préfère moins d'animations.
+        // avant même le premier rendu, si elle a déjà été vue cette session,
+        // si l'utilisateur préfère moins d'animations, ou si l'adresse
+        // demandait autre chose que la porte d'entrée.
         (function () {
             try {
                 // ?intro=1 dans l'URL force le rejeu (pratique pour régler l'effet)
                 var forced = /[?&]intro=1\b/.test(location.search);
                 var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 var seen = sessionStorage.getItem('avIntroSeen');
-                if (!forced && (reduce || seen)) {
+
+                // ARRIVÉE EN PROFONDEUR. L'ouverture de scène est la porte
+                // d'entrée du site : elle ne vaut que pour qui arrive à
+                // l'adresse nue. Une adresse qui désigne un endroit précis —
+                // l'univers d'un spectacle (#/univers/berenice), les dates —
+                // a été partagée POUR ce qu'elle montre : un directeur de
+                // casting qui ouvre ce lien doit voir le spectacle, pas un
+                // rideau de vingt secondes devant. Le fragment est lu ici,
+                // avant que le routage ne le remplace par #page_cv.
+                //
+                // #page_cv ne compte pas : c'est l'onglet par défaut, donc
+                // l'adresse nue sous un autre nom.
+                var h = location.hash || '';
+                var profond = h.length > 1 && h !== '#page_cv';
+
+                if (!forced && (reduce || seen || profond)) {
                     document.getElementById('intro-overlay').hidden = true;
-                } else {
-                    sessionStorage.setItem('avIntroSeen', '1');
                 }
+                // La session est marquée dans tous les cas : entrer par une
+                // porte dérobée reste entrer. Sans cela, revenir à l'adresse
+                // nue en cours de visite lèverait le rideau au milieu du
+                // spectacle — le contraire de ce qu'il est censé faire.
+                sessionStorage.setItem('avIntroSeen', '1');
             } catch (e) {
                 // Navigation privée / stockage bloqué : on montre l'intro sans bloquer le site
             }
