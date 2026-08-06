@@ -96,6 +96,62 @@ historique ne disait rien de plus que « Page build failed ».
 
 ---
 
+## Regarder une branche avant qu'elle ne touche le site (Cloudflare)
+
+GitHub Pages ne publie qu'une seule version : celle de `main`. Une branche de
+travail n'existe donc nulle part — on la relit dans un éditeur, jamais dans un
+navigateur, et surtout jamais sur un téléphone. Cloudflare comble ce trou : il
+publie une copie du dépôt **à chaque branche**, chacune à son adresse.
+
+Rien de tout cela ne concerne adrienvada.fr, qui reste servi par GitHub Pages
+et ignore Cloudflare. Si le projet Cloudflare disparaissait demain, le site
+n'en saurait rien.
+
+| Ce qu'on pousse | Ce qu'on obtient |
+|---|---|
+| `main` | `adrienvada-apercu.djerby-adrien.workers.dev` |
+| une autre branche | `<branche>-adrienvada-apercu.djerby-adrien.workers.dev` |
+
+L'adresse d'une branche est stable : elle suit son dernier commit. On peut donc
+la garder ouverte et recharger.
+
+**Trois fichiers, et c'est tout :**
+
+- **`wrangler.jsonc`** — un nom, une date de référence, et `"directory": "."`.
+  Pas de champ `main` : le site n'a aucun programme à exécuter, c'est un
+  serveur de fichiers. La racine du dépôt EST le site, exactement comme pour
+  GitHub Pages, pour que l'aperçu montre ce qui sera publié et rien d'autre.
+- **`.assetsignore`** — écarte `.git`, `.github`, `node_modules`. GitHub Pages
+  le fait sans le dire ; Cloudflare, non. Sans ce fichier la construction
+  échoue sur `✘ Asset too large` — l'historique du dépôt dépasse à lui seul la
+  limite de 25 Mio par fichier.
+- **`_headers`** — pose `X-Robots-Tag: noindex, nofollow` sur tout l'aperçu,
+  pour que Google n'y voie pas un second site au contenu identique. Lu par
+  Cloudflare uniquement ; GitHub Pages l'ignore. **Il faudrait le supprimer
+  avant de basculer adrienvada.fr chez Cloudflare** — la règle ne connaît pas
+  les noms de domaine, elle sortirait le vrai site de Google sans aucune
+  alerte.
+
+**Ces aperçus ne coûtent aucune publication GitHub Pages** : Cloudflare clone
+le dépôt de son côté. Le quota des dix par heure ne compte que les poussées,
+qui elles déclenchent bien les deux à la fois.
+
+Les visites sur `.workers.dev` **ne sont pas comptées** par Umami — voir plus
+bas, `data-domains`.
+
+Vérifier la configuration sans rien publier :
+
+```bash
+npx wrangler deploy --dry-run
+```
+
+Le « Read N files » affiché est le comptage brut du parcours de dossier, avant
+filtrage : il ne dit pas combien de fichiers seront publiés, et ne bouge pas
+quand on ajoute une ligne à `.assetsignore`. Ce qui se vérifie, c'est
+l'absence d'erreur.
+
+---
+
 ## Régénérer `styles.css` (obligatoire après modification des classes)
 
 Le site n'utilise plus le CDN Tailwind (qui générait le CSS dans le navigateur :
@@ -765,3 +821,10 @@ et par visite), `date_agenda`, `banner_next_date`.
 
 **Ne jamais transmettre autre chose que ce que la page affiche déjà** : noms de
 spectacle, noms de démo. Rien qui identifie qui que ce soit.
+
+**`data-domains="adrienvada.fr"`** sur la balise : la mesure ne compte que le
+domaine public. Le même `index.html` est aussi servi par les aperçus de branche
+Cloudflare ; sans cette restriction, chaque relecture d'une maquette viendrait
+gonfler les chiffres du vrai site. Ailleurs que sur le domaine listé, le script
+se charge et ne compte rien — c'est à retoucher le jour où le site changerait
+de nom de domaine, sans quoi la mesure s'arrêterait en silence.
