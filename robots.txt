@@ -1,4 +1,12 @@
 User-agent: *
 Allow: /
 
+# Le château-mystère (/chateau-mystere-2026-V1/) est une page privée.
+# Elle n'est VOLONTAIREMENT pas interdite ici : sa désindexation passe par la
+# balise <meta name="robots" content="noindex"> posée dans la page elle-même,
+# et un robot doit pouvoir entrer pour la lire. Un « Disallow » ferait
+# l'inverse de ce qu'on cherche — l'adresse resterait indexable depuis un
+# lien extérieur, sans qu'aucune consigne ne puisse plus l'en déloger.
+# NE PAS ajouter de Disallow sur ce dossier.
+
 Sitemap: https://adrienvada.fr/sitemap.xml
