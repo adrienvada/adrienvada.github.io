@@ -1350,7 +1350,8 @@ const SHOW_UNIVERSES = {
 
     // ── Ouverture : le panneau se déplie depuis la ligne cliquée ─────
     let openToken = 0;
-    let ouvertDepuis = 0;   // horodatage d'ouverture, pour mesurer la lecture
+    let ouvertDepuis = 0;      // horodatage d'ouverture, pour mesurer la lecture
+    let defilementAvant = 0;   // où l'on en était dans la page avant d'ouvrir
 
     function open(li, fromHistory) {
         const uni = universeFor(li);
@@ -1392,6 +1393,13 @@ const SHOW_UNIVERSES = {
             onScroll();
         });
 
+        // On retient où l'on en était dans la page AVANT de la verrouiller.
+        // `u-locked` pose overflow:hidden sur <html> : la page cesse d'être
+        // défilable, et le navigateur ramène aussitôt son défilement à zéro.
+        // Le retrait de la classe ne le rend pas — d'où un « précédent » qui
+        // renvoyait tout en haut du CV, alors qu'on avait ouvert un spectacle
+        // depuis le bas de la liste. C'est à nous de le rendre (voir close()).
+        defilementAvant = window.scrollY || document.documentElement.scrollTop || 0;
         document.documentElement.classList.add('u-locked');
         // Une entrée d'historique de plus : « précédent » referme l'univers
         // et rend le CV, au lieu de quitter le site (voir index.html).
@@ -1441,6 +1449,47 @@ const SHOW_UNIVERSES = {
         document.documentElement.classList.remove('u-locked');
         restoreThemeColor();
         window.dropOverlayState?.('univers');
+
+        // ── REPOSER LA PAGE LÀ OÙ ON L'AVAIT LAISSÉE ──
+        //  Ce n'est pas la restauration de défilement du navigateur qu'il faut
+        //  contrer, contrairement à ce qu'on croirait : c'est L'ADRESSE. Le
+        //  retour ramène le fragment à `#page_cv`, et le navigateur défile donc
+        //  vers cet élément — en DOUCEUR, puisque <html> porte `scroll-smooth`.
+        //  On voyait la page glisser vers le haut bien après notre remise en
+        //  place, qui n'y pouvait rien.
+        //
+        //  Chercher LE bon instant pour repositionner est une course perdue :
+        //  le retour d'historique et l'application du fragment n'arrivent pas
+        //  au même moment selon le chemin emprunté (croix, Échap, bouton du
+        //  navigateur). On insiste donc, image par image, pendant le court
+        //  moment où ça peut encore bouger — et on lâche prise dès que la
+        //  personne touche à la page, pour ne jamais lutter contre son geste.
+        if (defilementAvant) {
+            const y = defilementAvant;
+            defilementAvant = 0;
+            const html = document.documentElement;
+            const glissementInitial = html.style.scrollBehavior;
+            html.style.scrollBehavior = 'auto';   // sinon on ne fait que redonner une cible au glissement
+
+            const jusqua = Date.now() + 320;
+            let rendu = false;
+            const rendreLaMain = () => {
+                if (rendu) return;
+                rendu = true;
+                html.style.scrollBehavior = glissementInitial;
+                GESTES.forEach(g => window.removeEventListener(g, rendreLaMain));
+            };
+            const GESTES = ['wheel', 'touchstart', 'keydown', 'pointerdown'];
+            GESTES.forEach(g => window.addEventListener(g, rendreLaMain, { passive: true, once: true }));
+
+            const insister = () => {
+                if (rendu) return;
+                if (Math.abs(window.scrollY - y) > 1) window.scrollTo({ top: y, behavior: 'instant' });
+                if (Date.now() < jusqua) requestAnimationFrame(insister);
+                else rendreLaMain();
+            };
+            insister();
+        }
         const done = () => { overlay.hidden = true; overlay.innerHTML = ''; };
         if (REDUCED) done(); else setTimeout(done, 420);
         lastFocus?.focus?.({ preventScroll: true });

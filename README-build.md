@@ -385,6 +385,28 @@ puis rejoint les archives le lendemain. Le champ `icsDate` (format
 
 ---
 
+## La barre d'onglets reste en haut (téléphone uniquement)
+
+Sur petit écran, la barre se colle en haut au moment où elle allait sortir de
+l'écran. En haut de page, elle garde exactement son aspect habituel ; collée,
+elle prend un fond presque opaque et une ombre (`#nav-barre.est-collee`).
+
+⚠️ **Ne pas remettre `overflow-x: hidden` sur le `<body>`.** C'est ce qui
+empêchait `position: sticky` de fonctionner : `hidden` fait du `<body>` une
+boîte de défilement, et une barre collante se cale alors sur cette boîte, qui
+ne défile pas. Le `<body>` porte maintenant `overflow-x: clip`, qui rogne de la
+même façon **sans** créer de boîte de défilement. `hidden` reste déclaré juste
+avant, pour les navigateurs qui ignorent encore `clip` (Safari d'avant 16) :
+ils gardent le rognage et n'auront simplement pas la barre collante.
+
+L'état « collée » est détecté par une **sentinelle** placée juste au-dessus de
+la barre et surveillée par un `IntersectionObserver` (`suivreBarreCollante`) :
+aucun calcul à chaque pixel parcouru, et c'est le navigateur qui prévient au
+bon instant. L'observateur n'existe que sous 768 px, et se défait à la rotation
+de l'écran.
+
+---
+
 ## Univers des spectacles (`univers.js`)
 
 Un clic sur une ligne du CV n'ouvre plus un tiroir de dates, mais une **page
@@ -687,6 +709,28 @@ il sera écrasé.
 Le lien vers le répertoire, en pied de page d'`index.html`, est le seul chemin
 interne vers ces pages : sans lui, le sitemap les ferait indexer mais elles
 resteraient sans rien qui y mène. Ne pas le retirer.
+
+### Refermer un univers rend la page où elle était
+
+Ouvrir un univers pose `u-locked` (donc `overflow: hidden`) sur `<html>` : la
+page cesse d'être défilable et le navigateur ramène aussitôt son défilement à
+zéro. On retient donc la position avant de verrouiller, et on la repose à la
+fermeture.
+
+Ce n'est pas la restauration de défilement du navigateur qu'il faut contrer,
+contrairement à ce qu'on croirait : c'est **l'adresse**. Le retour ramène le
+fragment à `#page_cv`, et le navigateur défile vers cet élément — en douceur,
+puisque `<html>` porte `scroll-smooth`. La page glissait donc vers le haut bien
+après notre remise en place.
+
+D'où la méthode : couper le glissement le temps du retour, puis **insister
+image par image pendant 320 ms** — chercher LE bon instant est une course
+perdue, les moments d'application diffèrent selon le chemin (croix, Échap,
+bouton du navigateur). On lâche prise dès le premier geste de l'utilisateur
+(`wheel`, `touchstart`, `keydown`, `pointerdown`) pour ne jamais lutter contre
+lui.
+
+Vérifié sur les quatre chemins de fermeture, en mobile et en desktop.
 
 ### Un seul moteur, un seul visage
 
