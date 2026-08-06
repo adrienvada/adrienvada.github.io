@@ -141,7 +141,7 @@ const SHOW_UNIVERSES = {
             line: 'rgba(238,234,234,0.14)', glow: 'rgba(184,69,47,0.30)'
         },
         genre: 'Fiction d’anticipation',
-        synopsis: ['Paris, 2077. Pas de guerre nucléaire, pas de fertilité perdue, pas d’intelligence venue d’ailleurs pour nous exterminer ou nous sauver : le monde a seulement continué. Un meurtre étrange, une enquêtrice — et au bout de la piste, notre système agro-alimentaire.'],
+        synopsis: ['Paris, 2077.\nPas de guerre nucléaire, pas de fertilité perdue, pas d’intelligence venue d’ailleurs pour nous exterminer ou nous sauver : le monde a seulement continué. Un meurtre étrange, une enquêtrice — et au bout de la piste, notre système agro-alimentaire.'],
         // Un seul bloc, tant que le plateau n'existe pas : la note
         // d'intention. Condensée des intentions d'Angelo Jossec, à la
         // troisième personne — le « je » d'un metteur en scène sur le site
