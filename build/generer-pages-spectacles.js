@@ -406,7 +406,13 @@ function pageRepertoire(fiches) {
     const items = fiches.map((f, i) => `
         <li>
             <a href="${esc(f.slug)}/">
-                ${f.vignette ? `<img src="../${esc(f.vignette)}" alt="" loading="lazy" decoding="async" width="600" height="400">` : '<span class="sans-photo" aria-hidden="true"></span>'}
+                <!-- Pas de repli quand il n'y a pas de photo. Un spectacle en
+                     création n'en a pas encore : lui dessiner un cadre vide au
+                     ratio 3/2 donnait un grand rectangle sombre qui se lit
+                     comme une image qui n'a pas chargé — sur mobile, en
+                     colonne unique, il occupait la moitié de l'écran. Mieux
+                     vaut le seul texte, qui ne promet rien. -->
+                ${f.vignette ? `<img src="../${esc(f.vignette)}" alt="" loading="lazy" decoding="async" width="600" height="400">` : ''}
                 <span class="txt">
                     ${f.annee ? `<span class="annee">${esc(f.annee)}</span>` : ''}
                     <span class="nom">${esc(f.titre)}</span>
@@ -532,7 +538,7 @@ figcaption { margin-top: .4rem; font-size: .72rem; letter-spacing: .06em; text-t
 footer { max-width: 46rem; margin: 0 auto; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: .8rem; color: var(--muted); text-align: center; }
 
 /* Le répertoire (/spectacles/) */
-.repertoire { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1.25rem; padding: 2rem 0; }
+.repertoire { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1.25rem; padding: 2rem 0; align-items: start; }
 .repertoire a { display: block; text-decoration: none; color: inherit; }
 /* Le "height: auto" n'est pas décoratif : l'attribut height="400" du balisage
    agit comme indication de présentation et fixe une hauteur définie. Avec une
@@ -540,7 +546,7 @@ footer { max-width: 46rem; margin: 0 auto; padding-top: 1.5rem; border-top: 1px 
    les vignettes reprennent le cadrage du fichier — portrait pour les unes,
    paysage pour les autres — et la grille part en dents de scie. Le repasser
    à auto redonne la main au ratio. */
-.repertoire img, .repertoire .sans-photo {
+.repertoire img {
     display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover;
     border-radius: .5rem; background: var(--surface);
     transition: opacity .35s ease;
