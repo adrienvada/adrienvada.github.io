@@ -125,14 +125,17 @@ téléphone, avant que quoi que ce soit ne touche `adrienvada.fr`.
 L'adresse suit la forme :
 
 ```
-https://<branche>-adrienvada-apercu.<sous-domaine>.workers.dev
+https://<branche>-adrienvada-apercu.djerby-adrien.workers.dev
 ```
 
-`adrienvada-apercu` est le nom du Worker (voir `wrangler.jsonc`) ; le
-sous-domaine est celui du compte Cloudflare d'Adrien. **Ne pas inventer cette
-adresse** : la relever dans le tableau de bord Cloudflare, ou dans la sortie
-du déploiement, et la lui donner telle quelle. Une adresse approximative vaut
-moins que pas d'adresse du tout.
+`adrienvada-apercu` est le nom du Worker (voir `wrangler.jsonc`),
+`djerby-adrien` le sous-domaine du compte Cloudflare d'Adrien. L'adresse est
+**stable** : il peut la garder ouverte sur son téléphone et recharger au fil
+des commits.
+
+Et ces aperçus **ne consomment aucune publication GitHub Pages** : ils
+n'entament pas le quota de dix par heure. C'est la seconde raison de passer
+par une branche — on peut itérer autant qu'on veut sans toucher au compteur.
 
 Ces aperçus portent `X-Robots-Tag: noindex, nofollow` (voir `_headers`) et ne
 comptent pas dans la mesure d'audience (`data-domains` sur le script de
