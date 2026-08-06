@@ -87,6 +87,7 @@ FOLDERS = {
     "cleophene":   "cléophène",
     "fulgurees":   "fulgurés",
     "lerapt":      "le rapt",
+    "peaudesanges": "peau des anges",
 }
 
 
@@ -200,23 +201,25 @@ def main():
             print(f"  {n}.jpg  {im.width}x{im.height}  q{q}  "
                   f"{os.path.getsize(p) // 1024} Ko  {tag}")
 
-        # L'AFFICHE D'UN FILM : la seule image non numérotée admise. Elle ne
-        # fait pas partie du montage — elle le précède (champ `affiche` de
-        # l'univers) — et se dépose dans le dossier source sous le nom
-        # `affiche.jpg`. Portrait, plein écran : régime PLEIN.
-        for src_aff in glob.glob(os.path.join(SRC, folder, "affiche.*")):
-            im = ImageOps.exif_transpose(Image.open(src_aff)).convert("RGB")
-            im.thumbnail((PLEIN["side"], PLEIN["side"]), Image.LANCZOS)
-            p = os.path.join(dest, "affiche.jpg")
-            q = PLEIN["quality"]
-            while True:
-                im.save(p, quality=q, optimize=True, progressive=True)
-                if os.path.getsize(p) <= PLEIN["max_bytes"] or q <= PLEIN["floor"]:
-                    break
-                q -= 4
-            total += 1
-            print(f"  affiche.jpg  {im.width}x{im.height}  q{q}  "
-                  f"{os.path.getsize(p) // 1024} Ko  AFFICHE")
+        # LES INVITÉES NON NUMÉROTÉES, en nombre fermé. `affiche` ouvre la
+        # page d'un film (champ `affiche` de l'univers) ; `teaser` sert de
+        # jaquette locale à sa bande-annonce (champ `jaquette` d'un temps
+        # vidéo) — rien ne part vers l'hébergeur avant le clic. Toutes deux
+        # au régime PLEIN.
+        for nom in ("affiche", "teaser"):
+            for src_aff in glob.glob(os.path.join(SRC, folder, nom + ".*")):
+                im = ImageOps.exif_transpose(Image.open(src_aff)).convert("RGB")
+                im.thumbnail((PLEIN["side"], PLEIN["side"]), Image.LANCZOS)
+                p = os.path.join(dest, nom + ".jpg")
+                q = PLEIN["quality"]
+                while True:
+                    im.save(p, quality=q, optimize=True, progressive=True)
+                    if os.path.getsize(p) <= PLEIN["max_bytes"] or q <= PLEIN["floor"]:
+                        break
+                    q -= 4
+                total += 1
+                print(f"  {nom}.jpg  {im.width}x{im.height}  q{q}  "
+                      f"{os.path.getsize(p) // 1024} Ko  {nom.upper()}")
 
         # Photos retirées d'un montage : leur fichier traîne encore ici.
         # On ne le supprime que sur demande explicite — effacer des images

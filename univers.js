@@ -67,16 +67,18 @@
  *  UNE VIDÉO
  *  ---------
  *    { video: 'dQw4w9WgXcQ', c: ['Teaser du spectacle'] }
- *        Un extrait YouTube sur toute la largeur, en 16/9. On accepte
- *        l'identifiant seul ou l'adresse entière — youtu.be, watch?v=,
- *        /embed/, /shorts/ : ce qu'on a sous la main en copiant depuis
- *        YouTube. `c` donne la légende, comme pour une photo.
+ *    { video: 'https://vimeo.com/799006724', jaquette: 'teaser.jpg' }
+ *        Un extrait YouTube OU Vimeo sur toute la largeur, en 16/9. On
+ *        accepte l'identifiant seul ou l'adresse entière — ce qu'on a sous
+ *        la main en copiant. `c` donne la légende, comme pour une photo.
  *        Une valeur non reconnue est signalée dans la console et le bloc
  *        est ignoré — jamais de lecteur monté sur une adresse douteuse.
- *        RIEN N'EST DEMANDÉ À YOUTUBE AVANT LE CLIC : on ne montre que
- *        l'affiche du film. Le lecteur — un mégaoctet de scripts et ses
- *        traceurs — n'est fabriqué qu'au moment où l'on veut voir.
- *
+ *        RIEN N'EST DEMANDÉ À L'HÉBERGEUR AVANT LE CLIC : on ne montre que
+ *        la jaquette. YouTube en fournit une ; Vimeo non — une vidéo Vimeo
+ *        demande donc `jaquette`, un fichier du dossier de l'univers
+ *        (déposer « teaser.jpg » dans le dossier source, le script le
+ *        prépare comme l'affiche). Le lecteur — un mégaoctet de scripts et
+ *        ses traceurs — n'est fabriqué qu'au moment où l'on veut voir.
  *  LE CADRAGE D'UNE PHOTO
  *  ----------------------
  *    { p: [9, 5, 6], cadre: { 9: 'haut', 5: '38% 22%' } }
@@ -517,7 +519,8 @@ const SHOW_UNIVERSES = {
     "La peau des anges n'est pas si douce": {
         slug: 'peaudesanges',
         kind: 'film',
-        role: 'Court métrage · 12 minutes',
+        affiche: true,
+        role: 'Rôle · Narration',
         // Vermeer, littéralement : le plâtre clair d'un mur éclairé par la
         // gauche, l'outremer du turban, et le jaune de plomb-étain en
         // guise de lueur. La palette du film est celle des tableaux dont
@@ -527,13 +530,53 @@ const SHOW_UNIVERSES = {
             accent: '#2c4a8f', accentInk: '#223d78', onAccent: '#ffffff',
             line: 'rgba(28,26,23,0.15)', glow: 'rgba(199,158,58,0.30)'
         },
-        synopsis: ['L’histoire secrète des trente-deux tableaux',
-            'de Johannes Vermeer.',
-            'Elle est entièrement vraie,',
-            'puisque la cinéaste l’a entièrement imaginée.'],
+        // Le synopsis officiel de la fiche Unifrance, tel quel.
+        synopsis: ['Il était une fois la véritable histoire',
+            'des tableaux de Vermeer. Tout le monde l’a oubliée.',
+            'Certains détails de la vie d’une femme',
+            'doivent rester secrets.'],
+        // La distribution de l'affiche : luth, viole de gambe, narration.
+        cast: ['Constance Grard', 'Louise Pierrard', 'Adrien Vada'],
+        castNote: 'Luth, viole de gambe, narration.',
         prix: ['Prix du jury · Jeju International Film Festival, 2024',
             'Meilleur court métrage · Albany International Film Festival, 2023'],
-        sequence: []
+        sequence: [
+            {
+                chapter: '12 min',
+                chapterTitle: 'Entre documentaire et fiction, un voyage dans les tableaux de Vermeer — La Fémis, 2022.'
+            },
+            {
+                p: [1], cadre: { 1: '50% 35%' },
+                c: ['Au musée, devant « La Laitière ». C’est ici que le secret commence.']
+            },
+            {
+                q: ['« Cette histoire est entièrement vraie,', 'puisque je l’ai imaginée d’un bout à l’autre. »'],
+                by: 'Emma Fridé'
+            },
+            {
+                p: [2, 3], cadre: { 2: '30% 45%', 3: '50% 45%' },
+                c: ['Le globe du « Géographe ».', 'Un visage affleure dans les craquelures.'],
+                aside: ['Le film s’approche des toiles jusqu’à ce que la peinture devienne paysage.']
+            },
+            {
+                p: [4], cadre: { 4: '50% 40%' },
+                over: ['« Lorsqu’il s’agit de la vie d’une femme,', 'certains secrets sont faits pour durer. »'],
+                overAt: 'bas'
+            },
+            {
+                text: 'Faites un voyage romanesque à travers ses peintures : découvrez ' +
+                    'les paysages et les personnages issus de l’imagination du peintre.'
+            },
+            {
+                p: [5], cadre: { 5: '50% 45%' },
+                c: ['La peau des anges, au plus près.']
+            },
+            {
+                video: 'https://vimeo.com/799006724',
+                jaquette: 'teaser.jpg',
+                c: ['Bande-annonce — Le FIFA 41, Montréal']
+            },
+        ]
     },
 
     'Le rapt': {
@@ -1004,26 +1047,51 @@ const SHOW_UNIVERSES = {
     //  scripts et pose ses traceurs à l'affichage : en poser quatre dans
     //  un univers ruinerait le défilé qu'on vient tout juste d'alléger.
     const YT_ID = /^[A-Za-z0-9_-]{11}$/;
+    const VIMEO_ID = /^\d{6,12}$/;
+    // Ce qui peut légitimement finir dans data-u-video — et rien d'autre.
+    const VIDEO_REF = /^(yt:[A-Za-z0-9_-]{11}|vimeo:\d{6,12})$/;
+    // Une jaquette est un nom de fichier du dossier de l'univers, pas un
+    // chemin : pas de « / », pas d'espace, rien qui puisse sortir du dossier.
+    const JAQUETTE_OK = /^[A-Za-z0-9._-]+$/;
 
-    function videoId(uni, raw) {
+    function videoRef(uni, raw) {
         const s = String(raw || '').trim();
-        if (YT_ID.test(s)) return s;
-        const m = s.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/|\/live\/)([A-Za-z0-9_-]{11})/);
-        if (m) return m[1];
-        console.warn(`[univers] ${uni.slug} : vidéo « ${raw} » non reconnue — le bloc est ignoré. ` +
-            `Attendu : un identifiant YouTube de 11 signes, ou l'adresse complète de la vidéo.`);
+        if (YT_ID.test(s)) return 'yt:' + s;
+        let m = s.match(/(?:youtu\.be\/|v=|youtube\.com\/(?:embed|shorts|live)\/)([A-Za-z0-9_-]{11})/);
+        if (m) return 'yt:' + m[1];
+        m = s.match(/vimeo\.com\/(?:video\/)?(\d{6,12})/);
+        if (m) return 'vimeo:' + m[1];
+        if (VIMEO_ID.test(s)) return 'vimeo:' + s;
+        console.warn(`[univers] ${uni.slug} : vidéo « ${raw} » non reconnue — le bloc est ignoré. ` +
+            `Attendu : une adresse YouTube ou Vimeo, ou l'identifiant seul.`);
         return '';
     }
 
     function videoHtml(uni, beat, title) {
-        const id = videoId(uni, beat.video);
-        if (!id) return '';
+        const ref = videoRef(uni, beat.video);
+        if (!ref) return '';
         const cap = (beat.c && beat.c[0]) || '';
+        // La jaquette : l'image montrée avant le clic. YouTube en fournit
+        // une ; Vimeo n'en donne aucune sans appeler ses serveurs — ce qu'on
+        // se refuse à faire avant le clic. Une vidéo Vimeo demande donc sa
+        // jaquette locale (champ `jaquette`, fichier du dossier de
+        // l'univers, préparé par le script comme l'affiche).
+        let poster = '', repli = '';
+        if (beat.jaquette && JAQUETTE_OK.test(String(beat.jaquette))) {
+            poster = `ressources/images/univers/${uni.slug}/${beat.jaquette}`;
+        } else if (ref.startsWith('yt:')) {
+            const id = ref.slice(3);
+            poster = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+            repli = ` data-u-poster="${id}"`;
+        } else {
+            console.warn(`[univers] ${uni.slug} : une vidéo Vimeo demande une ` +
+                `jaquette locale (champ \`jaquette\`) — le bloc est ignoré.`);
+            return '';
+        }
         return `<figure class="u-video u-reveal">
-            <button type="button" class="u-video-play" data-u-video="${id}"
+            <button type="button" class="u-video-play" data-u-video="${ref}"
                     aria-label="Lire la vidéo : ${escape(cap || title)}">
-                <img src="https://i.ytimg.com/vi/${id}/maxresdefault.jpg"
-                     data-u-poster="${id}" alt="" loading="lazy" decoding="async">
+                <img src="${escape(poster)}"${repli} alt="" loading="lazy" decoding="async">
                 <span class="u-video-icon" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
             </button>
             ${cap ? `<figcaption class="u-cap"><span>${escape(cap)}</span></figcaption>` : ''}
@@ -1684,11 +1752,15 @@ const SHOW_UNIVERSES = {
             // l'affiche, et démarre — on vient de cliquer sur « lire ».
             const play = e.target.closest('[data-u-video]');
             if (play) {
-                const id = play.dataset.uVideo;
-                if (!YT_ID.test(id)) return;
+                const ref = play.dataset.uVideo;
+                if (!VIDEO_REF.test(ref)) return;
+                const id = ref.slice(ref.indexOf(':') + 1);
                 const frame = document.createElement('iframe');
-                frame.src = `https://www.youtube-nocookie.com/embed/${id}` +
-                    '?autoplay=1&rel=0&modestbranding=1';
+                // Les deux hébergeurs, chacun sous sa forme la plus sobre :
+                // nocookie pour YouTube, dnt (do not track) pour Vimeo.
+                frame.src = ref.startsWith('yt:')
+                    ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`
+                    : `https://player.vimeo.com/video/${id}?autoplay=1&dnt=1&title=0&byline=0&portrait=0`;
                 frame.title = play.getAttribute('aria-label') || 'Vidéo';
                 frame.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen';
                 frame.allowFullscreen = true;

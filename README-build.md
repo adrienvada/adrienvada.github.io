@@ -222,14 +222,18 @@ l'ordre. **Le nombre de photos suffit à décider de la mise en page** :
 { video: 'dQw4w9WgXcQ', c: ['Teaser du spectacle'] }
 ```
 
-Un extrait YouTube sur **toute la largeur**, en 16/9. On accepte l'identifiant
-seul ou l'adresse entière — `youtu.be/…`, `watch?v=…`, `/embed/…`, `/shorts/…` :
-ce qu'on a sous la main en copiant depuis YouTube. `c` donne la légende.
+Un extrait **YouTube ou Vimeo** sur **toute la largeur**, en 16/9. On accepte
+l'identifiant seul ou l'adresse entière — ce qu'on a sous la main en copiant.
+`c` donne la légende.
 
-**Rien n'est demandé à YouTube avant le clic.** Le bloc n'affiche d'abord que
-l'affiche du film ; le lecteur — un mégaoctet de scripts et ses traceurs —
-n'est fabriqué qu'au moment où l'on veut voir. Le lecteur est ensuite servi
-par `youtube-nocookie.com`.
+**Rien n'est demandé à l'hébergeur avant le clic.** Le bloc n'affiche d'abord
+qu'une jaquette ; le lecteur — un mégaoctet de scripts et ses traceurs —
+n'est fabriqué qu'au moment où l'on veut voir, servi par `youtube-nocookie.com`
+ou `player.vimeo.com` avec `dnt=1`.
+
+YouTube fournit sa jaquette tout seul ; **Vimeo non** : une vidéo Vimeo demande
+`jaquette: 'teaser.jpg'` — déposer le fichier dans le dossier source de
+l'univers, le script le prépare comme l'affiche.
 
 Une valeur non reconnue est **signalée dans la console** et le bloc est ignoré :
 jamais de lecteur monté sur une adresse qu'on n'a pas comprise.
