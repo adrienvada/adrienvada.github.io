@@ -133,6 +133,13 @@ const lignes = (v) => (Array.isArray(v) ? v : String(v || '').split('\n'))
 function photosDe(uni) {
     const vues = new Set();
     const out = [];
+    // `affiche: true` : le film ouvre son univers sur son affiche entière.
+    // La page le suit — c'est elle qui devient la vignette de partage, et une
+    // affiche se reconnaît là où un photogramme de tournage ne dit rien.
+    if (uni.affiche) {
+        const rel = `ressources/images/univers/${uni.slug}/affiche.jpg`;
+        if (fs.existsSync(path.join(RACINE, rel))) out.push({ src: rel, legende: 'Affiche' });
+    }
     (uni.sequence || []).forEach(bloc => {
         if (!bloc || !Array.isArray(bloc.p)) return;
         bloc.p.forEach((n, i) => {

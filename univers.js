@@ -1074,7 +1074,7 @@ const SHOW_UNIVERSES = {
                     aria-label="Agrandir l’affiche du film">
                 <img src="ressources/images/univers/${uni.slug}/affiche.jpg"
                      alt="Affiche — ${escape(title)}" loading="eager" decoding="async">
-                <span class="u-fig-loupe" aria-hidden="true"><i class="fa-solid fa-expand"></i></span>
+                <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
         </figure>`;
     }
