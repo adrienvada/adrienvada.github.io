@@ -1,0 +1,47 @@
+// ============================================================
+//  APERÇUS DE BRANCHE — configuration Cloudflare
+// ============================================================
+//  CE FICHIER NE CONCERNE PAS LE SITE PUBLIC. adrienvada.fr est
+//  servi par GitHub Pages, via .github/workflows/publier.yml, et
+//  ne sait rien de Cloudflare. Si ce fichier disparaissait, le
+//  site n'en serait pas affecté.
+//
+//  À QUOI IL SERT. Cloudflare publie une copie du site à CHAQUE
+//  branche, chacune à sa propre adresse. Une branche devient donc
+//  un vrai site consultable — depuis un téléphone, avant que quoi
+//  que ce soit ne touche la production. C'est le regard qu'on
+//  perd en travaillant directement sur `main`.
+//
+//  POURQUOI DU JSON ET PAS UN FORMULAIRE. Cloudflare a fondu son
+//  offre « Pages » dans « Workers » : l'ancien formulaire, qui
+//  demandait simplement un dossier à servir, n'existe plus. Le
+//  nouveau flux attend un projet Worker décrit par ce fichier.
+//  Notre site n'a pourtant aucun programme à exécuter — d'où une
+//  configuration réduite au strict minimum : un nom, une date, et
+//  le dossier à servir.
+//
+//  IL N'Y A PAS DE CHAMP `main` : c'est voulu. Un Worker sans
+//  script ne fait que servir des fichiers, ce qui est exactement
+//  le besoin. Ajouter un script n'apporterait rien et donnerait à
+//  maintenir du code qui ne rend aucun service.
+// ============================================================
+{
+  "name": "adrienvada-apercu",
+
+  // Date de référence du moteur Cloudflare. Elle fige le
+  // comportement de la plateforme : la relever un jour est un
+  // choix délibéré, jamais un réflexe.
+  "compatibility_date": "2026-08-01",
+
+  "assets": {
+    // La racine du dépôt EST le site — même chose que pour GitHub
+    // Pages. L'aperçu montre donc exactement ce qui sera publié,
+    // fichiers de build compris. C'est le but : un aperçu qui
+    // diffère de la production ne sert à rien.
+    "directory": ".",
+
+    // Une adresse inconnue rend le 404 du site, avec sa mise en
+    // page, au lieu de la page blanche par défaut de Cloudflare.
+    "not_found_handling": "404-page"
+  }
+}
