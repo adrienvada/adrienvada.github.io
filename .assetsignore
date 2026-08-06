@@ -1,0 +1,30 @@
+# ============================================================
+#  CE QUE CLOUDFLARE NE DOIT PAS SERVIR
+# ============================================================
+#  Lu par wrangler au moment de constituer la liste des fichiers
+#  à envoyer (voir wrangler.jsonc, "assets.directory": ".").
+#  Syntaxe identique à celle d'un .gitignore.
+#
+#  POURQUOI CE FICHIER EXISTE. La racine du dépôt EST le site :
+#  c'est vrai pour GitHub Pages comme pour Cloudflare. Mais
+#  GitHub Pages écarte d'office le dossier `.git`, alors que
+#  wrangler prend le dossier tel quel — et bute aussitôt :
+#
+#      ✘ [ERROR] Asset too large.
+#      .git/objects/pack/pack-cb3322…pack — 34.1 MiB
+#      (la limite est de 25 MiB par fichier)
+#
+#  L'historique du dépôt n'a évidemment rien à faire dans un
+#  site. La liste ci-dessous se borne donc à reproduire ce que
+#  GitHub Pages fait sans le dire.
+#
+#  ON N'EN EXCLUT PAS DAVANTAGE, et c'est délibéré : un aperçu
+#  qui diffère de la production ne sert à rien. Tout ce que
+#  GitHub Pages sert — y compris README-build.md et le dossier
+#  build/ — reste servi ici, pour que ce qu'on regarde soit
+#  exactement ce qui sera publié.
+# ============================================================
+
+.git
+.github
+node_modules
