@@ -124,10 +124,25 @@
 
 const SHOW_UNIVERSES = {
 
-    // ── EN CRÉATION ──────────────────────────────────────────────────
-    //  Deux spectacles qui n'existent pas encore. Leur univers n'a donc
-    //  pas de montage : un titre, ce qu'on en sait, et le pied de page.
-    //  `sequence: []` n'est pas un oubli — c'est l'état juste.
+    // ── L'ORDRE ──────────────────────────────────────────────────────
+    //  De la plus récente à la plus ancienne, comme le répertoire
+    //  (/spectacles/) et comme se lit un CV. À année égale, l'ordre est
+    //  celui qu'on a choisi — le tri ne le bouscule pas.
+    //  Le générateur des pages spectacle trie de son côté : cet ordre-ci
+    //  est un confort de lecture, rien ne s'appuie dessus.
+    //
+    //  DEUX CONVENTIONS, qui valent pour n'importe quelle entrée et qui
+    //  avaient jusqu'ici leur propre section — l'ordre chronologique les
+    //  a dispersées :
+    //
+    //   · `sequence: []` n'est pas un oubli. Un spectacle qui n'existe
+    //     pas encore n'a pas d'images à montrer : un titre, ce qu'on en
+    //     sait, et le pied de page. C'est l'état juste.
+    //
+    //   · `kind: 'film'` change le vocabulaire : un film n'est pas « à
+    //     l'affiche », n'a pas de tournée, et son pied de page ne renvoie
+    //     pas aux dates. Le montage viendra quand il y aura des images —
+    //     ou un extrait, avec un bloc { video: … }.
 
     'Cassandres': {
         slug: 'cassandres',
@@ -174,56 +189,119 @@ const SHOW_UNIVERSES = {
         sequence: []
     },
 
-    'Bérénice': {
-        slug: 'berenice',
-        // Blanc majeur, rose et noir mineurs : la lumière crue d'une
-        // séparation, le rose seulement là où ça touche.
+    'À la barre, peine perdue ?': {
+        slug: 'alabarre',
         palette: {
-            bg: '#f6f3ef', surface: '#ffffff', text: '#181215', muted: '#6d5d63',
-            accent: '#c0637e', accentInk: '#a34a66', onAccent: '#ffffff',
-            line: 'rgba(24,18,21,0.13)', glow: 'rgba(192,99,126,0.30)'
+            bg: '#08080b', surface: '#131620', text: '#ececef', muted: '#9899a4',
+            accent: '#c8102e', accentInk: '#e2455c', onAccent: '#ffffff',
+            line: 'rgba(236,236,239,0.14)', glow: 'rgba(31,58,147,0.40)'
         },
-        cast: ['Angelo Jossec', 'Manon Rivier', 'Lauren Toulin', 'Adrien Vada'],
-        credit: 'Olivier Héron',
-        genre: 'Tragédie',
-        synopsis: 'Rome, an 79. \n Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
+        cast: ['Marion Casabianca', 'Anne Cosmao', 'Rémi Dessenoix', 'Valérie Diome',
+            'Adrien Vada'],
+        castNote: 'Jeu et mise en scène collective.',
+        credit: 'Arnaud Bertereau',
+        genre: 'Théâtre documentaire',
+        synopsis: ['Inspirés d’affaires réelles, des extraits de procès révèlent la complexité d’une justice en souffrance face à l\'ampleur des violences conjugales.'],
         sequence: [
-            { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes en alexandrin' },
-            { p: [2], cadre: { 2: '55% 55%' }, c: ['Un triangle amoureux élevé au rang de la tragédie.'] },
             {
-                q: ['« Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice. »'], by: 'Bérénice, acte V'
-            },
-            { p: [18], cadre: { 18: '52% 45%' }, c: ['La scène est une arène en hyper proximité avec le public, baignée dans une ambiance sonore et musicale live.'] },
-            {
-                p: [12, 5], cadre: { 12: '58% 15%', 5: '30% 45%' }, c: ['Bérénice, Antiochus, Acte III', 'Paulin, Titus, Bérénice, Acte II'],
-                // REMPLISSAGE
-                aside: 'Une des plus belles partitions classique pour un personnage féminin qui sert « d\'exemple à l\'univers ».'
+                chapter: '1h05',
+                chapterTitle: 'Puis 45 minutes de débat — tout public dès 15 ans'
             },
             {
-                q: '« Depuis huit jours je règne ; et jusques à ce jour,\n' +
-                    'Qu\'ai-je fait pour l\'honneur ? J\'ai tout fait pour l\'amour. »', by: 'Titus, acte IV'
+                p: [19], cadre: { 19: '45% 25%' },
+                c: ['Créé en 2024 au palais de justice de Rouen.']
             },
             {
-                p: [1, 9, 11], cadre: { 1: '48% 15%', 9: '68% 20%', 11: '48% 18%' }, c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
-                // REMPLISSAGE
-                aside: 'La pureté des émotions transposée en thriller psychologique.'
+                q: ['« La violence est au plus proche des personnes de leurs relations,', 'au quotidien, au travail, dans la sphère familiale, la plus intime »'],
+                by: 'Marion, III - L’institution judiciaire au défi du réel'
             },
             {
-                p: [3], cadre: { 3: '62% 45%' }, c: ['Un travail au plus plus proche de l\'alexandrin racinien pour en éprouver la virtuosité.'],
+                p: [20, 8, 5, 9], cadre: { 20: '35% 35%', 8: '15% 18%', 5: '47% 18%', 9: '50% 15%' }, c: ['Avocate de la partie civile, IV - Le quotidien du sexisme', 'Prévenu, IV - Le quotidien du sexisme', 'Greffier, II - Face aux violences', 'Avocat de la défense, V - La défense des hommes'],
+                aside: ['Comment, dans ces conditions,', 'réussir à “rendre justice” ?']
             },
             {
-                q: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »'],
-                by: 'Bérénice, acte IV'
+                q: ['« Monsieur, avez-vous quelque chose à ajouter ? »'],
+                by: 'Présidente, VI - Dans le couple '
             },
-            { p: [7, 13, 16], cadre: { 7: '55% 25%', 13: '60% 40%', 16: '55% 25%' }, c: ['Bérénice, Antiochus, Acte I', 'Antiochus, Paulin, Titus, Acte IV', 'Bérénice, Antiochus, Titus, Acte V'] },
             {
-                text: 'Un spectacle exigeant qui déconstruit les a priori sur le théâtre classique pour transmettre ce patrimoine universel.'
+                p: [4, 13, 14, 12], cadre: { 4: '18% 25%', 13: '30% 15%', 14: '36% 28%', 12: '52% 25%' }, c: ['', '', ''],
+                aside: ['Le spectacle, sobre, peut se jouer en tribunal comme en salle municipale ou établissement scolaire : la salle d\'audience est recrée.']
             },
-            { p: [17, 19], cadre: { 17: '50% 55%', 19: '32% 35%' }, c: ['Lycée La Salle, Rouen', 'Espace Jean Legendre, Compiègne'] },
+            {
+                q: ['« Peine perdue, alors ? » — « Non, au contraire : on travaille, on continue. »'],
+                by: 'Rémi, Anne, X - Conclusion'
+            },
+            {
+                p: [6], cadre: { 6: '57% 28%' }, c: [''],
+                over: ['« La justice est imparfaite parce qu’elle est humaine... »'],
+                overAt: 'bas'
+            },
+            {
+                text: '« ... Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps. »  '
+            },
+            {
+                p: [25, 26], cadre: { 25: '55% 50%', 26: '33% 45%' }, c: ['Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen', 'Débat suivant une représentation au tribunal d\'Avignon', ''],
+            },
+        ]
+    },
 
+    'Audiences': {
+        slug: 'audiences',
+        // Salle de classe plutôt que salle d'audience : Audiences se joue au
+        // collège, et c'est d'abord un outil de transmission. D'où le fond
+        // clair — papier, lumière de salle, lisibilité — et le bleu d'encre
+        // scolaire en accent. Le noir des robes n'a pas disparu : il est
+        // passé dans le texte et les filets, et il est déjà partout dans les
+        // photos. La palette de À la barre, elle, reste noire et rouge :
+        // même sujet, mais pas le même geste.
+        palette: {
+            bg: '#edeff1', surface: '#ffffff', text: '#14171c', muted: '#59606b',
+            accent: '#4573c4', accentInk: '#2e5799', onAccent: '#ffffff',
+            line: 'rgba(20,23,28,0.15)', glow: 'rgba(69,115,196,0.20)'
+        },
+        // Sur le CV, l'accent ne peut pas servir tel quel : il est sombre
+        // pour porter du texte blanc sur le fond clair de l'univers, et il
+        // paraîtrait alors plus nocturne que Fulguré.e.s — l'inverse de ce
+        // que disent les deux spectacles. Le filet prend donc un bleu de
+        // craie : l'école, le tableau, la clarté.
+        cvAccent: '#8fbfe8',
+        cast: ['Steeve Brunet', 'Marine Chambrier', 'Adrien Vada'],
+        genre: 'Spectacle de prévention',
+        synopsis: ['Un spectacle de prévention, joué au collège.',
+            'Violences sexistes et sexuelles, stéréotypes, consentement — à travers le prisme de la justice.'],
+        sequence: [
             {
-                video: 'https://www.youtube.com/watch?v=5wg0P7-Dt_w',
-                c: ['Bande annonce — Centre culturel Voltaire, Déville-lès-Rouen']
+                chapter: '40 min',
+                chapterTitle: 'Puis 30 minutes de débat — niveaux 4ᵉ et 3ᵉ'
+            },
+            {
+                p: [8], cadre: { 8: '45% 55%' },
+                c: ['Adapté d’À la barre pour le collège, créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ.']
+            },
+            {
+                q: ['« Victime. Irréparable. Accusé. Avocat.',
+                    'Émotion. Juge. Défendre. Sursis.',
+                    'Acquitté. Procédure. Peine. Vérité. »'],
+                by: 'Les mots de la justice, par les élèves du collège Boieldieu'
+            },
+            {
+                p: [6, 5], cadre: { 6: '42% 20%', 5: '48% 18%' }, c: ['', ''],
+                aside: ['Les différents tribunaux, leur composition, le déroulé d’un procès — et ce qu’on y dit vraiment.']
+            },
+            {
+                p: [4], cadre: { 4: '62% 20%' },
+                c: ['Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres.']
+            },
+            {
+                p: [1, 2, 3], cadre: { 1: '48% 30%', 2: '35% 40%', 3: '60% 40%' }, c: ['', '', ''],
+                aside: ['Après la représentation, un échange permet d\'effectuer un travail de sensibilisation.']
+            },
+            {
+                q: ['« Pourquoi suis-je violent ? »'],
+                by: 'La question posée au débat'
+            },
+            {
+                text: 'C’est un outil de prévention autant qu’un spectacle : ce qui se joue devant les élèves prépare ce qui se dira après.'
             },
         ]
     },
@@ -307,177 +385,6 @@ const SHOW_UNIVERSES = {
         ]
     },
 
-    'As You Like It': {
-        slug: 'asyoulikeit',
-        // La forêt d'Ardenne : verts superposés, et les couleurs
-        // criardes du bouffon qui viennent dérégler l'ensemble.
-        palette: {
-            bg: '#0c2013', surface: '#153322', text: '#eaf7e2', muted: '#9dc3a0',
-            accent: '#c2d94b', accentInk: '#cfe36a', onAccent: '#0c2013',
-            line: 'rgba(194,217,75,0.22)', glow: 'rgba(217,79,43,0.35)'
-        },
-        cast: ['Alexis Debieuvre*', 'Noémie Fourdan', 'Nicolas Gaspar', 'Nanou Harry',
-            'Clotilde Maurin', 'Laurent Prache*', 'Bastien Spiteri', 'Laurène Thomas',
-            'Adrien Vada'],
-        castNote: '* en alternance',
-        credit: 'Clara Delmas',
-        genre: 'Comédie',
-        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes. Déguisée en berger sous le nom de Ganymède, elle est accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d\'autre membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
-        sequence: [
-            {
-                chapter: '2h',
-                chapterTitle: 'La comédie shakespearienne traduite et adaptée en spectacle théâtral et musical tout terrain, pour un public dès 12 ans.'
-            },
-            {
-                p: [3],
-                over: ['« Le monde entier est un théâtre... »'], overAt: 'centre'
-            },
-            {
-                q: ['« ...et tous les hommes et les femmes rien d’autre que des acteurs.', 'Ils ont leurs entrées et leurs sorties. »'],
-                by: 'Jaques, ACTE II'
-            },
-            {
-                p: [16, 14, 9], cadre: { 16: '45% 50%', 14: '50% 65%', 9: '60% 45%' }, c: ['Extérieur, ACTE I', 'Extérieur, ACTE V', 'Intérieur, ACTE V'],
-                aside: 'Neuf comédiens incarnant gens de cour et paysans réunis dans la même forêt.'
-            },
-            {
-                p: [8], cadre: { 8: '38% 40%' }, c: ['Dans As you like it, le rythme surprend et change à chaque instant. C\'est lui qui doit nous emporter.'],
-            },
-            {
-                q: ['« Un humain au cours de sa vie joue plusieurs rôles,',
-                    'ses actes étant les sept âges. »'],
-                by: 'Jaques, ACTE II'
-            },
-            {
-                p: [11, 1, 4], cadre: { 11: '48% 32%', 1: '47% 30%', 4: '42% 35%' }, c: ['Adurey, Touchstone, ACTE V', 'Rosalind, Duke Frederick, Celia, ACTE I', 'Celia, Rosalind, ACTE II'],
-            },
-            {
-                text: 'Des comédiens et des musiciens forment un joyeux orchestre. C’est comme une fête ! Et dans toute bonne fête, le rythme, la musique et le paysage sonore priment.'
-            },
-            {
-                p: [15, 13], cadre: { 15: '50% 70%', 13: '40% 35%' },
-                c: ['Château de Villerville', 'Le Studio d\'Asnières'],
-            },
-        ]
-    },
-
-    'Audiences': {
-        slug: 'audiences',
-        // Salle de classe plutôt que salle d'audience : Audiences se joue au
-        // collège, et c'est d'abord un outil de transmission. D'où le fond
-        // clair — papier, lumière de salle, lisibilité — et le bleu d'encre
-        // scolaire en accent. Le noir des robes n'a pas disparu : il est
-        // passé dans le texte et les filets, et il est déjà partout dans les
-        // photos. La palette de À la barre, elle, reste noire et rouge :
-        // même sujet, mais pas le même geste.
-        palette: {
-            bg: '#edeff1', surface: '#ffffff', text: '#14171c', muted: '#59606b',
-            accent: '#4573c4', accentInk: '#2e5799', onAccent: '#ffffff',
-            line: 'rgba(20,23,28,0.15)', glow: 'rgba(69,115,196,0.20)'
-        },
-        // Sur le CV, l'accent ne peut pas servir tel quel : il est sombre
-        // pour porter du texte blanc sur le fond clair de l'univers, et il
-        // paraîtrait alors plus nocturne que Fulguré.e.s — l'inverse de ce
-        // que disent les deux spectacles. Le filet prend donc un bleu de
-        // craie : l'école, le tableau, la clarté.
-        cvAccent: '#8fbfe8',
-        cast: ['Steeve Brunet', 'Marine Chambrier', 'Adrien Vada'],
-        genre: 'Spectacle de prévention',
-        synopsis: ['Un spectacle de prévention, joué au collège.',
-            'Violences sexistes et sexuelles, stéréotypes, consentement — à travers le prisme de la justice.'],
-        sequence: [
-            {
-                chapter: '40 min',
-                chapterTitle: 'Puis 30 minutes de débat — niveaux 4ᵉ et 3ᵉ'
-            },
-            {
-                p: [8], cadre: { 8: '45% 55%' },
-                c: ['Adapté d’À la barre pour le collège, créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ.']
-            },
-            {
-                q: ['« Victime. Irréparable. Accusé. Avocat.',
-                    'Émotion. Juge. Défendre. Sursis.',
-                    'Acquitté. Procédure. Peine. Vérité. »'],
-                by: 'Les mots de la justice, par les élèves du collège Boieldieu'
-            },
-            {
-                p: [6, 5], cadre: { 6: '42% 20%', 5: '48% 18%' }, c: ['', ''],
-                aside: ['Les différents tribunaux, leur composition, le déroulé d’un procès — et ce qu’on y dit vraiment.']
-            },
-            {
-                p: [4], cadre: { 4: '62% 20%' },
-                c: ['Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres.']
-            },
-            {
-                p: [1, 2, 3], cadre: { 1: '48% 30%', 2: '35% 40%', 3: '60% 40%' }, c: ['', '', ''],
-                aside: ['Après la représentation, un échange permet d\'effectuer un travail de sensibilisation.']
-            },
-            {
-                q: ['« Pourquoi suis-je violent ? »'],
-                by: 'La question posée au débat'
-            },
-            {
-                text: 'C’est un outil de prévention autant qu’un spectacle : ce qui se joue devant les élèves prépare ce qui se dira après.'
-            },
-        ]
-    },
-
-    'À la barre, peine perdue ?': {
-        slug: 'alabarre',
-        palette: {
-            bg: '#08080b', surface: '#131620', text: '#ececef', muted: '#9899a4',
-            accent: '#c8102e', accentInk: '#e2455c', onAccent: '#ffffff',
-            line: 'rgba(236,236,239,0.14)', glow: 'rgba(31,58,147,0.40)'
-        },
-        cast: ['Marion Casabianca', 'Anne Cosmao', 'Rémi Dessenoix', 'Valérie Diome',
-            'Adrien Vada'],
-        castNote: 'Jeu et mise en scène collective.',
-        credit: 'Arnaud Bertereau',
-        genre: 'Théâtre documentaire',
-        synopsis: ['Inspirés d’affaires réelles, des extraits de procès révèlent la complexité d’une justice en souffrance face à l\'ampleur des violences conjugales.'],
-        sequence: [
-            {
-                chapter: '1h05',
-                chapterTitle: 'Puis 45 minutes de débat — tout public dès 15 ans'
-            },
-            {
-                p: [19], cadre: { 19: '45% 25%' },
-                c: ['Créé en 2024 au palais de justice de Rouen.']
-            },
-            {
-                q: ['« La violence est au plus proche des personnes de leurs relations,', 'au quotidien, au travail, dans la sphère familiale, la plus intime »'],
-                by: 'Marion, III - L’institution judiciaire au défi du réel'
-            },
-            {
-                p: [20, 8, 5, 9], cadre: { 20: '35% 35%', 8: '15% 18%', 5: '47% 18%', 9: '50% 15%' }, c: ['Avocate de la partie civile, IV - Le quotidien du sexisme', 'Prévenu, IV - Le quotidien du sexisme', 'Greffier, II - Face aux violences', 'Avocat de la défense, V - La défense des hommes'],
-                aside: ['Comment, dans ces conditions,', 'réussir à “rendre justice” ?']
-            },
-            {
-                q: ['« Monsieur, avez-vous quelque chose à ajouter ? »'],
-                by: 'Présidente, VI - Dans le couple '
-            },
-            {
-                p: [4, 13, 14, 12], cadre: { 4: '18% 25%', 13: '30% 15%', 14: '36% 28%', 12: '52% 25%' }, c: ['', '', ''],
-                aside: ['Le spectacle, sobre, peut se jouer en tribunal comme en salle municipale ou établissement scolaire : la salle d\'audience est recrée.']
-            },
-            {
-                q: ['« Peine perdue, alors ? » — « Non, au contraire : on travaille, on continue. »'],
-                by: 'Rémi, Anne, X - Conclusion'
-            },
-            {
-                p: [6], cadre: { 6: '57% 28%' }, c: [''],
-                over: ['« La justice est imparfaite parce qu’elle est humaine... »'],
-                overAt: 'bas'
-            },
-            {
-                text: '« ... Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps. »  '
-            },
-            {
-                p: [25, 26], cadre: { 25: '55% 50%', 26: '33% 45%' }, c: ['Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen', 'Débat suivant une représentation au tribunal d\'Avignon', ''],
-            },
-        ]
-    },
-
     'Fulguré.e.s': {
         slug: 'fulgurees',
         // La nuit et la foudre : bleus profonds, éclats blancs.
@@ -532,11 +439,113 @@ const SHOW_UNIVERSES = {
         ]
     },
 
-    // ── COURTS MÉTRAGES ──────────────────────────────────────────────
-    //  `kind: 'film'` change le vocabulaire : un film n'est pas « à
-    //  l'affiche », n'a pas de tournée, et son pied de page ne renvoie pas
-    //  aux dates. Le montage viendra quand il y aura des images — ou un
-    //  extrait, avec un bloc { video: … }.
+    'Bérénice': {
+        slug: 'berenice',
+        // Blanc majeur, rose et noir mineurs : la lumière crue d'une
+        // séparation, le rose seulement là où ça touche.
+        palette: {
+            bg: '#f6f3ef', surface: '#ffffff', text: '#181215', muted: '#6d5d63',
+            accent: '#c0637e', accentInk: '#a34a66', onAccent: '#ffffff',
+            line: 'rgba(24,18,21,0.13)', glow: 'rgba(192,99,126,0.30)'
+        },
+        cast: ['Angelo Jossec', 'Manon Rivier', 'Lauren Toulin', 'Adrien Vada'],
+        credit: 'Olivier Héron',
+        genre: 'Tragédie',
+        synopsis: 'Rome, an 79. \n Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
+        sequence: [
+            { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes en alexandrin' },
+            { p: [2], cadre: { 2: '55% 55%' }, c: ['Un triangle amoureux élevé au rang de la tragédie.'] },
+            {
+                q: ['« Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice. »'], by: 'Bérénice, acte V'
+            },
+            { p: [18], cadre: { 18: '52% 45%' }, c: ['La scène est une arène en hyper proximité avec le public, baignée dans une ambiance sonore et musicale live.'] },
+            {
+                p: [12, 5], cadre: { 12: '58% 15%', 5: '30% 45%' }, c: ['Bérénice, Antiochus, Acte III', 'Paulin, Titus, Bérénice, Acte II'],
+                // REMPLISSAGE
+                aside: 'Une des plus belles partitions classique pour un personnage féminin qui sert « d\'exemple à l\'univers ».'
+            },
+            {
+                q: '« Depuis huit jours je règne ; et jusques à ce jour,\n' +
+                    'Qu\'ai-je fait pour l\'honneur ? J\'ai tout fait pour l\'amour. »', by: 'Titus, acte IV'
+            },
+            {
+                p: [1, 9, 11], cadre: { 1: '48% 15%', 9: '68% 20%', 11: '48% 18%' }, c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
+                // REMPLISSAGE
+                aside: 'La pureté des émotions transposée en thriller psychologique.'
+            },
+            {
+                p: [3], cadre: { 3: '62% 45%' }, c: ['Un travail au plus plus proche de l\'alexandrin racinien pour en éprouver la virtuosité.'],
+            },
+            {
+                q: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »'],
+                by: 'Bérénice, acte IV'
+            },
+            { p: [7, 13, 16], cadre: { 7: '55% 25%', 13: '60% 40%', 16: '55% 25%' }, c: ['Bérénice, Antiochus, Acte I', 'Antiochus, Paulin, Titus, Acte IV', 'Bérénice, Antiochus, Titus, Acte V'] },
+            {
+                text: 'Un spectacle exigeant qui déconstruit les a priori sur le théâtre classique pour transmettre ce patrimoine universel.'
+            },
+            { p: [17, 19], cadre: { 17: '50% 55%', 19: '32% 35%' }, c: ['Lycée La Salle, Rouen', 'Espace Jean Legendre, Compiègne'] },
+
+            {
+                video: 'https://www.youtube.com/watch?v=5wg0P7-Dt_w',
+                c: ['Bande annonce — Centre culturel Voltaire, Déville-lès-Rouen']
+            },
+        ]
+    },
+
+    'As You Like It': {
+        slug: 'asyoulikeit',
+        // La forêt d'Ardenne : verts superposés, et les couleurs
+        // criardes du bouffon qui viennent dérégler l'ensemble.
+        palette: {
+            bg: '#0c2013', surface: '#153322', text: '#eaf7e2', muted: '#9dc3a0',
+            accent: '#c2d94b', accentInk: '#cfe36a', onAccent: '#0c2013',
+            line: 'rgba(194,217,75,0.22)', glow: 'rgba(217,79,43,0.35)'
+        },
+        cast: ['Alexis Debieuvre*', 'Noémie Fourdan', 'Nicolas Gaspar', 'Nanou Harry',
+            'Clotilde Maurin', 'Laurent Prache*', 'Bastien Spiteri', 'Laurène Thomas',
+            'Adrien Vada'],
+        castNote: '* en alternance',
+        credit: 'Clara Delmas',
+        genre: 'Comédie',
+        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes. Déguisée en berger sous le nom de Ganymède, elle est accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d\'autre membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
+        sequence: [
+            {
+                chapter: '2h',
+                chapterTitle: 'La comédie shakespearienne traduite et adaptée en spectacle théâtral et musical tout terrain, pour un public dès 12 ans.'
+            },
+            {
+                p: [3],
+                over: ['« Le monde entier est un théâtre... »'], overAt: 'centre'
+            },
+            {
+                q: ['« ...et tous les hommes et les femmes rien d’autre que des acteurs.', 'Ils ont leurs entrées et leurs sorties. »'],
+                by: 'Jaques, ACTE II'
+            },
+            {
+                p: [16, 14, 9], cadre: { 16: '45% 50%', 14: '50% 65%', 9: '60% 45%' }, c: ['Extérieur, ACTE I', 'Extérieur, ACTE V', 'Intérieur, ACTE V'],
+                aside: 'Neuf comédiens incarnant gens de cour et paysans réunis dans la même forêt.'
+            },
+            {
+                p: [8], cadre: { 8: '38% 40%' }, c: ['Dans As you like it, le rythme surprend et change à chaque instant. C\'est lui qui doit nous emporter.'],
+            },
+            {
+                q: ['« Un humain au cours de sa vie joue plusieurs rôles,',
+                    'ses actes étant les sept âges. »'],
+                by: 'Jaques, ACTE II'
+            },
+            {
+                p: [11, 1, 4], cadre: { 11: '48% 32%', 1: '47% 30%', 4: '42% 35%' }, c: ['Adurey, Touchstone, ACTE V', 'Rosalind, Duke Frederick, Celia, ACTE I', 'Celia, Rosalind, ACTE II'],
+            },
+            {
+                text: 'Des comédiens et des musiciens forment un joyeux orchestre. C’est comme une fête ! Et dans toute bonne fête, le rythme, la musique et le paysage sonore priment.'
+            },
+            {
+                p: [15, 13], cadre: { 15: '50% 70%', 13: '40% 35%' },
+                c: ['Château de Villerville', 'Le Studio d\'Asnières'],
+            },
+        ]
+    },
 
     "La peau des anges n'est pas si douce": {
         slug: 'peaudesanges',

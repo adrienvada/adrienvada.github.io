@@ -535,6 +535,27 @@ eu deux moteurs pendant un temps, et le second aplatissait la séquence en une
 grille de photos : les chapitres, les citations et les incrustations
 disparaissaient. Ne pas recommencer.
 
+### L'ordre des spectacles
+
+Le répertoire va **du plus récent au plus ancien**, comme se lit un CV.
+L'année vient de la ligne de CV correspondante dans `index.html` — elle n'est
+écrite nulle part ailleurs.
+
+Le tri se fait dans le générateur, pas en se fiant à l'ordre de
+`SHOW_UNIVERSES` : une entrée ajoutée à la va-vite en fin de fichier ne doit
+pas se retrouver en fin de page. **À année égale, l'ordre du fichier tranche** —
+c'est un choix éditorial, et le tri ne le bouscule pas.
+
+`SHOW_UNIVERSES` est rangé dans ce même ordre, par confort de lecture
+(`build/ordonner-univers.py`, passé une fois). Si vous ajoutez un spectacle,
+mettez-le à sa place chronologique ; sinon ce n'est pas grave, la page sera
+juste quand même.
+
+Films et spectacles sont **mêlés** selon leur année : c'est un répertoire, pas
+deux listes. Les anciennes sections « EN CRÉATION » et « COURTS MÉTRAGES » ont
+disparu pour cette raison — leur contenu est remonté dans l'en-tête de
+`SHOW_UNIVERSES`, où il vaut pour toutes les entrées.
+
 ### Le repli sans JavaScript (`univers-statique.css`)
 
 Les mots du montage attendent à `opacity: 0` — c'est le script qui les

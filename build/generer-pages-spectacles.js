@@ -406,7 +406,13 @@ function pageRepertoire(fiches) {
     const items = fiches.map((f, i) => `
         <li>
             <a href="${esc(f.slug)}/">
-                ${f.vignette ? `<img src="../${esc(f.vignette)}" alt="" loading="lazy" decoding="async" width="600" height="400">` : '<span class="sans-photo" aria-hidden="true"></span>'}
+                <!-- Pas de repli quand il n'y a pas de photo. Un spectacle en
+                     création n'en a pas encore : lui dessiner un cadre vide au
+                     ratio 3/2 donnait un grand rectangle sombre qui se lit
+                     comme une image qui n'a pas chargé — sur mobile, en
+                     colonne unique, il occupait la moitié de l'écran. Mieux
+                     vaut le seul texte, qui ne promet rien. -->
+                ${f.vignette ? `<img src="../${esc(f.vignette)}" alt="" loading="lazy" decoding="async" width="600" height="400">` : ''}
                 <span class="txt">
                     ${f.annee ? `<span class="annee">${esc(f.annee)}</span>` : ''}
                     <span class="nom">${esc(f.titre)}</span>
@@ -532,7 +538,7 @@ figcaption { margin-top: .4rem; font-size: .72rem; letter-spacing: .06em; text-t
 footer { max-width: 46rem; margin: 0 auto; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: .8rem; color: var(--muted); text-align: center; }
 
 /* Le répertoire (/spectacles/) */
-.repertoire { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1.25rem; padding: 2rem 0; }
+.repertoire { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1.25rem; padding: 2rem 0; align-items: start; }
 .repertoire a { display: block; text-decoration: none; color: inherit; }
 /* Le "height: auto" n'est pas décoratif : l'attribut height="400" du balisage
    agit comme indication de présentation et fixe une hauteur définie. Avec une
@@ -540,7 +546,7 @@ footer { max-width: 46rem; margin: 0 auto; padding-top: 1.5rem; border-top: 1px 
    les vignettes reprennent le cadrage du fichier — portrait pour les unes,
    paysage pour les autres — et la grille part en dents de scie. Le repasser
    à auto redonne la main au ratio. */
-.repertoire img, .repertoire .sans-photo {
+.repertoire img {
     display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover;
     border-radius: .5rem; background: var(--surface);
     transition: opacity .35s ease;
@@ -576,11 +582,24 @@ function main() {
             slug: uni.slug,
             titre: uni.title || cle,
             annee: cv.annee || '',
+            // L'année en nombre, pour trier. « 2018 - 2021 » donne 2018 : on
+            // range sur le premier millésime venu, faute de mieux.
+            anneeNum: parseInt((cv.annee || '').match(/\d{4}/)?.[0] || '0', 10),
             role: (uni.role || cv.role || '').replace(/^R[oô]les?\s*·\s*/i, ''),
             vignette: photos[0] ? photos[0].src : '',
             cv: Boolean(cvParTitre[cle])
         });
     });
+
+    // ── L'ORDRE DU RÉPERTOIRE ──
+    // Du plus récent au plus ancien, comme se lit un CV. On trie ICI plutôt
+    // que de se fier à l'ordre de SHOW_UNIVERSES : celui-ci est rangé de la
+    // même façon (voir build/ordonner-univers.py), mais une entrée ajoutée à
+    // la va-vite en fin de fichier ne doit pas se retrouver en fin de page.
+    // À année égale, l'ordre du fichier tranche — c'est un choix éditorial,
+    // pas un hasard, et le tri ne doit pas le bousculer.
+    faites.forEach((f, i) => { f.rang = i; });
+    faites.sort((a, b) => (b.anneeNum - a.anneeNum) || (a.rang - b.rang));
 
     fs.writeFileSync(path.join(SORTIE, 'index.html'), pageRepertoire(faites));
 
