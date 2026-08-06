@@ -551,6 +551,12 @@ c'est un choix éditorial, et le tri ne le bouscule pas.
 mettez-le à sa place chronologique ; sinon ce n'est pas grave, la page sera
 juste quand même.
 
+Chaque carte porte **`année · genre`**, comme le bandeau du panneau
+(`u-eyebrow`) : un répertoire dit quand ET quoi. Le `genre` vient de
+`SHOW_UNIVERSES` ; c'est une étiquette libre (« Tragédie », « Théâtre
+documentaire », « Film sur l'art »), pas une valeur contrainte, et elle ne sert
+jamais au tri.
+
 **Deux groupes**, sous les intitulés du CV : « Théâtre » puis
 « Courts-métrages », chacun du plus récent au plus ancien. Sans intitulé, un
 2019 venant s'intercaler après un 2022 se lirait comme un tri cassé — c'est le
