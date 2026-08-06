@@ -34,6 +34,13 @@
         rel="stylesheet">
     <link rel="stylesheet" href="../../univers.css">
 
+    <!-- Le repli quand le script ne charge pas. Les mots du montage attendent
+         à opacity 0 : sans JavaScript, la page serait un écran vide, et son
+         texte invisible à qui doit l'indexer. Ce <noscript> les rend visibles
+         d'un coup. Il ne coûte rien quand tout va bien : le navigateur ne
+         charge cette feuille que s'il n'exécute pas de script. -->
+    <noscript><link rel="stylesheet" href="../../univers-statique.css"></noscript>
+
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
          #show-universe. Mêmes variables, mêmes valeurs : c'est ce qui donne
          à la page la couleur exacte de son univers. -->
@@ -177,10 +184,13 @@
 </script>
 </head>
 
-<!-- La classe u-statique remet le montage à l'état lisible : sur l'accueil,
-     les mots arrivent masqués et c'est le défilement qui les révèle. Sans
-     elle la page serait blanche, et un moteur de recherche ne verrait rien. -->
-<body class="u-statique">
+<!-- La classe u-page-spectacle est le signal que guette univers.js : elle lui
+     dit que le panneau est déjà rempli et qu'il n'a qu'à lui donner vie —
+     l'écriture du titre, la parallaxe, les révélations au défilement,
+     l'agrandissement des photos. C'est le MÊME moteur que sur l'accueil, et
+     c'est pourquoi la page ne se contente pas de ressembler à son univers :
+     elle se comporte comme lui. -->
+<body class="u-page-spectacle">
     <!-- SPRITE-ICONES:DEBUT -->
     <!-- Les 39 icônes du site, et rien d'autre. Généré par
          build/construire-sprite-icones.py — ne pas modifier à la main.
@@ -235,6 +245,9 @@
         <a class="u-retour" href="../../">← Adrien Vada</a>
         
         
+        <!-- La barre de progression vaut aussi pour une page autonome : le
+             panneau y défile dans sa propre boîte, exactement comme ici. -->
+        <div class="u-progress" aria-hidden="true"><span></span></div>
 
         <div class="u-hero-wrap">
         <header class="u-hero">
@@ -254,10 +267,10 @@
                  simplement, et n'appelle pas le clic. Les représentations
                  passées restent au pied de l'univers. -->
             <div class="u-hero-actions">
-                <a class="u-btn" href="#u-foot">
+                <button type="button" class="u-btn" data-u-jump>
                         Accéder aux dates
                         <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
-                    </a>
+                    </button>
             </div>
 
             <span class="u-scroll" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span>
@@ -449,8 +462,30 @@
             <p class="u-credit">Photographies : Arnaud Bertereau</p>
         </footer>
 
-
+<!-- Agrandissement : la photo entière, jamais recadrée. C'est le
+             recours quand le plein cadre ne dit pas ce qu'on regarde. -->
+        <div class="u-zoom" hidden role="dialog" aria-modal="true" aria-label="Photo agrandie">
+            <button type="button" class="u-close u-zoom-close" aria-label="Fermer la photo">
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
+            </button>
+            <button type="button" class="u-zoom-nav u-zoom-prev" aria-label="Photo précédente">
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-chevron-left"></use></svg>
+            </button>
+            <button type="button" class="u-zoom-nav u-zoom-next" aria-label="Photo suivante">
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-chevron-right"></use></svg>
+            </button>
+            <figure>
+                <img alt="" decoding="async">
+                <figcaption></figcaption>
+            </figure>
+        </div>
     </div>
+
+    <!-- Le moteur, dans l'ordre : le montage d'abord (univers.js s'en sert),
+         puis univers.js, qui reconnaît la classe du <body> et anime le
+         panneau déjà en place. Aucun des deux n'est propre à cette page. -->
+    <script src="../../univers-montage.js"></script>
+    <script src="../../univers.js"></script>
 </body>
 
 </html>
