@@ -42,12 +42,39 @@
 const fs = require('fs');
 const path = require('path');
 
+// LE MOTEUR DE MONTAGE, celui-là même dont se sert le panneau plein écran de
+// la page d'accueil (voir univers-montage.js). C'est tout l'objet de ce
+// fichier : une page spectacle n'est plus une pâle copie de son univers, elle
+// EST son univers — mêmes chapitres, mêmes cartons, mêmes incrustations,
+// mêmes groupes de vignettes. Il n'y a plus qu'un endroit où corriger le
+// montage, et plus qu'une feuille de style (univers.css) où corriger le
+// visage. La version précédente en avait deux, et la seconde aplatissait la
+// séquence en une grille de photos.
+const MONTAGE = require('../univers-montage.js');
+
 const RACINE = path.join(__dirname, '..');
 const SITE = 'https://adrienvada.fr';
 const SORTIE = path.join(RACINE, 'spectacles');
 const MAX_PHOTOS = 8;
 
 const lire = (f) => fs.readFileSync(path.join(RACINE, f), 'utf8');
+
+// Le sprite d'icônes, relu dans index.html entre ses deux repères. Le montage
+// pose des <use href="#i-solid-…"> : sans les <symbol> correspondants dans la
+// page, les flèches et les croix seraient des trous. On le relit plutôt que de
+// le recopier — il est lui-même généré (build/construire-sprite-icones.py).
+function chargerSprite() {
+    const src = lire('index.html');
+    const d = src.indexOf('<!-- SPRITE-ICONES:DEBUT -->');
+    const f = src.indexOf('<!-- SPRITE-ICONES:FIN -->');
+    if (d === -1 || f === -1) {
+        throw new Error('index.html : repères SPRITE-ICONES introuvables. ' +
+            'Les pages spectacle en ont besoin — leurs icônes viennent de là.');
+    }
+    return src.slice(d, f + '<!-- SPRITE-ICONES:FIN -->'.length);
+}
+
+const SPRITE = chargerSprite();
 
 // ── Extraction des données ──────────────────────────────────────────
 //  On n'exécute pas univers.js (il lui faudrait un DOM) : on en découpe la
@@ -221,72 +248,52 @@ function donneesStructurees(uni, titre, desc, dates, urlPage, photoOg) {
 // ── Gabarit d'une page ──────────────────────────────────────────────
 function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     const titre = uni.title || cle;
-    const sousTitre = uni.subtitle || '';
-    // `uni.role` sert d'étiquette libre dans le panneau plein écran, où elle
-    // s'affiche telle quelle : elle peut donc porter son propre libellé
-    // (« Rôle · Steven ») ou tout autre chose (« Court métrage · 12 minutes »).
-    // Ici le libellé est déjà dans le gabarit — on retire le doublon, et on
-    // n'affiche « Rôle » que quand la valeur en est bien un.
-    const roleBrut = uni.role || cv.role || '';
-    const estUnRole = !uni.role || /^R[oô]les?\s*·/i.test(uni.role) || Boolean(cv.role);
-    const role = roleBrut.replace(/^R[oô]les?\s*·\s*/i, '');
-    const desc = lignes(uni.synopsis).join(' ').slice(0, 300)
-        || `${titre} — ${role ? role + ', ' : ''}avec Adrien Vada.`;
-    const photos = photosDe(uni);
     const dates = datesDe(cle, SHOW_DATA);
+    const photos = photosDe(uni);
     const urlPage = `${SITE}/spectacles/${uni.slug}/`;
+    const desc = lignes(uni.synopsis).join(' ').slice(0, 300)
+        || `${titre} — avec Adrien Vada.`;
     const photoOg = photos[0] ? `${SITE}/${photos[0].src}` : `${SITE}/ressources/images/og-adrien-vada.jpg`;
     const p = uni.palette || {};
+    const titreComplet = `${titre}${uni.subtitle ? ' — ' + uni.subtitle : ''} · Adrien Vada`;
 
-    const titreComplet = `${titre}${sousTitre ? ' — ' + sousTitre : ''} · Adrien Vada`;
+    // `info` a exactement la forme que rowInfo() produit dans le navigateur en
+    // lisant la ligne du CV. Ici c'est le même contenu, relu dans index.html
+    // au lieu du DOM — le gabarit ne fait pas la différence.
+    const info = {
+        year: cv.annee || '',
+        title: titre,
+        author: uni.subtitle ?? '',
+        role: uni.role ?? cv.role ?? '',
+        company: cv.compagnie || '',
+        badge: cv.badge || '',
+        url: cv.url || '',
+        key: cle
+    };
 
-    const blocPalmares = (uni.prix && uni.prix.length) ? `
-      <section class="bloc">
-        <h2>Distinctions</h2>
-        <ul class="palmares">
-          ${lignes(uni.prix).map(l => {
-        const i = l.indexOf('·');
-        return i === -1
-            ? `<li><span class="prix">${esc(l)}</span></li>`
-            : `<li><span class="prix">${esc(l.slice(0, i).trim())}</span> <span class="ou">${esc(l.slice(i + 1).trim())}</span></li>`;
-    }).join('\n          ')}
-        </ul>
-      </section>` : '';
+    // Un spectacle sans date à venir peut être arrêté OU pas encore créé :
+    // c'est le badge de la ligne du CV qui les distingue, comme sur le site.
+    const enCreation = /cr[ée]ation/i.test(cv.badge || '');
 
-    const blocDistribution = (uni.cast && uni.cast.length) ? `
-      <section class="bloc">
-        <h2>Distribution</h2>
-        <ul class="cast">
-          ${uni.cast.map(n => `<li>${esc(n)}</li>`).join('\n          ')}
-        </ul>
-        ${uni.castNote ? `<p class="note">${esc(uni.castNote)}</p>` : ''}
-      </section>` : '';
+    // datesHtml attend le vocabulaire de dates.js (dateLabel, location,
+    // isSchool) ; datesDe() renvoie le sien. On traduit ici plutôt que de
+    // tordre l'un des deux : le moteur partagé ne doit pas connaître ce script.
+    const perfs = dates.map(d => ({
+        dateLabel: d.label, location: d.lieu, time: d.heure, isSchool: d.scolaire
+    }));
 
-    const blocDates = dates.length ? `
-      <section class="bloc">
-        <h2>Prochaines représentations</h2>
-        <ul class="dates">
-          ${dates.map(d => `<li>
-            <span class="quand">${esc(d.label)}${d.heure ? ' · ' + esc(d.heure) : ''}</span>
-            <span class="ou">${esc(d.lieu)}</span>
-            ${d.scolaire ? '<span class="note">Séance scolaire, accès restreint</span>' : ''}
-            ${d.billetterie && !d.scolaire ? `<a class="lien" href="${esc(d.billetterie)}" rel="noopener">Réserver</a>` : ''}
-          </li>`).join('\n          ')}
-        </ul>
-      </section>` : '';
+    const panneau = MONTAGE.panelHtml(info, uni, {
+        dates: MONTAGE.datesHtml(perfs),
+        enCreation,
+        statique: true
+    });
 
-    const blocPhotos = photos.length ? `
-      <section class="bloc">
-        <h2>Photographies</h2>
-        <div class="photos">
-          ${photos.map((ph, i) => `<figure>
-            <img src="../../${esc(ph.src)}" alt="${esc(titre)} — photographie ${i + 1}${ph.legende ? ' : ' + ph.legende : ''}"
-                 loading="lazy" decoding="async" width="1200" height="800">
-            ${ph.legende ? `<figcaption>${esc(ph.legende)}</figcaption>` : ''}
-          </figure>`).join('\n          ')}
-        </div>
-        ${uni.credit ? `<p class="note">Photographies : ${esc(uni.credit)}</p>` : ''}
-      </section>` : '';
+    // Les chemins d'images du montage sont relatifs à la racine du site ;
+    // cette page vit deux dossiers plus bas. On les rebase plutôt que de
+    // toucher au moteur, dont ce n'est pas le problème.
+    const corps = panneau
+        .replace(/(src|data-u-src|srcset)="ressources\//g, '$1="../../ressources/')
+        .replace(/url\((['"]?)ressources\//g, 'url($1../../ressources/');
 
     const jsonld = donneesStructurees(uni, titre, desc, dates, urlPage, photoOg)
         .map(o => `<script type="application/ld+json">\n${JSON.stringify(o, null, 2)}\n</script>`)
@@ -299,9 +306,9 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- PAGE GÉNÉRÉE — ne pas modifier à la main.
-         Source : build/generer-pages-spectacles.js, à partir d'univers.js,
-         dates.js et index.html. Toute retouche ici sera écrasée au prochain
-         passage du script. -->
+         Source : build/generer-pages-spectacles.js, qui appelle le MÊME
+         moteur de montage que le panneau plein écran de la page d'accueil
+         (univers-montage.js) et la MÊME feuille de style (univers.css). -->
     <title>${esc(titreComplet)}</title>
     <meta name="description" content="${esc(desc)}">
     <link rel="canonical" href="${urlPage}">
@@ -321,57 +328,51 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
 
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-96x96.png" sizes="96x96">
     <link rel="icon" type="image/svg+xml" href="../../favicon_io/favicon.svg">
-    <link rel="stylesheet" href="../spectacle.css">
 
-    <!-- La page prend les couleurs du spectacle, comme son univers sur le site. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@200;300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../../univers.css">
+
+    <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
+         #show-universe. Mêmes variables, mêmes valeurs : c'est ce qui donne
+         à la page la couleur exacte de son univers. -->
     <style>
-        :root {
-            --bg: ${p.bg || '#0a0907'};
-            --surface: ${p.surface || '#171410'};
-            --text: ${p.text || '#f2ece0'};
-            --muted: ${p.muted || '#b0a798'};
-            --accent: ${p.accent || '#bfa98a'};
-            --accent-ink: ${p.accentInk || p.accent || '#bfa98a'};
-            --on-accent: ${p.onAccent || '#0a0907'};
-            --line: ${p.line || 'rgba(255,255,255,0.14)'};
+        body { margin: 0; background: ${p.bg || '#0a0907'}; }
+        #show-universe {
+            --u-bg: ${p.bg || '#0a0907'};
+            --u-surface: ${p.surface || '#171410'};
+            --u-text: ${p.text || '#f2ece0'};
+            --u-muted: ${p.muted || '#b0a798'};
+            --u-accent: ${p.accent || '#bfa98a'};
+            --u-accent-ink: ${p.accentInk || p.accent || '#bfa98a'};
+            --u-on-accent: ${p.onAccent || '#0a0907'};
+            --u-line: ${p.line || 'rgba(255,255,255,0.14)'};
+            --u-glow: ${p.glow || 'rgba(191,169,138,0.30)'};
         }
+        /* Le retour au site : la seule chose que la page ajoute au montage. */
+        .u-retour {
+            position: absolute; top: 1.2rem; left: 1.4rem; z-index: 4;
+            font: 700 .68rem/1 'Montserrat', system-ui, sans-serif;
+            letter-spacing: .16em; text-transform: uppercase;
+            color: var(--u-muted); text-decoration: none;
+        }
+        .u-retour:hover { color: var(--u-accent-ink); }
     </style>
 
     ${jsonld}
 </head>
 
-<body>
-    <a class="retour" href="../../">← Adrien Vada</a>
-
-    <main>
-        <header class="tete">
-            ${cv.annee ? `<p class="annee">${esc(cv.annee)}${cv.badge ? ' · ' + esc(cv.badge) : ''}</p>` : ''}
-            <h1>${esc(titre)}</h1>
-            ${sousTitre ? `<p class="sous-titre">${esc(sousTitre)}</p>` : ''}
-            ${role ? `<p class="role">${estUnRole ? '<span>Rôle</span> ' : ''}${esc(role)}</p>` : ''}
-            ${cv.compagnie ? `<p class="compagnie">${esc(cv.compagnie)}</p>` : ''}
-            ${cv.url ? `<p class="compagnie"><a href="${esc(cv.url)}" rel="noopener">${uni.kind === 'film' ? 'Fiche du film' : 'Page officielle du spectacle'}</a></p>` : ''}
-        </header>
-
-        ${lignes(uni.synopsis).length ? `<section class="bloc synopsis">
-          ${lignes(uni.synopsis).map(l => `<p>${esc(l)}</p>`).join('\n          ')}
-        </section>` : ''}
-        ${blocPalmares}
-        ${blocDates}
-        ${blocPhotos}
-        ${blocDistribution}
-
-        <!-- Le vrai lieu de ce spectacle reste son univers sur le site : le
-             montage, les cartons, le générique. Cette page en est la porte
-             d'entrée pour un moteur de recherche, pas le remplacement. -->
-        <p class="cta">
-            <a href="../../#/univers/${esc(uni.slug)}">Voir l'univers de ${esc(titre)}</a>
-        </p>
-    </main>
-
-    <footer>
-        <p><a href="../../">adrienvada.fr</a> · <a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a></p>
-    </footer>
+<!-- La classe u-statique remet le montage à l'état lisible : sur l'accueil,
+     les mots arrivent masqués et c'est le défilement qui les révèle. Sans
+     elle la page serait blanche, et un moteur de recherche ne verrait rien. -->
+<body class="u-statique">
+    ${SPRITE}
+    <div id="show-universe">
+        <a class="u-retour" href="../../">← Adrien Vada</a>
+        ${corps}
+    </div>
 </body>
 
 </html>

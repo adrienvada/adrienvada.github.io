@@ -1610,25 +1610,10 @@
 
         <style type="text/css">
 
-        /* ══════════════════════════════════════════════════════════════
-           ICÔNES — le sprite remplace la police FontAwesome
-           `1em` et `currentColor` reproduisent exactement le comportement
-           d'une icône-police : elle prend la taille et la couleur du texte
-           qui l'entoure. C'est ce qui permet aux classes déjà en place
-           (text-[11px], text-luxury-goldInk…) de continuer à la piloter, sans
-           qu'aucune n'ait à changer.
-           Le décalage vertical est celui de FontAwesome : sans lui, chaque
-           icône s'assoit sur la ligne de base et paraît trop haute d'un
-           cheveu à côté de son libellé.
-           ══════════════════════════════════════════════════════════════ */
-        .ico {
-            width: 1em;
-            height: 1em;
-            display: inline-block;
-            vertical-align: -0.125em;
-            fill: currentColor;
-            flex-shrink: 0;
-        }
+        /* Les icônes : la règle `.ico` vit dans univers.css, chargée plus
+           haut. Elle y est parce que le montage d'un univers en pose partout
+           et que les pages /spectacles/ en ont besoin aussi — une seule
+           définition, pour les deux. */
 
         /* ══════════════════════════════════════════════════════════════
            BANDEAU « PROCHAINEMENT »
@@ -4885,6 +4870,10 @@
          Vide au repos ; son contenu est construit à l'ouverture par
          univers.js (une seule ligne du CV à la fois). -->
     <div id="show-universe" hidden role="dialog" aria-modal="true" aria-label="Univers du spectacle"></div>
+    <!-- Le moteur de montage, avant univers.js qui s'en sert.
+         Même fichier que celui dont se sert build/generer-pages-spectacles.js :
+         c'est ce qui garantit qu'une page spectacle a le visage de son univers. -->
+    <script src="univers-montage.js"></script>
     <script src="univers.js"></script>
 </body>
 
