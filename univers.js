@@ -578,11 +578,11 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [2, 3], cadre: { 2: '50% 40%', 3: '43% 31%' },
-                c: ['Magali, au ralenti du souvenir.', 'La porte de Melvin — épisode 1, Le date.']
+                c: ['Le souvenir de Magali', 'L\'accueil de Melvin — épisode 1, Le date.']
             },
             {
                 q: ['« Je sais qu’il y a pas que ça qui compte.', 'Mais c’est important, non — d’assurer ? »'],
-                by: 'Arthur, première séance'
+                by: 'Arthur - épisode 2, Première séance'
             },
             {
                 p: [4, 5], cadre: { 4: '80% 30%', 5: '42% 20%' },
