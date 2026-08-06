@@ -1,0 +1,25 @@
+# ============================================================
+#  EN-TÊTES HTTP — lu par Cloudflare Pages UNIQUEMENT
+# ============================================================
+#  Ce fichier ne sert qu'aux aperçus de branche hébergés sur
+#  Cloudflare (adresses en .pages.dev). GitHub Pages, qui sert
+#  adrienvada.fr, l'ignore complètement : il n'y a donc aucun
+#  risque qu'il touche à la production.
+#
+#  POURQUOI IL EXISTE. Cloudflare publie une copie du site à
+#  chaque branche, pour pouvoir la regarder avant qu'elle ne
+#  touche adrienvada.fr. Sans consigne, Google indexerait ces
+#  copies et verrait plusieurs sites au contenu identique — ce
+#  qui dessert le vrai. `noindex` les rend invisibles aux
+#  moteurs tout en les laissant parfaitement consultables par
+#  qui en a l'adresse.
+#
+#  Il porte sur TOUTES les adresses de l'aperçu, y compris la
+#  branche de production côté Cloudflare : cette copie-là n'a
+#  pas plus vocation à être trouvée que les autres. Le site
+#  public, lui, reste indexé normalement — il est servi par
+#  GitHub Pages, qui ne lit pas ce fichier.
+# ============================================================
+
+/*
+  X-Robots-Tag: noindex, nofollow
