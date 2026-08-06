@@ -96,6 +96,61 @@ historique ne disait rien de plus que « Page build failed ».
 
 ---
 
+## Une branche pour les gros changements — à proposer, jamais à décider seul
+
+**Règle de travail avec Adrien.** Avant d'entamer un changement qui touche
+l'allure du site, sa structure ou plusieurs pages à la fois, **lui demander
+s'il veut une branche** plutôt que d'écrire directement sur `main`. Et si
+c'est le cas, **lui donner l'adresse où il pourra la regarder** — la question
+n'a d'intérêt que si elle vient avec le moyen de voir.
+
+Ce qui mérite la question :
+
+- une refonte visuelle (couleurs, mise en page, animations d'ensemble) ;
+- un changement de structure (déplacer une section, changer une URL, toucher
+  au balisage d'une page entière) ;
+- tout ce qui se juge à l'œil et se discute — un aplat, un rythme, une
+  respiration ;
+- ce qui est difficile à défaire une fois publié.
+
+Ce qui ne la mérite pas : une correction de texte, un réglage de valeur, un
+commentaire, une régénération. On ne fabrique pas une branche pour trois mots.
+
+### Où la branche sera visible
+
+Cloudflare publie **une copie du site par branche**, à sa propre adresse.
+C'est là tout l'intérêt : une branche devient un site consultable depuis un
+téléphone, avant que quoi que ce soit ne touche `adrienvada.fr`.
+
+L'adresse suit la forme :
+
+```
+https://<branche>-adrienvada-apercu.<sous-domaine>.workers.dev
+```
+
+`adrienvada-apercu` est le nom du Worker (voir `wrangler.jsonc`) ; le
+sous-domaine est celui du compte Cloudflare d'Adrien. **Ne pas inventer cette
+adresse** : la relever dans le tableau de bord Cloudflare, ou dans la sortie
+du déploiement, et la lui donner telle quelle. Une adresse approximative vaut
+moins que pas d'adresse du tout.
+
+Ces aperçus portent `X-Robots-Tag: noindex, nofollow` (voir `_headers`) et ne
+comptent pas dans la mesure d'audience (`data-domains` sur le script de
+mesure) : ils ne polluent ni les moteurs, ni les statistiques.
+
+### La forme de la question
+
+Une phrase, avant de commencer, pas après :
+
+> « Ce changement touche l'allure de toutes les lignes du CV. Je le fais sur
+> une branche `guirlande-droite` ? Tu pourras la regarder sur ton téléphone à
+> l'adresse d'aperçu, et on ne touche à `main` que si elle te plaît. »
+
+Et si Adrien préfère `main`, on fait sur `main` — la question est là pour
+qu'il choisisse, pas pour lui imposer un détour.
+
+---
+
 ## Régénérer `styles.css` (obligatoire après modification des classes)
 
 Le site n'utilise plus le CDN Tailwind (qui générait le CSS dans le navigateur :
