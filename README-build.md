@@ -507,6 +507,41 @@ Le lien vers le répertoire, en pied de page d'`index.html`, est le seul chemin
 interne vers ces pages : sans lui, le sitemap les ferait indexer mais elles
 resteraient sans rien qui y mène. Ne pas le retirer.
 
+### Un seul moteur, un seul visage
+
+Ces pages ne sont pas des copies de leurs univers : elles **sont** leurs
+univers. Elles chargent la même feuille (`univers.css`), le même moteur de
+montage (`univers-montage.js`) et le même script d'animation (`univers.js`).
+Le titre s'y écrit, le synopsis s'y inscrit, le montage s'y révèle au
+défilement, les photos s'y agrandissent — comme depuis le CV.
+
+Ce qui les distingue : pas de croix de fermeture (rien à refermer), pas
+d'ouverture en clip-path (aucune ligne de CV d'où partir), et le bouton
+« Voir toutes les dates » est un lien vers `/#page_dates`.
+
+C'est la classe `u-page-spectacle` sur le `<body>` qui déclenche tout :
+`univers.js` la reconnaît et appelle `demarrerStatique()`.
+
+**Corriger le montage ou son dessin à un endroit le corrige partout.** Il y a
+eu deux moteurs pendant un temps, et le second aplatissait la séquence en une
+grille de photos : les chapitres, les citations et les incrustations
+disparaissaient. Ne pas recommencer.
+
+### Le repli sans JavaScript (`univers-statique.css`)
+
+Les mots du montage attendent à `opacity: 0` — c'est le script qui les
+révèle. Sans lui, la page serait un écran vide et son texte invisible à qui
+doit l'indexer.
+
+D'où `univers-statique.css`, chargée **uniquement dans un `<noscript>`** : elle
+ne coûte rien quand tout va bien, et remet tout à l'état lisible quand rien ne
+va. Elle n'a pas de préfixe de portée — sa seule présence signifie déjà
+qu'elle doit s'appliquer.
+
+Si vous ajoutez une règle qui masque un élément au départ dans `univers.css`,
+**ajoutez-la aussi à `univers-statique.css`**, sinon ce morceau du montage
+sera invisible sans JavaScript, et seulement là.
+
 ---
 
 ## Icônes (`sprite SVG`) — à régénérer après ajout

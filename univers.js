@@ -1479,6 +1479,37 @@ const SHOW_UNIVERSES = {
         // Après markCvRows : le routage ouvre un univers, et une ligne doit
         // déjà porter sa marque pour que le panneau en reprenne la couleur.
         initRouting();
+
+        // Une page /spectacles/ : le panneau y est déjà rempli, il n'y a rien
+        // à ouvrir. On rebranche seulement ce qui lui donne vie.
+        if (document.body.classList.contains('u-page-spectacle')) demarrerStatique();
+    }
+
+    // ── LA PAGE SPECTACLE S'ANIME COMME LE PANNEAU ──────────────────
+    //  Pas un second moteur d'animation — le même, dans le même
+    //  environnement. La page pose son #show-universe exactement comme
+    //  l'accueil : une boîte qui occupe l'écran et défile pour son compte.
+    //  Du coup `scroller = overlay` reste vrai, et l'écriture, la parallaxe,
+    //  les révélations au défilement, l'agrandissement des photos et le saut
+    //  vers les dates fonctionnent sans qu'une ligne leur soit adaptée.
+    //
+    //  Ce qui n'a pas lieu d'être ici : l'ouverture en clip-path (il n'y a pas
+    //  de ligne de CV d'où partir), la croix de fermeture (rien à refermer) et
+    //  l'entrée d'historique (la page EST l'adresse).
+    //
+    //  SI LE JAVASCRIPT NE CHARGE PAS, la page ne serait qu'un écran vide :
+    //  les mots attendent à `opacity: 0`. C'est pourquoi elle embarque
+    //  univers-statique.css dans un <noscript>, qui remet tout à l'état
+    //  lisible. Voir build/generer-pages-spectacles.js.
+    function demarrerStatique() {
+        scroller = overlay;
+        isOpen = true;
+        overlay.classList.add('is-open');
+        overlay.addEventListener('scroll', onScroll, { passive: true });
+        observeCaptions();
+        lastScrollTop = 0;
+        playWriting();
+        onScroll();
     }
 
     // ── Ce que le CV promet ──────────────────────────────────────────

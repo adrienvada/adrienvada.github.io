@@ -434,8 +434,10 @@ const UniversMontage = (function () {
         return `
         ${statique ? '' : `<button type="button" class="u-close" aria-label="Fermer l’univers du spectacle">
             <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
-        </button>
-        <div class="u-progress" aria-hidden="true"><span></span></div>`}
+        </button>`}
+        <!-- La barre de progression vaut aussi pour une page autonome : le
+             panneau y défile dans sa propre boîte, exactement comme ici. -->
+        <div class="u-progress" aria-hidden="true"><span></span></div>
 
         <div class="u-hero-wrap">
         <header class="u-hero">
@@ -461,15 +463,15 @@ const UniversMontage = (function () {
                  passées restent au pied de l'univers. -->
             <div class="u-hero-actions">
                 ${isFilm
-                ? `${statique ? `<a class="u-btn" href="#u-foot">` : `<button type="button" class="u-btn" data-u-jump>`}
+                ? `<button type="button" class="u-btn" data-u-jump>
                         Le film
                         <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
-                    ${statique ? `</a>` : `</button>`}`
+                    </button>`
                 : dates || enCreation
-                    ? `${statique ? `<a class="u-btn" href="#u-foot">` : `<button type="button" class="u-btn" data-u-jump>`}
+                    ? `<button type="button" class="u-btn" data-u-jump>
                         ${dates ? 'Accéder aux dates' : 'Le spectacle'}
                         <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
-                    ${statique ? `</a>` : `</button>`}`
+                    </button>`
                     : `<p class="u-hero-note">Ce spectacle n’est plus à l’affiche</p>`}
             </div>
 
@@ -511,7 +513,7 @@ const UniversMontage = (function () {
             ${uni.credit ? `<p class="u-credit">Photographies : ${escape(uni.credit)}</p>` : ''}
         </footer>
 
-${statique ? '' : `<!-- Agrandissement : la photo entière, jamais recadrée. C'est le
+<!-- Agrandissement : la photo entière, jamais recadrée. C'est le
              recours quand le plein cadre ne dit pas ce qu'on regarde. -->
         <div class="u-zoom" hidden role="dialog" aria-modal="true" aria-label="Photo agrandie">
             <button type="button" class="u-close u-zoom-close" aria-label="Fermer la photo">
@@ -527,7 +529,7 @@ ${statique ? '' : `<!-- Agrandissement : la photo entière, jamais recadrée. C'
                 <img alt="" decoding="async">
                 <figcaption></figcaption>
             </figure>
-        </div>`}`;
+        </div>`;
     }
 
     // ── Les représentations, au pied de l'univers ──────────────────

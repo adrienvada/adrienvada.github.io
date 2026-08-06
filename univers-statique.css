@@ -1,0 +1,73 @@
+/* ══════════════════════════════════════════════════════════════════════
+   L'ÉTAT LISIBLE — le repli sans JavaScript
+   ══════════════════════════════════════════════════════════════════════
+   Une page /spectacles/ s'anime comme le panneau de l'accueil : le titre
+   s'écrit, le synopsis s'inscrit, le montage se révèle au défilement.
+   C'est le moteur d'univers.js qui s'en charge (voir demarrerStatique).
+
+   Mais les mots attendent à `opacity: 0`. Si le script ne charge pas —
+   réseau coupé, bloqueur, robot qui n'exécute rien — la page ne serait
+   qu'un écran vide, et son texte invisible à qui doit l'indexer.
+
+   D'où ce fichier, chargé UNIQUEMENT dans un <noscript> : il ne coûte
+   rien quand tout va bien, et remet tout à l'état lisible quand rien ne
+   va. Il n'a donc pas de préfixe de portée — sa seule présence signifie
+   déjà qu'il doit s'appliquer.
+   ══════════════════════════════════════════════════════════════════════ */
+
+#show-universe,
+.u-rw,
+.u-ch,
+.u-wd,
+.u-word,
+.u-line,
+.u-author,
+.u-meta,
+.u-hero-actions,
+.u-scroll,
+.u-foot,
+.u-figs,
+.u-reveal,
+.u-fig,
+.u-fig-media,
+.u-group .u-fig-media,
+.u-group .u-cap span,
+.u-quote cite,
+.u-over cite,
+figcaption,
+.u-aside,
+.u-cap {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    transition: none !important;
+    visibility: visible !important;
+    clip-path: none !important;
+}
+
+/* Le panneau se pose en `position: fixed` par-dessus la page d'accueil et
+   défile dans sa propre boîte. Sur une page autonome il EST la page :
+   c'est le document qui défile, sinon la hauteur d'écran couperait le
+   montage au premier tiers. */
+#show-universe {
+    position: static !important;
+    inset: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* Le hero de l'accueil reste collé pendant que le texte s'écrit — c'est le
+   premier geste qui écrit la page avant de la quitter. Sans écriture, ce
+   collage n'a plus d'objet et laisserait un écran vide sous le titre. */
+.u-hero-wrap {
+    position: static !important;
+    height: auto !important;
+}
+
+/* Ce que la page autonome n'embarque pas. */
+.u-loader,
+.u-fig-loupe,
+.u-progress {
+    display: none !important;
+}

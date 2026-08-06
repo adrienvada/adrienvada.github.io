@@ -14,14 +14,14 @@
    mobile : elles reprennent la main sur les `!important` que la page
    d'accueil impose à ses titres, un conflit qui n'existe que là.
 
-   ── L'ÉTAT LISIBLE (.u-statique) ──
-   Sur la page d'accueil, les mots du montage arrivent masqués
-   (`.u-rw { opacity: 0 }`) et c'est le défilement qui les révèle. Une
-   page spectacle n'a pas ce script : servie telle quelle, elle serait
-   blanche. La classe `.u-statique`, posée sur le <body> des pages
-   générées, remet tout à l'état lisible — c'est exactement ce que fait
-   déjà le bloc `prefers-reduced-motion` en fin de fichier, réemployé
-   plutôt que réinventé.
+   ── LES PAGES SPECTACLE S'ANIMENT AUSSI ──
+   Elles chargent cette feuille ET univers.js, et font tourner le même
+   moteur : le titre s'écrit, le montage se révèle au défilement (voir
+   demarrerStatique dans univers.js). Les mots y attendent donc à
+   `opacity: 0` comme ici.
+   Leur repli sans JavaScript est dans univers-statique.css, chargé par
+   un <noscript> : sans lui, un script qui ne charge pas laisserait une
+   page vide et un texte invisible à qui doit l'indexer.
    ══════════════════════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════════════════
@@ -1601,85 +1601,4 @@ html.u-locked body {
     vertical-align: -0.125em;
     fill: currentColor;
     flex-shrink: 0;
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   L'ÉTAT LISIBLE — pages spectacle autonomes
-   ══════════════════════════════════════════════════════════════════════
-   Sur l'accueil, le montage arrive masqué : les mots sont à `opacity: 0`,
-   le générique attend, les vignettes de groupe patientent — et c'est le
-   défilement qui les révèle, un à un. Une page /spectacles/ n'a pas ce
-   script. Servie telle quelle, elle serait BLANCHE, et un moteur de
-   recherche n'y verrait rien.
-
-   La classe `u-statique`, posée sur le <body> des pages générées, annule
-   ces états de départ. Elle ne touche à rien d'autre : les couleurs, les
-   rythmes typographiques, les cadrages restent ceux du panneau.
-
-   La liste ci-dessous n'est pas approximative — elle reprend une à une
-   les règles de ce fichier qui posent `opacity: 0` ou `visibility:
-   hidden`. En ajouter une ailleurs sans l'ajouter ici rendrait un
-   morceau du montage invisible sur les pages autonomes, et seulement
-   sur elles.
-
-   DEUX EXCEPTIONS VOULUES : la loupe d'agrandissement et le masque de
-   chargement restent cachés. La première ouvre un dialogue que la page
-   autonome n'embarque pas ; le second annonce des photos qui sont déjà là.
-   ══════════════════════════════════════════════════════════════════════ */
-
-.u-statique #show-universe,
-.u-statique .u-rw,
-.u-statique .u-ch,
-.u-statique .u-wd,
-.u-statique .u-word,
-.u-statique .u-line,
-.u-statique .u-author,
-.u-statique .u-meta,
-.u-statique .u-hero-actions,
-.u-statique .u-scroll,
-.u-statique .u-foot,
-.u-statique .u-figs,
-.u-statique .u-reveal,
-.u-statique .u-fig,
-.u-statique .u-fig-media,
-.u-statique .u-group .u-fig-media,
-.u-statique .u-group .u-cap span,
-.u-statique .u-quote cite,
-.u-statique .u-over cite,
-.u-statique figcaption,
-.u-statique .u-aside,
-.u-statique .u-cap {
-    opacity: 1 !important;
-    filter: none !important;
-    transform: none !important;
-    transition: none !important;
-    visibility: visible !important;
-    clip-path: none !important;
-}
-
-/* Le panneau se pose en `position: fixed` par-dessus la page d'accueil et
-   défile dans sa propre boîte. Sur une page autonome il EST la page :
-   c'est le document qui défile, sinon la hauteur d'écran couperait le
-   montage au premier tiers. */
-.u-statique #show-universe {
-    position: static !important;
-    inset: auto !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-}
-
-/* Le hero de l'accueil reste collé pendant que le texte s'écrit — c'est le
-   premier geste qui écrit la page avant de la quitter. Sans écriture, ce
-   collage n'a plus d'objet et laisserait un écran vide sous le titre. */
-.u-statique .u-hero-wrap {
-    position: static !important;
-    height: auto !important;
-}
-
-/* Ce que la page autonome n'embarque pas. */
-.u-statique .u-loader,
-.u-statique .u-fig-loupe,
-.u-statique .u-progress {
-    display: none !important;
 }
