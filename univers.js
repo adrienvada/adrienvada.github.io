@@ -194,7 +194,7 @@ const SHOW_UNIVERSES = {
             {
                 text: 'Un spectacle exigeant qui déconstruit les a priori sur le théâtre classique pour transmettre ce patrimoine universel.'
             },
-            { p: [17, 19], c: ['Lycée La Salle, Rouen', 'Espace Jean Legendre, Compiègne'] }
+            { p: [17, 19], c: ['Lycée La Salle, Rouen', 'Espace Jean Legendre, Compiègne'] },
 
             {
                 video: 'https://www.youtube.com/watch?v=5wg0P7-Dt_w',
