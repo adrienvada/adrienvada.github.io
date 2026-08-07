@@ -492,7 +492,7 @@ function pageRepertoire(fiches) {
         return `
         <li class="carte" style="--ac:${esc(accent)};--i:${i}" data-slug="${esc(f.slug)}" data-vt="fiche-${esc(f.slug)}"${second}>
             <a href="${esc(f.slug)}/">
-                <span class="cadre">${media}<span class="lueur" aria-hidden="true"></span></span>
+                <span class="cadre">${media}<span class="lueur" aria-hidden="true"></span>${f.synopsis ? `<span class="chuchote" aria-hidden="true"><span class="voile"></span><p>${f.synopsis.split(/\s+/).map((m, k) => `<span class="mot" style="--m:${k}">${esc(m)}</span>`).join(' ')}</p></span>` : ''}</span>
                 <span class="txt">
                     ${fil || f.badge ? `<span class="fil">
                         ${fil ? `<span class="annee">${esc(fil)}</span>` : ''}
@@ -555,6 +555,18 @@ function pageRepertoire(fiches) {
     <title>Répertoire — Adrien Vada</title>
     <meta name="description" content="${esc(desc)}">
     <link rel="canonical" href="${url}">
+    <script>
+        // Thème appliqué AVANT le premier rendu — même clé et même logique
+        // que la page d'accueil (avTheme) : le choix fait là-bas vaut ici.
+        (function () {
+            var t = 'dark';
+            var stored = null;
+            try { stored = localStorage.getItem('avTheme'); } catch (e) { }
+            if (stored === 'light' || stored === 'dark') { t = stored; }
+            else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) { t = 'light'; }
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <meta name="theme-color" content="#0a0907">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">
@@ -584,8 +596,11 @@ ${JSON.stringify(liste, null, 2)}
 </head>
 
 <body>
-    ${miniSprite(['i-solid-masks-theater', 'i-solid-film'])}
+    ${miniSprite(['i-solid-masks-theater', 'i-solid-film', 'i-solid-sun', 'i-solid-moon'])}
     <a class="retour" href="../">← Adrien Vada</a>
+    <button type="button" class="bascule" data-bascule aria-pressed="false" aria-label="Passer au thème clair" title="Passer au thème clair">
+        <svg class="ico" data-bascule-icone aria-hidden="true"><use href="#i-solid-sun"></use></svg>
+    </button>
     <main>
         <header class="tete">
             <p class="sur-titre">Adrien Vada — Artiste interprète</p>
@@ -636,12 +651,18 @@ ${JSON.stringify(liste, null, 2)}
             // …le doigt appuie. Mêmes règles que le murmure du CV : l'appui
             // maintenu allume la carte, le doigt qui glisse annule, et le
             // relâchement après l'appui n'ouvre pas la fiche.
-            var minuteur = 0, tenu = false, x0 = 0, y0 = 0;
+            var minuteur = 0, tenu = false, appuye = false, x0 = 0, y0 = 0;
             c.addEventListener('touchstart', function (e) {
-                var t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; tenu = false;
+                var t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; tenu = false; appuye = true;
                 clearTimeout(minuteur);
                 minuteur = setTimeout(function () { tenu = true; eveille(c); regarde(c, true); }, APPUI);
             }, { passive: true });
+            // Android ouvre le menu contextuel du lien vers 500 ms : il
+            // couperait l'appui maintenu net. On le retient pendant le
+            // geste — le clic droit d'une souris, lui, garde son menu.
+            c.addEventListener('contextmenu', function (e) {
+                if (appuye || tenu) e.preventDefault();
+            });
             c.addEventListener('touchmove', function (e) {
                 var t = e.touches[0];
                 if (Math.hypot(t.clientX - x0, t.clientY - y0) > 12) {
@@ -650,11 +671,11 @@ ${JSON.stringify(liste, null, 2)}
                 }
             }, { passive: true });
             c.addEventListener('touchend', function (e) {
-                clearTimeout(minuteur);
+                clearTimeout(minuteur); appuye = false;
                 if (tenu) { e.preventDefault(); regarde(c, false); tenu = false; }
             });
             c.addEventListener('touchcancel', function () {
-                clearTimeout(minuteur); regarde(c, false); tenu = false;
+                clearTimeout(minuteur); appuye = false; regarde(c, false); tenu = false;
             });
         });
 
@@ -674,6 +695,68 @@ ${JSON.stringify(liste, null, 2)}
             if (!e.viewTransition || !e.activation) return;
             nomme(new URL(e.activation.entry.url).pathname);
         });
+        // La vitrine en profondeur — menée au geste, jamais à sa place :
+        // chaque défilement repose la dérive des seuls cadres à l'écran.
+        // Un observateur tient la liste, une image d'animation par geste,
+        // et le mouvement réduit coupe tout avant le premier pixel.
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            var DERIVE = 2.6; // ± % de la hauteur du média
+            var aLEcran = [];
+            var demande = 0;
+            var poseDerive = function () {
+                demande = 0;
+                var vh = innerHeight;
+                for (var k = 0; k < aLEcran.length; k++) {
+                    var media = aLEcran[k];
+                    var r = media.parentElement.getBoundingClientRect();
+                    var p = (r.top + r.height / 2 - vh / 2) / (vh / 2 + r.height / 2);
+                    p = Math.max(-1, Math.min(1, p));
+                    media.style.transform = 'translateY(' + (p * DERIVE).toFixed(3) + '%)';
+                }
+            };
+            var replanifie = function () { if (!demande) demande = requestAnimationFrame(poseDerive); };
+            var medias = Array.prototype.slice.call(document.querySelectorAll('.media--photo'));
+            if (medias.length && 'IntersectionObserver' in window) {
+                document.documentElement.classList.add('parallaxe');
+                var io = new IntersectionObserver(function (entrees) {
+                    entrees.forEach(function (e) {
+                        var i = aLEcran.indexOf(e.target);
+                        if (e.isIntersecting && i === -1) aLEcran.push(e.target);
+                        if (!e.isIntersecting && i !== -1) aLEcran.splice(i, 1);
+                    });
+                    replanifie();
+                }, { rootMargin: '12% 0%' });
+                medias.forEach(function (m) { io.observe(m); });
+                addEventListener('scroll', replanifie, { passive: true });
+                addEventListener('resize', replanifie);
+                replanifie();
+            }
+        }
+
+        // La bascule de thème : même clé que l'accueil (avTheme), mêmes
+        // astres — soleil pour aller au clair, lune pour revenir au soir.
+        var bascule = document.querySelector('[data-bascule]');
+        function appliqueTheme(theme, retenir) {
+            document.documentElement.setAttribute('data-theme', theme);
+            if (retenir) { try { localStorage.setItem('avTheme', theme); } catch (e) { } }
+            var versClair = theme === 'dark';
+            var action = versClair ? 'Passer au thème clair' : 'Passer au thème sombre';
+            if (bascule) {
+                bascule.setAttribute('aria-label', action);
+                bascule.setAttribute('title', action);
+                bascule.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+                var u = bascule.querySelector('use');
+                if (u) u.setAttribute('href', versClair ? '#i-solid-sun' : '#i-solid-moon');
+            }
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', theme === 'light' ? '#FAF9F5' : '#0a0907');
+        }
+        appliqueTheme(document.documentElement.getAttribute('data-theme') || 'dark', false);
+        if (bascule) bascule.addEventListener('click', function () {
+            var t = document.documentElement.getAttribute('data-theme');
+            appliqueTheme(t === 'light' ? 'dark' : 'light', true);
+        });
+
         addEventListener('pagereveal', function (e) {
             if (!e.viewTransition) return;
             // Revenir par morphing ET lever les cartes une à une se
@@ -710,13 +793,30 @@ const FEUILLE = `/* RÉPERTOIRE (/spectacles/) — feuille générée (build/gen
     initial-value: #bfa98a;
 }
 
+/* Les deux thèmes — mêmes valeurs que la page d'accueil (avTheme). Les
+   couvertures des spectacles, elles, gardent leurs palettes : une affiche
+   ne change pas de couleurs selon la salle. */
+:root {
+    --ombre: rgba(0, 0, 0, .8);
+    --vignette: rgba(0, 0, 0, .28);
+    --or-defaut: #bfa98a;
+}
+:root[data-theme="light"] {
+    --bg: #faf9f5; --surface: #ffffff; --text: #1a1a1f; --muted: #575761;
+    --accent: #967e5b; --accent-ink: #826c4a; --on-accent: #ffffff;
+    --line: rgba(26, 26, 31, 0.14);
+    --ombre: rgba(41, 37, 36, .28);
+    --vignette: rgba(41, 37, 36, .10);
+    --or-defaut: #967e5b;
+}
+
 body {
     margin: 0; padding: 0 1.25rem 3.5rem;
     background: var(--bg); color: var(--text);
     font: 400 16px/1.65 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
-    --ambiance: #bfa98a;
-    transition: --ambiance .55s ease;
+    --ambiance: var(--or-defaut);
+    transition: --ambiance .55s ease, background-color .35s ease, color .35s ease;
 }
 
 /* Sous la page, la lueur — elle prend la couleur d'ambiance. */
@@ -731,8 +831,8 @@ body::before {
 body::after {
     content: ''; position: fixed; inset: 0; z-index: 40; pointer-events: none;
     background:
-        radial-gradient(130% 110% at 50% 12%, transparent 58%, rgba(0, 0, 0, .28) 100%),
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.05'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") repeat;
+        radial-gradient(130% 110% at 50% 12%, transparent 58%, var(--vignette) 100%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.06'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") repeat;
 }
 
 main { max-width: 64rem; margin: 0 auto; }
@@ -745,6 +845,20 @@ a { color: var(--accent-ink); }
     transition: color .25s ease;
 }
 .retour:hover { color: var(--accent-ink); }
+
+/* La bascule de thème — même geste qu'à l'accueil, posée à droite du
+   chemin du retour. Soleil d'ambre pour aller au clair, lune d'encre
+   pour revenir au soir. */
+.bascule {
+    position: absolute; top: 1.15rem; right: 1.25rem; z-index: 50;
+    display: grid; place-items: center; width: 2.3rem; height: 2.3rem;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: var(--surface); color: #fbbf24; cursor: pointer;
+    transition: border-color .3s ease, color .3s ease, background-color .35s ease;
+}
+:root[data-theme="light"] .bascule { color: #6366a8; }
+.bascule:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.bascule .ico { font-size: .95rem; }
 
 /* ── La manchette ── */
 .tete { padding: 3.2rem 0 2.4rem; text-align: center; }
@@ -801,9 +915,14 @@ h1 {
 }
 .carte a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: .65rem; }
 .cadre {
-    position: relative; display: block; aspect-ratio: 2 / 3; overflow: hidden;
+    position: relative; display: block; aspect-ratio: 2 / 3;
+    /* hidden ferait du cadre un CONTENEUR DE DÉFILEMENT : la timeline
+       view() de la dérive s'y accrocherait et ne progresserait jamais.
+       clip rogne pareil sans créer de boîte — le même piège, et le même
+       remède, que la barre collante du CV (voir README). */
+    overflow: hidden; overflow: clip;
     border-radius: .65rem; border: 1px solid var(--line); background: var(--surface);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), 0 10px 28px -18px rgba(0, 0, 0, .8);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), 0 10px 28px -18px var(--ombre);
     transition: border-color .35s ease, box-shadow .35s ease, transform .35s ease;
 }
 .media { position: absolute; inset: 0; display: block; }
@@ -817,6 +936,30 @@ h1 {
 .img2 { opacity: 0; transition: opacity .5s ease, transform .6s cubic-bezier(.2, .6, .2, 1); }
 .carte.regarde .img2 { opacity: 1; }
 .lueur { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, .3)); }
+
+/* Le murmure du kakemono — le synopsis se révèle mot à mot dans la
+   carte, comme sur les lignes du CV, par-dessus le deuxième regard. Un
+   voile monte d'abord pour asseoir la lecture ; chaque mot sort d'un
+   flou, l'un après l'autre (--m, posé au balisage). Toujours ivoire :
+   il se lit sur une photographie, pas sur la page. */
+.chuchote {
+    position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    display: flex; align-items: flex-end; padding: 1rem .95rem;
+}
+.voile {
+    position: absolute; inset: 0; opacity: 0; transition: opacity .5s ease;
+    background: linear-gradient(180deg, rgba(10, 9, 7, 0) 0%, rgba(10, 9, 7, .34) 42%, rgba(10, 9, 7, .82) 100%);
+}
+.chuchote p { position: relative; margin: 0; font: 400 .74rem/1.6 'Inter', system-ui, sans-serif; color: #f2ece0; }
+.mot {
+    display: inline-block; opacity: 0; filter: blur(5px); transform: translateY(4px);
+    transition: opacity .45s ease, filter .45s ease, transform .45s ease;
+}
+.carte a:hover .voile, .carte.regarde .voile { opacity: 1; }
+.carte a:hover .mot, .carte.regarde .mot {
+    opacity: 1; filter: none; transform: none;
+    transition-delay: calc(140ms + var(--m, 0) * 26ms);
+}
 
 /* La couverture des spectacles sans photographie : l'aplat de leur palette,
    leur titre en Cinzel entre deux fleurons — une affiche d'attente. */
@@ -874,16 +1017,17 @@ h1 {
     /* Entrée en scène : les cartes se lèvent une à une (--i, posé au
        balisage). Au retour par morphing, elles sont déjà en place. */
     html:not(.retour-vt) .carte { animation: se-lever .55s cubic-bezier(.2, .6, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 55ms); }
-    /* La vitrine en profondeur : le photogramme dérive dans son cadre au
-       rythme du défilement — lié au geste, jamais à sa place. Le cadre est
-       rempli plus haut que lui (inset négatif) : la dérive ne découvre
-       jamais le bord. */
-    @supports (animation-timeline: view()) {
-        .media--photo { inset: -7% 0; animation: derive linear both; animation-timeline: view(); }
-    }
 }
 @keyframes se-lever { from { opacity: 0; transform: translateY(14px); } }
-@keyframes derive { from { transform: translateY(2.6%); } to { transform: translateY(-2.6%); } }
+
+/* La vitrine en profondeur : le photogramme dérive dans son cadre au
+   rythme du défilement — lié au geste, jamais à sa place. C'est le script
+   qui la mène, comme la parallaxe des univers : le CSS scroll-driven
+   reste inégal d'un navigateur à l'autre, le geste, lui, est partout.
+   La classe .parallaxe n'arrive qu'avec lui : le cadre est alors rempli
+   plus haut que lui (inset négatif), et la dérive ne découvre jamais le
+   bord. Sans script ou en mouvement réduit : image posée, rien d'autre. */
+html.parallaxe .media--photo { inset: -7% 0; will-change: transform; }
 
 /* ── Le morphing vers la fiche ──
    Les deux documents y consentent (celui-ci ici, les fiches dans leur
@@ -925,6 +1069,9 @@ footer a:hover { color: var(--accent-ink); }
     .role { font-size: .68rem; margin-top: .2rem; }
     .carton-titre { font-size: .9rem; }
     .carton-orne { font-size: .56rem; }
+    .chuchote { padding: .8rem .7rem; }
+    .chuchote p { font-size: .66rem; line-height: 1.55; }
+    .bascule { top: 1rem; right: .9rem; width: 2.1rem; height: 2.1rem; }
     footer { margin-top: 2rem; }
 }
 `;
@@ -967,6 +1114,12 @@ function main() {
             // range sur le premier millésime venu, faute de mieux.
             anneeNum: parseInt((cv.annee || '').match(/\d{4}/)?.[0] || '0', 10),
             role: (uni.role || cv.role || '').replace(/^R[oô]les?\s*·\s*/i, ''),
+            // Le murmure du kakemono : le synopsis de l'univers, plafonné —
+            // au-delà de trente-quatre mots, la carte n'est plus une carte.
+            synopsis: (() => {
+                const mots = lignes(uni.synopsis).join(' ').split(/\s+/).filter(Boolean);
+                return mots.length > 34 ? mots.slice(0, 34).join(' ') + '…' : mots.join(' ');
+            })(),
             vignette: photos[0] ? photos[0].src : '',
             vignettePos: photos[0] ? posCss(photos[0].cadre) : '',
             // Le deuxième regard : au maintien du survol, la carte fond vers
