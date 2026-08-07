@@ -65,6 +65,18 @@
             color: var(--u-muted); text-decoration: none;
         }
         .u-retour:hover { color: var(--u-accent-ink); }
+        /* Le morphing depuis le répertoire : les deux documents y
+           consentent, et le panneau porte le nom que la carte cliquée
+           prend au départ — sa vignette glisse jusqu'à devenir cette
+           page. Navigateurs plus anciens : navigation ordinaire. */
+        @view-transition { navigation: auto; }
+        #show-universe { view-transition-name: fiche-cleophene; }
+        ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
+        ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*), ::view-transition-image-pair(*),
+            ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+        }
     </style>
 
     <script type="application/ld+json">

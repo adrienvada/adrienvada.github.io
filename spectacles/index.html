@@ -29,6 +29,28 @@
             --accent: #bfa98a; --accent-ink: #c9b494; --on-accent: #0a0907;
             --line: rgba(255, 255, 255, 0.13);
         }
+        body:has(.carte[data-slug="cassandres"] a:hover),
+        body:has(.carte[data-slug="cassandres"].regarde) { --ambiance: #b8452f; }
+        body:has(.carte[data-slug="imaginaireforce"] a:hover),
+        body:has(.carte[data-slug="imaginaireforce"].regarde) { --ambiance: #d4823c; }
+        body:has(.carte[data-slug="alabarre"] a:hover),
+        body:has(.carte[data-slug="alabarre"].regarde) { --ambiance: #c8102e; }
+        body:has(.carte[data-slug="audiences"] a:hover),
+        body:has(.carte[data-slug="audiences"].regarde) { --ambiance: #8fbfe8; }
+        body:has(.carte[data-slug="cleophene"] a:hover),
+        body:has(.carte[data-slug="cleophene"].regarde) { --ambiance: #d9a24a; }
+        body:has(.carte[data-slug="fulgurees"] a:hover),
+        body:has(.carte[data-slug="fulgurees"].regarde) { --ambiance: #4d5fc4; }
+        body:has(.carte[data-slug="berenice"] a:hover),
+        body:has(.carte[data-slug="berenice"].regarde) { --ambiance: #c0637e; }
+        body:has(.carte[data-slug="asyoulikeit"] a:hover),
+        body:has(.carte[data-slug="asyoulikeit"].regarde) { --ambiance: #c2d94b; }
+        body:has(.carte[data-slug="hommemoderne"] a:hover),
+        body:has(.carte[data-slug="hommemoderne"].regarde) { --ambiance: #cf8352; }
+        body:has(.carte[data-slug="peaudesanges"] a:hover),
+        body:has(.carte[data-slug="peaudesanges"].regarde) { --ambiance: #2c4a8f; }
+        body:has(.carte[data-slug="lerapt"] a:hover),
+        body:has(.carte[data-slug="lerapt"].regarde) { --ambiance: #de7a5a; }
     </style>
     <script type="application/ld+json">
 {
@@ -125,12 +147,13 @@
                 <span class="groupe-filet" aria-hidden="true"></span>
             </h2>
             <ul class="repertoire">
-        <li class="carte" style="--ac:#b8452f;--i:0">
+        <li class="carte" style="--ac:#b8452f;--i:0" data-slug="cassandres" data-vt="fiche-cassandres">
             <a href="cassandres/">
-                <span class="cadre"><span class="carton" style="--cbg:#0f0e10;--ctx:#eeeaea">
+                <span class="cadre"><span class="media"><span class="carton" style="--cbg:#0f0e10;--ctx:#eeeaea">
                     <span class="carton-orne" aria-hidden="true">✦</span>
                     <span class="carton-titre">Cassandres</span>
-                </span><span class="lueur" aria-hidden="true"></span></span>
+                    <span class="carton-orne" aria-hidden="true">✦</span>
+                </span></span><span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2027 · Fiction d’anticipation</span>
@@ -141,12 +164,13 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#d4823c;--i:1">
+        <li class="carte" style="--ac:#d4823c;--i:1" data-slug="imaginaireforce" data-vt="fiche-imaginaireforce">
             <a href="imaginaireforce/">
-                <span class="cadre"><span class="carton" style="--cbg:#160f0a;--ctx:#f6ead8">
+                <span class="cadre"><span class="media"><span class="carton" style="--cbg:#160f0a;--ctx:#f6ead8">
                     <span class="carton-orne" aria-hidden="true">✦</span>
                     <span class="carton-titre">L’Imaginaire forcé</span>
-                </span><span class="lueur" aria-hidden="true"></span></span>
+                    <span class="carton-orne" aria-hidden="true">✦</span>
+                </span></span><span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2026 · Comédie</span>
@@ -157,9 +181,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#c8102e;--i:2">
+        <li class="carte" style="--ac:#c8102e;--i:2" data-slug="alabarre" data-vt="fiche-alabarre" data-src2="../ressources/images/univers/alabarre/20.jpg" data-pos2="35% 35%">
             <a href="alabarre/">
-                <span class="cadre"><img src="../ressources/images/univers/alabarre/19.jpg" alt="" loading="lazy" decoding="async" width="600" height="400"><span class="lueur" aria-hidden="true"></span></span>
+                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/alabarre/19.jpg" style="--pos:45% 25%" alt="" loading="lazy" decoding="async"></span><span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2026 · Théâtre documentaire</span>
@@ -170,9 +194,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#8fbfe8;--i:3">
+        <li class="carte" style="--ac:#8fbfe8;--i:3" data-slug="audiences" data-vt="fiche-audiences" data-src2="../ressources/images/univers/audiences/6.jpg" data-pos2="42% 20%">
             <a href="audiences/">
-                <span class="cadre"><img src="../ressources/images/univers/audiences/8.jpg" alt="" loading="lazy" decoding="async" width="600" height="400"><span class="lueur" aria-hidden="true"></span></span>
+                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/audiences/8.jpg" style="--pos:45% 55%" alt="" loading="lazy" decoding="async"></span><span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2025 · Spectacle de prévention</span>
@@ -183,9 +207,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#d9a24a;--i:4">
+        <li class="carte" style="--ac:#d9a24a;--i:4" data-slug="cleophene" data-vt="fiche-cleophene" data-src2="../ressources/images/univers/cleophene/9.jpg" data-pos2="50% 35%">
             <a href="cleophene/">
-                <span class="cadre"><img src="../ressources/images/univers/cleophene/5.jpg" alt="" loading="lazy" decoding="async" width="600" height="400"><span class="lueur" aria-hidden="true"></span></span>
+                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/cleophene/5.jpg" style="--pos:15% 25%" alt="" loading="lazy" decoding="async"></span><span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2024 · Tragédie</span>
@@ -196,9 +220,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#4d5fc4;--i:5">
+        <li class="carte" style="--ac:#4d5fc4;--i:5" data-slug="fulgurees" data-vt="fiche-fulgurees" data-src2="../ressources/images/univers/fulgurees/3.jpg" data-pos2="80% 25%">
             <a href="fulgurees/">
-                <span class="cadre"><img src="../ressources/images/univers/fulgurees/10.jpg" alt="" loading="lazy" decoding="async" width="600" height="400"><span class="lueur" aria-hidden="true"></span></span>
+                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/fulgurees/10.jpg" style="--pos:47% 35%" alt="" loading="lazy" decoding="async"></span><span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2023 · Fable contemporaine</span>
@@ -209,9 +233,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#c0637e;--i:6">
+        <li class="carte" style="--ac:#c0637e;--i:6" data-slug="berenice" data-vt="fiche-berenice" data-src2="../ressources/images/univers/berenice/18.jpg" data-pos2="52% 45%">
             <a href="berenice/">
-                <span class="cadre"><img src="../ressources/images/univers/berenice/2.jpg" alt="" loading="lazy" decoding="async" width="600" height="400"><span class="lueur" aria-hidden="true"></span></span>
+                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/berenice/2.jpg" style="--pos:55% 55%" alt="" loading="lazy" decoding="async"></span><span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2022 · Tragédie</span>
@@ -222,9 +246,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#c2d94b;--i:7">
+        <li class="carte" style="--ac:#c2d94b;--i:7" data-slug="asyoulikeit" data-vt="fiche-asyoulikeit" data-src2="../ressources/images/univers/asyoulikeit/16.jpg" data-pos2="45% 50%">
             <a href="asyoulikeit/">
-                <span class="cadre"><img src="../ressources/images/univers/asyoulikeit/3.jpg" alt="" loading="lazy" decoding="async" width="600" height="400"><span class="lueur" aria-hidden="true"></span></span>
+                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/asyoulikeit/3.jpg" alt="" loading="lazy" decoding="async"></span><span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2022 · Comédie</span>
@@ -244,9 +268,9 @@
                 <span class="groupe-filet" aria-hidden="true"></span>
             </h2>
             <ul class="repertoire">
-        <li class="carte" style="--ac:#cf8352;--i:0">
+        <li class="carte" style="--ac:#cf8352;--i:0" data-slug="hommemoderne" data-vt="fiche-hommemoderne" data-src2="../ressources/images/univers/hommemoderne/2.jpg" data-pos2="50% 40%">
             <a href="hommemoderne/">
-                <span class="cadre"><img src="../ressources/images/univers/hommemoderne/1.jpg" alt="" loading="lazy" decoding="async" width="600" height="400"><span class="lueur" aria-hidden="true"></span></span>
+                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/hommemoderne/1.jpg" style="--pos:74% 36%" alt="" loading="lazy" decoding="async"></span><span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2023 · Comédie</span>
@@ -257,9 +281,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#2c4a8f;--i:1">
+        <li class="carte" style="--ac:#2c4a8f;--i:1" data-slug="peaudesanges" data-vt="fiche-peaudesanges" data-src2="../ressources/images/univers/peaudesanges/1.jpg" data-pos2="50% 35%">
             <a href="peaudesanges/">
-                <span class="cadre"><img src="../ressources/images/univers/peaudesanges/affiche.jpg" alt="" loading="lazy" decoding="async" width="600" height="400"><span class="lueur" aria-hidden="true"></span></span>
+                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/peaudesanges/affiche.jpg" alt="" loading="lazy" decoding="async"></span><span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2022 · Film sur l’art</span>
@@ -270,9 +294,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#de7a5a;--i:2">
+        <li class="carte" style="--ac:#de7a5a;--i:2" data-slug="lerapt" data-vt="fiche-lerapt" data-src2="../ressources/images/univers/lerapt/1.jpg" data-pos2="66% 40%">
             <a href="lerapt/">
-                <span class="cadre"><img src="../ressources/images/univers/lerapt/affiche.jpg" alt="" loading="lazy" decoding="async" width="600" height="400"><span class="lueur" aria-hidden="true"></span></span>
+                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/lerapt/affiche.jpg" alt="" loading="lazy" decoding="async"></span><span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2019 · Comédie</span>
@@ -290,6 +314,92 @@
         <p><a href="../">adrienvada.fr</a> · <a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a></p>
         <p class="maj">Répertoire mis à jour en août 2026.</p>
     </footer>
+
+    <!-- Trois gestes, rien de plus : l'appui maintenu qui vaut survol (le
+         même que le murmure du CV), le deuxième regard qui ne se charge
+         qu'au premier survol, et le nom de transition posé sur la seule
+         carte cliquée. Sans JavaScript, la page reste entière — survols
+         souris compris, hors fondu du deuxième regard. -->
+    <script>
+    (function () {
+        'use strict';
+        var APPUI = 400; // ms — l'appui maintenu du murmure, à l'identique
+        var cartes = Array.prototype.slice.call(document.querySelectorAll('.carte'));
+
+        function regarde(c, oui) { c.classList.toggle('regarde', oui); }
+
+        // Le deuxième regard : la photo suivante du montage n'est pas dans
+        // la page — elle naît au premier survol, jamais d'avance.
+        function eveille(c) {
+            if (!c.dataset.src2 || c.querySelector('.img2')) return;
+            var i = new Image();
+            i.className = 'img2'; i.alt = ''; i.decoding = 'async';
+            if (c.dataset.pos2) i.style.setProperty('--pos', c.dataset.pos2);
+            i.src = c.dataset.src2;
+            var m = c.querySelector('.media'); if (m) m.appendChild(i);
+        }
+
+        cartes.forEach(function (c) {
+            // La souris survole…
+            c.addEventListener('pointerenter', function (e) {
+                if (e.pointerType === 'touch') return;
+                eveille(c); regarde(c, true);
+            });
+            c.addEventListener('pointerleave', function (e) {
+                if (e.pointerType === 'touch') return;
+                regarde(c, false);
+            });
+            // …le doigt appuie. Mêmes règles que le murmure du CV : l'appui
+            // maintenu allume la carte, le doigt qui glisse annule, et le
+            // relâchement après l'appui n'ouvre pas la fiche.
+            var minuteur = 0, tenu = false, x0 = 0, y0 = 0;
+            c.addEventListener('touchstart', function (e) {
+                var t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; tenu = false;
+                clearTimeout(minuteur);
+                minuteur = setTimeout(function () { tenu = true; eveille(c); regarde(c, true); }, APPUI);
+            }, { passive: true });
+            c.addEventListener('touchmove', function (e) {
+                var t = e.touches[0];
+                if (Math.hypot(t.clientX - x0, t.clientY - y0) > 12) {
+                    clearTimeout(minuteur);
+                    if (tenu) { regarde(c, false); tenu = false; }
+                }
+            }, { passive: true });
+            c.addEventListener('touchend', function (e) {
+                clearTimeout(minuteur);
+                if (tenu) { e.preventDefault(); regarde(c, false); tenu = false; }
+            });
+            c.addEventListener('touchcancel', function () {
+                clearTimeout(minuteur); regarde(c, false); tenu = false;
+            });
+        });
+
+        // Le morphing vers la fiche : au départ, SEULE la carte cliquée
+        // porte un nom de transition — dix groupes muets pèseraient pour
+        // rien. Au retour, la carte d'où l'on revient reprend son nom avant
+        // la première image, et la fiche vient s'y ranger.
+        function nomme(chemin) {
+            cartes.forEach(function (c) {
+                var a = c.querySelector('a'), cadre = c.querySelector('.cadre');
+                if (!a || !cadre) return;
+                cadre.style.viewTransitionName =
+                    (new URL(a.href).pathname === chemin) ? c.dataset.vt : 'none';
+            });
+        }
+        addEventListener('pageswap', function (e) {
+            if (!e.viewTransition || !e.activation) return;
+            nomme(new URL(e.activation.entry.url).pathname);
+        });
+        addEventListener('pagereveal', function (e) {
+            if (!e.viewTransition) return;
+            // Revenir par morphing ET lever les cartes une à une se
+            // disputeraient l'écran : au retour, elles sont déjà en place.
+            document.documentElement.classList.add('retour-vt');
+            var act = (typeof navigation !== 'undefined') && navigation.activation;
+            if (act && act.from) nomme(new URL(act.from.url).pathname);
+        });
+    })();
+    </script>
 </body>
 
 </html>

@@ -1,16 +1,45 @@
 /* RÉPERTOIRE (/spectacles/) — feuille générée (build/generer-pages-spectacles.js)
-   Le costume du site : Cinzel, or sur noir — et la couleur de chaque
-   spectacle (--ac, posée sur sa carte) en signature. */
+   Le costume du site : Cinzel, or sur noir, la couleur de chaque spectacle
+   (--ac, posée sur sa carte) en signature — et quatre mises en scène :
+   le grain de pellicule, les kakemonos, la vitrine en profondeur, la
+   salle qui prend les couleurs du spectacle survolé (--ambiance). */
 *, *::before, *::after { box-sizing: border-box; }
+
+/* L'ambiance est une COULEUR ENREGISTRÉE : déclarée en <color>, elle
+   s'interpole — le passage d'un or à un carmin est un glissement, pas un
+   claquement. Les règles qui la changent sont écrites dans la page, une
+   par spectacle : le générateur les connaît toutes. */
+@property --ambiance {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #bfa98a;
+}
+
 body {
     margin: 0; padding: 0 1.25rem 3.5rem;
     background: var(--bg); color: var(--text);
     font: 400 16px/1.65 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
-    /* Une lueur d'or au lever de rideau, rien de plus. */
-    background-image: radial-gradient(58rem 26rem at 50% -6rem, rgba(191, 169, 138, .07), transparent 68%);
-    background-repeat: no-repeat;
+    --ambiance: #bfa98a;
+    transition: --ambiance .55s ease;
 }
+
+/* Sous la page, la lueur — elle prend la couleur d'ambiance. */
+body::before {
+    content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(58rem 30rem at 50% -8rem,
+            color-mix(in srgb, var(--ambiance) 9%, transparent), transparent 68%);
+}
+
+/* Sur la page, la matière : un grain de pellicule (bruit SVG de 600 octets,
+   opacité gravée dans son alpha) et un vignettage de salle éteinte. */
+body::after {
+    content: ''; position: fixed; inset: 0; z-index: 40; pointer-events: none;
+    background:
+        radial-gradient(130% 110% at 50% 12%, transparent 58%, rgba(0, 0, 0, .28) 100%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.05'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") repeat;
+}
+
 main { max-width: 64rem; margin: 0 auto; }
 a { color: var(--accent-ink); }
 
@@ -32,14 +61,17 @@ h1 {
     margin: 0; font: 700 clamp(2.6rem, 7vw, 4rem)/1.05 'Cinzel', Georgia, serif;
     letter-spacing: .04em; color: var(--text); text-wrap: balance;
 }
+/* Le fleuron suit l'ambiance : il est la première chose qui rosit quand on
+   survole Bérénice, la première qui reprend l'or quand la main s'en va. */
 .ornement {
     position: relative; margin: 1.5rem auto 0; width: 11rem; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(191, 169, 138, .55), transparent);
+    background: linear-gradient(90deg, transparent,
+            color-mix(in srgb, var(--ambiance) 60%, transparent), transparent);
 }
 .ornement span {
     position: absolute; left: 50%; top: 50%; width: 7px; height: 7px;
     transform: translate(-50%, -50%) rotate(45deg);
-    background: var(--accent); box-shadow: 0 0 0 3px var(--bg);
+    background: var(--ambiance); box-shadow: 0 0 0 3px var(--bg);
 }
 
 /* ── Intitulés de groupe — les mêmes que le CV, icône comprise ── */
@@ -51,52 +83,68 @@ h1 {
 .groupe-ico {
     display: grid; place-items: center; width: 1.9rem; height: 1.9rem;
     border: 1px solid var(--line); border-radius: .45rem;
-    background: var(--surface); color: var(--accent-ink);
+    background: var(--surface); color: var(--ambiance);
 }
 .ico { display: block; width: 1em; height: 1em; fill: currentColor; font-size: .8rem; }
-.groupe-filet { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+.groupe-filet {
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg,
+            color-mix(in srgb, var(--ambiance) 26%, var(--line)), transparent);
+}
 
-/* ── Les cartes ── */
+/* ── Les kakemonos ──
+   Des affiches hautes (2/3), serrées comme dans le hall d'une maison de
+   production. Le recadrage portrait vise le point du montage (--pos). */
 .repertoire {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
-    gap: 1.9rem 1.6rem; margin: 0; padding: 1.8rem 0 .6rem;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 1.9rem 1.5rem; margin: 0; padding: 1.8rem 0 .6rem;
     list-style: none; align-items: start;
 }
-.carte a { display: block; text-decoration: none; color: inherit; }
+.carte a {
+    display: block; text-decoration: none; color: inherit;
+    -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+}
 .carte a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: .65rem; }
 .cadre {
-    position: relative; display: block; aspect-ratio: 3 / 2; overflow: hidden;
+    position: relative; display: block; aspect-ratio: 2 / 3; overflow: hidden;
     border-radius: .65rem; border: 1px solid var(--line); background: var(--surface);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), 0 10px 28px -18px rgba(0, 0, 0, .8);
     transition: border-color .35s ease, box-shadow .35s ease, transform .35s ease;
 }
-/* Le "height: 100%" prime sur l'attribut height="400" du balisage : les
-   vignettes remplissent leur cadre 3/2 quel que soit le cadrage du fichier. */
-.cadre img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.2, .6, .2, 1); }
+.media { position: absolute; inset: 0; display: block; }
+.media img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; object-position: var(--pos, 50% 32%);
+    transition: transform .6s cubic-bezier(.2, .6, .2, 1);
+}
+/* Le deuxième regard : la photo suivante du montage, née au premier survol
+   (voir le script de la page), fond par-dessus la première. */
+.img2 { opacity: 0; transition: opacity .5s ease, transform .6s cubic-bezier(.2, .6, .2, 1); }
+.carte.regarde .img2 { opacity: 1; }
 .lueur { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, .3)); }
 
 /* La couverture des spectacles sans photographie : l'aplat de leur palette,
-   leur titre en Cinzel, un filet intérieur — une affiche d'attente, pas un
-   cadre vide. */
+   leur titre en Cinzel entre deux fleurons — une affiche d'attente. */
 .carton {
-    position: absolute; inset: 0; display: grid; place-content: center; gap: .55rem;
-    padding: 1rem 1.2rem; text-align: center;
-    background: linear-gradient(155deg, color-mix(in srgb, var(--cbg) 88%, #f2ece0), var(--cbg));
+    position: absolute; inset: 0; display: grid; place-content: center; gap: .8rem;
+    padding: 1.2rem; text-align: center;
+    background: linear-gradient(165deg, color-mix(in srgb, var(--cbg) 88%, #f2ece0), var(--cbg));
 }
 .carton::after {
-    content: ''; position: absolute; inset: .55rem; pointer-events: none;
-    border: 1px solid color-mix(in srgb, var(--ctx) 22%, transparent); border-radius: .35rem;
+    content: ''; position: absolute; inset: .6rem; pointer-events: none;
+    border: 1px solid color-mix(in srgb, var(--ctx) 22%, transparent); border-radius: .4rem;
 }
-.carton-orne { font-size: .7rem; color: var(--ac, var(--accent)); }
-.carton-titre { font: 600 1.05rem/1.3 'Cinzel', Georgia, serif; color: var(--ctx); text-wrap: balance; }
+.carton-orne { font-size: .68rem; color: var(--ac, var(--accent)); }
+.carton-titre { font: 600 1.1rem/1.35 'Cinzel', Georgia, serif; color: var(--ctx); text-wrap: balance; }
 
-.carte a:hover .cadre, .carte a:focus-visible .cadre {
+/* Le survol — et son jumeau .regarde, posé par l'appui maintenu du doigt. */
+.carte a:hover .cadre, .carte.regarde .cadre, .carte a:focus-visible .cadre {
     border-color: color-mix(in srgb, var(--ac, var(--accent)) 55%, transparent);
-    box-shadow: 0 14px 34px -14px color-mix(in srgb, var(--ac, var(--accent)) 38%, transparent),
+    box-shadow: 0 16px 38px -14px color-mix(in srgb, var(--ac, var(--accent)) 40%, transparent),
         0 10px 28px -18px rgba(0, 0, 0, .8);
     transform: translateY(-3px);
 }
-.carte a:hover .cadre img { transform: scale(1.045); }
+.carte a:hover .media img, .carte.regarde .media img { transform: scale(1.05); }
 
 .txt { display: block; padding-top: .7rem; }
 .fil { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
@@ -113,7 +161,7 @@ h1 {
 }
 .nom {
     position: relative; display: block; margin-top: .3rem; padding-bottom: .5rem;
-    font: 600 1.04rem/1.3 'Cinzel', Georgia, serif; color: var(--text);
+    font: 600 1.02rem/1.3 'Cinzel', Georgia, serif; color: var(--text);
     transition: color .3s ease;
 }
 .nom::after {
@@ -121,16 +169,39 @@ h1 {
     background: var(--ac, var(--accent)); opacity: .55;
     transition: width .35s ease, opacity .35s ease;
 }
-.carte a:hover .nom { color: var(--accent-ink); }
-.carte a:hover .nom::after { width: 2.6rem; opacity: 1; }
+.carte a:hover .nom, .carte.regarde .nom { color: var(--accent-ink); }
+.carte a:hover .nom::after, .carte.regarde .nom::after { width: 2.6rem; opacity: 1; }
 .role { display: block; margin-top: .3rem; font-size: .78rem; color: var(--muted); }
 
-/* Entrée en scène : les cartes se lèvent une à une (--i, posé au balisage). */
+/* ── Les mouvements — tous sous prefers-reduced-motion ── */
 @media (prefers-reduced-motion: no-preference) {
     html { scroll-behavior: smooth; }
-    .carte { animation: se-lever .55s cubic-bezier(.2, .6, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 55ms); }
+    /* Entrée en scène : les cartes se lèvent une à une (--i, posé au
+       balisage). Au retour par morphing, elles sont déjà en place. */
+    html:not(.retour-vt) .carte { animation: se-lever .55s cubic-bezier(.2, .6, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 55ms); }
+    /* La vitrine en profondeur : le photogramme dérive dans son cadre au
+       rythme du défilement — lié au geste, jamais à sa place. Le cadre est
+       rempli plus haut que lui (inset négatif) : la dérive ne découvre
+       jamais le bord. */
+    @supports (animation-timeline: view()) {
+        .media--photo { inset: -7% 0; animation: derive linear both; animation-timeline: view(); }
+    }
 }
 @keyframes se-lever { from { opacity: 0; transform: translateY(14px); } }
+@keyframes derive { from { transform: translateY(2.6%); } to { transform: translateY(-2.6%); } }
+
+/* ── Le morphing vers la fiche ──
+   Les deux documents y consentent (celui-ci ici, les fiches dans leur
+   propre <style>) ; le script ne nomme que la carte cliquée, et la vignette
+   glisse jusqu'à devenir le panneau du spectacle. Navigateurs plus
+   anciens : navigation ordinaire, rien de cassé. */
+@view-transition { navigation: auto; }
+::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*), ::view-transition-image-pair(*),
+    ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
 
 footer {
     max-width: 64rem; margin: 2.6rem auto 0; padding-top: 1.4rem;
@@ -141,9 +212,7 @@ footer a { text-decoration: none; }
 footer a:hover { color: var(--accent-ink); }
 .maj { margin: .4rem 0 0; font-size: .68rem; letter-spacing: .06em; opacity: .75; }
 
-/* ── Téléphone : un catalogue, pas une liste ──
-   Deux colonnes serrées — la grille reste une grille, et dix cartes
-   tiennent en trois écrans au lieu de dix. */
+/* ── Téléphone : un mur d'affiches, pas une liste ── */
 @media (max-width: 640px) {
     body { padding: 0 .9rem 2.6rem; }
     .tete { padding: 2.3rem 0 1.8rem; }
@@ -151,7 +220,7 @@ footer a:hover { color: var(--accent-ink); }
     .ornement { margin-top: 1.1rem; width: 8.5rem; }
     .groupe { margin-top: 2rem; gap: .6rem; font-size: .64rem; letter-spacing: .16em; }
     .groupe-ico { width: 1.65rem; height: 1.65rem; }
-    .repertoire { grid-template-columns: repeat(2, 1fr); gap: 1.25rem .8rem; padding: 1.2rem 0 .4rem; }
+    .repertoire { grid-template-columns: repeat(2, 1fr); gap: 1.3rem .75rem; padding: 1.2rem 0 .4rem; }
     .txt { padding-top: .5rem; }
     .fil { gap: .35rem; }
     .annee { font-size: .52rem; letter-spacing: .12em; }
@@ -159,7 +228,7 @@ footer a:hover { color: var(--accent-ink); }
     .nom { font-size: .84rem; margin-top: .22rem; padding-bottom: .4rem; }
     .nom::after { height: 1.5px; }
     .role { font-size: .68rem; margin-top: .2rem; }
-    .carton-titre { font-size: .84rem; }
-    .carton-orne { font-size: .58rem; }
+    .carton-titre { font-size: .9rem; }
+    .carton-orne { font-size: .56rem; }
     footer { margin-top: 2rem; }
 }
