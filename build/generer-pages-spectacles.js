@@ -597,10 +597,16 @@ ${JSON.stringify(liste, null, 2)}
 
 <body>
     ${miniSprite(['i-solid-masks-theater', 'i-solid-film', 'i-solid-sun', 'i-solid-moon'])}
-    <a class="retour" href="../">← Adrien Vada</a>
-    <button type="button" class="bascule" data-bascule aria-pressed="false" aria-label="Passer au thème clair" title="Passer au thème clair">
-        <svg class="ico" data-bascule-icone aria-hidden="true"><use href="#i-solid-sun"></use></svg>
-    </button>
+    <!-- La sentinelle : un point posé au-dessus de la barre. Tant qu'il est
+         visible, la barre est chez elle ; dès qu'il sort, elle flotte —
+         le même guet que la barre d'onglets de l'accueil. -->
+    <div class="barre-sentinelle" aria-hidden="true"></div>
+    <header class="barre">
+        <a class="retour" href="../">← Adrien Vada</a>
+        <button type="button" class="bascule" data-bascule aria-pressed="false" aria-label="Passer au thème clair" title="Passer au thème clair">
+            <svg class="ico" data-bascule-icone aria-hidden="true"><use href="#i-solid-sun"></use></svg>
+        </button>
+    </header>
     <main>
         <header class="tete">
             <p class="sur-titre">Adrien Vada — Artiste interprète</p>
@@ -733,6 +739,17 @@ ${JSON.stringify(liste, null, 2)}
             }
         }
 
+        // La barre flotte dès que sa sentinelle sort de l'écran — le même
+        // guet que la barre d'onglets de l'accueil : aucun calcul au fil
+        // des pixels, c'est le navigateur qui prévient au bon instant.
+        var barre = document.querySelector('.barre');
+        var sentinelle = document.querySelector('.barre-sentinelle');
+        if (barre && sentinelle && 'IntersectionObserver' in window) {
+            new IntersectionObserver(function (entrees) {
+                barre.classList.toggle('est-collee', !entrees[0].isIntersecting);
+            }, { threshold: 0 }).observe(sentinelle);
+        }
+
         // La bascule de thème : même clé que l'accueil (avTheme), mêmes
         // astres — soleil pour aller au clair, lune pour revenir au soir.
         var bascule = document.querySelector('[data-bascule]');
@@ -811,6 +828,7 @@ const FEUILLE = `/* RÉPERTOIRE (/spectacles/) — feuille générée (build/gen
 }
 
 body {
+    position: relative; /* l'ancre de la sentinelle de barre */
     margin: 0; padding: 0 1.25rem 3.5rem;
     background: var(--bg); color: var(--text);
     font: 400 16px/1.65 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -838,20 +856,40 @@ body::after {
 main { max-width: 64rem; margin: 0 auto; }
 a { color: var(--accent-ink); }
 
+/* ── La barre — retour à gauche, bascule à droite ──
+   Chez elle en haut de page, transparente et sans cadre. Dès que la
+   sentinelle sort de l'écran, elle flotte à une petite marge du bord :
+   pastille presque opaque (du texte défile dessous), verre flouté,
+   filet d'or — le même costume que la barre d'onglets de l'accueil. */
+.barre-sentinelle { position: absolute; top: 0; left: 0; width: 1px; height: 1px; }
+.barre {
+    position: sticky; top: .75rem; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    max-width: 64rem; margin: .65rem auto 0; padding: .4rem .55rem;
+    border: 1px solid transparent; border-radius: 999px;
+}
+.barre.est-collee {
+    background: color-mix(in srgb, var(--surface) 98.5%, transparent);
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+    box-shadow: 0 8px 22px -10px rgba(0, 0, 0, .55);
+    padding-left: .9rem; padding-right: .55rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .barre { transition: background-color 240ms ease, box-shadow 240ms ease, border-color 240ms ease, padding 240ms ease; }
+}
 .retour {
-    display: inline-block; margin-top: 1.4rem;
+    display: inline-block;
     font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
     text-decoration: none; color: var(--muted);
     transition: color .25s ease;
 }
 .retour:hover { color: var(--accent-ink); }
 
-/* La bascule de thème — même geste qu'à l'accueil, posée à droite du
-   chemin du retour. Soleil d'ambre pour aller au clair, lune d'encre
-   pour revenir au soir. */
+/* La bascule de thème — même geste qu'à l'accueil. Soleil d'ambre pour
+   aller au clair, lune d'encre pour revenir au soir. */
 .bascule {
-    position: absolute; top: 1.15rem; right: 1.25rem; z-index: 50;
-    display: grid; place-items: center; width: 2.3rem; height: 2.3rem;
+    display: grid; place-items: center; width: 2.3rem; height: 2.3rem; flex: none;
     border: 1px solid var(--line); border-radius: 999px;
     background: var(--surface); color: #fbbf24; cursor: pointer;
     transition: border-color .3s ease, color .3s ease, background-color .35s ease;
@@ -1071,7 +1109,8 @@ footer a:hover { color: var(--accent-ink); }
     .carton-orne { font-size: .56rem; }
     .chuchote { padding: .8rem .7rem; }
     .chuchote p { font-size: .66rem; line-height: 1.55; }
-    .bascule { top: 1rem; right: .9rem; width: 2.1rem; height: 2.1rem; }
+    .barre { top: .55rem; margin-top: .5rem; }
+    .bascule { width: 2.1rem; height: 2.1rem; }
     footer { margin-top: 2rem; }
 }
 `;
