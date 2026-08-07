@@ -334,10 +334,56 @@
                     color-mix(in srgb, var(--ambiance) 22%, transparent), transparent 72%);
         }
 
-        /* La salle ne s'allume pas sur le papier. */
+        /* LE GRAIN DE LA SALLE. Une couleur seule reste une couleur ; ce
+           qui fait la matière, c'est le bruit. Un grain de pellicule très
+           fin se pose alors sur toute la page — il donne du corps aux
+           noirs comme aux blancs, et c'est lui qui fait basculer l'effet
+           de « teinte » à « on entre quelque part ».
+
+           IL N'APPARAÎT QU'AVEC LA SALLE. Posé en permanence, il salirait
+           un CV qu'on vient lire ; le voir arriver AVEC la couleur, et
+           repartir avec elle, en fait un événement plutôt qu'un décor.
+
+           Le bruit est une turbulence SVG de six cents octets, encapsulée
+           dans l'adresse : aucun fichier à servir, aucune requête. Son
+           opacité est gravée dans son propre alpha (feFuncA), et le voile
+           n'a plus qu'à monter de zéro à un — une opacité s'anime sans
+           repeindre quoi que ce soit. */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.55s ease;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.055'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") repeat;
+        }
+
+        :root.salle-allumee body::after {
+            opacity: 1;
+        }
+
+        /* Ni la lueur ni le grain ne s'allument sur le papier. */
         @media print {
-            body::before {
+
+            body::before,
+            body::after {
                 display: none !important;
+            }
+        }
+
+        /* « Moins d'animations » : la couleur et le grain arrivent d'un
+           coup plutôt que de glisser. Ils ne disparaissent pas — ils
+           servent à désigner, pas à distraire. */
+        @media (prefers-reduced-motion: reduce) {
+
+            :root {
+                transition: none;
+            }
+
+            body::after {
+                transition: none;
             }
         }
 
@@ -1130,46 +1176,65 @@
                 width: 3px;
             }
 
-            /* ── LA GUIRLANDE ──
-               Le lavis de couleur se retire : à .13 partout et en même
-               temps, huit aplats posés les uns sous les autres finissaient
-               par faire un décor, et le CV se lisait à travers une nappe.
-               Il tombe donc à ZÉRO — la ligne est nue, la couleur n'existe
-               que le temps de son passage — et ne monte à .16 qu'à son
-               tour. Rien ne reste allumé derrière la vague.
+        }
 
-               La vague part du haut et descend, une ligne après l'autre :
-               --cv-rang est le rang de la ligne dans le CV, posé par
-               univers.js en ordre de lecture, et c'est lui qui retarde le
-               départ. Chaque pulsation dure plus longtemps que l'intervalle
-               qui sépare deux lignes : plusieurs restent donc allumées
-               ensemble, et l'on voit passer une onde plutôt qu'un point
-               qui saute de ligne en ligne. Les deux tiers du cycle sont du
-               repos — une guirlande respire, elle ne clignote pas.
+        /* ── LA GUIRLANDE, PARTOUT ──
+           Elle était réservée au petit écran, du temps où le lavis partait
+           du bord gauche : sur une liste large, une couleur qui traversait
+           le début des lignes gênait la lecture. Depuis, le lavis vient de
+           la DROITE — il ne tombe plus que sur la marge, le badge et la
+           flèche. Rien ne s'oppose plus à ce que la vague descende aussi
+           l'écran d'ordinateur, et le CV y gagne le même appel du regard. */
+        /* ── LA GUIRLANDE ──
+           Le lavis de couleur se retire : à .13 partout et en même
+           temps, huit aplats posés les uns sous les autres finissaient
+           par faire un décor, et le CV se lisait à travers une nappe.
+           Il tombe donc à ZÉRO — la ligne est nue, la couleur n'existe
+           que le temps de son passage — et ne monte à .16 qu'à son
+           tour. Rien ne reste allumé derrière la vague.
 
-               Seule l'opacité est animée : le compositeur la traite sans
-               repeindre quoi que ce soit, et le CV en porte une dizaine. */
-            .cv-has-universe::after {
-                opacity: 0;
-                animation: cv-guirlande 4s ease-in-out infinite;
-                animation-delay: calc(var(--cv-rang, 0) * .25s);
-            }
+           La vague part du haut et descend, une ligne après l'autre :
+           --cv-rang est le rang de la ligne dans le CV, posé par
+           univers.js en ordre de lecture, et c'est lui qui retarde le
+           départ. Chaque pulsation dure plus longtemps que l'intervalle
+           qui sépare deux lignes : plusieurs restent donc allumées
+           ensemble, et l'on voit passer une onde plutôt qu'un point
+           qui saute de ligne en ligne. Les deux tiers du cycle sont du
+           repos — une guirlande respire, elle ne clignote pas.
 
-            /* Au doigt, la ligne touchée s'allume à la CRÊTE DE LA
-               GUIRLANDE — la même couleur que la vague, ni plus ni moins :
-               on touche ce qu'on voyait passer.
+           Seule l'opacité est animée : le compositeur la traite sans
+           repeindre quoi que ce soit, et le CV en porte une dizaine. */
+        .cv-has-universe::after {
+            opacity: 0;
+            animation: cv-guirlande 4s ease-in-out infinite;
+            animation-delay: calc(var(--cv-rang, 0) * .25s);
+        }
 
-               Une animation l'emporte sur une opacité déclarée : il faut
-               la couper pour reprendre la main, pas seulement la
-               surcharger. Et le marqueur est posé par le script, pas par
-               `:active` : au doigt, le navigateur reprend `:active` dès
-               qu'il croit reconnaître autre chose qu'un tap, et la couleur
-               retombait alors à zéro sous le doigt. */
-            .cv-item.is-pressed.cv-has-universe::after,
-            .cv-has-universe:has(.cv-row-toggle:active)::after {
+        /* Au doigt, la ligne touchée s'allume à la CRÊTE DE LA
+           GUIRLANDE — la même couleur que la vague, ni plus ni moins :
+           on touche ce qu'on voyait passer.
+
+           Une animation l'emporte sur une opacité déclarée : il faut
+           la couper pour reprendre la main, pas seulement la
+           surcharger. Et le marqueur est posé par le script, pas par
+           `:active` : au doigt, le navigateur reprend `:active` dès
+           qu'il croit reconnaître autre chose qu'un tap, et la couleur
+           retombait alors à zéro sous le doigt. */
+        .cv-item.is-pressed.cv-has-universe::after,
+        .cv-has-universe:has(.cv-row-toggle:active)::after {
+            animation: none;
+            opacity: var(--cv-crete);
+            transition-duration: var(--dur-press);
+        }
+
+        /* À la souris, le même geste : la ligne visée s'arrête à la crête
+           de la vague. Elle ne s'allume ni plus ni moins qu'au passage de
+           la guirlande — on désigne ce qu'on voyait déjà. */
+        @media (hover: hover) and (pointer: fine) {
+            .cv-has-universe:hover::after {
                 animation: none;
                 opacity: var(--cv-crete);
-                transition-duration: var(--dur-press);
+                transition-duration: var(--dur-quick);
             }
         }
 

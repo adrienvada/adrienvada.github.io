@@ -1883,6 +1883,11 @@ const SHOW_UNIVERSES = {
         if (!c || c === ambianceEnCours) return;
         ambianceEnCours = c;
         racine.style.setProperty('--ambiance', c);
+        // La classe pilote le grain de pellicule (voir body::after dans
+        // index.html) : il n'apparaît qu'avec la salle, et repart avec
+        // elle. Une couleur seule reste une couleur ; c'est le bruit qui
+        // fait la matière.
+        racine.classList.add('salle-allumee');
     }
 
     function eteindreLaSalle() {
@@ -1892,6 +1897,7 @@ const SHOW_UNIVERSES = {
         // par défaut vit dans la feuille de style, et c'est elle qui doit
         // décider — y compris quand le thème change.
         racine.style.removeProperty('--ambiance');
+        racine.classList.remove('salle-allumee');
     }
 
     //  À LA SOURIS. On écoute la liste, pas chaque ligne : une seule paire
