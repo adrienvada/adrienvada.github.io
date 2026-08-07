@@ -1228,7 +1228,11 @@ h1 {
 .carte a:hover .media img, .carte.regarde .media img { transform: scale(1.05); }
 
 .txt { display: block; padding-top: .7rem; }
-.fil { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+/* L'année sur sa ligne, la pastille d'état TOUJOURS sur la sienne :
+   « En création » n'est pas la suite de la date, c'est un tampon. */
+.fil { display: block; }
+.annee { display: block; }
+.etat { display: inline-block; margin-top: .35rem; }
 .annee {
     font-size: .6rem; line-height: 1.4; letter-spacing: .16em;
     text-transform: uppercase; color: var(--accent-ink);
@@ -1378,7 +1382,7 @@ html[data-zoom="1"] .nom { font-size: 1.12rem; }
     .groupe-ico { width: 1.65rem; height: 1.65rem; }
     .repertoire { grid-template-columns: repeat(2, 1fr); gap: 1.3rem .75rem; padding: 1.2rem 0 .4rem; }
     .txt { padding-top: .5rem; }
-    .fil { gap: .35rem; }
+    .etat { margin-top: .28rem; }
     .annee { font-size: .52rem; letter-spacing: .12em; }
     .etat { font-size: .48rem; padding: .18rem .4rem; }
     .nom { font-size: .84rem; margin-top: .22rem; padding-bottom: .4rem; }
