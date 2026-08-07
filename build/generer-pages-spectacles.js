@@ -413,45 +413,91 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
 //  des pages, pas à leur donner du poids : sans un seul lien depuis le site,
 //  chaque page de spectacle reste une île. Cette page les relie entre elles
 //  et au reste — et elle a sa propre utilité, comme sommaire du répertoire.
+//
+//  Google la montre en lien de site sous adrienvada.fr : c'est une DEVANTURE
+//  autant qu'un sommaire, et elle porte le même costume que le reste du
+//  site — Cinzel, or sur noir, la couleur de chaque spectacle en signature
+//  de sa carte.
+
+// Le sprite complet pèse quarante et un dessins ; la page n'en montre que
+// deux. On découpe les seuls <symbol> utiles — les mêmes icônes que les
+// intitulés du CV, pour que le répertoire parle la même langue que lui.
+function miniSprite(ids) {
+    const symboles = ids.map(id => {
+        const m = SPRITE.match(new RegExp(`<symbol id="${id}"[\\s\\S]*?</symbol>`));
+        return m ? m[0] : '';
+    }).filter(Boolean).join('');
+    return symboles
+        ? `<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">${symboles}</svg>`
+        : '';
+}
+
 function pageRepertoire(fiches) {
     const url = `${SITE}/spectacles/`;
     const desc = 'Les spectacles et films d’Adrien Vada : rôles, distributions, dates et photographies.';
-    const carte = (f) => `
-        <li>
+    // « août 2026 » — le répertoire est réécrit à chaque passage du script,
+    // autant le dire au visiteur : une devanture datée inspire confiance.
+    const misAJour = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' })
+        .format(new Date());
+
+    const carte = (f, i) => {
+        // La couleur du spectacle signe sa carte — filet sous le titre, halo
+        // au survol. C'est l'accent de sa ligne de CV quand elle en porte un,
+        // celui de sa palette sinon : jamais une couleur inventée ici.
+        const accent = f.accent || '#bfa98a';
+        // Année · genre en fil de carte ; l'état (« En création », « En
+        // tournée ») devient une pastille, comme un tampon de production —
+        // il ne se mélange plus à la date. Espace normale avant le point
+        // médian, insécable après : le retour à la ligne se fait devant le
+        // point, qui part avec ce qu'il annonce.
+        const fil = [f.annee, f.genre].filter(Boolean).join(' ·\u00A0');
+        // Un spectacle sans photographie reçoit une COUVERTURE à ses
+        // couleurs — titre en Cinzel sur l'aplat de sa palette, comme une
+        // affiche d'attente. Un cadre vide se lisait comme une image en
+        // panne ; une couverture dessinée dit « à venir ».
+        const media = f.vignette
+            ? `<img src="../${esc(f.vignette)}" alt="" loading="lazy" decoding="async" width="600" height="400">`
+            : `<span class="carton" style="--cbg:${esc(f.paletteBg || '#171410')};--ctx:${esc(f.paletteText || '#f2ece0')}">
+                    <span class="carton-orne" aria-hidden="true">✦</span>
+                    <span class="carton-titre">${esc(f.titre)}</span>
+                </span>`;
+        return `
+        <li class="carte" style="--ac:${esc(accent)};--i:${i}">
             <a href="${esc(f.slug)}/">
-                <!-- Pas de repli quand il n'y a pas de photo. Un spectacle en
-                     création n'en a pas encore : lui dessiner un cadre vide au
-                     ratio 3/2 donnait un grand rectangle sombre qui se lit
-                     comme une image qui n'a pas chargé — sur mobile, en
-                     colonne unique, il occupait la moitié de l'écran. Mieux
-                     vaut le seul texte, qui ne promet rien. -->
-                ${f.vignette ? `<img src="../${esc(f.vignette)}" alt="" loading="lazy" decoding="async" width="600" height="400">` : ''}
+                <span class="cadre">${media}<span class="lueur" aria-hidden="true"></span></span>
                 <span class="txt">
-                    ${[f.annee, f.genre, f.badge].some(Boolean)
-        // Espace normale AVANT le point médian, insécable APRÈS : le retour à
-        // la ligne se fait donc devant le point, qui part avec ce qu'il
-        // annonce. Sans ça il restait seul en bout de ligne, à pendre.
-        ? `<span class="annee">${esc([f.annee, f.genre, f.badge].filter(Boolean).join(' ·\u00A0'))}</span>`
-        : ''}
+                    ${fil || f.badge ? `<span class="fil">
+                        ${fil ? `<span class="annee">${esc(fil)}</span>` : ''}
+                        ${f.badge ? `<span class="etat">${esc(f.badge)}</span>` : ''}
+                    </span>` : ''}
                     <span class="nom">${esc(f.titre)}</span>
                     ${f.role ? `<span class="role">${esc(f.role)}</span>` : ''}
                 </span>
             </a>
         </li>`;
+    };
 
     // ── DEUX GROUPES ──
     // Le théâtre puis les films, chacun du plus récent au plus ancien. Mêlés,
     // un 2019 venait s'intercaler entre deux 2022 sans rien qui l'explique :
-    // ça se lisait comme un tri cassé. Les intitulés reprennent ceux du CV.
+    // ça se lisait comme un tri cassé. Les intitulés reprennent ceux du CV,
+    // jusqu'à leurs icônes — masques pour la scène, pellicule pour l'écran.
     const groupes = [
-        { titre: 'Théâtre', fiches: fiches.filter(f => !f.film) },
-        { titre: 'Courts-métrages', fiches: fiches.filter(f => f.film) }
+        { titre: 'Théâtre', icone: 'i-solid-masks-theater', fiches: fiches.filter(f => !f.film) },
+        { titre: 'Courts-métrages', icone: 'i-solid-film', fiches: fiches.filter(f => f.film) }
     ].filter(g => g.fiches.length);
 
     const sections = groupes.map(g => `
-        <h2 class="groupe">${esc(g.titre)}</h2>
-        <ul class="repertoire">${g.fiches.map(carte).join('')}
-        </ul>`).join('');
+        <section>
+            <h2 class="groupe">
+                <span class="groupe-ico" aria-hidden="true"><svg class="ico"><use href="#${g.icone}"></use></svg></span>
+                <span>${esc(g.titre)}</span>
+                <span class="groupe-filet" aria-hidden="true"></span>
+                <span class="groupe-compte">${g.fiches.length}</span>
+            </h2>
+            <ul class="repertoire">${g.fiches.map(carte).join('')}
+            </ul>
+        </section>`).join('');
 
     const liste = {
         '@context': 'https://schema.org', '@type': 'ItemList', name: 'Répertoire — Adrien Vada', url,
@@ -481,6 +527,10 @@ function pageRepertoire(fiches) {
     <meta property="og:url" content="${url}">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/svg+xml" href="../favicon_io/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap">
     <link rel="stylesheet" href="spectacle.css">
     <style>
         :root {
@@ -495,16 +545,20 @@ ${JSON.stringify(liste, null, 2)}
 </head>
 
 <body>
+    ${miniSprite(['i-solid-masks-theater', 'i-solid-film'])}
     <a class="retour" href="../">← Adrien Vada</a>
     <main>
         <header class="tete">
+            <p class="sur-titre">Adrien Vada — Artiste interprète</p>
             <h1>Répertoire</h1>
-            <p class="sous-titre">${esc(desc)}</p>
+            <p class="ornement" aria-hidden="true"><span></span></p>
+            <p class="sous-titre">Spectacles et courts-métrages, de la création à la tournée.</p>
         </header>
         ${sections}
     </main>
     <footer>
         <p><a href="../">adrienvada.fr</a> · <a href="mailto:adrien.vada@gmail.com">adrien.vada@gmail.com</a></p>
+        <p class="maj">Répertoire mis à jour en ${misAJour}.</p>
     </footer>
 </body>
 
@@ -512,92 +566,183 @@ ${JSON.stringify(liste, null, 2)}
 `;
 }
 
-// ── Feuille de style commune ────────────────────────────────────────
-const FEUILLE = `/* PAGES SPECTACLE — feuille commune (générée : build/generer-pages-spectacles.js)
-   Les couleurs viennent de chaque page, qui les tient de la palette de son
-   spectacle dans univers.js. Ici, seulement la mise en page. */
+// ── Feuille de style du répertoire ──────────────────────────────────
+//  Chargée par la seule page /spectacles/ — les fiches, elles, portent
+//  univers.css et leur palette. L'ancienne feuille gardait les règles d'une
+//  première maquette des fiches (.bloc, .cast, .photos…) que plus aucune
+//  page ne chargeait : elles sont parties avec elle.
+const FEUILLE = `/* RÉPERTOIRE (/spectacles/) — feuille générée (build/generer-pages-spectacles.js)
+   Le costume du site : Cinzel, or sur noir — et la couleur de chaque
+   spectacle (--ac, posée sur sa carte) en signature. */
 *, *::before, *::after { box-sizing: border-box; }
 body {
-    margin: 0; padding: 0 1.25rem 4rem;
+    margin: 0; padding: 0 1.25rem 3.5rem;
     background: var(--bg); color: var(--text);
     font: 400 16px/1.65 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
+    /* Une lueur d'or au lever de rideau, rien de plus. */
+    background-image: radial-gradient(58rem 26rem at 50% -6rem, rgba(191, 169, 138, .07), transparent 68%);
+    background-repeat: no-repeat;
 }
-main { max-width: 46rem; margin: 0 auto; }
+main { max-width: 64rem; margin: 0 auto; }
 a { color: var(--accent-ink); }
+
 .retour {
-    display: inline-block; margin: 1.5rem auto 0; max-width: 46rem;
-    font-size: .75rem; letter-spacing: .12em; text-transform: uppercase;
+    display: inline-block; margin-top: 1.4rem;
+    font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
     text-decoration: none; color: var(--muted);
+    transition: color .25s ease;
 }
 .retour:hover { color: var(--accent-ink); }
-.tete { padding: 2.5rem 0 1.5rem; border-bottom: 1px solid var(--line); }
-.annee { margin: 0 0 .75rem; font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-ink); }
-h1 { margin: 0; font: 700 clamp(2rem, 7vw, 3.25rem)/1.05 'Cinzel', Georgia, serif; letter-spacing: -.01em; }
-.sous-titre { margin: .5rem 0 0; font-size: 1rem; font-style: italic; color: var(--muted); }
-.role { margin: 1.25rem 0 0; font-size: .95rem; }
-.role span { color: var(--accent-ink); font-weight: 600; }
-.compagnie { margin: .25rem 0 0; font-size: .85rem; color: var(--muted); }
-.bloc { padding: 2rem 0; border-bottom: 1px solid var(--line); }
-.bloc h2 { margin: 0 0 1rem; font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-ink); font-weight: 700; }
-.synopsis p { margin: 0 0 .5rem; font-size: 1.15rem; line-height: 1.55; }
-ul { margin: 0; padding: 0; list-style: none; }
-.cast li, .palmares li, .dates li { padding: .45rem 0; border-bottom: 1px solid var(--line); }
-.cast li:last-child, .palmares li:last-child, .dates li:last-child { border-bottom: 0; }
-.prix { color: var(--accent-ink); font-weight: 600; }
-.ou { color: var(--muted); }
-.dates li { display: flex; flex-wrap: wrap; gap: .25rem 1rem; align-items: baseline; }
-.quand { font-weight: 600; }
-.note { margin: .5rem 0 0; font-size: .8rem; color: var(--muted); }
-.lien {
-    padding: .15rem .6rem; border-radius: .4rem;
-    background: var(--accent); color: var(--on-accent);
-    font-size: .7rem; font-weight: 700; letter-spacing: .08em;
-    text-transform: uppercase; text-decoration: none;
-}
-.photos { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; }
-figure { margin: 0; }
-figure img { width: 100%; height: auto; border-radius: .5rem; display: block; background: var(--surface); }
-figcaption { margin-top: .4rem; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.cta { padding: 2.5rem 0; text-align: center; }
-.cta a {
-    display: inline-block; padding: .7rem 1.4rem; border-radius: .6rem;
-    background: var(--accent); color: var(--on-accent);
-    font-weight: 700; font-size: .8rem; letter-spacing: .1em;
-    text-transform: uppercase; text-decoration: none;
-}
-footer { max-width: 46rem; margin: 0 auto; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: .8rem; color: var(--muted); text-align: center; }
 
-/* Le répertoire (/spectacles/) */
+/* ── La manchette ── */
+.tete { padding: 3.2rem 0 2.4rem; text-align: center; }
+.sur-titre {
+    margin: 0 0 1rem; font: 700 .68rem/1.5 'Montserrat', system-ui, sans-serif;
+    letter-spacing: .26em; text-transform: uppercase; color: var(--accent-ink);
+}
+h1 {
+    margin: 0; font: 700 clamp(2.6rem, 7vw, 4rem)/1.05 'Cinzel', Georgia, serif;
+    letter-spacing: .04em; color: var(--text); text-wrap: balance;
+}
+.ornement {
+    position: relative; margin: 1.5rem auto 0; width: 11rem; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(191, 169, 138, .55), transparent);
+}
+.ornement span {
+    position: absolute; left: 50%; top: 50%; width: 7px; height: 7px;
+    transform: translate(-50%, -50%) rotate(45deg);
+    background: var(--accent); box-shadow: 0 0 0 3px var(--bg);
+}
+.sous-titre { margin: 1.35rem auto 0; max-width: 34rem; font-size: .95rem; color: var(--muted); }
+
+/* ── Intitulés de groupe — les mêmes que le CV, icône comprise ── */
 .groupe {
-    margin: 2.5rem 0 0; padding-bottom: .5rem;
-    border-bottom: 1px solid var(--line);
-    font: 700 .7rem/1 'Montserrat', system-ui, sans-serif;
-    letter-spacing: .18em; text-transform: uppercase; color: var(--accent-ink);
+    display: flex; align-items: center; gap: .8rem; margin: 2.6rem 0 0;
+    font: 700 .72rem/1 'Montserrat', system-ui, sans-serif;
+    letter-spacing: .2em; text-transform: uppercase; color: var(--accent-ink);
 }
-.groupe:first-of-type { margin-top: 1.5rem; }
-.repertoire { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1.25rem; padding: 2rem 0; align-items: start; }
-.repertoire a { display: block; text-decoration: none; color: inherit; }
-/* Le "height: auto" n'est pas décoratif : l'attribut height="400" du balisage
-   agit comme indication de présentation et fixe une hauteur définie. Avec une
-   largeur ET une hauteur définies, l'aspect-ratio n'a plus rien à calculer :
-   les vignettes reprennent le cadrage du fichier — portrait pour les unes,
-   paysage pour les autres — et la grille part en dents de scie. Le repasser
-   à auto redonne la main au ratio. */
-.repertoire img {
-    display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover;
-    border-radius: .5rem; background: var(--surface);
-    transition: opacity .35s ease;
+.groupe-ico {
+    display: grid; place-items: center; width: 1.9rem; height: 1.9rem;
+    border: 1px solid var(--line); border-radius: .45rem;
+    background: var(--surface); color: var(--accent-ink);
 }
-.repertoire a:hover img { opacity: .78; }
-.repertoire .txt { display: block; padding-top: .6rem; }
-.repertoire .annee {
-    display: block; font-size: .65rem; line-height: 1.5; letter-spacing: .14em;
+.ico { display: block; width: 1em; height: 1em; fill: currentColor; font-size: .8rem; }
+.groupe-filet { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+.groupe-compte {
+    font: 600 .68rem/1 'Inter', system-ui, sans-serif; letter-spacing: .05em;
+    color: var(--muted); border: 1px solid var(--line); border-radius: 999px;
+    padding: .3rem .6rem;
+}
+
+/* ── Les cartes ── */
+.repertoire {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+    gap: 1.9rem 1.6rem; margin: 0; padding: 1.8rem 0 .6rem;
+    list-style: none; align-items: start;
+}
+.carte a { display: block; text-decoration: none; color: inherit; }
+.carte a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: .65rem; }
+.cadre {
+    position: relative; display: block; aspect-ratio: 3 / 2; overflow: hidden;
+    border-radius: .65rem; border: 1px solid var(--line); background: var(--surface);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), 0 10px 28px -18px rgba(0, 0, 0, .8);
+    transition: border-color .35s ease, box-shadow .35s ease, transform .35s ease;
+}
+/* Le "height: 100%" prime sur l'attribut height="400" du balisage : les
+   vignettes remplissent leur cadre 3/2 quel que soit le cadrage du fichier. */
+.cadre img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.2, .6, .2, 1); }
+.lueur { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, .3)); }
+
+/* La couverture des spectacles sans photographie : l'aplat de leur palette,
+   leur titre en Cinzel, un filet intérieur — une affiche d'attente, pas un
+   cadre vide. */
+.carton {
+    position: absolute; inset: 0; display: grid; place-content: center; gap: .55rem;
+    padding: 1rem 1.2rem; text-align: center;
+    background: linear-gradient(155deg, color-mix(in srgb, var(--cbg) 88%, #f2ece0), var(--cbg));
+}
+.carton::after {
+    content: ''; position: absolute; inset: .55rem; pointer-events: none;
+    border: 1px solid color-mix(in srgb, var(--ctx) 22%, transparent); border-radius: .35rem;
+}
+.carton-orne { font-size: .7rem; color: var(--ac, var(--accent)); }
+.carton-titre { font: 600 1.05rem/1.3 'Cinzel', Georgia, serif; color: var(--ctx); text-wrap: balance; }
+
+.carte a:hover .cadre, .carte a:focus-visible .cadre {
+    border-color: color-mix(in srgb, var(--ac, var(--accent)) 55%, transparent);
+    box-shadow: 0 14px 34px -14px color-mix(in srgb, var(--ac, var(--accent)) 38%, transparent),
+        0 10px 28px -18px rgba(0, 0, 0, .8);
+    transform: translateY(-3px);
+}
+.carte a:hover .cadre img { transform: scale(1.045); }
+
+.txt { display: block; padding-top: .7rem; }
+.fil { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.annee {
+    font-size: .6rem; line-height: 1.4; letter-spacing: .16em;
     text-transform: uppercase; color: var(--accent-ink);
 }
-.repertoire .nom { display: block; font: 600 1rem/1.25 'Cinzel', Georgia, serif; margin-top: .15rem; }
-.repertoire .role { display: block; font-size: .78rem; color: var(--muted); margin-top: .15rem; }
-@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+.etat {
+    font: 600 .55rem/1 'Inter', system-ui, sans-serif; letter-spacing: .12em;
+    text-transform: uppercase; white-space: nowrap; color: var(--accent-ink);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: 999px; padding: .22rem .5rem;
+    background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+.nom {
+    position: relative; display: block; margin-top: .3rem; padding-bottom: .5rem;
+    font: 600 1.04rem/1.3 'Cinzel', Georgia, serif; color: var(--text);
+    transition: color .3s ease;
+}
+.nom::after {
+    content: ''; position: absolute; left: 0; bottom: 0; width: 1.4rem; height: 2px;
+    background: var(--ac, var(--accent)); opacity: .55;
+    transition: width .35s ease, opacity .35s ease;
+}
+.carte a:hover .nom { color: var(--accent-ink); }
+.carte a:hover .nom::after { width: 2.6rem; opacity: 1; }
+.role { display: block; margin-top: .3rem; font-size: .78rem; color: var(--muted); }
+
+/* Entrée en scène : les cartes se lèvent une à une (--i, posé au balisage). */
+@media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+    .carte { animation: se-lever .55s cubic-bezier(.2, .6, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 55ms); }
+}
+@keyframes se-lever { from { opacity: 0; transform: translateY(14px); } }
+
+footer {
+    max-width: 64rem; margin: 2.6rem auto 0; padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    font-size: .8rem; color: var(--muted); text-align: center;
+}
+footer a { text-decoration: none; }
+footer a:hover { color: var(--accent-ink); }
+.maj { margin: .4rem 0 0; font-size: .68rem; letter-spacing: .06em; opacity: .75; }
+
+/* ── Téléphone : un catalogue, pas une liste ──
+   Deux colonnes serrées — la grille reste une grille, et dix cartes
+   tiennent en trois écrans au lieu de dix. */
+@media (max-width: 640px) {
+    body { padding: 0 .9rem 2.6rem; }
+    .tete { padding: 2.3rem 0 1.8rem; }
+    .sur-titre { font-size: .58rem; letter-spacing: .22em; margin-bottom: .8rem; }
+    .sous-titre { font-size: .84rem; margin-top: 1.05rem; }
+    .ornement { margin-top: 1.1rem; width: 8.5rem; }
+    .groupe { margin-top: 2rem; gap: .6rem; font-size: .64rem; letter-spacing: .16em; }
+    .groupe-ico { width: 1.65rem; height: 1.65rem; }
+    .repertoire { grid-template-columns: repeat(2, 1fr); gap: 1.25rem .8rem; padding: 1.2rem 0 .4rem; }
+    .txt { padding-top: .5rem; }
+    .fil { gap: .35rem; }
+    .annee { font-size: .52rem; letter-spacing: .12em; }
+    .etat { font-size: .48rem; padding: .18rem .4rem; }
+    .nom { font-size: .84rem; margin-top: .22rem; padding-bottom: .4rem; }
+    .nom::after { height: 1.5px; }
+    .role { font-size: .68rem; margin-top: .2rem; }
+    .carton-titre { font-size: .84rem; }
+    .carton-orne { font-size: .58rem; }
+    footer { margin-top: 2rem; }
+}
 `;
 
 // ── Exécution ───────────────────────────────────────────────────────
@@ -650,6 +795,13 @@ function main() {
             // le panneau : année · genre · badge. Il explique au passage
             // pourquoi deux spectacles n'ont pas encore de photographie.
             badge: cv.badge || '',
+            // La couleur du spectacle, pour signer sa carte : l'accent de sa
+            // ligne de CV s'il en a un (cvAccent), celui de sa palette sinon.
+            // Le fond et l'encre servent aux couvertures des spectacles sans
+            // photo — leur carte est peinte à leurs couleurs, pas en gris.
+            accent: uni.cvAccent || (uni.palette && uni.palette.accent) || '',
+            paletteBg: (uni.palette && uni.palette.bg) || '',
+            paletteText: (uni.palette && uni.palette.text) || '',
             cv: Boolean(cvParTitre[cle])
         });
     });
