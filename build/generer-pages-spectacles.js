@@ -748,7 +748,7 @@ ${JSON.stringify(liste, null, 2)}
                     // retard de phase sur sa voisine — la gauche entame sa
                     // montée, la droite la suit un cran de défilement plus
                     // bas. La vague vaut à tous les rangs du pincement.
-                    cible = Math.max(0, Math.min(1, cible - (Math.max(0, r.left) / innerWidth) * .2));
+                    cible = Math.max(0, Math.min(1, cible - (Math.max(0, r.left) / innerWidth) * .32));
                     var p = parseFloat(carte.dataset.p || '0');
                     p += (cible - p) * .13;
                     if (Math.abs(cible - p) > .002) { encore = true; } else { p = cible; }
@@ -1240,13 +1240,13 @@ html.scrolly .carte { --p: 0; --pl: 0; }
     /* Le fondu suit l'horloge LINÉAIRE (--pl) : la courbe souple charge
        tant le départ que, posée sur elle, l'opacité était pleine dès le
        bord de l'écran. Ici : zéro au bord, pleine au tiers de la montée. */
-    opacity: min(1, calc(var(--pl, 1) / .38));
+    opacity: min(1, calc(var(--pl, 1) / .55));
     transform: translateY(calc((1 - var(--p, 1)) * 48px)) scale(calc(.94 + var(--p, 1) * .06));
 }
 .media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
 .volet-couleur {
     position: absolute; inset: -2% 0; z-index: 1; pointer-events: none;
-    opacity: .58;
+    opacity: .42;
     background: linear-gradient(to top,
             transparent 0%,
             color-mix(in srgb, var(--ac, var(--accent)) 88%, transparent) 13%,

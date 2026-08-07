@@ -298,13 +298,13 @@ html.scrolly .carte { --p: 0; --pl: 0; }
     /* Le fondu suit l'horloge LINÉAIRE (--pl) : la courbe souple charge
        tant le départ que, posée sur elle, l'opacité était pleine dès le
        bord de l'écran. Ici : zéro au bord, pleine au tiers de la montée. */
-    opacity: min(1, calc(var(--pl, 1) / .38));
+    opacity: min(1, calc(var(--pl, 1) / .55));
     transform: translateY(calc((1 - var(--p, 1)) * 48px)) scale(calc(.94 + var(--p, 1) * .06));
 }
 .media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
 .volet-couleur {
     position: absolute; inset: -2% 0; z-index: 1; pointer-events: none;
-    opacity: .58;
+    opacity: .42;
     background: linear-gradient(to top,
             transparent 0%,
             color-mix(in srgb, var(--ac, var(--accent)) 88%, transparent) 13%,
