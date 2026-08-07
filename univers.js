@@ -1653,6 +1653,9 @@ const SHOW_UNIVERSES = {
         markCvRows();
         bindLongPress();
         bindAmbianceSurvol();
+        // Après markCvRows et addWhisper : le murmure ajoute son balisage
+        // dans la ligne, et la mesure doit porter sur la ligne finie.
+        suivreLesHauteurs();
         // Après markCvRows : le routage ouvre un univers, et une ligne doit
         // déjà porter sa marque pour que le panneau en reprenne la couleur.
         initRouting();
@@ -1858,6 +1861,55 @@ const SHOW_UNIVERSES = {
     //  sorte que le clic droit reste normal partout ailleurs.
     const PRESS_DELAY = 400;
     const PRESS_SLOP = 10;
+
+    // ── LES LIGNES D'UNE MÊME CATÉGORIE, À LA MÊME HAUTEUR ───────────
+    //  Le CSS pose le rôle sur une ligne et centre le contenu ; il ne sait
+    //  pas, lui, quelle est la ligne la plus haute d'une liste. On la
+    //  mesure donc, et on donne sa hauteur à toutes ses voisines.
+    //
+    //  CHAQUE LISTE EST TRAITÉE À PART, et c'est voulu : un court métrage
+    //  n'affiche ni rôle ni compagnie, l'aligner sur le théâtre ne ferait
+    //  que du vide. L'égalité ne veut dire quelque chose qu'entre pairs.
+    //
+    //  On remet à zéro AVANT de mesurer : sans cela on mesurerait la
+    //  hauteur qu'on a imposée au passage précédent, et la liste ne
+    //  pourrait plus jamais rétrécir — elle grandirait à chaque
+    //  redimensionnement, sans retour.
+    function egaliserLesLignes() {
+        document.querySelectorAll('#page_cv ul').forEach(ul => {
+            const lignes = ul.querySelectorAll(':scope > li.cv-item');
+            if (lignes.length < 2) return;
+            lignes.forEach(li => li.style.removeProperty('min-height'));
+            let max = 0;
+            lignes.forEach(li => {
+                const h = li.getBoundingClientRect().height;
+                if (h > max) max = h;
+            });
+            // Un demi-pixel de marge : les hauteurs mesurées sont
+            // fractionnaires, et arrondir vers le bas rognerait la ligne
+            // la plus haute — celle-là même qui a donné la mesure.
+            const cible = Math.ceil(max) + 'px';
+            lignes.forEach(li => li.style.minHeight = cible);
+        });
+    }
+
+    //  LA MESURE DÉPEND DE CE QUI EST DÉJÀ AFFICHÉ. Les polices arrivent
+    //  après le HTML, et un titre en Montserrat ne se replie pas comme le
+    //  même titre en police de secours : mesurer trop tôt, c'est figer une
+    //  hauteur fausse. On mesure donc au chargement, à l'arrivée des
+    //  polices, et à chaque changement de largeur — le repli des titres en
+    //  dépend entièrement.
+    function suivreLesHauteurs() {
+        egaliserLesLignes();
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(egaliserLesLignes);
+        }
+        let minuteur = 0;
+        window.addEventListener('resize', () => {
+            clearTimeout(minuteur);
+            minuteur = setTimeout(egaliserLesLignes, 150);
+        });
+    }
 
     // ── LA SALLE AUX COULEURS DU SPECTACLE ───────────────────────────
     //  Emprunté au répertoire (/spectacles/), où survoler une carte teinte

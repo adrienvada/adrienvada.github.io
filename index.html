@@ -816,6 +816,64 @@
             overflow-wrap: anywhere;
         }
 
+        /* ══════════════════════════════════════════════════════════════
+           TOUTES LES LIGNES D'UNE MÊME CATÉGORIE À LA MÊME HAUTEUR
+           Une liste dont les lignes respirent différemment donne à croire
+           que les entrées ne pèsent pas le même poids — qu'un spectacle
+           serait mieux documenté qu'un autre. Or c'est la longueur des
+           titres qui décidait, rien d'autre : 85 px pour Bérénice, 117
+           pour À la barre.
+
+           Les deux catégories restent LIBRES L'UNE PAR RAPPORT À L'AUTRE :
+           un court métrage n'a ni rôle ni compagnie à afficher, et
+           l'aligner sur le théâtre ne ferait que du vide. C'est à
+           l'intérieur d'une catégorie que l'égalité veut dire quelque
+           chose.
+
+           DEUX PIÈCES, ET IL FAUT LES DEUX. Ici, le rôle sur UNE SEULE
+           LIGNE — c'est lui qui s'emballait (« Juge, accusé, greffier,
+           avocat, narrateur ») et lui seul qu'on peut couper sans
+           dommage : le titre, jamais. Là-bas, dans univers.js, la mesure
+           qui aligne chaque liste sur sa ligne la plus haute.
+
+           Le texte coupé reste ENTIER dans le document : les lecteurs
+           d'écran le lisent en entier, l'impression aussi (voir plus bas),
+           et l'univers du spectacle donne la distribution complète. Seul
+           l'affichage s'arrête.
+           ══════════════════════════════════════════════════════════════ */
+        #page_cv ul li .cv-role {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* LE TEXTE SE CENTRE DANS LA HAUTEUR GAGNÉE. Le filet de couleur et
+           le lavis courent sur toute la ligne ; un bloc collé en haut y
+           flotterait, avec tout le vide sous lui. Centré, chaque entrée
+           devient une vignette à l'air égal — ce qui est précisément ce
+           qu'on veut faire comprendre. */
+        #page_cv ul li.cv-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* À l'impression, rien n'est tronqué ni calé : un CV sur papier
+           doit tout dire, et la hauteur des lignes n'y signifie rien. */
+        @media print {
+
+            #page_cv ul li .cv-role {
+                display: block;
+                overflow: visible;
+            }
+
+            #page_cv ul li.cv-item {
+                display: block;
+                min-height: 0 !important;
+            }
+        }
+
         @media (max-width: 767px) {
 
             /* Global text scale-down */
