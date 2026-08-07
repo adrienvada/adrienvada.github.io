@@ -5104,30 +5104,136 @@
         });
 
         // ── Données structurées des représentations (schema.org/TheaterEvent) ──
+        //
+        //  CE QUI MANQUAIT, ET POURQUOI ON PEUT LE DIRE SANS L'INVENTER.
+        //  La Search Console signalait cinq champs absents — organizer,
+        //  endDate, description, image, offers. Quatre d'entre eux étaient
+        //  déjà sur le site, ailleurs : le synopsis et la durée vivent dans
+        //  l'univers du spectacle, la compagnie sous son titre dans le CV,
+        //  les photos dans son montage. Ce bloc ne fait que rassembler ce
+        //  qui existe — il n'écrit AUCUNE donnée nouvelle. Un spectacle sans
+        //  univers (Théâtre-forum, par exemple) rend simplement moins de
+        //  champs, ce qui vaut mieux qu'un champ rempli au jugé.
+        const DUREE_LISIBLE = /^(?:(\d{1,2})\s*h\s*(\d{0,2})|(\d{1,3})\s*min)$/;
+
+        //  La durée est écrite en tête du montage, telle qu'on l'annonce au
+        //  public : « 1h05 », « 40 min ». Le même champ sert ailleurs à
+        //  numéroter des chapitres (« I », « 4 épisodes ») — d'où le filtre :
+        //  on ne retient que ce qui EST une durée, et seulement le premier
+        //  temps du montage, seul endroit où la convention tienne.
+        function minutesDuSpectacle(uni) {
+            const bloc = (uni?.sequence || []).find(b => b && b.chapter);
+            const m = bloc && String(bloc.chapter).trim().match(DUREE_LISIBLE);
+            if (!m) return 0;
+            return m[3] ? +m[3] : (+m[1]) * 60 + (+(m[2] || 0));
+        }
+
+        //  Même règle que le répertoire (photosDe, dans le générateur) :
+        //  l'affiche si le spectacle en a une, sinon la première photo de
+        //  son montage. Google veut une adresse absolue.
+        function photoDuSpectacle(uni) {
+            if (!uni) return '';
+            let rel = '';
+            if (uni.affiche) rel = `ressources/images/univers/${uni.slug}/affiche.jpg`;
+            else {
+                const bloc = (uni.sequence || []).find(b => b && Array.isArray(b.p) && b.p.length);
+                if (bloc) rel = `ressources/images/univers/${uni.slug}/${bloc.p[0]}.jpg`;
+            }
+            return rel ? new URL(rel, document.baseURI).href : '';
+        }
+
+        //  La compagnie est écrite sous le titre, dans le CV, et cette ligne
+        //  suit deux conventions constantes : la BARRE OBLIQUE sépare deux
+        //  coproducteurs (« CDN de Normandie-Rouen / Compagnie du P'tit
+        //  Ballon »), le TIRET CADRATIN sépare la compagnie de son metteur
+        //  en scène (« Théâtre des Crescite — Angelo Jossec »).
+        //
+        //  On coupe donc au tiret : un metteur en scène est une personne, pas
+        //  l'organisation qui produit — le déclarer comme telle serait faux,
+        //  et c'est le genre de faux qu'un moteur reprend tel quel. Le tiret
+        //  est cherché ENTOURÉ D'ESPACES, sinon « CDN de Normandie-Rouen »
+        //  perdrait la moitié de son nom.
+        function organisateursDuSpectacle(li) {
+            const brut = li?.querySelector('.cv-subtitle')?.textContent || '';
+            const noms = brut.split('/')
+                .map(s => s.replace(/\s+/g, ' ').trim().split(/ [—–] /)[0].trim())
+                .filter(Boolean);
+            if (!noms.length) return null;
+            const org = noms.map(name => ({ "@type": "Organization", name }));
+            return org.length === 1 ? org[0] : org;
+        }
+
         function injectEventStructuredData(upcoming) {
             const events = [];
-            const push = (title, subtitle, location, icsDate, time) => {
+            const push = (title, subtitle, location, icsDate, time, bookingUrl) => {
                 if (!icsDate) return;
                 const m = String(time || '').match(/(\d{1,2})[hH:](\d{2})?/);
-                events.push({
+                const debut = m ? `${icsDate}T${String(m[1]).padStart(2, '0')}:${m[2] || '00'}:00` : icsDate;
+                const ev = {
                     "@context": "https://schema.org",
                     "@type": "TheaterEvent",
                     "name": subtitle ? `${title} (${subtitle})` : title,
-                    "startDate": m ? `${icsDate}T${String(m[1]).padStart(2, '0')}:${m[2] || '00'}:00` : icsDate,
+                    "startDate": debut,
                     "eventStatus": "https://schema.org/EventScheduled",
                     "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
                     "location": { "@type": "Place", "name": location, "address": location },
                     "performer": { "@type": "Person", "@id": "https://adrienvada.fr/#adrien-vada", "name": "Adrien Vada" },
                     "url": "https://adrienvada.fr/#page_dates"
-                });
+                };
+
+                const trouve = typeof window.spectacleParTitre === 'function'
+                    ? window.spectacleParTitre(title) : null;
+                if (trouve) {
+                    const { uni, li } = trouve;
+                    const syn = Array.isArray(uni.synopsis) ? uni.synopsis.join(' ') : uni.synopsis;
+                    if (syn) ev.description = String(syn).replace(/\s+/g, ' ').trim();
+                    const img = photoDuSpectacle(uni);
+                    if (img) ev.image = img;
+                    const org = organisateursDuSpectacle(li);
+                    if (org) ev.organizer = org;
+                    //  L'HEURE de fin se déduit de la durée annoncée — mais
+                    //  seulement si l'on connaît l'heure de DÉBUT : ajouter
+                    //  1h05 à une date sans heure ne veut rien dire.
+                    const min = minutesDuSpectacle(uni);
+                    if (m && min) {
+                        const f = new Date(debut);
+                        f.setMinutes(f.getMinutes() + min);
+                        const deux = (n) => String(n).padStart(2, '0');
+                        ev.endDate = `${f.getFullYear()}-${deux(f.getMonth() + 1)}-${deux(f.getDate())}` +
+                            `T${deux(f.getHours())}:${deux(f.getMinutes())}:00`;
+                    }
+                }
+                //  Sans heure de début — treize dates sur dix-sept aujourd'hui
+                //  n'en portent pas — on dit au moins le JOUR de la fin : une
+                //  représentation du 25 novembre se termine le 25 novembre.
+                //  C'est vrai, c'est vérifiable, et cela n'ajoute aucune
+                //  précision qu'on n'ait pas. Le champ gagnera son heure tout
+                //  seul le jour où la date recevra la sienne dans dates.js.
+                if (!ev.endDate) ev.endDate = icsDate;
+
+                //  PAS D'OFFRE TANT QU'IL N'Y A PAS DE BILLETTERIE. Google
+                //  attend dans `offers` un prix et une devise ; nous n'avons
+                //  ni l'un ni l'autre, et les inventer serait pire que le
+                //  silence — c'est une information qu'un spectateur croirait.
+                //  Le champ apparaîtra de lui-même le jour où une date
+                //  recevra son lien de réservation dans dates.js.
+                if (bookingUrl) {
+                    ev.offers = {
+                        "@type": "Offer",
+                        "url": bookingUrl,
+                        "availability": "https://schema.org/InStock",
+                        "validFrom": icsDate
+                    };
+                }
+                events.push(ev);
             };
             (upcoming || []).forEach(show => {
                 if (show.type === 'series' && show.shows) {
                     show.shows.forEach(r => push(show.title, show.subtitle, show.location, r.icsDate,
-                        Array.isArray(r.times) ? r.times[0] : r.time));
+                        Array.isArray(r.times) ? r.times[0] : r.time, r.bookingUrl || show.bookingUrl));
                 } else {
                     push(show.title, show.subtitle, show.location, show.icsDate,
-                        Array.isArray(show.times) ? show.times[0] : show.time);
+                        Array.isArray(show.times) ? show.times[0] : show.time, show.bookingUrl);
                 }
             });
             if (!events.length) return;

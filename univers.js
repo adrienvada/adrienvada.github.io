@@ -820,8 +820,7 @@ const SHOW_UNIVERSES = {
     const normaliserTitre = (t) => String(t || '').replace(ESPACES, ' ').trim();
     let indexUnivers = null;
 
-    function universeFor(li) {
-        const brut = li?.dataset?.cvShow || '';
+    function universeParTitre(brut) {
         if (!brut) return null;
         // Le chemin rapide d'abord : la plupart du temps les deux écritures
         // coïncident, et on évite alors de construire quoi que ce soit.
@@ -834,6 +833,35 @@ const SHOW_UNIVERSES = {
         }
         return indexUnivers.get(normaliserTitre(brut)) || null;
     }
+
+    function universeFor(li) {
+        return universeParTitre(li?.dataset?.cvShow || '');
+    }
+
+    //  LE CALENDRIER NE CONNAÎT QUE DES TITRES — ceux de dates.js — et doit
+    //  remonter jusqu'au spectacle pour ses données structurées : synopsis,
+    //  durée, photo, compagnie. On lui prête la même reconnaissance qu'aux
+    //  lignes du CV, espaces insécables compris (voir normaliserTitre) :
+    //  c'est ici, et nulle part ailleurs, qu'on sait qu'« À la barre, peine
+    //  perdue ? » écrit dans dates.js et celui écrit dans le CV sont le même
+    //  spectacle. On rend AUSSI la ligne du CV, parce que la compagnie n'est
+    //  pas dans l'univers : elle est écrite dans le CV, sous le titre.
+    //
+    //  POSÉ ICI, HORS DE init(), ET C'EST TOUT L'ENJEU. init() attend le
+    //  DOMContentLoaded, et le calendrier — dont l'écouteur est inscrit plus
+    //  haut dans la page — s'y rend AVANT lui. Une aide publiée depuis init()
+    //  arriverait donc trop tard pour le premier rendu, le seul que voie un
+    //  robot d'indexation qui ne clique sur rien. Au niveau du module, elle
+    //  existe dès que ce fichier s'exécute, c'est-à-dire pendant l'analyse
+    //  de la page — bien avant que le calendrier n'en ait besoin.
+    window.spectacleParTitre = (titre) => {
+        const uni = universeParTitre(titre);
+        if (!uni) return null;
+        const cible = normaliserTitre(titre);
+        const li = Array.from(document.querySelectorAll('#page_cv li[data-cv-show]'))
+            .find(x => normaliserTitre(x.dataset.cvShow) === cible) || null;
+        return { uni, li };
+    };
 
     // ── Dates : relues dans dates.js, jamais dupliquées ici ──────────
     function datesBlock(key) {
