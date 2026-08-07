@@ -18,6 +18,10 @@
             if (stored === 'light' || stored === 'dark') { t = stored; }
             else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) { t = 'light'; }
             document.documentElement.setAttribute('data-theme', t);
+            // Visiter le répertoire, c'est être entré : le retour vers
+            // l'accueil ne doit pas lever le rideau d'introduction —
+            // « entrer par une porte dérobée reste entrer » (intro.js).
+            try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
         })();
     </script>
     <meta name="theme-color" content="#0a0907">
@@ -417,6 +421,26 @@
             if (!e.viewTransition || !e.activation) return;
             nomme(new URL(e.activation.entry.url).pathname);
         });
+        // L'entrée en scène au seuil : rien au chargement, tout au
+        // franchissement. L'observateur lâche chaque carte après son
+        // entrée — on ne guette pas ce qui est déjà en scène. Le retard
+        // d'échelonnement suit la place dans la rangée : la gauche
+        // d'abord, la droite un souffle après.
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+            document.documentElement.classList.add('scrolly');
+            var ioScene = new IntersectionObserver(function (entrees) {
+                entrees.forEach(function (e) {
+                    if (!e.isIntersecting) return;
+                    var carte = e.target;
+                    carte.style.setProperty('--retard',
+                        Math.round(Math.max(0, carte.getBoundingClientRect().left) / innerWidth * 140) + 'ms');
+                    carte.classList.add('en-scene');
+                    ioScene.unobserve(carte);
+                });
+            }, { rootMargin: '0px 0px -10% 0px' });
+            cartes.forEach(function (c) { ioScene.observe(c); });
+        }
+
         // La barre flotte dès que sa sentinelle sort de l'écran — le même
         // guet que la barre d'onglets de l'accueil : aucun calcul au fil
         // des pixels, c'est le navigateur qui prévient au bon instant.
@@ -457,6 +481,7 @@
             // Revenir par morphing ET lever les cartes une à une se
             // disputeraient l'écran : au retour, elles sont déjà en place.
             document.documentElement.classList.add('retour-vt');
+            cartes.forEach(function (c) { c.classList.add('en-scene'); });
             var act = (typeof navigation !== 'undefined') && navigation.activation;
             if (act && act.from) nomme(new URL(act.from.url).pathname);
         });

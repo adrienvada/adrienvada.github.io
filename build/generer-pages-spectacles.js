@@ -372,6 +372,13 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
          charge cette feuille que s'il n'exécute pas de script. -->
     <noscript><link rel="stylesheet" href="../../univers-statique.css"></noscript>
 
+    <script>
+        // Visiter une fiche, c'est être entré : le retour vers l'accueil ne
+        // doit pas lever le rideau d'introduction — « entrer par une porte
+        // dérobée reste entrer » (intro.js).
+        try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+    </script>
+
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
          #show-universe. Mêmes variables, mêmes valeurs : c'est ce qui donne
          à la page la couleur exacte de son univers. -->
@@ -565,6 +572,10 @@ function pageRepertoire(fiches) {
             if (stored === 'light' || stored === 'dark') { t = stored; }
             else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) { t = 'light'; }
             document.documentElement.setAttribute('data-theme', t);
+            // Visiter le répertoire, c'est être entré : le retour vers
+            // l'accueil ne doit pas lever le rideau d'introduction —
+            // « entrer par une porte dérobée reste entrer » (intro.js).
+            try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
         })();
     </script>
     <meta name="theme-color" content="#0a0907">
@@ -701,6 +712,26 @@ ${JSON.stringify(liste, null, 2)}
             if (!e.viewTransition || !e.activation) return;
             nomme(new URL(e.activation.entry.url).pathname);
         });
+        // L'entrée en scène au seuil : rien au chargement, tout au
+        // franchissement. L'observateur lâche chaque carte après son
+        // entrée — on ne guette pas ce qui est déjà en scène. Le retard
+        // d'échelonnement suit la place dans la rangée : la gauche
+        // d'abord, la droite un souffle après.
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+            document.documentElement.classList.add('scrolly');
+            var ioScene = new IntersectionObserver(function (entrees) {
+                entrees.forEach(function (e) {
+                    if (!e.isIntersecting) return;
+                    var carte = e.target;
+                    carte.style.setProperty('--retard',
+                        Math.round(Math.max(0, carte.getBoundingClientRect().left) / innerWidth * 140) + 'ms');
+                    carte.classList.add('en-scene');
+                    ioScene.unobserve(carte);
+                });
+            }, { rootMargin: '0px 0px -10% 0px' });
+            cartes.forEach(function (c) { ioScene.observe(c); });
+        }
+
         // La barre flotte dès que sa sentinelle sort de l'écran — le même
         // guet que la barre d'onglets de l'accueil : aucun calcul au fil
         // des pixels, c'est le navigateur qui prévient au bon instant.
@@ -741,6 +772,7 @@ ${JSON.stringify(liste, null, 2)}
             // Revenir par morphing ET lever les cartes une à une se
             // disputeraient l'écran : au retour, elles sont déjà en place.
             document.documentElement.classList.add('retour-vt');
+            cartes.forEach(function (c) { c.classList.add('en-scene'); });
             var act = (typeof navigation !== 'undefined') && navigation.activation;
             if (act && act.from) nomme(new URL(act.from.url).pathname);
         });
@@ -926,6 +958,14 @@ h1 {
     transition: border-color .35s ease, box-shadow .35s ease, transform .35s ease;
 }
 .media { position: absolute; inset: 0; display: block; }
+/* Le rai de la dorure : hors champ à gauche, il ne traverse qu'une
+   fois, à l'entrée en scène. Doré, léger, au-dessus de l'affiche et
+   sous le murmure. */
+.cadre::after {
+    content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(105deg, transparent 42%, rgba(255, 236, 200, .2) 50%, transparent 58%);
+    transform: translateX(-135%);
+}
 .media img {
     position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; object-position: var(--pos, 50% 32%);
@@ -1011,14 +1051,36 @@ h1 {
 .carte a:hover .nom::after, .carte.regarde .nom::after { width: 2.6rem; opacity: 1; }
 .role { display: block; margin-top: .3rem; font-size: .78rem; color: var(--muted); }
 
-/* ── Les mouvements — tous sous prefers-reduced-motion ── */
 @media (prefers-reduced-motion: no-preference) {
     html { scroll-behavior: smooth; }
-    /* Entrée en scène : les cartes se lèvent une à une (--i, posé au
-       balisage). Au retour par morphing, elles sont déjà en place. */
-    html:not(.retour-vt) .carte { animation: se-lever .55s cubic-bezier(.2, .6, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 55ms); }
 }
-@keyframes se-lever { from { opacity: 0; transform: translateY(14px); } }
+
+/* ── L'entrée en scène au seuil — le lever, le volet, la dorure ──
+   Rien ne se joue au chargement : chaque carte fait son entrée quand
+   elle franchit le bas de l'écran (html.scrolly et .en-scene, posés par
+   le script). La carte se lève d'un fondu pendant qu'un volet dévoile
+   l'affiche de bas en haut ; la dorure la traverse une fois, puis le
+   filet du titre s'embrase. Des animations UNE FOIS, jamais des
+   transitions d'état : le survol garde ses réflexes, l'entrée ne les
+   retarde pas. --retard échelonne la rangée, posé au franchissement.
+   Sans script, sans observateur ou en mouvement réduit : tout est là,
+   immobile. */
+html.scrolly .carte:not(.en-scene) { opacity: 0; }
+html.scrolly .carte.en-scene { animation: carte-leve .6s cubic-bezier(.22, .61, .25, 1) var(--retard, 0ms) backwards; }
+html.scrolly .carte.en-scene .media { animation: volet .8s cubic-bezier(.3, .6, .2, 1) calc(var(--retard, 0ms) + 90ms) backwards; }
+html.scrolly .carte.en-scene .nom::after { animation: filet-embrase .5s ease calc(var(--retard, 0ms) + 520ms) backwards; }
+html.scrolly .carte.en-scene .cadre::after { animation: dorure .9s ease calc(var(--retard, 0ms) + 300ms) both; }
+@keyframes carte-leve { from { opacity: 0; transform: translateY(22px); } }
+@keyframes volet { from { clip-path: inset(100% 0 0 0); transform: scale(1.06); } }
+@keyframes filet-embrase { from { width: 0; opacity: 0; } }
+@keyframes dorure { from { transform: translateX(-135%); } to { transform: translateX(135%); } }
+
+/* Au retour par morphing, les cartes sont déjà en place : rejouer
+   l'entrée disputerait l'écran à la fiche qui vient s'y ranger. */
+html.retour-vt .carte.en-scene,
+html.retour-vt .carte.en-scene .media,
+html.retour-vt .carte.en-scene .nom::after,
+html.retour-vt .carte.en-scene .cadre::after { animation: none !important; }
 
 
 /* ── Le morphing vers la fiche ──
