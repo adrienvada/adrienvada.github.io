@@ -701,47 +701,6 @@ ${JSON.stringify(liste, null, 2)}
             if (!e.viewTransition || !e.activation) return;
             nomme(new URL(e.activation.entry.url).pathname);
         });
-        // La vitrine en profondeur — menée au geste, jamais à sa place :
-        // chaque défilement repose la dérive des seuls cadres à l'écran.
-        // Un observateur tient la liste, une image d'animation par geste,
-        // et le mouvement réduit coupe tout avant le premier pixel.
-        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            // ±6,5 % de la hauteur du média : la première valeur (±2,6 %)
-            // faisait sept pixels sur une carte de téléphone — une dérive
-            // qu'on devine n'est pas une dérive.
-            var DERIVE = 6.5;
-            var aLEcran = [];
-            var demande = 0;
-            var poseDerive = function () {
-                demande = 0;
-                var vh = innerHeight;
-                for (var k = 0; k < aLEcran.length; k++) {
-                    var media = aLEcran[k];
-                    var r = media.parentElement.getBoundingClientRect();
-                    var p = (r.top + r.height / 2 - vh / 2) / (vh / 2 + r.height / 2);
-                    p = Math.max(-1, Math.min(1, p));
-                    media.style.transform = 'translateY(' + (p * DERIVE).toFixed(3) + '%)';
-                }
-            };
-            var replanifie = function () { if (!demande) demande = requestAnimationFrame(poseDerive); };
-            var medias = Array.prototype.slice.call(document.querySelectorAll('.media--photo'));
-            if (medias.length && 'IntersectionObserver' in window) {
-                document.documentElement.classList.add('parallaxe');
-                var io = new IntersectionObserver(function (entrees) {
-                    entrees.forEach(function (e) {
-                        var i = aLEcran.indexOf(e.target);
-                        if (e.isIntersecting && i === -1) aLEcran.push(e.target);
-                        if (!e.isIntersecting && i !== -1) aLEcran.splice(i, 1);
-                    });
-                    replanifie();
-                }, { rootMargin: '12% 0%' });
-                medias.forEach(function (m) { io.observe(m); });
-                addEventListener('scroll', replanifie, { passive: true });
-                addEventListener('resize', replanifie);
-                replanifie();
-            }
-        }
-
         // La barre flotte dès que sa sentinelle sort de l'écran — le même
         // guet que la barre d'onglets de l'accueil : aucun calcul au fil
         // des pixels, c'est le navigateur qui prévient au bon instant.
@@ -1061,14 +1020,6 @@ h1 {
 }
 @keyframes se-lever { from { opacity: 0; transform: translateY(14px); } }
 
-/* La vitrine en profondeur : le photogramme dérive dans son cadre au
-   rythme du défilement — lié au geste, jamais à sa place. C'est le script
-   qui la mène, comme la parallaxe des univers : le CSS scroll-driven
-   reste inégal d'un navigateur à l'autre, le geste, lui, est partout.
-   La classe .parallaxe n'arrive qu'avec lui : le cadre est alors rempli
-   plus haut que lui (inset négatif), et la dérive ne découvre jamais le
-   bord. Sans script ou en mouvement réduit : image posée, rien d'autre. */
-html.parallaxe .media--photo { inset: -9% 0; will-change: transform; }
 
 /* ── Le morphing vers la fiche ──
    Les deux documents y consentent (celui-ci ici, les fiches dans leur
