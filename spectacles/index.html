@@ -448,16 +448,25 @@
             // La boucle ne tourne que tant qu'il reste du chemin.
             var boucle = function () {
                 var vh = innerHeight;
+                // Au fond de la page, plus personne ne reste en l'air : la
+                // dernière rangée ne peut plus voyager, alors sur le
+                // dernier tiers d'écran de défilement restant, un plancher
+                // monte vers 1 et achève toutes les entrées.
+                var doc = document.documentElement;
+                var reste = doc.scrollHeight - vh - (window.scrollY || doc.scrollTop || 0);
+                var plancher = Math.max(0, Math.min(1, 1 - reste / (vh * .3)));
                 var encore = false;
                 for (var k = 0; k < suivies.length; k++) {
                     var carte = suivies[k];
                     var r = carte.getBoundingClientRect();
-                    var cible = Math.max(0, Math.min(1, (vh - r.top) / (vh * .75)));
+                    var base = Math.max(0, Math.min(1, (vh - r.top) / (vh * .75)));
                     // La vague gauche-droite : chaque colonne prend un
-                    // retard de phase sur sa voisine — la gauche entame sa
-                    // montée, la droite la suit un cran de défilement plus
-                    // bas. La vague vaut à tous les rangs du pincement.
-                    cible = Math.max(0, Math.min(1, cible - (Math.max(0, r.left) / innerWidth) * .34));
+                    // retard de phase sur sa voisine. La phase S'ÉTEINT à
+                    // mesure que la montée s'achève — une carte peut être
+                    // en retard sur sa voisine, jamais empêchée d'arriver.
+                    var cible = Math.max(0, Math.min(1,
+                        base - (Math.max(0, r.left) / innerWidth) * .22 * (1 - base)));
+                    cible = Math.max(cible, plancher);
                     var p = parseFloat(carte.dataset.p || '0');
                     p += (cible - p) * .13;
                     if (Math.abs(cible - p) > .002) { encore = true; } else { p = cible; }
