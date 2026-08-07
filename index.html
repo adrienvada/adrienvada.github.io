@@ -1092,28 +1092,13 @@
             overflow: hidden;
         }
 
-        /* « Lire mon parcours » : le seul endroit qui dise qu'on peut
-           appuyer. Sans lui, deux lignes tronquées ressemblent à une
-           mise en page ratée plutôt qu'à une invitation. */
-        .recit-lire {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            margin-top: 0.25rem;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 0.58rem;
-            font-weight: 700;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: rgb(var(--c-gold-ink));
-        }
+        /* PAS DE « LIRE LA SUITE ». La phrase s'arrête au milieu d'un mot :
+           c'est l'interruption elle-même qui appelle, et une étiquette
+           posée dessous ne ferait que dire tout haut ce que les trois
+           points disent déjà. Le bouton garde un aria-label, lui : un
+           lecteur d'écran ne voit pas une coupure, il faut la lui nommer.
 
-        .recit-lire .ico {
-            transform: rotate(-90deg);
-            transition: transform var(--dur-base) var(--ease-out);
-        }
-
-        /* Au survol, c'est la FEUILLE du haut qui réagit, pas le bouton :
+           Au survol, c'est la FEUILLE du haut qui réagit, pas le bouton :
            le cadre doré est déjà là, on ne va pas en poser un second
            par-dessus. */
         @media (hover: hover) and (pointer: fine) {
@@ -1124,19 +1109,29 @@
             .recit-appel:hover .bio-handwritten-wrap {
                 box-shadow: 0 0 0 1px rgb(var(--c-gold) / 0.28);
             }
-
-            .recit-appel:hover .recit-lire {
-                color: rgb(var(--c-gold-light));
-            }
-
-            .recit-appel:hover .ico {
-                transform: rotate(-90deg) translateY(-2px);
-            }
         }
 
         .recit-appel:focus-visible {
             outline: 2px solid rgb(var(--c-gold));
             outline-offset: 2px;
+        }
+
+        /* LE VOL DES PREMIERS MOTS.
+           Le navigateur anime seul le déplacement et la mise à l'échelle
+           entre les deux positions ; il n'y a qu'à lui donner le temps.
+           520 ms, c'est plus long qu'une ouverture de panneau ordinaire —
+           mais on ne veut pas que ça claque : on veut voir la phrase
+           traverser, sans quoi le lien entre le haut de page et le papier
+           ne se lit pas. L'assouplissement est celui des panneaux du site. */
+        ::view-transition-group(recit-encre) {
+            animation-duration: 520ms;
+            animation-timing-function: var(--ease-panel);
+        }
+
+        ::view-transition-old(recit-encre),
+        ::view-transition-new(recit-encre) {
+            animation-duration: 520ms;
+            animation-timing-function: var(--ease-out);
         }
 
         /* ── LA FEUILLE ──
@@ -2786,17 +2781,12 @@
                     <div class="bio-collapse" id="header-bio">
                         <div class="bio-collapse-inner">
                             <button type="button" class="recit-appel" data-recit-ouvrir
-                                aria-haspopup="dialog" aria-controls="recit">
+                                aria-haspopup="dialog" aria-controls="recit"
+                                aria-label="Lire mon parcours en entier">
                                 <span class="bio-handwritten-wrap max-w-xl block text-left">
                                     <span class="bio-handwritten recit-extrait">Ce que j'aime, c'est ce que chaque
                                         masque m'oblige à aller chercher. J'ai vu Cyrano au cinéma quand j'avais
                                         onze ans, et je n'ai jamais quitté le plateau depuis.</span>
-                                </span>
-                                <span class="recit-lire">
-                                    <svg class="ico text-[9px]" aria-hidden="true">
-                                        <use href="#i-solid-chevron-down"></use>
-                                    </svg>
-                                    Lire la suite
                                 </span>
                             </button>
                         </div>
@@ -5472,50 +5462,77 @@
             if (!panneau) return;
             const defile = panneau.querySelector('.recit-defile');
             const morceaux = Array.from(panneau.querySelectorAll('.recit-para, .recit-signature'));
+            const extrait = document.querySelector('.recit-extrait');
+            if (!extrait || !morceaux.length) return;
             const DUREE_SORTIE = 420;   // un peu plus que --dur-panel
             const REDUIT = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             let rendreLeFocus = null, observateur = null, minuteur = 0;
 
-            //  DEUX RÉGIMES, ET C'EST LA DIFFÉRENCE QUI FAIT L'EFFET.
-            //  Ce qui est déjà sous les yeux à l'ouverture s'inscrit ligne
-            //  après ligne, avec un décalage : c'est la main qui écrit. Ce
-            //  qu'on atteint ensuite en défilant paraît sans attendre — un
-            //  paragraphe qui se ferait désirer après qu'on a scrollé jusqu'à
-            //  lui ne serait plus une écriture, mais une lenteur.
-            function inscrire(el, rang) {
-                el.style.transitionDelay = rang ? (rang * 0.14) + 's' : '';
-                el.classList.add('est-la');
-            }
-
+            //  LE PREMIER PARAGRAPHE EST DÉJÀ LÀ, LE RESTE S'ÉCRIT.
+            //  Il n'a pas à paraître : il vient d'arriver du haut de la page,
+            //  ce sont les mots qu'on lisait une seconde plus tôt et qui
+            //  viennent de trouver leur place sur le papier. Le faire
+            //  attendre romprait le seul lien qu'on ait entre les deux
+            //  états.
+            //
+            //  Tous les autres attendent d'être ATTEINTS. Pas « d'entrer dans
+            //  la feuille » — d'arriver au tiers haut : la marge négative de
+            //  40 % rétrécit la zone de déclenchement par le bas, si bien
+            //  qu'un paragraphe visible en pied de page reste blanc, et ne
+            //  s'inscrit que lorsqu'on a scrollé jusqu'à lui. C'est ce qui
+            //  fait qu'on lit un livre en train de s'écrire, et non une page
+            //  déjà écrite qui se dévoile.
             function armerLesParagraphes() {
+                if (observateur) { observateur.disconnect(); observateur = null; }
+                morceaux.forEach(el => {
+                    el.classList.remove('a-paraitre', 'est-la');
+                });
                 if (REDUIT) return;
-                morceaux.forEach(el => {
-                    el.classList.add('a-paraitre');
-                    el.classList.remove('est-la');
-                    el.style.transitionDelay = '';
-                });
-                const bas = defile.clientHeight;
-                let rang = 0;
-                const attente = [];
-                morceaux.forEach(el => {
-                    if (el.offsetTop < bas) attente.push(el);      // déjà dans la fenêtre
-                });
-                requestAnimationFrame(() => attente.forEach(el => inscrire(el, rang++)));
-
-                const reste = morceaux.filter(el => !attente.includes(el));
-                if (!reste.length) return;
-                if (observateur) observateur.disconnect();
+                const [premier, ...suite] = morceaux;
+                premier.classList.add('est-la');            // il arrive de l'en-tête
+                suite.forEach(el => el.classList.add('a-paraitre'));
                 observateur = new IntersectionObserver((entrees) => {
                     entrees.forEach(e => {
                         if (!e.isIntersecting) return;
-                        inscrire(e.target, 0);
+                        e.target.classList.add('est-la');
                         observateur.unobserve(e.target);
                     });
-                }, { root: defile, rootMargin: '0px 0px -10% 0px' });
-                reste.forEach(el => observateur.observe(el));
+                }, { root: defile, rootMargin: '0px 0px -40% 0px' });
+                suite.forEach(el => observateur.observe(el));
             }
 
-            function ouvrir(appelant) {
+            //  LES PREMIERS MOTS VOYAGENT JUSQU'AU PAPIER. L'extrait de
+            //  l'en-tête et le premier paragraphe de la lettre portent le
+            //  MÊME texte ; en leur donnant tour à tour le même
+            //  view-transition-name, le navigateur ne les traite plus comme
+            //  deux éléments mais comme un seul qui se déplace, grandit et
+            //  change d'encre. Le nom doit passer de l'un à l'autre DANS le
+            //  rappel : deux éléments qui le porteraient en même temps
+            //  feraient abandonner la transition.
+            //
+            //  Même idiome que le répertoire (voir spectacles/index.html) :
+            //  on pose le nom, on transitionne, on le retire quoi qu'il
+            //  arrive. Sans View Transitions — ou si l'on a demandé moins
+            //  d'animations — on ouvre franchement, ce qui reste juste.
+            function ouvrirEnVolant(appelant) {
+                if (REDUIT || !document.startViewTransition) { ouvrir(appelant); return; }
+                extrait.style.viewTransitionName = 'recit-encre';
+                const t = document.startViewTransition(() => {
+                    extrait.style.viewTransitionName = '';
+                    morceaux[0].style.viewTransitionName = 'recit-encre';
+                    //  Ouvert SANS attendre de frame : la transition
+                    //  photographie l'état d'arrivée juste après ce rappel.
+                    //  Une feuille encore à opacité zéro y serait invisible,
+                    //  et l'on verrait le texte voler vers du vide.
+                    ouvrir(appelant, true);
+                });
+                t.finished.then(() => { }, () => { }).then(() => {
+                    extrait.style.viewTransitionName = '';
+                    morceaux[0].style.viewTransitionName = '';
+                });
+            }
+
+            function ouvrir(appelant, tout_de_suite) {
                 if (!panneau.hidden) return;
                 clearTimeout(minuteur);
                 rendreLeFocus = appelant || null;
@@ -5534,7 +5551,8 @@
                 document.documentElement.classList.add('u-locked');
                 defile.scrollTop = 0;
                 armerLesParagraphes();
-                requestAnimationFrame(() => panneau.classList.add('est-ouvert'));
+                if (tout_de_suite) panneau.classList.add('est-ouvert');
+                else requestAnimationFrame(() => panneau.classList.add('est-ouvert'));
                 defile.focus({ preventScroll: true });
             }
 
@@ -5559,7 +5577,7 @@
 
             document.addEventListener('click', (e) => {
                 const appel = e.target.closest('[data-recit-ouvrir]');
-                if (appel) { ouvrir(appel); return; }
+                if (appel) { ouvrirEnVolant(appel); return; }
                 if (e.target.closest('[data-recit-fermer]')) fermer();
             });
 
