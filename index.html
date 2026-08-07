@@ -1064,6 +1064,326 @@
             }
         }
 
+        /* ══ LE RÉCIT ══════════════════════════════════════════════════
+           L'APPEL : deux lignes, puis une porte. Le texte entier est dans
+           le document — c'est le CSS seul qui l'arrête, et les points de
+           suspension sont ceux du navigateur. Rien n'est caché à un lecteur
+           d'écran ni à un moteur : on ne coupe que le regard.
+
+           C'est un <button> et non un lien : rien ne change d'adresse, on
+           ouvre un panneau. Il en garde le clavier et le rôle. */
+        .recit-appel {
+            display: block;
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.35rem 0.55rem;
+            border-radius: 0.4rem;
+            text-align: left;
+            cursor: pointer;
+            background: transparent;
+            transition: background-color var(--dur-base) var(--ease-out);
+        }
+
+        .recit-extrait {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 0.72rem;
+            line-height: 1.45;
+            color: rgb(var(--c-muted));
+        }
+
+        /* « Lire mon parcours » : le seul endroit qui dise qu'on peut
+           appuyer. Sans lui, deux lignes tronquées ressemblent à une
+           mise en page ratée plutôt qu'à une invitation. */
+        .recit-lire {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-top: 0.25rem;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.58rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgb(var(--c-gold-ink));
+        }
+
+        .recit-lire .ico {
+            transform: rotate(-90deg);
+            transition: transform var(--dur-base) var(--ease-out);
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .recit-appel:hover {
+                background: rgb(var(--c-gold) / 0.07);
+            }
+
+            .recit-appel:hover .ico {
+                transform: rotate(-90deg) translateY(-2px);
+            }
+        }
+
+        .recit-appel:focus-visible {
+            outline: 2px solid rgb(var(--c-gold));
+            outline-offset: 2px;
+        }
+
+        /* ── LA FEUILLE ──
+           Un panneau plein écran, comme les univers, mais leur exact
+           contraire de matière : eux sont une salle de cinéma, celui-ci est
+           une page. Le papier reste CLAIR dans les deux thèmes, et c'est
+           voulu — une lettre ne devient pas noire parce qu'on éteint la
+           lampe. C'est aussi ce qui la détache de tout le reste du site.
+
+           Le fond derrière elle, lui, suit le thème : c'est la pénombre
+           dans laquelle la page est tenue. */
+        /* CENTRÉ EN FLEX, ET PAS EN GRILLE. En grille avec place-items:center,
+           la colonne se dimensionne sur son contenu — et le `100%` de la
+           feuille se résout alors contre une colonne qui l'attend elle-même :
+           mesurée, elle sortait à 155 px de large sur 1817 de haut, sa
+           hauteur maximale ignorée. En flex, les deux pourcentages tombent
+           sur la boîte du panneau, qui, elle, connaît sa taille. */
+        .recit {
+            position: fixed;
+            inset: 0;
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(0.75rem, 4vw, 2.5rem);
+        }
+
+        .recit[hidden] {
+            display: none;
+        }
+
+        .recit-fond {
+            position: absolute;
+            inset: 0;
+            background: rgb(var(--c-bg) / 0.86);
+            -webkit-backdrop-filter: blur(7px);
+            backdrop-filter: blur(7px);
+            opacity: 0;
+            transition: opacity var(--dur-panel) var(--ease-out);
+        }
+
+        .recit.est-ouvert .recit-fond {
+            opacity: 1;
+        }
+
+        .recit-feuille {
+            position: relative;
+            width: min(46rem, 100%);
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+            border-radius: 0.5rem;
+            /* Le papier : deux lavis chauds décentrés plutôt qu'un aplat.
+               Un aplat de blanc cassé se lit comme une boîte de dialogue ;
+               ces deux-là donnent le bord un peu plus sombre qu'a une
+               feuille posée sur une table. */
+            background:
+                radial-gradient(ellipse at 18% 8%, #fffdf7 0%, transparent 60%),
+                radial-gradient(ellipse at 85% 100%, #f3ead6 0%, transparent 55%),
+                #faf5ea;
+            box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.7),
+                0 2px 0 rgba(255, 255, 255, 0.5) inset;
+            /* Elle entre comme une page qu'on pose : elle descend de très
+               peu, et son inclinaison se redresse. */
+            opacity: 0;
+            transform: translateY(14px) rotate(-0.5deg) scale(0.985);
+            transition: opacity var(--dur-panel) var(--ease-out),
+                transform var(--dur-panel) var(--ease-panel);
+        }
+
+        .recit.est-ouvert .recit-feuille {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* Le grain du papier — le même bruit que la salle et que la
+           citation, à la même échelle. Trois endroits, une seule texture. */
+        .recit-feuille::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity: 0.09;
+            mix-blend-mode: multiply;
+            pointer-events: none;
+        }
+
+        .recit-defile {
+            overflow-y: auto;
+            /* Sans min-height:0, un enfant de colonne flex refuse de
+               descendre sous sa hauteur de contenu : la feuille grandirait
+               au lieu de faire défiler son texte. */
+            min-height: 0;
+            overscroll-behavior: contain;
+            padding: clamp(1.75rem, 6vw, 3.25rem) clamp(1.5rem, 6vw, 3.5rem) clamp(1.5rem, 5vw, 2.75rem);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .recit-defile:focus {
+            outline: none;
+        }
+
+        .recit-titre {
+            font-family: 'Cinzel', Georgia, serif;
+            font-size: clamp(1.15rem, 4vw, 1.6rem);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: #5a4a33;
+            margin-bottom: 1.5rem;
+        }
+
+        /* L'encre : Kalam, comme la citation, mais à taille de lecture.
+           En dessous de 1rem cette fonte cesse d'être lisible sur plusieurs
+           paragraphes — c'est la raison du saut d'échelle par rapport à
+           l'en-tête, où elle ne porte que deux lignes. */
+        .recit-para {
+            font-family: 'Kalam', cursive;
+            font-size: clamp(1rem, 2.6vw, 1.12rem);
+            line-height: 1.75;
+            color: #2f2a22;
+            margin-bottom: 1.35rem;
+        }
+
+        /* Chaque paragraphe s'inscrit quand il entre dans le champ. Sans
+           script, aucune classe n'est jamais posée — d'où l'état de repos
+           écrit sur .a-paraitre et non sur .recit-para : le texte nu reste
+           visible, et c'est le script qui décide de le faire attendre. */
+        .recit-para.a-paraitre,
+        .recit-signature.a-paraitre {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .recit-para.est-la,
+        .recit-signature.est-la {
+            opacity: 1;
+            transform: none;
+            transition: opacity 0.75s var(--ease-out), transform 0.75s var(--ease-panel);
+        }
+
+        .recit-signature {
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            font-size: clamp(1.05rem, 3vw, 1.3rem);
+            color: #7a5f3a;
+            text-align: right;
+            transform: rotate(-1.5deg);
+            margin-top: 2rem;
+            opacity: 0.85;
+        }
+
+        .recit-signature.est-la {
+            transform: rotate(-1.5deg);
+        }
+
+        /* La croix se pose SUR le papier, pas au-dessus de l'écran : c'est
+           la feuille qu'on referme. */
+        .recit-fermer {
+            position: absolute;
+            top: 0.55rem;
+            right: 0.55rem;
+            z-index: 2;
+            display: grid;
+            place-items: center;
+            width: 2.1rem;
+            height: 2.1rem;
+            border-radius: 999px;
+            border: 1px solid rgba(90, 74, 51, 0.22);
+            background: rgba(255, 253, 247, 0.75);
+            color: #5a4a33;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color var(--dur-base) var(--ease-out),
+                border-color var(--dur-base) var(--ease-out);
+        }
+
+        .recit-fermer:hover {
+            background: #fffdf7;
+            border-color: rgba(90, 74, 51, 0.45);
+        }
+
+        .recit-fermer:focus-visible {
+            outline: 2px solid #7a5f3a;
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .recit-fond,
+            .recit-feuille,
+            .recit-para,
+            .recit-signature {
+                transition: none !important;
+            }
+
+            .recit-para.a-paraitre,
+            .recit-signature.a-paraitre {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* SUR PAPIER, LA LETTRE EST LÀ ET L'APPEL N'Y EST PLUS.
+           Le CV imprimé se termine donc par « Mon parcours » en entier — un
+           directeur de casting qui reçoit le PDF a la bio avec. L'appel de
+           l'en-tête, lui, disparaît tout entier : ses deux lignes sont le
+           début de la lettre, et les garder ferait lire deux fois la même
+           phrase ; quant à « lire mon parcours », il n'a aucun sens sur du
+           papier, où l'on ne peut appuyer sur rien.
+
+           Le panneau redevient un bloc dans le flux : ni fixe, ni centré,
+           ni fondu — et le grain de papier saute, il coûterait de l'encre
+           pour rien. */
+        @media print {
+            .recit-appel {
+                display: none;
+            }
+
+            .recit {
+                position: static;
+                display: block;
+                padding: 0;
+            }
+
+            .recit[hidden] {
+                display: block;
+            }
+
+            .recit-fond,
+            .recit-fermer {
+                display: none;
+            }
+
+            .recit-feuille {
+                width: auto;
+                max-height: none;
+                opacity: 1;
+                transform: none;
+                background: none;
+                box-shadow: none;
+            }
+
+            .recit-feuille::before {
+                display: none;
+            }
+
+            .recit-para,
+            .recit-titre,
+            .recit-signature {
+                color: #000;
+                opacity: 1;
+                transform: none;
+            }
+        }
+
         /* ── Tiroirs des spectacles du CV ── */
         .cv-expand-panel {
             display: grid;
@@ -2449,6 +2769,28 @@
                                     prosodie jusqu'au corps.<span class="bio-quote" aria-hidden="true">&raquo;</span>
                                 </p>
                             </div>
+
+                            <!-- LE RÉCIT, DEUX LIGNES PUIS UNE PORTE.
+                                 La citation donne la voix, le récit donne
+                                 l'histoire : ils se suivent. On n'en montre
+                                 que le début — deux lignes, puis des points
+                                 de suspension posés par le CSS (voir
+                                 .recit-extrait) — et le reste s'ouvre en
+                                 pleine page. Le texte entier reste DANS le
+                                 document : lecteurs d'écran, impression et
+                                 moteurs de recherche l'ont en entier, seul
+                                 l'affichage s'arrête. -->
+                            <button type="button" class="recit-appel" data-recit-ouvrir
+                                aria-haspopup="dialog" aria-controls="recit">
+                                <span class="recit-extrait">Comédien depuis 20 ans, j'ai vu Cyrano au cinéma quand
+                                    j'avais 11 ans et j'ai toujours fait du théâtre depuis.</span>
+                                <span class="recit-lire">
+                                    <svg class="ico text-[9px]" aria-hidden="true">
+                                        <use href="#i-solid-chevron-down"></use>
+                                    </svg>
+                                    Lire mon parcours
+                                </span>
+                            </button>
                         </div>
                     </div>
 
@@ -5103,6 +5445,107 @@
             if (toggle) toggleDatePanel(toggle.dataset.togglePanel, toggle);
         });
 
+        // ════════════════════════════════════════════════════════════════
+        //  LE RÉCIT — la lettre qu'on ouvre depuis l'en-tête
+        // ════════════════════════════════════════════════════════════════
+        //  Le texte vit dans le HTML, pas ici : ce bloc n'écrit rien, il ne
+        //  fait qu'ouvrir, fermer, et décider du moment où chaque paragraphe
+        //  s'inscrit. Sans lui la page reste juste, avec un récit déplié.
+        //
+        //  ON ATTEND LE DOCUMENT. Ce script s'exécute au milieu du corps de
+        //  page ; la feuille, elle, est écrite tout à la fin, avec les autres
+        //  panneaux. Appelée tout de suite, cette fonction ne trouverait rien
+        //  et sortirait sans un mot — le bouton resterait mort. Même
+        //  déclenchement que celui d'univers.js, pour la même raison.
+        function recit() {
+            const panneau = document.getElementById('recit');
+            if (!panneau) return;
+            const defile = panneau.querySelector('.recit-defile');
+            const morceaux = Array.from(panneau.querySelectorAll('.recit-para, .recit-signature'));
+            const DUREE_SORTIE = 420;   // un peu plus que --dur-panel
+            const REDUIT = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let rendreLeFocus = null, observateur = null, minuteur = 0;
+
+            //  DEUX RÉGIMES, ET C'EST LA DIFFÉRENCE QUI FAIT L'EFFET.
+            //  Ce qui est déjà sous les yeux à l'ouverture s'inscrit ligne
+            //  après ligne, avec un décalage : c'est la main qui écrit. Ce
+            //  qu'on atteint ensuite en défilant paraît sans attendre — un
+            //  paragraphe qui se ferait désirer après qu'on a scrollé jusqu'à
+            //  lui ne serait plus une écriture, mais une lenteur.
+            function inscrire(el, rang) {
+                el.style.transitionDelay = rang ? (rang * 0.14) + 's' : '';
+                el.classList.add('est-la');
+            }
+
+            function armerLesParagraphes() {
+                if (REDUIT) return;
+                morceaux.forEach(el => {
+                    el.classList.add('a-paraitre');
+                    el.classList.remove('est-la');
+                    el.style.transitionDelay = '';
+                });
+                const bas = defile.clientHeight;
+                let rang = 0;
+                const attente = [];
+                morceaux.forEach(el => {
+                    if (el.offsetTop < bas) attente.push(el);      // déjà dans la fenêtre
+                });
+                requestAnimationFrame(() => attente.forEach(el => inscrire(el, rang++)));
+
+                const reste = morceaux.filter(el => !attente.includes(el));
+                if (!reste.length) return;
+                if (observateur) observateur.disconnect();
+                observateur = new IntersectionObserver((entrees) => {
+                    entrees.forEach(e => {
+                        if (!e.isIntersecting) return;
+                        inscrire(e.target, 0);
+                        observateur.unobserve(e.target);
+                    });
+                }, { root: defile, rootMargin: '0px 0px -10% 0px' });
+                reste.forEach(el => observateur.observe(el));
+            }
+
+            function ouvrir(appelant) {
+                clearTimeout(minuteur);
+                rendreLeFocus = appelant || null;
+                panneau.hidden = false;
+                // La page cesse de défiler derrière : même mécanisme que les
+                // univers, une seule classe pour les deux.
+                document.documentElement.classList.add('u-locked');
+                defile.scrollTop = 0;
+                armerLesParagraphes();
+                requestAnimationFrame(() => panneau.classList.add('est-ouvert'));
+                defile.focus({ preventScroll: true });
+            }
+
+            function fermer() {
+                if (panneau.hidden) return;
+                panneau.classList.remove('est-ouvert');
+                document.documentElement.classList.remove('u-locked');
+                if (observateur) { observateur.disconnect(); observateur = null; }
+                // On attend la fin du fondu avant de retirer le panneau du
+                // rendu : le cacher tout de suite ferait disparaître la
+                // feuille d'un coup, sans qu'elle ait le temps de se replier.
+                clearTimeout(minuteur);
+                minuteur = setTimeout(() => { panneau.hidden = true; }, DUREE_SORTIE);
+                if (rendreLeFocus && document.contains(rendreLeFocus)) rendreLeFocus.focus();
+                rendreLeFocus = null;
+            }
+
+            document.addEventListener('click', (e) => {
+                const appel = e.target.closest('[data-recit-ouvrir]');
+                if (appel) { ouvrir(appel); return; }
+                if (e.target.closest('[data-recit-fermer]')) fermer();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !panneau.hidden) { e.stopPropagation(); fermer(); }
+            });
+        }
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', recit);
+        else recit();
+
         // ── Données structurées des représentations (schema.org/TheaterEvent) ──
         //
         //  CE QUI MANQUAIT, ET POURQUOI ON PEUT LE DIRE SANS L'INVENTER.
@@ -5797,6 +6240,38 @@
          Vide au repos ; son contenu est construit à l'ouverture par
          univers.js (une seule ligne du CV à la fois). -->
     <div id="show-universe" hidden role="dialog" aria-modal="true" aria-label="Univers du spectacle"></div>
+
+    <!-- LE RÉCIT — une lettre, pas une fiche.
+         Le texte est écrit ICI, en clair, et non fabriqué par le script :
+         c'est une page de biographie, elle doit exister sans JavaScript,
+         être trouvable par un moteur et s'imprimer. Chaque paragraphe
+         s'inscrit à son tour quand il entre dans le champ (voir
+         .recit-para) ; sans script, ils sont tous là d'emblée. -->
+    <div id="recit" class="recit" hidden>
+        <div class="recit-fond" data-recit-fermer aria-hidden="true"></div>
+        <div class="recit-feuille" role="dialog" aria-modal="true" aria-labelledby="recit-titre">
+            <button type="button" class="recit-fermer" data-recit-fermer aria-label="Fermer le récit">
+                <svg class="ico" aria-hidden="true">
+                    <use href="#i-solid-xmark"></use>
+                </svg>
+            </button>
+            <div class="recit-defile" tabindex="-1">
+                <h2 class="recit-titre" id="recit-titre">Mon parcours</h2>
+                <p class="recit-para">Comédien depuis 20 ans, j'ai vu Cyrano au cinéma quand j'avais 11 ans et j'ai
+                    toujours fait du théâtre depuis.</p>
+                <p class="recit-para">Actuellement je joue notamment dans un spectacle sur les violences conjugales
+                    dans les tribunaux ou salles de réunion citoyenne. Nous menons également des ateliers en collège
+                    et lycée sur ces questions.</p>
+                <p class="recit-para">Je fais du piano depuis l'âge de 5 ans, je compose, pour la scène et l'image.
+                    Je parle russe couramment, mon père étant d'origine soviétique. J'ai une expérience
+                    professionnelle en tant que jeune officier d'armée de Terre et réserviste en gendarmerie. Cela
+                    m'a donné de bonnes bases en tir et maniement d'armes de guerre (moniteur de tir) et sports de
+                    combat.</p>
+                <p class="recit-signature" aria-hidden="true">Adrien Vada</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Le moteur de montage, avant univers.js qui s'en sert.
          Même fichier que celui dont se sert build/generer-pages-spectacles.js :
          c'est ce qui garantit qu'une page spectacle a le visage de son univers. -->
