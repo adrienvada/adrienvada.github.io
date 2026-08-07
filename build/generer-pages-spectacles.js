@@ -748,7 +748,7 @@ ${JSON.stringify(liste, null, 2)}
                     // retard de phase sur sa voisine — la gauche entame sa
                     // montée, la droite la suit un cran de défilement plus
                     // bas. La vague vaut à tous les rangs du pincement.
-                    cible = Math.max(0, Math.min(1, cible - (Math.max(0, r.left) / innerWidth) * .32));
+                    cible = Math.max(0, Math.min(1, cible - (Math.max(0, r.left) / innerWidth) * .45));
                     var p = parseFloat(carte.dataset.p || '0');
                     p += (cible - p) * .13;
                     if (Math.abs(cible - p) > .002) { encore = true; } else { p = cible; }
@@ -1241,7 +1241,7 @@ html.scrolly .carte { --p: 0; --pl: 0; }
        tant le départ que, posée sur elle, l'opacité était pleine dès le
        bord de l'écran. Ici : zéro au bord, pleine au tiers de la montée. */
     opacity: min(1, calc(var(--pl, 1) / .55));
-    transform: translateY(calc((1 - var(--p, 1)) * 48px)) scale(calc(.94 + var(--p, 1) * .06));
+    transform: translateY(calc((1 - var(--p, 1)) * 72px)) scale(calc(.94 + var(--p, 1) * .06));
 }
 .media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
 .volet-couleur {

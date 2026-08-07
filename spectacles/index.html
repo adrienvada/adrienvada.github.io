@@ -457,7 +457,7 @@
                     // retard de phase sur sa voisine — la gauche entame sa
                     // montée, la droite la suit un cran de défilement plus
                     // bas. La vague vaut à tous les rangs du pincement.
-                    cible = Math.max(0, Math.min(1, cible - (Math.max(0, r.left) / innerWidth) * .32));
+                    cible = Math.max(0, Math.min(1, cible - (Math.max(0, r.left) / innerWidth) * .45));
                     var p = parseFloat(carte.dataset.p || '0');
                     p += (cible - p) * .13;
                     if (Math.abs(cible - p) > .002) { encore = true; } else { p = cible; }
