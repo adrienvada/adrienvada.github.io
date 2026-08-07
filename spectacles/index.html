@@ -499,26 +499,28 @@
             addEventListener('resize', replanifieScene);
             replanifieScene();
 
-            // La galerie au pincement : écarter les doigts agrandit les
-            // kakemonos (moins de colonnes), les resserrer les aligne en
-            // galerie. Chaque cran part en View Transition même-document :
-            // les cartes GLISSENT jusqu'à leur nouveau rang, une à une.
-            // Le geste remplace le zoom de page sur le mur (touch-action),
-            // et chaque cran rebase la mesure : un long pincement traverse
-            // plusieurs rangs.
+            // La galerie au pincement, À LA MAIN : pendant le geste, le
+            // mur suit les doigts en continu — une échelle élastique,
+            // centrée entre eux, un seul transform composité. Au relâcher,
+            // deux issues : le cran est franchi, et le morphing part DEPUIS
+            // l'état pincé (la bascule de colonnes nettoie l'échelle dans
+            // la même View Transition — aucune couture) ; ou il ne l'est
+            // pas, et le mur revient s'asseoir d'un petit rebond. Le geste
+            // remplace le zoom de page sur le mur (touch-action).
             var mur = document.querySelector('main');
             var NIVEAUX = function () { return innerWidth < 640 ? [2, 3, 4] : [2, 3, 4, 5]; };
             var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
             var zoomCourant = function () {
                 return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
             };
-            var changeZoom = function (sens) {
+            var changeZoom = function (sens, avant) {
                 var n = NIVEAUX();
                 var i = n.indexOf(zoomCourant());
                 if (i === -1) i = n.indexOf(zoomRepos());
                 var vers = n[Math.max(0, Math.min(n.length - 1, i + sens))];
                 if (vers === zoomCourant()) return false;
                 var applique = function () {
+                    if (avant) avant();
                     document.documentElement.dataset.zoom = vers;
                     replanifieScene();
                 };
@@ -531,24 +533,50 @@
                 } else { applique(); }
                 return true;
             };
-            var pincement = 0;
+            var pincement = 0, rapport = 1;
             var ecart = function (t) {
                 return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
             };
+            var finPincement = function () {
+                if (!pincement) return;
+                pincement = 0;
+                var sens = rapport > 1.15 ? -1 : rapport < .87 ? 1 : 0;
+                var nettoie = function () { mur.style.transform = ''; };
+                if (!sens || !changeZoom(sens, nettoie)) {
+                    // Pas de cran : le retour élastique, puis on efface tout.
+                    mur.classList.add('retour-elastique');
+                    mur.style.transform = 'scale(1)';
+                    setTimeout(function () {
+                        mur.classList.remove('retour-elastique'); nettoie();
+                    }, 280);
+                }
+                rapport = 1;
+            };
             mur.addEventListener('touchstart', function (e) {
-                if (e.touches.length === 2) pincement = ecart(e.touches);
+                if (e.touches.length !== 2) return;
+                pincement = ecart(e.touches); rapport = 1;
+                mur.classList.remove('retour-elastique');
+                // L'échelle pivote entre les deux doigts, pas au centre du mur.
+                var r = mur.getBoundingClientRect();
+                if (r.width && r.height) {
+                    var x = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left) / r.width * 100;
+                    var y = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top) / r.height * 100;
+                    mur.style.transformOrigin = x.toFixed(1) + '% ' + y.toFixed(1) + '%';
+                }
             }, { passive: true });
             mur.addEventListener('touchmove', function (e) {
                 if (e.touches.length !== 2 || !pincement) return;
                 e.preventDefault();
-                var d = ecart(e.touches);
-                var r = d / pincement;
-                if (r > 1.22) { if (changeZoom(-1)) pincement = d; }
-                else if (r < .82) { if (changeZoom(1)) pincement = d; }
+                rapport = ecart(e.touches) / pincement;
+                // Une résistance de ressort : la moitié du geste, bornée —
+                // le mur accompagne sans jamais partir en vrille.
+                var visuel = Math.max(.84, Math.min(1.26, 1 + (rapport - 1) * .55));
+                mur.style.transform = 'scale(' + visuel.toFixed(4) + ')';
             }, { passive: false });
             mur.addEventListener('touchend', function (e) {
-                if (e.touches.length < 2) pincement = 0;
+                if (e.touches.length < 2) finPincement();
             });
+            mur.addEventListener('touchcancel', finPincement);
 
             // La vitrine scintille : toutes les quelques secondes, une
             // carte posée — jamais celle qu'on regarde — reçoit un
