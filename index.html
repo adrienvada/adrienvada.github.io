@@ -302,16 +302,16 @@
             initial-value: #bfa98a;
         }
 
-        /* La progression de l'encre dans un paragraphe du récit. Déclarée en
-           pourcentage, donc INTERPOLABLE : sans cette déclaration, le
-           navigateur ne verrait qu'un mot à remplacer d'un coup, et le
-           masque sauterait de « rien » à « tout » sans jamais traverser.
-           Même raison que --ambiance juste au-dessus. Elle n'hérite pas :
-           chaque paragraphe mène sa diffusion pour son compte. */
+        /* L'ENCRE D'UN MOT DU RÉCIT — de 0 (rien) à 1 (plein).
+           Déclarée en nombre, donc utilisable dans les calculs qui en
+           dérivent la couleur et l'épaisseur du tracé (voir .mot). Sa
+           valeur par défaut est 1 : sans script, le texte est écrit.
+           Elle n'hérite pas — chaque mot porte la sienne, c'est tout le
+           principe. */
         @property --encre {
-            syntax: '<percentage>';
+            syntax: '<number>';
             inherits: false;
-            initial-value: 100%;
+            initial-value: 1;
         }
 
         :root {
@@ -1128,24 +1128,6 @@
             outline-offset: 2px;
         }
 
-        /* LE VOL DES PREMIERS MOTS.
-           Le navigateur anime seul le déplacement et la mise à l'échelle
-           entre les deux positions ; il n'y a qu'à lui donner le temps.
-           520 ms, c'est plus long qu'une ouverture de panneau ordinaire —
-           mais on ne veut pas que ça claque : on veut voir la phrase
-           traverser, sans quoi le lien entre le haut de page et le papier
-           ne se lit pas. L'assouplissement est celui des panneaux du site. */
-        ::view-transition-group(recit-encre) {
-            animation-duration: 520ms;
-            animation-timing-function: var(--ease-panel);
-        }
-
-        ::view-transition-old(recit-encre),
-        ::view-transition-new(recit-encre) {
-            animation-duration: 520ms;
-            animation-timing-function: var(--ease-out);
-        }
-
         /* ── LA FEUILLE ──
            Un panneau plein écran, comme les univers, mais leur exact
            contraire de matière : eux sont une salle de cinéma, celui-ci est
@@ -1201,20 +1183,11 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            border-radius: 0.5rem;
-            /* Le papier : des lavis chauds décentrés plutôt qu'un aplat. Un
-               blanc cassé uniforme se lit comme une boîte de dialogue ;
-               ceux-là donnent le bord plus sombre qu'a une feuille posée sur
-               une table, et le fond va vers le parchemin plutôt que vers le
-               papier machine — c'est là que l'encre a l'air d'encre. */
-            background:
-                radial-gradient(ellipse at 20% 6%, #fffcf2 0%, transparent 55%),
-                radial-gradient(ellipse at 88% 96%, #e9dcbf 0%, transparent 60%),
-                radial-gradient(ellipse at 50% 50%, #f7efdc 0%, #f0e5cd 100%);
-            box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.7),
-                0 2px 0 rgba(255, 255, 255, 0.5) inset;
-            /* Elle entre comme une page qu'on pose : elle descend de très
-               peu, et son inclinaison se redresse. */
+            /* LA FEUILLE ELLE-MÊME NE PORTE PLUS RIEN — ni fond, ni ombre,
+               ni coins arrondis. Tout cela est passé au calque du dessous,
+               qui peut alors être déchiré sans emmener le texte avec lui.
+               Un coin arrondi, c'est une fenêtre ; une lisière irrégulière,
+               c'est du papier. */
             opacity: 0;
             transform: translateY(14px) rotate(-0.5deg) scale(0.985);
             transition: opacity var(--dur-panel) var(--ease-out),
@@ -1226,17 +1199,63 @@
             transform: none;
         }
 
-        /* Le grain du papier — le même bruit que la salle et que la
-           citation, à la même échelle. Trois endroits, une seule texture. */
+        /* LE PAPIER, en calque séparé et déchiré par le filtre. Les lavis
+           chauds décentrés valent mieux qu'un aplat : un blanc cassé
+           uniforme se lit comme une boîte de dialogue, ceux-là donnent le
+           bord plus sombre d'une feuille posée sur une table. Le fond va au
+           parchemin plutôt qu'au papier machine — c'est là que l'encre a
+           l'air d'encre. L'ombre portée est déchirée avec lui, et suit donc
+           la lisière au lieu de dessiner un rectangle. */
         .recit-feuille::before {
             content: "";
             position: absolute;
             inset: 0;
-            border-radius: inherit;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            z-index: 0;
+            background:
+                radial-gradient(ellipse at 20% 6%, #fffcf2 0%, transparent 55%),
+                radial-gradient(ellipse at 88% 96%, #e6d7b6 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 50%, #f7efdc 0%, #efe3c9 100%);
+            box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.7);
+            filter: url(#bord-papier);
+            pointer-events: none;
+        }
+
+        /* LA FIBRE, par-dessus. Deux bruits superposés plutôt qu'un : le fin
+           donne le grain du papier, le gros les irrégularités d'épaisseur
+           qu'a une feuille tenue devant une lampe. Aucune image n'est
+           chargée : tout est calculé par le navigateur, six cents octets en
+           tout.
+
+           Le second bruit est ISOTROPE, et il a fallu y venir : étiré dans
+           un sens, il donnait des stries verticales très nettes — du métal
+           brossé plutôt que du papier. Une feuille n'a pas de direction. */
+        .recit-feuille::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+            background-size: 90px 90px, 400px 400px;
             opacity: 0.09;
             mix-blend-mode: multiply;
             pointer-events: none;
+        }
+
+        /* Le texte passe AU-DESSUS des deux calques. La croix, elle, est déjà
+           positionnée plus bas — on ne lui donne que son étage, sans quoi on
+           lui reprendrait son `absolute` et elle retomberait dans le flux. */
+        .recit-defile {
+            position: relative;
+            z-index: 2;
+        }
+
+        .recit-filtres {
+            position: absolute;
+            width: 0;
+            height: 0;
+            overflow: hidden;
         }
 
         /* LE HAUT ET LE BAS DE LA PAGE S'ÉTEIGNENT.
@@ -1253,35 +1272,39 @@
             overscroll-behavior: contain;
             padding: clamp(2.5rem, 9vw, 4rem) clamp(1.15rem, 5.5vw, 3.5rem) clamp(4rem, 14vh, 8rem);
             -webkit-overflow-scrolling: touch;
+            /* PAS DE BARRE DE DÉFILEMENT. Une feuille de papier n'en a pas,
+               et celle-ci trahissait le procédé : on voyait la boîte plutôt
+               que la page. Ce qui reste à lire se devine au bas qui
+               s'éteint — et rien n'est perdu pour autant, la molette, le
+               doigt et les flèches font le même travail. */
+            scrollbar-width: none;
             -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 6%, #000 90%, transparent 100%);
             mask-image: linear-gradient(to bottom, transparent 0, #000 6%, #000 90%, transparent 100%);
+        }
+
+        .recit-defile::-webkit-scrollbar {
+            width: 0;
+            height: 0;
         }
 
         .recit-defile:focus {
             outline: none;
         }
 
+        /* Hors de la vue, dans le document. Le clip à zéro plutôt que
+           display:none : ce dernier retirerait le titre de l'arbre
+           d'accessibilité, et le dialogue perdrait le nom qu'il désigne
+           par aria-labelledby. */
         .recit-titre {
-            font-family: 'Cinzel', Georgia, serif;
-            font-size: clamp(0.78rem, 3vw, 0.95rem);
-            font-weight: 600;
-            letter-spacing: 0.34em;
-            text-transform: uppercase;
-            text-align: center;
-            color: #8a7350;
-            margin-bottom: clamp(2.5rem, 9vh, 4.5rem);
-        }
-
-        /* Le fleuron du répertoire, repris ici : un losange sur un filet qui
-           s'éteint des deux côtés. C'est la même main qui signe les deux
-           pages. */
-        .recit-titre::after {
-            content: "✦";
-            display: block;
-            margin: 0.9rem auto 0;
-            font-size: 0.7em;
-            letter-spacing: 0;
-            color: #b09468;
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+            border: 0;
         }
 
         /* ══ L'ENCRE ══
@@ -1295,17 +1318,17 @@
            Le premier paragraphe est plus grand que les autres : il arrive du
            haut de la page, et c'est lui qui donne le ton avant que la voix ne
            se pose. */
+        /* L'ALINÉA. C'est le geste de quelqu'un qui écrit : on rentre la
+           première ligne, et le paragraphe suivant recommence de même. Sans
+           lui, le texte revenait sagement au fer à gauche — une page
+           composée, pas une page écrite. */
         .recit-para {
             font-family: 'Kalam', cursive;
             font-size: clamp(1.22rem, 5vw, 1.55rem);
             line-height: 1.9;
             color: #241d13;
             margin-bottom: clamp(2.2rem, 8vh, 4rem);
-            /* L'encre monte DANS le masque, pas dans l'opacité : voir plus
-               bas. À 100 %, le dégradé est entièrement opaque et ne change
-               rien à la page. */
-            -webkit-mask-image: linear-gradient(to bottom, #000 var(--encre), transparent calc(var(--encre) + 20%));
-            mask-image: linear-gradient(to bottom, #000 var(--encre), transparent calc(var(--encre) + 20%));
+            text-indent: 2.4em;
         }
 
         .recit-para:first-of-type {
@@ -1314,51 +1337,35 @@
             color: #1a140c;
         }
 
-        /* LE TEXTE NE PARAÎT PAS, IL SE RÉPAND. Une opacité qui monte, c'est
-           une lampe qu'on allume ; ici on veut de l'encre qui gagne le papier.
-           Le masque descend donc le long du paragraphe — première ligne, puis
-           la suivante — et le flou qui se résorbe fait le reste : au départ
-           les mots sont une tache, à l'arrivée un tracé.
+        /* ══ LE MOT ══
+           CHAQUE MOT S'ENCRE POUR SON COMPTE, et rien ne bouge. C'était
+           l'erreur d'avant : un paragraphe qui monte de quelques pixels en
+           s'éclaircissant, c'est une diapositive qui arrive. Ici les mots
+           sont DÉJÀ À LEUR PLACE — définitive — et seule l'encre les gagne,
+           comme les pas sur la carte du Maraudeur.
 
-           --encre part de -20 % : à cette valeur, la butée opaque est encore
-           AU-DESSUS du paragraphe et sa butée transparente à zéro, donc rien
-           ne se voit. À 100 %, tout est là. Sans @property, cette valeur
-           serait un mot que le navigateur remplace d'un coup, jamais une
-           grandeur qu'il interpole — et il n'y aurait pas d'animation du
-           tout, seulement un claquement. */
-        .recit-para,
-        .recit-signature {
-            --encre: 100%;
-        }
+           TROIS CHOSES BOUGENT ENSEMBLE, et c'est leur somme qui fait
+           l'encre plutôt qu'une lampe qu'on allume :
 
-        .recit-para.a-paraitre,
-        .recit-signature.a-paraitre {
-            --encre: -20%;
-            opacity: 0.55;
-            filter: blur(6px);
-            transform: translateY(14px);
-        }
+           · l'opacité, qui ne va que jusqu'à 1 ;
+           · la COULEUR, qui part d'un ocre pâle — la couleur d'un trait
+             qui n'a pas encore pris — pour aller au brun noir ;
+           · une ombre portée de la couleur du mot, large au départ, nulle
+             à l'arrivée : c'est elle qui donne le tracé qui S'ÉPAISSIT,
+             comme dans le journal de Jedusor. Une ombre portée plutôt
+             qu'un filtre : elle ne crée pas de couche de composition, et
+             il y en a trois cent cinquante sur cette page.
 
-        .recit-para.est-la,
-        .recit-signature.est-la {
-            --encre: 100%;
-            opacity: 1;
-            filter: blur(0);
-            transform: none;
-            /* L'encre met plus longtemps que le reste : c'est elle qu'on
-               regarde, et une diffusion qui se dépêche n'est plus une
-               diffusion. */
-            transition: --encre 1.7s var(--ease-out),
-                filter 1.1s var(--ease-out),
-                opacity 1.1s var(--ease-out),
-                transform 1.3s var(--ease-panel);
-        }
-
-        /* La signature garde son inclinaison à l'arrivée : `transform: none`
-           de la règle ci-dessus la remettrait d'aplomb, et une signature
-           droite n'est plus une signature. */
-        .recit-signature.est-la {
-            transform: rotate(-1.5deg);
+           AUCUNE TRANSITION CSS ICI, et c'est volontaire. La valeur est
+           posée à chaque image par le script, en fonction de la position
+           de défilement : c'est le doigt qui mène l'encre. Une transition
+           viendrait par-dessus, avec son propre retard, et l'on perdrait
+           exactement ce qu'on cherche — que remonter EFFACE. */
+        .mot {
+            --encre: 1;
+            opacity: var(--encre);
+            color: color-mix(in srgb, #241d13 calc(var(--encre) * 100%), #c4ad86);
+            text-shadow: 0 0 calc((1 - var(--encre)) * 5px) currentColor;
         }
 
         .recit-signature {
@@ -1370,12 +1377,10 @@
             transform: rotate(-1.5deg);
             margin-top: clamp(2rem, 7vh, 3.5rem);
             opacity: 0.9;
-            -webkit-mask-image: linear-gradient(to bottom, #000 var(--encre), transparent calc(var(--encre) + 20%));
-            mask-image: linear-gradient(to bottom, #000 var(--encre), transparent calc(var(--encre) + 20%));
         }
 
-        .recit-signature.est-la {
-            transform: rotate(-1.5deg);
+        .recit-signature .mot {
+            color: color-mix(in srgb, #7a5f3a calc(var(--encre) * 100%), #cbb894);
         }
 
         /* La croix se pose SUR le papier, pas au-dessus de l'écran : c'est
@@ -1384,7 +1389,7 @@
             position: absolute;
             top: 0.55rem;
             right: 0.55rem;
-            z-index: 2;
+            z-index: 3;
             display: grid;
             place-items: center;
             width: 2.1rem;
@@ -1409,21 +1414,19 @@
             outline-offset: 2px;
         }
 
+        /* Qui a demandé moins d'animations lit une lettre déjà écrite : le
+           script ne pose alors aucune encre, et la valeur par défaut de
+           --encre — 1 — laisse tout le texte en place. */
         @media (prefers-reduced-motion: reduce) {
 
             .recit-fond,
-            .recit-feuille,
-            .recit-para,
-            .recit-signature {
+            .recit-feuille {
                 transition: none !important;
             }
 
-            .recit-para.a-paraitre,
-            .recit-signature.a-paraitre {
-                --encre: 100%;
-                opacity: 1;
-                filter: none;
-                transform: none;
+            .mot {
+                --encre: 1 !important;
+                text-shadow: none;
             }
         }
 
@@ -1471,15 +1474,20 @@
                 display: none;
             }
 
-            /* Sur papier, ni masque ni flou : une encre à moitié diffusée
-               s'imprimerait telle quelle, et la moitié du texte manquerait. */
+            /* Sur papier, l'encre est pleine partout. Le script s'arrête au
+               défilement de l'écran, qui n'a plus cours ici : sans cette
+               règle, on imprimerait la page telle qu'elle était lue, la
+               moitié des mots encore à venir. */
             .recit-defile,
             .recit-para,
             .recit-titre,
-            .recit-signature {
+            .recit-signature,
+            .mot {
+                --encre: 1 !important;
                 color: #000;
                 opacity: 1;
                 filter: none;
+                text-shadow: none;
                 transform: none;
                 -webkit-mask-image: none;
                 mask-image: none;
@@ -5568,70 +5576,107 @@
             if (!extrait || !morceaux.length) return;
             const DUREE_SORTIE = 420;   // un peu plus que --dur-panel
             const REDUIT = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            let rendreLeFocus = null, observateur = null, minuteur = 0;
+            let rendreLeFocus = null, minuteur = 0;
 
-            //  LE PREMIER PARAGRAPHE EST DÉJÀ LÀ, LE RESTE S'ÉCRIT.
-            //  Il n'a pas à paraître : il vient d'arriver du haut de la page,
-            //  ce sont les mots qu'on lisait une seconde plus tôt et qui
-            //  viennent de trouver leur place sur le papier. Le faire
-            //  attendre romprait le seul lien qu'on ait entre les deux
-            //  états.
+            // ── L'ENCRE SUIT LE DOIGT ───────────────────────────────────
+            //  Ce n'est pas une animation déclenchée : c'est une FONCTION DE
+            //  LA POSITION DE DÉFILEMENT. À un défilement donné correspond
+            //  un état d'encre, un seul, toujours le même — d'où le fait que
+            //  remonter efface. Rien n'est « joué » : tout est calculé.
             //
-            //  Tous les autres attendent d'être ATTEINTS. Pas « d'entrer dans
-            //  la feuille » — d'arriver au tiers haut : la marge négative de
-            //  40 % rétrécit la zone de déclenchement par le bas, si bien
-            //  qu'un paragraphe visible en pied de page reste blanc, et ne
-            //  s'inscrit que lorsqu'on a scrollé jusqu'à lui. C'est ce qui
-            //  fait qu'on lit un livre en train de s'écrire, et non une page
-            //  déjà écrite qui se dévoile.
-            function armerLesParagraphes() {
-                if (observateur) { observateur.disconnect(); observateur = null; }
-                morceaux.forEach(el => {
-                    el.classList.remove('a-paraitre', 'est-la');
-                });
-                if (REDUIT) return;
-                const [premier, ...suite] = morceaux;
-                premier.classList.add('est-la');            // il arrive de l'en-tête
-                suite.forEach(el => el.classList.add('a-paraitre'));
-                observateur = new IntersectionObserver((entrees) => {
-                    entrees.forEach(e => {
-                        if (!e.isIntersecting) return;
-                        e.target.classList.add('est-la');
-                        observateur.unobserve(e.target);
+            //  LA LIGNE D'ÉCRITURE est un repère horizontal fixe dans la
+            //  feuille. Ce qui est passé au-dessus est écrit, ce qui est
+            //  encore dessous ne l'est pas, et entre les deux les mots
+            //  prennent l'encre. On la place aux deux tiers : plus haut, on
+            //  écrirait sous les yeux du lecteur au lieu de le précéder ;
+            //  plus bas, la page serait pleine avant qu'il n'ait scrollé.
+            const LIGNE = 0.66;
+
+            //  MOT À MOT, ET NON LIGNE À LIGNE. Deux mots d'une même ligne
+            //  sont à la même hauteur : sans correction, toute la ligne
+            //  s'encrerait d'un coup. On ajoute donc à la hauteur de chaque
+            //  mot une fraction de sa position HORIZONTALE — le début de
+            //  ligne compte comme un peu plus haut que sa fin. La lecture
+            //  redevient un ordre, et l'encre le suit de gauche à droite.
+            const BALAYAGE = 1.5;   // en hauteurs de ligne, l'étalement d'une ligne
+            const BANDE = 1.5;      // en hauteurs de ligne, la durée du fondu d'un mot
+
+            let mots = [];
+            let mesureFaite = false;
+            let enAttente = false;
+
+            //  Le texte est écrit d'un bloc dans le HTML — il doit se lire,
+            //  s'imprimer et s'indexer sans nous. On ne le découpe qu'ici,
+            //  au moment où l'on en a besoin, et une seule fois.
+            function decouperEnMots() {
+                morceaux.forEach(p => {
+                    if (p.dataset.decoupe) return;
+                    const brut = p.textContent.replace(/\s+/g, ' ').trim();
+                    p.textContent = '';
+                    brut.split(' ').forEach((m, i) => {
+                        if (i) p.appendChild(document.createTextNode(' '));
+                        const s = document.createElement('span');
+                        s.className = 'mot';
+                        s.textContent = m;
+                        p.appendChild(s);
                     });
-                }, { root: defile, rootMargin: '0px 0px -48% 0px' });
-                suite.forEach(el => observateur.observe(el));
+                    p.dataset.decoupe = '1';
+                });
+                mots = Array.from(defile.querySelectorAll('.mot'));
             }
 
-            //  LES PREMIERS MOTS VOYAGENT JUSQU'AU PAPIER. L'extrait de
-            //  l'en-tête et le premier paragraphe de la lettre portent le
-            //  MÊME texte ; en leur donnant tour à tour le même
-            //  view-transition-name, le navigateur ne les traite plus comme
-            //  deux éléments mais comme un seul qui se déplace, grandit et
-            //  change d'encre. Le nom doit passer de l'un à l'autre DANS le
-            //  rappel : deux éléments qui le porteraient en même temps
-            //  feraient abandonner la transition.
-            //
-            //  Même idiome que le répertoire (voir spectacles/index.html) :
-            //  on pose le nom, on transitionne, on le retire quoi qu'il
-            //  arrive. Sans View Transitions — ou si l'on a demandé moins
-            //  d'animations — on ouvre franchement, ce qui reste juste.
-            function ouvrirEnVolant(appelant) {
-                if (REDUIT || !document.startViewTransition) { ouvrir(appelant); return; }
-                extrait.style.viewTransitionName = 'recit-encre';
-                const t = document.startViewTransition(() => {
-                    extrait.style.viewTransitionName = '';
-                    morceaux[0].style.viewTransitionName = 'recit-encre';
-                    //  Ouvert SANS attendre de frame : la transition
-                    //  photographie l'état d'arrivée juste après ce rappel.
-                    //  Une feuille encore à opacité zéro y serait invisible,
-                    //  et l'on verrait le texte voler vers du vide.
-                    ouvrir(appelant, true);
+            //  On mesure UNE FOIS, et jamais pendant le défilement : lire une
+            //  géométrie à chaque image forcerait le navigateur à recalculer
+            //  la mise en page trois cent cinquante fois par seconde. Les
+            //  positions sont enregistrées dans le contenu, pas à l'écran —
+            //  elles ne dépendent donc pas du défilement.
+            function mesurerLesMots() {
+                if (!mots.length) return;
+                const cadre = defile.getBoundingClientRect();
+                const hautContenu = cadre.top - defile.scrollTop;
+                const largeur = defile.clientWidth || 1;
+                mots.forEach(m => {
+                    const r = m.getBoundingClientRect();
+                    const hLigne = parseFloat(getComputedStyle(m.parentNode).lineHeight) || 30;
+                    m._y = (r.top - hautContenu) + ((r.left - cadre.left) / largeur) * hLigne * BALAYAGE;
+                    m._bande = hLigne * BANDE;
+                    m._encre = -1;
                 });
-                t.finished.then(() => { }, () => { }).then(() => {
-                    extrait.style.viewTransitionName = '';
-                    morceaux[0].style.viewTransitionName = '';
-                });
+                mesureFaite = true;
+            }
+
+            function encrer() {
+                if (!mesureFaite) return;
+                const ligne = defile.scrollTop + defile.clientHeight * LIGNE;
+                for (let i = 0; i < mots.length; i++) {
+                    const m = mots[i];
+                    let e = (ligne - m._y) / m._bande;
+                    e = e < 0 ? 0 : e > 1 ? 1 : e;
+                    // On n'écrit dans le style que si la valeur a bougé :
+                    // l'immense majorité des mots est à 0 ou à 1 et n'a rien
+                    // à faire redessiner.
+                    if (Math.abs(e - m._encre) < 0.008) continue;
+                    m._encre = e;
+                    m.style.setProperty('--encre', e.toFixed(3));
+                }
+            }
+
+            function auDefilement() {
+                if (enAttente) return;
+                enAttente = true;
+                requestAnimationFrame(() => { enAttente = false; encrer(); });
+            }
+
+            function armerLEncre() {
+                if (REDUIT) return;       // lettre déjà écrite, voir le CSS
+                decouperEnMots();
+                mesurerLesMots();
+                encrer();
+                // Les polices arrivent après le HTML : mesurer avant elles,
+                // c'est mesurer une page qui n'est pas celle qu'on lira.
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(() => { mesurerLesMots(); encrer(); });
+                }
             }
 
             function ouvrir(appelant, tout_de_suite) {
@@ -5652,9 +5697,8 @@
                 // univers, une seule classe pour les deux.
                 document.documentElement.classList.add('u-locked');
                 defile.scrollTop = 0;
-                armerLesParagraphes();
-                if (tout_de_suite) panneau.classList.add('est-ouvert');
-                else requestAnimationFrame(() => panneau.classList.add('est-ouvert'));
+                armerLEncre();
+                requestAnimationFrame(() => panneau.classList.add('est-ouvert'));
                 defile.focus({ preventScroll: true });
             }
 
@@ -5667,7 +5711,6 @@
                 window.dropOverlayState?.('recit');
                 panneau.classList.remove('est-ouvert');
                 document.documentElement.classList.remove('u-locked');
-                if (observateur) { observateur.disconnect(); observateur = null; }
                 // On attend la fin du fondu avant de retirer le panneau du
                 // rendu : le cacher tout de suite ferait disparaître la
                 // feuille d'un coup, sans qu'elle ait le temps de se replier.
@@ -5679,8 +5722,22 @@
 
             document.addEventListener('click', (e) => {
                 const appel = e.target.closest('[data-recit-ouvrir]');
-                if (appel) { ouvrirEnVolant(appel); return; }
+                if (appel) { ouvrir(appel); return; }
                 if (e.target.closest('[data-recit-fermer]')) fermer();
+            });
+
+            //  C'est ici que tout se joue : le défilement ne DÉCLENCHE rien,
+            //  il donne l'état. Une image par déplacement, pas davantage.
+            defile.addEventListener('scroll', auDefilement, { passive: true });
+
+            //  Changer de largeur replie le texte autrement : les positions
+            //  mesurées ne valent plus rien. On remesure, et l'encre reprend
+            //  d'après la nouvelle page.
+            let minuteurMesure = 0;
+            window.addEventListener('resize', () => {
+                if (panneau.hidden || REDUIT) return;
+                clearTimeout(minuteurMesure);
+                minuteurMesure = setTimeout(() => { mesurerLesMots(); encrer(); }, 150);
             });
 
             document.addEventListener('keydown', (e) => {
@@ -6397,6 +6454,23 @@
          s'inscrit à son tour quand il entre dans le champ (voir
          .recit-para) ; sans script, ils sont tous là d'emblée. -->
     <div id="recit" class="recit" hidden>
+        <!-- LE BORD DÉCHIRÉ. Un bruit fractal très étiré horizontalement
+             sert de carte de déplacement : chaque point du bord est poussé
+             de quelques pixels au hasard, et la ligne droite devient une
+             lisière. Le filtre ne s'applique QU'AU CALQUE DE PAPIER, jamais
+             au texte — déplacer les mots les rendrait illisibles, et c'est
+             de toute façon le fond qu'on veut froisser. L'intérieur du
+             calque étant uni, le déplacement n'y voit rien : il ne se
+             remarque qu'aux bords, ce qui est exactement le but. -->
+        <svg class="recit-filtres" aria-hidden="true" focusable="false">
+            <filter id="bord-papier" x="-8%" y="-5%" width="116%" height="110%"
+                color-interpolation-filters="sRGB">
+                <feTurbulence type="fractalNoise" baseFrequency="0.006 0.018" numOctaves="4" seed="11"
+                    result="bruit" />
+                <feDisplacementMap in="SourceGraphic" in2="bruit" scale="17" xChannelSelector="R"
+                    yChannelSelector="G" />
+            </filter>
+        </svg>
         <div class="recit-fond" data-recit-fermer aria-hidden="true"></div>
         <div class="recit-feuille" role="dialog" aria-modal="true" aria-labelledby="recit-titre">
             <button type="button" class="recit-fermer" data-recit-fermer aria-label="Fermer le récit">
@@ -6405,6 +6479,11 @@
                 </svg>
             </button>
             <div class="recit-defile" tabindex="-1">
+                <!-- Le titre est ÔTÉ DE LA VUE, pas du document. Une lettre
+                     n'a pas de manchette : on entre dans le texte, à
+                     l'alinéa, comme quelqu'un qui écrit. Mais un panneau de
+                     dialogue doit porter un nom, sans quoi un lecteur
+                     d'écran annonce « dialogue » et s'arrête là. -->
                 <h2 class="recit-titre" id="recit-titre">Mon parcours</h2>
                 <p class="recit-para">Ce que j'aime, c'est ce que chaque masque m'oblige à aller chercher. J'ai vu
                     Cyrano au cinéma quand j'avais onze ans, et je n'ai jamais quitté le plateau depuis.</p>
