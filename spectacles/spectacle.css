@@ -358,10 +358,8 @@ footer a:hover { color: var(--accent-ink); }
    soutien, bascule nette). Aux rangs serrés, la carte redevient une
    image : le fil et le rôle s'effacent, le titre se fait discret. */
 main { touch-action: pan-y; }
-/* Le retour élastique du mur après un pincement sans cran : il revient
-   s'asseoir avec un soupçon de rebond. Pendant le geste lui-même, aucune
-   transition — la main commande en direct. */
-main.retour-elastique { transition: transform .26s cubic-bezier(.2, .7, .3, 1.15); }
+/* Pendant le vol du pincement, chaque carte est pilotée en transform
+   inline — l'entrée en scène reprend la main dès l'atterrissage. */
 html[data-zoom] .repertoire { grid-template-columns: repeat(var(--colonnes, 2), 1fr); }
 html[data-zoom="1"] { --colonnes: 1; }
 html[data-zoom="2"] { --colonnes: 2; }

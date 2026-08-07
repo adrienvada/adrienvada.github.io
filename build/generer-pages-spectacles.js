@@ -790,29 +790,42 @@ ${JSON.stringify(liste, null, 2)}
             addEventListener('resize', replanifieScene);
             replanifieScene();
 
-            // La galerie au pincement, À LA MAIN : pendant le geste, le
-            // mur suit les doigts en continu — une échelle élastique,
-            // centrée entre eux, un seul transform composité. Au relâcher,
-            // deux issues : le cran est franchi, et le morphing part DEPUIS
-            // l'état pincé (la bascule de colonnes nettoie l'échelle dans
-            // la même View Transition — aucune couture) ; ou il ne l'est
-            // pas, et le mur revient s'asseoir d'un petit rebond. Le geste
-            // remplace le zoom de page sur le mur (touch-action).
+            // La galerie au pincement, façon Google Photos : pas de page
+            // qui zoome — CHAQUE VIGNETTE PARCOURT SON CHEMIN vers sa
+            // place dans l'autre rang, au rythme des doigts. Au début du
+            // vol, on mesure les positions d'arrivée (un aller-retour de
+            // grille invisible) ; pendant le geste, chaque carte est
+            // interpolée — translation et échelle — vers son point de
+            // chute ; au relâcher, la bascule part en View Transition qui
+            // résorbe le dernier millimètre, ou tout revient en place.
             var mur = document.querySelector('main');
             var NIVEAUX = function () { return innerWidth < 640 ? [2, 3, 4] : [2, 3, 4, 5]; };
             var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
             var zoomCourant = function () {
                 return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
             };
-            var changeZoom = function (sens, avant) {
+            var niveauVoisin = function (sens) {
                 var n = NIVEAUX();
                 var i = n.indexOf(zoomCourant());
                 if (i === -1) i = n.indexOf(zoomRepos());
-                var vers = n[Math.max(0, Math.min(n.length - 1, i + sens))];
-                if (vers === zoomCourant()) return false;
+                var v = n[i + sens];
+                return v === undefined ? 0 : v;
+            };
+            var mesure = function () {
+                var m = {};
+                cartes.forEach(function (c) { m[c.dataset.slug] = c.getBoundingClientRect(); });
+                return m;
+            };
+            var poseNiveau = function (v) {
+                if (v) document.documentElement.dataset.zoom = v;
+                else delete document.documentElement.dataset.zoom;
+            };
+            var appliqueNiveau = function (vers) {
                 var applique = function () {
-                    if (avant) avant();
-                    document.documentElement.dataset.zoom = vers;
+                    poseNiveau(vers);
+                    cartes.forEach(function (c) {
+                        c.style.transform = ''; c.style.transformOrigin = ''; c.style.transition = '';
+                    });
                     replanifieScene();
                 };
                 if (document.startViewTransition) {
@@ -822,52 +835,86 @@ ${JSON.stringify(liste, null, 2)}
                         cartes.forEach(function (c) { c.style.viewTransitionName = ''; });
                     });
                 } else { applique(); }
-                return true;
             };
-            var pincement = 0, rapport = 1;
+
+            var pincement = 0, rapport = 1, sensVol = 0, versVol = 0, departs = null, cibles = null, tVol = 0, demandeVol = 0;
             var ecart = function (t) {
                 return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
             };
-            var finPincement = function () {
-                if (!pincement) return;
-                pincement = 0;
-                var sens = rapport > 1.15 ? -1 : rapport < .87 ? 1 : 0;
-                var nettoie = function () { mur.style.transform = ''; };
-                if (!sens || !changeZoom(sens, nettoie)) {
-                    // Pas de cran : le retour élastique, puis on efface tout.
-                    mur.classList.add('retour-elastique');
-                    mur.style.transform = 'scale(1)';
-                    setTimeout(function () {
-                        mur.classList.remove('retour-elastique'); nettoie();
-                    }, 280);
+            // Prépare une étape de vol vers le rang voisin — mesure les
+            // départs et, par un aller-retour de grille invisible, les
+            // arrivées. Sans voisin dans ce sens : pas de vol.
+            var prepareVol = function (sens) {
+                var vers = niveauVoisin(sens);
+                if (!vers) { sensVol = 0; versVol = 0; departs = cibles = null; return; }
+                var courant = document.documentElement.dataset.zoom || '';
+                departs = mesure();
+                poseNiveau(vers);
+                cibles = mesure();
+                if (courant) document.documentElement.dataset.zoom = courant; else delete document.documentElement.dataset.zoom;
+                sensVol = sens; versVol = vers;
+            };
+            var vole = function () {
+                demandeVol = 0;
+                if (!departs || !cibles) return;
+                for (var k = 0; k < cartes.length; k++) {
+                    var c = cartes[k];
+                    var a = departs[c.dataset.slug], b = cibles[c.dataset.slug];
+                    if (!a || !b || !a.width) continue;
+                    var dx = (b.left - a.left) * tVol, dy = (b.top - a.top) * tVol;
+                    var s = 1 + (b.width / a.width - 1) * tVol;
+                    c.style.transformOrigin = '0 0';
+                    c.style.transform = 'translate(' + dx.toFixed(1) + 'px, ' + dy.toFixed(1) + 'px) scale(' + s.toFixed(4) + ')';
                 }
-                rapport = 1;
+            };
+            var replanifieVol = function () { if (!demandeVol) demandeVol = requestAnimationFrame(vole); };
+            var atterrit = function (commet) {
+                if (commet && versVol) {
+                    appliqueNiveau(versVol);
+                } else {
+                    // Pas de cran : chaque carte revole en arrière, en douceur.
+                    cartes.forEach(function (c) {
+                        c.style.transition = 'transform .22s ease';
+                        c.style.transform = '';
+                    });
+                    setTimeout(function () {
+                        cartes.forEach(function (c) {
+                            c.style.transition = ''; c.style.transformOrigin = '';
+                        });
+                    }, 240);
+                }
+                sensVol = 0; versVol = 0; departs = cibles = null; tVol = 0;
             };
             mur.addEventListener('touchstart', function (e) {
                 if (e.touches.length !== 2) return;
-                pincement = ecart(e.touches); rapport = 1;
-                mur.classList.remove('retour-elastique');
-                // L'échelle pivote entre les deux doigts, pas au centre du mur.
-                var r = mur.getBoundingClientRect();
-                if (r.width && r.height) {
-                    var x = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left) / r.width * 100;
-                    var y = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top) / r.height * 100;
-                    mur.style.transformOrigin = x.toFixed(1) + '% ' + y.toFixed(1) + '%';
-                }
+                pincement = ecart(e.touches); rapport = 1; tVol = 0;
             }, { passive: true });
             mur.addEventListener('touchmove', function (e) {
                 if (e.touches.length !== 2 || !pincement) return;
                 e.preventDefault();
                 rapport = ecart(e.touches) / pincement;
-                // Une résistance de ressort : la moitié du geste, bornée —
-                // le mur accompagne sans jamais partir en vrille.
-                var visuel = Math.max(.84, Math.min(1.26, 1 + (rapport - 1) * .55));
-                mur.style.transform = 'scale(' + visuel.toFixed(4) + ')';
+                var sens = rapport > 1 ? -1 : 1;
+                if (sens !== sensVol) prepareVol(sens);
+                if (!versVol) return;
+                // La course du geste : écarter jusqu'à ×1,5 ou resserrer
+                // jusqu'à ÷1,5 fait le chemin entier.
+                tVol = Math.max(0, Math.min(1, sens === -1 ? (rapport - 1) / .5 : (1 - rapport) / .34));
+                replanifieVol();
+                // Chemin parcouru en entier : le cran se pose, et le même
+                // geste peut enchaîner vers le rang suivant.
+                if (tVol >= 1) {
+                    atterrit(true);
+                    pincement = ecart(e.touches); rapport = 1;
+                }
             }, { passive: false });
             mur.addEventListener('touchend', function (e) {
-                if (e.touches.length < 2) finPincement();
+                if (e.touches.length >= 2 || !pincement) return;
+                pincement = 0;
+                atterrit(tVol >= .45);
             });
-            mur.addEventListener('touchcancel', finPincement);
+            mur.addEventListener('touchcancel', function () {
+                pincement = 0; atterrit(false);
+            });
 
             // La vitrine scintille : toutes les quelques secondes, une
             // carte posée — jamais celle qu'on regarde — reçoit un
@@ -1300,10 +1347,8 @@ footer a:hover { color: var(--accent-ink); }
    soutien, bascule nette). Aux rangs serrés, la carte redevient une
    image : le fil et le rôle s'effacent, le titre se fait discret. */
 main { touch-action: pan-y; }
-/* Le retour élastique du mur après un pincement sans cran : il revient
-   s'asseoir avec un soupçon de rebond. Pendant le geste lui-même, aucune
-   transition — la main commande en direct. */
-main.retour-elastique { transition: transform .26s cubic-bezier(.2, .7, .3, 1.15); }
+/* Pendant le vol du pincement, chaque carte est pilotée en transform
+   inline — l'entrée en scène reprend la main dès l'atterrissage. */
 html[data-zoom] .repertoire { grid-template-columns: repeat(var(--colonnes, 2), 1fr); }
 html[data-zoom="1"] { --colonnes: 1; }
 html[data-zoom="2"] { --colonnes: 2; }
