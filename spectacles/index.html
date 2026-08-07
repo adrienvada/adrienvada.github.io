@@ -432,24 +432,36 @@
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
             document.documentElement.classList.add('scrolly');
             var suivies = [];
-            var demandeScene = 0;
+            var enMouvement = false;
             var adoucit = function (t) { return 1 - Math.pow(1 - t, 3); };
-            var joue = function () {
-                demandeScene = 0;
+            // L'INERTIE : la progression ne saute pas à sa cible, elle la
+            // poursuit — un huitième du chemin par image. Une pichenette
+            // rapide laisse donc les cartes finir leur entrée en douceur,
+            // au niveau des yeux, au lieu de l'expédier sous le pouce.
+            // La boucle ne tourne que tant qu'il reste du chemin.
+            var boucle = function () {
                 var vh = innerHeight;
+                var encore = false;
                 for (var k = 0; k < suivies.length; k++) {
                     var carte = suivies[k];
                     var r = carte.getBoundingClientRect();
-                    var P = Math.max(0, Math.min(1, (vh - r.top) / (vh * .65)));
-                    carte.style.setProperty('--p', adoucit(P).toFixed(4));
-                    if (P >= .5 && !carte.classList.contains('en-scene')) {
+                    var cible = adoucit(Math.max(0, Math.min(1, (vh - r.top) / (vh * .75))));
+                    var p = parseFloat(carte.dataset.p || '0');
+                    p += (cible - p) * .13;
+                    if (Math.abs(cible - p) > .002) { encore = true; } else { p = cible; }
+                    carte.dataset.p = p;
+                    carte.style.setProperty('--p', p.toFixed(4));
+                    if (cible >= .55 && !carte.classList.contains('en-scene')) {
                         carte.style.setProperty('--retard',
                             Math.round(Math.max(0, r.left) / innerWidth * 140) + 'ms');
                         carte.classList.add('en-scene');
                     }
                 }
+                if (encore) { requestAnimationFrame(boucle); } else { enMouvement = false; }
             };
-            var replanifieScene = function () { if (!demandeScene) demandeScene = requestAnimationFrame(joue); };
+            var replanifieScene = function () {
+                if (!enMouvement) { enMouvement = true; requestAnimationFrame(boucle); }
+            };
             var ioScene = new IntersectionObserver(function (entrees) {
                 entrees.forEach(function (e) {
                     var i = suivies.indexOf(e.target);
@@ -458,7 +470,9 @@
                         suivies.splice(i, 1);
                         // Sortie par le haut : posée. Par le bas : à zéro,
                         // prête à rejouer son entrée.
-                        e.target.style.setProperty('--p', e.boundingClientRect.top < 0 ? '1' : '0');
+                        var repos = e.boundingClientRect.top < 0 ? '1' : '0';
+                        e.target.dataset.p = repos;
+                        e.target.style.setProperty('--p', repos);
                     }
                 });
                 replanifieScene();
@@ -467,6 +481,22 @@
             addEventListener('scroll', replanifieScene, { passive: true });
             addEventListener('resize', replanifieScene);
             replanifieScene();
+
+            // La vitrine scintille : toutes les quelques secondes, une
+            // carte posée — jamais celle qu'on regarde — reçoit un
+            // nouveau passage de dorure. Une seule à la fois, rien quand
+            // l'onglet dort.
+            setInterval(function () {
+                if (document.hidden) return;
+                var posees = cartes.filter(function (c) {
+                    return c.classList.contains('en-scene') &&
+                        !c.classList.contains('regarde') && !c.classList.contains('reluit');
+                });
+                if (!posees.length) return;
+                var elue = posees[Math.floor(Math.random() * posees.length)];
+                elue.classList.add('reluit');
+                setTimeout(function () { elue.classList.remove('reluit'); }, 1450);
+            }, 4600);
         }
 
         // La barre flotte dès que sa sentinelle sort de l'écran — le même

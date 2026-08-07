@@ -723,24 +723,36 @@ ${JSON.stringify(liste, null, 2)}
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
             document.documentElement.classList.add('scrolly');
             var suivies = [];
-            var demandeScene = 0;
+            var enMouvement = false;
             var adoucit = function (t) { return 1 - Math.pow(1 - t, 3); };
-            var joue = function () {
-                demandeScene = 0;
+            // L'INERTIE : la progression ne saute pas à sa cible, elle la
+            // poursuit — un huitième du chemin par image. Une pichenette
+            // rapide laisse donc les cartes finir leur entrée en douceur,
+            // au niveau des yeux, au lieu de l'expédier sous le pouce.
+            // La boucle ne tourne que tant qu'il reste du chemin.
+            var boucle = function () {
                 var vh = innerHeight;
+                var encore = false;
                 for (var k = 0; k < suivies.length; k++) {
                     var carte = suivies[k];
                     var r = carte.getBoundingClientRect();
-                    var P = Math.max(0, Math.min(1, (vh - r.top) / (vh * .65)));
-                    carte.style.setProperty('--p', adoucit(P).toFixed(4));
-                    if (P >= .5 && !carte.classList.contains('en-scene')) {
+                    var cible = adoucit(Math.max(0, Math.min(1, (vh - r.top) / (vh * .75))));
+                    var p = parseFloat(carte.dataset.p || '0');
+                    p += (cible - p) * .13;
+                    if (Math.abs(cible - p) > .002) { encore = true; } else { p = cible; }
+                    carte.dataset.p = p;
+                    carte.style.setProperty('--p', p.toFixed(4));
+                    if (cible >= .55 && !carte.classList.contains('en-scene')) {
                         carte.style.setProperty('--retard',
                             Math.round(Math.max(0, r.left) / innerWidth * 140) + 'ms');
                         carte.classList.add('en-scene');
                     }
                 }
+                if (encore) { requestAnimationFrame(boucle); } else { enMouvement = false; }
             };
-            var replanifieScene = function () { if (!demandeScene) demandeScene = requestAnimationFrame(joue); };
+            var replanifieScene = function () {
+                if (!enMouvement) { enMouvement = true; requestAnimationFrame(boucle); }
+            };
             var ioScene = new IntersectionObserver(function (entrees) {
                 entrees.forEach(function (e) {
                     var i = suivies.indexOf(e.target);
@@ -749,7 +761,9 @@ ${JSON.stringify(liste, null, 2)}
                         suivies.splice(i, 1);
                         // Sortie par le haut : posée. Par le bas : à zéro,
                         // prête à rejouer son entrée.
-                        e.target.style.setProperty('--p', e.boundingClientRect.top < 0 ? '1' : '0');
+                        var repos = e.boundingClientRect.top < 0 ? '1' : '0';
+                        e.target.dataset.p = repos;
+                        e.target.style.setProperty('--p', repos);
                     }
                 });
                 replanifieScene();
@@ -758,6 +772,22 @@ ${JSON.stringify(liste, null, 2)}
             addEventListener('scroll', replanifieScene, { passive: true });
             addEventListener('resize', replanifieScene);
             replanifieScene();
+
+            // La vitrine scintille : toutes les quelques secondes, une
+            // carte posée — jamais celle qu'on regarde — reçoit un
+            // nouveau passage de dorure. Une seule à la fois, rien quand
+            // l'onglet dort.
+            setInterval(function () {
+                if (document.hidden) return;
+                var posees = cartes.filter(function (c) {
+                    return c.classList.contains('en-scene') &&
+                        !c.classList.contains('regarde') && !c.classList.contains('reluit');
+                });
+                if (!posees.length) return;
+                var elue = posees[Math.floor(Math.random() * posees.length)];
+                elue.classList.add('reluit');
+                setTimeout(function () { elue.classList.remove('reluit'); }, 1450);
+            }, 4600);
         }
 
         // La barre flotte dès que sa sentinelle sort de l'écran — le même
@@ -1080,6 +1110,15 @@ h1 {
 
 @media (prefers-reduced-motion: no-preference) {
     html { scroll-behavior: smooth; }
+    /* Le fleuron respire — à peine : la manchette n'est pas un aplat mort. */
+    .ornement span { animation: fleuron-respire 5.5s ease-in-out infinite alternate; }
+}
+@keyframes fleuron-respire {
+    from { transform: translate(-50%, -50%) rotate(45deg); box-shadow: 0 0 0 3px var(--bg); }
+    to {
+        transform: translate(-50%, -50%) rotate(45deg) scale(1.16);
+        box-shadow: 0 0 0 3px var(--bg), 0 0 13px 2px color-mix(in srgb, var(--ambiance) 55%, transparent);
+    }
 }
 
 /* ── L'entrée en scène, LIÉE AU GESTE ──
@@ -1099,8 +1138,8 @@ h1 {
    dorure, puis le filet du titre qui s'embrase. */
 html.scrolly .carte { --p: 0; }
 .carte {
-    opacity: min(1, calc(var(--p, 1) / .3));
-    transform: translateY(calc((1 - var(--p, 1)) * 44px)) scale(calc(.94 + var(--p, 1) * .06));
+    opacity: min(1, calc(var(--p, 1) / .22));
+    transform: translateY(calc((1 - var(--p, 1)) * 48px)) scale(calc(.94 + var(--p, 1) * .06));
 }
 .media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
 .volet-couleur {
@@ -1110,11 +1149,15 @@ html.scrolly .carte { --p: 0; }
             color-mix(in srgb, var(--ac, var(--accent)) 88%, transparent) 13%,
             var(--ac, var(--accent)) 40%,
             color-mix(in srgb, var(--ac, var(--accent)) 76%, #14100b) 100%);
-    transform: translateY(calc(clamp(0, (var(--p, 1) - .05) / .55, 1) * -118%));
+    transform: translateY(calc(clamp(0, (var(--p, 1) - .22) / .6, 1) * -118%));
 }
 html.scrolly .carte:not(.en-scene) .nom::after { width: 0; opacity: 0; }
 html.scrolly .carte.en-scene .nom::after { animation: filet-embrase .5s ease calc(var(--retard, 0ms) + 420ms) backwards; }
 html.scrolly .carte.en-scene .cadre::after { animation: dorure .9s ease var(--retard, 0ms) both; }
+/* La vitrine scintille : de temps en temps, une carte posée reçoit un
+   nouveau passage de dorure (classe posée par le script, retirée après).
+   La devanture vit, sans jamais gigoter. */
+html.scrolly .carte.reluit .cadre::after { animation: dorure 1.3s ease both; }
 @keyframes filet-embrase { from { width: 0; opacity: 0; } }
 @keyframes dorure { from { transform: translateX(-135%); } to { transform: translateX(135%); } }
 
