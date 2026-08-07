@@ -422,7 +422,10 @@
         // Un observateur tient la liste, une image d'animation par geste,
         // et le mouvement réduit coupe tout avant le premier pixel.
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            var DERIVE = 2.6; // ± % de la hauteur du média
+            // ±6,5 % de la hauteur du média : la première valeur (±2,6 %)
+            // faisait sept pixels sur une carte de téléphone — une dérive
+            // qu'on devine n'est pas une dérive.
+            var DERIVE = 6.5;
             var aLEcran = [];
             var demande = 0;
             var poseDerive = function () {

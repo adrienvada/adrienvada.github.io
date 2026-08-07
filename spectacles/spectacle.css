@@ -270,7 +270,7 @@ h1 {
    La classe .parallaxe n'arrive qu'avec lui : le cadre est alors rempli
    plus haut que lui (inset négatif), et la dérive ne découvre jamais le
    bord. Sans script ou en mouvement réduit : image posée, rien d'autre. */
-html.parallaxe .media--photo { inset: -7% 0; will-change: transform; }
+html.parallaxe .media--photo { inset: -9% 0; will-change: transform; }
 
 /* ── Le morphing vers la fiche ──
    Les deux documents y consentent (celui-ci ici, les fiches dans leur

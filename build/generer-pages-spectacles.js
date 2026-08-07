@@ -706,7 +706,10 @@ ${JSON.stringify(liste, null, 2)}
         // Un observateur tient la liste, une image d'animation par geste,
         // et le mouvement réduit coupe tout avant le premier pixel.
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            var DERIVE = 2.6; // ± % de la hauteur du média
+            // ±6,5 % de la hauteur du média : la première valeur (±2,6 %)
+            // faisait sept pixels sur une carte de téléphone — une dérive
+            // qu'on devine n'est pas une dérive.
+            var DERIVE = 6.5;
             var aLEcran = [];
             var demande = 0;
             var poseDerive = function () {
@@ -1065,7 +1068,7 @@ h1 {
    La classe .parallaxe n'arrive qu'avec lui : le cadre est alors rempli
    plus haut que lui (inset négatif), et la dérive ne découvre jamais le
    bord. Sans script ou en mouvement réduit : image posée, rien d'autre. */
-html.parallaxe .media--photo { inset: -7% 0; will-change: transform; }
+html.parallaxe .media--photo { inset: -9% 0; will-change: transform; }
 
 /* ── Le morphing vers la fiche ──
    Les deux documents y consentent (celui-ci ici, les fiches dans leur
