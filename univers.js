@@ -1652,6 +1652,7 @@ const SHOW_UNIVERSES = {
 
         markCvRows();
         bindLongPress();
+        bindAmbianceSurvol();
         // Après markCvRows : le routage ouvre un univers, et une ligne doit
         // déjà porter sa marque pour que le panneau en reprenne la couleur.
         initRouting();
@@ -1858,12 +1859,65 @@ const SHOW_UNIVERSES = {
     const PRESS_DELAY = 400;
     const PRESS_SLOP = 10;
 
+    // ── LA SALLE AUX COULEURS DU SPECTACLE ───────────────────────────
+    //  Emprunté au répertoire (/spectacles/), où survoler une carte teinte
+    //  la page entière. Ici la mécanique est plus simple : le répertoire
+    //  doit écrire une règle CSS par spectacle, parce que le CSS ne sait
+    //  pas lire la couleur d'une carte survolée. Nous, nous avons déjà posé
+    //  `--cv-accent` sur chaque ligne (voir markCvRows) — il n'y a qu'à la
+    //  relayer vers la racine, d'où toute la page la voit.
+    //
+    //  L'ambiance est déclarée en <color> dans index.html (@property), donc
+    //  elle S'INTERPOLE : passer d'un carmin à un bleu est un glissement,
+    //  pas un claquement. C'est ce qui fait la lumière de salle plutôt
+    //  qu'un interrupteur.
+    //
+    //  Le geste est le même que celui du murmure — survol à la souris,
+    //  appui maintenu au doigt : la couleur monte en même temps que le
+    //  synopsis, et la page tout entière écoute le spectacle qu'on regarde.
+    const racine = document.documentElement;
+    let ambianceEnCours = null;
+
+    function allumerLaSalle(li) {
+        const c = li && li.style.getPropertyValue('--cv-accent').trim();
+        if (!c || c === ambianceEnCours) return;
+        ambianceEnCours = c;
+        racine.style.setProperty('--ambiance', c);
+    }
+
+    function eteindreLaSalle() {
+        if (ambianceEnCours === null) return;
+        ambianceEnCours = null;
+        // On retire la déclaration plutôt que de reposer l'or : la valeur
+        // par défaut vit dans la feuille de style, et c'est elle qui doit
+        // décider — y compris quand le thème change.
+        racine.style.removeProperty('--ambiance');
+    }
+
+    //  À LA SOURIS. On écoute la liste, pas chaque ligne : une seule paire
+    //  d'écouteurs pour tout le CV, et les lignes ajoutées plus tard sont
+    //  servies sans qu'on y pense.
+    function bindAmbianceSurvol() {
+        if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+        document.addEventListener('pointerover', (e) => {
+            const li = e.target.closest?.('.cv-item.cv-has-universe');
+            if (li) allumerLaSalle(li);
+        });
+        document.addEventListener('pointerout', (e) => {
+            const li = e.target.closest?.('.cv-item.cv-has-universe');
+            // On ne s'éteint que si le pointeur quitte vraiment la ligne,
+            // pas quand il passe d'un mot à l'autre à l'intérieur.
+            if (li && !li.contains(e.relatedTarget)) eteindreLaSalle();
+        });
+    }
+
     function bindLongPress() {
         let timer = 0, row = null, x0 = 0, y0 = 0, shown = false;
 
         const disarm = () => { clearTimeout(timer); timer = 0; };
         const hush = () => {
             if (row) row.classList.remove('is-whispering', 'is-pressed');
+            eteindreLaSalle();
             row = null;
         };
 
@@ -1878,6 +1932,7 @@ const SHOW_UNIVERSES = {
             // doigt, la guirlande reprenant la main. Ce marqueur-ci ne
             // dépend que de nous : il tient de touchstart à touchend.
             li.classList.add('is-pressed');
+            allumerLaSalle(li);
             const t = e.touches[0];
             row = li; x0 = t.clientX; y0 = t.clientY;
             // Le murmure, lui, demande un synopsis : sans lui la ligne

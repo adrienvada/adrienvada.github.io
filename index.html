@@ -270,6 +270,77 @@
             transition: background-color 0.45s ease;
         }
 
+        /* ══════════════════════════════════════════════════════════════
+           LA SALLE AUX COULEURS DU SPECTACLE
+           Emprunté au répertoire (/spectacles/) : regarder un spectacle
+           teinte la page entière de sa couleur, puis l'or revient. C'est
+           le même geste que le murmure — survol à la souris, appui
+           maintenu au doigt — et les deux montent ensemble : on lit le
+           synopsis pendant que la salle prend les couleurs de la pièce.
+
+           L'AMBIANCE EST UNE COULEUR ENREGISTRÉE. Déclarée en <color>,
+           elle S'INTERPOLE : passer d'un carmin à un bleu devient un
+           glissement d'une demi-seconde, pas un claquement. Sans
+           @property, une variable ne sait pas se transitionner — elle
+           saute. C'est toute la différence entre une lumière de salle et
+           un interrupteur.
+
+           C'est univers.js qui la pose sur <html>, en relayant le
+           `--cv-accent` de la ligne regardée. Le répertoire, lui, doit
+           écrire une règle par spectacle : le CSS ne sait pas lire la
+           couleur d'un élément survolé. Ici la couleur est déjà connue du
+           script, il n'y a qu'à la faire remonter.
+
+           RESTER DISCRET EST LA CONSIGNE. Un CV se lit ; ce n'est pas une
+           devanture. La teinte n'entre que dans la lueur de fond, dans le
+           filet de la barre collée et dans son halo — jamais sous le
+           texte. Au repos, rien n'est allumé.
+           ══════════════════════════════════════════════════════════════ */
+        @property --ambiance {
+            syntax: '<color>';
+            inherits: true;
+            initial-value: #bfa98a;
+        }
+
+        :root {
+            --ambiance: rgb(var(--c-gold));
+            transition: --ambiance 0.55s ease;
+        }
+
+        /* La lueur de salle : au-dessus du fond, sous tout le reste.
+           VINGT-DEUX POUR CENT, et non neuf comme au répertoire : là-bas le
+           fond est plat, la couleur s'y pose et se voit. Ici `--page-glow`
+           dessine déjà une radiale brune dans le même coin, et une teinte à
+           neuf pour cent s'y noyait — invisible à l'écran alors que la
+           valeur était bien posée. C'est le fond qu'il faut battre, pas une
+           consigne à recopier.
+
+           Elle reste haute et large : la couleur entre par le haut de
+           l'écran, là où elle ne passe sous aucun texte. */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            /* ZÉRO, ET NON −1. Le répertoire met sa lueur en négatif, mais
+               son `body` n'a qu'un fond plat ; ici `--page-glow` y peint une
+               radiale OPAQUE, et une lueur en négatif passe dessous —
+               invisible, essayé. À zéro elle se pose au-dessus du fond, et
+               le contenu reste devant sans qu'on touche à rien : le
+               conteneur du site porte déjà `z-index: 10`, et les voiles
+               plein écran montent à 90 et au-delà. */
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(62rem 34rem at 50% -8rem,
+                    color-mix(in srgb, var(--ambiance) 22%, transparent), transparent 72%);
+        }
+
+        /* La salle ne s'allume pas sur le papier. */
+        @media print {
+            body::before {
+                display: none !important;
+            }
+        }
+
         .glass-card {
             background: var(--glass-bg);
             backdrop-filter: blur(8px);
@@ -1745,8 +1816,13 @@
                 background: rgb(var(--c-surface) / 0.985);
                 backdrop-filter: blur(16px);
                 -webkit-backdrop-filter: blur(16px);
-                box-shadow: 0 8px 22px -10px rgb(0 0 0 / 0.55);
-                border-color: rgb(var(--c-gold) / 0.22);
+                /* LE FILET ET LE HALO SUIVENT LA SALLE : regarder Bérénice
+                   rosit aussi la barre. Le FOND, lui, ne bouge pas — du
+                   texte défile dessous, et une barre teintée le rendrait
+                   moins lisible pour un effet que personne n'a demandé. */
+                box-shadow: 0 8px 22px -10px rgb(0 0 0 / 0.55),
+                    0 0 20px -8px color-mix(in srgb, var(--ambiance) 42%, transparent);
+                border-color: color-mix(in srgb, var(--ambiance) 30%, transparent);
             }
 
             @media (prefers-reduced-motion: no-preference) {
