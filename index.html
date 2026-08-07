@@ -302,6 +302,18 @@
             initial-value: #bfa98a;
         }
 
+        /* La progression de l'encre dans un paragraphe du récit. Déclarée en
+           pourcentage, donc INTERPOLABLE : sans cette déclaration, le
+           navigateur ne verrait qu'un mot à remplacer d'un coup, et le
+           masque sauterait de « rien » à « tout » sans jamais traverser.
+           Même raison que --ambiance juste au-dessus. Elle n'hérite pas :
+           chaque paragraphe mène sa diffusion pour son compte. */
+        @property --encre {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 100%;
+        }
+
         :root {
             --ambiance: rgb(var(--c-gold));
             transition: --ambiance 0.55s ease;
@@ -1179,19 +1191,26 @@
 
         .recit-feuille {
             position: relative;
-            width: min(46rem, 100%);
-            max-height: 100%;
+            /* UNE PAGE, PAS UNE BOÎTE. La colonne est étroite — 34rem, une
+               quarantaine de signes par ligne — et la feuille occupe toute
+               la hauteur qu'on lui laisse. Le texte ne peut donc PLUS tenir
+               d'un écran, même sur un grand moniteur : le défilement cesse
+               d'être un moyen d'atteindre la fin, il devient la façon de
+               lire. */
+            width: min(34rem, 100%);
+            height: 100%;
             display: flex;
             flex-direction: column;
             border-radius: 0.5rem;
-            /* Le papier : deux lavis chauds décentrés plutôt qu'un aplat.
-               Un aplat de blanc cassé se lit comme une boîte de dialogue ;
-               ces deux-là donnent le bord un peu plus sombre qu'a une
-               feuille posée sur une table. */
+            /* Le papier : des lavis chauds décentrés plutôt qu'un aplat. Un
+               blanc cassé uniforme se lit comme une boîte de dialogue ;
+               ceux-là donnent le bord plus sombre qu'a une feuille posée sur
+               une table, et le fond va vers le parchemin plutôt que vers le
+               papier machine — c'est là que l'encre a l'air d'encre. */
             background:
-                radial-gradient(ellipse at 18% 8%, #fffdf7 0%, transparent 60%),
-                radial-gradient(ellipse at 85% 100%, #f3ead6 0%, transparent 55%),
-                #faf5ea;
+                radial-gradient(ellipse at 20% 6%, #fffcf2 0%, transparent 55%),
+                radial-gradient(ellipse at 88% 96%, #e9dcbf 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 50%, #f7efdc 0%, #f0e5cd 100%);
             box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.7),
                 0 2px 0 rgba(255, 255, 255, 0.5) inset;
             /* Elle entre comme une page qu'on pose : elle descend de très
@@ -1220,6 +1239,11 @@
             pointer-events: none;
         }
 
+        /* LE HAUT ET LE BAS DE LA PAGE S'ÉTEIGNENT.
+           Le texte n'arrive pas sur un bord net : il sort du blanc et y
+           retourne. C'est ce qui donne au défilement son air de plan-séquence
+           plutôt que de zone qui glisse — et ça règle en même temps le vieux
+           problème des lignes coupées en deux par le cadre. */
         .recit-defile {
             overflow-y: auto;
             /* Sans min-height:0, un enfant de colonne flex refuse de
@@ -1227,8 +1251,10 @@
                au lieu de faire défiler son texte. */
             min-height: 0;
             overscroll-behavior: contain;
-            padding: clamp(1.75rem, 6vw, 3.25rem) clamp(1.5rem, 6vw, 3.5rem) clamp(1.5rem, 5vw, 2.75rem);
+            padding: clamp(2.5rem, 9vw, 4rem) clamp(1.15rem, 5.5vw, 3.5rem) clamp(4rem, 14vh, 8rem);
             -webkit-overflow-scrolling: touch;
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 6%, #000 90%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0, #000 6%, #000 90%, transparent 100%);
         }
 
         .recit-defile:focus {
@@ -1237,51 +1263,115 @@
 
         .recit-titre {
             font-family: 'Cinzel', Georgia, serif;
-            font-size: clamp(1.15rem, 4vw, 1.6rem);
+            font-size: clamp(0.78rem, 3vw, 0.95rem);
             font-weight: 600;
-            letter-spacing: 0.04em;
-            color: #5a4a33;
-            margin-bottom: 1.5rem;
+            letter-spacing: 0.34em;
+            text-transform: uppercase;
+            text-align: center;
+            color: #8a7350;
+            margin-bottom: clamp(2.5rem, 9vh, 4.5rem);
         }
 
-        /* L'encre : Kalam, comme la citation, mais à taille de lecture.
-           En dessous de 1rem cette fonte cesse d'être lisible sur plusieurs
-           paragraphes — c'est la raison du saut d'échelle par rapport à
-           l'en-tête, où elle ne porte que deux lignes. */
+        /* Le fleuron du répertoire, repris ici : un losange sur un filet qui
+           s'éteint des deux côtés. C'est la même main qui signe les deux
+           pages. */
+        .recit-titre::after {
+            content: "✦";
+            display: block;
+            margin: 0.9rem auto 0;
+            font-size: 0.7em;
+            letter-spacing: 0;
+            color: #b09468;
+        }
+
+        /* ══ L'ENCRE ══
+           PLUS GRAND, ET DONC PLUS LENT. Le texte tenait en deux écrans : on
+           le prenait d'un bloc, et le défilement ne servait qu'à finir. À
+           cette échelle il en demande cinq ou six, une pensée à la fois — ce
+           n'est pas de la décoration, c'est le rythme de lecture lui-même
+           qu'on règle. Kalam supporte l'agrandissement : c'est une écriture
+           manuscrite, elle gagne à la taille où l'on voit le tracé.
+
+           Le premier paragraphe est plus grand que les autres : il arrive du
+           haut de la page, et c'est lui qui donne le ton avant que la voix ne
+           se pose. */
         .recit-para {
             font-family: 'Kalam', cursive;
-            font-size: clamp(1rem, 2.6vw, 1.12rem);
-            line-height: 1.75;
-            color: #2f2a22;
-            margin-bottom: 1.35rem;
+            font-size: clamp(1.22rem, 5vw, 1.55rem);
+            line-height: 1.9;
+            color: #241d13;
+            margin-bottom: clamp(2.2rem, 8vh, 4rem);
+            /* L'encre monte DANS le masque, pas dans l'opacité : voir plus
+               bas. À 100 %, le dégradé est entièrement opaque et ne change
+               rien à la page. */
+            -webkit-mask-image: linear-gradient(to bottom, #000 var(--encre), transparent calc(var(--encre) + 20%));
+            mask-image: linear-gradient(to bottom, #000 var(--encre), transparent calc(var(--encre) + 20%));
         }
 
-        /* Chaque paragraphe s'inscrit quand il entre dans le champ. Sans
-           script, aucune classe n'est jamais posée — d'où l'état de repos
-           écrit sur .a-paraitre et non sur .recit-para : le texte nu reste
-           visible, et c'est le script qui décide de le faire attendre. */
+        .recit-para:first-of-type {
+            font-size: clamp(1.42rem, 6vw, 1.9rem);
+            line-height: 1.75;
+            color: #1a140c;
+        }
+
+        /* LE TEXTE NE PARAÎT PAS, IL SE RÉPAND. Une opacité qui monte, c'est
+           une lampe qu'on allume ; ici on veut de l'encre qui gagne le papier.
+           Le masque descend donc le long du paragraphe — première ligne, puis
+           la suivante — et le flou qui se résorbe fait le reste : au départ
+           les mots sont une tache, à l'arrivée un tracé.
+
+           --encre part de -20 % : à cette valeur, la butée opaque est encore
+           AU-DESSUS du paragraphe et sa butée transparente à zéro, donc rien
+           ne se voit. À 100 %, tout est là. Sans @property, cette valeur
+           serait un mot que le navigateur remplace d'un coup, jamais une
+           grandeur qu'il interpole — et il n'y aurait pas d'animation du
+           tout, seulement un claquement. */
+        .recit-para,
+        .recit-signature {
+            --encre: 100%;
+        }
+
         .recit-para.a-paraitre,
         .recit-signature.a-paraitre {
-            opacity: 0;
-            transform: translateY(10px);
+            --encre: -20%;
+            opacity: 0.55;
+            filter: blur(6px);
+            transform: translateY(14px);
         }
 
         .recit-para.est-la,
         .recit-signature.est-la {
+            --encre: 100%;
             opacity: 1;
+            filter: blur(0);
             transform: none;
-            transition: opacity 0.75s var(--ease-out), transform 0.75s var(--ease-panel);
+            /* L'encre met plus longtemps que le reste : c'est elle qu'on
+               regarde, et une diffusion qui se dépêche n'est plus une
+               diffusion. */
+            transition: --encre 1.7s var(--ease-out),
+                filter 1.1s var(--ease-out),
+                opacity 1.1s var(--ease-out),
+                transform 1.3s var(--ease-panel);
+        }
+
+        /* La signature garde son inclinaison à l'arrivée : `transform: none`
+           de la règle ci-dessus la remettrait d'aplomb, et une signature
+           droite n'est plus une signature. */
+        .recit-signature.est-la {
+            transform: rotate(-1.5deg);
         }
 
         .recit-signature {
             font-family: 'Kalam', cursive;
             font-weight: 700;
-            font-size: clamp(1.05rem, 3vw, 1.3rem);
+            font-size: clamp(1.3rem, 5vw, 1.65rem);
             color: #7a5f3a;
             text-align: right;
             transform: rotate(-1.5deg);
-            margin-top: 2rem;
-            opacity: 0.85;
+            margin-top: clamp(2rem, 7vh, 3.5rem);
+            opacity: 0.9;
+            -webkit-mask-image: linear-gradient(to bottom, #000 var(--encre), transparent calc(var(--encre) + 20%));
+            mask-image: linear-gradient(to bottom, #000 var(--encre), transparent calc(var(--encre) + 20%));
         }
 
         .recit-signature.est-la {
@@ -1330,7 +1420,9 @@
 
             .recit-para.a-paraitre,
             .recit-signature.a-paraitre {
+                --encre: 100%;
                 opacity: 1;
+                filter: none;
                 transform: none;
             }
         }
@@ -1379,12 +1471,22 @@
                 display: none;
             }
 
+            /* Sur papier, ni masque ni flou : une encre à moitié diffusée
+               s'imprimerait telle quelle, et la moitié du texte manquerait. */
+            .recit-defile,
             .recit-para,
             .recit-titre,
             .recit-signature {
                 color: #000;
                 opacity: 1;
+                filter: none;
                 transform: none;
+                -webkit-mask-image: none;
+                mask-image: none;
+            }
+
+            .recit-titre::after {
+                display: none;
             }
         }
 
@@ -5497,7 +5599,7 @@
                         e.target.classList.add('est-la');
                         observateur.unobserve(e.target);
                     });
-                }, { root: defile, rootMargin: '0px 0px -40% 0px' });
+                }, { root: defile, rootMargin: '0px 0px -48% 0px' });
                 suite.forEach(el => observateur.observe(el));
             }
 
