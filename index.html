@@ -564,6 +564,13 @@
                 --c-surface: 255 255 255;
                 --c-text: 0 0 0;
                 --c-muted: 51 51 51;
+                /* Le papier est un fond clair : le badge y prend la même
+                   proportion d'encre que le thème clair, sans quoi il
+                   garderait celle du sombre — la seule qui n'y convienne
+                   pas. Une photocopie en noir et blanc, elle, ne retient
+                   que la clarté : c'est là qu'un accent trop pâle
+                   disparaîtrait tout à fait. */
+                --cv-badge-encre: 45%;
                 --c-s50: 255 255 255;
                 --c-s100: 255 255 255;
                 --c-s200: 229 231 235;
@@ -1184,6 +1191,62 @@
             transform: rotate(-45deg) translateX(3px);
             opacity: 1;
             transition-duration: var(--dur-press);
+        }
+
+        /*  5. LE BADGE PORTE LA COULEUR DE SON SPECTACLE.
+               « En création » était doré, « En tournée » gris : la couleur
+               disait l'état, pas l'œuvre. Or l'état se lit déjà dans les
+               mots — c'est même tout ce qu'ils disent. La teinte était donc
+               dépensée à répéter, alors qu'elle est le seul signe qui puisse
+               relier ce badge à sa ligne, à son lavis et à son univers.
+
+               L'ENCRE EST L'ACCENT RAMENÉ VERS LE TEXTE, jamais l'accent
+               brut : pris tel quel, le rouge d'À la barre tombe à 2,93 de
+               contraste sur fond sombre et l'ambre de Cléophène à 2,08 sur
+               fond clair, pour un texte de 9 px. Le mélange va vers
+               `--c-text`, donc TOUJOURS à l'opposé du fond : il éclaircit
+               sur le sombre, il assombrit sur le clair, sans qu'on ait à
+               savoir laquelle des deux choses il fait.
+
+               La proportion diffère par thème, et il le faut : le sombre
+               souffre des accents foncés, le clair des accents vifs, et ce
+               ne sont pas les mêmes spectacles. 65 % en sombre, 45 % en
+               clair ; chaque thème garde ainsi tout l'accent qu'il peut
+               porter. Seuil visé : 4,5.
+
+               LE CALAGE PORTE SUR LES ONZE ACCENTS, pas sur les cinq qui
+               ont un badge aujourd'hui. Ces badges se posent à la main, au
+               fil des créations et des tournées : le jour où As You Like It
+               en recevra un, son tilleul — 1,49 brut sur fond clair, le
+               pire de tous — devra passer sans qu'on ait à y revenir. Aux
+               proportions retenues, les onze passent avec de la marge.
+
+               45 % ET NON 48 % EN CLAIR : à 48, ce même tilleul tombait
+               pile sur 4,50 dans le répertoire — conforme, mais sans un
+               dixième devant lui. Trois points d'accent en moins portent
+               le pire cas à 5,05 ici et 4,89 là-bas : de quoi retoucher un
+               fond ou une palette sans repasser par ce calcul.
+
+               Relevé aux valeurs retenues, encre contre fond de badge —
+               sombre : 4,57 au pire (La peau des anges), 4,66 parmi les
+               cinq qui portent un badge (À la barre). Clair : 5,05 au pire
+               (As You Like It), 6,19 parmi les cinq (Cléophène).
+
+               Le fond et le filet, eux, prennent l'accent BRUT : à 12 % et
+               42 %, ils ne portent aucun texte et rendent au badge la
+               saturation que l'encre a dû céder. */
+        :root {
+            --cv-badge-encre: 65%;
+        }
+
+        :root[data-theme="light"] {
+            --cv-badge-encre: 45%;
+        }
+
+        .cv-has-universe .cv-badge {
+            color: color-mix(in srgb, var(--cv-accent) var(--cv-badge-encre), rgb(var(--c-text)));
+            background: color-mix(in srgb, var(--cv-accent) 12%, rgb(var(--c-surface)));
+            border-color: color-mix(in srgb, var(--cv-accent) 42%, transparent);
         }
 
         /*  4. LE LAVIS, SUR PETIT ÉCRAN SEULEMENT. Un filet de 2 px se

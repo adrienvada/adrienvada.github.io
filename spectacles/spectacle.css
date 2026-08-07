@@ -22,8 +22,11 @@
     --ombre: rgba(0, 0, 0, .8);
     --vignette: rgba(0, 0, 0, .28);
     --or-defaut: #bfa98a;
+    /* Part d'accent gardée dans l'encre des pastilles d'état — voir .etat. */
+    --etat-encre: 65%;
 }
 :root[data-theme="light"] {
+    --etat-encre: 45%;
     --bg: #faf9f5; --surface: #ffffff; --text: #1a1a1f; --muted: #575761;
     --accent: #967e5b; --accent-ink: #826c4a; --on-accent: #ffffff;
     --line: rgba(26, 26, 31, 0.14);
@@ -248,12 +251,30 @@ h1 {
     font-size: .6rem; line-height: 1.4; letter-spacing: .16em;
     text-transform: uppercase; color: var(--accent-ink);
 }
+/* LA PASTILLE PORTE LA COULEUR DE SON SPECTACLE, comme le badge du CV.
+   Elle prenait l'or du site : toutes les cartes disaient donc leur état
+   de la même voix, alors que chacune a déjà sa teinte — le fleuron, le
+   filet sous le nom, la lueur au survol la portent. La pastille était le
+   dernier élément à ne pas suivre.
+
+   L'encre est l'accent ramené vers --text, jamais l'accent brut : sur
+   onze spectacles, les plus foncés tombent sous 2 de contraste en thème
+   sombre, les plus vifs en font autant en clair, et ce texte-ci fait
+   .55rem. Le mélange va toujours à l'opposé du fond. La proportion suit
+   le thème pour la même raison que sur le CV — voir --cv-badge-encre
+   dans index.html, où le calcul est détaillé.
+
+   Mesuré ici sur les onze cartes, encre contre fond de pastille composé :
+   5,06 au pire en sombre, 4,89 en clair. Le cas serré est le tilleul
+   d'As You Like It sur fond clair — c'est lui qui a fait descendre le
+   clair à 45 %, où 48 % le laissaient pile sur le seuil de 4,5. */
 .etat {
     font: 600 .55rem/1 'Inter', system-ui, sans-serif; letter-spacing: .12em;
-    text-transform: uppercase; white-space: nowrap; color: var(--accent-ink);
-    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    text-transform: uppercase; white-space: nowrap;
+    color: color-mix(in srgb, var(--ac, var(--accent)) var(--etat-encre, 65%), var(--text));
+    border: 1px solid color-mix(in srgb, var(--ac, var(--accent)) 45%, transparent);
     border-radius: 999px; padding: .22rem .5rem;
-    background: color-mix(in srgb, var(--accent) 9%, transparent);
+    background: color-mix(in srgb, var(--ac, var(--accent)) 9%, transparent);
 }
 .nom {
     position: relative; display: block; margin-top: .3rem; padding-bottom: .5rem;
