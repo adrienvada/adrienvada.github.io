@@ -1882,9 +1882,17 @@ const SHOW_UNIVERSES = {
             lignes.forEach(li => li.style.removeProperty('min-height'));
             let max = 0;
             lignes.forEach(li => {
+                // UNE LIGNE DÉPLIÉE NE COMPTE PAS. Son murmure lui donne
+                // trois lignes de synopsis de plus, et depuis qu'il reste
+                // épinglé il peut être ouvert au moment où l'on mesure —
+                // un simple pivotement de téléphone suffirait alors à
+                // imposer sa hauteur à TOUTE la liste, et à l'y laisser
+                // une fois le murmure refermé.
+                if (li.classList.contains('is-whispering')) return;
                 const h = li.getBoundingClientRect().height;
                 if (h > max) max = h;
             });
+            if (!max) return;
             // Un demi-pixel de marge : les hauteurs mesurées sont
             // fractionnaires, et arrondir vers le bas rognerait la ligne
             // la plus haute — celle-là même qui a donné la mesure.
@@ -1969,14 +1977,29 @@ const SHOW_UNIVERSES = {
         });
     }
 
+    //  LE MURMURE S'ÉPINGLE UNE FOIS PARU. Tant qu'il fallait garder le
+    //  doigt posé, le texte était illisible : le pouce couvre une ligne sur
+    //  trois, et le moindre glissement — celui qu'on fait sans y penser
+    //  pour dégager la vue — l'effaçait. On lisait donc à travers sa propre
+    //  main, ou pas du tout.
+    //
+    //  Passé le seuil, la ligne reste donc allumée après le relâchement :
+    //  murmure, lavis et couleur de salle. Ce n'est pas un état perdu — il
+    //  se referme au prochain contact, où qu'il soit, car touchstart
+    //  commence par tout éteindre. Toucher ailleurs referme, toucher la
+    //  même ligne la rouvre ou l'ouvre pour de bon.
+    //
+    //  L'épingle ne vaut qu'AU DOIGT : à la souris, le survol garde le
+    //  dernier mot, et il n'y a aucune raison qu'une ligne reste éclairée
+    //  quand le pointeur est parti ailleurs.
     function bindLongPress() {
-        let timer = 0, row = null, x0 = 0, y0 = 0, shown = false;
+        let timer = 0, row = null, x0 = 0, y0 = 0, shown = false, epingle = false;
 
         const disarm = () => { clearTimeout(timer); timer = 0; };
         const hush = () => {
             if (row) row.classList.remove('is-whispering', 'is-pressed');
             eteindreLaSalle();
-            row = null;
+            row = null; epingle = false;
         };
 
         document.addEventListener('touchstart', (e) => {
@@ -1997,13 +2020,16 @@ const SHOW_UNIVERSES = {
             // s'allume au doigt mais n'a rien à dire (voir Cassandres).
             if (!li.querySelector('.cv-whisper')) return;
             timer = setTimeout(() => {
-                timer = 0; shown = true;
+                timer = 0; shown = true; epingle = true;
                 li.classList.add('is-whispering');
             }, PRESS_DELAY);
         }, { passive: true });
 
         document.addEventListener('touchmove', (e) => {
-            if (!row) return;
+            // Avant le seuil, bouger veut dire « je voulais défiler » et
+            // le murmure est abandonné. Après, il est épinglé : le doigt
+            // peut aller où il veut, y compris se retirer de l'écran.
+            if (!row || epingle) return;
             const t = e.touches[0];
             if (Math.abs(t.clientX - x0) > PRESS_SLOP ||
                 Math.abs(t.clientY - y0) > PRESS_SLOP) {
@@ -2011,9 +2037,17 @@ const SHOW_UNIVERSES = {
             }
         }, { passive: true });
 
-        document.addEventListener('touchend', () => { disarm(); hush(); }, { passive: true });
+        document.addEventListener('touchend', () => {
+            disarm();
+            if (!epingle) hush();
+        }, { passive: true });
+        // Le système reprend la main sur le geste — un défilement qu'il
+        // décide de mener lui-même. Sans épingle, c'est un abandon ; avec,
+        // c'est simplement le doigt qui s'en va, et rien ne doit s'éteindre.
         document.addEventListener('touchcancel', () => {
-            disarm(); hush(); shown = false;
+            disarm();
+            if (epingle) return;
+            hush(); shown = false;
         }, { passive: true });
 
         // Le clic qui suit un appui maintenu n'en est pas un.
