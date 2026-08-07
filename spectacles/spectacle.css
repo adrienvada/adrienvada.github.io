@@ -368,9 +368,13 @@ html[data-zoom="6"] { --colonnes: 6; }
 html[data-zoom="1"] .nom { font-size: 1.12rem; }
 @media (max-width: 640px) {
     html[data-zoom="3"] .repertoire { gap: .9rem .5rem; }
-    html[data-zoom="3"] .nom { font-size: .66rem; padding-bottom: .3rem; }
+    html[data-zoom="3"] .nom { font-size: .62rem; padding-bottom: .28rem; }
     html[data-zoom="3"] .fil, html[data-zoom="3"] .role { display: none; }
     html[data-zoom="3"] .txt { padding-top: .35rem; }
+    /* Au rang le plus serré, la carte n'est plus qu'une image : un mur
+       de galerie, le titre attend dans la fiche. */
+    html[data-zoom="4"] .repertoire { gap: .45rem .4rem; }
+    html[data-zoom="4"] .txt { display: none; }
 }
 
 /* ── Téléphone : un mur d'affiches, pas une liste ── */

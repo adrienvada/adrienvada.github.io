@@ -502,7 +502,7 @@
             // et chaque cran rebase la mesure : un long pincement traverse
             // plusieurs rangs.
             var mur = document.querySelector('main');
-            var NIVEAUX = function () { return innerWidth < 640 ? [1, 2, 3] : [2, 3, 4, 5]; };
+            var NIVEAUX = function () { return innerWidth < 640 ? [2, 3, 4] : [2, 3, 4, 5]; };
             var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
             var zoomCourant = function () {
                 return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();

@@ -793,7 +793,7 @@ ${JSON.stringify(liste, null, 2)}
             // et chaque cran rebase la mesure : un long pincement traverse
             // plusieurs rangs.
             var mur = document.querySelector('main');
-            var NIVEAUX = function () { return innerWidth < 640 ? [1, 2, 3] : [2, 3, 4, 5]; };
+            var NIVEAUX = function () { return innerWidth < 640 ? [2, 3, 4] : [2, 3, 4, 5]; };
             var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
             var zoomCourant = function () {
                 return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
@@ -1277,9 +1277,13 @@ html[data-zoom="6"] { --colonnes: 6; }
 html[data-zoom="1"] .nom { font-size: 1.12rem; }
 @media (max-width: 640px) {
     html[data-zoom="3"] .repertoire { gap: .9rem .5rem; }
-    html[data-zoom="3"] .nom { font-size: .66rem; padding-bottom: .3rem; }
+    html[data-zoom="3"] .nom { font-size: .62rem; padding-bottom: .28rem; }
     html[data-zoom="3"] .fil, html[data-zoom="3"] .role { display: none; }
     html[data-zoom="3"] .txt { padding-top: .35rem; }
+    /* Au rang le plus serré, la carte n'est plus qu'une image : un mur
+       de galerie, le titre attend dans la fiche. */
+    html[data-zoom="4"] .repertoire { gap: .45rem .4rem; }
+    html[data-zoom="4"] .txt { display: none; }
 }
 
 /* ── Téléphone : un mur d'affiches, pas une liste ── */
