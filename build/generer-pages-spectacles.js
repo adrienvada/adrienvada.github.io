@@ -744,6 +744,11 @@ ${JSON.stringify(liste, null, 2)}
                     var carte = suivies[k];
                     var r = carte.getBoundingClientRect();
                     var cible = Math.max(0, Math.min(1, (vh - r.top) / (vh * .75)));
+                    // La vague gauche-droite : chaque colonne prend un
+                    // retard de phase sur sa voisine — la gauche entame sa
+                    // montée, la droite la suit un cran de défilement plus
+                    // bas. La vague vaut à tous les rangs du pincement.
+                    cible = Math.max(0, Math.min(1, cible - (Math.max(0, r.left) / innerWidth) * .2));
                     var p = parseFloat(carte.dataset.p || '0');
                     p += (cible - p) * .13;
                     if (Math.abs(cible - p) > .002) { encore = true; } else { p = cible; }
@@ -755,7 +760,7 @@ ${JSON.stringify(liste, null, 2)}
                     carte.style.setProperty('--p', adoucit(p).toFixed(4));
                     if (cible >= .45 && !carte.classList.contains('en-scene')) {
                         carte.style.setProperty('--retard',
-                            Math.round(Math.max(0, r.left) / innerWidth * 140) + 'ms');
+                            Math.round(Math.max(0, r.left) / innerWidth * 280) + 'ms');
                         carte.classList.add('en-scene');
                     }
                 }
