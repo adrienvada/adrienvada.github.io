@@ -1131,6 +1131,11 @@
                valeurs doivent rester la même : on touche exactement ce
                qu'on voyait passer. */
             --cv-crete: .16;
+            /* LA LARGEUR DU LAVIS, ses deux valeurs côte à côte pour que
+               le rapport se voie : au repos un tiers de ce qu'il fait une
+               fois désigné. Voir la règle ::after plus bas. */
+            --cv-lueur: 15%;
+            --cv-lueur-designee: 46%;
         }
 
         /* LE FILET EST À DROITE, comme le lavis. Les deux signaux de la
@@ -1193,19 +1198,34 @@
                tombe sur la marge, le badge et le chevron : rien à lire, et
                la lueur désigne l'endroit même où l'on va appuyer. La
                guirlande gagne des deux côtés — les titres restent nets, et
-               le geste est montré. */
+               le geste est montré.
+
+               IL EST TROIS FOIS PLUS ÉTROIT AU REPOS. Sur près de la
+               moitié de la ligne, la vague qui passe cessait d'être une
+               lueur pour devenir un aplat qui balayait le CV ; le regard
+               la suivait au lieu de lire. Réduite au dernier septième,
+               elle redevient ce qu'elle doit être — une braise au bord
+               droit, qu'on remarque sans qu'elle réclame.
+
+               SOUS LE DOIGT OU LA SOURIS, ELLE REPREND SA PLEINE LARGEUR.
+               C'est là toute la différence entre ce qui respire et ce
+               qu'on désigne : la ligne visée s'ouvre, les autres se
+               contentent de scintiller. La largeur devient ainsi le
+               second signal de la désignation, avec l'opacité — et
+               l'étalement se voit même quand la couleur est déjà là. */
         .cv-has-universe::after {
             content: '';
             position: absolute;
             right: 0;
             top: 0;
             bottom: 0;
-            width: 46%;
+            width: var(--cv-lueur);
             border-radius: inherit;
             background: linear-gradient(270deg, var(--cv-accent, transparent), transparent);
             opacity: 0;
             pointer-events: none;
-            transition: opacity var(--dur-base) var(--ease-out);
+            transition: opacity var(--dur-base) var(--ease-out),
+                width var(--dur-base) var(--ease-out);
         }
 
         /* Le contenu passe au-dessus du lavis, sinon le titre serait teinté. */
@@ -1282,6 +1302,7 @@
         .cv-has-universe:has(.cv-row-toggle:active)::after {
             animation: none;
             opacity: var(--cv-crete);
+            width: var(--cv-lueur-designee);
             transition-duration: var(--dur-press);
         }
 
@@ -1292,6 +1313,7 @@
             .cv-has-universe:hover::after {
                 animation: none;
                 opacity: var(--cv-crete);
+                width: var(--cv-lueur-designee);
                 transition-duration: var(--dur-quick);
             }
         }
