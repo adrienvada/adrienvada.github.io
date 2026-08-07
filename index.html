@@ -1075,23 +1075,21 @@
         .recit-appel {
             display: block;
             width: 100%;
-            margin-top: 0.5rem;
-            padding: 0.35rem 0.55rem;
-            border-radius: 0.4rem;
             text-align: left;
             cursor: pointer;
             background: transparent;
-            transition: background-color var(--dur-base) var(--ease-out);
         }
 
+        /* Cette classe ne fait QUE couper. L'écriture — la fonte, l'or,
+           l'inclinaison — vient de .bio-handwritten, portée par le même
+           élément : une règle qui redéclarerait ici une taille ou une
+           couleur gagnerait sur elle, puisqu'elle est écrite plus bas, et
+           l'encre manuscrite retomberait en texte courant. */
         .recit-extrait {
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            font-size: 0.72rem;
-            line-height: 1.45;
-            color: rgb(var(--c-muted));
         }
 
         /* « Lire mon parcours » : le seul endroit qui dise qu'on peut
@@ -1115,9 +1113,20 @@
             transition: transform var(--dur-base) var(--ease-out);
         }
 
+        /* Au survol, c'est la FEUILLE du haut qui réagit, pas le bouton :
+           le cadre doré est déjà là, on ne va pas en poser un second
+           par-dessus. */
         @media (hover: hover) and (pointer: fine) {
-            .recit-appel:hover {
-                background: rgb(var(--c-gold) / 0.07);
+            .recit-appel .bio-handwritten-wrap {
+                transition: box-shadow var(--dur-base) var(--ease-out);
+            }
+
+            .recit-appel:hover .bio-handwritten-wrap {
+                box-shadow: 0 0 0 1px rgb(var(--c-gold) / 0.28);
+            }
+
+            .recit-appel:hover .recit-lire {
+                color: rgb(var(--c-gold-light));
             }
 
             .recit-appel:hover .ico {
@@ -2759,36 +2768,35 @@
                          d'animer la hauteur sans la connaître à l'avance (une
                          transition sur max-height obligerait à fixer une valeur
                          arbitraire, et saccaderait au repli). -->
+                    <!-- LA PREMIÈRE PHRASE DE LA LETTRE, ET RIEN D'AUTRE.
+                         Il y avait ici une citation encadrée, puis, dessous,
+                         l'amorce du récit : deux fois la même voix, à deux
+                         endroits, disant deux choses. Le haut de page est
+                         maintenant le DÉBUT DU TEXTE qu'on ouvre — mêmes
+                         mots, même écriture, qui se poursuit simplement sur
+                         le papier. Les guillemets sont tombés avec la
+                         citation : on ne se cite pas soi-même dans sa propre
+                         lettre.
+
+                         Deux lignes, puis des points de suspension posés par
+                         le CSS (voir .recit-extrait). Le texte entier reste
+                         DANS le document : lecteurs d'écran, impression et
+                         moteurs de recherche l'ont en entier, seul
+                         l'affichage s'arrête. -->
                     <div class="bio-collapse" id="header-bio">
                         <div class="bio-collapse-inner">
-                            <div class="bio-handwritten-wrap max-w-xl pb-2.5 inline-block text-left">
-                                <p class="bio-handwritten">
-                                    <span class="bio-quote" aria-hidden="true">&laquo;</span>Ce que j'aime, c'est ce
-                                    que chaque masque m'oblige à aller chercher.
-                                    <br /> Autant de plaisir à préparer qu'à jouer — reprendre, préciser, de la
-                                    prosodie jusqu'au corps.<span class="bio-quote" aria-hidden="true">&raquo;</span>
-                                </p>
-                            </div>
-
-                            <!-- LE RÉCIT, DEUX LIGNES PUIS UNE PORTE.
-                                 La citation donne la voix, le récit donne
-                                 l'histoire : ils se suivent. On n'en montre
-                                 que le début — deux lignes, puis des points
-                                 de suspension posés par le CSS (voir
-                                 .recit-extrait) — et le reste s'ouvre en
-                                 pleine page. Le texte entier reste DANS le
-                                 document : lecteurs d'écran, impression et
-                                 moteurs de recherche l'ont en entier, seul
-                                 l'affichage s'arrête. -->
                             <button type="button" class="recit-appel" data-recit-ouvrir
                                 aria-haspopup="dialog" aria-controls="recit">
-                                <span class="recit-extrait">Comédien depuis 20 ans, j'ai vu Cyrano au cinéma quand
-                                    j'avais 11 ans et j'ai toujours fait du théâtre depuis.</span>
+                                <span class="bio-handwritten-wrap max-w-xl block text-left">
+                                    <span class="bio-handwritten recit-extrait">Ce que j'aime, c'est ce que chaque
+                                        masque m'oblige à aller chercher. J'ai vu Cyrano au cinéma quand j'avais
+                                        onze ans, et je n'ai jamais quitté le plateau depuis.</span>
+                                </span>
                                 <span class="recit-lire">
                                     <svg class="ico text-[9px]" aria-hidden="true">
                                         <use href="#i-solid-chevron-down"></use>
                                     </svg>
-                                    Lire mon parcours
+                                    Lire la suite
                                 </span>
                             </button>
                         </div>
@@ -4505,6 +4513,8 @@
                     window.closeUniverseZoom?.();
                 } else if (layer === 'univers') {
                     window.closeShowUniverse?.();
+                } else if (layer === 'recit') {
+                    window.fermerLeRecit?.();
                 } else if (openModalEl) {
                     if (openModalEl.id === 'gallery-modal') closeGallery();
                     else if (openModalEl.id === 'video-modal') closeVideoModal();
@@ -5506,9 +5516,19 @@
             }
 
             function ouvrir(appelant) {
+                if (!panneau.hidden) return;
                 clearTimeout(minuteur);
                 rendreLeFocus = appelant || null;
                 panneau.hidden = false;
+                //  LE RETOUR DU NAVIGATEUR REFERME LA LETTRE, et ne quitte
+                //  pas la page. C'est le réflexe dominant sur téléphone, où
+                //  le geste de retour est la façon normale de sortir d'un
+                //  plein écran ; sans cette entrée, on se retrouvait éjecté
+                //  du site pour avoir voulu replier une page. On s'inscrit
+                //  dans la pile de couches déjà en place (voir
+                //  pushOverlayState) : une seule mécanique pour les univers,
+                //  les photos, le calendrier et la lettre.
+                window.pushOverlayState?.('recit');
                 // La page cesse de défiler derrière : même mécanisme que les
                 // univers, une seule classe pour les deux.
                 document.documentElement.classList.add('u-locked');
@@ -5520,6 +5540,11 @@
 
             function fermer() {
                 if (panneau.hidden) return;
+                //  Si la fermeture vient d'une fermeture « normale » — croix,
+                //  fond, Échap — on recule d'une entrée pour que l'historique
+                //  reste d'accord avec l'écran. Si elle vient DÉJÀ du retour,
+                //  dropOverlayState le sait et ne recule pas une seconde fois.
+                window.dropOverlayState?.('recit');
                 panneau.classList.remove('est-ouvert');
                 document.documentElement.classList.remove('u-locked');
                 if (observateur) { observateur.disconnect(); observateur = null; }
@@ -5541,6 +5566,10 @@
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && !panneau.hidden) { e.stopPropagation(); fermer(); }
             });
+
+            // Le gestionnaire de retour d'index.html a besoin de pouvoir
+            // refermer la lettre sans rien savoir de ce qu'il y a dedans.
+            window.fermerLeRecit = fermer;
         }
 
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', recit);
@@ -6257,16 +6286,34 @@
             </button>
             <div class="recit-defile" tabindex="-1">
                 <h2 class="recit-titre" id="recit-titre">Mon parcours</h2>
-                <p class="recit-para">Comédien depuis 20 ans, j'ai vu Cyrano au cinéma quand j'avais 11 ans et j'ai
-                    toujours fait du théâtre depuis.</p>
-                <p class="recit-para">Actuellement je joue notamment dans un spectacle sur les violences conjugales
-                    dans les tribunaux ou salles de réunion citoyenne. Nous menons également des ateliers en collège
-                    et lycée sur ces questions.</p>
-                <p class="recit-para">Je fais du piano depuis l'âge de 5 ans, je compose, pour la scène et l'image.
-                    Je parle russe couramment, mon père étant d'origine soviétique. J'ai une expérience
-                    professionnelle en tant que jeune officier d'armée de Terre et réserviste en gendarmerie. Cela
-                    m'a donné de bonnes bases en tir et maniement d'armes de guerre (moniteur de tir) et sports de
-                    combat.</p>
+                <p class="recit-para">Ce que j'aime, c'est ce que chaque masque m'oblige à aller chercher. J'ai vu
+                    Cyrano au cinéma quand j'avais onze ans, et je n'ai jamais quitté le plateau depuis.</p>
+                <p class="recit-para">L'alexandrin de Racine, la forêt de Shakespeare, une tragédie de Corneille,
+                    une comédie de Molière : j'aime les textes qui demandent qu'on leur donne un corps et une voix
+                    avant de leur donner un sens. Autant de plaisir à préparer qu'à jouer — reprendre, préciser, de
+                    la prosodie jusqu'au corps. Depuis quelques années, la caméra a pris sa place à côté du plateau,
+                    et le micro aussi.</p>
+                <p class="recit-para">En ce moment, je joue notamment dans un spectacle sur les violences
+                    conjugales, monté à partir d'extraits de procès réels. On le donne dans des tribunaux, des
+                    hôtels de ville, des salles de réunion citoyenne — rarement dans un théâtre, souvent devant des
+                    gens qui ne seraient jamais venus nous voir. Le débat qui suit dure presque aussi longtemps que
+                    la représentation.</p>
+                <p class="recit-para">Et il y a les ateliers, en collège et en lycée. C'est peut-être ce à quoi je
+                    tiens le plus. Faire dire un alexandrin à voix haute à quelqu'un qui n'en avait jamais lu,
+                    entendre une classe se disputer sur le consentement bien après la fin de la scène : la
+                    transmission n'est pas l'annexe de ce métier, c'en est le cœur. J'y apprends au moins autant que
+                    j'y donne.</p>
+                <p class="recit-para">Le piano me suit depuis l'âge de cinq ans — Conservatoire, improvisation,
+                    composition, pour la scène et pour l'image. Je chante en baryton-basse, je me bats à l'épée, et
+                    je parle russe : mon père est d'origine soviétique.</p>
+                <p class="recit-para">J'ai aussi été jeune officier dans l'armée de Terre, en Guyane, puis
+                    réserviste en gendarmerie, en Normandie. On en retient d'abord ce qui se voit — le tir, le
+                    maniement des armes ; je suis moniteur de tir. Mais ce que j'en garde vraiment, ce sont les
+                    gens : des mécaniciens, des médecins, des cuisiniers, des gendarmes de campagne, des Français et
+                    des Françaises singuliers que le théâtre seul ne m'aurait jamais fait rencontrer. Je m'en sers
+                    chaque fois qu'il s'agit de fabriquer quelqu'un.</p>
+                <p class="recit-para">C'est peut-être cela, au fond : aucun endroit où je sois passé qui ne
+                    finisse, un jour, par servir sur un plateau.</p>
                 <p class="recit-signature" aria-hidden="true">Adrien Vada</p>
             </div>
         </div>
