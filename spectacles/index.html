@@ -360,7 +360,14 @@
             var i = new Image();
             i.className = 'img2'; i.alt = ''; i.decoding = 'async';
             if (c.dataset.pos2) i.style.setProperty('--pos', c.dataset.pos2);
+            // Le fondu n'a de sens que sur une image ENTIÈRE : la classe
+            // n'arrive qu'au décodage — jamais de pixels qui surgissent.
             i.src = c.dataset.src2;
+            var prete = function () { i.classList.add('prete'); };
+            if (i.decode) { i.decode().then(prete).catch(prete); } else { i.onload = prete; }
+            // Ceinture : si le décodage ne répond pas, le fondu part
+            // quand même — une image tardive vaut mieux qu'aucune.
+            setTimeout(prete, 1200);
             var m = c.querySelector('.media'); if (m) m.appendChild(i);
         }
 
@@ -481,6 +488,57 @@
             addEventListener('scroll', replanifieScene, { passive: true });
             addEventListener('resize', replanifieScene);
             replanifieScene();
+
+            // La galerie au pincement : écarter les doigts agrandit les
+            // kakemonos (moins de colonnes), les resserrer les aligne en
+            // galerie. Chaque cran part en View Transition même-document :
+            // les cartes GLISSENT jusqu'à leur nouveau rang, une à une.
+            // Le geste remplace le zoom de page sur le mur (touch-action),
+            // et chaque cran rebase la mesure : un long pincement traverse
+            // plusieurs rangs.
+            var mur = document.querySelector('main');
+            var NIVEAUX = function () { return innerWidth < 640 ? [1, 2, 3] : [2, 3, 4, 5]; };
+            var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
+            var zoomCourant = function () {
+                return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
+            };
+            var changeZoom = function (sens) {
+                var n = NIVEAUX();
+                var i = n.indexOf(zoomCourant());
+                if (i === -1) i = n.indexOf(zoomRepos());
+                var vers = n[Math.max(0, Math.min(n.length - 1, i + sens))];
+                if (vers === zoomCourant()) return false;
+                var applique = function () {
+                    document.documentElement.dataset.zoom = vers;
+                    replanifieScene();
+                };
+                if (document.startViewTransition) {
+                    cartes.forEach(function (c) { c.style.viewTransitionName = 'c-' + c.dataset.slug; });
+                    var t = document.startViewTransition(applique);
+                    t.finished.then(function () { }, function () { }).then(function () {
+                        cartes.forEach(function (c) { c.style.viewTransitionName = ''; });
+                    });
+                } else { applique(); }
+                return true;
+            };
+            var pincement = 0;
+            var ecart = function (t) {
+                return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+            };
+            mur.addEventListener('touchstart', function (e) {
+                if (e.touches.length === 2) pincement = ecart(e.touches);
+            }, { passive: true });
+            mur.addEventListener('touchmove', function (e) {
+                if (e.touches.length !== 2 || !pincement) return;
+                e.preventDefault();
+                var d = ecart(e.touches);
+                var r = d / pincement;
+                if (r > 1.22) { if (changeZoom(-1)) pincement = d; }
+                else if (r < .82) { if (changeZoom(1)) pincement = d; }
+            }, { passive: false });
+            mur.addEventListener('touchend', function (e) {
+                if (e.touches.length < 2) pincement = 0;
+            });
 
             // La vitrine scintille : toutes les quelques secondes, une
             // carte posée — jamais celle qu'on regarde — reçoit un

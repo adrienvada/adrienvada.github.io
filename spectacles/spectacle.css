@@ -74,10 +74,13 @@ a { color: var(--accent-ink); }
     border: 1px solid transparent; border-radius: 999px;
 }
 .barre.est-collee {
-    background: color-mix(in srgb, var(--surface) 98.5%, transparent);
+    /* Le fond, le filet et le halo suivent l'ambiance : survoler
+       Bérénice rosit aussi la barre — la salle entière est au spectacle. */
+    background: color-mix(in srgb, var(--surface) 94%, var(--ambiance));
     -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-    border-color: color-mix(in srgb, var(--accent) 22%, transparent);
-    box-shadow: 0 8px 22px -10px rgba(0, 0, 0, .55);
+    border-color: color-mix(in srgb, var(--ambiance) 30%, transparent);
+    box-shadow: 0 8px 22px -10px rgba(0, 0, 0, .55),
+        0 0 20px -6px color-mix(in srgb, var(--ambiance) 38%, transparent);
     padding-left: .9rem; padding-right: .55rem;
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -184,8 +187,8 @@ h1 {
 }
 /* Le deuxième regard : la photo suivante du montage, née au premier survol
    (voir le script de la page), fond par-dessus la première. */
-.img2 { opacity: 0; transition: opacity .5s ease, transform .6s cubic-bezier(.2, .6, .2, 1); }
-.carte.regarde .img2 { opacity: 1; }
+.img2 { opacity: 0; transition: opacity .6s ease, transform .6s cubic-bezier(.2, .6, .2, 1); }
+.carte.regarde .img2.prete { opacity: 1; }
 .lueur { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, .3)); }
 
 /* Le murmure du kakemono — le synopsis se révèle mot à mot dans la
@@ -298,6 +301,7 @@ html.scrolly .carte { --p: 0; }
 .media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
 .volet-couleur {
     position: absolute; inset: -2% 0; z-index: 1; pointer-events: none;
+    opacity: .58;
     background: linear-gradient(to top,
             transparent 0%,
             color-mix(in srgb, var(--ac, var(--accent)) 88%, transparent) 13%,
@@ -343,6 +347,28 @@ footer {
 footer a { text-decoration: none; }
 footer a:hover { color: var(--accent-ink); }
 .maj { margin: .4rem 0 0; font-size: .68rem; letter-spacing: .06em; opacity: .75; }
+
+/* ── La galerie au pincement ──
+   Deux doigts resserrent ou élargissent le mur : le script pose
+   data-zoom sur <html>, la grille suit, et les kakemonos glissent
+   jusqu'à leur nouveau rang (View Transitions même-document — sans
+   soutien, bascule nette). Aux rangs serrés, la carte redevient une
+   image : le fil et le rôle s'effacent, le titre se fait discret. */
+main { touch-action: pan-y; }
+html[data-zoom] .repertoire { grid-template-columns: repeat(var(--colonnes, 2), 1fr); }
+html[data-zoom="1"] { --colonnes: 1; }
+html[data-zoom="2"] { --colonnes: 2; }
+html[data-zoom="3"] { --colonnes: 3; }
+html[data-zoom="4"] { --colonnes: 4; }
+html[data-zoom="5"] { --colonnes: 5; }
+html[data-zoom="6"] { --colonnes: 6; }
+html[data-zoom="1"] .nom { font-size: 1.12rem; }
+@media (max-width: 640px) {
+    html[data-zoom="3"] .repertoire { gap: .9rem .5rem; }
+    html[data-zoom="3"] .nom { font-size: .66rem; padding-bottom: .3rem; }
+    html[data-zoom="3"] .fil, html[data-zoom="3"] .role { display: none; }
+    html[data-zoom="3"] .txt { padding-top: .35rem; }
+}
 
 /* ── Téléphone : un mur d'affiches, pas une liste ── */
 @media (max-width: 640px) {

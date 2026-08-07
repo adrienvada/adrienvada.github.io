@@ -651,7 +651,14 @@ ${JSON.stringify(liste, null, 2)}
             var i = new Image();
             i.className = 'img2'; i.alt = ''; i.decoding = 'async';
             if (c.dataset.pos2) i.style.setProperty('--pos', c.dataset.pos2);
+            // Le fondu n'a de sens que sur une image ENTIÈRE : la classe
+            // n'arrive qu'au décodage — jamais de pixels qui surgissent.
             i.src = c.dataset.src2;
+            var prete = function () { i.classList.add('prete'); };
+            if (i.decode) { i.decode().then(prete).catch(prete); } else { i.onload = prete; }
+            // Ceinture : si le décodage ne répond pas, le fondu part
+            // quand même — une image tardive vaut mieux qu'aucune.
+            setTimeout(prete, 1200);
             var m = c.querySelector('.media'); if (m) m.appendChild(i);
         }
 
@@ -772,6 +779,57 @@ ${JSON.stringify(liste, null, 2)}
             addEventListener('scroll', replanifieScene, { passive: true });
             addEventListener('resize', replanifieScene);
             replanifieScene();
+
+            // La galerie au pincement : écarter les doigts agrandit les
+            // kakemonos (moins de colonnes), les resserrer les aligne en
+            // galerie. Chaque cran part en View Transition même-document :
+            // les cartes GLISSENT jusqu'à leur nouveau rang, une à une.
+            // Le geste remplace le zoom de page sur le mur (touch-action),
+            // et chaque cran rebase la mesure : un long pincement traverse
+            // plusieurs rangs.
+            var mur = document.querySelector('main');
+            var NIVEAUX = function () { return innerWidth < 640 ? [1, 2, 3] : [2, 3, 4, 5]; };
+            var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
+            var zoomCourant = function () {
+                return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
+            };
+            var changeZoom = function (sens) {
+                var n = NIVEAUX();
+                var i = n.indexOf(zoomCourant());
+                if (i === -1) i = n.indexOf(zoomRepos());
+                var vers = n[Math.max(0, Math.min(n.length - 1, i + sens))];
+                if (vers === zoomCourant()) return false;
+                var applique = function () {
+                    document.documentElement.dataset.zoom = vers;
+                    replanifieScene();
+                };
+                if (document.startViewTransition) {
+                    cartes.forEach(function (c) { c.style.viewTransitionName = 'c-' + c.dataset.slug; });
+                    var t = document.startViewTransition(applique);
+                    t.finished.then(function () { }, function () { }).then(function () {
+                        cartes.forEach(function (c) { c.style.viewTransitionName = ''; });
+                    });
+                } else { applique(); }
+                return true;
+            };
+            var pincement = 0;
+            var ecart = function (t) {
+                return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+            };
+            mur.addEventListener('touchstart', function (e) {
+                if (e.touches.length === 2) pincement = ecart(e.touches);
+            }, { passive: true });
+            mur.addEventListener('touchmove', function (e) {
+                if (e.touches.length !== 2 || !pincement) return;
+                e.preventDefault();
+                var d = ecart(e.touches);
+                var r = d / pincement;
+                if (r > 1.22) { if (changeZoom(-1)) pincement = d; }
+                else if (r < .82) { if (changeZoom(1)) pincement = d; }
+            }, { passive: false });
+            mur.addEventListener('touchend', function (e) {
+                if (e.touches.length < 2) pincement = 0;
+            });
 
             // La vitrine scintille : toutes les quelques secondes, une
             // carte posée — jamais celle qu'on regarde — reçoit un
@@ -920,10 +978,13 @@ a { color: var(--accent-ink); }
     border: 1px solid transparent; border-radius: 999px;
 }
 .barre.est-collee {
-    background: color-mix(in srgb, var(--surface) 98.5%, transparent);
+    /* Le fond, le filet et le halo suivent l'ambiance : survoler
+       Bérénice rosit aussi la barre — la salle entière est au spectacle. */
+    background: color-mix(in srgb, var(--surface) 94%, var(--ambiance));
     -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-    border-color: color-mix(in srgb, var(--accent) 22%, transparent);
-    box-shadow: 0 8px 22px -10px rgba(0, 0, 0, .55);
+    border-color: color-mix(in srgb, var(--ambiance) 30%, transparent);
+    box-shadow: 0 8px 22px -10px rgba(0, 0, 0, .55),
+        0 0 20px -6px color-mix(in srgb, var(--ambiance) 38%, transparent);
     padding-left: .9rem; padding-right: .55rem;
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -1030,8 +1091,8 @@ h1 {
 }
 /* Le deuxième regard : la photo suivante du montage, née au premier survol
    (voir le script de la page), fond par-dessus la première. */
-.img2 { opacity: 0; transition: opacity .5s ease, transform .6s cubic-bezier(.2, .6, .2, 1); }
-.carte.regarde .img2 { opacity: 1; }
+.img2 { opacity: 0; transition: opacity .6s ease, transform .6s cubic-bezier(.2, .6, .2, 1); }
+.carte.regarde .img2.prete { opacity: 1; }
 .lueur { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, .3)); }
 
 /* Le murmure du kakemono — le synopsis se révèle mot à mot dans la
@@ -1144,6 +1205,7 @@ html.scrolly .carte { --p: 0; }
 .media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
 .volet-couleur {
     position: absolute; inset: -2% 0; z-index: 1; pointer-events: none;
+    opacity: .58;
     background: linear-gradient(to top,
             transparent 0%,
             color-mix(in srgb, var(--ac, var(--accent)) 88%, transparent) 13%,
@@ -1189,6 +1251,28 @@ footer {
 footer a { text-decoration: none; }
 footer a:hover { color: var(--accent-ink); }
 .maj { margin: .4rem 0 0; font-size: .68rem; letter-spacing: .06em; opacity: .75; }
+
+/* ── La galerie au pincement ──
+   Deux doigts resserrent ou élargissent le mur : le script pose
+   data-zoom sur <html>, la grille suit, et les kakemonos glissent
+   jusqu'à leur nouveau rang (View Transitions même-document — sans
+   soutien, bascule nette). Aux rangs serrés, la carte redevient une
+   image : le fil et le rôle s'effacent, le titre se fait discret. */
+main { touch-action: pan-y; }
+html[data-zoom] .repertoire { grid-template-columns: repeat(var(--colonnes, 2), 1fr); }
+html[data-zoom="1"] { --colonnes: 1; }
+html[data-zoom="2"] { --colonnes: 2; }
+html[data-zoom="3"] { --colonnes: 3; }
+html[data-zoom="4"] { --colonnes: 4; }
+html[data-zoom="5"] { --colonnes: 5; }
+html[data-zoom="6"] { --colonnes: 6; }
+html[data-zoom="1"] .nom { font-size: 1.12rem; }
+@media (max-width: 640px) {
+    html[data-zoom="3"] .repertoire { gap: .9rem .5rem; }
+    html[data-zoom="3"] .nom { font-size: .66rem; padding-bottom: .3rem; }
+    html[data-zoom="3"] .fil, html[data-zoom="3"] .role { display: none; }
+    html[data-zoom="3"] .txt { padding-top: .35rem; }
+}
 
 /* ── Téléphone : un mur d'affiches, pas une liste ── */
 @media (max-width: 640px) {
