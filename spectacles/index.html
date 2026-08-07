@@ -452,13 +452,17 @@
                 for (var k = 0; k < suivies.length; k++) {
                     var carte = suivies[k];
                     var r = carte.getBoundingClientRect();
-                    var cible = adoucit(Math.max(0, Math.min(1, (vh - r.top) / (vh * .75))));
+                    var cible = Math.max(0, Math.min(1, (vh - r.top) / (vh * .75)));
                     var p = parseFloat(carte.dataset.p || '0');
                     p += (cible - p) * .13;
                     if (Math.abs(cible - p) > .002) { encore = true; } else { p = cible; }
                     carte.dataset.p = p;
-                    carte.style.setProperty('--p', p.toFixed(4));
-                    if (cible >= .55 && !carte.classList.contains('en-scene')) {
+                    // Deux horloges tirées de la même poursuite : la linéaire
+                    // (--pl) pour le fondu, qui doit partir de zéro au bord ;
+                    // la souple (--p) pour les mouvements, vifs puis posés.
+                    carte.style.setProperty('--pl', p.toFixed(4));
+                    carte.style.setProperty('--p', adoucit(p).toFixed(4));
+                    if (cible >= .45 && !carte.classList.contains('en-scene')) {
                         carte.style.setProperty('--retard',
                             Math.round(Math.max(0, r.left) / innerWidth * 140) + 'ms');
                         carte.classList.add('en-scene');
@@ -480,6 +484,7 @@
                         var repos = e.boundingClientRect.top < 0 ? '1' : '0';
                         e.target.dataset.p = repos;
                         e.target.style.setProperty('--p', repos);
+                        e.target.style.setProperty('--pl', repos);
                     }
                 });
                 replanifieScene();

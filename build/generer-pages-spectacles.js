@@ -743,13 +743,17 @@ ${JSON.stringify(liste, null, 2)}
                 for (var k = 0; k < suivies.length; k++) {
                     var carte = suivies[k];
                     var r = carte.getBoundingClientRect();
-                    var cible = adoucit(Math.max(0, Math.min(1, (vh - r.top) / (vh * .75))));
+                    var cible = Math.max(0, Math.min(1, (vh - r.top) / (vh * .75)));
                     var p = parseFloat(carte.dataset.p || '0');
                     p += (cible - p) * .13;
                     if (Math.abs(cible - p) > .002) { encore = true; } else { p = cible; }
                     carte.dataset.p = p;
-                    carte.style.setProperty('--p', p.toFixed(4));
-                    if (cible >= .55 && !carte.classList.contains('en-scene')) {
+                    // Deux horloges tirées de la même poursuite : la linéaire
+                    // (--pl) pour le fondu, qui doit partir de zéro au bord ;
+                    // la souple (--p) pour les mouvements, vifs puis posés.
+                    carte.style.setProperty('--pl', p.toFixed(4));
+                    carte.style.setProperty('--p', adoucit(p).toFixed(4));
+                    if (cible >= .45 && !carte.classList.contains('en-scene')) {
                         carte.style.setProperty('--retard',
                             Math.round(Math.max(0, r.left) / innerWidth * 140) + 'ms');
                         carte.classList.add('en-scene');
@@ -771,6 +775,7 @@ ${JSON.stringify(liste, null, 2)}
                         var repos = e.boundingClientRect.top < 0 ? '1' : '0';
                         e.target.dataset.p = repos;
                         e.target.style.setProperty('--p', repos);
+                        e.target.style.setProperty('--pl', repos);
                     }
                 });
                 replanifieScene();
@@ -1197,9 +1202,12 @@ h1 {
    vers le haut et la découvre, bord adouci en dégradé. Restent deux
    surprises une-fois, au passage du milieu (.en-scene) : le rai de
    dorure, puis le filet du titre qui s'embrase. */
-html.scrolly .carte { --p: 0; }
+html.scrolly .carte { --p: 0; --pl: 0; }
 .carte {
-    opacity: min(1, calc(var(--p, 1) / .22));
+    /* Le fondu suit l'horloge LINÉAIRE (--pl) : la courbe souple charge
+       tant le départ que, posée sur elle, l'opacité était pleine dès le
+       bord de l'écran. Ici : zéro au bord, pleine au tiers de la montée. */
+    opacity: min(1, calc(var(--pl, 1) / .38));
     transform: translateY(calc((1 - var(--p, 1)) * 48px)) scale(calc(.94 + var(--p, 1) * .06));
 }
 .media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
@@ -1225,7 +1233,7 @@ html.scrolly .carte.reluit .cadre::after { animation: dorure 1.3s ease both; }
 
 /* Au retour par morphing, les cartes sont déjà en place : rejouer
    l'entrée disputerait l'écran à la fiche qui vient s'y ranger. */
-html.retour-vt .carte { --p: 1 !important; }
+html.retour-vt .carte { --p: 1 !important; --pl: 1 !important; }
 html.retour-vt .carte .nom::after,
 html.retour-vt .carte .cadre::after { animation: none !important; }
 
