@@ -493,7 +493,6 @@ function pageRepertoire(fiches) {
                 <span class="groupe-ico" aria-hidden="true"><svg class="ico"><use href="#${g.icone}"></use></svg></span>
                 <span>${esc(g.titre)}</span>
                 <span class="groupe-filet" aria-hidden="true"></span>
-                <span class="groupe-compte">${g.fiches.length}</span>
             </h2>
             <ul class="repertoire">${g.fiches.map(carte).join('')}
             </ul>
@@ -552,7 +551,6 @@ ${JSON.stringify(liste, null, 2)}
             <p class="sur-titre">Adrien Vada — Artiste interprète</p>
             <h1>Répertoire</h1>
             <p class="ornement" aria-hidden="true"><span></span></p>
-            <p class="sous-titre">Spectacles et courts-métrages, de la création à la tournée.</p>
         </header>
         ${sections}
     </main>
@@ -614,7 +612,6 @@ h1 {
     transform: translate(-50%, -50%) rotate(45deg);
     background: var(--accent); box-shadow: 0 0 0 3px var(--bg);
 }
-.sous-titre { margin: 1.35rem auto 0; max-width: 34rem; font-size: .95rem; color: var(--muted); }
 
 /* ── Intitulés de groupe — les mêmes que le CV, icône comprise ── */
 .groupe {
@@ -629,11 +626,6 @@ h1 {
 }
 .ico { display: block; width: 1em; height: 1em; fill: currentColor; font-size: .8rem; }
 .groupe-filet { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
-.groupe-compte {
-    font: 600 .68rem/1 'Inter', system-ui, sans-serif; letter-spacing: .05em;
-    color: var(--muted); border: 1px solid var(--line); border-radius: 999px;
-    padding: .3rem .6rem;
-}
 
 /* ── Les cartes ── */
 .repertoire {
@@ -727,7 +719,6 @@ footer a:hover { color: var(--accent-ink); }
     body { padding: 0 .9rem 2.6rem; }
     .tete { padding: 2.3rem 0 1.8rem; }
     .sur-titre { font-size: .58rem; letter-spacing: .22em; margin-bottom: .8rem; }
-    .sous-titre { font-size: .84rem; margin-top: 1.05rem; }
     .ornement { margin-top: 1.1rem; width: 8.5rem; }
     .groupe { margin-top: 2rem; gap: .6rem; font-size: .64rem; letter-spacing: .16em; }
     .groupe-ico { width: 1.65rem; height: 1.65rem; }
