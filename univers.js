@@ -46,6 +46,10 @@
  *            des photos le prépare avec le reste.
  *  role      remplace le rôle lu sur la ligne du CV, quand celle-ci n'en
  *            porte pas (les courts métrages) ou en dit autre chose.
+ *  heroCta   *(films)* remplace le libellé « Le film » du bouton d'accroche.
+ *            À poser quand le film n'est pas accessible en entier sur cette
+ *            page — seulement en bande-annonce, par exemple — pour ne pas
+ *            promettre plus que ce qu'on peut montrer.
  *  sequence  LE MONTAGE. Un élément = un temps du défilé, dans l'ordre.
  *            `sequence: []` est un état légitime : un spectacle qui n'est
  *            pas encore créé n'a pas d'images à montrer.
@@ -624,6 +628,10 @@ const SHOW_UNIVERSES = {
         kind: 'film',
         affiche: true,
         role: 'Rôle · Narration',
+        // Le film n'est pas accessible en entier depuis cette page — sequence
+        // ci-dessous ne montre qu'une bande-annonce. « Le film » promettrait
+        // plus qu'on ne peut tenir.
+        heroCta: 'La bande-annonce',
         // Vermeer, littéralement : le plâtre clair d'un mur éclairé par la
         // gauche, l'outremer du turban, et le jaune de plomb-étain en
         // guise de lueur. La palette du film est celle des tableaux dont

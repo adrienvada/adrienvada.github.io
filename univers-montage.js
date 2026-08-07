@@ -465,7 +465,7 @@ const UniversMontage = (function () {
             <div class="u-hero-actions">
                 ${isFilm
                 ? `<button type="button" class="u-btn" data-u-jump>
-                        Le film
+                        ${escape(uni.heroCta || 'Le film')}
                         <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
                     </button>`
                 : dates || enCreation
