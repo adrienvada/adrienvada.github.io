@@ -499,7 +499,7 @@ function pageRepertoire(fiches) {
         return `
         <li class="carte" style="--ac:${esc(accent)};--i:${i}" data-slug="${esc(f.slug)}" data-vt="fiche-${esc(f.slug)}"${second}>
             <a href="${esc(f.slug)}/">
-                <span class="cadre">${media}<span class="lueur" aria-hidden="true"></span>${f.synopsis ? `<span class="chuchote" aria-hidden="true"><span class="voile"></span><p>${f.synopsis.split(/\s+/).map((m, k) => `<span class="mot" style="--m:${k}">${esc(m)}</span>`).join(' ')}</p></span>` : ''}</span>
+                <span class="cadre">${media}${f.vignette ? '<span class="volet-couleur" aria-hidden="true"></span>' : ''}<span class="lueur" aria-hidden="true"></span>${f.synopsis ? `<span class="chuchote" aria-hidden="true"><span class="voile"></span><p>${f.synopsis.split(/\s+/).map((m, k) => `<span class="mot" style="--m:${k}">${esc(m)}</span>`).join(' ')}</p></span>` : ''}</span>
                 <span class="txt">
                     ${fil || f.badge ? `<span class="fil">
                         ${fil ? `<span class="annee">${esc(fil)}</span>` : ''}
@@ -712,24 +712,52 @@ ${JSON.stringify(liste, null, 2)}
             if (!e.viewTransition || !e.activation) return;
             nomme(new URL(e.activation.entry.url).pathname);
         });
-        // L'entrée en scène au seuil : rien au chargement, tout au
-        // franchissement. L'observateur lâche chaque carte après son
-        // entrée — on ne guette pas ce qui est déjà en scène. Le retard
-        // d'échelonnement suit la place dans la rangée : la gauche
-        // d'abord, la droite un souffle après.
+        // L'entrée en scène, liée au geste : à chaque défilement, une
+        // image d'animation repose la progression --p des seules cartes
+        // à l'écran — 0 au bas de l'écran, 1 aux deux tiers de la
+        // montée, adoucie ici pour que la feuille n'ait que des règles
+        // de trois. Une carte qui ressort par le bas revient à zéro :
+        // remonter la rejoue, c'est le geste qui commande. Les deux
+        // surprises une-fois (dorure, filet) partent au passage du
+        // milieu, échelonnées selon la place dans la rangée.
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
             document.documentElement.classList.add('scrolly');
+            var suivies = [];
+            var demandeScene = 0;
+            var adoucit = function (t) { return 1 - Math.pow(1 - t, 3); };
+            var joue = function () {
+                demandeScene = 0;
+                var vh = innerHeight;
+                for (var k = 0; k < suivies.length; k++) {
+                    var carte = suivies[k];
+                    var r = carte.getBoundingClientRect();
+                    var P = Math.max(0, Math.min(1, (vh - r.top) / (vh * .65)));
+                    carte.style.setProperty('--p', adoucit(P).toFixed(4));
+                    if (P >= .5 && !carte.classList.contains('en-scene')) {
+                        carte.style.setProperty('--retard',
+                            Math.round(Math.max(0, r.left) / innerWidth * 140) + 'ms');
+                        carte.classList.add('en-scene');
+                    }
+                }
+            };
+            var replanifieScene = function () { if (!demandeScene) demandeScene = requestAnimationFrame(joue); };
             var ioScene = new IntersectionObserver(function (entrees) {
                 entrees.forEach(function (e) {
-                    if (!e.isIntersecting) return;
-                    var carte = e.target;
-                    carte.style.setProperty('--retard',
-                        Math.round(Math.max(0, carte.getBoundingClientRect().left) / innerWidth * 140) + 'ms');
-                    carte.classList.add('en-scene');
-                    ioScene.unobserve(carte);
+                    var i = suivies.indexOf(e.target);
+                    if (e.isIntersecting && i === -1) suivies.push(e.target);
+                    if (!e.isIntersecting && i !== -1) {
+                        suivies.splice(i, 1);
+                        // Sortie par le haut : posée. Par le bas : à zéro,
+                        // prête à rejouer son entrée.
+                        e.target.style.setProperty('--p', e.boundingClientRect.top < 0 ? '1' : '0');
+                    }
                 });
-            }, { rootMargin: '0px 0px -10% 0px' });
+                replanifieScene();
+            }, { rootMargin: '8% 0%' });
             cartes.forEach(function (c) { ioScene.observe(c); });
+            addEventListener('scroll', replanifieScene, { passive: true });
+            addEventListener('resize', replanifieScene);
+            replanifieScene();
         }
 
         // La barre flotte dès que sa sentinelle sort de l'écran — le même
@@ -772,7 +800,6 @@ ${JSON.stringify(liste, null, 2)}
             // Revenir par morphing ET lever les cartes une à une se
             // disputeraient l'écran : au retour, elles sont déjà en place.
             document.documentElement.classList.add('retour-vt');
-            cartes.forEach(function (c) { c.classList.add('en-scene'); });
             var act = (typeof navigation !== 'undefined') && navigation.activation;
             if (act && act.from) nomme(new URL(act.from.url).pathname);
         });
@@ -1055,32 +1082,47 @@ h1 {
     html { scroll-behavior: smooth; }
 }
 
-/* ── L'entrée en scène au seuil — le lever, le volet, la dorure ──
-   Rien ne se joue au chargement : chaque carte fait son entrée quand
-   elle franchit le bas de l'écran (html.scrolly et .en-scene, posés par
-   le script). La carte se lève d'un fondu pendant qu'un volet dévoile
-   l'affiche de bas en haut ; la dorure la traverse une fois, puis le
-   filet du titre s'embrase. Des animations UNE FOIS, jamais des
-   transitions d'état : le survol garde ses réflexes, l'entrée ne les
-   retarde pas. --retard échelonne la rangée, posé au franchissement.
-   Sans script, sans observateur ou en mouvement réduit : tout est là,
-   immobile. */
-html.scrolly .carte:not(.en-scene) { opacity: 0; }
-html.scrolly .carte.en-scene { animation: carte-leve .6s cubic-bezier(.22, .61, .25, 1) var(--retard, 0ms) backwards; }
-html.scrolly .carte.en-scene .media { animation: volet .8s cubic-bezier(.3, .6, .2, 1) calc(var(--retard, 0ms) + 90ms) backwards; }
-html.scrolly .carte.en-scene .nom::after { animation: filet-embrase .5s ease calc(var(--retard, 0ms) + 520ms) backwards; }
-html.scrolly .carte.en-scene .cadre::after { animation: dorure .9s ease calc(var(--retard, 0ms) + 300ms) both; }
-@keyframes carte-leve { from { opacity: 0; transform: translateY(22px); } }
-@keyframes volet { from { clip-path: inset(100% 0 0 0); transform: scale(1.06); } }
+/* ── L'entrée en scène, LIÉE AU GESTE ──
+   La règle des univers vaut ici : une révélation pilotée par la
+   position de défilement, jamais par un déclencheur — c'est le lien
+   direct entre le doigt et l'image qui fait l'effet. Le script pose
+   sur chaque carte une progression --p (0 en bas de l'écran, 1 aux
+   deux tiers de la montée, déjà adoucie) ; tout le reste est du
+   calcul de feuille. Redescendre rembobine, remonter rejoue —
+   l'apparition appartient au geste. Sans script ou en mouvement
+   réduit, --p vaut 1 : tout est là, immobile.
+
+   La carte se lève et se resserre en s'éveillant ; l'affiche se tasse
+   doucement dans son cadre ; LE VOLET AUX COULEURS DU SPECTACLE glisse
+   vers le haut et la découvre, bord adouci en dégradé. Restent deux
+   surprises une-fois, au passage du milieu (.en-scene) : le rai de
+   dorure, puis le filet du titre qui s'embrase. */
+html.scrolly .carte { --p: 0; }
+.carte {
+    opacity: min(1, calc(var(--p, 1) / .3));
+    transform: translateY(calc((1 - var(--p, 1)) * 44px)) scale(calc(.94 + var(--p, 1) * .06));
+}
+.media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
+.volet-couleur {
+    position: absolute; inset: -2% 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(to top,
+            transparent 0%,
+            color-mix(in srgb, var(--ac, var(--accent)) 88%, transparent) 13%,
+            var(--ac, var(--accent)) 40%,
+            color-mix(in srgb, var(--ac, var(--accent)) 76%, #14100b) 100%);
+    transform: translateY(calc(clamp(0, (var(--p, 1) - .05) / .55, 1) * -118%));
+}
+html.scrolly .carte:not(.en-scene) .nom::after { width: 0; opacity: 0; }
+html.scrolly .carte.en-scene .nom::after { animation: filet-embrase .5s ease calc(var(--retard, 0ms) + 420ms) backwards; }
+html.scrolly .carte.en-scene .cadre::after { animation: dorure .9s ease var(--retard, 0ms) both; }
 @keyframes filet-embrase { from { width: 0; opacity: 0; } }
 @keyframes dorure { from { transform: translateX(-135%); } to { transform: translateX(135%); } }
 
 /* Au retour par morphing, les cartes sont déjà en place : rejouer
    l'entrée disputerait l'écran à la fiche qui vient s'y ranger. */
-html.retour-vt .carte.en-scene,
-html.retour-vt .carte.en-scene .media,
-html.retour-vt .carte.en-scene .nom::after,
-html.retour-vt .carte.en-scene .cadre::after { animation: none !important; }
+html.retour-vt .carte { --p: 1 !important; }
+html.retour-vt .carte .nom::after,
+html.retour-vt .carte .cadre::after { animation: none !important; }
 
 
 /* ── Le morphing vers la fiche ──

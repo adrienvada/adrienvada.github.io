@@ -266,32 +266,47 @@ h1 {
     html { scroll-behavior: smooth; }
 }
 
-/* ── L'entrée en scène au seuil — le lever, le volet, la dorure ──
-   Rien ne se joue au chargement : chaque carte fait son entrée quand
-   elle franchit le bas de l'écran (html.scrolly et .en-scene, posés par
-   le script). La carte se lève d'un fondu pendant qu'un volet dévoile
-   l'affiche de bas en haut ; la dorure la traverse une fois, puis le
-   filet du titre s'embrase. Des animations UNE FOIS, jamais des
-   transitions d'état : le survol garde ses réflexes, l'entrée ne les
-   retarde pas. --retard échelonne la rangée, posé au franchissement.
-   Sans script, sans observateur ou en mouvement réduit : tout est là,
-   immobile. */
-html.scrolly .carte:not(.en-scene) { opacity: 0; }
-html.scrolly .carte.en-scene { animation: carte-leve .6s cubic-bezier(.22, .61, .25, 1) var(--retard, 0ms) backwards; }
-html.scrolly .carte.en-scene .media { animation: volet .8s cubic-bezier(.3, .6, .2, 1) calc(var(--retard, 0ms) + 90ms) backwards; }
-html.scrolly .carte.en-scene .nom::after { animation: filet-embrase .5s ease calc(var(--retard, 0ms) + 520ms) backwards; }
-html.scrolly .carte.en-scene .cadre::after { animation: dorure .9s ease calc(var(--retard, 0ms) + 300ms) both; }
-@keyframes carte-leve { from { opacity: 0; transform: translateY(22px); } }
-@keyframes volet { from { clip-path: inset(100% 0 0 0); transform: scale(1.06); } }
+/* ── L'entrée en scène, LIÉE AU GESTE ──
+   La règle des univers vaut ici : une révélation pilotée par la
+   position de défilement, jamais par un déclencheur — c'est le lien
+   direct entre le doigt et l'image qui fait l'effet. Le script pose
+   sur chaque carte une progression --p (0 en bas de l'écran, 1 aux
+   deux tiers de la montée, déjà adoucie) ; tout le reste est du
+   calcul de feuille. Redescendre rembobine, remonter rejoue —
+   l'apparition appartient au geste. Sans script ou en mouvement
+   réduit, --p vaut 1 : tout est là, immobile.
+
+   La carte se lève et se resserre en s'éveillant ; l'affiche se tasse
+   doucement dans son cadre ; LE VOLET AUX COULEURS DU SPECTACLE glisse
+   vers le haut et la découvre, bord adouci en dégradé. Restent deux
+   surprises une-fois, au passage du milieu (.en-scene) : le rai de
+   dorure, puis le filet du titre qui s'embrase. */
+html.scrolly .carte { --p: 0; }
+.carte {
+    opacity: min(1, calc(var(--p, 1) / .3));
+    transform: translateY(calc((1 - var(--p, 1)) * 44px)) scale(calc(.94 + var(--p, 1) * .06));
+}
+.media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
+.volet-couleur {
+    position: absolute; inset: -2% 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(to top,
+            transparent 0%,
+            color-mix(in srgb, var(--ac, var(--accent)) 88%, transparent) 13%,
+            var(--ac, var(--accent)) 40%,
+            color-mix(in srgb, var(--ac, var(--accent)) 76%, #14100b) 100%);
+    transform: translateY(calc(clamp(0, (var(--p, 1) - .05) / .55, 1) * -118%));
+}
+html.scrolly .carte:not(.en-scene) .nom::after { width: 0; opacity: 0; }
+html.scrolly .carte.en-scene .nom::after { animation: filet-embrase .5s ease calc(var(--retard, 0ms) + 420ms) backwards; }
+html.scrolly .carte.en-scene .cadre::after { animation: dorure .9s ease var(--retard, 0ms) both; }
 @keyframes filet-embrase { from { width: 0; opacity: 0; } }
 @keyframes dorure { from { transform: translateX(-135%); } to { transform: translateX(135%); } }
 
 /* Au retour par morphing, les cartes sont déjà en place : rejouer
    l'entrée disputerait l'écran à la fiche qui vient s'y ranger. */
-html.retour-vt .carte.en-scene,
-html.retour-vt .carte.en-scene .media,
-html.retour-vt .carte.en-scene .nom::after,
-html.retour-vt .carte.en-scene .cadre::after { animation: none !important; }
+html.retour-vt .carte { --p: 1 !important; }
+html.retour-vt .carte .nom::after,
+html.retour-vt .carte .cadre::after { animation: none !important; }
 
 
 /* ── Le morphing vers la fiche ──

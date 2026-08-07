@@ -550,6 +550,7 @@ const SHOW_UNIVERSES = {
     "L'Homme moderne": {
         slug: 'hommemoderne',
         kind: 'film',
+        affiche: true,
         subtitle: 'mini-série en quatre épisodes',
         role: 'Rôle · Arthur',
         // Le parchemin du générique — un codex de Vinci où l’homme de
