@@ -1334,9 +1334,12 @@
             text-indent: 2.4em;
         }
 
+        /* Le premier paragraphe avait un corps plus grand — il devait donner
+           le ton. Mais il porte aussi les mots de l'aperçu, et l'écart se
+           voyait comme une inégalité plutôt que comme une intention : une
+           lettre est écrite d'une seule main, du même calibre du début à la
+           fin. Seule l'encre y reste un peu plus noire. */
         .recit-para:first-of-type {
-            font-size: clamp(1.42rem, 6vw, 1.9rem);
-            line-height: 1.75;
             color: #1a140c;
         }
 
@@ -4217,6 +4220,55 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- DOUBLAGE -->
+                <section class="glass-card rounded-xl p-4 shadow-sm reveal">
+                    <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
+                        <div
+                            class="w-6.5 h-6.5 rounded bg-stone-100 flex items-center justify-center text-luxury-goldInk border border-stone-200">
+                            <svg class="ico text-[11px]" aria-hidden="true">
+                                <use href="#i-solid-masks-theater"></use>
+                            </svg>
+                        </div>
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Doublage
+                        </h3>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <!-- Player 9: 3, 2, 1 Go ! - Nathan -->
+                        <div
+                            class="glass-panel p-2.5 rounded-lg flex items-center gap-3 transition hover:border-luxury-gold/25 duration-300 odd:bg-luxury-stripe even:bg-transparent">
+                            <button type="button" data-audio-toggle="audio-doublage-nathan"
+                                id="btn-audio-doublage-nathan"
+                                class="w-8 h-8 rounded-full bg-stone-200 hover:bg-luxury-gold hover:text-luxury-onGold text-stone-700 flex items-center justify-center transition-all duration-300 flex-shrink-0">
+                                <svg class="ico text-[10px] pl-0.5" aria-hidden="true" id="icon-audio-doublage-nathan">
+                                    <use href="#i-solid-play"></use>
+                                </svg>
+                            </button>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
+                                    <span
+                                        class="audio-title font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">3,
+                                        2, 1 Go ! <span
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            - Nathan, voix adolescent (home studio)</span></span>
+                                    <span id="time-audio-doublage-nathan"
+                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        / 0:00</span>
+                                </div>
+                                <div data-audio-seek="audio-doublage-nathan" role="slider" tabindex="0"
+                                    aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                                    class="progress-bar-container h-1 bg-stone-200 rounded-full cursor-pointer relative overflow-hidden">
+                                    <div id="progress-audio-doublage-nathan"
+                                        class="h-full bg-luxury-gold w-0 transition-all duration-100"></div>
+                                </div>
+                                <audio id="audio-doublage-nathan"
+                                    src="ressources/sons/vada-doublage-321-go-nathan.mp3" class="hidden"
+                                    preload="none"></audio>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
 
         </main>
@@ -5672,10 +5724,11 @@
             //  LA LIGNE D'ÉCRITURE est un repère horizontal fixe dans la
             //  feuille. Ce qui est passé au-dessus est écrit, ce qui est
             //  encore dessous ne l'est pas, et entre les deux les mots
-            //  prennent l'encre. On la place aux deux tiers : plus haut, on
-            //  écrirait sous les yeux du lecteur au lieu de le précéder ;
-            //  plus bas, la page serait pleine avant qu'il n'ait scrollé.
-            const LIGNE = 0.66;
+            //  prennent l'encre. Elle est BASSE — quatre cinquièmes de la
+            //  hauteur — pour qu'on voie les mots se former près du bord,
+            //  là où le regard descend, et non se découvrir déjà faits au
+            //  milieu de la page.
+            const LIGNE = 0.8;
 
             //  MOT À MOT, ET NON LIGNE À LIGNE. Deux mots d'une même ligne
             //  sont à la même hauteur : sans correction, toute la ligne
@@ -5697,9 +5750,27 @@
             //  portent aucun filtre du tout.
             const PALIERS = 12;
 
+            //  ══ LA TRAÎNE ══
+            //  Le papier suit le doigt, mais pas tout à fait : il retarde
+            //  d'un souffle, puis rattrape. C'est ce qu'on trouve déjà dans
+            //  les univers, où les photos avancent moins vite que le
+            //  défilement — le décalage donne du poids à ce qu'on déplace.
+            //  Une page qui colle exactement au geste est une surface ; une
+            //  page qui traîne un peu est un objet.
+            //
+            //  L'ENCRE SUIT LA POSITION AMORTIE, et non la vraie : sans
+            //  cela, les mots s'écriraient à un endroit et le papier serait
+            //  à un autre — la ligne d'écriture flotterait. Amorti, tout
+            //  reste d'accord, et l'état final ne change pas d'un pixel
+            //  puisque la position amortie rejoint toujours la vraie.
+            const TRAINE = 0.16;      // part du retard rattrapée à chaque image
+            const TRAINE_MAX = 52;    // px : au-delà, on ne traîne plus, on décroche
+
             let mots = [];
+            let flot = null;
             let mesureFaite = false;
-            let enAttente = false;
+            let boucle = 0;
+            let amorti = 0;
 
             //  ══ LA DIFFUSION ══
             //  Un fondu, même lent, reste un fondu : le mot entier pâlit
@@ -5788,6 +5859,39 @@
                 defile.style.paddingBottom = Math.round(h * (1 - LIGNE) + h * 0.12 + 40) + 'px';
             }
 
+            //  L'AMORCE — le texte commence BAS dans la page, et pas d'un
+            //  pouce arbitraire : assez bas pour qu'à l'ouverture, exactement
+            //  les mots de l'aperçu soient écrits, et pas un de plus. On
+            //  lisait ces mots une seconde plus tôt en haut du site ; on les
+            //  retrouve ici, seuls sur une page vide, et la seule chose à
+            //  faire est de descendre.
+            //
+            //  Le compte des mots est PRIS DE L'APERÇU LUI-MÊME, jamais
+            //  écrit en dur : le jour où la coupe changera de place dans le
+            //  texte, l'amorce suivra sans qu'on y pense.
+            function poserLAmorce() {
+                const amorce = extrait.textContent.replace(/\s+/g, ' ').trim()
+                    .replace(/[…\.]+$/, '').split(' ').filter(Boolean).length;
+                const cible = mots[Math.min(amorce, mots.length) - 1];
+                if (!cible) return;
+                defile.style.paddingTop = '0px';
+                defile.scrollTop = 0;
+                const cadre = defile.getBoundingClientRect();
+                const r = cible.getBoundingClientRect();
+                const bas = r.bottom - cadre.top;
+                const hLigne = parseFloat(getComputedStyle(cible.parentNode).lineHeight) || 30;
+                //  Le dernier mot de l'aperçu doit avoir FINI de prendre
+                //  l'encre, pas commencé : il faut donc que la ligne
+                //  d'écriture le dépasse d'une bande entière. On retranche
+                //  aussi son décalage horizontal, celui-là même qui fait
+                //  s'écrire une ligne de gauche à droite — sans quoi la
+                //  butée tomberait ailleurs selon la place du mot dans sa
+                //  ligne.
+                const decal = ((r.left - cadre.left) / (defile.clientWidth || 1)) * hLigne * BALAYAGE;
+                const voulu = defile.clientHeight * LIGNE - bas - hLigne * (BANDE - 1.35) - decal;
+                defile.style.paddingTop = Math.max(0, Math.round(voulu)) + 'px';
+            }
+
             function mesurerLesMots() {
                 if (!mots.length) return;
                 const cadre = defile.getBoundingClientRect();
@@ -5806,7 +5910,7 @@
 
             function encrer() {
                 if (!mesureFaite) return;
-                const ligne = defile.scrollTop + defile.clientHeight * LIGNE;
+                const ligne = amorti + defile.clientHeight * LIGNE;
                 for (let i = 0; i < mots.length; i++) {
                     const m = mots[i];
                     let e = (ligne - m._y) / m._bande;
@@ -5838,23 +5942,69 @@
                 }
             }
 
+            //  Une seule boucle, et elle s'arrête d'elle-même. Tant que le
+            //  papier a du retard à rattraper, on redemande une image ; dès
+            //  qu'il a rejoint le doigt, on rend la main au navigateur. Une
+            //  boucle qui tournerait en permanence tiendrait le processeur
+            //  éveillé pour ne rien calculer.
+            function tourner() {
+                const vise = defile.scrollTop;
+                amorti += (vise - amorti) * TRAINE;
+                // Au-delà d'un certain retard on ne traîne plus, on décroche :
+                // sur un lancer rapide, le texte partirait sinon très loin
+                // derrière et reviendrait d'un bond.
+                if (vise - amorti > TRAINE_MAX) amorti = vise - TRAINE_MAX;
+                else if (amorti - vise > TRAINE_MAX) amorti = vise + TRAINE_MAX;
+
+                let retard = vise - amorti;
+                if (Math.abs(retard) < 0.15) { amorti = vise; retard = 0; }
+                if (flot) flot.style.transform = retard
+                    ? 'translate3d(0,' + retard.toFixed(1) + 'px,0)' : '';
+                encrer();
+                boucle = retard ? requestAnimationFrame(tourner) : 0;
+            }
+
             function auDefilement() {
-                if (enAttente) return;
-                enAttente = true;
-                requestAnimationFrame(() => { enAttente = false; encrer(); });
+                if (!boucle) boucle = requestAnimationFrame(tourner);
+            }
+
+            //  L'ordre compte : l'amorce déplace tout le texte vers le bas,
+            //  le talon allonge la course, et ce n'est qu'ensuite que les
+            //  positions valent quelque chose.
+            //  Le texte est glissé dans une enveloppe qu'on peut décaler
+            //  sans toucher au défilement lui-même : le navigateur garde sa
+            //  course, son inertie et ses barres, et l'on ne fait que
+            //  retenir ce qu'il montre. Détourner le défilement pour le
+            //  ralentir vraiment coûterait tout cela.
+            function envelopper() {
+                if (flot) return;
+                flot = document.createElement('div');
+                flot.className = 'recit-flot';
+                while (defile.firstChild) flot.appendChild(defile.firstChild);
+                defile.appendChild(flot);
+            }
+
+            function recomposer() {
+                // On mesure une page IMMOBILE : un décalage résiduel
+                // fausserait toutes les positions d'un coup.
+                if (flot) flot.style.transform = '';
+                amorti = defile.scrollTop;
+                poserLAmorce();
+                poserLeTalon();
+                mesurerLesMots();
+                encrer();
             }
 
             function armerLEncre() {
                 if (REDUIT) return;       // lettre déjà écrite, voir le CSS
                 forgerLesFiltres();
                 decouperEnMots();
-                poserLeTalon();
-                mesurerLesMots();
-                encrer();
+                envelopper();
+                recomposer();
                 // Les polices arrivent après le HTML : mesurer avant elles,
                 // c'est mesurer une page qui n'est pas celle qu'on lira.
                 if (document.fonts && document.fonts.ready) {
-                    document.fonts.ready.then(() => { poserLeTalon(); mesurerLesMots(); encrer(); });
+                    document.fonts.ready.then(recomposer);
                 }
             }
 
@@ -5890,6 +6040,9 @@
                 window.dropOverlayState?.('recit');
                 panneau.classList.remove('est-ouvert');
                 document.documentElement.classList.remove('u-locked');
+                // La traîne n'a plus rien à rattraper une fois la lettre
+                // refermée : on rend la main tout de suite.
+                if (boucle) { cancelAnimationFrame(boucle); boucle = 0; }
                 // On attend la fin du fondu avant de retirer le panneau du
                 // rendu : le cacher tout de suite ferait disparaître la
                 // feuille d'un coup, sans qu'elle ait le temps de se replier.
@@ -5916,7 +6069,7 @@
             window.addEventListener('resize', () => {
                 if (panneau.hidden || REDUIT) return;
                 clearTimeout(minuteurMesure);
-                minuteurMesure = setTimeout(() => { poserLeTalon(); mesurerLesMots(); encrer(); }, 150);
+                minuteurMesure = setTimeout(recomposer, 150);
             });
 
             document.addEventListener('keydown', (e) => {

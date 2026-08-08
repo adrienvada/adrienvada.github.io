@@ -40,6 +40,7 @@ FICHIERS=(
   "stereo|ressources/sons/docu-animalier.mp3"
   "stereo|ressources/sons/vada-publicite-loreal.mp3"
   "stereo|ressources/sons/vada-publicite-nexity.mp3"
+  "mono|ressources/sons/vada-doublage-321-go-nathan.mp3"
 )
 
 total_avant=0
