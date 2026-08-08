@@ -19,3 +19,4 @@ node_modules/
 #   launch.json, lui, est versionné : c'est la façon de lancer le site en
 #   local, et elle vaut pour toutes les machines.
 .claude/settings.local.json
+build/signature.svg.txt
