@@ -5770,12 +5770,27 @@
             //  à un autre — la ligne d'écriture flotterait. Amorti, tout
             //  reste d'accord, et l'état final ne change pas d'un pixel
             //  puisque la position amortie rejoint toujours la vraie.
-            //  0,07 : le papier ne rattrape que sept centièmes de son
-            //  retard par image, soit une bonne demi-seconde pour se
-            //  reposer. C'est beaucoup, et c'est voulu — à 0,16 on sentait
-            //  un flottement, ici on sent une matière qui résiste.
-            const TRAINE = 0.07;      // part du retard rattrapée à chaque image
-            const TRAINE_MAX = 130;   // px : au-delà, on ne traîne plus, on décroche
+            //  LE FREIN N'EST PLUS CONSTANT, ET C'EST CE QUI MANQUAIT. À
+            //  taux fixe, le papier mettait le même temps à se reposer
+            //  qu'on l'ait poussé d'un centimètre ou lancé d'un écran :
+            //  léger geste, longue dérive — d'où l'impression que ça
+            //  résistait trop. Un objet réel fait l'inverse. Plus il est
+            //  loin de sa place, plus il y revient vite.
+            //
+            //  Le taux monte donc avec le retard : mou quand on effleure,
+            //  ferme quand on lance. La matière se sent au petit geste, et
+            //  le grand geste ne traîne plus derrière soi.
+            const TRAINE = 0.11;      // part du retard rattrapée par image, au repos
+            const TRAINE_RAPPEL = 0.19; // ce qui s'y ajoute quand le retard est maximal
+            const TRAINE_MAX = 80;    // px : au-delà, on ne traîne plus, on décroche
+
+            //  ET LE TEMPS COMPTE, PAS LES IMAGES. Rattraper « onze
+            //  centièmes par image » va deux fois plus vite sur un écran à
+            //  120 Hz que sur un à 60 : le même geste n'aurait pas le même
+            //  poids d'un téléphone à l'autre. On convertit donc le taux en
+            //  durée — c'est la seule façon que la matière soit la même
+            //  partout.
+            const IMAGE = 1000 / 60;
 
             let mots = [];
             let flot = null;
@@ -5783,6 +5798,7 @@
             let largeurMesuree = 0;
             let boucle = 0;
             let amorti = 0;
+            let dernierTemps = 0;
 
             //  Le texte est écrit d'un bloc dans le HTML — il doit se lire,
             //  s'imprimer et s'indexer sans nous. On ne le découpe qu'ici,
@@ -5940,9 +5956,23 @@
             //  qu'il a rejoint le doigt, on rend la main au navigateur. Une
             //  boucle qui tournerait en permanence tiendrait le processeur
             //  éveillé pour ne rien calculer.
-            function tourner() {
+            function tourner(maintenant) {
+                //  Le temps écoulé, plafonné : revenir d'un onglet resté
+                //  ouvert une minute donnerait un écart énorme, et le papier
+                //  rattraperait tout d'un bond.
+                const dt = Math.min(50, dernierTemps ? maintenant - dernierTemps : IMAGE);
+                dernierTemps = maintenant;
+
                 const vise = defile.scrollTop;
-                amorti += (vise - amorti) * TRAINE;
+                const ecart = Math.abs(vise - amorti);
+                //  Le taux du moment : d'autant plus ferme que le papier est
+                //  loin de sa place.
+                const taux = TRAINE + TRAINE_RAPPEL * Math.min(1, ecart / TRAINE_MAX);
+                //  Converti d'« une image » vers « le temps réellement
+                //  écoulé » : la même fermeté à 60 comme à 120 Hz.
+                const k = 1 - Math.pow(1 - taux, dt / IMAGE);
+                amorti += (vise - amorti) * k;
+
                 // Au-delà d'un certain retard on ne traîne plus, on décroche :
                 // sur un lancer rapide, le texte partirait sinon très loin
                 // derrière et reviendrait d'un bond.
@@ -5954,11 +5984,12 @@
                 if (flot) flot.style.transform = retard
                     ? 'translate3d(0,' + retard.toFixed(1) + 'px,0)' : '';
                 encrer();
-                boucle = retard ? requestAnimationFrame(tourner) : 0;
+                if (retard) boucle = requestAnimationFrame(tourner);
+                else { boucle = 0; dernierTemps = 0; }
             }
 
             function auDefilement() {
-                if (!boucle) boucle = requestAnimationFrame(tourner);
+                if (!boucle) { dernierTemps = 0; boucle = requestAnimationFrame(tourner); }
             }
 
             //  L'ordre compte : l'amorce déplace tout le texte vers le bas,
