@@ -1377,6 +1377,28 @@
             text-shadow: 0 0 calc((1 - var(--encre)) * 3px) currentColor;
         }
 
+        /* LA GOUTTE PART DE LA PREMIÈRE LETTRE. Les plaques du filtre
+           naissaient partout à la fois dans le mot : c'était de l'encre,
+           mais de l'encre tombée d'en haut. Une plume pose son trait à
+           gauche et le tire vers la droite — un voile horizontal balaie
+           donc le mot dans ce sens, par-dessus le filtre.
+
+           Il part à -50 % et va à 110 % : à zéro le mot est entièrement
+           couvert, à un il est entièrement découvert, et le dégradé de
+           45 % qui suit la butée donne au front sa mollesse. Sans ces
+           débordements des deux côtés, un mot n'aurait jamais ni son
+           premier ni son dernier instant.
+
+           LE VOILE N'EST POSÉ QUE PENDANT LA DIFFUSION (classe .coule) :
+           un masque, même entièrement opaque, demande au navigateur une
+           couche de composition, et il y a trois cent quarante mots sur
+           cette page. Posés, ils n'en portent aucun. */
+        .mot.coule {
+            --front: calc(var(--encre) * 160% - 50%);
+            -webkit-mask-image: linear-gradient(to right, #000 var(--front), transparent calc(var(--front) + 45%));
+            mask-image: linear-gradient(to right, #000 var(--front), transparent calc(var(--front) + 45%));
+        }
+
         .recit-signature {
             font-family: 'Kalam', cursive;
             font-weight: 700;
@@ -1479,7 +1501,9 @@
                 box-shadow: none;
             }
 
-            .recit-feuille::before {
+            .recit-feuille::before,
+            .recit-feuille::after,
+            .recit-filtres {
                 display: none;
             }
 
@@ -1505,8 +1529,57 @@
                 mask-image: none;
             }
 
-            .recit-titre::after {
-                display: none;
+            /* ── LA BIO IMPRIMÉE N'EST PAS LA LETTRE ──
+               À l'écran c'est un objet qu'on regarde : grand, manuscrit,
+               une pensée par écran. Sur papier ce serait quatre feuilles
+               de Kalam à 20 px, illisibles en photocopie et hors sujet
+               dans un dossier de casting. On la ramène donc à ce qu'elle
+               doit y être — une NOTICE en pied de CV, en romain, au corps
+               du reste du document. Le manuscrit était une mise en scène ;
+               le papier n'en a pas besoin, il a déjà sa matière. */
+            .recit-defile {
+                padding: 0;
+                overflow: visible;
+            }
+
+            .recit-para,
+            .recit-signature {
+                font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                font-size: 7.5pt;
+                line-height: 1.35;
+                margin: 0 0 0.3em;
+                text-indent: 1.1em;
+                font-weight: 400;
+            }
+
+            .recit-para:first-of-type {
+                font-size: 7.5pt;
+                line-height: 1.35;
+            }
+
+            .recit-signature {
+                text-align: right;
+                text-indent: 0;
+                font-style: italic;
+                margin-top: 0.5em;
+            }
+
+            /* Un titre courant, cette fois visible : sur papier la bio
+               arrive après les dates et les distinctions, et sans nom on
+               ne saurait pas ce qu'on lit. */
+            .recit-titre {
+                position: static;
+                width: auto;
+                height: auto;
+                margin: 1.2em 0 0.4em;
+                padding: 0;
+                clip-path: none;
+                overflow: visible;
+                font-family: 'Montserrat', system-ui, sans-serif;
+                font-size: 8pt;
+                font-weight: 700;
+                letter-spacing: 0.18em;
+                text-transform: uppercase;
             }
         }
 
@@ -5754,8 +5827,13 @@
                         : e >= 0.985 ? PALIERS
                             : Math.min(PALIERS - 1, Math.max(1, Math.round(e * PALIERS)));
                     if (p !== m._palier) {
+                        const coulait = m._palier > 0 && m._palier < PALIERS;
+                        const coule = p > 0 && p < PALIERS;
                         m._palier = p;
-                        m.style.filter = (p === 0 || p === PALIERS) ? '' : 'url(#encre-' + p + ')';
+                        m.style.filter = coule ? 'url(#encre-' + p + ')' : '';
+                        // Le voile horizontal n'existe que pendant la
+                        // diffusion — voir .mot.coule dans la feuille.
+                        if (coule !== coulait) m.classList.toggle('coule', coule);
                     }
                 }
             }
