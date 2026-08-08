@@ -1228,6 +1228,15 @@
             transition: opacity var(--dur-panel) var(--ease-out);
         }
 
+        /* EN THÈME CLAIR, LE VOILE SE RÉCHAUFFE. Il valait le fond du
+           site, presque blanc, et le papier crème s'y détachait à peine —
+           ce qui se remarquait d'autant plus depuis que l'ombre est partie.
+           Un gris chaud le remet derrière la feuille sans faire du voile
+           une nappe sombre : le thème clair reste clair. */
+        :root[data-theme="light"] .recit-fond {
+            background: rgb(228 221 208 / 0.95);
+        }
+
         .recit.est-ouvert .recit-fond {
             opacity: 1;
         }
@@ -1273,8 +1282,30 @@
            le bord plus sombre d'une feuille posée sur une table. Le fond va
            au parchemin plutôt qu'au papier machine — c'est là que l'encre a
            l'air d'encre. */
+        /* LE CALQUE QUI TRAÎNE EST PROMU. Il change de transform à chaque
+           image pendant que le papier retarde sur le doigt ; sans cet avis,
+           le navigateur peut redessiner tout ce qu'il contient — trois mille
+           pixels de haut, une ombre floutée de soixante-dix — plutôt que de
+           se contenter de le déplacer. C'est exactement le genre de travail
+           qui ne se voit pas dans le profil du script et qui pourtant fait
+           saccader le défilement. */
+        .recit-flot {
+            will-change: transform;
+        }
+
         .recit-page {
             position: relative;
+            /* PAS D'OMBRE. Elle était portée par la page, non par le papier
+               découpé — une découpe emporte tout ce qui déborde, l'ombre
+               comprise — et restait donc RECTANGULAIRE sous une lisière
+               dentelée. On voyait un bloc gris dépasser au bas de la feuille.
+
+               Trois issues possibles : un papier droit, une ombre suivant la
+               forme, ou pas d'ombre. La deuxième demanderait un drop-shadow,
+               c'est-à-dire un filtre — celui-là même qu'on vient de retirer
+               pour rendre le défilement fluide. On prend la troisième : le
+               bord déchiré suffit à dire le papier, et le voile derrière
+               suffit à l'en détacher. */
             /* La marge du papier autour de son texte : une page a du blanc
                tout autour, sinon les mots tombent de la feuille.
 
@@ -1297,100 +1328,28 @@
                 radial-gradient(ellipse 90% 30% at 20% 2%, #fffcf2 0%, transparent 60%),
                 radial-gradient(ellipse 80% 25% at 88% 99%, #e6d7b6 0%, transparent 65%),
                 linear-gradient(180deg, #f7efdc 0%, #f1e6cf 45%, #f6eeda 100%);
-            box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.7);
-            filter: url(#bord-papier);
+            /* LA LISIÈRE EST UNE DÉCOUPE, PLUS UN FILTRE — et c'est une
+               question de fluidité, pas de dessin. Un feTurbulence de quatre
+               octaves s'appliquait ici sur 544 × 3731 pixels, soit deux
+               mégapixels, et il vit dans le calque que la traîne déplace à
+               chaque image : le navigateur le recalculait donc en boucle
+               pendant qu'on défilait. D'où les à-coups sur grand écran, où la
+               page est la plus large.
+
+               Une découpe polygonale ne coûte rien : elle est posée une fois,
+               le compositeur s'en sert telle quelle, et rien n'est recalculé
+               tant que la page ne change pas de taille. Le contour est
+               engendré par le script (voir decouperLePapier). */
+            clip-path: var(--dechirure, none);
             pointer-events: none;
         }
 
-        /* LA FIBRE, par-dessus — et c'est une IMAGE, maintenant.
-           Elle était calculée par le navigateur (deux feTurbulence). Le
-           bruit fractal est mathématiquement homogène : à toutes les
-           échelles la même densité, la même orientation moyenne. Du papier
-           ne fait pas ça — ses fibres sont des SEGMENTS couchés à plat, qui
-           s'agglutinent par paquets et laissent des zones nues. La tuile est
-           donc engendrée hors ligne, fibre par fibre, par
-           build/generer-papier.py : 18 Ko, sans couture par construction,
-           et rien qui vienne d'ailleurs — ni licence à vérifier, ni
-           provenance à croire.
-
-           Son contraste est faible exprès. Elle se répète six fois sur la
-           hauteur de la lettre ; tout ce qui s'y verrait assez pour être
-           reconnu se verrait six fois. */
-        .recit-page::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            background-image: url("ressources/images/papier/fibre.webp");
-            background-size: 512px 512px;
-            opacity: 0.55;
-            mix-blend-mode: multiply;
-            pointer-events: none;
-        }
-
-        /* Le texte passe AU-DESSUS des deux calques. */
+        /* Le texte passe AU-DESSUS du papier. */
         .recit-page > * {
             position: relative;
             z-index: 2;
         }
 
-        /* ══ LES ACCIDENTS DU PAPIER ══
-           Le grain et la fibre sont partout pareils : ils font une matière,
-           pas un objet. Une feuille qu'on a portée a des ACCIDENTS, et un
-           accident est par définition quelque part — d'où des positions
-           écrites une à une plutôt qu'un motif qui se répète.
-
-           UN PLI SE VOIT EN DEUX TEMPS : l'arête prend la lumière, le
-           creux juste au-dessus la perd. C'est ce décalage qui fait le
-           relief ; une simple ligne claire ferait une rayure de scanner.
-           Deux plis seulement, aux tiers, là où l'on plie une lettre pour
-           la mettre dans son enveloppe.
-
-           Tout est en dessous de 0,14 d'alpha. Un accident qu'on remarque
-           n'est plus un accident, c'est une décoration. */
-        .recit-page .recit-plis {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-            background-repeat: no-repeat;
-            background-image:
-                /* LES DEUX PLIS SONT LA MÊME IMAGE, CADRÉE AILLEURS.
-                   Un pli photographié a une arête qui serpente et une
-                   vigueur qui varie sur sa longueur — deux choses qu'un
-                   dégradé linéaire ne sait pas faire. On n'en engendre
-                   qu'un seul (build/generer-papier.py), et on en montre
-                   deux morceaux différents : la même feuille pliée deux
-                   fois, jamais tout à fait pareil. */
-                url("ressources/images/papier/pli.webp"),
-                url("ressources/images/papier/pli.webp"),
-                /* une éraflure oblique, courte */
-                linear-gradient(101deg, transparent 47.5%, rgba(120, 99, 64, 0.13) 49.2%,
-                    transparent 50.6%),
-                /* un coin corné, en haut à droite */
-                radial-gradient(130px 150px at 100% 0, rgba(120, 99, 64, 0.11), transparent 72%),
-                /* et l'ombre d'un doigt, en bas à gauche */
-                radial-gradient(180px 120px at 0 100%, rgba(120, 99, 64, 0.07), transparent 75%);
-            background-size:
-                190% 52px,
-                150% 44px,
-                44% 200px,
-                100% 100%,
-                100% 100%;
-            background-position:
-                -12% 30%,
-                -78% 67%,
-                86% 41%,
-                0 0,
-                0 100%;
-        }
-
-        .recit-filtres {
-            position: absolute;
-            width: 0;
-            height: 0;
-            overflow: hidden;
-        }
 
         /* PLUS DE FONDU SUR LA BOÎTE. Le haut et le bas de la zone
            s'éteignaient par un masque, ce qui donnait au défilement son air
@@ -1563,35 +1522,25 @@
             opacity: 0.9;
         }
 
-        /* ── LE PARAPHE SE DESSINE ──
-           L'encre est posée d'un bloc, en image ; c'est un MASQUE qui la
-           découvre. Le masque est un trait épais qui suit la trajectoire de
-           la main, et dont on ne montre qu'une part croissante : à
-           --trace = 0 rien n'est découvert, à 1 tout l'est. Le trait est
-           large — trente-quatre unités — parce qu'il n'a pas à être beau,
-           il a à couvrir : vérifié à 100 % de la signature au bout de sa
-           course.
+        /* ── LE PARAPHE ──
+           Les deux mots sont des images de MÊME HAUTEUR : seule leur
+           largeur diffère. C'est ce qui les garde à l'échelle l'un de
+           l'autre — cadrées chacune sur sa propre boîte, elles auraient été
+           mises à deux tailles par le CSS.
 
-           C'est l'inverse de ce qu'on fait d'ordinaire, où l'on trace un
-           chemin visible. Ici le chemin ne se voit jamais : il ne sert qu'à
-           dire jusqu'où la plume est allée.
-
-           Normalisé à une longueur de 1 (pathLength), de sorte que le calcul
-           ne dépende ni de l'échelle du dessin ni de sa longueur réelle.
-           1,02 plutôt que 1 : à l'arrondi près, un tiret exactement égal
-           laissait un point résiduel au départ. */
-        .recit-paraphe {
-            --trace: 1;
-            display: block;
-            width: min(17rem, 74%);
-            height: auto;
-            margin-left: auto;
-            overflow: visible;
+           La hauteur est en em, donc relative au corps de la signature : la
+           main grandit avec la lettre. Et l'opacité vient de .mot, comme
+           pour tous les autres mots de la page — il n'y a rien de
+           particulier à écrire ici. */
+        .recit-signature .mot {
+            display: inline-block;
+            vertical-align: bottom;
         }
 
-        .paraphe-plume {
-            stroke-dasharray: 1.02;
-            stroke-dashoffset: calc(1.02 * (1 - var(--trace)));
+        .recit-signature .mot img {
+            display: block;
+            height: 3.4em;
+            width: auto;
         }
 
         /* La croix se pose SUR le papier, pas au-dessus de l'écran : c'est
@@ -5778,7 +5727,6 @@
             if (!panneau) return;
             const defile = panneau.querySelector('.recit-defile');
             const morceaux = Array.from(panneau.querySelectorAll('.recit-para'));
-            const paraphe = panneau.querySelector('.recit-paraphe');
             const extrait = document.querySelector('.recit-extrait');
             if (!extrait || !morceaux.length) return;
             const DUREE_SORTIE = 420;   // un peu plus que --dur-panel
@@ -5901,6 +5849,60 @@
             //  texte — d'où ce blanc en pied de page, calculé pour que le
             //  dernier mot puisse à son tour passer la ligne, et un peu
             //  au-delà pour que la diffusion s'achève.
+            //  ══ LA LISIÈRE DU PAPIER ══
+            //  Un contour ondulé, posé une fois en découpe. Il remplace un
+            //  filtre de turbulence qui, lui, était recalculé à chaque image
+            //  parce qu'il vivait dans le calque que la traîne déplace — sur
+            //  grand écran, deux mégapixels de bruit fractal par déplacement,
+            //  et le défilement s'en ressentait.
+            //
+            //  L'ondulation est un bruit LISSE, pas un tirage par point : des
+            //  valeurs au hasard tous les quatre-vingts pixels, interpolées
+            //  en douceur entre elles. Tiré point par point, le bord aurait
+            //  été une scie ; une déchirure ondule.
+            //
+            //  Le hasard est ENSEMENCÉ : la même feuille à chaque ouverture.
+            //  Une lisière qui changerait d'une fois sur l'autre trahirait
+            //  qu'elle est calculée.
+            const DENTELURE = 8;      // amplitude, en pixels
+            const MAILLE = 80;        // distance entre deux valeurs tirées
+
+            function decouperLePapier() {
+                const page = defile.querySelector('.recit-page');
+                if (!page) return;
+                const L = page.offsetWidth, H = page.offsetHeight;
+                if (!L || !H) return;
+
+                let graine = 20260808;
+                const tirage = () => {
+                    graine = (graine * 1103515245 + 12345) & 0x7fffffff;
+                    return graine / 0x7fffffff;
+                };
+                //  Une suite de valeurs par bord, interpolée en S : c'est ce
+                //  lissage qui fait la déchirure plutôt que le denté.
+                const bord = (longueur) => {
+                    const n = Math.max(3, Math.ceil(longueur / MAILLE) + 1);
+                    const v = Array.from({ length: n }, () => (tirage() - 0.5) * 2 * DENTELURE);
+                    return (t) => {
+                        const g = t * (n - 1), i = Math.min(n - 2, Math.floor(g)), f = g - i;
+                        const s = f * f * (3 - 2 * f);
+                        return v[i] + (v[i + 1] - v[i]) * s;
+                    };
+                };
+                const haut = bord(L), bas = bord(L), gauche = bord(H), droite = bord(H);
+
+                const pts = [];
+                const pas = 26;
+                const nx = Math.max(4, Math.round(L / pas)), ny = Math.max(6, Math.round(H / pas));
+                for (let i = 0; i <= nx; i++) pts.push([L * i / nx, DENTELURE + haut(i / nx)]);
+                for (let i = 1; i <= ny; i++) pts.push([L - DENTELURE + droite(i / ny), H * i / ny]);
+                for (let i = nx - 1; i >= 0; i--) pts.push([L * i / nx, H - DENTELURE + bas(i / nx)]);
+                for (let i = ny - 1; i >= 1; i--) pts.push([DENTELURE + gauche(i / ny), H * i / ny]);
+
+                page.style.setProperty('--dechirure',
+                    'polygon(' + pts.map(([x, y]) => x.toFixed(1) + 'px ' + y.toFixed(1) + 'px').join(',') + ')');
+            }
+
             function poserLeTalon() {
                 const h = defile.clientHeight;
                 defile.style.paddingBottom = Math.round(h * (1 - LIGNE) + h * 0.12 + 40) + 'px';
@@ -5958,21 +5960,20 @@
                     const r = m.getBoundingClientRect();
                     const hLigne = parseFloat(getComputedStyle(m.parentNode).lineHeight) || 30;
                     m._y = (r.top - hautContenu) + ((r.left - cadre.left) / largeur) * hLigne * BALAYAGE;
-                    m._bande = hLigne * BANDE;
+                    //  LA SIGNATURE PREND SON TEMPS. Sa bande est douze
+                    //  fois plus large que celle d'un mot : ses deux
+                    //  « mots » font cent trente pixels de large et
+                    //  quatre-vingt-dix de haut, là où un mot ordinaire en
+                    //  fait quarante sur vingt. À bande égale, une surface
+                    //  six fois plus grande paraît six fois plus
+                    //  brutalement — elle claquait au lieu de venir. C'est
+                    //  aussi le dernier geste de la lettre : il a droit à
+                    //  ce qu'on le voie arriver.
+                    m._bande = hLigne * (m.closest('.recit-signature') ? BANDE * 12 : BANDE);
                     // -1 : aucune valeur connue, donc le premier passage
                     // écrira quoi qu'il arrive.
                     m._encre = -1;
                 });
-                if (paraphe) {
-                    const r = paraphe.getBoundingClientRect();
-                    paraphe._y = r.top - hautContenu;
-                    //  UNE SIGNATURE PREND SON TEMPS. Là où un mot vient en
-                    //  un dixième de ligne, le paraphe s'écrit sur quatre :
-                    //  c'est le dernier geste de la lettre, et on doit voir
-                    //  la plume aller.
-                    paraphe._bande = (parseFloat(getComputedStyle(morceaux[0]).lineHeight) || 30) * 4;
-                    paraphe._encre = -1;
-                }
                 mesureFaite = true;
             }
 
@@ -6003,17 +6004,6 @@
                     if (Math.abs(v - m._encre) < 0.006) continue;
                     m._encre = v;
                     m.style.setProperty('--encre', v.toFixed(3));
-                }
-                //  Le paraphe suit la même règle que les mots — il vient
-                //  quand la ligne d'écriture l'atteint — mais sur une bande
-                //  quarante fois plus large, et il ne pâlit pas : il se TRACE.
-                if (paraphe && paraphe._y !== undefined) {
-                    let v = (ligne - paraphe._y) / paraphe._bande;
-                    v = v < 0 ? 0 : v > 1 ? 1 : v;
-                    if (Math.abs(v - paraphe._encre) >= 0.004) {
-                        paraphe._encre = v;
-                        paraphe.style.setProperty('--trace', v.toFixed(4));
-                    }
                 }
             }
 
@@ -6088,6 +6078,7 @@
                 largeurMesuree = defile.clientWidth;
                 poserLAmorce();
                 poserLeTalon();
+                decouperLePapier();
                 mesurerLesMots();
                 encrer();
             }
@@ -6900,23 +6891,6 @@
          s'inscrit à son tour quand il entre dans le champ (voir
          .recit-para) ; sans script, ils sont tous là d'emblée. -->
     <div id="recit" class="recit" hidden>
-        <!-- LE BORD DÉCHIRÉ. Un bruit fractal très étiré horizontalement
-             sert de carte de déplacement : chaque point du bord est poussé
-             de quelques pixels au hasard, et la ligne droite devient une
-             lisière. Le filtre ne s'applique QU'AU CALQUE DE PAPIER, jamais
-             au texte — déplacer les mots les rendrait illisibles, et c'est
-             de toute façon le fond qu'on veut froisser. L'intérieur du
-             calque étant uni, le déplacement n'y voit rien : il ne se
-             remarque qu'aux bords, ce qui est exactement le but. -->
-        <svg class="recit-filtres" aria-hidden="true" focusable="false">
-            <filter id="bord-papier" x="-8%" y="-5%" width="116%" height="110%"
-                color-interpolation-filters="sRGB">
-                <feTurbulence type="fractalNoise" baseFrequency="0.006 0.018" numOctaves="4" seed="11"
-                    result="bruit" />
-                <feDisplacementMap in="SourceGraphic" in2="bruit" scale="17" xChannelSelector="R"
-                    yChannelSelector="G" />
-            </filter>
-        </svg>
         <div class="recit-fond" data-recit-fermer aria-hidden="true"></div>
         <div class="recit-feuille" role="dialog" aria-modal="true" aria-labelledby="recit-titre">
             <button type="button" class="recit-fermer" data-recit-fermer aria-label="Fermer le récit">
@@ -6938,11 +6912,6 @@
                      — l'amorce et le talon — reste sur la boîte, hors de la
                      page : ce sont des marges de défilement, pas du papier. -->
                 <div class="recit-page">
-                    <!-- Les accidents du papier : deux plis, une éraflure,
-                         un coin corné. Ils sont posés à des endroits PRÉCIS
-                         — un pli qui se répéterait ne serait plus un pli,
-                         ce serait un motif. -->
-                    <div class="recit-plis" aria-hidden="true"></div>
                     <h2 class="recit-titre" id="recit-titre">Mon parcours</h2>
                     <p class="recit-para">Ce que j'aime, c'est ce que chaque masque m'oblige à aller chercher. J'ai vu
                         Cyrano au cinéma quand j'avais onze ans, et je n'ai jamais quitté le plateau depuis. D'abord en
@@ -6969,33 +6938,31 @@
                         chaque fois qu'il s'agit de fabriquer quelqu'un.</p>
                     <p class="recit-para">C'est peut-être cela, au fond : aucun endroit où je sois passé, aucune
                         expérience de vie qui ne finisse, un jour, par servir sur un plateau.</p>
-    <!-- LE PARAPHE — LA VRAIE SIGNATURE D'ADRIEN.
-                     Écrite sur sa tablette reMarkable, dont l'export PDF
-                     contient ce que la main a fait : des surfaces posées
-                     DANS L'ORDRE DU GESTE. C'est le seul endroit du site où
-                     le tracé qui s'écrit n'est pas une imitation — une
-                     police ne contient jamais le trajet du stylo, seulement
-                     le contour rempli de la lettre.
+                    <!-- LE PARAPHE — LA VRAIE SIGNATURE D'ADRIEN, écrite sur sa
+                         tablette reMarkable. Deux images plutôt qu'une : elle
+                         paraît MOT APRÈS MOT, exactement comme le reste de la
+                         lettre.
 
-                     L'encre est une image : ses cinq mille points pesaient
-                     59 Ko de données de chemin, chargés à chaque visite pour
-                     une signature que seuls voient ceux qui ouvrent la
-                     lettre. Seule la TRAJECTOIRE reste en SVG, parce que
-                     c'est elle que le CSS anime.
+                         Il y avait ici tout un mécanisme pour la découvrir dans
+                         l'ordre du geste — un masque suivant la trajectoire de la
+                         main. Il marchait, et il est parti quand même : l'écriture
+                         manuscrite donne déjà l'organique, et une signature qui se
+                         DESSINE pendant que les mots PARAISSENT faisait deux
+                         langages sur la même page.
 
-                     Engendré par build/signature-vers-svg.py. -->
-                    <p class="recit-signature" aria-hidden="true">
-    <svg class="recit-paraphe" viewBox="0 0 374.4 175.8" aria-hidden="true" focusable="false">
-                        <defs>
-                            <mask id="paraphe-plume" maskUnits="userSpaceOnUse" x="0" y="0" width="374.4" height="175.8">
-                                <path class="paraphe-plume" pathLength="1" fill="none" stroke="#fff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"
-                                    d="M251.6 154.9L154.2 149.5L87.4 154.2L85.9 155.6L85.2 156.1L84.2 157.8L82.8 158.5L81.6 159.8L80.8 160.0L79.5 160.5L78.4 160.7L78.1 161.0L77.8 160.7L77.5 161.0L76.8 160.7L76.5 161.0L75.9 160.4L74.8 158.2L74.8 157.7L74.4 157.4L74.8 157.1L74.4 156.8L74.8 156.1L74.4 155.8L74.8 155.5L74.9 155.0L75.2 154.4L75.4 153.9L75.7 153.6L75.4 153.3L75.5 152.8L75.9 151.8L76.0 151.4L75.7 151.0L76.3 150.4L76.5 149.6L76.8 149.0L77.0 148.5L77.6 147.9L77.3 147.6L77.3 146.9L77.9 146.3L78.2 144.7L78.9 144.1L79.0 143.6L80.9 139.5L81.1 138.7L82.1 137.7L83.0 136.5L83.0 135.8L84.0 134.9L84.4 134.4L85.9 133.0L86.0 132.5L86.5 131.7L89.4 127.8L90.6 126.9L91.7 126.1L92.5 125.3L93.3 124.9L94.3 123.9L95.1 123.8L96.0 123.4L97.3 123.5L97.8 123.6L98.1 123.3L98.4 123.6L99.0 123.3L99.8 124.1L100.4 124.6L100.5 125.1L101.0 125.3L100.8 126.0L101.1 126.3L101.2 126.8L101.3 128.0L100.9 130.3L100.6 131.2L100.0 132.8L99.7 133.4L99.4 134.0L98.9 134.2L99.2 134.5L98.4 136.0L98.2 136.8L97.6 137.4L97.5 137.9L96.6 139.9L96.0 140.6L96.3 140.9L96.0 141.2L95.5 141.8L95.4 142.5L94.1 143.7L94.4 144.1L93.9 144.3L93.7 145.1L93.2 145.3L93.1 146.0L92.6 146.2L92.4 146.8L91.1 149.0L88.3 153.0L87.8 153.2L87.4 154.2L87.1 149.9L87.3 149.3L88.9 146.8L89.0 146.3L90.0 145.3L89.7 145.0L90.2 144.8L90.5 144.2L91.6 142.5L91.9 141.8L92.5 141.2L92.2 140.9L92.8 140.7L93.5 139.6L93.8 138.0L94.4 137.4L94.7 136.1L95.4 135.5L95.4 134.9L96.0 134.2L95.7 133.9L96.6 133.0L96.6 132.3L97.3 131.7L98.0 129.3L98.0 127.1L97.9 126.3L97.4 126.5L96.0 126.7L95.2 127.1L93.9 128.0L93.0 128.7L91.6 130.1L91.0 130.7L90.9 131.1L90.4 131.3L90.0 132.0L89.8 132.8L89.9 133.4L89.7 134.5L88.7 135.5L88.4 138.0L87.6 138.8L87.1 139.0L86.6 139.1L86.2 138.4L86.7 138.1L86.7 137.6L86.3 137.9L85.5 138.4L85.5 139.1L84.9 139.3L85.2 139.6L84.8 139.8L84.9 140.3L84.0 141.2L83.6 142.5L82.7 143.4L83.0 143.7L81.9 144.2L82.1 144.7L81.4 145.3L81.4 146.0L80.8 146.6L80.6 147.4L79.0 151.5L78.8 152.5L78.6 153.9L77.9 154.5L77.7 156.0L77.8 156.9L78.0 157.8L78.7 157.9L79.4 157.2L80.3 156.9L80.8 156.4L80.9 156.0L81.3 156.3L81.5 155.4L83.2 154.3L84.7 152.2L85.5 151.7L85.9 150.6L86.4 150.5L86.6 150.0L87.1 149.9L86.7 137.1L83.5 141.6L83.2 141.9L88.6 134.6L88.0 136.2L87.0 136.8L87.6 136.8L88.0 137.1L87.0 137.4L87.3 137.8L148.1 101.0L138.9 62.5L102.9 42.3L101.2 53.5L102.0 52.1L102.5 51.6L103.1 51.0L104.6 48.9L105.5 48.0L105.2 47.6L105.7 47.5L106.2 47.0L106.7 46.5L106.9 45.7L107.3 45.5L107.5 44.7L108.0 44.5L108.2 44.0L110.0 41.6L110.4 40.8L110.7 40.3L111.2 40.1L111.2 39.4L111.9 38.8L115.0 34.0L115.8 32.9L116.3 32.1L116.9 31.5L116.9 30.8L118.2 29.6L118.7 28.8L119.2 28.6L118.8 28.3L119.4 28.1L119.6 27.3L120.0 27.1L120.4 25.8L121.7 24.5L122.0 23.9L123.3 21.9L125.0 18.6L125.2 18.1L126.1 17.2L126.1 16.6L126.8 15.9L127.4 15.0L127.1 14.7L127.4 14.3L127.3 13.9L126.6 14.5L125.8 15.0L123.7 16.8L123.1 17.7L122.5 18.3L120.9 20.5L120.7 21.1L120.2 21.2L118.5 23.5L118.1 24.2L117.7 24.4L114.4 29.2L114.0 30.0L113.5 30.2L113.8 30.5L113.3 30.7L112.8 31.1L112.7 31.6L111.9 33.1L110.9 34.0L110.7 34.8L110.0 36.2L109.0 37.2L109.0 37.8L108.4 38.4L108.4 39.1L107.4 40.0L107.4 40.7L106.8 41.3L106.5 42.2L105.8 42.9L105.6 43.7L105.4 44.3L105.2 44.8L104.3 45.7L104.3 46.4L103.6 47.0L103.9 47.3L103.3 48.0L103.3 48.6L102.7 49.2L101.6 51.9L101.4 52.4L100.9 52.9L100.5 53.2L101.2 53.5L128.2 12.8L127.9 13.1L127.6 13.7L101.0 53.7L97.8 57.2L140.3 55.3L140.0 56.9L139.7 57.5L139.0 57.8L139.7 58.1L138.1 59.1L138.7 61.0L138.4 61.3L137.4 61.6L137.8 61.9L138.1 62.4L136.2 62.9L137.4 63.7L135.5 64.2L136.2 64.2L137.1 64.2L137.4 64.5L135.8 64.8L136.8 65.1L85.6 78.2L67.6 109.0L67.9 108.7L72.5 108.0L74.6 103.3L75.6 101.1L76.5 99.5L76.8 98.5L77.0 97.8L77.6 97.1L77.9 95.5L78.6 94.9L78.8 93.8L79.3 92.5L79.5 91.7L80.2 91.1L80.2 89.8L80.8 89.2L80.9 88.7L81.3 87.8L81.5 86.9L82.0 86.7L82.1 86.0L82.7 85.4L82.7 84.8L83.0 84.4L82.7 84.1L83.3 83.5L83.5 83.0L83.8 82.4L84.0 81.9L84.6 81.3L84.8 80.5L85.1 79.5L85.2 79.0L84.4 79.5L83.8 80.2L81.3 83.3L80.7 84.2L79.5 85.1L78.2 87.1L77.7 87.2L77.5 87.7L76.7 88.2L76.3 89.2L75.9 89.7L73.7 92.1L73.3 92.3L71.3 94.9L70.8 95.4L70.2 95.9L69.1 96.8L69.1 97.4L68.6 97.9L68.0 98.5L67.5 98.6L67.4 99.1L66.9 99.3L66.8 99.7L66.3 99.9L65.2 101.6L64.7 101.8L64.5 102.3L64.1 102.4L63.5 103.3L62.9 104.2L62.2 104.3L61.8 104.7L61.4 105.7L61.0 105.5L59.2 107.9L57.8 109.3L57.3 109.6L61.4 109.5L64.1 109.0L64.5 109.3L64.8 109.0L67.0 109.0L67.3 108.7L67.6 109.0L64.2 100.3L117.5 103.2L148.3 101.1L171.0 99.8L199.6 97.3L206.9 99.8L164.4 103.3L136.8 104.9L112.5 113.9L101.9 139.1L103.8 153.7L114.2 130.3L130.4 129.6L123.7 152.5L143.0 133.6L142.0 143.7L157.5 121.5L157.2 137.1L143.6 153.6L162.8 141.4L186.5 127.7L197.8 128.5L185.9 154.7L188.3 140.3L184.3 138.2L170.2 150.4L182.4 126.1L165.6 142.3L140.7 154.5L126.7 154.0L118.8 146.6L115.4 139.9L95.1 158.7L105.2 123.8L93.0 109.0L71.9 117.1L61.1 146.9L57.3 156.1L61.9 133.8L68.3 111.9L52.2 114.9L28.2 141.8L9.7 158.9L23.6 142.9L39.2 125.0L35.0 114.4L11.6 111.7L24.2 110.9L45.1 110.9L67.1 94.3L83.3 75.9L102.2 44.0L118.2 19.4L131.9 11.8L112.1 43.9L86.5 84.1L84.4 106.5L103.8 104.3L121.1 88.2L133.4 61.3L139.2 61.4L130.6 74.9L119.0 99.2L136.1 101.7L196.1 100.6L216.1 96.5L14.4 108.7L13.7 108.4L12.8 108.6L11.5 109.3L13.4 108.9L16.3 108.9L10.6 109.2L13.7 109.2L12.1 109.5L13.6 109.8L11.8 110.2L10.2 110.5L12.5 110.5L16.6 110.5L11.5 110.8L13.4 110.9L12.1 111.1L12.8 111.3L14.1 111.4L17.2 111.4L19.8 111.4L15.3 111.7L20.4 111.7L16.9 112.1L20.1 112.1L22.6 112.1L17.5 112.4L21.0 113.0L49.9 113.3L76.2 107.6L86.7 107.9L156.1 134.4L157.1 133.4L157.5 133.3L158.2 133.0L158.7 132.8L160.1 131.4L160.6 130.8L161.0 129.5L162.3 128.2L162.0 127.9L162.3 127.6L162.7 126.5L162.7 124.6L162.6 123.8L162.1 123.3L160.9 123.0L159.8 124.1L159.1 125.3L158.5 126.0L158.5 126.6L157.5 127.6L157.0 128.1L156.0 129.5L155.9 130.2L155.3 130.4L155.6 130.7L155.4 134.0L156.1 134.4L165.3 127.3L187.5 124.7L184.4 125.4L105.7 129.5L115.5 133.3L114.2 135.3L115.0 134.5L115.4 133.6L114.7 133.9L113.8 135.2L114.2 135.3L113.6 135.5L112.7 139.0L114.3 139.0L118.4 147.6L141.2 145.4L151.1 136.5L174.5 129.5L181.8 134.3L183.7 135.2L182.5 135.8L179.0 138.4L177.7 138.7L194.2 129.8L193.9 130.1L190.7 131.1L15.6 154.6L95.9 150.1L129.8 150.1L185.3 155.2L187.2 155.4L186.3 155.8L326.2 127.0L364.2 68.3L301.4 139.7L304.6 135.8L305.5 135.2L297.0 134.3L347.4 159.8L342.5 156.1L336.9 156.3L330.1 154.4L323.0 157.9L321.4 144.2L316.0 149.6L303.1 157.3L298.2 157.5L293.3 154.8L292.4 152.9L284.2 161.1L279.7 159.9L281.8 152.2L284.1 146.9L285.4 143.4L291.3 134.6L295.9 130.0L300.4 127.1L304.4 131.1L304.6 135.3L301.1 139.5L298.2 145.2L296.8 151.4L296.3 155.0L303.1 150.4L306.2 142.7L306.9 140.7L308.8 137.4L311.4 133.9L316.6 128.4L323.9 123.9L330.8 122.1L334.2 114.6L337.7 108.5L342.1 100.0L347.1 89.3L350.7 82.5L353.5 77.2L357.7 69.5L360.5 64.1L365.0 58.1L365.9 62.9L363.1 71.1L360.4 71.6L354.8 80.9L352.3 85.4L348.5 93.9L345.2 100.7L342.5 105.4L337.7 114.9L335.2 120.9L332.4 125.9L329.0 134.4L324.2 145.8L322.6 151.5L328.3 151.8L333.6 141.5L339.6 133.0L345.5 128.7L351.8 124.2L356.7 126.5L355.7 133.7L347.9 145.3L345.3 153.3L350.2 158.5L289.4 146.0L288.4 146.6L287.8 146.9L290.4 150.7L290.9 150.2L291.4 149.8L291.1 149.5L292.0 148.5L292.5 147.7L293.3 146.6L294.7 144.2L295.0 143.7L295.4 143.5L295.5 142.8L296.2 142.2L296.3 141.7L297.6 139.5L297.8 138.9L298.3 138.8L298.4 138.0L299.0 137.4L299.0 136.8L299.6 136.1L299.8 135.3L301.7 130.6L301.9 130.1L301.4 130.3L300.1 130.6L299.6 131.1L298.8 131.5L296.5 133.9L296.0 134.4L296.3 134.7L296.8 135.2L296.0 136.0L295.7 135.7L295.4 136.0L295.0 135.7L294.6 136.1L294.4 136.6L293.9 138.1L293.4 138.3L293.2 138.8L292.7 139.0L293.0 139.3L292.3 140.3L292.7 140.6L292.0 141.2L291.4 142.2L291.1 143.4L290.6 143.9L290.1 144.1L290.4 144.4L289.8 146.6L289.2 147.2L289.5 147.6L289.2 147.9L289.2 148.5L288.1 149.6L287.4 149.9L287.1 149.6L286.6 149.1L286.2 149.5L285.7 149.8L286.0 150.1L285.7 150.4L285.5 150.9L284.9 152.2L284.4 153.9L283.8 154.5L283.8 155.2L283.5 155.5L283.8 155.8L283.5 156.1L283.3 156.9L283.2 158.1L284.1 157.7L285.0 157.1L285.1 156.7L286.2 156.3L286.6 155.8L287.3 154.5L288.5 153.6L288.9 152.5L289.4 152.4L289.5 151.7L290.4 150.7L287.5 147.6L288.1 148.2L288.7 148.2L286.8 148.5L288.4 148.5L304.3 132.7L305.5 133.0L304.9 133.3L304.4 133.6L306.2 133.6L303.6 133.9L305.5 133.9L305.2 134.3L304.3 134.6L304.9 134.9L303.6 135.8L302.7 136.5L303.6 136.5L302.4 136.8L311.9 141.1L315.0 136.9L315.5 136.1L315.8 135.8L315.3 135.7L315.1 136.2L313.3 137.7L313.0 138.7L312.5 139.1L312.2 138.8L312.0 139.3L311.4 139.9L311.3 140.7L310.4 141.2L310.1 142.5L309.6 143.0L309.2 143.7L308.8 144.1L309.4 144.0L311.9 141.1L297.3 146.0L310.3 151.2L310.7 151.0L310.4 150.7L311.3 150.5L311.9 149.6L312.6 148.5L313.4 147.7L314.9 146.6L315.3 145.8L316.1 145.3L315.8 145.0L317.3 144.1L317.7 143.4L318.4 142.5L318.8 141.8L319.2 141.6L319.4 141.1L320.3 140.6L320.7 139.8L321.7 138.5L322.3 137.6L322.6 137.0L323.1 136.8L322.8 136.5L323.3 136.3L323.7 135.8L323.9 135.3L324.7 133.9L325.0 133.6L324.7 133.3L325.3 133.0L325.4 132.6L326.0 132.3L325.6 132.0L325.8 131.5L326.1 130.9L326.1 130.3L326.0 129.8L326.6 129.2L326.3 128.8L326.6 128.5L326.6 126.9L326.1 126.5L324.7 126.7L323.4 127.2L322.6 127.5L322.0 128.4L321.5 128.5L320.0 129.4L319.9 129.9L319.4 130.0L319.6 130.7L320.0 131.5L320.3 133.3L319.6 133.9L319.9 134.2L319.6 134.5L319.4 135.3L318.8 136.6L317.6 138.5L317.2 139.1L317.0 139.7L316.5 139.9L314.9 142.2L314.5 142.9L314.0 143.0L313.2 144.5L312.3 145.0L311.6 146.4L311.1 146.5L311.0 147.0L310.5 147.2L309.9 148.0L309.4 148.6L308.5 149.1L308.0 149.6L308.2 150.1L307.1 150.6L306.6 151.0L306.5 151.5L306.1 151.2L306.0 152.0L305.0 152.9L305.1 154.3L305.7 154.2L307.6 153.0L308.4 152.7L308.6 152.2L309.3 152.2L310.3 151.2L294.4 150.1L293.8 151.4L295.4 151.4L295.7 152.2L304.3 152.3L295.4 156.5L296.7 157.7L364.2 64.8L364.2 65.4L363.3 65.9L362.9 66.4L363.9 66.7L359.1 67.3L363.6 68.0L360.7 69.9L360.5 70.4L361.7 70.2L362.6 70.5L361.4 70.8L360.1 71.1L362.0 71.5L360.7 72.1L327.7 127.3L333.4 154.7L333.7 154.4L334.2 154.3L335.2 153.9L337.3 152.4L337.9 151.5L339.2 150.8L341.8 147.6L342.3 147.1L343.5 145.6L344.4 145.0L345.0 144.1L345.2 143.3L345.5 142.3L345.6 141.8L346.4 141.1L346.9 140.9L346.6 140.6L347.1 140.0L347.4 139.5L349.2 136.4L349.8 136.1L349.4 135.8L349.9 135.3L350.7 134.9L351.5 133.4L351.7 132.9L352.5 132.7L353.8 128.4L353.7 127.7L353.5 127.2L352.8 126.8L352.5 127.1L351.8 127.4L350.9 128.0L347.9 130.3L347.4 131.2L346.9 131.7L346.4 132.2L346.1 131.9L345.6 133.3L345.0 133.9L344.7 134.5L343.1 137.1L342.8 137.7L342.1 138.4L342.1 139.1L341.6 139.2L341.2 140.6L340.2 141.5L339.9 142.2L338.8 143.9L338.6 144.5L338.1 144.6L338.0 145.3L337.4 146.0L336.8 146.5L336.4 147.6L336.0 148.0L334.5 149.8L333.9 150.4L333.8 151.2L333.1 153.9L333.4 154.7L315.7 131.7L321.7 143.5L348.4 129.8L344.2 134.3L336.0 147.6L322.4 153.0L323.3 154.9L342.3 152.0L309.3 91.4L310.3 95.4L303.8 102.8L298.4 107.9L294.5 112.1L288.6 117.3L281.6 123.7L275.2 130.1L266.8 138.8L264.0 142.0L258.7 146.6L253.6 152.7L249.8 156.8L243.1 163.2L240.2 166.3L236.5 166.6L245.7 150.1L248.7 144.2L252.4 136.5L255.4 131.5L259.4 122.5L264.4 106.6L266.7 95.9L265.5 94.7L264.1 101.2L260.9 105.1L261.9 101.7L261.9 96.8L264.6 90.0L267.6 82.2L270.5 85.1L269.9 90.9L267.6 104.7L263.9 118.5L261.4 125.2L258.1 132.0L252.7 142.8L250.2 147.2L247.7 152.2L249.0 152.9L257.9 143.0L262.4 138.8L266.2 134.7L269.3 131.3L276.6 124.6L280.8 120.8L289.4 112.7L295.3 106.6L301.2 100.9L304.5 97.4L309.8 91.4L314.2 83.8L316.8 77.1L317.9 73.5L317.9 64.9L309.8 71.8L311.5 66.3L320.1 62.4L321.2 67.3L321.2 72.1L319.1 80.5L310.7 94.9L266.5 86.7L265.9 88.6L266.8 91.4L265.3 92.4L264.0 94.6L263.4 97.2L264.0 97.5L263.0 97.8L262.7 99.4L263.4 99.4L262.1 100.0L261.8 103.2L261.3 103.8L262.7 104.0L262.1 104.1L261.3 104.4L261.8 105.1L262.1 105.4L281.8 120.0L246.2 155.5L245.9 156.1L245.3 156.8L309.3 70.8L314.4 64.2L313.2 65.1L311.6 67.3L312.4 68.3L312.2 68.9L311.2 69.2" />
-                            </mask>
-                        </defs>
-                        <image mask="url(#paraphe-plume)" x="0" y="0" width="374.4" height="175.8"
-                            href="ressources/images/papier/signature.webp" />
-                    </svg>
-                    </p>
+                         Les deux mots portent la classe `mot` : le moteur d'encre
+                         les ramasse alors sans rien savoir d'eux et les traite
+                         comme les trois cent quarante autres. Même hauteur pour
+                         les deux images, sans quoi le CSS les mettrait à deux
+                         échelles différentes — « Vada » aurait paru plus grand
+                         qu'« Adrien », qui a des jambages plus longs.
+
+                         Engendrées par build/signature-vers-svg.py. -->
+                    <p class="recit-signature" aria-hidden="true"><span class="mot"><img
+                                src="ressources/images/papier/signature-1.webp" alt="" width="770"
+                                height="527" decoding="async" /></span> <span class="mot"><img
+                                src="ressources/images/papier/signature-2.webp" alt="" width="522"
+                                height="527" decoding="async" /></span></p>
                 </div>
             </div>
         </div>

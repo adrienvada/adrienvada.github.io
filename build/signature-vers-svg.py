@@ -20,13 +20,18 @@
 #  des rubans ne marche pas (essayé : le squelette part en vrille dès
 #  que la plume tourne).
 #
-#  CE QU'ON FAIT À LA PLACE. On garde l'encre telle quelle — c'est
-#  son écriture, on n'y touche pas — et l'on ne se sert de l'ordre du
-#  fichier que pour la DÉCOUVRIR. L'ordre des sous-tracés est celui
-#  de la main ; un trait épais qui les suit balaie donc la signature
-#  dans le sens où elle a été écrite. La trajectoire n'a pas à être
-#  belle, elle doit seulement être dans le bon ordre et tout couvrir :
-#  mesuré à 99 % de couverture, ce qui reste sous le trait.
+#  ET POURTANT ON NE TRACE PAS. Il y avait ici tout un mécanisme pour
+#  découvrir la signature dans l'ordre du geste — un masque suivant la
+#  trajectoire de la main. Il marchait. Il a été retiré quand même :
+#  l'écriture manuscrite suffit à donner l'organique, et une signature
+#  qui se dessine pendant que le reste de la lettre paraît en fondu
+#  faisait deux langages sur la même page. Elle paraît donc comme les
+#  mots, en fondu, mot après mot.
+#
+#  D'où DEUX IMAGES et non une : « Adrien » puis « Vada ». Elles sont
+#  découpées au plus grand blanc horizontal, et gardent LA MÊME
+#  HAUTEUR — celle de la signature entière — sans quoi la mise à
+#  l'échelle par le CSS les rendrait de deux tailles différentes.
 #
 #  Relancer :  python3 build/signature-vers-svg.py <fichier.pdf>
 # ============================================================
@@ -196,43 +201,43 @@ if __name__ == "__main__":
     def place(p):
         return [((x - mx + marge), (ey - (y - my) + marge)) for x, y in p]
 
-    #  L'ENCRE PART EN IMAGE, LA TRAJECTOIRE RESTE EN LIGNE.
-    #  Les cinq mille points de la signature pèsent 59 Ko de données de
-    #  chemin, chargés à chaque visite du site pour une image que seuls
-    #  voient ceux qui ouvrent la lettre. Une image en pèse le tiers et
-    #  ne coûte rien tant qu'on ne l'ouvre pas. La trajectoire, elle,
-    #  doit rester du SVG : c'est elle que le CSS anime.
+    #  Le plus grand blanc horizontal sépare les deux mots.
+    boites = sorted((min(x for sp in f for x, _ in sp),
+                     max(x for sp in f for x, _ in sp)) for f in formes)
+    blocs = []
+    for a0, b0 in boites:
+        if blocs and a0 <= blocs[-1][1] + 1:
+            blocs[-1][1] = max(blocs[-1][1], b0)
+        else:
+            blocs.append([a0, b0])
+    coupe = max(((blocs[i][1] + blocs[i + 1][0]) / 2, blocs[i + 1][0] - blocs[i][1])
+                for i in range(len(blocs) - 1))[0]
+
     ECHELLE = 3
-    LI, HI = int((ex + marge * 2) * ECHELLE), int((ey + marge * 2) * ECHELLE)
-    a_lechelle = [[[(x * ECHELLE, y * ECHELLE) for x, y in place(sp)] for sp in f] for f in formes]
-    img = remplir_pair_impair((LI, HI), a_lechelle, (107, 83, 52, 255))
     dossier = RACINE / "ressources" / "images" / "papier"
     dossier.mkdir(parents=True, exist_ok=True)
-    img.save(dossier / "signature.webp", "WEBP", quality=94, method=6, lossless=False)
-    poids = (dossier / "signature.webp").stat().st_size // 1024
+    tailles = []
+    for i, garde in enumerate(((lambda cx: cx < coupe), (lambda cx: cx >= coupe))):
+        groupe = [f for f in formes
+                  if garde(sum(x for sp in f for x, _ in sp) / sum(len(sp) for sp in f))]
+        xs = [x for f in groupe for sp in f for x, _ in sp]
+        # Le trait d'attaque du A sort loin à gauche : une marge trop
+        # courte le tranchait net.
+        x0, x1 = min(xs) - marge * 3, max(xs) + marge * 3
+        L = int((x1 - x0) * ECHELLE)
+        H = int((ey + marge * 2) * ECHELLE)
+        place_i = lambda pl: [((x - mx - (x0 - 0)) * ECHELLE, (ey - (y - my) + marge) * ECHELLE)
+                              for x, y in pl]
+        # place() ramène déjà à l'origine du dessin : on ne décale
+        # ensuite que du bord gauche du mot.
+        dec = x0 - 0
+        groupes = [[[(px - dec, py) for px, py in place(sp)] for sp in f] for f in groupe]
+        a_lechelle = [[[(px * ECHELLE, py * ECHELLE) for px, py in sp] for sp in f] for f in groupes]
+        img = remplir_pair_impair((L, H), a_lechelle, (107, 83, 52, 255))
+        nom = f"signature-{i + 1}.webp"
+        img.save(dossier / nom, "WEBP", quality=94, method=6)
+        tailles.append((nom, img.size, (dossier / nom).stat().st_size // 1024))
 
-    plume = vers_svg(place(chemin), False)
-    couverture = controler(formes, chemin, (mx, my, ex, ey))
-    l, h = ex + marge * 2, ey + marge * 2
-
-    svg = (f'<svg class="recit-paraphe" viewBox="0 0 {l:.1f} {h:.1f}"'
-           ' aria-hidden="true" focusable="false">\n'
-           '    <defs>\n'
-           f'        <mask id="paraphe-plume" maskUnits="userSpaceOnUse"'
-           f' x="0" y="0" width="{l:.1f}" height="{h:.1f}">\n'
-           f'            <path class="paraphe-plume" pathLength="1" fill="none" stroke="#fff"'
-           f' stroke-width="{EPAISSEUR_PLUME}" stroke-linecap="round" stroke-linejoin="round"\n'
-           f'                d="{plume}" />\n'
-           '        </mask>\n'
-           '    </defs>\n'
-           f'    <image mask="url(#paraphe-plume)" x="0" y="0" width="{l:.1f}" height="{h:.1f}"\n'
-           '        href="ressources/images/papier/signature.webp" />\n'
-           '</svg>')
-
-    sortie = RACINE / "build" / "signature.svg.txt"
-    sortie.write_text(svg, encoding="utf-8")
-    print(f"  {len(formes)} formes · trajectoire de {len(chemin)} points")
-    print(f"  couverture du trait : {couverture} %")
-    print(f"  contrôle : {CONTROLE}")
-    print(f"  encre : signature.webp  {poids} Ko")
-    print(f"  bloc SVG : {sortie}  ({len(svg) // 1024} Ko)")
+    print(f"  {len(formes)} formes · coupe entre les deux mots à x = {coupe:.0f}")
+    for nom, taille, poids in tailles:
+        print(f"  {nom:18} {taille[0]}×{taille[1]}  {poids} Ko")
