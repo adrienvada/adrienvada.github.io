@@ -1273,8 +1273,25 @@
            le bord plus sombre d'une feuille posée sur une table. Le fond va
            au parchemin plutôt qu'au papier machine — c'est là que l'encre a
            l'air d'encre. */
+        /* LE CALQUE QUI TRAÎNE EST PROMU. Il change de transform à chaque
+           image pendant que le papier retarde sur le doigt ; sans cet avis,
+           le navigateur peut redessiner tout ce qu'il contient — trois mille
+           pixels de haut, une ombre floutée de soixante-dix — plutôt que de
+           se contenter de le déplacer. C'est exactement le genre de travail
+           qui ne se voit pas dans le profil du script et qui pourtant fait
+           saccader le défilement. */
+        .recit-flot {
+            will-change: transform;
+        }
+
         .recit-page {
             position: relative;
+            /* L'ombre est portée par la page et non par le papier découpé :
+               une découpe emporte tout ce qui déborde, l'ombre comprise. Elle
+               reste rectangulaire, mais son flou de soixante-dix pixels est
+               quatre fois plus large que la dentelure — la différence ne se
+               voit pas. */
+            box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.7);
             /* La marge du papier autour de son texte : une page a du blanc
                tout autour, sinon les mots tombent de la feuille.
 
@@ -1297,8 +1314,19 @@
                 radial-gradient(ellipse 90% 30% at 20% 2%, #fffcf2 0%, transparent 60%),
                 radial-gradient(ellipse 80% 25% at 88% 99%, #e6d7b6 0%, transparent 65%),
                 linear-gradient(180deg, #f7efdc 0%, #f1e6cf 45%, #f6eeda 100%);
-            box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.7);
-            filter: url(#bord-papier);
+            /* LA LISIÈRE EST UNE DÉCOUPE, PLUS UN FILTRE — et c'est une
+               question de fluidité, pas de dessin. Un feTurbulence de quatre
+               octaves s'appliquait ici sur 544 × 3731 pixels, soit deux
+               mégapixels, et il vit dans le calque que la traîne déplace à
+               chaque image : le navigateur le recalculait donc en boucle
+               pendant qu'on défilait. D'où les à-coups sur grand écran, où la
+               page est la plus large.
+
+               Une découpe polygonale ne coûte rien : elle est posée une fois,
+               le compositeur s'en sert telle quelle, et rien n'est recalculé
+               tant que la page ne change pas de taille. Le contour est
+               engendré par le script (voir decouperLePapier). */
+            clip-path: var(--dechirure, none);
             pointer-events: none;
         }
 
@@ -1308,12 +1336,6 @@
             z-index: 2;
         }
 
-        .recit-filtres {
-            position: absolute;
-            width: 0;
-            height: 0;
-            overflow: hidden;
-        }
 
         /* PLUS DE FONDU SUR LA BOÎTE. Le haut et le bas de la zone
            s'éteignaient par un masque, ce qui donnait au défilement son air
@@ -5813,6 +5835,60 @@
             //  texte — d'où ce blanc en pied de page, calculé pour que le
             //  dernier mot puisse à son tour passer la ligne, et un peu
             //  au-delà pour que la diffusion s'achève.
+            //  ══ LA LISIÈRE DU PAPIER ══
+            //  Un contour ondulé, posé une fois en découpe. Il remplace un
+            //  filtre de turbulence qui, lui, était recalculé à chaque image
+            //  parce qu'il vivait dans le calque que la traîne déplace — sur
+            //  grand écran, deux mégapixels de bruit fractal par déplacement,
+            //  et le défilement s'en ressentait.
+            //
+            //  L'ondulation est un bruit LISSE, pas un tirage par point : des
+            //  valeurs au hasard tous les quatre-vingts pixels, interpolées
+            //  en douceur entre elles. Tiré point par point, le bord aurait
+            //  été une scie ; une déchirure ondule.
+            //
+            //  Le hasard est ENSEMENCÉ : la même feuille à chaque ouverture.
+            //  Une lisière qui changerait d'une fois sur l'autre trahirait
+            //  qu'elle est calculée.
+            const DENTELURE = 8;      // amplitude, en pixels
+            const MAILLE = 80;        // distance entre deux valeurs tirées
+
+            function decouperLePapier() {
+                const page = defile.querySelector('.recit-page');
+                if (!page) return;
+                const L = page.offsetWidth, H = page.offsetHeight;
+                if (!L || !H) return;
+
+                let graine = 20260808;
+                const tirage = () => {
+                    graine = (graine * 1103515245 + 12345) & 0x7fffffff;
+                    return graine / 0x7fffffff;
+                };
+                //  Une suite de valeurs par bord, interpolée en S : c'est ce
+                //  lissage qui fait la déchirure plutôt que le denté.
+                const bord = (longueur) => {
+                    const n = Math.max(3, Math.ceil(longueur / MAILLE) + 1);
+                    const v = Array.from({ length: n }, () => (tirage() - 0.5) * 2 * DENTELURE);
+                    return (t) => {
+                        const g = t * (n - 1), i = Math.min(n - 2, Math.floor(g)), f = g - i;
+                        const s = f * f * (3 - 2 * f);
+                        return v[i] + (v[i + 1] - v[i]) * s;
+                    };
+                };
+                const haut = bord(L), bas = bord(L), gauche = bord(H), droite = bord(H);
+
+                const pts = [];
+                const pas = 26;
+                const nx = Math.max(4, Math.round(L / pas)), ny = Math.max(6, Math.round(H / pas));
+                for (let i = 0; i <= nx; i++) pts.push([L * i / nx, DENTELURE + haut(i / nx)]);
+                for (let i = 1; i <= ny; i++) pts.push([L - DENTELURE + droite(i / ny), H * i / ny]);
+                for (let i = nx - 1; i >= 0; i--) pts.push([L * i / nx, H - DENTELURE + bas(i / nx)]);
+                for (let i = ny - 1; i >= 1; i--) pts.push([DENTELURE + gauche(i / ny), H * i / ny]);
+
+                page.style.setProperty('--dechirure',
+                    'polygon(' + pts.map(([x, y]) => x.toFixed(1) + 'px ' + y.toFixed(1) + 'px').join(',') + ')');
+            }
+
             function poserLeTalon() {
                 const h = defile.clientHeight;
                 defile.style.paddingBottom = Math.round(h * (1 - LIGNE) + h * 0.12 + 40) + 'px';
@@ -5870,7 +5946,16 @@
                     const r = m.getBoundingClientRect();
                     const hLigne = parseFloat(getComputedStyle(m.parentNode).lineHeight) || 30;
                     m._y = (r.top - hautContenu) + ((r.left - cadre.left) / largeur) * hLigne * BALAYAGE;
-                    m._bande = hLigne * BANDE;
+                    //  LA SIGNATURE PREND SON TEMPS. Sa bande est douze
+                    //  fois plus large que celle d'un mot : ses deux
+                    //  « mots » font cent trente pixels de large et
+                    //  quatre-vingt-dix de haut, là où un mot ordinaire en
+                    //  fait quarante sur vingt. À bande égale, une surface
+                    //  six fois plus grande paraît six fois plus
+                    //  brutalement — elle claquait au lieu de venir. C'est
+                    //  aussi le dernier geste de la lettre : il a droit à
+                    //  ce qu'on le voie arriver.
+                    m._bande = hLigne * (m.closest('.recit-signature') ? BANDE * 12 : BANDE);
                     // -1 : aucune valeur connue, donc le premier passage
                     // écrira quoi qu'il arrive.
                     m._encre = -1;
@@ -5979,6 +6064,7 @@
                 largeurMesuree = defile.clientWidth;
                 poserLAmorce();
                 poserLeTalon();
+                decouperLePapier();
                 mesurerLesMots();
                 encrer();
             }
@@ -6791,23 +6877,6 @@
          s'inscrit à son tour quand il entre dans le champ (voir
          .recit-para) ; sans script, ils sont tous là d'emblée. -->
     <div id="recit" class="recit" hidden>
-        <!-- LE BORD DÉCHIRÉ. Un bruit fractal très étiré horizontalement
-             sert de carte de déplacement : chaque point du bord est poussé
-             de quelques pixels au hasard, et la ligne droite devient une
-             lisière. Le filtre ne s'applique QU'AU CALQUE DE PAPIER, jamais
-             au texte — déplacer les mots les rendrait illisibles, et c'est
-             de toute façon le fond qu'on veut froisser. L'intérieur du
-             calque étant uni, le déplacement n'y voit rien : il ne se
-             remarque qu'aux bords, ce qui est exactement le but. -->
-        <svg class="recit-filtres" aria-hidden="true" focusable="false">
-            <filter id="bord-papier" x="-8%" y="-5%" width="116%" height="110%"
-                color-interpolation-filters="sRGB">
-                <feTurbulence type="fractalNoise" baseFrequency="0.006 0.018" numOctaves="4" seed="11"
-                    result="bruit" />
-                <feDisplacementMap in="SourceGraphic" in2="bruit" scale="17" xChannelSelector="R"
-                    yChannelSelector="G" />
-            </filter>
-        </svg>
         <div class="recit-fond" data-recit-fermer aria-hidden="true"></div>
         <div class="recit-feuille" role="dialog" aria-modal="true" aria-labelledby="recit-titre">
             <button type="button" class="recit-fermer" data-recit-fermer aria-label="Fermer le récit">
