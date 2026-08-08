@@ -1266,8 +1266,16 @@
         .recit-page {
             position: relative;
             /* La marge du papier autour de son texte : une page a du blanc
-               tout autour, sinon les mots tombent de la feuille. */
-            padding: clamp(1.6rem, 6vw, 2.6rem) clamp(1.15rem, 5.5vw, 3.5rem) clamp(2rem, 7vw, 3rem);
+               tout autour, sinon les mots tombent de la feuille.
+
+               EN HAUT, QUATRE FOIS PLUS. On n'attaque pas une lettre au ras
+               du bord : il faut du papier vide au-dessus de la première
+               phrase, comme la main en laisse toujours avant de poser le
+               premier mot. Ce blanc-là ne coûte rien au lecteur — l'amorce
+               du défilement se règle sur la position réelle des mots, elle
+               se réduira donc d'autant, et l'on verra simplement le bord
+               haut de la page plus tôt. */
+            padding: clamp(6.4rem, 24vw, 10.4rem) clamp(1.15rem, 5.5vw, 3.5rem) clamp(2rem, 7vw, 3rem);
         }
 
         .recit-page::before {
