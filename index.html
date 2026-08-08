@@ -1228,6 +1228,15 @@
             transition: opacity var(--dur-panel) var(--ease-out);
         }
 
+        /* EN THÈME CLAIR, LE VOILE SE RÉCHAUFFE. Il valait le fond du
+           site, presque blanc, et le papier crème s'y détachait à peine —
+           ce qui se remarquait d'autant plus depuis que l'ombre est partie.
+           Un gris chaud le remet derrière la feuille sans faire du voile
+           une nappe sombre : le thème clair reste clair. */
+        :root[data-theme="light"] .recit-fond {
+            background: rgb(228 221 208 / 0.95);
+        }
+
         .recit.est-ouvert .recit-fond {
             opacity: 1;
         }
@@ -1286,12 +1295,17 @@
 
         .recit-page {
             position: relative;
-            /* L'ombre est portée par la page et non par le papier découpé :
-               une découpe emporte tout ce qui déborde, l'ombre comprise. Elle
-               reste rectangulaire, mais son flou de soixante-dix pixels est
-               quatre fois plus large que la dentelure — la différence ne se
-               voit pas. */
-            box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.7);
+            /* PAS D'OMBRE. Elle était portée par la page, non par le papier
+               découpé — une découpe emporte tout ce qui déborde, l'ombre
+               comprise — et restait donc RECTANGULAIRE sous une lisière
+               dentelée. On voyait un bloc gris dépasser au bas de la feuille.
+
+               Trois issues possibles : un papier droit, une ombre suivant la
+               forme, ou pas d'ombre. La deuxième demanderait un drop-shadow,
+               c'est-à-dire un filtre — celui-là même qu'on vient de retirer
+               pour rendre le défilement fluide. On prend la troisième : le
+               bord déchiré suffit à dire le papier, et le voile derrière
+               suffit à l'en détacher. */
             /* La marge du papier autour de son texte : une page a du blanc
                tout autour, sinon les mots tombent de la feuille.
 
