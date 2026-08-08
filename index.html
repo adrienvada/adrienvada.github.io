@@ -1441,11 +1441,17 @@
            plaques grises, et une plaque d'encre grise n'existe pas. Ce qui
            apparaît doit apparaître NOIR, et c'est l'étendue de la tache qui
            raconte l'avancement. */
+        /* PLUS DE HALO. Une ombre portée de la couleur du mot l'entourait
+           tant que l'encre était jeune : cela faisait la tache qui bave
+           avant de sécher. L'idée était juste, l'effet ne l'était pas — un
+           mot flou au milieu de mots nets se lit comme un défaut de mise au
+           point, pas comme de l'encre fraîche. Ne restent que le front qui
+           balaie de gauche à droite et la couleur qui fonce : deux choses
+           nettes, et le geste se voit mieux sans la troisième. */
         .mot {
             --encre: 1;
             opacity: min(1, calc(var(--encre) * 2.6));
             color: color-mix(in srgb, #241d13 calc(min(1, var(--encre) * 1.9) * 100%), #b8a077);
-            text-shadow: 0 0 calc((1 - var(--encre)) * 3px) currentColor;
         }
 
         /* ══ LES DEUX FRONTS ══
@@ -1542,7 +1548,6 @@
 
             .mot {
                 --encre: 1 !important;
-                text-shadow: none;
             }
         }
 
