@@ -1302,87 +1302,10 @@
             pointer-events: none;
         }
 
-        /* LA FIBRE, par-dessus — et c'est une IMAGE, maintenant.
-           Elle était calculée par le navigateur (deux feTurbulence). Le
-           bruit fractal est mathématiquement homogène : à toutes les
-           échelles la même densité, la même orientation moyenne. Du papier
-           ne fait pas ça — ses fibres sont des SEGMENTS couchés à plat, qui
-           s'agglutinent par paquets et laissent des zones nues. La tuile est
-           donc engendrée hors ligne, fibre par fibre, par
-           build/generer-papier.py : 18 Ko, sans couture par construction,
-           et rien qui vienne d'ailleurs — ni licence à vérifier, ni
-           provenance à croire.
-
-           Son contraste est faible exprès. Elle se répète six fois sur la
-           hauteur de la lettre ; tout ce qui s'y verrait assez pour être
-           reconnu se verrait six fois. */
-        .recit-page::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            background-image: url("ressources/images/papier/fibre.webp");
-            background-size: 512px 512px;
-            opacity: 0.55;
-            mix-blend-mode: multiply;
-            pointer-events: none;
-        }
-
-        /* Le texte passe AU-DESSUS des deux calques. */
+        /* Le texte passe AU-DESSUS du papier. */
         .recit-page > * {
             position: relative;
             z-index: 2;
-        }
-
-        /* ══ LES ACCIDENTS DU PAPIER ══
-           Le grain et la fibre sont partout pareils : ils font une matière,
-           pas un objet. Une feuille qu'on a portée a des ACCIDENTS, et un
-           accident est par définition quelque part — d'où des positions
-           écrites une à une plutôt qu'un motif qui se répète.
-
-           UN PLI SE VOIT EN DEUX TEMPS : l'arête prend la lumière, le
-           creux juste au-dessus la perd. C'est ce décalage qui fait le
-           relief ; une simple ligne claire ferait une rayure de scanner.
-           Deux plis seulement, aux tiers, là où l'on plie une lettre pour
-           la mettre dans son enveloppe.
-
-           Tout est en dessous de 0,14 d'alpha. Un accident qu'on remarque
-           n'est plus un accident, c'est une décoration. */
-        .recit-page .recit-plis {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-            background-repeat: no-repeat;
-            background-image:
-                /* LES DEUX PLIS SONT LA MÊME IMAGE, CADRÉE AILLEURS.
-                   Un pli photographié a une arête qui serpente et une
-                   vigueur qui varie sur sa longueur — deux choses qu'un
-                   dégradé linéaire ne sait pas faire. On n'en engendre
-                   qu'un seul (build/generer-papier.py), et on en montre
-                   deux morceaux différents : la même feuille pliée deux
-                   fois, jamais tout à fait pareil. */
-                url("ressources/images/papier/pli.webp"),
-                url("ressources/images/papier/pli.webp"),
-                /* une éraflure oblique, courte */
-                linear-gradient(101deg, transparent 47.5%, rgba(120, 99, 64, 0.13) 49.2%,
-                    transparent 50.6%),
-                /* un coin corné, en haut à droite */
-                radial-gradient(130px 150px at 100% 0, rgba(120, 99, 64, 0.11), transparent 72%),
-                /* et l'ombre d'un doigt, en bas à gauche */
-                radial-gradient(180px 120px at 0 100%, rgba(120, 99, 64, 0.07), transparent 75%);
-            background-size:
-                190% 52px,
-                150% 44px,
-                44% 200px,
-                100% 100%,
-                100% 100%;
-            background-position:
-                -12% 30%,
-                -78% 67%,
-                86% 41%,
-                0 0,
-                0 100%;
         }
 
         .recit-filtres {
@@ -6938,11 +6861,6 @@
                      — l'amorce et le talon — reste sur la boîte, hors de la
                      page : ce sont des marges de défilement, pas du papier. -->
                 <div class="recit-page">
-                    <!-- Les accidents du papier : deux plis, une éraflure,
-                         un coin corné. Ils sont posés à des endroits PRÉCIS
-                         — un pli qui se répéterait ne serait plus un pli,
-                         ce serait un motif. -->
-                    <div class="recit-plis" aria-hidden="true"></div>
                     <h2 class="recit-titre" id="recit-titre">Mon parcours</h2>
                     <p class="recit-para">Ce que j'aime, c'est ce que chaque masque m'oblige à aller chercher. J'ai vu
                         Cyrano au cinéma quand j'avais onze ans, et je n'ai jamais quitté le plateau depuis. D'abord en
