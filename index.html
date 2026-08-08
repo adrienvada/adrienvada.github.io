@@ -1208,12 +1208,22 @@
             display: none;
         }
 
+        /* UN VOILE, ET RIEN D'AUTRE. Il y avait ici un flou d'arrière-plan.
+           Un backdrop-filter oblige le navigateur à reprendre TOUT ce qui
+           est derrière lui à chaque image ; pendant un défilement il ne
+           tient pas la cadence et bascule d'un rendu approché à un rendu
+           net dès qu'on s'arrête — d'où un CV qui se trouble en bougeant et
+           se rétablit au repos, ce que l'œil lit comme un défaut, jamais
+           comme une profondeur.
+
+           Un aplat translucide ne coûte rien et ne tremble jamais. Il monte
+           à 0,94 : sans le flou pour brouiller les lignes du CV, il faut
+           que l'opacité fasse seule le travail d'éloigner ce qu'il y a
+           derrière. */
         .recit-fond {
             position: absolute;
             inset: 0;
-            background: rgb(var(--c-bg) / 0.86);
-            -webkit-backdrop-filter: blur(7px);
-            backdrop-filter: blur(7px);
+            background: rgb(var(--c-bg) / 0.94);
             opacity: 0;
             transition: opacity var(--dur-panel) var(--ease-out);
         }
