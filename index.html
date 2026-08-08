@@ -1332,6 +1332,27 @@
             scrollbar-width: none;
         }
 
+        /* ── LE TEMPS DE PRÉPARATION ──
+           Découper trois cent quarante mots et mesurer leur place coûte
+           39 ms à la première ouverture : plus de deux images, donc un
+           à-coup, et il tombait pile pendant que la feuille arrivait. On
+           sépare donc les deux moments. La feuille se pose d'abord, seule
+           et vide — c'est du papier qu'on met sur la table. Le travail se
+           fait ensuite, à l'abri, pendant que le texte est encore invisible.
+           Puis l'écriture paraît.
+
+           Ce n'est pas un contretemps qu'on maquille : c'est le geste qu'on
+           remet dans le bon ordre. On ne commence pas à écrire sur une page
+           qu'on n'a pas encore posée. */
+        .recit-defile {
+            opacity: 0;
+            transition: opacity 0.5s var(--ease-out);
+        }
+
+        .recit.est-prete .recit-defile {
+            opacity: 1;
+        }
+
         .recit-defile::-webkit-scrollbar {
             width: 0;
             height: 0;
@@ -5666,8 +5687,12 @@
             const extrait = document.querySelector('.recit-extrait');
             if (!extrait || !morceaux.length) return;
             const DUREE_SORTIE = 420;   // un peu plus que --dur-panel
+            //  Le temps que la feuille se pose avant qu'on n'écrive dessus.
+            //  Un peu plus que --dur-panel : on attend la fin de son
+            //  arrivée, pas le milieu.
+            const PREPARATION = 430;
             const REDUIT = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            let rendreLeFocus = null, minuteur = 0;
+            let rendreLeFocus = null, minuteur = 0, minuteurPrep = 0;
 
             // ── L'ENCRE SUIT LE DOIGT ───────────────────────────────────
             //  Ce n'est pas une animation déclenchée : c'est une FONCTION DE
@@ -5730,6 +5755,7 @@
             let mots = [];
             let flot = null;
             let mesureFaite = false;
+            let largeurMesuree = 0;
             let boucle = 0;
             let amorti = 0;
 
@@ -5927,6 +5953,13 @@
                 // fausserait toutes les positions d'un coup.
                 if (flot) flot.style.transform = '';
                 amorti = defile.scrollTop;
+                //  ROUVRIR NE COÛTE RIEN. Seule la largeur décide du repli
+                //  du texte : tant qu'elle n'a pas bougé, les positions
+                //  mesurées la fois d'avant valent toujours, et il n'y a
+                //  qu'à repeindre. C'est ce qui fait passer la seconde
+                //  ouverture de 3,3 ms à presque rien.
+                if (mesureFaite && defile.clientWidth === largeurMesuree) { encrer(); return; }
+                largeurMesuree = defile.clientWidth;
                 poserLAmorce();
                 poserLeTalon();
                 mesurerLesMots();
@@ -5945,9 +5978,10 @@
                 }
             }
 
-            function ouvrir(appelant, tout_de_suite) {
+            function ouvrir(appelant) {
                 if (!panneau.hidden) return;
                 clearTimeout(minuteur);
+                clearTimeout(minuteurPrep);
                 rendreLeFocus = appelant || null;
                 panneau.hidden = false;
                 //  LE RETOUR DU NAVIGATEUR REFERME LA LETTRE, et ne quitte
@@ -5963,8 +5997,18 @@
                 // univers, une seule classe pour les deux.
                 document.documentElement.classList.add('u-locked');
                 defile.scrollTop = 0;
-                armerLEncre();
+                panneau.classList.remove('est-prete');
+                //  D'ABORD LA FEUILLE, SEULE ET VIDE. Rien de lourd ne tourne
+                //  pendant qu'elle se pose : c'est la seule façon que son
+                //  arrivée soit franche.
                 requestAnimationFrame(() => panneau.classList.add('est-ouvert'));
+                //  ENSUITE LE TRAVAIL, à l'abri. Le texte est encore
+                //  invisible : découper les mots et les mesurer ne se voit
+                //  pas, même si cela prend deux images.
+                minuteurPrep = setTimeout(() => {
+                    armerLEncre();
+                    panneau.classList.add('est-prete');   // et l'écriture paraît
+                }, PREPARATION);
                 defile.focus({ preventScroll: true });
             }
 
@@ -5975,6 +6019,13 @@
                 //  reste d'accord avec l'écran. Si elle vient DÉJÀ du retour,
                 //  dropOverlayState le sait et ne recule pas une seconde fois.
                 window.dropOverlayState?.('recit');
+                clearTimeout(minuteurPrep);
+                //  L'ÉCRITURE PART AVANT LA PAGE. On retire d'abord la
+                //  classe qui la rend visible, et la feuille ne s'en va
+                //  qu'ensuite : le geste inverse de l'ouverture, dans le
+                //  bon ordre lui aussi. Cela laisse en prime le champ libre
+                //  au fondu de sortie — aucun calcul ne tourne pendant.
+                panneau.classList.remove('est-prete');
                 panneau.classList.remove('est-ouvert');
                 document.documentElement.classList.remove('u-locked');
                 // La traîne n'a plus rien à rattraper une fois la lettre
