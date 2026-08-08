@@ -101,6 +101,56 @@ def trajectoire(formes):
     return alleger(chemin, GRAIN * 1.2)
 
 
+def remplir_pair_impair(taille, formes, couleur):
+    """LE REMPLISSAGE PAIR-IMPAIR, à la main.
+
+    reMarkable ferme chaque trait par `f*` — la règle pair-impair — et
+    ce n'est pas un détail : un trait qui BOUCLE (le A, le d, les a de
+    Vada) enferme son contre-poinçon entre deux contours emboîtés. En
+    pair-impair, l'intérieur s'annule et reste blanc, comme sous une
+    vraie plume. Rempli sous-tracé par sous-tracé, il devient noir — et
+    la signature n'est plus la sienne.
+
+    Pillow ne sait pas faire ça : son polygon() remplit chaque contour
+    séparément. On balaie donc l'image ligne par ligne, on compte les
+    traversées de contour, et l'on ne peint qu'entre la première et la
+    deuxième, la troisième et la quatrième — ce qui laisse le dedans des
+    boucles intact.
+    """
+    L, H = taille
+    img = Image.new("RGBA", (L, H), (0, 0, 0, 0))
+    px = img.load()
+    for forme in formes:
+        aretes = []
+        for s in forme:
+            for i in range(len(s)):
+                x0, y0 = s[i]
+                x1, y1 = s[(i + 1) % len(s)]
+                if y0 != y1:
+                    aretes.append((min(y0, y1), max(y0, y1), x0, y0, x1, y1))
+        if not aretes:
+            continue
+        # Sans ce classement par tranche, chaque ligne rejouerait les
+        # cinq mille arêtes de la signature entière.
+        hmin = max(0, int(min(a[0] for a in aretes)))
+        hmax = min(H - 1, int(max(a[1] for a in aretes)) + 1)
+        seaux = {}
+        for a in aretes:
+            for y in range(max(0, int(a[0])), min(H, int(a[1]) + 1)):
+                seaux.setdefault(y, []).append(a)
+        for y in range(hmin, hmax + 1):
+            yc = y + 0.5
+            croix = []
+            for y0, y1, ax, ay, bx, by in seaux.get(y, ()):
+                if y0 <= yc < y1:
+                    croix.append(ax + (bx - ax) * (yc - ay) / (by - ay))
+            croix.sort()
+            for i in range(0, len(croix) - 1, 2):
+                for x in range(max(0, int(croix[i] + .5)), min(L, int(croix[i + 1] + .5))):
+                    px[x, y] = couleur
+    return img
+
+
 def vers_svg(points, ferme):
     d = f"M{points[0][0]:.{DECIMALES}f} {points[0][1]:.{DECIMALES}f}"
     for x, y in points[1:]:
@@ -115,11 +165,8 @@ def controler(formes, chemin, boite, part=0.72):
     L, H = 1100, max(200, int(1100 * ey / ex))
     e = (L - 40) / ex
     T = lambda x, y: (20 + (x - mx) * e, H - 20 - (y - my) * e)
-    art = Image.new("L", (L, H), 0)
-    da = ImageDraw.Draw(art)
-    for f in formes:
-        for s in f:
-            da.polygon([T(x, y) for x, y in s], fill=255)
+    art = remplir_pair_impair((L, H), [[[T(x, y) for x, y in s] for s in f] for f in formes],
+                              (255, 255, 255, 255)).convert("L")
     msk = Image.new("L", (L, H), 0)
     ImageDraw.Draw(msk).line([T(x, y) for x, y in chemin[:int(len(chemin) * part)]],
                              fill=255, width=int(EPAISSEUR_PLUME * e), joint="curve")
@@ -157,11 +204,8 @@ if __name__ == "__main__":
     #  doit rester du SVG : c'est elle que le CSS anime.
     ECHELLE = 3
     LI, HI = int((ex + marge * 2) * ECHELLE), int((ey + marge * 2) * ECHELLE)
-    img = Image.new("RGBA", (LI, HI), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    for f in formes:
-        for sp in f:
-            d.polygon([(x * ECHELLE, y * ECHELLE) for x, y in place(sp)], fill=(107, 83, 52, 255))
+    a_lechelle = [[[(x * ECHELLE, y * ECHELLE) for x, y in place(sp)] for sp in f] for f in formes]
+    img = remplir_pair_impair((LI, HI), a_lechelle, (107, 83, 52, 255))
     dossier = RACINE / "ressources" / "images" / "papier"
     dossier.mkdir(parents=True, exist_ok=True)
     img.save(dossier / "signature.webp", "WEBP", quality=94, method=6, lossless=False)
