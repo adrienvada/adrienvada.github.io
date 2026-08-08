@@ -1097,11 +1097,14 @@
            élément : une règle qui redéclarerait ici une taille ou une
            couleur gagnerait sur elle, puisqu'elle est écrite plus bas, et
            l'encre manuscrite retomberait en texte courant. */
+        /* LA COUPE EST ÉCRITE, PLUS CALCULÉE. Elle l'était par le CSS, à
+           deux lignes, et tombait donc où la largeur de l'écran voulait
+           bien : un mot sur téléphone, un autre sur ordinateur. Elle est
+           maintenant dans le texte — « je n'ai jamais quitté le… » — et
+           s'arrête au même endroit partout, sur l'article qui appelle son
+           nom. C'est une phrase interrompue, pas une ligne tronquée. */
         .recit-extrait {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            display: block;
         }
 
         /* PAS DE « LIRE LA SUITE ». La phrase s'arrête au milieu d'un mot :
@@ -1361,11 +1364,17 @@
            de défilement : c'est le doigt qui mène l'encre. Une transition
            viendrait par-dessus, avec son propre retard, et l'on perdrait
            exactement ce qu'on cherche — que remonter EFFACE. */
+        /* L'opacité et la couleur montent VITE — deux fois et demie plus
+           vite que la diffusion. C'est le filtre qui révèle maintenant, par
+           plaques ; si l'opacité traînait derrière lui, on verrait des
+           plaques grises, et une plaque d'encre grise n'existe pas. Ce qui
+           apparaît doit apparaître NOIR, et c'est l'étendue de la tache qui
+           raconte l'avancement. */
         .mot {
             --encre: 1;
-            opacity: var(--encre);
-            color: color-mix(in srgb, #241d13 calc(var(--encre) * 100%), #c4ad86);
-            text-shadow: 0 0 calc((1 - var(--encre)) * 5px) currentColor;
+            opacity: min(1, calc(var(--encre) * 2.6));
+            color: color-mix(in srgb, #241d13 calc(min(1, var(--encre) * 1.9) * 100%), #b8a077);
+            text-shadow: 0 0 calc((1 - var(--encre)) * 3px) currentColor;
         }
 
         .recit-signature {
@@ -1485,8 +1494,11 @@
             .mot {
                 --encre: 1 !important;
                 color: #000;
-                opacity: 1;
-                filter: none;
+                opacity: 1 !important;
+                /* !important : le script pose le filtre en style en ligne,
+                   qui l'emporterait sinon — et l'on imprimerait des mots
+                   à moitié diffusés. */
+                filter: none !important;
                 text-shadow: none;
                 transform: none;
                 -webkit-mask-image: none;
@@ -2896,7 +2908,7 @@
                                 <span class="bio-handwritten-wrap max-w-xl block text-left">
                                     <span class="bio-handwritten recit-extrait">Ce que j'aime, c'est ce que chaque
                                         masque m'oblige à aller chercher. J'ai vu Cyrano au cinéma quand j'avais
-                                        onze ans, et je n'ai jamais quitté le plateau depuis.</span>
+                                        onze ans, et je n'ai jamais quitté le…</span>
                                 </span>
                             </button>
                         </div>
@@ -5601,9 +5613,70 @@
             const BALAYAGE = 1.5;   // en hauteurs de ligne, l'étalement d'une ligne
             const BANDE = 1.5;      // en hauteurs de ligne, la durée du fondu d'un mot
 
+            //  LES PALIERS DE DIFFUSION. Un filtre SVG ne sait pas lire une
+            //  variable CSS : ses réglages sont des attributs, et les
+            //  réécrire à chaque image pour trois cent mots coûterait bien
+            //  plus cher que le rendu. On forge donc une fois pour toutes
+            //  une ÉCHELLE de filtres — douze états figés de la même
+            //  diffusion — et chaque mot prend celui qui correspond à son
+            //  avancement. Douze suffit : au-delà, l'œil ne distingue plus
+            //  deux paliers voisins, et le premier comme le dernier ne
+            //  portent aucun filtre du tout.
+            const PALIERS = 12;
+
             let mots = [];
             let mesureFaite = false;
             let enAttente = false;
+
+            //  ══ LA DIFFUSION ══
+            //  Un fondu, même lent, reste un fondu : le mot entier pâlit
+            //  d'un bloc, et c'est une lampe qu'on allume. L'encre, elle,
+            //  ne gagne pas uniformément — elle prend le papier par
+            //  plaques, en suivant la fibre, et le bord de la tache est
+            //  irrégulier jusqu'au dernier instant. C'est ce qu'on voit sur
+            //  la carte du Maraudeur, et dans le journal de Jedusor.
+            //
+            //  D'où ce filtre, en trois temps :
+            //
+            //   1. un BRUIT FRACTAL sert de fibre au papier ;
+            //   2. son canal alpha est écrasé contre un SEUIL très raide —
+            //      ce qui le transforme en plaques franches plutôt qu'en
+            //      dégradé. C'est le seuil qui descend d'un palier à
+            //      l'autre : au début presque rien ne passe, à la fin tout ;
+            //   3. le mot n'est gardé QUE là où ces plaques sont pleines
+            //      (feComposite « in »), et il est au passage déplacé par
+            //      le même bruit — d'autant plus que la diffusion est
+            //      jeune. Le tracé tremble tant que l'encre est fraîche,
+            //      puis se pose.
+            //
+            //  Les mots posés ne portent AUCUN filtre : seuls les dix ou
+            //  douze en cours de diffusion en ont un, sur une zone grande
+            //  comme un mot. C'est ce qui rend la chose tenable.
+            function forgerLesFiltres() {
+                if (document.getElementById('encre-filtres')) return;
+                let d = '';
+                for (let k = 1; k < PALIERS; k++) {
+                    const t = k / PALIERS;
+                    const PENTE = 14;                       // raideur du seuil
+                    const seuil = (-13 + 14 * t).toFixed(2);
+                    const secousse = ((1 - t) * 7).toFixed(1);
+                    d += '<filter id="encre-' + k + '" x="-40%" y="-40%" width="180%" height="180%"' +
+                        ' color-interpolation-filters="sRGB">' +
+                        '<feTurbulence type="fractalNoise" baseFrequency="0.055" numOctaves="4"' +
+                        ' seed="' + (3 + k * 7) + '" result="fibre"/>' +
+                        '<feDisplacementMap in="SourceGraphic" in2="fibre" scale="' + secousse + '"' +
+                        ' xChannelSelector="R" yChannelSelector="G" result="tremble"/>' +
+                        '<feComponentTransfer in="fibre" result="plaques">' +
+                        '<feFuncA type="linear" slope="' + PENTE + '" intercept="' + seuil + '"/>' +
+                        '</feComponentTransfer>' +
+                        '<feComposite in="tremble" in2="plaques" operator="in"/>' +
+                        '</filter>';
+                }
+                const hote = document.createElement('div');
+                hote.innerHTML = '<svg id="encre-filtres" class="recit-filtres" aria-hidden="true"' +
+                    ' focusable="false"><defs>' + d + '</defs></svg>';
+                panneau.appendChild(hote.firstChild);
+            }
 
             //  Le texte est écrit d'un bloc dans le HTML — il doit se lire,
             //  s'imprimer et s'indexer sans nous. On ne le découpe qu'ici,
@@ -5630,6 +5703,18 @@
             //  la mise en page trois cent cinquante fois par seconde. Les
             //  positions sont enregistrées dans le contenu, pas à l'écran —
             //  elles ne dépendent donc pas du défilement.
+            //  LE TALON. La ligne d'écriture est aux deux tiers de la
+            //  feuille : le dernier tiers ne la franchit JAMAIS, et les
+            //  derniers mots restaient donc à l'encre pâle, quoi qu'on
+            //  fasse. Il faut pouvoir continuer à défiler après la fin du
+            //  texte — d'où ce blanc en pied de page, calculé pour que le
+            //  dernier mot puisse à son tour passer la ligne, et un peu
+            //  au-delà pour que la diffusion s'achève.
+            function poserLeTalon() {
+                const h = defile.clientHeight;
+                defile.style.paddingBottom = Math.round(h * (1 - LIGNE) + h * 0.12 + 40) + 'px';
+            }
+
             function mesurerLesMots() {
                 if (!mots.length) return;
                 const cadre = defile.getBoundingClientRect();
@@ -5641,6 +5726,7 @@
                     m._y = (r.top - hautContenu) + ((r.left - cadre.left) / largeur) * hLigne * BALAYAGE;
                     m._bande = hLigne * BANDE;
                     m._encre = -1;
+                    m._palier = -1;
                 });
                 mesureFaite = true;
             }
@@ -5655,9 +5741,22 @@
                     // On n'écrit dans le style que si la valeur a bougé :
                     // l'immense majorité des mots est à 0 ou à 1 et n'a rien
                     // à faire redessiner.
-                    if (Math.abs(e - m._encre) < 0.008) continue;
-                    m._encre = e;
-                    m.style.setProperty('--encre', e.toFixed(3));
+                    if (Math.abs(e - m._encre) >= 0.008) {
+                        m._encre = e;
+                        m.style.setProperty('--encre', e.toFixed(3));
+                    }
+                    //  Le palier de diffusion, lui, est discret — et c'est
+                    //  ce qui permet de ne toucher au filtre que quand on
+                    //  change vraiment d'état. Rien avant le premier palier,
+                    //  rien après le dernier : un mot posé ne coûte plus
+                    //  rien du tout.
+                    const p = e <= 0.02 ? 0
+                        : e >= 0.985 ? PALIERS
+                            : Math.min(PALIERS - 1, Math.max(1, Math.round(e * PALIERS)));
+                    if (p !== m._palier) {
+                        m._palier = p;
+                        m.style.filter = (p === 0 || p === PALIERS) ? '' : 'url(#encre-' + p + ')';
+                    }
                 }
             }
 
@@ -5669,13 +5768,15 @@
 
             function armerLEncre() {
                 if (REDUIT) return;       // lettre déjà écrite, voir le CSS
+                forgerLesFiltres();
                 decouperEnMots();
+                poserLeTalon();
                 mesurerLesMots();
                 encrer();
                 // Les polices arrivent après le HTML : mesurer avant elles,
                 // c'est mesurer une page qui n'est pas celle qu'on lira.
                 if (document.fonts && document.fonts.ready) {
-                    document.fonts.ready.then(() => { mesurerLesMots(); encrer(); });
+                    document.fonts.ready.then(() => { poserLeTalon(); mesurerLesMots(); encrer(); });
                 }
             }
 
@@ -5737,7 +5838,7 @@
             window.addEventListener('resize', () => {
                 if (panneau.hidden || REDUIT) return;
                 clearTimeout(minuteurMesure);
-                minuteurMesure = setTimeout(() => { mesurerLesMots(); encrer(); }, 150);
+                minuteurMesure = setTimeout(() => { poserLeTalon(); mesurerLesMots(); encrer(); }, 150);
             });
 
             document.addEventListener('keydown', (e) => {
@@ -6486,7 +6587,8 @@
                      d'écran annonce « dialogue » et s'arrête là. -->
                 <h2 class="recit-titre" id="recit-titre">Mon parcours</h2>
                 <p class="recit-para">Ce que j'aime, c'est ce que chaque masque m'oblige à aller chercher. J'ai vu
-                    Cyrano au cinéma quand j'avais onze ans, et je n'ai jamais quitté le plateau depuis.</p>
+                    Cyrano au cinéma quand j'avais onze ans, et je n'ai jamais quitté le plateau depuis. D'abord en
+                    tant que passionné en vivant d'autres vies, puis en tant que professionnel.</p>
                 <p class="recit-para">L'alexandrin de Racine, la folie de Shakespeare, l'ampleur de Corneille, le
                     comique de Molière : j'aime les textes qui demandent qu'on leur donne une musique, une voix, et
                     un corps pour leur donner un sens. Autant de plaisir à préparer qu'à jouer — reprendre,
