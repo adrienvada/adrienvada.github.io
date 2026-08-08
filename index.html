@@ -1250,37 +1250,47 @@
             transform: none;
         }
 
-        /* LE PAPIER, en calque séparé et déchiré par le filtre. Les lavis
-           chauds décentrés valent mieux qu'un aplat : un blanc cassé
-           uniforme se lit comme une boîte de dialogue, ceux-là donnent le
-           bord plus sombre d'une feuille posée sur une table. Le fond va au
-           parchemin plutôt qu'au papier machine — c'est là que l'encre a
-           l'air d'encre. L'ombre portée est déchirée avec lui, et suit donc
-           la lisière au lieu de dessiner un rectangle. */
-        .recit-feuille::before {
+        /* ══ LA PAGE ══
+           Elle porte tout ce que portait la feuille : le papier, sa fibre,
+           son ombre et sa lisière déchirée. La différence est qu'elle vit
+           DANS le défilement — elle commence au premier mot, finit au
+           paraphe, et ses deux bords montent avec le texte. Une feuille
+           qu'on fait glisser, non une fenêtre à travers laquelle du texte
+           passe.
+
+           Les lavis chauds décentrés valent mieux qu'un aplat : un blanc
+           cassé uniforme se lit comme une boîte de dialogue, ceux-là donnent
+           le bord plus sombre d'une feuille posée sur une table. Le fond va
+           au parchemin plutôt qu'au papier machine — c'est là que l'encre a
+           l'air d'encre. */
+        .recit-page {
+            position: relative;
+            /* La marge du papier autour de son texte : une page a du blanc
+               tout autour, sinon les mots tombent de la feuille. */
+            padding: clamp(1.6rem, 6vw, 2.6rem) clamp(1.15rem, 5.5vw, 3.5rem) clamp(2rem, 7vw, 3rem);
+        }
+
+        .recit-page::before {
             content: "";
             position: absolute;
             inset: 0;
             z-index: 0;
             background:
-                radial-gradient(ellipse at 20% 6%, #fffcf2 0%, transparent 55%),
-                radial-gradient(ellipse at 88% 96%, #e6d7b6 0%, transparent 60%),
-                radial-gradient(ellipse at 50% 50%, #f7efdc 0%, #efe3c9 100%);
+                radial-gradient(ellipse 90% 30% at 20% 2%, #fffcf2 0%, transparent 60%),
+                radial-gradient(ellipse 80% 25% at 88% 99%, #e6d7b6 0%, transparent 65%),
+                linear-gradient(180deg, #f7efdc 0%, #f1e6cf 45%, #f6eeda 100%);
             box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.7);
             filter: url(#bord-papier);
             pointer-events: none;
         }
 
-        /* LA FIBRE, par-dessus. Deux bruits superposés plutôt qu'un : le fin
-           donne le grain du papier, le gros les irrégularités d'épaisseur
-           qu'a une feuille tenue devant une lampe. Aucune image n'est
-           chargée : tout est calculé par le navigateur, six cents octets en
-           tout.
-
-           Le second bruit est ISOTROPE, et il a fallu y venir : étiré dans
-           un sens, il donnait des stries verticales très nettes — du métal
-           brossé plutôt que du papier. Une feuille n'a pas de direction. */
-        .recit-feuille::after {
+        /* LA FIBRE, par-dessus. Deux bruits superposés : le fin donne le
+           grain, le gros les irrégularités d'épaisseur qu'a une feuille
+           tenue devant une lampe. Aucune image n'est chargée — tout est
+           calculé par le navigateur, six cents octets en tout. Le second
+           est ISOTROPE : étiré dans un sens, il donnait des stries de métal
+           brossé, et une feuille n'a pas de direction. */
+        .recit-page::after {
             content: "";
             position: absolute;
             inset: 0;
@@ -1294,10 +1304,8 @@
             pointer-events: none;
         }
 
-        /* Le texte passe AU-DESSUS des deux calques. La croix, elle, est déjà
-           positionnée plus bas — on ne lui donne que son étage, sans quoi on
-           lui reprendrait son `absolute` et elle retomberait dans le flux. */
-        .recit-defile {
+        /* Le texte passe AU-DESSUS des deux calques. */
+        .recit-page > * {
             position: relative;
             z-index: 2;
         }
@@ -1324,7 +1332,11 @@
                au lieu de faire défiler son texte. */
             min-height: 0;
             overscroll-behavior: contain;
-            padding: clamp(2.5rem, 9vw, 4rem) clamp(1.15rem, 5.5vw, 3.5rem) clamp(4rem, 14vh, 8rem);
+            /* Plus de marge latérale ici : elle appartient désormais à la
+               page, qui doit toucher les bords de la boîte pour que sa
+               lisière déchirée se voie. Le haut et le bas sont l'amorce et
+               le talon, que le script recalcule à l'ouverture. */
+            padding: clamp(2.5rem, 9vw, 4rem) 0 clamp(4rem, 14vh, 8rem);
             -webkit-overflow-scrolling: touch;
             /* PAS DE BARRE DE DÉFILEMENT. Une feuille de papier n'en a pas,
                et celle-ci trahissait le procédé : on voyait la boîte plutôt
@@ -6864,63 +6876,72 @@
                      l'alinéa, comme quelqu'un qui écrit. Mais un panneau de
                      dialogue doit porter un nom, sans quoi un lecteur
                      d'écran annonce « dialogue » et s'arrête là. -->
-                <h2 class="recit-titre" id="recit-titre">Mon parcours</h2>
-                <p class="recit-para">Ce que j'aime, c'est ce que chaque masque m'oblige à aller chercher. J'ai vu
-                    Cyrano au cinéma quand j'avais onze ans, et je n'ai jamais quitté le plateau depuis. D'abord en
-                    tant que passionné en vivant d'autres vies, puis en tant que professionnel.</p>
-                <p class="recit-para">L'alexandrin de Racine, la folie de Shakespeare, l'ampleur de Corneille, le
-                    comique de Molière : j'aime les textes qui demandent qu'on leur donne une musique, une voix, et
-                    un corps pour leur donner un sens. Autant de plaisir à préparer qu'à jouer — reprendre,
-                    préciser, de la prosodie jusqu'au corps. Depuis quelques années, la caméra a pris sa place à
-                    côté du plateau, et le micro aussi.</p>
-                <p class="recit-para">En ce moment, je joue notamment dans un spectacle sur les violences
-                    conjugales, monté à partir d'extraits de procès réels. On le donne dans des tribunaux, des
-                    hôtels de ville, des salles de réunion citoyenne — rarement dans un théâtre. Le débat qui suit
-                    dure presque aussi longtemps que la représentation.</p>
-                <p class="recit-para">Et il y a les ateliers, en collège et en lycée. Faire dire un alexandrin à
-                    voix haute à quelqu'un qui n'en avait jamais lu. J'y apprends au moins autant que j'y donne.</p>
-                <p class="recit-para">Le piano me suit depuis l'âge de cinq ans — Conservatoire, improvisation,
-                    composition, pour la scène et pour l'image. Je chante en baryton-basse, je me bats à l'épée, et
-                    je parle russe : mon père est d'origine soviétique.</p>
-                <p class="recit-para">J'ai aussi été élève-officier dans l'armée de Terre, en Guyane, puis
-                    réserviste en gendarmerie, en Normandie. On en retient d'abord ce qui se voit — le tir, le
-                    maniement des armes ; je suis moniteur de tir. Mais ce que j'en garde vraiment, ce sont les
-                    gens : des mécaniciens, des médecins, des cuisiniers, des gendarmes de campagne, des Français et
-                    des Françaises singuliers que le théâtre seul ne m'aurait jamais fait rencontrer. Je m'en sers
-                    chaque fois qu'il s'agit de fabriquer quelqu'un.</p>
-                <p class="recit-para">C'est peut-être cela, au fond : aucun endroit où je sois passé, aucune
-                    expérience de vie qui ne finisse, un jour, par servir sur un plateau.</p>
-                <!-- LE PARAPHE, TRACÉ À LA MAIN.
-                     Dix-sept traits de plume écrits un à un en coordonnées
-                     — pas une police détourée. C'est le seul endroit de la
-                     lettre où l'on pouvait vraiment montrer une main qui
-                     écrit : une signature est courte, elle n'a pas à se
-                     replier, elle n'a pas à être sélectionnable, et elle
-                     EST un geste par nature. Le reste du texte n'aurait
-                     rien gagné à devenir du dessin. L'ordre des traits est
-                     celui de la main : le A puis sa barre, le d, le r, le
-                     i puis son point, et le paraphe pour finir. -->
-                <p class="recit-signature" aria-hidden="true">
-                    <svg class="recit-paraphe" viewBox="0 0 372 120" focusable="false">
-                        <path style="--k:0" pathLength="1" d="M8 92 C 22 52, 40 18, 54 20 C 64 21, 62 56, 60 92" />
-                        <path style="--k:1" pathLength="1" d="M26 66 C 40 61, 52 60, 62 62" />
-                        <path style="--k:2" pathLength="1" d="M88 62 C 80 58, 70 62, 70 72 C 70 82, 80 86, 88 80" />
-                        <path style="--k:3" pathLength="1" d="M90 20 C 89 46, 88 72, 90 84 C 91 90, 95 92, 99 88" />
-                        <path style="--k:4" pathLength="1" d="M108 62 C 110 74, 112 84, 113 88" />
-                        <path style="--k:5" pathLength="1" d="M110 66 C 114 60, 120 57, 126 60" />
-                        <path style="--k:6" pathLength="1" d="M133 62 C 134 74, 135 84, 136 88" />
-                        <path style="--k:7" pathLength="1" d="M134 47 L 134 48" />
-                        <path style="--k:8" pathLength="1" d="M169 72 C 170 65, 163 60, 156 62 C 148 64, 145 73, 149 81 C 153 88, 163 88, 169 82" />
-                        <path style="--k:9" pathLength="1" d="M150 73 C 158 71, 165 70, 169 72" />
-                        <path style="--k:10" pathLength="1" d="M178 88 C 178 74, 179 64, 180 62 C 184 58, 192 60, 194 68 C 195 76, 195 84, 196 88" />
-                        <path style="--k:11" pathLength="1" d="M216 26 C 224 50, 234 76, 242 88 C 250 74, 258 46, 262 24" />
-                        <path style="--k:12" pathLength="1" d="M288 62 C 282 58, 272 61, 271 70 C 270 80, 279 85, 286 79 C 289 76, 290 68, 289 62 C 289 74, 290 84, 293 88" />
-                        <path style="--k:13" pathLength="1" d="M318 62 C 310 58, 300 62, 300 72 C 300 82, 310 86, 318 80" />
-                        <path style="--k:14" pathLength="1" d="M320 22 C 319 48, 318 74, 320 86 C 321 91, 325 92, 329 88" />
-                        <path style="--k:15" pathLength="1" d="M356 62 C 350 58, 340 61, 339 70 C 338 80, 347 85, 354 79 C 357 76, 358 68, 357 62 C 357 74, 358 84, 361 88" />
-                        <path style="--k:16" pathLength="1" d="M10 106 C 100 98, 250 98, 362 104" />
-                    </svg>
-                </p>
+                <!-- LA PAGE EST DANS LE DÉFILEMENT, plus autour de lui.
+                     Elle commence où commence le texte, finit où il finit,
+                     et ses bords montent avec lui : c'est une feuille qu'on
+                     fait glisser, non une fenêtre à travers laquelle on
+                     regarde du texte passer. Le blanc au-dessus et au-dessous
+                     — l'amorce et le talon — reste sur la boîte, hors de la
+                     page : ce sont des marges de défilement, pas du papier. -->
+                <div class="recit-page">
+                    <h2 class="recit-titre" id="recit-titre">Mon parcours</h2>
+                    <p class="recit-para">Ce que j'aime, c'est ce que chaque masque m'oblige à aller chercher. J'ai vu
+                        Cyrano au cinéma quand j'avais onze ans, et je n'ai jamais quitté le plateau depuis. D'abord en
+                        tant que passionné en vivant d'autres vies, puis en tant que professionnel.</p>
+                    <p class="recit-para">L'alexandrin de Racine, la folie de Shakespeare, l'ampleur de Corneille, le
+                        comique de Molière : j'aime les textes qui demandent qu'on leur donne une musique, une voix, et
+                        un corps pour leur donner un sens. Autant de plaisir à préparer qu'à jouer — reprendre,
+                        préciser, de la prosodie jusqu'au corps. Depuis quelques années, la caméra a pris sa place à
+                        côté du plateau, et le micro aussi.</p>
+                    <p class="recit-para">En ce moment, je joue notamment dans un spectacle sur les violences
+                        conjugales, monté à partir d'extraits de procès réels. On le donne dans des tribunaux, des
+                        hôtels de ville, des salles de réunion citoyenne — rarement dans un théâtre. Le débat qui suit
+                        dure presque aussi longtemps que la représentation.</p>
+                    <p class="recit-para">Et il y a les ateliers, en collège et en lycée. Faire dire un alexandrin à
+                        voix haute à quelqu'un qui n'en avait jamais lu. J'y apprends au moins autant que j'y donne.</p>
+                    <p class="recit-para">Le piano me suit depuis l'âge de cinq ans — Conservatoire, improvisation,
+                        composition, pour la scène et pour l'image. Je chante en baryton-basse, je me bats à l'épée, et
+                        je parle russe : mon père est d'origine soviétique.</p>
+                    <p class="recit-para">J'ai aussi été élève-officier dans l'armée de Terre, en Guyane, puis
+                        réserviste en gendarmerie, en Normandie. On en retient d'abord ce qui se voit — le tir, le
+                        maniement des armes ; je suis moniteur de tir. Mais ce que j'en garde vraiment, ce sont les
+                        gens : des mécaniciens, des médecins, des cuisiniers, des gendarmes de campagne, des Français et
+                        des Françaises singuliers que le théâtre seul ne m'aurait jamais fait rencontrer. Je m'en sers
+                        chaque fois qu'il s'agit de fabriquer quelqu'un.</p>
+                    <p class="recit-para">C'est peut-être cela, au fond : aucun endroit où je sois passé, aucune
+                        expérience de vie qui ne finisse, un jour, par servir sur un plateau.</p>
+                    <!-- LE PARAPHE, TRACÉ À LA MAIN.
+                         Dix-sept traits de plume écrits un à un en coordonnées
+                         — pas une police détourée. C'est le seul endroit de la
+                         lettre où l'on pouvait vraiment montrer une main qui
+                         écrit : une signature est courte, elle n'a pas à se
+                         replier, elle n'a pas à être sélectionnable, et elle
+                         EST un geste par nature. Le reste du texte n'aurait
+                         rien gagné à devenir du dessin. L'ordre des traits est
+                         celui de la main : le A puis sa barre, le d, le r, le
+                         i puis son point, et le paraphe pour finir. -->
+                    <p class="recit-signature" aria-hidden="true">
+                        <svg class="recit-paraphe" viewBox="0 0 372 120" focusable="false">
+                            <path style="--k:0" pathLength="1" d="M8 92 C 22 52, 40 18, 54 20 C 64 21, 62 56, 60 92" />
+                            <path style="--k:1" pathLength="1" d="M26 66 C 40 61, 52 60, 62 62" />
+                            <path style="--k:2" pathLength="1" d="M88 62 C 80 58, 70 62, 70 72 C 70 82, 80 86, 88 80" />
+                            <path style="--k:3" pathLength="1" d="M90 20 C 89 46, 88 72, 90 84 C 91 90, 95 92, 99 88" />
+                            <path style="--k:4" pathLength="1" d="M108 62 C 110 74, 112 84, 113 88" />
+                            <path style="--k:5" pathLength="1" d="M110 66 C 114 60, 120 57, 126 60" />
+                            <path style="--k:6" pathLength="1" d="M133 62 C 134 74, 135 84, 136 88" />
+                            <path style="--k:7" pathLength="1" d="M134 47 L 134 48" />
+                            <path style="--k:8" pathLength="1" d="M169 72 C 170 65, 163 60, 156 62 C 148 64, 145 73, 149 81 C 153 88, 163 88, 169 82" />
+                            <path style="--k:9" pathLength="1" d="M150 73 C 158 71, 165 70, 169 72" />
+                            <path style="--k:10" pathLength="1" d="M178 88 C 178 74, 179 64, 180 62 C 184 58, 192 60, 194 68 C 195 76, 195 84, 196 88" />
+                            <path style="--k:11" pathLength="1" d="M216 26 C 224 50, 234 76, 242 88 C 250 74, 258 46, 262 24" />
+                            <path style="--k:12" pathLength="1" d="M288 62 C 282 58, 272 61, 271 70 C 270 80, 279 85, 286 79 C 289 76, 290 68, 289 62 C 289 74, 290 84, 293 88" />
+                            <path style="--k:13" pathLength="1" d="M318 62 C 310 58, 300 62, 300 72 C 300 82, 310 86, 318 80" />
+                            <path style="--k:14" pathLength="1" d="M320 22 C 319 48, 318 74, 320 86 C 321 91, 325 92, 329 88" />
+                            <path style="--k:15" pathLength="1" d="M356 62 C 350 58, 340 61, 339 70 C 338 80, 347 85, 354 79 C 357 76, 358 68, 357 62 C 357 74, 358 84, 361 88" />
+                            <path style="--k:16" pathLength="1" d="M10 106 C 100 98, 250 98, 362 104" />
+                        </svg>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
