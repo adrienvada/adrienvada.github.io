@@ -1302,22 +1302,28 @@
             pointer-events: none;
         }
 
-        /* LA FIBRE, par-dessus. Deux bruits superposés : le fin donne le
-           grain, le gros les irrégularités d'épaisseur qu'a une feuille
-           tenue devant une lampe. Aucune image n'est chargée — tout est
-           calculé par le navigateur, six cents octets en tout. Le second
-           est ISOTROPE : étiré dans un sens, il donnait des stries de métal
-           brossé, et une feuille n'a pas de direction. */
+        /* LA FIBRE, par-dessus — et c'est une IMAGE, maintenant.
+           Elle était calculée par le navigateur (deux feTurbulence). Le
+           bruit fractal est mathématiquement homogène : à toutes les
+           échelles la même densité, la même orientation moyenne. Du papier
+           ne fait pas ça — ses fibres sont des SEGMENTS couchés à plat, qui
+           s'agglutinent par paquets et laissent des zones nues. La tuile est
+           donc engendrée hors ligne, fibre par fibre, par
+           build/generer-papier.py : 18 Ko, sans couture par construction,
+           et rien qui vienne d'ailleurs — ni licence à vérifier, ni
+           provenance à croire.
+
+           Son contraste est faible exprès. Elle se répète six fois sur la
+           hauteur de la lettre ; tout ce qui s'y verrait assez pour être
+           reconnu se verrait six fois. */
         .recit-page::after {
             content: "";
             position: absolute;
             inset: 0;
             z-index: 1;
-            background-image:
-                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
-            background-size: 90px 90px, 400px 400px;
-            opacity: 0.09;
+            background-image: url("ressources/images/papier/fibre.webp");
+            background-size: 512px 512px;
+            opacity: 0.55;
             mix-blend-mode: multiply;
             pointer-events: none;
         }
@@ -1349,12 +1355,15 @@
             pointer-events: none;
             background-repeat: no-repeat;
             background-image:
-                /* le premier pli : creux, puis arête */
-                linear-gradient(180deg, transparent 0, rgba(120, 99, 64, 0.10) 42%,
-                    rgba(255, 253, 244, 0.46) 56%, transparent 100%),
-                /* le second, un peu plus effacé — on ne plie jamais deux fois pareil */
-                linear-gradient(180deg, transparent 0, rgba(120, 99, 64, 0.075) 45%,
-                    rgba(255, 253, 244, 0.38) 57%, transparent 100%),
+                /* LES DEUX PLIS SONT LA MÊME IMAGE, CADRÉE AILLEURS.
+                   Un pli photographié a une arête qui serpente et une
+                   vigueur qui varie sur sa longueur — deux choses qu'un
+                   dégradé linéaire ne sait pas faire. On n'en engendre
+                   qu'un seul (build/generer-papier.py), et on en montre
+                   deux morceaux différents : la même feuille pliée deux
+                   fois, jamais tout à fait pareil. */
+                url("ressources/images/papier/pli.webp"),
+                url("ressources/images/papier/pli.webp"),
                 /* une éraflure oblique, courte */
                 linear-gradient(101deg, transparent 47.5%, rgba(120, 99, 64, 0.13) 49.2%,
                     transparent 50.6%),
@@ -1363,14 +1372,14 @@
                 /* et l'ombre d'un doigt, en bas à gauche */
                 radial-gradient(180px 120px at 0 100%, rgba(120, 99, 64, 0.07), transparent 75%);
             background-size:
-                100% 42px,
-                100% 36px,
+                190% 52px,
+                150% 44px,
                 44% 200px,
                 100% 100%,
                 100% 100%;
             background-position:
-                0 30%,
-                0 67%,
+                -12% 30%,
+                -78% 67%,
                 86% 41%,
                 0 0,
                 0 100%;

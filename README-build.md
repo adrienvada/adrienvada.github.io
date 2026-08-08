@@ -17,6 +17,7 @@ périmé. Il affiche simplement l'état d'avant.
 | une **ligne du CV** dans `index.html` — titre, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
 | le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…` |
 | une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
+| le **papier de la lettre** — sa fibre, ses plis | `python3 build/generer-papier.py` | `ressources/images/papier/` |
 
 Chacune a sa section plus bas, avec ce qu'elle fait et pourquoi.
 
