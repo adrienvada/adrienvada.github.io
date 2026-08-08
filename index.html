@@ -314,6 +314,15 @@
             initial-value: 1;
         }
 
+        /* L'avancement de la plume dans le paraphe, de 0 (rien) à 1 (signé).
+           Elle HÉRITE, contrairement à --encre : elle est posée une seule
+           fois sur le SVG et chacun des dix-sept traits la lit. */
+        @property --trace {
+            syntax: '<number>';
+            inherits: true;
+            initial-value: 1;
+        }
+
         :root {
             --ambiance: rgb(var(--c-gold));
             transition: --ambiance 0.55s ease;
@@ -1467,9 +1476,41 @@
             opacity: 0.9;
         }
 
-        .recit-signature .mot {
-            color: color-mix(in srgb, #7a5f3a calc(var(--encre) * 100%), #cbb894);
+        /* ── LE PARAPHE SE DESSINE ──
+           Chaque trait est normalisé à une longueur de 1 (pathLength), si
+           bien qu'un seul et même calcul vaut pour le grand A comme pour le
+           point du i. Le tiret vaut toute la longueur, et le décalage la
+           découvre : à --trace = 0 rien n'est tracé, à 1 tout l'est.
+
+           LES DIX-SEPT TRAITS SE SUIVENT, et c'est --k qui les ordonne :
+           chacun n'a la main que sur un dix-septième de la course. Un seul
+           nombre est donc écrit par image — sur le SVG, pas sur les traits —
+           et le CSS en déduit où en est chaque plume. Écrire dix-sept
+           valeurs à chaque image pour dire la même chose serait dix-sept
+           fois le travail.
+
+           1,02 plutôt que 1 : à l'arrondi près, un tiret exactement égal à
+           la longueur laissait parfois un point résiduel au départ du
+           trait. */
+        .recit-paraphe {
+            --trace: 1;
+            display: block;
+            width: min(15rem, 66%);
+            height: auto;
+            margin-left: auto;
+            overflow: visible;
         }
+
+        .recit-paraphe path {
+            fill: none;
+            stroke: #6b5334;
+            stroke-width: 3.1;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 1.02;
+            stroke-dashoffset: calc(1.02 * (1 - clamp(0, calc(var(--trace) * 17 - var(--k)), 1)));
+        }
+
 
         /* La croix se pose SUR le papier, pas au-dessus de l'écran : c'est
            la feuille qu'on referme. */
@@ -5654,7 +5695,8 @@
             const panneau = document.getElementById('recit');
             if (!panneau) return;
             const defile = panneau.querySelector('.recit-defile');
-            const morceaux = Array.from(panneau.querySelectorAll('.recit-para, .recit-signature'));
+            const morceaux = Array.from(panneau.querySelectorAll('.recit-para'));
+            const paraphe = panneau.querySelector('.recit-paraphe');
             const extrait = document.querySelector('.recit-extrait');
             if (!extrait || !morceaux.length) return;
             const DUREE_SORTIE = 420;   // un peu plus que --dur-panel
@@ -5836,6 +5878,16 @@
                     // écrira quoi qu'il arrive.
                     m._encre = -1;
                 });
+                if (paraphe) {
+                    const r = paraphe.getBoundingClientRect();
+                    paraphe._y = r.top - hautContenu;
+                    //  UNE SIGNATURE PREND SON TEMPS. Là où un mot vient en
+                    //  un dixième de ligne, le paraphe s'écrit sur quatre :
+                    //  c'est le dernier geste de la lettre, et on doit voir
+                    //  la plume aller.
+                    paraphe._bande = (parseFloat(getComputedStyle(morceaux[0]).lineHeight) || 30) * 4;
+                    paraphe._encre = -1;
+                }
                 mesureFaite = true;
             }
 
@@ -5865,6 +5917,21 @@
                     if (Math.abs(v - m._encre) < 0.006) continue;
                     m._encre = v;
                     m.style.setProperty('--encre', v.toFixed(3));
+                }
+                //  Le paraphe suit la même règle que les mots — il vient
+                //  quand la ligne d'écriture l'atteint, il s'efface quand le
+                //  papier le reprend — mais sur une bande quarante fois plus
+                //  large, et il ne pâlit pas : il se TRACE.
+                if (paraphe && paraphe._y !== undefined) {
+                    let e = (ligne - paraphe._y) / paraphe._bande;
+                    e = e < 0 ? 0 : e > 1 ? 1 : e;
+                    let a = (reprise - paraphe._y) / paraphe._bande;
+                    a = a < 0 ? 0 : a > 1 ? 1 : a;
+                    const v = e * (1 - a);
+                    if (Math.abs(v - paraphe._encre) >= 0.004) {
+                        paraphe._encre = v;
+                        paraphe.style.setProperty('--trace', v.toFixed(4));
+                    }
                 }
             }
 
@@ -6792,7 +6859,37 @@
                     chaque fois qu'il s'agit de fabriquer quelqu'un.</p>
                 <p class="recit-para">C'est peut-être cela, au fond : aucun endroit où je sois passé, aucune
                     expérience de vie qui ne finisse, un jour, par servir sur un plateau.</p>
-                <p class="recit-signature" aria-hidden="true">Adrien Vada</p>
+                <!-- LE PARAPHE, TRACÉ À LA MAIN.
+                     Dix-sept traits de plume écrits un à un en coordonnées
+                     — pas une police détourée. C'est le seul endroit de la
+                     lettre où l'on pouvait vraiment montrer une main qui
+                     écrit : une signature est courte, elle n'a pas à se
+                     replier, elle n'a pas à être sélectionnable, et elle
+                     EST un geste par nature. Le reste du texte n'aurait
+                     rien gagné à devenir du dessin. L'ordre des traits est
+                     celui de la main : le A puis sa barre, le d, le r, le
+                     i puis son point, et le paraphe pour finir. -->
+                <p class="recit-signature" aria-hidden="true">
+                    <svg class="recit-paraphe" viewBox="0 0 372 120" focusable="false">
+                        <path style="--k:0" pathLength="1" d="M8 92 C 22 52, 40 18, 54 20 C 64 21, 62 56, 60 92" />
+                        <path style="--k:1" pathLength="1" d="M26 66 C 40 61, 52 60, 62 62" />
+                        <path style="--k:2" pathLength="1" d="M88 62 C 80 58, 70 62, 70 72 C 70 82, 80 86, 88 80" />
+                        <path style="--k:3" pathLength="1" d="M90 20 C 89 46, 88 72, 90 84 C 91 90, 95 92, 99 88" />
+                        <path style="--k:4" pathLength="1" d="M108 62 C 110 74, 112 84, 113 88" />
+                        <path style="--k:5" pathLength="1" d="M110 66 C 114 60, 120 57, 126 60" />
+                        <path style="--k:6" pathLength="1" d="M133 62 C 134 74, 135 84, 136 88" />
+                        <path style="--k:7" pathLength="1" d="M134 47 L 134 48" />
+                        <path style="--k:8" pathLength="1" d="M169 72 C 170 65, 163 60, 156 62 C 148 64, 145 73, 149 81 C 153 88, 163 88, 169 82" />
+                        <path style="--k:9" pathLength="1" d="M150 73 C 158 71, 165 70, 169 72" />
+                        <path style="--k:10" pathLength="1" d="M178 88 C 178 74, 179 64, 180 62 C 184 58, 192 60, 194 68 C 195 76, 195 84, 196 88" />
+                        <path style="--k:11" pathLength="1" d="M216 26 C 224 50, 234 76, 242 88 C 250 74, 258 46, 262 24" />
+                        <path style="--k:12" pathLength="1" d="M288 62 C 282 58, 272 61, 271 70 C 270 80, 279 85, 286 79 C 289 76, 290 68, 289 62 C 289 74, 290 84, 293 88" />
+                        <path style="--k:13" pathLength="1" d="M318 62 C 310 58, 300 62, 300 72 C 300 82, 310 86, 318 80" />
+                        <path style="--k:14" pathLength="1" d="M320 22 C 319 48, 318 74, 320 86 C 321 91, 325 92, 329 88" />
+                        <path style="--k:15" pathLength="1" d="M356 62 C 350 58, 340 61, 339 70 C 338 80, 347 85, 354 79 C 357 76, 358 68, 357 62 C 357 74, 358 84, 361 88" />
+                        <path style="--k:16" pathLength="1" d="M10 106 C 100 98, 250 98, 362 104" />
+                    </svg>
+                </p>
             </div>
         </div>
     </div>
