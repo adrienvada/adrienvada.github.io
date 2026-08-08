@@ -5755,19 +5755,6 @@
             //  ligne paraîtrait APRÈS le premier de la suivante.
             const BANDE = 0.1;      // en hauteurs de ligne, la venue d'un mot
 
-            //  LA LIGNE D'ABSORPTION, en haut. Ce que le papier reprend :
-            //  un mot qui la franchit s'efface du même geste qui l'avait
-            //  écrit, de la gauche vers la droite. Elle est haute — un
-            //  huitième — pour qu'on ait le temps de lire avant que la
-            //  fibre ne rattrape l'encre.
-            //
-            //  (Il y avait ici une échelle de douze filtres fractals qui
-            //  faisait naître les mots par plaques. L'effet était juste,
-            //  mais chaque palier redemandait au navigateur de recalculer
-            //  une turbulence, et le défilement s'en ressentait. Le voile
-            //  qui balaie de gauche à droite dit la même chose pour rien —
-            //  un dégradé, aucune texture à produire.)
-            const ABSORPTION = 0.125;
 
             //  ══ LA TRAÎNE ══
             //  Le papier suit le doigt, mais pas tout à fait : il retarde
@@ -5919,25 +5906,26 @@
                 mesureFaite = true;
             }
 
-            //  UNE SEULE GRANDEUR PAR MOT, et tout en découle. Ce que le mot
-            //  a reçu d'encre, moins ce que le papier lui a repris :
-            //  `v = venue × (1 − reprise)`. Elle monte de 0 à 1 quand le mot
-            //  passe la ligne d'écriture, redescend à 0 quand il passe la
-            //  ligne d'absorption, et l'opacité comme la couleur s'en
-            //  déduisent dans la feuille de style. Deux variables et un
-            //  masque faisaient la même chose en trois fois plus de travail.
+            //  UNE SEULE GRANDEUR PAR MOT, et tout en découle : ce que le
+            //  mot a reçu d'encre, de 0 à 1, selon sa distance à la ligne
+            //  d'écriture. L'opacité et la couleur s'en déduisent dans la
+            //  feuille de style.
+            //
+            //  CE QUI EST ÉCRIT RESTE ÉCRIT. Une seconde ligne, en haut,
+            //  reprenait l'encre aux mots qui la franchissaient — le papier
+            //  les buvait. C'était joli et c'était faux : on relit sans
+            //  cesse la ligne d'avant, et la voir s'effacer pendant qu'on y
+            //  revient rend la lecture impossible. Remonter défait toujours
+            //  l'écriture, puisque la ligne d'écriture remonte avec le
+            //  regard — mais par le bas, là où l'on n'a pas encore lu.
             function encrer() {
                 if (!mesureFaite) return;
                 const h = defile.clientHeight;
-                const ligne = amorti + h * LIGNE;         // en bas : ce qui s'écrit
-                const reprise = amorti + h * ABSORPTION;  // en haut : ce que le papier reprend
+                const ligne = amorti + h * LIGNE;   // ce qui vient de s'écrire
                 for (let i = 0; i < mots.length; i++) {
                     const m = mots[i];
-                    let e = (ligne - m._y) / m._bande;
-                    e = e < 0 ? 0 : e > 1 ? 1 : e;
-                    let a = (reprise - m._y) / m._bande;
-                    a = a < 0 ? 0 : a > 1 ? 1 : a;
-                    const v = e * (1 - a);
+                    let v = (ligne - m._y) / m._bande;
+                    v = v < 0 ? 0 : v > 1 ? 1 : v;
                     //  On n'écrit dans le style que si la valeur a bougé :
                     //  l'immense majorité des mots est à 0 ou à 1 et n'a rien
                     //  à faire redessiner. C'est ce qui rend trois cent
@@ -5947,15 +5935,11 @@
                     m.style.setProperty('--encre', v.toFixed(3));
                 }
                 //  Le paraphe suit la même règle que les mots — il vient
-                //  quand la ligne d'écriture l'atteint, il s'efface quand le
-                //  papier le reprend — mais sur une bande quarante fois plus
-                //  large, et il ne pâlit pas : il se TRACE.
+                //  quand la ligne d'écriture l'atteint — mais sur une bande
+                //  quarante fois plus large, et il ne pâlit pas : il se TRACE.
                 if (paraphe && paraphe._y !== undefined) {
-                    let e = (ligne - paraphe._y) / paraphe._bande;
-                    e = e < 0 ? 0 : e > 1 ? 1 : e;
-                    let a = (reprise - paraphe._y) / paraphe._bande;
-                    a = a < 0 ? 0 : a > 1 ? 1 : a;
-                    const v = e * (1 - a);
+                    let v = (ligne - paraphe._y) / paraphe._bande;
+                    v = v < 0 ? 0 : v > 1 ? 1 : v;
                     if (Math.abs(v - paraphe._encre) >= 0.004) {
                         paraphe._encre = v;
                         paraphe.style.setProperty('--trace', v.toFixed(4));
