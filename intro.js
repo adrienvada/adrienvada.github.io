@@ -83,65 +83,133 @@
     // « STEVEN », et le rythme partirait en vrille.
     var OPENING_STEP_MS = 22, OPENING_FRAMES = 3;    // rythme des rôles d'ouverture (lisibles)
     var DECODE_BASE_MS = 300, DECODE_FLOOR_MS = 55;  // temps de résolution d'un mot
-    var HOLD_BASE_MS = 260, HOLD_FLOOR_MS = 12;      // temps de lecture une fois résolu
+    var HOLD_BASE_MS = 260, HOLD_FLOOR_MS = 8;      // temps de lecture une fois résolu
     var FRAMES_BASE = 4, FRAMES_FLOOR = 2;           // images de brouillage par groupe
     var STEP_MS = 20;                                // durée d'une image de brouillage
-    var CHURN_BASE_MS = 230, CHURN_FLOOR_MS = 45;    // durée du « mouline » entre deux rôles
-    var ACCEL_START_INDEX = 2;                       // dès Steven (3e rôle) : ça s'emballe
-    var ACCEL_RATE = 0.72;                           // < 1 : plus petit = plus brutal
-    var ACCEL_POW = 1.5;                             // > 1 : l'emballement s'emballe lui-même
-    var DECEL_COUNT = 3;                             // les trois derniers rôles : ça freine
+    var CHURN_BASE_MS = 230, CHURN_FLOOR_MS = 0;    // durée du « mouline » entre deux rôles
+    var OPENING_INDEX = 2;                           // rôles décodés lettre à lettre, sans blocs
+
+    // ════════════════════════════════════════════════════════════
+    //  LE PROFIL DE VITESSE : UNE COURBE, PAS UNE CASCADE
+    // ════════════════════════════════════════════════════════════
+    //  Le rythme suivait une décroissance géométrique, puis un freinage
+    //  plaqué sur les trois derniers rôles. Deux mécanismes séparés, donc
+    //  deux ruptures : ça s'emballait d'un coup au 3e rôle, et ça refreinait
+    //  d'un coup à l'avant-dernier. Une roulette, elle, ne fait ni l'un ni
+    //  l'autre — elle est lancée, elle file, elle s'épuise.
+    //
+    //  Un seul geste désormais, sur toute la liste : une cloche en cosinus
+    //  surélevé, dont la dérivée est NULLE aux deux extrémités. Le départ
+    //  s'amorce donc en douceur au lieu de plonger, et la fin s'éteint en
+    //  douceur au lieu de s'arrêter. La contrepartie est voulue : pour tenir
+    //  la même durée totale avec des épaules aussi étalées, la vitesse de
+    //  pointe du milieu doit être bien plus élevée qu'avant.
+    //
+    //    PROFIL_POW  — aplatit les épaules et resserre le sommet. Au-dessus
+    //                  de 1, le départ et l'arrivée sont plus progressifs, et
+    //                  la pointe plus violente.
+    //    PROFIL_BIAIS — déplace le sommet. En dessous de 1, il arrive plus
+    //                  tôt : l'accélération est courte, la décélération
+    //                  longue. C'est ce qui donne au dernier rôle le temps
+    //                  de tomber comme une pierre dans du miel.
+    //    VITESSE_MAX — le rythme au sommet, en fraction du rythme d'ouverture
+    //                  (0,008 = quatre-vingts fois plus rapide, avant que les
+    //                  planchers ne s'en mêlent).
+    var VITESSE_MAX = 0.003;
+    var PROFIL_POW = 2.8;
+    var PROFIL_BIAIS = 0.92;
 
     function accelK(i) {
-        // L'EMBALLEMENT S'EMBALLE. Une décroissance géométrique simple
-        // (ACCEL_RATE puissance le rang) fondait trop lentement : avec vingt
-        // rôles, on avait tout le temps de les compter. En élevant le rang à
-        // une puissance supérieure à 1, chaque cran retire davantage que le
-        // précédent — le défilé plonge au plancher en cinq rôles au lieu de
-        // dix, et l'on arrive au nom sans savoir combien en sont passés.
-        //
-        // Au premier rang accéléré, n vaut 1 : n^ACCEL_POW vaut 1 aussi, et
-        // le rythme du 3e rôle est donc EXACTEMENT celui d'avant. C'est
-        // voulu — les trois premiers rôles sont les seuls qu'on lise
-        // vraiment, ils ne doivent pas bouger d'une milliseconde.
-        var n = i - ACCEL_START_INDEX + 1;
-        var k = i < ACCEL_START_INDEX ? 1 : Math.pow(ACCEL_RATE, Math.pow(n, ACCEL_POW));
-
-        // FREINAGE. Une roulette ne s'arrête pas net : elle ralentit, et
-        // c'est ce ralentissement qui fait qu'on se remet à lire juste avant
-        // le dernier symbole — trois rôles qui redeviennent lisibles, puis
-        // « Adrien » qui se pose. Sans lui, la machine ne s'arrêterait pas :
-        // elle s'éteindrait en pleine course, ce qui n'est pas la même chose.
-        var reste = ROLES.length - 1 - i;
-        if (reste < DECEL_COUNT) {
-            var t = (DECEL_COUNT - reste) / DECEL_COUNT;
-            k += (1 - k) * t * t;
-        }
-        return k;
+        var n = ROLES.length - 1;
+        if (n <= 0) return 1;
+        var p = Math.pow(i / n, PROFIL_BIAIS);
+        var cloche = Math.pow(Math.sin(Math.PI * p), PROFIL_POW);
+        return Math.pow(VITESSE_MAX, cloche);
     }
 
-    // Rythme d'un rôle donné : lisible pour l'ouverture, puis décroissance
-    // exponentielle — l'effet « on se perd dans les rôles ». Au lieu de
-    // raccourcir indéfiniment le temps par caractère (qui bute vite sur la
-    // fréquence d'écran), on révèle PLUSIEURS caractères par étape : les
-    // derniers rôles se décodent par blocs, plus lettre à lettre.
+    // Comment un mot se décode. Au lieu de raccourcir indéfiniment le temps
+    // par caractère (qui bute vite sur la fréquence d'écran), on révèle
+    // PLUSIEURS caractères par étape : les rôles rapides se décodent par
+    // blocs, plus lettre à lettre. Les deux premiers gardent le décodage
+    // lettre à lettre, qui est ce qu'on regarde vraiment au lever de rideau.
     function wordTiming(i, word) {
-        if (i < ACCEL_START_INDEX) {
-            return { hold: HOLD_BASE_MS, step: OPENING_STEP_MS, frames: OPENING_FRAMES, chunk: 1 };
+        if (i < OPENING_INDEX) {
+            return { step: OPENING_STEP_MS, frames: OPENING_FRAMES, chunk: 1 };
         }
         var k = accelK(i);
         var decode = Math.max(DECODE_FLOOR_MS, Math.round(DECODE_BASE_MS * k));
-        var hold = Math.max(HOLD_FLOOR_MS, Math.round(HOLD_BASE_MS * k));
         var frames = Math.max(FRAMES_FLOOR, Math.round(FRAMES_BASE * k));
         var letters = Math.max(1, String(word || '').replace(/ /g, '').length);
         var maxSteps = Math.max(1, Math.round(decode / (frames * STEP_MS)));
         var chunk = Math.max(1, Math.ceil(letters / maxSteps));
-        return { hold: hold, step: STEP_MS, frames: frames, chunk: chunk };
+        return { step: STEP_MS, frames: frames, chunk: chunk };
+    }
+
+    // Combien de temps le décodage d'un mot occupe réellement l'écran.
+    function decodeDuration(i, word) {
+        var t = wordTiming(i, word);
+        var letters = Math.max(1, String(word || '').replace(/ /g, '').length);
+        return Math.ceil(letters / t.chunk) * t.frames * t.step;
     }
 
     function churnDuration(i) {
         return Math.max(CHURN_FLOOR_MS, Math.round(CHURN_BASE_MS * accelK(i)));
     }
+
+    // ════════════════════════════════════════════════════════════
+    //  LA DURÉE EST UNE CONSIGNE, PAS UNE CONSÉQUENCE
+    // ════════════════════════════════════════════════════════════
+    //  Jusqu'ici, chaque rôle ajouté à la liste rallongeait l'ouverture, et
+    //  il fallait re-régler les constantes à la main jusqu'à retomber sur ses
+    //  pieds. C'est l'inverse maintenant : on FIXE la durée du défilé, et
+    //  l'on cherche le facteur de rythme qui l'atteint. Le profil de vitesse
+    //  décide de la FORME, cette consigne décide de la DURÉE, et les deux ne
+    //  se marchent plus dessus. Ajouter dix rôles ne rallonge donc plus rien :
+    //  ça densifie.
+    //
+    //  La recherche se fait par dichotomie et non par une simple règle de
+    //  trois, parce que les planchers rendent la somme non proportionnelle au
+    //  facteur : en dessous d'un certain rythme, un rôle ne raccourcit plus.
+    //  La somme reste en revanche croissante, ce qui suffit à la dichotomie.
+    //  Une trentaine d'itérations, une seule fois au chargement.
+    var SEQUENCE_CIBLE_MS = 4455;  // du lever de rideau à l'arrêt sur « Adrien »
+    var SHIFT_BASE_MS = 380, SHIFT_FLOOR_MS = 38;   // durée d'un cran du tambour
+    var LOCK_SHIFT_FACTOR = 3.8;   // le dernier cran : « Adrien » tombe au ralenti
+
+    function shiftAvec(i, facteur) {
+        var lock = i === ROLES.length - 1 ? LOCK_SHIFT_FACTOR : 1;
+        return Math.max(SHIFT_FLOOR_MS, Math.round(SHIFT_BASE_MS * accelK(i) * lock * facteur));
+    }
+
+    function holdAvec(i, facteur) {
+        return Math.max(HOLD_FLOOR_MS, Math.round(HOLD_BASE_MS * accelK(i) * facteur));
+    }
+
+    // Le déroulé complet : le premier rôle se décode au centre, les suivants
+    // arrivent déjà décodés et ne coûtent que leur cran plus leur lecture. Le
+    // dernier n'a pas de lecture : c'est le verrouillage qui prend la suite.
+    function dureeSequence(facteur) {
+        var total = decodeDuration(0, ROLES[0]) + holdAvec(0, facteur);
+        for (var i = 1; i < ROLES.length; i++) {
+            total += shiftAvec(i, facteur);
+            if (i < ROLES.length - 1) total += holdAvec(i, facteur);
+        }
+        return total;
+    }
+
+    var rythme = (function () {
+        if (ROLES.length < 2) return 1;
+        var bas = 0.01, haut = 20;
+        if (dureeSequence(haut) < SEQUENCE_CIBLE_MS) return haut;  // liste trop courte : au plus lent
+        for (var n = 0; n < 40; n++) {
+            var mid = (bas + haut) / 2;
+            if (dureeSequence(mid) < SEQUENCE_CIBLE_MS) bas = mid; else haut = mid;
+        }
+        return (bas + haut) / 2;
+    })();
+
+    function shiftDuration(i) { return shiftAvec(i, rythme); }
+    function holdDuration(i) { return holdAvec(i, rythme); }
 
     var SEAL_DELAY_MS = 200;     // délai avant de dessiner le sceau après le nom final
     var SEAL_DRAW_MS = 850;      // durée du tracé du sceau (doit couvrir les 2 transitions CSS)
@@ -737,15 +805,9 @@
     var cells = [].slice.call(reelEl.querySelectorAll('.intro-cell'));
     var seqTimer = null;     // minuteur du défilé (les crans)
 
-    var SHIFT_BASE_MS = 380, SHIFT_FLOOR_MS = 62;  // durée d'un cran, avant/après emballement
-
-    // Durée d'un cran pour le rôle qui arrive au centre. Le dernier — celui
-    // qui arrête la machine — pèse plus lourd que les autres : on doit
-    // sentir la masse du tambour se poser.
-    function shiftDuration(i) {
-        var d = Math.max(SHIFT_FLOOR_MS, Math.round(SHIFT_BASE_MS * accelK(i)));
-        return i === ROLES.length - 1 ? Math.round(d * LOCK_SHIFT_FACTOR) : d;
-    }
+    // La durée d'un cran (shiftDuration) et le temps de lecture d'un rôle
+    // (holdDuration) sont définis plus haut, avec le profil de vitesse et la
+    // consigne de durée : c'est là que se règle tout le tempo.
 
     // Les cinq places du tambour. `y` est en em (donc solidaire de la
     // taille du texte, qui varie avec l'écran) ; `z` en pixels, lu à
@@ -916,7 +978,8 @@
     //  auquel on ajoute un mot.
     //
     //  Quatre temps, dans l'ordre :
-    //    1. les trois derniers rôles ralentissent (voir DECEL_COUNT) ;
+    //    1. le défilé s'épuise — le profil de vitesse ramène les derniers
+    //       rôles à un rythme lisible, sur une bonne demi-douzaine de crans ;
     //    2. « ADRIEN » descend au centre en dépassant d'un cheveu, puis
     //       revient s'y caler — le « clac » d'une roulette qui verrouille ;
     //    3. les rôles restés en dessous achèvent leur chute et s'éteignent,
@@ -924,9 +987,8 @@
     //    4. « VADA » s'allume à droite tandis qu'« ADRIEN » glisse vers la
     //       gauche pour lui faire place — le nom entier se centre.
     // ════════════════════════════════════════════════════════════
-    var LOCK_SHIFT_FACTOR = 1.4;   // le dernier cran, plus lourd que les autres
     var VIDAGE_MS = 900;           // chute des rôles restants une fois la machine à l'arrêt
-    var SILENCE_MS = 560;          // le temps qu'on laisse à « Adrien » seul, avant « Vada »
+    var SILENCE_MS = 380;          // le temps qu'on laisse à « Adrien » seul, avant « Vada »
     var VADA_MS = 460;             // « Vada » s'allume et le nom se recentre
 
     // La courbe du dernier cran. Le dépassement — le 1.55, au-delà de 1 —
@@ -955,9 +1017,8 @@
         // Lever de rideau : Antiochus se décode droit au centre — et, dans
         // le même temps, Le Juge se décode déjà tout en haut, atténué et
         // plus loin. Le premier cran ne tombe qu'une fois Antiochus lu.
-        var first = wordTiming(0, ROLES[0]);
-        decodeCell(ring[0], ROLES[0], first, function () {
-            seqTimer = setTimeout(function () { step(1); }, first.hold);
+        decodeCell(ring[0], ROLES[0], wordTiming(0, ROLES[0]), function () {
+            seqTimer = setTimeout(function () { step(1); }, holdDuration(0));
         });
         armTopCell(1);
     }
@@ -985,8 +1046,7 @@
         }
 
         turbulenceTarget = Math.min(1, idx / ROLES.length);
-        seqTimer = setTimeout(function () { step(idx + 1); },
-            dur + wordTiming(idx, ROLES[idx]).hold);
+        seqTimer = setTimeout(function () { step(idx + 1); }, dur + holdDuration(idx));
     }
 
     // TEMPS 3. La roulette s'est arrêtée sur « Adrien ». Les rôles encore

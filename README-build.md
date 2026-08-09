@@ -284,10 +284,10 @@ restait. Déplacer `'ADRIEN'` ailleurs dans `ROLES` casse toute la fin.
 
 La séquence se termine donc en quatre temps :
 
-1. **le freinage** — les trois derniers rôles ralentissent et redeviennent
-   lisibles (`DECEL_COUNT`, qui remonte `accelK` vers 1). C'est ce qui rend la
-   fin lisible alors qu'on vient de traverser une vingtaine de rôles sans
-   pouvoir en compter un seul ;
+1. **le freinage** — le défilé s'épuise de lui-même : le profil de vitesse (voir
+   plus bas) ramène les derniers rôles à un rythme lisible sur une bonne
+   demi-douzaine de crans. C'est ce qui rend la fin lisible alors qu'on vient de
+   traverser une vingtaine de rôles sans pouvoir en compter un seul ;
 2. **l'arrêt** — « Adrien » descend au centre en dépassant d'environ 9 % puis
    revient s'y caler (`LOCK_EASE`). Le dépassement joue sur les deux axes : le
    mot passe sous le centre, et il grossit en passant devant le plan de l'écran,
@@ -360,25 +360,42 @@ visite lèverait le rideau au milieu du spectacle.
 
 Tout est dans les constantes en haut de `intro.js` :
 
-- `ROLES` — la liste et l'ordre des rôles. **Seuls les trois premiers et les
-  trois derniers sont faits pour être lus** : entre les deux, c'est une masse
-  qu'on traverse sans pouvoir la compter, et c'est le but. Ajouter un rôle au
-  milieu ne rallonge donc presque pas la séquence ; en ajouter un au début ou à
-  la fin, si. `'ADRIEN'` doit rester en dernier (voir plus haut).
-- `ACCEL_START_INDEX` — à partir de quel rôle l'accélération démarre (2).
-- `ACCEL_RATE` — brutalité de l'accélération (0.72 ; plus petit = plus violent).
-- `ACCEL_POW` — de combien l'emballement s'emballe lui-même (1.5). À 1, on
-  retrouve une décroissance géométrique ordinaire, qui fondait trop lentement
-  pour une longue liste. Au premier rang accéléré la valeur ne change rien :
-  c'est ce qui permet aux trois premiers rôles de ne pas bouger.
-- `SHIFT_FLOOR_MS` / `HOLD_FLOOR_MS` — le plancher, c'est-à-dire la vitesse
-  maximale du défilé (62 + 12 ms par rôle). Les descendre encore rendrait le
-  milieu illisible sur un appareil lent, où les mots se chevaucheraient.
-- `DECEL_COUNT` — combien de rôles se remettent à être lisibles avant l'arrêt.
-- `OPENING_STEP_MS` / `OPENING_FRAMES` — rythme des rôles d'ouverture.
+Tout se joue à deux endroits, et **c'est la séparation des deux qui compte** :
+un profil décide de la FORME du rythme, une consigne décide de sa DURÉE. On peut
+donc rendre le défilé plus fou sans qu'il s'allonge, et allonger le nom sans le
+ralentir. Ils ne se marchent plus dessus.
+
+- `SEQUENCE_CIBLE_MS` — **la durée du défilé, du lever de rideau à l'arrêt sur
+  « Adrien ».** C'est une consigne : `intro.js` cherche au chargement, par
+  dichotomie, le facteur de rythme qui l'atteint. Conséquence directe : ajouter
+  dix rôles ne rallonge plus l'ouverture, ça la densifie. C'est ici, et nulle
+  part ailleurs, qu'on rend l'intro plus longue ou plus courte.
+- `ROLES` — la liste et l'ordre des rôles. **Seuls les premiers et les derniers
+  sont faits pour être lus** : entre les deux, c'est une masse qu'on traverse
+  sans pouvoir la compter, et c'est le but. `'ADRIEN'` doit rester en dernier
+  (voir plus haut).
+- `PROFIL_POW` — aplatit les épaules de la courbe et resserre son sommet.
+  Au-dessus de 1, le départ et l'arrivée sont plus progressifs et la pointe plus
+  violente ; à 1, on retrouve une cloche ordinaire.
+- `PROFIL_BIAIS` — déplace le sommet. En dessous de 1 il arrive plus tôt :
+  accélération courte, décélération longue.
+- `VITESSE_MAX` — le rythme au sommet, en fraction du rythme d'ouverture.
+- `SHIFT_FLOOR_MS` / `HOLD_FLOOR_MS` — le plancher absolu (38 + 8 ms par rôle).
+  Les descendre encore ferait se chevaucher les mots sur un appareil lent.
+- `LOCK_SHIFT_FACTOR` — de combien le DERNIER cran est plus lent que les autres.
+  À 3,8, « Adrien » met près d'une seconde à descendre : la roulette n'a plus
+  d'élan, elle se laisse tomber.
+- `OPENING_STEP_MS` / `OPENING_FRAMES` / `OPENING_INDEX` — le décodage lettre à
+  lettre des premiers rôles, celui qu'on regarde vraiment au lever de rideau.
 - `MAX_INTRO_MS` — garde-fou : au-delà, le voile disparaît quoi qu'il arrive.
   Ne jamais le descendre sous la durée naturelle de la séquence (environ 6 s
   jusqu'au sceau), sinon l'animation serait coupée avant la fin.
+
+Un mot sur l'arbitrage, parce qu'il se represente à chaque réglage : à durée
+constante, une décélération plus longue et une chute finale plus lente se
+financent forcément sur le reste. Étaler les deux extrémités impose une pointe
+plus rapide au milieu, et comprime un peu l'ouverture. Il n'y a pas de réglage
+qui donne tout à la fois — seulement des équilibres.
 
 ### Régler le grain (et pourquoi il ne faut pas le grossir)
 
