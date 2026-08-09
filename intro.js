@@ -63,10 +63,19 @@
     //    s'arrête : le nom n'est pas une conclusion plaquée par-dessus
     //    les rôles, c'est le rôle qui restait. Le déplacer ailleurs
     //    casserait toute la fin de la séquence.
+    //
+    //    LE MILIEU DE LA LISTE N'EST PAS FAIT POUR ÊTRE LU, et c'est le but :
+    //    on doit arriver au nom sans savoir combien de rôles ont défilé. Ces
+    //    rôles-là ne sont donc pas rangés par importance — ils sont la masse
+    //    qu'on traverse. Seuls comptent les trois premiers, lisibles, et les
+    //    trois derniers, que le freinage rend de nouveau lisibles.
     var ROLES = [
         'ANTIOCHUS', 'LE JUGE',
         'STEVEN', 'SGANARELLE', 'TOUCHSTONE', 'TITUS ANDRONICUS', 'LE PROCUREUR', "L'ACCUSÉ",
-        'LE GREFFIER', "L'AVOCAT", 'LE NARRATEUR', 'LE JEUNE MEC', 'JEREM', 'ADRIEN'
+        'LE GREFFIER', "L'AVOCAT", 'LE NARRATEUR',
+        'ARTHUR', 'INSPECTEUR TOUTOU', 'CYRANO', 'ROBERT', 'PONTAGNAC', 'SMIRNOV',
+        'LE PROFESSEUR', 'LE MÉDECIN',
+        'LE JEUNE MEC', 'JEREM', 'ADRIEN'
     ];
 
     // On raisonne en DURÉE CIBLE par mot, pas en vitesse par caractère :
@@ -74,16 +83,29 @@
     // « STEVEN », et le rythme partirait en vrille.
     var OPENING_STEP_MS = 22, OPENING_FRAMES = 3;    // rythme des rôles d'ouverture (lisibles)
     var DECODE_BASE_MS = 300, DECODE_FLOOR_MS = 55;  // temps de résolution d'un mot
-    var HOLD_BASE_MS = 260, HOLD_FLOOR_MS = 18;      // temps de lecture une fois résolu
+    var HOLD_BASE_MS = 260, HOLD_FLOOR_MS = 12;      // temps de lecture une fois résolu
     var FRAMES_BASE = 4, FRAMES_FLOOR = 2;           // images de brouillage par groupe
     var STEP_MS = 20;                                // durée d'une image de brouillage
     var CHURN_BASE_MS = 230, CHURN_FLOOR_MS = 45;    // durée du « mouline » entre deux rôles
     var ACCEL_START_INDEX = 2;                       // dès Steven (3e rôle) : ça s'emballe
     var ACCEL_RATE = 0.72;                           // < 1 : plus petit = plus brutal
+    var ACCEL_POW = 1.5;                             // > 1 : l'emballement s'emballe lui-même
     var DECEL_COUNT = 3;                             // les trois derniers rôles : ça freine
 
     function accelK(i) {
-        var k = i < ACCEL_START_INDEX ? 1 : Math.pow(ACCEL_RATE, i - ACCEL_START_INDEX + 1);
+        // L'EMBALLEMENT S'EMBALLE. Une décroissance géométrique simple
+        // (ACCEL_RATE puissance le rang) fondait trop lentement : avec vingt
+        // rôles, on avait tout le temps de les compter. En élevant le rang à
+        // une puissance supérieure à 1, chaque cran retire davantage que le
+        // précédent — le défilé plonge au plancher en cinq rôles au lieu de
+        // dix, et l'on arrive au nom sans savoir combien en sont passés.
+        //
+        // Au premier rang accéléré, n vaut 1 : n^ACCEL_POW vaut 1 aussi, et
+        // le rythme du 3e rôle est donc EXACTEMENT celui d'avant. C'est
+        // voulu — les trois premiers rôles sont les seuls qu'on lise
+        // vraiment, ils ne doivent pas bouger d'une milliseconde.
+        var n = i - ACCEL_START_INDEX + 1;
+        var k = i < ACCEL_START_INDEX ? 1 : Math.pow(ACCEL_RATE, Math.pow(n, ACCEL_POW));
 
         // FREINAGE. Une roulette ne s'arrête pas net : elle ralentit, et
         // c'est ce ralentissement qui fait qu'on se remet à lire juste avant
@@ -715,7 +737,7 @@
     var cells = [].slice.call(reelEl.querySelectorAll('.intro-cell'));
     var seqTimer = null;     // minuteur du défilé (les crans)
 
-    var SHIFT_BASE_MS = 380, SHIFT_FLOOR_MS = 90;  // durée d'un cran, avant/après emballement
+    var SHIFT_BASE_MS = 380, SHIFT_FLOOR_MS = 62;  // durée d'un cran, avant/après emballement
 
     // Durée d'un cran pour le rôle qui arrive au centre. Le dernier — celui
     // qui arrête la machine — pèse plus lourd que les autres : on doit

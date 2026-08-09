@@ -2380,8 +2380,10 @@
             margin: 0;
             font-family: 'Montserrat', sans-serif;
             font-weight: 700;
-            /* Calibré sur le rôle le plus long (« TITUS ANDRONICUS »,
-               16 caractères) pour tenir sur une seule ligne dès 320 px. */
+            /* Calibré sur le rôle le plus long (« INSPECTEUR TOUTOU »,
+               17 caractères) pour tenir sur une seule ligne dès 320 px : il y
+               occupe 189 px sur les 320, marges confortables. Un rôle plus
+               long que celui-là demanderait de revoir ce calibrage. */
             font-size: clamp(1rem, 4.4vw, 3rem);
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -2397,8 +2399,27 @@
            réglée elle aussi image par image (le défilé s'emballe). */
         .intro-cell {
             position: absolute;
-            left: 0;
-            right: 0;
+            /* LA BOÎTE DÉBORDE LARGEMENT LA PILE, DES DEUX CÔTÉS. C'est la
+               pile qui donne sa largeur à la colonne, et la pile est mesurée
+               sur « ADRIEN VADA » — les cellules du tambour n'y contribuent
+               pas, étant en position absolue. Un rôle plus long que le nom
+               débordait donc de sa boîte ; et un texte en `nowrap` plus large
+               que sa ligne ne se répartit pas de part et d'autre, il part
+               vers la droite. « Titus Andronicus » s'affichait ainsi 58 px à
+               droite du centre, et « Inspecteur Toutou » 77 px. Une boîte plus
+               large que le plus long des rôles, et centrée par construction,
+               supprime la question — sans rien changer à la perspective, dont
+               l'origine reste celle du tambour.
+
+               `max-width` DOIT être levé ici, sinon rien de tout cela ne
+               s'applique : la règle commune plafonne à 100 % de la pile, la
+               boîte élargie se retrouve ramenée à sa largeur, et le navigateur
+               abandonne alors le calage de droite. On revient au point de
+               départ sans que rien ne le signale. Le nom, lui, garde le
+               plafond : il est dans le flux, et c'est lui qui mesure la pile. */
+            left: -50vw;
+            right: -50vw;
+            max-width: none;
             top: 50%;
             text-align: center;
             opacity: 0;

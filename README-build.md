@@ -285,7 +285,9 @@ restait. Déplacer `'ADRIEN'` ailleurs dans `ROLES` casse toute la fin.
 La séquence se termine donc en quatre temps :
 
 1. **le freinage** — les trois derniers rôles ralentissent et redeviennent
-   lisibles (`DECEL_COUNT`, qui remonte `accelK` vers 1) ;
+   lisibles (`DECEL_COUNT`, qui remonte `accelK` vers 1). C'est ce qui rend la
+   fin lisible alors qu'on vient de traverser une vingtaine de rôles sans
+   pouvoir en compter un seul ;
 2. **l'arrêt** — « Adrien » descend au centre en dépassant d'environ 9 % puis
    revient s'y caler (`LOCK_EASE`). Le dépassement joue sur les deux axes : le
    mot passe sous le centre, et il grossit en passant devant le plan de l'écran,
@@ -358,16 +360,25 @@ visite lèverait le rideau au milieu du spectacle.
 
 Tout est dans les constantes en haut de `intro.js` :
 
-- `ROLES` — la liste et l'ordre des rôles. Les 2 premiers (Antiochus, Le Juge)
-  se décodent lettre à lettre pour rester lisibles ; les suivants s'emballent.
+- `ROLES` — la liste et l'ordre des rôles. **Seuls les trois premiers et les
+  trois derniers sont faits pour être lus** : entre les deux, c'est une masse
+  qu'on traverse sans pouvoir la compter, et c'est le but. Ajouter un rôle au
+  milieu ne rallonge donc presque pas la séquence ; en ajouter un au début ou à
+  la fin, si. `'ADRIEN'` doit rester en dernier (voir plus haut).
 - `ACCEL_START_INDEX` — à partir de quel rôle l'accélération démarre (2).
 - `ACCEL_RATE` — brutalité de l'accélération (0.72 ; plus petit = plus violent).
+- `ACCEL_POW` — de combien l'emballement s'emballe lui-même (1.5). À 1, on
+  retrouve une décroissance géométrique ordinaire, qui fondait trop lentement
+  pour une longue liste. Au premier rang accéléré la valeur ne change rien :
+  c'est ce qui permet aux trois premiers rôles de ne pas bouger.
+- `SHIFT_FLOOR_MS` / `HOLD_FLOOR_MS` — le plancher, c'est-à-dire la vitesse
+  maximale du défilé (62 + 12 ms par rôle). Les descendre encore rendrait le
+  milieu illisible sur un appareil lent, où les mots se chevaucheraient.
+- `DECEL_COUNT` — combien de rôles se remettent à être lisibles avant l'arrêt.
 - `OPENING_STEP_MS` / `OPENING_FRAMES` — rythme des rôles d'ouverture.
-- `updateFade()` — courbe du fondu rôles → nom (exposant 1.6 : le nom reste
-  discret au début, puis prend le dessus sur la seconde moitié).
 - `MAX_INTRO_MS` — garde-fou : au-delà, le voile disparaît quoi qu'il arrive.
-  Ne jamais le descendre sous la durée naturelle de la séquence, sinon
-  l'animation serait coupée avant la fin.
+  Ne jamais le descendre sous la durée naturelle de la séquence (environ 6 s
+  jusqu'au sceau), sinon l'animation serait coupée avant la fin.
 
 ### Régler le grain (et pourquoi il ne faut pas le grossir)
 
