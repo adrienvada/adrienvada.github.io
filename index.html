@@ -2415,12 +2415,15 @@
             will-change: transform, opacity;
         }
 
+        /* Le nom reste un élément DANS le flux de la grille, et il le faut :
+           c'est lui qui donne sa largeur à la pile. Les cellules du tambour
+           sont toutes en position absolue et ne mesurent donc rien ; l'en
+           sortir fait s'effondrer la colonne à zéro. */
         .intro-name-fade {
             grid-area: 1 / 1;
             align-self: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.26s ease;
         }
 
         .intro-cell .ch,
@@ -2433,7 +2436,8 @@
         }
 
         /* La partie « VADA » reprend directement la typo du logotype du
-           header, dès le départ — elle annonce ce vers quoi le fondu mène. */
+           header : c'est elle qui vient se poser à côté du rôle « Adrien »
+           une fois la roulette arrêtée, et qui fait du rôle un nom. */
         .intro-name-fade .ch-vada {
             font-family: 'Cinzel', serif;
             color: #bfa98a;
@@ -2898,9 +2902,20 @@
                     <p class="intro-cell">&nbsp;</p>
                     <p class="intro-cell">&nbsp;</p>
                 </div>
-                <p class="intro-name-fade" id="intro-name-fade">
-                    <span class="ch">ADRIEN</span> <span class="ch ch-vada">VADA</span>
-                </p>
+                <!-- LE NOM EST DÉCOUPÉ LETTRE PAR LETTRE, À PLAT, ET IL LE
+                     FAUT. La roulette s'arrête sur le rôle « ADRIEN » ; ce
+                     texte-ci prend ensuite sa place, au pixel près, pour lui
+                     adjoindre « VADA ». Or le tambour rend chaque caractère
+                     dans sa propre boîte (voir renderCell dans intro.js) : un
+                     mot écrit d'un seul tenant n'aurait pas le même crénage,
+                     et la substitution se verrait — les lettres sauteraient.
+                     Pour la même raison, PAS de <span> groupant les deux
+                     mots : une boîte en ligne imbriquée décale la hauteur de
+                     la ligne d'un demi-pixel, et ce demi-pixel se voyait
+                     aussi. Le balisage doit reproduire exactement celui du
+                     tambour — donc des lettres, et rien d'autre. Aucune
+                     espace entre les <span> : elle compterait. -->
+                <p class="intro-name-fade" id="intro-name-fade"><span class="ch">A</span><span class="ch">D</span><span class="ch">R</span><span class="ch">I</span><span class="ch">E</span><span class="ch">N</span> <span class="ch ch-vada">V</span><span class="ch ch-vada">A</span><span class="ch ch-vada">D</span><span class="ch ch-vada">A</span></p>
             </div>
             <!-- Le sceau n'ouvre pas le site tout seul : il faut cliquer dessus -->
             <div class="intro-cta" id="intro-cta">

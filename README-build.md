@@ -269,16 +269,51 @@ Ce sont donc **quatre temps**, pas deux : quand Le Juge prend le centre,
 Antiochus est encore là, en dessous, à demi éteint — il ne disparaît qu'à
 l'arrivée de Steven. On voit toujours d'où l'on vient et où l'on va.
 
-En parallèle, « Adrien Vada » — superposé à la position centrale du tambour —
-apparaît en fondu et remplace peu à peu les rôles. Un **sceau** se trace enfin :
-il faut **cliquer dessus pour entrer** (l'intro ne se referme jamais toute
-seule).
-
 Le tambour compte **cinq cellules pour quatre places visibles** : la cinquième
 attend en coulisse, invisible, le temps d'être remontée du fond vers le haut sans
 qu'on la voie sauter. Ses réglages (hauteurs, éloignement, opacités, flou) sont
 dans `SLOTS`, en haut de la section « tambour » d'`intro.js` ; la durée d'un cran
 est `SHIFT_BASE_MS`, qui suit la même accélération que le reste du défilé.
+
+### La roulette s'arrête sur « Adrien »
+
+**« ADRIEN » est le dernier rôle de la liste, et ce n'est pas un hasard** : c'est
+un rôle joué comme les autres, et c'est celui sur lequel la machine cale. Le nom
+n'est pas une conclusion plaquée par-dessus les rôles — c'est le rôle qui
+restait. Déplacer `'ADRIEN'` ailleurs dans `ROLES` casse toute la fin.
+
+La séquence se termine donc en quatre temps :
+
+1. **le freinage** — les trois derniers rôles ralentissent et redeviennent
+   lisibles (`DECEL_COUNT`, qui remonte `accelK` vers 1) ;
+2. **l'arrêt** — « Adrien » descend au centre en dépassant d'environ 9 % puis
+   revient s'y caler (`LOCK_EASE`). Le dépassement joue sur les deux axes : le
+   mot passe sous le centre, et il grossit en passant devant le plan de l'écran,
+   puisque la profondeur dépasse aussi. C'est le « clac » d'une roulette qui se
+   verrouille — sans lui elle ne s'arrête pas, elle s'immobilise ;
+3. **le silence** — les rôles restés en dessous achèvent leur chute et
+   s'éteignent, pendant que le centre ne bouge plus (`VIDAGE_MS`, `SILENCE_MS`) ;
+4. **« Vada »** — le mot s'allume en Cinzel doré à droite pendant qu'« Adrien »
+   glisse vers la gauche, et le nom entier se recentre (`VADA_MS`).
+
+Le quatrième temps repose sur une **substitution invisible** : le texte net
+(`#intro-name-fade`) vient prendre la place exacte du rôle affiché par le
+tambour. Pour que les lettres ne sautent pas d'un pixel, deux précautions —
+toutes deux vérifiées à la mesure, et toutes deux nécessaires :
+
+- le nom est **découpé lettre par lettre, à plat**, comme le fait `renderCell`.
+  Un mot d'un seul tenant n'aurait pas le même crénage ; un `<span>` groupant les
+  deux mots décalait la hauteur de ligne d'un demi-pixel ;
+- le calage se fait **par mesure, pas par calcul** : `revele()` superpose le
+  « A » du nom sur le « A » du tambour dans les deux axes. Un décalage déduit de
+  la largeur ajoutée par « VADA » serait juste horizontalement, mais laisserait
+  un demi-pixel vertical — les lettres de « VADA » sont en Cinzel, dont les
+  métriques rendent la ligne du nom un pixel plus haute que celle du tambour.
+  La mesure, elle, reste vraie quelles que soient les fontes, la largeur de
+  l'écran, et même si les polices n'ont pas fini de se charger.
+
+Un **sceau** se trace enfin : il faut **cliquer dessus pour entrer** (l'intro ne
+se referme jamais toute seule).
 
 Le nuage de points du masque est dans `mask-points.js` : **fichier généré, à ne
 pas éditer à la main**. Il a été produit hors-ligne à partir du modèle 3D FBX
