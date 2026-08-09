@@ -105,19 +105,28 @@
     //  la même durée totale avec des épaules aussi étalées, la vitesse de
     //  pointe du milieu doit être bien plus élevée qu'avant.
     //
-    //    PROFIL_POW  — aplatit les épaules et resserre le sommet. Au-dessus
-    //                  de 1, le départ et l'arrivée sont plus progressifs, et
-    //                  la pointe plus violente.
-    //    PROFIL_BIAIS — déplace le sommet. En dessous de 1, il arrive plus
-    //                  tôt : l'accélération est courte, la décélération
-    //                  longue. C'est ce qui donne au dernier rôle le temps
-    //                  de tomber comme une pierre dans du miel.
-    //    VITESSE_MAX — le rythme au sommet, en fraction du rythme d'ouverture
-    //                  (0,008 = quatre-vingts fois plus rapide, avant que les
-    //                  planchers ne s'en mêlent).
-    var VITESSE_MAX = 0.003;
-    var PROFIL_POW = 2.8;
-    var PROFIL_BIAIS = 0.92;
+    //    PROFIL_POW  — resserre le sommet et aplatit les épaules. Au-dessus
+    //                  de 1, la pointe est plus étroite et plus violente ;
+    //                  près de 1, la courbe s'étale et la marche s'efface.
+    //    PROFIL_BIAIS — déplace le sommet. Au-dessus de 1 il arrive plus tard :
+    //                  l'accélération prend son temps, la décélération est plus
+    //                  serrée. En dessous, l'inverse.
+    //    VITESSE_MAX — L'AMPLITUDE DE LA COURBE, et c'est là qu'est le piège.
+    //                  On croirait qu'elle règle la vitesse de pointe : elle ne
+    //                  la règle plus. Au sommet, le rythme bute depuis
+    //                  longtemps sur SHIFT_FLOOR_MS — c'est LE PLANCHER qui
+    //                  décide de la vitesse maximale, pas cette valeur-ci.
+    //                  Elle ne décide plus que de la HAUTEUR DE LA FALAISE à
+    //                  descendre pour l'atteindre. Et une falaise plus courte
+    //                  se descend par des marches plus petites : passée de
+    //                  0,003 à 0,13, la pointe n'a pas bougé d'une
+    //                  milliseconde, mais aucun rôle n'est plus qu'un tiers
+    //                  plus rapide que celui qui le précède, là où l'on
+    //                  doublait la vitesse d'un rôle à l'autre. C'est tout le
+    //                  ressaut qu'on sentait vers « Sganarelle ».
+    var VITESSE_MAX = 0.13;
+    var PROFIL_POW = 1.8;
+    var PROFIL_BIAIS = 1.1;
 
     function accelK(i) {
         var n = ROLES.length - 1;
@@ -174,7 +183,7 @@
     //  Une trentaine d'itérations, une seule fois au chargement.
     var SEQUENCE_CIBLE_MS = 4455;  // du lever de rideau à l'arrêt sur « Adrien »
     var SHIFT_BASE_MS = 380, SHIFT_FLOOR_MS = 38;   // durée d'un cran du tambour
-    var LOCK_SHIFT_FACTOR = 3.8;   // le dernier cran : « Adrien » tombe au ralenti
+    var LOCK_SHIFT_FACTOR = 5;     // le dernier cran : « Adrien » tombe au ralenti
 
     function shiftAvec(i, facteur) {
         var lock = i === ROLES.length - 1 ? LOCK_SHIFT_FACTOR : 1;
@@ -945,13 +954,30 @@
         if (i >= ROLES.length) { cell.innerHTML = '&nbsp;'; return; }
         var role = ROLES[i];
         var timing = wordTiming(i, role);
-        // Deux rôles se décodent d'emblée, sans « ça mouline » préalable.
-        // Le premier du haut (« Le Juge ») : au lever de rideau, personne
-        // n'attend. Et le dernier (« Adrien ») : le freinage ne lui laisse
-        // pas assez de temps pour brouiller PUIS se résoudre, et il doit
-        // être entièrement formé quand il descend prendre le centre —
-        // c'est un arrêt sur un mot, pas sur un mot qui se cherche encore.
-        var churn = (i <= 1 || i === ROLES.length - 1) ? 0 : Math.round(churnDuration(i) * 0.5);
+
+        // LE BROUILLAGE NE DOIT JAMAIS MANGER LE DÉCODAGE. Un mot doit être
+        // FORMÉ quand il descend prendre le centre : sinon on ne voit plus
+        // passer des rôles, on voit passer du bruit — et au plus fort de
+        // l'emballement, c'est précisément ce qui arrivait, « Pontagnac »
+        // arrivant au centre encore à moitié brouillé.
+        //
+        // On ne laisse donc au « ça mouline » que ce qui reste de la fenêtre
+        // une fois le décodage payé, moins une image de marge. Au sommet il ne
+        // reste rien, et c'est très bien ainsi ; dans les zones lentes il
+        // retrouve toute sa place. Le calcul s'ajuste tout seul au rythme, ce
+        // qu'un coefficient fixe ne savait pas faire.
+        //
+        // Deux rôles s'en passent quoi qu'il arrive : le premier du haut
+        // (« Le Juge »), parce qu'au lever de rideau personne n'attend qu'ça
+        // mouline ; et le dernier (« Adrien »), parce que c'est un arrêt sur
+        // un mot, pas sur un mot qui se cherche encore.
+        var fenetre = i === 1
+            ? decodeDuration(0, ROLES[0]) + holdDuration(0)
+            : shiftDuration(i - 1) + holdDuration(i - 1);
+        var disponible = fenetre - decodeDuration(i, role) - STEP_MS;
+        var churn = (i <= 1 || i === ROLES.length - 1)
+            ? 0
+            : Math.max(0, Math.min(Math.round(churnDuration(i) * 0.5), disponible));
         churnCell(cell, role.length, churn, function () {
             decodeCell(cell, role, timing);
         });

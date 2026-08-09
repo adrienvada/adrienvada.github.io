@@ -374,16 +374,25 @@ ralentir. Ils ne se marchent plus dessus.
   sont faits pour être lus** : entre les deux, c'est une masse qu'on traverse
   sans pouvoir la compter, et c'est le but. `'ADRIEN'` doit rester en dernier
   (voir plus haut).
-- `PROFIL_POW` — aplatit les épaules de la courbe et resserre son sommet.
-  Au-dessus de 1, le départ et l'arrivée sont plus progressifs et la pointe plus
-  violente ; à 1, on retrouve une cloche ordinaire.
-- `PROFIL_BIAIS` — déplace le sommet. En dessous de 1 il arrive plus tôt :
-  accélération courte, décélération longue.
-- `VITESSE_MAX` — le rythme au sommet, en fraction du rythme d'ouverture.
+- `PROFIL_POW` — resserre le sommet et aplatit les épaules. Près de 1, la courbe
+  s'étale ; au-dessus, la pointe se fait plus étroite et plus violente.
+- `PROFIL_BIAIS` — déplace le sommet. Au-dessus de 1 il arrive plus tard :
+  l'accélération prend son temps, la décélération est plus serrée.
 - `SHIFT_FLOOR_MS` / `HOLD_FLOOR_MS` — le plancher absolu (38 + 8 ms par rôle).
-  Les descendre encore ferait se chevaucher les mots sur un appareil lent.
+  **C'est lui, et lui seul, qui fixe la vitesse de pointe** — voir juste en
+  dessous. Les descendre encore ferait se chevaucher les mots sur un appareil
+  lent.
+- `VITESSE_MAX` — **l'amplitude de la courbe, et le piège du réglage.** On
+  croirait qu'elle règle la vitesse de pointe : elle ne la règle pas. Au sommet,
+  le rythme bute depuis longtemps sur le plancher ci-dessus. Elle ne décide que
+  de la hauteur de la falaise à descendre pour l'atteindre — et une falaise plus
+  courte se descend par des marches plus petites. La passer de 0,003 à 0,13 n'a
+  pas changé la pointe d'une milliseconde, mais a fait tomber le pire écart
+  entre deux rôles consécutifs de 2,1× à 1,3× : c'est tout le ressaut qu'on
+  sentait vers « Sganarelle ». **Pour lisser l'accélération, c'est ici qu'on
+  agit — en montant cette valeur, contre l'intuition.**
 - `LOCK_SHIFT_FACTOR` — de combien le DERNIER cran est plus lent que les autres.
-  À 3,8, « Adrien » met près d'une seconde à descendre : la roulette n'a plus
+  À 5, « Adrien » met près d'une seconde à descendre : la roulette n'a plus
   d'élan, elle se laisse tomber.
 - `OPENING_STEP_MS` / `OPENING_FRAMES` / `OPENING_INDEX` — le décodage lettre à
   lettre des premiers rôles, celui qu'on regarde vraiment au lever de rideau.
