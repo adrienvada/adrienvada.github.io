@@ -2341,21 +2341,41 @@
             text-align: center;
         }
 
-        /* ── Un seul emplacement de texte : le rôle en cours (qui se
-           décode normalement) et « ADRIEN VADA » sont superposés exactement
-           au même endroit. Seule leur opacité respective bouge : le rôle
-           s'efface progressivement pendant qu'Adrien Vada apparaît en
-           fondu — le nom REMPLACE les rôles, il ne s'y ajoute pas. */
+        /* ── LE TAMBOUR DE ROULETTE. Les rôles ne se remplacent plus sur
+           place : ils DÉFILENT, comme les symboles d'une machine à sous.
+           Trois positions visibles, sur un axe qui s'enfonce dans l'écran :
+           tout en haut, atténué et plus loin dans la profondeur, le rôle
+           suivant est en train de se décoder ; au centre, net et de face,
+           le rôle en cours — exactement là où « ADRIEN VADA » finira par
+           s'imposer ; en bas, le rôle qu'on vient de quitter s'éloigne et
+           s'efface. À chaque cran, tout descend d'un rang.
+
+           « ADRIEN VADA » est superposé à la position CENTRALE du tambour :
+           seule leur opacité respective bouge, le nom remplace les rôles
+           en fondu plutôt que de leur être concaténé. */
         .intro-textstack {
             position: relative;
             display: grid;
-            min-height: 1.3em;
+            /* Assez haut pour que les trois crans du tambour respirent : la
+               position centrale reste à mi-hauteur, donc alignée avec le nom. */
+            min-height: 3.8em;
             max-width: 100%;
         }
 
-        .intro-scramble,
-        .intro-name-fade {
+        .intro-reel {
             grid-area: 1 / 1;
+            align-self: stretch;
+            position: relative;
+            /* La perspective est posée ICI, pas sur un parent : les cellules
+               sont ses enfants directs, et l'opacité que le fondu applique au
+               tambour ne peut donc pas aplatir leur profondeur. */
+            perspective: 900px;
+            perspective-origin: 50% 50%;
+            transition: opacity 0.26s ease;
+        }
+
+        .intro-cell,
+        .intro-name-fade {
             margin: 0;
             font-family: 'Montserrat', sans-serif;
             font-weight: 700;
@@ -2368,20 +2388,46 @@
             max-width: 100%;
             color: #f2ece0;
             text-shadow: 0 0 24px rgba(191, 169, 138, 0.35);
-            transition: opacity 0.26s ease;
+        }
+
+        /* Chaque cellule est un cran du tambour. Sa place — hauteur,
+           éloignement, opacité, flou — est posée par intro.js ; ne restent
+           ici que l'ancrage sur la ligne médiane et la durée des transitions,
+           réglée elle aussi image par image (le défilé s'emballe). */
+        .intro-cell {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            text-align: center;
+            opacity: 0;
+            transform: translate3d(0, -50%, 0);
+            transition-property: transform, opacity, filter;
+            /* Deux courbes, pas une. Le DÉPLACEMENT démarre et se pose en
+               douceur, comme un cran de tambour qu'on relâche. L'OPACITÉ,
+               elle, est LINÉAIRE : sur la courbe du déplacement, le rôle qui
+               s'en va serait éteint avant d'avoir bougé — on ne le verrait pas
+               partir, il disparaîtrait sur place. Linéaire, il est encore à
+               mi-lumière à mi-chemin : on le voit vraiment s'enfoncer. */
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1), linear, cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 0ms;
+            will-change: transform, opacity;
         }
 
         .intro-name-fade {
+            grid-area: 1 / 1;
+            align-self: center;
             opacity: 0;
             pointer-events: none;
+            transition: opacity 0.26s ease;
         }
 
-        .intro-scramble .ch,
+        .intro-cell .ch,
         .intro-name-fade .ch {
             display: inline-block;
         }
 
-        .intro-scramble .ch-dim {
+        .intro-cell .ch-dim {
             opacity: 0.4;
         }
 
@@ -2834,12 +2880,20 @@
     <div id="intro-overlay">
         <canvas id="intro-canvas" aria-hidden="true"></canvas>
         <div class="intro-stage" aria-hidden="true">
-            <!-- Un seul emplacement : le rôle en cours (décodé normalement)
-                 et « Adrien Vada » sont superposés au même endroit — seule
-                 leur opacité respective évolue, le nom remplace les rôles
-                 en fondu plutôt que de leur être concaténé. -->
+            <!-- Le tambour de roulette : quatre cellules qui tournent en
+                 rond sur trois positions visibles (haut / centre / bas) —
+                 la quatrième attend en coulisse, invisible, le temps d'être
+                 remontée sans qu'on la voie sauter. « Adrien Vada » est
+                 superposé à la position centrale : seule leur opacité
+                 respective évolue, le nom remplace les rôles en fondu
+                 plutôt que de leur être concaténé. -->
             <div class="intro-textstack">
-                <p class="intro-scramble" id="intro-scramble">&nbsp;</p>
+                <div class="intro-reel" id="intro-scramble">
+                    <p class="intro-cell">&nbsp;</p>
+                    <p class="intro-cell">&nbsp;</p>
+                    <p class="intro-cell">&nbsp;</p>
+                    <p class="intro-cell">&nbsp;</p>
+                </div>
                 <p class="intro-name-fade" id="intro-name-fade">
                     <span class="ch">ADRIEN</span> <span class="ch ch-vada">VADA</span>
                 </p>

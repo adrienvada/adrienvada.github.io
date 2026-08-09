@@ -11,11 +11,13 @@
  *      qu'on écarte de la main). La forme vient de mask-points.js —
  *      un nuage de points généré hors-ligne à partir d'un modèle 3D
  *      fourni (voir ce fichier).
- *   2. Un texte unique : le rôle en cours défile, lisible, à son
- *      rythme propre ; en parallèle, « Adrien Vada » — superposé au
- *      même endroit — apparaît en fondu et REMPLACE peu à peu les
- *      rôles (pas de concaténation lettre à lettre : juste un
- *      fondu enchaîné entre les deux).
+ *   2. Un tambour de roulette : les rôles DÉFILENT de haut en bas sur
+ *      un axe qui s'enfonce dans l'écran — le suivant se décode déjà,
+ *      atténué, loin au-dessus ; celui du centre se laisse lire, net
+ *      et de face ; le précédent descend en s'éloignant. En parallèle,
+ *      « Adrien Vada » — superposé à la position centrale — apparaît
+ *      en fondu et REMPLACE peu à peu les rôles (pas de concaténation
+ *      lettre à lettre : juste un fondu enchaîné entre les deux).
  *   3. Un sceau qui se trace mais N'OUVRE PAS le site tout seul :
  *      il faut cliquer dessus (ou sur le rideau, ou une touche).
  *
@@ -42,9 +44,10 @@
     var skipBtn = document.getElementById('intro-skip');
     var ctx = canvas.getContext('2d');
 
-    // ── Rôles joués, dans l'ordre d'apparition. Antiochus et Le Juge
-    //    défilent à un rythme lisible ; l'accélération démarre ensuite,
-    //    à partir de Touchstone (3e rôle).
+    // ── Rôles joués, dans l'ordre d'apparition. Antiochus ouvre au
+    //    centre du tambour, Le Juge se décode déjà au-dessus de lui ;
+    //    tous deux défilent à un rythme lisible, l'accélération ne
+    //    démarrant qu'ensuite, à partir de Steven (3e rôle).
     var ROLES = [
         'ANTIOCHUS', 'LE JUGE',
         'STEVEN', 'SGANARELLE', 'TOUCHSTONE', 'TITUS ANDRONICUS', 'LE PROCUREUR', "L'ACCUSÉ",
@@ -61,7 +64,7 @@
     var FRAMES_BASE = 4, FRAMES_FLOOR = 2;           // images de brouillage par groupe
     var STEP_MS = 20;                                // durée d'une image de brouillage
     var CHURN_BASE_MS = 230, CHURN_FLOOR_MS = 45;    // durée du « mouline » entre deux rôles
-    var ACCEL_START_INDEX = 2;                       // dès Touchstone (3e rôle) : ça s'emballe
+    var ACCEL_START_INDEX = 2;                       // dès Steven (3e rôle) : ça s'emballe
     var ACCEL_RATE = 0.72;                           // < 1 : plus petit = plus brutal
 
     function accelK(i) {
@@ -647,14 +650,106 @@
     window.addEventListener('resize', resize);
 
     // ════════════════════════════════════════════════════════════
-    //  TEXTE : le rôle en cours défile normalement ; « Adrien Vada »,
-    //  superposé au même endroit, apparaît en fondu par-dessus et le
-    //  remplace peu à peu — aucune concaténation, juste une opacité
-    //  qui glisse d'un texte à l'autre.
+    //  TEXTE : UN TAMBOUR DE ROULETTE
     // ════════════════════════════════════════════════════════════
-    var tickerTimer = null;
+    //  Les rôles ne se remplacent plus sur place : ils DÉFILENT, comme
+    //  les symboles d'une machine à sous, sur un axe qui s'enfonce dans
+    //  l'écran. Trois positions visibles :
+    //
+    //    haut   — atténué, plus petit, loin dans la profondeur : le rôle
+    //             SUIVANT s'y décode déjà, à l'avance ;
+    //    centre — net, de face, pleine taille : le rôle en cours. C'est
+    //             aussi, exactement, la place d'« Adrien Vada » ;
+    //    bas    — le rôle qu'on vient de quitter, qui descend en
+    //             s'éloignant et s'efface.
+    //
+    //  À chaque cran tout descend d'un rang : le centre part vers le bas,
+    //  le haut prend le centre (déjà décodé, donc lisible dès son
+    //  arrivée), et le rôle d'après apparaît en haut pour s'y décoder à
+    //  son tour. Une QUATRIÈME cellule tourne dans le lot sans jamais
+    //  être vue : c'est celle qui remonte du bas vers le haut, ce qu'on
+    //  fait pendant qu'elle est à opacité nulle pour que le saut passe
+    //  inaperçu.
+    //
+    //  Le tambour porte l'accélération existante (accelK) : plus le
+    //  défilé s'emballe, plus le cran est bref — et la roulette finit par
+    //  tourner trop vite pour qu'on lise, ce qui est le but.
+    // ════════════════════════════════════════════════════════════
+    var reelEl = tickerEl;   // #intro-scramble : le tambour lui-même
+    var cells = [].slice.call(reelEl.querySelectorAll('.intro-cell'));
+    var seqTimer = null;     // minuteur du défilé (les crans)
 
-    function renderTickerFrame(target, revealCount) {
+    var SHIFT_BASE_MS = 380, SHIFT_FLOOR_MS = 90;  // durée d'un cran, avant/après emballement
+
+    // Durée d'un cran pour le rôle qui arrive au centre.
+    function shiftDuration(i) {
+        return Math.max(SHIFT_FLOOR_MS, Math.round(SHIFT_BASE_MS * accelK(i)));
+    }
+
+    // Les quatre places du tambour. `y` est en em (donc solidaire de la
+    // taille du texte, qui varie avec l'écran) ; `z` en pixels, lu à
+    // travers la perspective de 900 px posée en CSS — c'est lui qui donne
+    // le rétrécissement, sans qu'aucune échelle ne soit écrite à la main.
+    //  Les `y` paraissent généreux : ils sont mesurés AVANT la perspective,
+    //  qui les rabote ensuite (× 0,75 en haut, × 0,59 en bas). À l'écran, les
+    //  crans se tiennent à un peu plus d'une hauteur de ligne l'un de l'autre.
+    //  `fade` raccourcit la seule opacité par rapport au reste du mouvement :
+    //  le rôle qui s'en va est ÉTEINT avant d'avoir fini sa descente. C'est ce
+    //  qui rend sa remontée en coulisse invisible même si le navigateur saute
+    //  une image ou deux — sans quoi on le verrait réapparaître en haut, encore
+    //  lumineux, par-dessus le rôle qui s'y décode.
+    var SLOTS = {
+        haut: { y: -1.8, z: -300, opacity: 0.42, blur: 0.6 },
+        centre: { y: 0, z: 0, opacity: 1, blur: 0 },
+        bas: { y: 2.2, z: -620, opacity: 0, blur: 2.4, fade: 0.68 },
+        // « Coulisse » : la place du haut, mais invisible. Une cellule y
+        // remonte du bas sans être vue, puis n'a plus qu'à s'y allumer.
+        coulisse: { y: -1.8, z: -300, opacity: 0, blur: 0.6 }
+    };
+
+    // ring[0] = centre, ring[1] = haut, ring[2] = coulisse, ring[3] = bas.
+    var ring = cells.slice(0, 4);
+
+    function placeCell(cell, slot, durationMs) {
+        var s = SLOTS[slot];
+        var d = durationMs || 0;
+        // `calc()` veut un opérateur et une valeur, jamais deux signes qui se
+        // suivent : on écrit « - 1.8em » et non « + -1.8em », que tous les
+        // navigateurs n'acceptent pas.
+        var dy = s.y < 0 ? ' - ' + (-s.y) + 'em' : ' + ' + s.y + 'em';
+        // Trois durées, dans l'ordre des propriétés déclarées en CSS :
+        // transform, opacity, filter.
+        cell.style.transitionDuration = d + 'ms, ' + Math.round(d * (s.fade || 1)) + 'ms, ' + d + 'ms';
+        cell.style.transform = 'translate3d(0, calc(-50%' + dy + '), ' + s.z + 'px)';
+        cell.style.opacity = s.opacity;
+        cell.style.filter = s.blur ? 'blur(' + s.blur + 'px)' : 'none';
+    }
+
+    var SLOT_ORDER = ['centre', 'haut', 'coulisse', 'bas'];
+
+    function placeRing(durationMs) {
+        for (var i = 0; i < ring.length; i++) placeCell(ring[i], SLOT_ORDER[i], durationMs);
+    }
+
+    // Un cran. La cellule du bas (éteinte depuis un moment, cf. `fade`) est
+    // TÉLÉPORTÉE en coulisse avant la rotation.
+    //
+    // La lecture de getComputedStyle entre les deux est indispensable : elle
+    // force le navigateur à recalculer les styles, donc à prendre acte de la
+    // téléportation. Sans elle il ne verrait que l'état final du tour et
+    // animerait un remontage bien visible. (Lire offsetWidth ne suffirait
+    // pas : transform et opacity ne salissent pas la mise en page, le
+    // navigateur est donc libre de rendre une valeur déjà calculée sans
+    // rien recalculer.)
+    function shiftReel(durationMs) {
+        var remonte = ring[3];
+        placeCell(remonte, 'coulisse', 0);
+        void window.getComputedStyle(remonte).opacity;
+        ring = [ring[1], ring[2], ring[3], ring[0]];
+        placeRing(durationMs);
+    }
+
+    function renderCell(cell, target, revealCount) {
         var html = '';
         for (var i = 0; i < target.length; i++) {
             var ch = target[i];
@@ -663,12 +758,13 @@
             var displayCh = settled ? ch : CHARS[Math.floor(Math.random() * CHARS.length)];
             html += '<span class="ch' + (settled ? '' : ' ch-dim') + '">' + displayCh + '</span>';
         }
-        tickerEl.innerHTML = html || '&nbsp;';
+        cell.innerHTML = html || '&nbsp;';
     }
 
-    // Décode un mot caractère par caractère (façon "cyber-reveal"), puis
-    // appelle onDone.
-    function scrambleTicker(target, timing, onDone) {
+    // Décode un mot caractère par caractère (façon "cyber-reveal") DANS une
+    // cellule donnée, puis appelle onDone. Chaque cellule porte son propre
+    // minuteur : le haut se décode pendant que le centre se laisse lire.
+    function decodeCell(cell, target, timing, onDone) {
         var revealCount = 0, frameInChar = 0;
         var chunk = timing.chunk || 1;
 
@@ -678,46 +774,70 @@
         skipSpaces();
 
         function tick() {
+            if (isDismissed) return;
             if (revealCount >= target.length) {
-                renderTickerFrame(target, target.length);
+                renderCell(cell, target, target.length);
                 onDone && onDone();
                 return;
             }
-            renderTickerFrame(target, revealCount);
+            renderCell(cell, target, revealCount);
             frameInChar++;
             if (frameInChar >= timing.frames) {
                 revealCount += chunk;
                 frameInChar = 0;
                 skipSpaces();
             }
-            tickerTimer = setTimeout(tick, timing.step);
+            cell.introTimer = setTimeout(tick, timing.step);
         }
         tick();
     }
 
-    // « Ça mouline » : un bref brouillage sans mot lisible entre deux rôles.
-    function churnThen(noiseLen, durationMs, onDone) {
+    // « Ça mouline » : un bref brouillage sans mot lisible, le temps que le
+    // rôle suivant se présente en haut du tambour.
+    function churnCell(cell, noiseLen, durationMs, onDone) {
+        if (durationMs <= 0) { onDone(); return; }
         var elapsed = 0, stepMs = 24;
         var placeholder = new Array(Math.max(1, noiseLen) + 1).join('X');
         function tick() {
             if (isDismissed) return;
-            renderTickerFrame(placeholder, 0);
+            renderCell(cell, placeholder, 0);
             elapsed += stepMs;
             if (elapsed >= durationMs) { onDone(); return; }
-            tickerTimer = setTimeout(tick, stepMs);
+            cell.introTimer = setTimeout(tick, stepMs);
         }
         tick();
     }
 
+    // Charge le rôle `i` dans la cellule du haut et l'y décode. Passé le
+    // dernier rôle, le haut reste vide : le tambour se vide par le bas.
+    function armTopCell(i) {
+        var cell = ring[1];
+        clearTimeout(cell.introTimer);
+        if (i >= ROLES.length) { cell.innerHTML = '&nbsp;'; return; }
+        var role = ROLES[i];
+        var timing = wordTiming(i, role);
+        // Le tout premier rôle du haut (« Le Juge ») se décode d'emblée :
+        // au lever de rideau, personne n'attend qu'« ça mouline ».
+        var churn = i <= 1 ? 0 : Math.round(churnDuration(i) * 0.5);
+        churnCell(cell, role.length, churn, function () {
+            decodeCell(cell, role, timing);
+        });
+    }
+
+    function stopTicker() {
+        clearTimeout(seqTimer);
+        for (var i = 0; i < cells.length; i++) clearTimeout(cells[i].introTimer);
+    }
+
     // Fondu enchaîné : plus la séquence avance, plus « Adrien Vada »
-    // devient opaque et plus le rôle en cours s'estompe — une courbe
+    // devient opaque et plus le tambour s'estompe — une courbe
     // légèrement concave pour que les premiers rôles restent nets et
     // pleinement lisibles, le remplacement se faisant surtout sur la
     // seconde moitié du défilé.
     function updateFade(idx) {
         var p = Math.pow(Math.min(1, idx / ROLES.length), 1.6);
         nameFadeEl.style.opacity = p.toFixed(3);
-        tickerEl.style.opacity = (1 - p).toFixed(3);
+        reelEl.style.opacity = (1 - p).toFixed(3);
     }
 
     // ════════════════════════════════════════════════════════════
@@ -725,31 +845,54 @@
     // ════════════════════════════════════════════════════════════
     function runSequence() {
         if (isDismissed) return;
+        // Le tambour a besoin de ses quatre cellules (trois places visibles
+        // + la coulisse). S'il en manque, on saute droit au nom plutôt que
+        // de faire tourner une roulette bancale.
+        if (ring.length < 4) { finish(); return; }
 
-        function next(idx) {
-            if (isDismissed) return;
-            updateFade(idx);
+        placeRing(0);
+        void ring[0].offsetWidth;
 
-            if (idx >= ROLES.length) { finish(); return; }
+        updateFade(0);
+        turbulenceTarget = 0;
 
-            var role = ROLES[idx];
-            var timing = wordTiming(idx, role);
-            turbulenceTarget = Math.min(1, idx / ROLES.length);
+        // Lever de rideau : Antiochus se décode droit au centre — et, dans
+        // le même temps, Le Juge se décode déjà tout en haut, atténué et
+        // plus loin. Le premier cran ne tombe qu'une fois Antiochus lu.
+        var first = wordTiming(0, ROLES[0]);
+        decodeCell(ring[0], ROLES[0], first, function () {
+            seqTimer = setTimeout(function () { step(1); }, first.hold);
+        });
+        armTopCell(1);
+    }
 
-            function decode() {
-                scrambleTicker(role, timing, function () {
-                    if (isDismissed) return;
-                    tickerTimer = setTimeout(function () { next(idx + 1); }, timing.hold);
-                });
-            }
+    // Un cran du tambour : `idx` est le rôle qui prend la place centrale.
+    function step(idx) {
+        if (isDismissed) return;
 
-            if (idx === 0) {
-                decode(); // démarre directement par Antiochus, sans brouillage préalable
-            } else {
-                churnThen(role.length, churnDuration(idx), decode);
-            }
+        // Passé le dernier rôle, un ultime cran vide le centre : le
+        // tambour s'en va par le bas et ne laisse que le nom.
+        if (idx >= ROLES.length) {
+            var last = shiftDuration(ROLES.length - 1);
+            shiftReel(last);
+            armTopCell(idx);
+            updateFade(ROLES.length);
+            seqTimer = setTimeout(finish, last);
+            return;
         }
-        next(0);
+
+        var dur = shiftDuration(idx);
+        shiftReel(dur);
+        updateFade(idx);
+        turbulenceTarget = Math.min(1, idx / ROLES.length);
+
+        // Le rôle d'après se décode en haut PENDANT que celui-ci descend :
+        // c'est ce chevauchement qui donne la roulette, plutôt qu'une
+        // succession de mots qui attendent chacun leur tour.
+        armTopCell(idx + 1);
+
+        seqTimer = setTimeout(function () { step(idx + 1); },
+            dur + wordTiming(idx, ROLES[idx]).hold);
     }
 
     // Le fondu est déjà à son terme (Adrien Vada pleinement opaque, le
@@ -791,7 +934,7 @@
         if (isDismissed) return;
         isDismissed = true;
         dismissedAt = performance.now();
-        clearTimeout(tickerTimer);
+        stopTicker();
 
         // L'ouverture fait-elle fuir ? La réponse tient en deux chiffres :
         // combien de temps on est resté, et si l'on a vu le sceau — c'est-à-dire

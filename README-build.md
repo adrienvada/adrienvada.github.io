@@ -258,10 +258,20 @@ imprimé sur fond noir gâcherait l'encre et passerait mal en photocopie.
 ## Ouverture de scène (`intro.js` + `mask-points.js`)
 
 Au premier chargement : un **masque de théâtre en particules** tourne lentement
-au centre, pendant que les rôles joués défilent de plus en plus vite. En
-parallèle, « Adrien Vada » — superposé au même endroit que les rôles — apparaît
-en fondu et les remplace peu à peu. Un **sceau** se trace enfin : il faut
-**cliquer dessus pour entrer** (l'intro ne se referme jamais toute seule).
+au centre, pendant que les rôles joués défilent de plus en plus vite. Le défilé
+est un **tambour de roulette** : le rôle en cours occupe le centre, net et de
+face ; le suivant se décode déjà au-dessus de lui, atténué et plus loin dans la
+profondeur ; le précédent descend en s'éloignant. À chaque cran, tout descend
+d'un rang. En parallèle, « Adrien Vada » — superposé à la position centrale du
+tambour — apparaît en fondu et remplace peu à peu les rôles. Un **sceau** se
+trace enfin : il faut **cliquer dessus pour entrer** (l'intro ne se referme
+jamais toute seule).
+
+Le tambour compte **quatre cellules pour trois places visibles** : la quatrième
+attend en coulisse, invisible, le temps d'être remontée du bas vers le haut sans
+qu'on la voie sauter. Ses réglages (hauteurs, éloignement, opacités, flou) sont
+dans `SLOTS`, en haut de la section « tambour » d'`intro.js` ; la durée d'un cran
+est `SHIFT_BASE_MS`, qui suit la même accélération que le reste du défilé.
 
 Le nuage de points du masque est dans `mask-points.js` : **fichier généré, à ne
 pas éditer à la main**. Il a été produit hors-ligne à partir du modèle 3D FBX
