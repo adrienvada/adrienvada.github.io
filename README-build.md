@@ -269,16 +269,48 @@ Ce sont donc **quatre temps**, pas deux : quand Le Juge prend le centre,
 Antiochus est encore là, en dessous, à demi éteint — il ne disparaît qu'à
 l'arrivée de Steven. On voit toujours d'où l'on vient et où l'on va.
 
-En parallèle, « Adrien Vada » — superposé à la position centrale du tambour —
-apparaît en fondu et remplace peu à peu les rôles. Un **sceau** se trace enfin :
-il faut **cliquer dessus pour entrer** (l'intro ne se referme jamais toute
-seule).
-
 Le tambour compte **cinq cellules pour quatre places visibles** : la cinquième
 attend en coulisse, invisible, le temps d'être remontée du fond vers le haut sans
 qu'on la voie sauter. Ses réglages (hauteurs, éloignement, opacités, flou) sont
 dans `SLOTS`, en haut de la section « tambour » d'`intro.js` ; la durée d'un cran
 est `SHIFT_BASE_MS`, qui suit la même accélération que le reste du défilé.
+
+### Le tampon : comment « ADRIEN VADA » arrive
+
+Le tambour s'emballe jusqu'à l'illisible, et là **tout s'éteint d'un coup** : la
+roulette et la poussière, sur la même image. Un temps de noir très court. Puis le
+nom **frappe** — il apparaît d'un bloc à 115 % et s'écrase à 100 % en 130 ms,
+pendant qu'une **onde de choc** repousse la poussière depuis le centre. Le
+**sceau** se trace juste après : c'est le même geste, un tampon puis son
+empreinte. Il faut **cliquer dessus pour entrer** (l'intro ne se referme jamais
+toute seule).
+
+**Il y avait un fondu enchaîné, et c'était le principe qui était mauvais, pas son
+réglage.** Le nom montait en opacité pendant que le tambour redescendait, tous
+deux posés exactement au même endroit : pendant près de deux secondes on lisait
+les deux à la fois, donc ni l'un ni l'autre — les captures image par image
+donnaient « ADRIENRATEUR » et « LE GREFFIER » bavant à travers le nom. Deux
+textes lisibles superposés ne se remplacent pas, ils se brouillent. **Règle : ne
+jamais faire cohabiter deux textes lisibles à la même place.**
+
+| Où | Quoi |
+|---|---|
+| `NOIR_MS` (115) | durée du noir. Sous ~80 ms l'œil ne l'enregistre plus ; au-delà de ~180 ms le rythme se casse |
+| `FRAPPE_MS` (130) | durée de l'écrasement. **Écrite deux fois** : ici, et dans `@keyframes introTampon` (`index.html`) qui la joue vraiment — les garder d'accord |
+| `introTampon` / `introEclat` | l'écrasement (`transform`/`opacity`, composés) et la lueur (`text-shadow`, fil principal) sont **deux animations séparées** : mêlées, elles retomberaient toutes sur le fil principal, précisément pendant les 130 ms où le canevas est le plus occupé |
+| `CHOC_*` dans `intro.js` | l'onde : amplitude, vitesse, épaisseur de la crête, amortissement. Tout en **fraction de la diagonale** — une onde réglée en pixels traverserait un téléphone en un clin d'œil |
+
+L'onde est une **impulsion séparée**, pas un détournement de `turbulence` (qui
+est lissée sur ~600 ms et *resserre* la poussière, l'inverse de ce qu'on veut).
+Le déplacement suit une crête qui s'éloigne du centre : chaque grain n'est
+bousculé qu'à son passage et se retrouve à sa place ensuite — le retour est dans
+la forme de l'onde, il n'y a aucun ressort ni état à mémoriser.
+
+**Elle est armée, pas datée** (`chocArme`). Prendre l'heure au moment où l'on
+pose la classe du tampon était faux : le nom ne s'affiche qu'à l'image suivante,
+et sur une machine lente l'onde avait déjà traversé un tiers de l'écran quand le
+nom apparaissait — le souffle précédait le coup. Elle part donc de la première
+image réellement dessinée, celle-là même où le nom se pose.
 
 Le nuage de points du masque est dans `mask-points.js` : **fichier généré, à ne
 pas éditer à la main**. Il a été produit hors-ligne à partir du modèle 3D FBX
@@ -328,8 +360,7 @@ Tout est dans les constantes en haut de `intro.js` :
 - `ACCEL_START_INDEX` — à partir de quel rôle l'accélération démarre (2).
 - `ACCEL_RATE` — brutalité de l'accélération (0.72 ; plus petit = plus violent).
 - `OPENING_STEP_MS` / `OPENING_FRAMES` — rythme des rôles d'ouverture.
-- `updateFade()` — courbe du fondu rôles → nom (exposant 1.6 : le nom reste
-  discret au début, puis prend le dessus sur la seconde moitié).
+- `NOIR_MS` / `FRAPPE_MS` / `CHOC_*` — le tampon et son onde (voir ci-dessus).
 - `MAX_INTRO_MS` — garde-fou : au-delà, le voile disparaît quoi qu'il arrive.
   Ne jamais le descendre sous la durée naturelle de la séquence, sinon
   l'animation serait coupée avant la fin.

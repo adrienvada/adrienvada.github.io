@@ -2351,9 +2351,10 @@
            mais toujours lisible ; plus bas encore, celui d'avant, que la
            profondeur achève d'avaler. À chaque cran, tout descend d'un rang.
 
-           « ADRIEN VADA » est superposé à la position CENTRALE du tambour :
-           seule leur opacité respective bouge, le nom remplace les rôles
-           en fondu plutôt que de leur être concaténé. */
+           « ADRIEN VADA » occupe la position CENTRALE du tambour — la même
+           place, exactement. Les deux ne se croisent jamais : le tambour est
+           coupé net, il y a un temps de noir, et le nom frappe (voir
+           `introTampon` plus bas, et coupure/frappe dans intro.js). */
         .intro-textstack {
             position: relative;
             display: grid;
@@ -2372,7 +2373,10 @@
                tambour ne peut donc pas aplatir leur profondeur. */
             perspective: 900px;
             perspective-origin: 50% 50%;
-            transition: opacity 0.26s ease;
+            /* AUCUNE TRANSITION SUR L'OPACITÉ. Le tambour ne s'estompe
+               plus : il est coupé sur une image, en pleine course. Une
+               transition ici, même brève, redonnerait un fondu — et c'est
+               précisément ce qu'on a retiré. */
         }
 
         .intro-cell,
@@ -2415,12 +2419,71 @@
             will-change: transform, opacity;
         }
 
+        /* Le nom attend, invisible, exactement à la place du cran central du
+           tambour. Il n'a AUCUNE transition : il ne monte pas en opacité, il
+           n'existe pas puis il est là — c'est l'animation `introTampon`,
+           posée par intro.js à l'instant de la frappe, qui l'allume. */
         .intro-name-fade {
             grid-area: 1 / 1;
             align-self: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.26s ease;
+            /* La couche est réservée d'avance : la créer à l'instant où
+               l'animation démarre coûterait justement l'image qu'on veut
+               nette. */
+            will-change: transform, opacity;
+        }
+
+        /* ── LE TAMPON ──────────────────────────────────────────────────
+           Le nom arrive à 115 % et s'écrase à 100 % en 130 ms, avec un
+           dépassement sous les 100 % : un tampon qu'on abat mord le papier
+           avant de se relever. La courbe est brutale en entrée — l'essentiel
+           de la course est mangé dans les premières dizaines de millisecondes
+           — puis se pose.
+
+           DEUX ANIMATIONS ET NON UNE, et ce n'est pas de la coquetterie :
+           `transform` et `opacity` se composent hors du fil principal, mais
+           `text-shadow` non. Mêlés dans la même animation, ils y
+           retomberaient tous ensemble — et ces 130 ms-là sont précisément
+           celles où le canevas de particules est le plus occupé (l'onde de
+           choc y tourne à plein régime). Séparés, l'écrasement tient sa
+           cadence quoi qu'il arrive au fil principal, et la lueur, elle,
+           peut se permettre de traîner un peu plus longtemps que le coup. */
+        @keyframes introTampon {
+            0% {
+                opacity: 1;
+                transform: scale(1.15);
+                animation-timing-function: cubic-bezier(0.12, 0.78, 0.2, 1);
+            }
+
+            72% {
+                transform: scale(0.984);
+                animation-timing-function: ease-in-out;
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes introEclat {
+            0% {
+                text-shadow: 0 0 78px rgba(214, 196, 168, 0.9);
+            }
+
+            100% {
+                text-shadow: 0 0 24px rgba(191, 169, 138, 0.35);
+            }
+        }
+
+        /* `both` et pas seulement `forwards` : le remplissage ARRIÈRE est
+           indispensable. Sans lui, le nom resterait à l'opacité 0 de la règle
+           de base pendant l'image qui sépare la pose de la classe du départ
+           réel de l'animation — un clignotement en plein milieu de la frappe,
+           là où l'on regarde. */
+        .intro-name-fade.intro-frappe {
+            animation: introTampon 130ms both, introEclat 340ms ease-out both;
         }
 
         .intro-cell .ch,
@@ -2433,7 +2496,8 @@
         }
 
         /* La partie « VADA » reprend directement la typo du logotype du
-           header, dès le départ — elle annonce ce vers quoi le fondu mène. */
+           header : au moment où le tampon retombe, ce qu'on lit est déjà
+           le logotype du site, pas une étape vers lui. */
         .intro-name-fade .ch-vada {
             font-family: 'Cinzel', serif;
             color: #bfa98a;
@@ -2886,10 +2950,11 @@
                  temps de descente : le rôle quitté reste lisible en retrait
                  avant de partir dans la profondeur au cran suivant) — la
                  cinquième attend en coulisse, invisible, le temps d'être
-                 remontée sans qu'on la voie sauter. « Adrien Vada » est
-                 superposé à la position centrale : seule leur opacité
-                 respective évolue, le nom remplace les rôles en fondu
-                 plutôt que de leur être concaténé. -->
+                 remontée sans qu'on la voie sauter. « Adrien Vada » attend
+                 invisible à la position centrale — la même place, au pixel
+                 près : les deux ne sont jamais lisibles en même temps, le
+                 tambour est coupé net et le nom frappe après un temps de
+                 noir. -->
             <div class="intro-textstack">
                 <div class="intro-reel" id="intro-scramble">
                     <p class="intro-cell">&nbsp;</p>

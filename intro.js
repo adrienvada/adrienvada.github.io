@@ -14,12 +14,17 @@
  *   2. Un tambour de roulette : les rôles DÉFILENT de haut en bas sur
  *      un axe qui s'enfonce dans l'écran — le suivant se décode déjà,
  *      atténué, loin au-dessus ; celui du centre se laisse lire, net
- *      et de face ; le précédent descend en s'éloignant. En parallèle,
- *      « Adrien Vada » — superposé à la position centrale — apparaît
- *      en fondu et REMPLACE peu à peu les rôles (pas de concaténation
- *      lettre à lettre : juste un fondu enchaîné entre les deux).
- *   3. Un sceau qui se trace mais N'OUVRE PAS le site tout seul :
+ *      et de face ; le précédent descend en s'éloignant. Le tambour
+ *      s'emballe jusqu'à l'illisible.
+ *   3. LE TAMPON : tout s'éteint d'un coup, sur une image — la roulette
+ *      ET la poussière. Un temps de noir très court, puis « ADRIEN
+ *      VADA » FRAPPE : il arrive à 115 % et s'écrase à 100 % en un
+ *      dixième de seconde, pendant qu'une onde de choc repousse la
+ *      poussière depuis le centre. Le nom ne se révèle pas, il est
+ *      asséné (voir coupure/frappe plus bas).
+ *   4. Un sceau qui se trace mais N'OUVRE PAS le site tout seul :
  *      il faut cliquer dessus (ou sur le rideau, ou une touche).
+ *      C'est le même geste que le tampon : sa contre-épreuve.
  *
  *  Aucune librairie : Canvas 2D avec une vraie rotation 3D (matrice
  *  simplifiée) et une projection en perspective sur un nuage de
@@ -94,7 +99,20 @@
         return Math.max(CHURN_FLOOR_MS, Math.round(CHURN_BASE_MS * accelK(i)));
     }
 
-    var SEAL_DELAY_MS = 200;     // délai avant de dessiner le sceau après le nom final
+    // ── LE TAMPON ────────────────────────────────────────────────
+    //  Le noir n'est pas une transition, c'est un SILENCE : sans lui la
+    //  frappe arriverait par-dessus le tambour et se lirait comme un
+    //  remplacement de plus. Assez long pour qu'on le remarque, assez
+    //  court pour qu'on ne se demande pas si ça a planté. En dessous de
+    //  ~80 ms l'œil ne l'enregistre plus ; au-delà de ~180 ms le rythme
+    //  se casse et la frappe n'a plus rien à trancher.
+    var NOIR_MS = 115;
+    //  Durée de l'écrasement 115 % → 100 %. ELLE EST ÉCRITE DEUX FOIS :
+    //  ici pour que le sceau attende que le tampon ait fini de se poser,
+    //  et dans l'animation `introTampon` (index.html) qui la joue
+    //  vraiment. Les garder d'accord.
+    var FRAPPE_MS = 130;
+    var SEAL_DELAY_MS = 200;     // temps de pose, une fois le tampon abattu, avant le sceau
     var SEAL_DRAW_MS = 850;      // durée du tracé du sceau (doit couvrir les 2 transitions CSS)
     var FADE_MS = 700;           // durée du fondu de sortie (doit matcher le CSS)
     var MAX_INTRO_MS = 20000;    // garde-fou anti-blocage (onglet gelé, erreur…) — pas un rythme normal
@@ -128,6 +146,40 @@
     var turbulence = 0;
     var shapeBirth = null;   // timestamp d'apparition du masque (effet de matérialisation)
     var rotYNudge = 0;       // rotation additionnelle, lissée, suivant le pointeur
+
+    // ── L'ONDE DE CHOC ───────────────────────────────────────────────
+    //  Au moment où le nom frappe, la poussière est repoussée depuis le
+    //  centre. C'est une IMPULSION SÉPARÉE, pas un détournement de la
+    //  turbulence : celle-ci est lissée sur ~600 ms et resserre la
+    //  poussière vers la surface du masque, exactement le contraire de ce
+    //  qu'on veut ici — un coup sec, vers l'extérieur, qui retombe seul.
+    //
+    //  Ce n'est pas non plus une simple dilatation d'ensemble : le
+    //  déplacement suit une CRÊTE qui s'éloigne du centre à vitesse fixe.
+    //  Chaque grain n'est bousculé qu'au passage de la crête et se
+    //  retrouve à sa place une fois qu'elle l'a dépassé — le retour ne
+    //  demande donc aucun ressort ni aucun état à mémoriser, il est dans
+    //  la forme même de l'onde.
+    //
+    //  Tout est exprimé en fraction de la DIAGONALE de l'écran : une onde
+    //  réglée en pixels traverserait un téléphone en un clin d'œil et
+    //  ramperait sur un grand écran.
+    var CHOC_AMPLITUDE = 0.050;  // déplacement au sommet de la crête
+    var CHOC_VITESSE = 2.1;      // diagonales par seconde : la crête sort du champ en ~0,45 s
+    var CHOC_EPAISSEUR = 0.19;   // largeur de la crête (écart-type de la gaussienne)
+    var CHOC_AMORTI = 3.4;       // décroissance exponentielle, en s⁻¹
+    var chocA = null;            // timestamp de l'impact — null tant qu'il n'a pas eu lieu
+    //  L'ONDE EST ARMÉE, PAS DATÉE. Prendre l'heure au moment où l'on pose
+    //  la classe du tampon paraissait plus simple — c'était faux. Le nom,
+    //  lui, ne s'affiche qu'à l'image suivante (le temps que le moteur
+    //  d'animation prenne acte de la classe) : sur une machine qui rend à
+    //  quinze images par seconde, l'onde avait déjà traversé un tiers de
+    //  l'écran quand le nom apparaissait enfin — le souffle précédait le
+    //  coup. On la datera donc de la première image RÉELLEMENT dessinée
+    //  après l'impact, qui est aussi celle où le nom se pose : les deux
+    //  sont désormais tenus par la même cadence, quelle qu'elle soit.
+    var chocArme = false;
+    var enNoir = false;          // la coupure : le champ de particules est éteint
 
     // MASK_POINTS (mask-points.js) est un tableau plat [x,y,z, x,y,z, …] ;
     // on le regroupe une fois en triplets.
@@ -411,6 +463,14 @@
     }
 
     function stepAndDraw(now, dt, tSec) {
+        // LA COUPURE. Le champ s'éteint sur une image, avant même qu'on ait
+        // fait tourner quoi que ce soit : c'est un rideau de fer, pas un
+        // fondu. On sort ici — la rotation, le travelling et le lissage de
+        // la turbulence sont donc gelés le temps du noir, et le masque
+        // reprend la pose exacte qu'il avait quand la lumière revient. Un
+        // clignement, pas un redémarrage.
+        if (enNoir) { ctx.clearRect(0, 0, W, H); return; }
+
         // Le masque OSCILLE autour de la position de face, il ne tourne pas
         // sur lui-même : un visage ne se reconnaît que de face ou presque.
         // Une rotation continue (l'ancien `tSec * 0.16`) le rendait illisible
@@ -453,6 +513,24 @@
         var springBack = Math.min(1, dt * 4.2);
         var energyDecay = Math.pow(0.9, dt * 60);
 
+        // L'onde de choc, calculée une fois par image et non par grain :
+        // rayon de la crête, sa largeur, l'amplitude qui reste. Passée sous
+        // 1 % de sa force elle ne déplacerait plus rien de visible — on la
+        // range, et la boucle retrouve son coût habituel.
+        var chocForce = 0, chocRayon = 0, chocLarg = 1, chocPousse = 0;
+        if (chocArme) { chocArme = false; chocA = now; }
+        if (chocA !== null) {
+            var ct = (now - chocA) / 1000;
+            chocForce = Math.exp(-ct * CHOC_AMORTI);
+            if (chocForce < 0.01) { chocA = null; chocForce = 0; }
+            else {
+                var diag = Math.sqrt(W * W + H * H);
+                chocRayon = ct * CHOC_VITESSE * diag;
+                chocLarg = CHOC_EPAISSEUR * diag;
+                chocPousse = CHOC_AMPLITUDE * diag * chocForce;
+            }
+        }
+
         ctx.clearRect(0, 0, W, H);
         if (!caseStyle) buildPalette();
         // Les lueurs s'ajoutent au lieu de se recouvrir : c'est de là que
@@ -484,6 +562,25 @@
             var persp = focal / (focal - z2);
             var sx = cx + x1 * shapeScale * persp;
             var sy = cy + y1 * shapeScale * persp;
+
+            // LE PASSAGE DE L'ONDE. Le grain est chassé DROIT DEHORS, sur le
+            // rayon qui le relie au centre de l'impact, d'autant plus fort
+            // qu'il est près de la crête. Il s'allume au passage : une onde
+            // qu'on ne verrait pas briller ne se lirait pas comme un souffle
+            // mais comme un tremblement du cadrage.
+            var eclat = 0;
+            if (chocForce > 0) {
+                var ox = sx - cx, oy = sy - cy;
+                var od = Math.sqrt(ox * ox + oy * oy) || 1;
+                var e = (od - chocRayon) / chocLarg;
+                var crete = Math.exp(-e * e);
+                if (crete > 0.004) {
+                    var pousse = chocPousse * crete / od;
+                    sx += ox * pousse;
+                    sy += oy * pousse;
+                    eclat = crete * chocForce;
+                }
+            }
 
             // Réaction au pointeur : à peine un frémissement — une caresse,
             // pas un souffle. Les particules proches s'illuminent doucement
@@ -523,12 +620,12 @@
             // s'éteignait, ce qui hachait la forme et coûtait de la lumière
             // pour rien. Il en reste ce qu'il faut pour que ça respire.
             var twinkle = 0.92 + 0.08 * Math.sin(tSec * p.twinkleSpeed + p.twinklePhase);
-            var glow = Math.min(1, prof + p.energy * 0.7);
+            var glow = Math.min(1, prof + p.energy * 0.7 + eclat * 0.85);
 
             // L'opacité reste modeste : ce sont les recouvrements et la
             // nappe qui font la lumière, et un grain trop opaque ferait
             // blanchir la silhouette avant que l'intérieur n'apparaisse.
-            var alpha = (0.17 + prof * 0.95) * twinkle + p.energy * 0.5;
+            var alpha = (0.17 + prof * 0.95) * twinkle + p.energy * 0.5 + eclat * 0.45;
             if (alpha > 1) alpha = 1;
 
             // `p.r` était tiré au sort à la naissance de chaque particule et
@@ -587,7 +684,13 @@
         rafId = requestAnimationFrame(loop);
         if (lastT === null) lastT = now;
         var dt = (now - lastT) / 1000;
-        if (dt < DUST_MIN_DT) return;   // l'image précédente reste à l'écran
+        // Une image sur deux SAUF pendant l'onde de choc : elle ne dure
+        // qu'une demi-seconde et c'est le seul moment où la poussière ne
+        // dérive plus mais se déplace vite. À 30 images par seconde la
+        // crête avancerait par sauts de trente pixels et se lirait comme
+        // un scintillement. Une demi-seconde à plein régime : le budget
+        // de l'auto-régulation l'absorbe sans broncher.
+        if (dt < DUST_MIN_DT && chocA === null && !chocArme) return;   // l'image précédente reste à l'écran
         lastT = now;
 
         var t0 = performance.now();
@@ -843,15 +946,61 @@
         for (var i = 0; i < cells.length; i++) clearTimeout(cells[i].introTimer);
     }
 
-    // Fondu enchaîné : plus la séquence avance, plus « Adrien Vada »
-    // devient opaque et plus le tambour s'estompe — une courbe
-    // légèrement concave pour que les premiers rôles restent nets et
-    // pleinement lisibles, le remplacement se faisant surtout sur la
-    // seconde moitié du défilé.
-    function updateFade(idx) {
-        var p = Math.pow(Math.min(1, idx / ROLES.length), 1.6);
-        nameFadeEl.style.opacity = p.toFixed(3);
-        reelEl.style.opacity = (1 - p).toFixed(3);
+    // ════════════════════════════════════════════════════════════
+    //  LE TAMPON : COUPURE, NOIR, FRAPPE
+    // ════════════════════════════════════════════════════════════
+    //  IL Y AVAIT UN FONDU ENCHAÎNÉ ICI, et c'était le principe qui
+    //  était mauvais, pas son réglage. Le nom montait en opacité pendant
+    //  que le tambour redescendait, tous deux posés au même endroit :
+    //  pendant près de deux secondes on lisait les deux à la fois, donc
+    //  ni l'un ni l'autre — les captures image par image donnaient
+    //  « ADRIENRATEUR », « LE GREFFIER » qui bavait à travers le nom.
+    //  Deux textes lisibles superposés ne se remplacent pas, ils se
+    //  brouillent. Aucune courbe ne rattrape ça : il faut que l'un ait
+    //  entièrement disparu avant que l'autre arrive.
+    //
+    //  D'où trois temps, dont un vide :
+    //
+    //   1. LA COUPURE. Le tambour s'éteint sur une image, en pleine
+    //      course, à l'instant où il est devenu illisible — et la
+    //      poussière avec lui. Pas de fondu : un rideau de fer.
+    //   2. LE NOIR. Rien à l'écran. C'est le silence avant le coup ;
+    //      sans lui la frappe n'aurait rien à trancher.
+    //   3. LA FRAPPE. Le nom apparaît d'un bloc à 115 % et s'écrase à
+    //      100 % en un dixième de seconde, pendant qu'une onde de choc
+    //      chasse la poussière depuis le centre. Il n'est jamais
+    //      « révélé » : il est asséné, et le sceau qui se trace juste
+    //      après n'est que l'empreinte du même geste.
+    // ════════════════════════════════════════════════════════════
+
+    // Le `transition: none` en ligne fait double emploi avec le CSS, où la
+    // transition d'opacité du tambour a été retirée — et c'est voulu : la
+    // coupure doit rester une coupure même si quelqu'un rend un jour au
+    // tambour un fondu d'entrée. On arrête aussi les minuteurs de
+    // brouillage, qui continueraient sinon à repeindre un tambour éteint
+    // pendant tout le noir.
+    function coupure() {
+        stopTicker();
+        reelEl.style.transition = 'none';
+        reelEl.style.opacity = '0';
+        // La poussière s'éteint dans la même image. On efface le canevas
+        // TOUT DE SUITE au lieu d'attendre le prochain tour de boucle : à
+        // 30 images par seconde, celui-ci peut être à 30 ms d'ici, et la
+        // roulette partirait un tiers de noir avant la poussière.
+        enNoir = true;
+        if (ctx && W && H) ctx.clearRect(0, 0, W, H);
+        turbulenceTarget = 0;
+    }
+
+    function frappe() {
+        if (isDismissed) return;
+        enNoir = false;
+        chocArme = true;
+        nameFadeEl.classList.add('intro-frappe');
+        // Le sceau enchaîne sur l'impact, pas sur la coupure : c'est de la
+        // frappe qu'il découle. On laisse d'abord le tampon finir de
+        // s'écraser, puis un court temps de pose.
+        setTimeout(showSeal, FRAPPE_MS + SEAL_DELAY_MS);
     }
 
     // ════════════════════════════════════════════════════════════
@@ -867,7 +1016,6 @@
         placeRing(0);
         void ring[0].offsetWidth;
 
-        updateFade(0);
         turbulenceTarget = 0;
 
         // Lever de rideau : Antiochus se décode droit au centre — et, dans
@@ -892,7 +1040,6 @@
             var last = shiftDuration(ROLES.length - 1);
             shiftReel(last);
             armTopCell(idx);
-            updateFade(ROLES.length);
             var cransAVide = idx - ROLES.length;
             seqTimer = setTimeout(
                 cransAVide >= 1 ? finish : function () { step(idx + 1); },
@@ -902,7 +1049,6 @@
 
         var dur = shiftDuration(idx);
         shiftReel(dur);
-        updateFade(idx);
         turbulenceTarget = Math.min(1, idx / ROLES.length);
 
         // Le rôle d'après se décode en haut PENDANT que celui-ci descend :
@@ -914,15 +1060,14 @@
             dur + wordTiming(idx, ROLES[idx]).hold);
     }
 
-    // Le fondu est déjà à son terme (Adrien Vada pleinement opaque, le
-    // rôle effacé) : on amène le sceau — qui, lui, attend un clic et ne
-    // referme jamais la scène tout seul.
+    // Le tambour a fini de tourner à vide : on abat le tampon. La scène
+    // s'éteint, se tait, puis le nom frappe — et c'est seulement de là que
+    // découle le sceau, qui attend un clic et ne referme jamais la scène
+    // tout seul.
     function finish() {
         if (isDismissed) return;
-        updateFade(ROLES.length);
-        nameFadeEl.classList.add('intro-final');
-        turbulenceTarget = 0;
-        setTimeout(showSeal, SEAL_DELAY_MS);
+        coupure();
+        setTimeout(frappe, NOIR_MS);
     }
 
     function showSeal() {
