@@ -2351,9 +2351,12 @@
            mais toujours lisible ; plus bas encore, celui d'avant, que la
            profondeur achève d'avaler. À chaque cran, tout descend d'un rang.
 
-           « ADRIEN VADA » est superposé à la position CENTRALE du tambour :
-           seule leur opacité respective bouge, le nom remplace les rôles
-           en fondu plutôt que de leur être concaténé. */
+           « ADRIEN VADA » occupe la position CENTRALE du tambour, mais les
+           deux ne s'y croisent JAMAIS : le nom n'arrive qu'une fois la place
+           vidée, et il est d'abord ÉCRIT PAR LA POUSSIÈRE du masque (voir
+           intro.js, section « LE NOM S'ÉCRIT AVEC LA POUSSIÈRE DU MASQUE »).
+           Le texte reste donc à opacité nulle pendant toute la traversée ;
+           il ne se pose, net, que sur les grains déjà arrivés. */
         .intro-textstack {
             position: relative;
             display: grid;
@@ -2886,10 +2889,16 @@
                  temps de descente : le rôle quitté reste lisible en retrait
                  avant de partir dans la profondeur au cran suivant) — la
                  cinquième attend en coulisse, invisible, le temps d'être
-                 remontée sans qu'on la voie sauter. « Adrien Vada » est
-                 superposé à la position centrale : seule leur opacité
-                 respective évolue, le nom remplace les rôles en fondu
-                 plutôt que de leur être concaténé. -->
+                 remontée sans qu'on la voie sauter.
+
+                 « Adrien Vada » est à la même place, mais il n'y paraît
+                 qu'une fois le tambour vidé : la poussière du masque va
+                 d'abord l'écrire elle-même, et ce texte-ci ne se pose, net,
+                 que sur les grains arrivés. D'où les deux <span> séparés :
+                 intro.js relève sur eux, au pixel près, boîte, corps et
+                 fonte de chaque mot pour redessiner exactement le même nom
+                 dans son canevas hors écran — c'est ce qui fait que les
+                 grains tombent sur ces lettres-là et pas à côté. -->
             <div class="intro-textstack">
                 <div class="intro-reel" id="intro-scramble">
                     <p class="intro-cell">&nbsp;</p>

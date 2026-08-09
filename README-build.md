@@ -269,16 +269,70 @@ Ce sont donc **quatre temps**, pas deux : quand Le Juge prend le centre,
 Antiochus est encore là, en dessous, à demi éteint — il ne disparaît qu'à
 l'arrivée de Steven. On voit toujours d'où l'on vient et où l'on va.
 
-En parallèle, « Adrien Vada » — superposé à la position centrale du tambour —
-apparaît en fondu et remplace peu à peu les rôles. Un **sceau** se trace enfin :
-il faut **cliquer dessus pour entrer** (l'intro ne se referme jamais toute
-seule).
+Puis le tambour se vide, et **le masque abandonne sa forme** : les particules
+se détachent du visage et vont écrire « ADRIEN VADA » de gauche à droite (voir
+plus bas). Un **sceau** se trace enfin : il faut **cliquer dessus pour entrer**
+(l'intro ne se referme jamais toute seule). Au clic, la poussière se relâche et
+retourne au masque pendant que le rideau tombe.
 
 Le tambour compte **cinq cellules pour quatre places visibles** : la cinquième
 attend en coulisse, invisible, le temps d'être remontée du fond vers le haut sans
 qu'on la voie sauter. Ses réglages (hauteurs, éloignement, opacités, flou) sont
 dans `SLOTS`, en haut de la section « tambour » d'`intro.js` ; la durée d'un cran
 est `SHIFT_BASE_MS`, qui suit la même accélération que le reste du défilé.
+
+### Le nom est écrit par la poussière
+
+L'apparition du nom était naguère un **fondu enchaîné entre deux textes posés
+au même endroit** : pendant près de deux secondes on lisait « LE PROCUREUR » et
+« ADRIEN VADA » l'un à travers l'autre, c'est-à-dire ni l'un ni l'autre. Ce
+n'était pas un problème de réglage, c'était le principe qui était mauvais.
+**Deux textes lisibles ne partagent jamais la même place.**
+
+À la place, le masque **abandonne sa forme**. Chaque particule quitte son ancre
+sur le visage et va se ranger sur une lettre du nom ; la traversée dure
+`FORM_MS` (1,5 s) et se fait de gauche à droite, comme on écrit. Le tambour a
+déjà vidé sa place centrale quand la poussière part : rien ne se superpose.
+
+**Les cibles ne sont pas un fichier.** Aucun asset n'a été ajouté : `intro.js`
+**redessine le nom dans un canevas hors écran**, relit ses pixels avec
+`getImageData` et sème des cibles là où il y a de l'encre. Une seule fois — le
+relevé coûte 20 à 25 ms, jamais par image.
+
+Et il le redessine **à partir du texte HTML lui-même** : boîte, corps, graisse,
+interlettrage et fonte sont relevés sur les `<span>` réels d'`#intro-name-fade`
+(`getBoundingClientRect` + `getComputedStyle`), le fil de base étant recalculé
+à partir des métriques de la police comme le fait CSS. Le calque hors écran est
+donc le même nom au même endroit que celui du DOM — c'est ce qui permet au
+**texte net de reprendre la main à la fin sans le moindre décalage** : il se
+pose exactement sur les grains arrivés, comme s'ils durcissaient. La poussière
+fait l'arrivée, le texte net fait la signature — et rend la typographie du
+logotype (Montserrat 700 pour ADRIEN, Cinzel doré pour VADA), qu'un semis de
+grains ne saurait rendre. Les grains restent dessous, en halo.
+
+| Question qui se pose d'habitude | Réponse ici |
+|---|---|
+| **Que faire des particules en trop ?** | Il n'y en a jamais : le pas d'échantillonnage se déduit de la surface d'encre ET du nombre de particules, donc il y a exactement autant de cibles que de grains. Un grand écran a plus de particules et un nom plus grand ; les deux varient ensemble |
+| **Et s'il manque des cibles ?** | Même réponse. Si l'encre est trop maigre pour le nombre demandé (petit écran), on repasse sur les mêmes cibles avec un écart supplémentaire : deux grains issus d'une même cible ne se superposent pas |
+| **Comment éviter le plat de spaghettis ?** | L'appariement préserve la position : les deux nuages sont rangés par colonne puis, dans chaque colonne, de haut en bas, et appariés rang par rang. On range sur les **ancres** du masque, qui ne bougent jamais — l'appariement survit donc à un redimensionnement |
+| **Le masque tourne-t-il pendant ce temps ?** | Non : l'oscillation s'éteint au fur et à mesure (`calme = 1 - forme`). Un nom doit rester de face |
+| **Et si le canevas n'est pas là ?** | `construitCibles()` renvoie `false` et le nom se pose en net, directement. L'ouverture ne dépend jamais de son décor |
+
+Le rangement se fait en **tris par comptage** (`trieParCase`) et non avec
+`Array.prototype.sort` : dans une fonction qu'on n'exécute qu'une fois, une
+fonction de comparaison appelée cent mille fois n'est jamais optimisée par le
+moteur et reste interprétée. Mesuré : **34 ms → 2 ms**.
+
+Les molettes du nom :
+
+| Constante | Effet |
+|---|---|
+| `FORM_MS` | durée de la traversée (le sceau attend qu'elle soit finie) |
+| `FORM_STAGGER` | part de cette durée mangée par le décalage gauche→droite (0 = tout part ensemble) |
+| `GRAIN_NOM` | taille du grain, **en fraction de l'écart moyen entre cibles** — 1 remplit les lettres, moins les rend granuleuses |
+| `ALPHA_NOM` | opacité d'un grain posé (les recouvrements et la nappe font le reste) |
+| `CIBLE_SS` | suréchantillonnage du calque de texte (2 : des bords moins escaliers) |
+| `RELEASE_MS` | relâchement au clic — volontairement plus court que `FADE_MS`, sinon on ne le verrait pas |
 
 Le nuage de points du masque est dans `mask-points.js` : **fichier généré, à ne
 pas éditer à la main**. Il a été produit hors-ligne à partir du modèle 3D FBX
@@ -328,11 +382,13 @@ Tout est dans les constantes en haut de `intro.js` :
 - `ACCEL_START_INDEX` — à partir de quel rôle l'accélération démarre (2).
 - `ACCEL_RATE` — brutalité de l'accélération (0.72 ; plus petit = plus violent).
 - `OPENING_STEP_MS` / `OPENING_FRAMES` — rythme des rôles d'ouverture.
-- `updateFade()` — courbe du fondu rôles → nom (exposant 1.6 : le nom reste
-  discret au début, puis prend le dessus sur la seconde moitié).
+- `FORM_MS` et les autres molettes du nom — voir « Le nom est écrit par la
+  poussière » ci-dessus. Le tambour, lui, ne s'atténue plus jamais : les rôles
+  gardent leur pleine lumière du premier au dernier.
 - `MAX_INTRO_MS` — garde-fou : au-delà, le voile disparaît quoi qu'il arrive.
   Ne jamais le descendre sous la durée naturelle de la séquence, sinon
-  l'animation serait coupée avant la fin.
+  l'animation serait coupée avant la fin. Le sceau paraît vers 6 s ; les 20 s
+  du garde-fou laissent donc une marge confortable.
 
 ### Régler le grain (et pourquoi il ne faut pas le grossir)
 
