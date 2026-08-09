@@ -47,7 +47,15 @@
     var sealRing = document.getElementById('intro-seal-ring');
     var sealRingInner = document.getElementById('intro-seal-ring-inner');
     var skipBtn = document.getElementById('intro-skip');
-    var ctx = canvas.getContext('2d');
+    // LE DÉCOR PEUT MANQUER À L'APPEL, et ça ne doit pas coûter le site.
+    // getContext renvoie null quand le contexte 2D n'est pas accordé —
+    // mémoire contrainte, contexte déjà pris par une autre API. Sans cette
+    // précaution, resize() levait dès la première ligne, start() s'arrêtait
+    // là, le garde-fou de sortie n'était jamais posé, et le rideau restait
+    // à l'écran POUR TOUJOURS : un visiteur devant un site qui ne s'ouvre
+    // pas, à cause d'une poussière décorative. Sans contexte, on se passe
+    // simplement du masque ; le texte et le sceau, eux, jouent normalement.
+    var ctx = canvas ? canvas.getContext('2d') : null;
 
     // ── Rôles joués, dans l'ordre d'apparition. Antiochus ouvre au
     //    centre du tambour, Le Juge se décode déjà au-dessus de lui ;
@@ -216,6 +224,7 @@
     }
 
     function resize() {
+        if (!ctx) return false;   // pas de décor : il n'y a rien à dimensionner
         // window.innerWidth/Height peuvent être à 0 lors d'un tout premier
         // appel synchrone (webview pas encore mise en page) : on retombe
         // alors sur les dimensions du <canvas> déjà posées par le CSS.
@@ -713,7 +722,7 @@
     }
 
     function startParticleLoop() {
-        if (running) return;
+        if (running || !ctx) return;
         running = true;
         lastT = null;
         rafId = requestAnimationFrame(loop);
@@ -1150,7 +1159,9 @@
     // à 0 — on réessaie sans jamais bloquer la séquence de texte ni la sortie.
     function startParticlesWhenReady(attempt) {
         attempt = attempt || 0;
-        if (isDismissed) return;
+        // Sans contexte 2D il n'y a pas de décor, et rien à réessayer non
+        // plus : ce n'est pas une mise en page qui tarde, c'est un refus.
+        if (isDismissed || !ctx) return;
         if (resize()) {
             initParticles();
             startParticleLoop();
@@ -1167,17 +1178,25 @@
             dismiss();
             return;
         }
-        // Empêche la page de défiler derrière le voile
         demarreA = performance.now();
+
+        // LE GARDE-FOU EST POSÉ EN PREMIER, ET C'EST TOUT L'INTÉRÊT. Il ne
+        // sert qu'aux cas anormaux — onglet resté en arrière-plan avec ses
+        // minuteurs gelés, erreur imprévue… — et en usage normal la sortie
+        // attend toujours un clic sur le sceau : ce délai ne doit jamais se
+        // déclencher pendant une lecture tranquille.
+        //
+        // Mais il était posé en DERNIER, après le décor et la séquence. Une
+        // exception dans l'un ou l'autre et il n'existait tout simplement
+        // pas : le rideau restait alors à l'écran pour toujours, sans issue
+        // ni bouton. Une promesse de sortie qui dépend du bon déroulement de
+        // ce dont elle protège n'en est pas une. Elle est donc tenue d'abord.
+        setTimeout(dismiss, MAX_INTRO_MS);
+
+        // Empêche la page de défiler derrière le voile
         document.body.classList.add('modal-open');
         startParticlesWhenReady(0);
         runSequence();
-
-        // Garde-fou absolu : uniquement pour les cas anormaux (onglet resté
-        // en arrière-plan avec timers gelés, erreur imprévue…). En usage
-        // normal, la sortie attend toujours un clic sur le sceau — ce délai
-        // ne doit jamais se déclencher pendant une lecture tranquille.
-        setTimeout(dismiss, MAX_INTRO_MS);
     }
 
     if (document.readyState === 'loading') {
