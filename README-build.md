@@ -261,14 +261,21 @@ Au premier chargement : un **masque de théâtre en particules** tourne lentemen
 au centre, pendant que les rôles joués défilent de plus en plus vite. Le défilé
 est un **tambour de roulette** : le rôle en cours occupe le centre, net et de
 face ; le suivant se décode déjà au-dessus de lui, atténué et plus loin dans la
-profondeur ; le précédent descend en s'éloignant. À chaque cran, tout descend
-d'un rang. En parallèle, « Adrien Vada » — superposé à la position centrale du
-tambour — apparaît en fondu et remplace peu à peu les rôles. Un **sceau** se
-trace enfin : il faut **cliquer dessus pour entrer** (l'intro ne se referme
-jamais toute seule).
+profondeur ; le précédent est descendu d'un rang, en retrait mais **toujours
+lisible** ; celui d'avant, plus bas encore, achève de se faire avaler par la
+profondeur. À chaque cran, tout descend d'une place.
 
-Le tambour compte **quatre cellules pour trois places visibles** : la quatrième
-attend en coulisse, invisible, le temps d'être remontée du bas vers le haut sans
+Ce sont donc **quatre temps**, pas deux : quand Le Juge prend le centre,
+Antiochus est encore là, en dessous, à demi éteint — il ne disparaît qu'à
+l'arrivée de Steven. On voit toujours d'où l'on vient et où l'on va.
+
+En parallèle, « Adrien Vada » — superposé à la position centrale du tambour —
+apparaît en fondu et remplace peu à peu les rôles. Un **sceau** se trace enfin :
+il faut **cliquer dessus pour entrer** (l'intro ne se referme jamais toute
+seule).
+
+Le tambour compte **cinq cellules pour quatre places visibles** : la cinquième
+attend en coulisse, invisible, le temps d'être remontée du fond vers le haut sans
 qu'on la voie sauter. Ses réglages (hauteurs, éloignement, opacités, flou) sont
 dans `SLOTS`, en haut de la section « tambour » d'`intro.js` ; la durée d'un cran
 est `SHIFT_BASE_MS`, qui suit la même accélération que le reste du défilé.

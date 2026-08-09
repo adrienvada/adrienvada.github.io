@@ -2343,12 +2343,13 @@
 
         /* ── LE TAMBOUR DE ROULETTE. Les rôles ne se remplacent plus sur
            place : ils DÉFILENT, comme les symboles d'une machine à sous.
-           Trois positions visibles, sur un axe qui s'enfonce dans l'écran :
+           Quatre positions visibles, sur un axe qui s'enfonce dans l'écran :
            tout en haut, atténué et plus loin dans la profondeur, le rôle
            suivant est en train de se décoder ; au centre, net et de face,
            le rôle en cours — exactement là où « ADRIEN VADA » finira par
-           s'imposer ; en bas, le rôle qu'on vient de quitter s'éloigne et
-           s'efface. À chaque cran, tout descend d'un rang.
+           s'imposer ; en dessous, le rôle qu'on vient de quitter, en retrait
+           mais toujours lisible ; plus bas encore, celui d'avant, que la
+           profondeur achève d'avaler. À chaque cran, tout descend d'un rang.
 
            « ADRIEN VADA » est superposé à la position CENTRALE du tambour :
            seule leur opacité respective bouge, le nom remplace les rôles
@@ -2880,15 +2881,18 @@
     <div id="intro-overlay">
         <canvas id="intro-canvas" aria-hidden="true"></canvas>
         <div class="intro-stage" aria-hidden="true">
-            <!-- Le tambour de roulette : quatre cellules qui tournent en
-                 rond sur trois positions visibles (haut / centre / bas) —
-                 la quatrième attend en coulisse, invisible, le temps d'être
+            <!-- Le tambour de roulette : cinq cellules qui tournent en rond
+                 sur quatre positions visibles (haut / centre, puis deux
+                 temps de descente : le rôle quitté reste lisible en retrait
+                 avant de partir dans la profondeur au cran suivant) — la
+                 cinquième attend en coulisse, invisible, le temps d'être
                  remontée sans qu'on la voie sauter. « Adrien Vada » est
                  superposé à la position centrale : seule leur opacité
                  respective évolue, le nom remplace les rôles en fondu
                  plutôt que de leur être concaténé. -->
             <div class="intro-textstack">
                 <div class="intro-reel" id="intro-scramble">
+                    <p class="intro-cell">&nbsp;</p>
                     <p class="intro-cell">&nbsp;</p>
                     <p class="intro-cell">&nbsp;</p>
                     <p class="intro-cell">&nbsp;</p>

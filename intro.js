@@ -654,19 +654,27 @@
     // ════════════════════════════════════════════════════════════
     //  Les rôles ne se remplacent plus sur place : ils DÉFILENT, comme
     //  les symboles d'une machine à sous, sur un axe qui s'enfonce dans
-    //  l'écran. Trois positions visibles :
+    //  l'écran. Quatre positions visibles :
     //
     //    haut   — atténué, plus petit, loin dans la profondeur : le rôle
     //             SUIVANT s'y décode déjà, à l'avance ;
     //    centre — net, de face, pleine taille : le rôle en cours. C'est
     //             aussi, exactement, la place d'« Adrien Vada » ;
-    //    bas    — le rôle qu'on vient de quitter, qui descend en
-    //             s'éloignant et s'efface.
+    //    bas1   — le rôle qu'on vient de quitter. Il descend et s'atténue
+    //             mais NE S'ÉTEINT PAS : on le lit encore, en retrait,
+    //             tout le temps que son successeur tient le centre ;
+    //    bas2   — un cran plus tard seulement, il repart dans la
+    //             profondeur et disparaît pour de bon.
+    //
+    //  C'est ce QUATRIÈME temps qui donne au tambour son épaisseur : à
+    //  l'instant où Le Juge prend le centre, Antiochus est encore là,
+    //  en dessous, à demi éteint ; il ne s'efface qu'à l'arrivée de
+    //  Steven. On voit donc toujours d'où l'on vient et où l'on va.
     //
     //  À chaque cran tout descend d'un rang : le centre part vers le bas,
     //  le haut prend le centre (déjà décodé, donc lisible dès son
     //  arrivée), et le rôle d'après apparaît en haut pour s'y décoder à
-    //  son tour. Une QUATRIÈME cellule tourne dans le lot sans jamais
+    //  son tour. Une CINQUIÈME cellule tourne dans le lot sans jamais
     //  être vue : c'est celle qui remonte du bas vers le haut, ce qu'on
     //  fait pendant qu'elle est à opacité nulle pour que le saut passe
     //  inaperçu.
@@ -686,29 +694,37 @@
         return Math.max(SHIFT_FLOOR_MS, Math.round(SHIFT_BASE_MS * accelK(i)));
     }
 
-    // Les quatre places du tambour. `y` est en em (donc solidaire de la
+    // Les cinq places du tambour. `y` est en em (donc solidaire de la
     // taille du texte, qui varie avec l'écran) ; `z` en pixels, lu à
     // travers la perspective de 900 px posée en CSS — c'est lui qui donne
     // le rétrécissement, sans qu'aucune échelle ne soit écrite à la main.
     //  Les `y` paraissent généreux : ils sont mesurés AVANT la perspective,
-    //  qui les rabote ensuite (× 0,75 en haut, × 0,59 en bas). À l'écran, les
-    //  crans se tiennent à un peu plus d'une hauteur de ligne l'un de l'autre.
+    //  qui les rabote ensuite (× 0,75 en haut, × 0,59 puis × 0,5 en bas). À
+    //  l'écran, les crans se tiennent à un peu plus d'une hauteur de ligne
+    //  l'un de l'autre.
     //  `fade` raccourcit la seule opacité par rapport au reste du mouvement :
-    //  le rôle qui s'en va est ÉTEINT avant d'avoir fini sa descente. C'est ce
+    //  le rôle arrivé au fond est ÉTEINT avant d'avoir fini sa course. C'est ce
     //  qui rend sa remontée en coulisse invisible même si le navigateur saute
     //  une image ou deux — sans quoi on le verrait réapparaître en haut, encore
     //  lumineux, par-dessus le rôle qui s'y décode.
     var SLOTS = {
         haut: { y: -1.8, z: -300, opacity: 0.42, blur: 0.6 },
         centre: { y: 0, z: 0, opacity: 1, blur: 0 },
-        bas: { y: 2.2, z: -620, opacity: 0, blur: 2.4, fade: 0.68 },
+        // Premier temps de la sortie : en retrait, mais toujours lisible.
+        bas1: { y: 2.2, z: -620, opacity: 0.32, blur: 1.4 },
+        // Second temps, un cran plus tard : la profondeur l'avale.
+        bas2: { y: 4.3, z: -900, opacity: 0, blur: 3, fade: 0.68 },
         // « Coulisse » : la place du haut, mais invisible. Une cellule y
-        // remonte du bas sans être vue, puis n'a plus qu'à s'y allumer.
+        // remonte du fond sans être vue, puis n'a plus qu'à s'y allumer.
         coulisse: { y: -1.8, z: -300, opacity: 0, blur: 0.6 }
     };
 
-    // ring[0] = centre, ring[1] = haut, ring[2] = coulisse, ring[3] = bas.
-    var ring = cells.slice(0, 4);
+    // Le chemin d'une cellule, dans l'ordre :
+    //   coulisse → haut → centre → bas1 → bas2 → coulisse → …
+    // ring[i] occupe SLOT_ORDER[i] ; un cran est une simple rotation à
+    // gauche du tableau, qui reproduit exactement ce chemin.
+    var SLOT_ORDER = ['centre', 'haut', 'coulisse', 'bas2', 'bas1'];
+    var ring = cells.slice(0, SLOT_ORDER.length);
 
     function placeCell(cell, slot, durationMs) {
         var s = SLOTS[slot];
@@ -725,13 +741,11 @@
         cell.style.filter = s.blur ? 'blur(' + s.blur + 'px)' : 'none';
     }
 
-    var SLOT_ORDER = ['centre', 'haut', 'coulisse', 'bas'];
-
     function placeRing(durationMs) {
         for (var i = 0; i < ring.length; i++) placeCell(ring[i], SLOT_ORDER[i], durationMs);
     }
 
-    // Un cran. La cellule du bas (éteinte depuis un moment, cf. `fade`) est
+    // Un cran. La cellule du fond (éteinte depuis un moment, cf. `fade`) est
     // TÉLÉPORTÉE en coulisse avant la rotation.
     //
     // La lecture de getComputedStyle entre les deux est indispensable : elle
@@ -742,10 +756,10 @@
     // navigateur est donc libre de rendre une valeur déjà calculée sans
     // rien recalculer.)
     function shiftReel(durationMs) {
-        var remonte = ring[3];
+        var remonte = ring[3];   // celle qui est au fond (bas2)
         placeCell(remonte, 'coulisse', 0);
         void window.getComputedStyle(remonte).opacity;
-        ring = [ring[1], ring[2], ring[3], ring[0]];
+        ring = ring.slice(1).concat(ring[0]);
         placeRing(durationMs);
     }
 
@@ -845,10 +859,10 @@
     // ════════════════════════════════════════════════════════════
     function runSequence() {
         if (isDismissed) return;
-        // Le tambour a besoin de ses quatre cellules (trois places visibles
+        // Le tambour a besoin de ses cinq cellules (quatre places visibles
         // + la coulisse). S'il en manque, on saute droit au nom plutôt que
         // de faire tourner une roulette bancale.
-        if (ring.length < 4) { finish(); return; }
+        if (ring.length < SLOT_ORDER.length) { finish(); return; }
 
         placeRing(0);
         void ring[0].offsetWidth;
@@ -870,14 +884,19 @@
     function step(idx) {
         if (isDismissed) return;
 
-        // Passé le dernier rôle, un ultime cran vide le centre : le
-        // tambour s'en va par le bas et ne laisse que le nom.
+        // Passé le dernier rôle, on continue à tourner à vide : il faut
+        // DEUX crans pour vider les deux places basses, sans quoi le
+        // dernier rôle resterait planté en retrait sous le nom. Le tambour
+        // s'en va par le fond et ne laisse qu'« Adrien Vada ».
         if (idx >= ROLES.length) {
             var last = shiftDuration(ROLES.length - 1);
             shiftReel(last);
             armTopCell(idx);
             updateFade(ROLES.length);
-            seqTimer = setTimeout(finish, last);
+            var cransAVide = idx - ROLES.length;
+            seqTimer = setTimeout(
+                cransAVide >= 1 ? finish : function () { step(idx + 1); },
+                last);
             return;
         }
 
