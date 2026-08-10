@@ -2301,15 +2301,13 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            /* LE FOND EST CREUSÉ SOUS LE MASQUE. La lueur chaude était au
-               centre — c'est-à-dire exactement derrière la poussière, qui
-               devait donc se détacher sur la partie la plus claire de
-               l'écran. Le noir passe au centre et la chaleur recule en
-               couronne : le contraste du masque monte sans une goutte
-               d'encre de plus, et la lumière tournante qu'on avait garde
-               sa place, derrière lui, comme une contre-plongée de scène. */
+            /* PRESQUE NOIR PARTOUT : c'est ce qui fait ressortir les
+               particules, chaudes elles-mêmes, sans qu'un fond tout aussi
+               chaud vienne leur faire concurrence. Il ne reste qu'un souffle
+               doré tout au bord, à peine perceptible — une vignette, pas
+               une lueur. */
             background:
-                radial-gradient(ellipse at center, #070605 0%, #0c0a07 34%, #17140f 70%, #0d0b08 90%, #060504 100%);
+                radial-gradient(ellipse at center, #030202 0%, #030202 55%, #070502 100%);
             opacity: 1;
             transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
         }
