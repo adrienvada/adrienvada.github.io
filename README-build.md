@@ -258,10 +258,64 @@ imprimé sur fond noir gâcherait l'encre et passerait mal en photocopie.
 ## Ouverture de scène (`intro.js` + `mask-points.js`)
 
 Au premier chargement : un **masque de théâtre en particules** tourne lentement
-au centre, pendant que les rôles joués défilent de plus en plus vite. En
-parallèle, « Adrien Vada » — superposé au même endroit que les rôles — apparaît
-en fondu et les remplace peu à peu. Un **sceau** se trace enfin : il faut
-**cliquer dessus pour entrer** (l'intro ne se referme jamais toute seule).
+au centre, pendant que les rôles joués défilent de plus en plus vite. Le défilé
+est un **tambour de roulette** : le rôle en cours occupe le centre, net et de
+face ; le suivant se décode déjà au-dessus de lui, atténué et plus loin dans la
+profondeur ; le précédent est descendu d'un rang, en retrait mais **toujours
+lisible** ; celui d'avant, plus bas encore, achève de se faire avaler par la
+profondeur. À chaque cran, tout descend d'une place.
+
+Ce sont donc **quatre temps**, pas deux : quand Le Juge prend le centre,
+Antiochus est encore là, en dessous, à demi éteint — il ne disparaît qu'à
+l'arrivée de Steven. On voit toujours d'où l'on vient et où l'on va.
+
+Le tambour compte **cinq cellules pour quatre places visibles** : la cinquième
+attend en coulisse, invisible, le temps d'être remontée du fond vers le haut sans
+qu'on la voie sauter. Ses réglages (hauteurs, éloignement, opacités, flou) sont
+dans `SLOTS`, en haut de la section « tambour » d'`intro.js` ; la durée d'un cran
+est `SHIFT_BASE_MS`, qui suit la même accélération que le reste du défilé.
+
+### La roulette s'arrête sur « Adrien »
+
+**« ADRIEN » est le dernier rôle de la liste, et ce n'est pas un hasard** : c'est
+un rôle joué comme les autres, et c'est celui sur lequel la machine cale. Le nom
+n'est pas une conclusion plaquée par-dessus les rôles — c'est le rôle qui
+restait. Déplacer `'ADRIEN'` ailleurs dans `ROLES` casse toute la fin.
+
+La séquence se termine donc en quatre temps :
+
+1. **le freinage** — le défilé s'épuise de lui-même : le profil de vitesse (voir
+   plus bas) ramène les derniers rôles à un rythme lisible sur une bonne
+   demi-douzaine de crans. C'est ce qui rend la fin lisible alors qu'on vient de
+   traverser une vingtaine de rôles sans pouvoir en compter un seul ;
+2. **l'arrêt** — « Adrien » descend au centre en dépassant d'environ 9 % puis
+   revient s'y caler (`LOCK_EASE`). Le dépassement joue sur les deux axes : le
+   mot passe sous le centre, et il grossit en passant devant le plan de l'écran,
+   puisque la profondeur dépasse aussi. C'est le « clac » d'une roulette qui se
+   verrouille — sans lui elle ne s'arrête pas, elle s'immobilise ;
+3. **le silence** — les rôles restés en dessous achèvent leur chute et
+   s'éteignent, pendant que le centre ne bouge plus (`VIDAGE_MS`, `SILENCE_MS`) ;
+4. **« Vada »** — le mot s'allume en Cinzel doré à droite pendant qu'« Adrien »
+   glisse vers la gauche, et le nom entier se recentre (`VADA_MS`).
+
+Le quatrième temps repose sur une **substitution invisible** : le texte net
+(`#intro-name-fade`) vient prendre la place exacte du rôle affiché par le
+tambour. Pour que les lettres ne sautent pas d'un pixel, deux précautions —
+toutes deux vérifiées à la mesure, et toutes deux nécessaires :
+
+- le nom est **découpé lettre par lettre, à plat**, comme le fait `renderCell`.
+  Un mot d'un seul tenant n'aurait pas le même crénage ; un `<span>` groupant les
+  deux mots décalait la hauteur de ligne d'un demi-pixel ;
+- le calage se fait **par mesure, pas par calcul** : `revele()` superpose le
+  « A » du nom sur le « A » du tambour dans les deux axes. Un décalage déduit de
+  la largeur ajoutée par « VADA » serait juste horizontalement, mais laisserait
+  un demi-pixel vertical — les lettres de « VADA » sont en Cinzel, dont les
+  métriques rendent la ligne du nom un pixel plus haute que celle du tambour.
+  La mesure, elle, reste vraie quelles que soient les fontes, la largeur de
+  l'écran, et même si les polices n'ont pas fini de se charger.
+
+Un **sceau** se trace enfin : il faut **cliquer dessus pour entrer** (l'intro ne
+se referme jamais toute seule).
 
 Le nuage de points du masque est dans `mask-points.js` : **fichier généré, à ne
 pas éditer à la main**. Il a été produit hors-ligne à partir du modèle 3D FBX
@@ -306,16 +360,51 @@ visite lèverait le rideau au milieu du spectacle.
 
 Tout est dans les constantes en haut de `intro.js` :
 
-- `ROLES` — la liste et l'ordre des rôles. Les 2 premiers (Antiochus, Le Juge)
-  se décodent lettre à lettre pour rester lisibles ; les suivants s'emballent.
-- `ACCEL_START_INDEX` — à partir de quel rôle l'accélération démarre (2).
-- `ACCEL_RATE` — brutalité de l'accélération (0.72 ; plus petit = plus violent).
-- `OPENING_STEP_MS` / `OPENING_FRAMES` — rythme des rôles d'ouverture.
-- `updateFade()` — courbe du fondu rôles → nom (exposant 1.6 : le nom reste
-  discret au début, puis prend le dessus sur la seconde moitié).
+Tout se joue à deux endroits, et **c'est la séparation des deux qui compte** :
+un profil décide de la FORME du rythme, une consigne décide de sa DURÉE. On peut
+donc rendre le défilé plus fou sans qu'il s'allonge, et allonger le nom sans le
+ralentir. Ils ne se marchent plus dessus.
+
+- `SEQUENCE_CIBLE_MS` — **la durée du défilé, du lever de rideau à l'arrêt sur
+  « Adrien ».** C'est une consigne : `intro.js` cherche au chargement, par
+  dichotomie, le facteur de rythme qui l'atteint. Conséquence directe : ajouter
+  dix rôles ne rallonge plus l'ouverture, ça la densifie. C'est ici, et nulle
+  part ailleurs, qu'on rend l'intro plus longue ou plus courte.
+- `ROLES` — la liste et l'ordre des rôles. **Seuls les premiers et les derniers
+  sont faits pour être lus** : entre les deux, c'est une masse qu'on traverse
+  sans pouvoir la compter, et c'est le but. `'ADRIEN'` doit rester en dernier
+  (voir plus haut).
+- `PROFIL_POW` — resserre le sommet et aplatit les épaules. Près de 1, la courbe
+  s'étale ; au-dessus, la pointe se fait plus étroite et plus violente.
+- `PROFIL_BIAIS` — déplace le sommet. Au-dessus de 1 il arrive plus tard :
+  l'accélération prend son temps, la décélération est plus serrée.
+- `SHIFT_FLOOR_MS` / `HOLD_FLOOR_MS` — le plancher absolu (38 + 8 ms par rôle).
+  **C'est lui, et lui seul, qui fixe la vitesse de pointe** — voir juste en
+  dessous. Les descendre encore ferait se chevaucher les mots sur un appareil
+  lent.
+- `VITESSE_MAX` — **l'amplitude de la courbe, et le piège du réglage.** On
+  croirait qu'elle règle la vitesse de pointe : elle ne la règle pas. Au sommet,
+  le rythme bute depuis longtemps sur le plancher ci-dessus. Elle ne décide que
+  de la hauteur de la falaise à descendre pour l'atteindre — et une falaise plus
+  courte se descend par des marches plus petites. La passer de 0,003 à 0,13 n'a
+  pas changé la pointe d'une milliseconde, mais a fait tomber le pire écart
+  entre deux rôles consécutifs de 2,1× à 1,3× : c'est tout le ressaut qu'on
+  sentait vers « Sganarelle ». **Pour lisser l'accélération, c'est ici qu'on
+  agit — en montant cette valeur, contre l'intuition.**
+- `LOCK_SHIFT_FACTOR` — de combien le DERNIER cran est plus lent que les autres.
+  À 5, « Adrien » met près d'une seconde à descendre : la roulette n'a plus
+  d'élan, elle se laisse tomber.
+- `OPENING_STEP_MS` / `OPENING_FRAMES` / `OPENING_INDEX` — le décodage lettre à
+  lettre des premiers rôles, celui qu'on regarde vraiment au lever de rideau.
 - `MAX_INTRO_MS` — garde-fou : au-delà, le voile disparaît quoi qu'il arrive.
-  Ne jamais le descendre sous la durée naturelle de la séquence, sinon
-  l'animation serait coupée avant la fin.
+  Ne jamais le descendre sous la durée naturelle de la séquence (environ 6 s
+  jusqu'au sceau), sinon l'animation serait coupée avant la fin.
+
+Un mot sur l'arbitrage, parce qu'il se represente à chaque réglage : à durée
+constante, une décélération plus longue et une chute finale plus lente se
+financent forcément sur le reste. Étaler les deux extrémités impose une pointe
+plus rapide au milieu, et comprime un peu l'ouverture. Il n'y a pas de réglage
+qui donne tout à la fois — seulement des équilibres.
 
 ### Régler le grain (et pourquoi il ne faut pas le grossir)
 

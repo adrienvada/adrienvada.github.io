@@ -2301,15 +2301,13 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            /* LE FOND EST CREUSÉ SOUS LE MASQUE. La lueur chaude était au
-               centre — c'est-à-dire exactement derrière la poussière, qui
-               devait donc se détacher sur la partie la plus claire de
-               l'écran. Le noir passe au centre et la chaleur recule en
-               couronne : le contraste du masque monte sans une goutte
-               d'encre de plus, et la lumière tournante qu'on avait garde
-               sa place, derrière lui, comme une contre-plongée de scène. */
+            /* PRESQUE NOIR PARTOUT : c'est ce qui fait ressortir les
+               particules, chaudes elles-mêmes, sans qu'un fond tout aussi
+               chaud vienne leur faire concurrence. Il ne reste qu'un souffle
+               doré tout au bord, à peine perceptible — une vignette, pas
+               une lueur. */
             background:
-                radial-gradient(ellipse at center, #070605 0%, #0c0a07 34%, #17140f 70%, #0d0b08 90%, #060504 100%);
+                radial-gradient(ellipse at center, #030202 0%, #030202 55%, #070502 100%);
             opacity: 1;
             transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -2341,26 +2339,49 @@
             text-align: center;
         }
 
-        /* ── Un seul emplacement de texte : le rôle en cours (qui se
-           décode normalement) et « ADRIEN VADA » sont superposés exactement
-           au même endroit. Seule leur opacité respective bouge : le rôle
-           s'efface progressivement pendant qu'Adrien Vada apparaît en
-           fondu — le nom REMPLACE les rôles, il ne s'y ajoute pas. */
+        /* ── LE TAMBOUR DE ROULETTE. Les rôles ne se remplacent plus sur
+           place : ils DÉFILENT, comme les symboles d'une machine à sous.
+           Quatre positions visibles, sur un axe qui s'enfonce dans l'écran :
+           tout en haut, atténué et plus loin dans la profondeur, le rôle
+           suivant est en train de se décoder ; au centre, net et de face,
+           le rôle en cours — exactement là où « ADRIEN VADA » finira par
+           s'imposer ; en dessous, le rôle qu'on vient de quitter, en retrait
+           mais toujours lisible ; plus bas encore, celui d'avant, que la
+           profondeur achève d'avaler. À chaque cran, tout descend d'un rang.
+
+           « ADRIEN VADA » est superposé à la position CENTRALE du tambour :
+           seule leur opacité respective bouge, le nom remplace les rôles
+           en fondu plutôt que de leur être concaténé. */
         .intro-textstack {
             position: relative;
             display: grid;
-            min-height: 1.3em;
+            /* Assez haut pour que les trois crans du tambour respirent : la
+               position centrale reste à mi-hauteur, donc alignée avec le nom. */
+            min-height: 3.8em;
             max-width: 100%;
         }
 
-        .intro-scramble,
-        .intro-name-fade {
+        .intro-reel {
             grid-area: 1 / 1;
+            align-self: stretch;
+            position: relative;
+            /* La perspective est posée ICI, pas sur un parent : les cellules
+               sont ses enfants directs, et l'opacité que le fondu applique au
+               tambour ne peut donc pas aplatir leur profondeur. */
+            perspective: 900px;
+            perspective-origin: 50% 50%;
+            transition: opacity 0.26s ease;
+        }
+
+        .intro-cell,
+        .intro-name-fade {
             margin: 0;
             font-family: 'Montserrat', sans-serif;
             font-weight: 700;
-            /* Calibré sur le rôle le plus long (« TITUS ANDRONICUS »,
-               16 caractères) pour tenir sur une seule ligne dès 320 px. */
+            /* Calibré sur le rôle le plus long (« INSPECTEUR TOUTOU »,
+               17 caractères) pour tenir sur une seule ligne dès 320 px : il y
+               occupe 189 px sur les 320, marges confortables. Un rôle plus
+               long que celui-là demanderait de revoir ce calibrage. */
             font-size: clamp(1rem, 4.4vw, 3rem);
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -2368,25 +2389,74 @@
             max-width: 100%;
             color: #f2ece0;
             text-shadow: 0 0 24px rgba(191, 169, 138, 0.35);
-            transition: opacity 0.26s ease;
         }
 
+        /* Chaque cellule est un cran du tambour. Sa place — hauteur,
+           éloignement, opacité, flou — est posée par intro.js ; ne restent
+           ici que l'ancrage sur la ligne médiane et la durée des transitions,
+           réglée elle aussi image par image (le défilé s'emballe). */
+        .intro-cell {
+            position: absolute;
+            /* LA BOÎTE DÉBORDE LARGEMENT LA PILE, DES DEUX CÔTÉS. C'est la
+               pile qui donne sa largeur à la colonne, et la pile est mesurée
+               sur « ADRIEN VADA » — les cellules du tambour n'y contribuent
+               pas, étant en position absolue. Un rôle plus long que le nom
+               débordait donc de sa boîte ; et un texte en `nowrap` plus large
+               que sa ligne ne se répartit pas de part et d'autre, il part
+               vers la droite. « Titus Andronicus » s'affichait ainsi 58 px à
+               droite du centre, et « Inspecteur Toutou » 77 px. Une boîte plus
+               large que le plus long des rôles, et centrée par construction,
+               supprime la question — sans rien changer à la perspective, dont
+               l'origine reste celle du tambour.
+
+               `max-width` DOIT être levé ici, sinon rien de tout cela ne
+               s'applique : la règle commune plafonne à 100 % de la pile, la
+               boîte élargie se retrouve ramenée à sa largeur, et le navigateur
+               abandonne alors le calage de droite. On revient au point de
+               départ sans que rien ne le signale. Le nom, lui, garde le
+               plafond : il est dans le flux, et c'est lui qui mesure la pile. */
+            left: -50vw;
+            right: -50vw;
+            max-width: none;
+            top: 50%;
+            text-align: center;
+            opacity: 0;
+            transform: translate3d(0, -50%, 0);
+            transition-property: transform, opacity, filter;
+            /* Deux courbes, pas une. Le DÉPLACEMENT démarre et se pose en
+               douceur, comme un cran de tambour qu'on relâche. L'OPACITÉ,
+               elle, est LINÉAIRE : sur la courbe du déplacement, le rôle qui
+               s'en va serait éteint avant d'avoir bougé — on ne le verrait pas
+               partir, il disparaîtrait sur place. Linéaire, il est encore à
+               mi-lumière à mi-chemin : on le voit vraiment s'enfoncer. */
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1), linear, cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 0ms;
+            will-change: transform, opacity;
+        }
+
+        /* Le nom reste un élément DANS le flux de la grille, et il le faut :
+           c'est lui qui donne sa largeur à la pile. Les cellules du tambour
+           sont toutes en position absolue et ne mesurent donc rien ; l'en
+           sortir fait s'effondrer la colonne à zéro. */
         .intro-name-fade {
+            grid-area: 1 / 1;
+            align-self: center;
             opacity: 0;
             pointer-events: none;
         }
 
-        .intro-scramble .ch,
+        .intro-cell .ch,
         .intro-name-fade .ch {
             display: inline-block;
         }
 
-        .intro-scramble .ch-dim {
+        .intro-cell .ch-dim {
             opacity: 0.4;
         }
 
         /* La partie « VADA » reprend directement la typo du logotype du
-           header, dès le départ — elle annonce ce vers quoi le fondu mène. */
+           header : c'est elle qui vient se poser à côté du rôle « Adrien »
+           une fois la roulette arrêtée, et qui fait du rôle un nom. */
         .intro-name-fade .ch-vada {
             font-family: 'Cinzel', serif;
             color: #bfa98a;
@@ -2957,15 +3027,37 @@
     <div id="intro-overlay">
         <canvas id="intro-canvas" aria-hidden="true"></canvas>
         <div class="intro-stage" aria-hidden="true">
-            <!-- Un seul emplacement : le rôle en cours (décodé normalement)
-                 et « Adrien Vada » sont superposés au même endroit — seule
-                 leur opacité respective évolue, le nom remplace les rôles
-                 en fondu plutôt que de leur être concaténé. -->
+            <!-- Le tambour de roulette : cinq cellules qui tournent en rond
+                 sur quatre positions visibles (haut / centre, puis deux
+                 temps de descente : le rôle quitté reste lisible en retrait
+                 avant de partir dans la profondeur au cran suivant) — la
+                 cinquième attend en coulisse, invisible, le temps d'être
+                 remontée sans qu'on la voie sauter. « Adrien Vada » est
+                 superposé à la position centrale : seule leur opacité
+                 respective évolue, le nom remplace les rôles en fondu
+                 plutôt que de leur être concaténé. -->
             <div class="intro-textstack">
-                <p class="intro-scramble" id="intro-scramble">&nbsp;</p>
-                <p class="intro-name-fade" id="intro-name-fade">
-                    <span class="ch">ADRIEN</span> <span class="ch ch-vada">VADA</span>
-                </p>
+                <div class="intro-reel" id="intro-scramble">
+                    <p class="intro-cell">&nbsp;</p>
+                    <p class="intro-cell">&nbsp;</p>
+                    <p class="intro-cell">&nbsp;</p>
+                    <p class="intro-cell">&nbsp;</p>
+                    <p class="intro-cell">&nbsp;</p>
+                </div>
+                <!-- LE NOM EST DÉCOUPÉ LETTRE PAR LETTRE, À PLAT, ET IL LE
+                     FAUT. La roulette s'arrête sur le rôle « ADRIEN » ; ce
+                     texte-ci prend ensuite sa place, au pixel près, pour lui
+                     adjoindre « VADA ». Or le tambour rend chaque caractère
+                     dans sa propre boîte (voir renderCell dans intro.js) : un
+                     mot écrit d'un seul tenant n'aurait pas le même crénage,
+                     et la substitution se verrait — les lettres sauteraient.
+                     Pour la même raison, PAS de <span> groupant les deux
+                     mots : une boîte en ligne imbriquée décale la hauteur de
+                     la ligne d'un demi-pixel, et ce demi-pixel se voyait
+                     aussi. Le balisage doit reproduire exactement celui du
+                     tambour — donc des lettres, et rien d'autre. Aucune
+                     espace entre les <span> : elle compterait. -->
+                <p class="intro-name-fade" id="intro-name-fade"><span class="ch">A</span><span class="ch">D</span><span class="ch">R</span><span class="ch">I</span><span class="ch">E</span><span class="ch">N</span> <span class="ch ch-vada">V</span><span class="ch ch-vada">A</span><span class="ch ch-vada">D</span><span class="ch ch-vada">A</span></p>
             </div>
             <!-- Le sceau n'ouvre pas le site tout seul : il faut cliquer dessus -->
             <div class="intro-cta" id="intro-cta">
