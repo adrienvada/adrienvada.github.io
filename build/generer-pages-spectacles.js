@@ -376,7 +376,7 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
         // Visiter une fiche, c'est être entré : le retour vers l'accueil ne
         // doit pas lever le rideau d'introduction — « entrer par une porte
         // dérobée reste entrer » (intro.js).
-        try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+        try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -575,7 +575,7 @@ function pageRepertoire(fiches) {
             // Visiter le répertoire, c'est être entré : le retour vers
             // l'accueil ne doit pas lever le rideau d'introduction —
             // « entrer par une porte dérobée reste entrer » (intro.js).
-            try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+            try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
         })();
     </script>
     <meta name="theme-color" content="#0a0907">
