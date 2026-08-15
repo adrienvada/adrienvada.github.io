@@ -580,6 +580,54 @@ compte.
 > pas `:has()` ignore la règle et retombe sur deux lignes : le CV déborde d'un
 > cheveu, il ne casse pas.
 
+### « Profil » : une grille à l'écran, une fiche sur le papier
+
+À l'écran, chaque rubrique du profil est une carte — un cadre, un lavis, une
+ombre — et la grille les range. À l'impression, la règle `.glass-panel` retire le
+cadre, le lavis et l'ombre : il ne restait que la grille, c'est-à-dire des textes
+posés à des fers différents sans rien pour dire où commence une rubrique. Sept
+cartes devenaient une bouillie sur trois colonnes.
+
+Le papier abandonne donc la grille (`.cv-fiche` passe en `display: block`). Une
+rubrique par ligne, l'intitulé dans une gouttière, la valeur en regard — la mise
+en page d'une fiche de renseignements. Les cadres qui séparaient les valeurs
+multiples sont remplacés par des points médians, et les couples
+employeur/lieu ou langue/niveau par des parenthèses.
+
+**L'intitulé flotte à gauche**, tiré hors de la gouttière par une marge négative.
+Un retrait négatif (`text-indent`) aurait donné le même effet à l'œil, à trois
+pixels près : l'espace qui sépare l'intitulé de sa valeur dans la source décale
+la première ligne, et elle seule. Contre un flottant, cette espace tombe en début
+de ligne et disparaît. Mesuré dans le PDF : intitulés à x = 75,38, valeurs à
+x = 196,88 — **toutes** les lignes, continuations comprises.
+
+> ⚠️ **La gouttière fait 162 px parce que le plus long intitulé — « Expériences
+> professionnelles » — en mesure 155.** Un intitulé plus long passerait à la
+> ligne, et sa valeur descendrait avec lui : l'alignement de toute la fiche se
+> romprait, sans que rien ne le signale. Renommer une rubrique du profil, c'est
+> donc remesurer.
+
+`cv-fiche` et `cv-fiche-cle` n'existent que pour ces règles-là : aucun style
+d'écran ne s'y accroche. Elles évitent aux sélecteurs d'impression de descendre
+dans la structure des cadres, qui n'est pas la même d'une rubrique à l'autre.
+
+### Le piano au même rang que le chant
+
+Deux endroits le disaient autrement, et tous deux sont dans `index.html` :
+
+- **La signature casting** (l'en-tête, visible sur tous les onglets) rangeait le
+  piano dans le groupe des aptitudes physiques — « Escrime artistique · Piano ·
+  Tir » — en gris de service, quand le chant avait sa case à lui, en pleine
+  encre. Le piano a désormais la sienne, juste après « Baryton-basse ».
+- **La fiche Profil** donnait au piano une case double, en deuxième rangée, sous
+  les trois « vraies » cases : plus large, mais plus bas, et donc lu comme un
+  complément. Il est remonté à côté du chant, dans une case de même taille
+  (`md:col-span-2 lg:col-span-1` retiré).
+
+Ce sont deux musiques, et un rôle qui demande l'une demande souvent l'autre.
+Même rang, même place, même case — c'est la seule façon qu'a une grille de dire
+que deux choses comptent autant.
+
 ---
 
 ## Mettre à jour les dates de représentation

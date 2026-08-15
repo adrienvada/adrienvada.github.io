@@ -980,18 +980,101 @@
                 flex: 0 0 auto !important;
             }
 
-            /* — LE PROFIL —
-               Déjà sur trois colonnes (voir la règle .grid plus haut) : il
-               ne lui reste qu'à respirer moins fort. */
-            #page_cv #cv-profil-grid,
-            #page_cv section .grid {
-                gap: 0.3rem !important;
+            /* — LE PROFIL DEVIENT UNE FICHE —
+               À l'écran, chaque rubrique est une carte : un cadre, un lavis,
+               une ombre, et la grille qui les range. À l'impression, la
+               règle `.glass-panel` retire le cadre, le lavis et l'ombre —
+               il ne restait que la grille, c'est-à-dire des textes posés à
+               des fers différents, sans rien pour dire où commence une
+               rubrique et où finit la précédente. Sept cartes devenaient
+               une bouillie sur trois colonnes.
+
+               On abandonne donc la grille sur le papier. Une rubrique par
+               ligne, l'intitulé dans une gouttière de 162 px, la valeur en
+               regard : c'est la mise en page d'une fiche de renseignements,
+               et elle se lit d'un coup d'œil.
+
+               L'intitulé FLOTTE à gauche, tiré hors de la gouttière par une
+               marge négative. Un retrait négatif (`text-indent`) aurait fait
+               le même effet à l'œil, mais l'espace qui sépare l'intitulé de
+               sa valeur dans la source aurait décalé la PREMIÈRE ligne de
+               trois pixels — et elle seule. Contre un flottant, cette espace
+               tombe en début de ligne et disparaît : toutes les lignes
+               partent du même fer, la première comme les suivantes. */
+            #page_cv .cv-fiche {
+                display: block !important;
             }
 
-            #page_cv section .grid p,
-            #page_cv section .grid span,
-            #page_cv section .grid div {
-                line-height: 1.3 !important;
+            #page_cv .cv-fiche>div {
+                display: block !important;
+                margin: 0 0 2px !important;
+                padding: 0 0 0 162px !important;
+                clear: both !important;
+                border: 0 !important;
+                background: transparent !important;
+                text-align: left !important;
+                font-size: 10px !important;
+                line-height: 1.35 !important;
+            }
+
+            /* Tout le contenu d'une rubrique se met en ligne : les valeurs
+               suivent l'intitulé au lieu de s'empiler sous lui. */
+            #page_cv .cv-fiche>div * {
+                display: inline !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: 0 !important;
+                background: transparent !important;
+                text-align: left !important;
+                font-size: 10px !important;
+            }
+
+            /* 162 px, parce que le plus long des intitulés — « Expériences
+               professionnelles » — en mesure 155 à cette taille. Un intitulé
+               qui dépasserait la gouttière passerait à la ligne, et sa valeur
+               descendrait avec lui : l'alignement de toute la fiche s'en
+               trouverait rompu, sans que rien ne le signale. Renommer une
+               rubrique, c'est donc remesurer (voir README-build.md). */
+            #page_cv .cv-fiche .cv-fiche-cle {
+                float: left !important;
+                width: 162px !important;
+                margin-left: -162px !important;
+                font-size: 8px !important;
+            }
+
+            /* Les pictogrammes disaient « moto », « voiture », « lien
+               externe ». Sur une fiche imprimée, « Permis A, B » se lit
+               sans dessin, et une flèche de lien ne mène nulle part. */
+            #page_cv .cv-fiche .ico {
+                display: none !important;
+            }
+
+            /* LES SÉPARATEURS REMPLACENT LES CADRES. Les valeurs multiples
+               — les sports, les employeurs, les langues — étaient séparées
+               par des encadrés que l'impression efface. Sans point médian,
+               elles se toucheraient : « Boxe anglaiseKaraté ». */
+            #page_cv .cv-fiche>div>div>span+span::before,
+            #page_cv .cv-fiche .grid-cols-3>div+div::before,
+            #page_cv .cv-fiche .space-y-1>div+div::before {
+                content: ' · ';
+            }
+
+            /* Un employeur et son lieu, une langue et son niveau : la
+               parenthèse dit le rapport entre les deux, qu'une simple
+               espace laisserait deviner. */
+            #page_cv .cv-fiche .grid-cols-3>div>p+p::before,
+            #page_cv .cv-fiche .space-y-1>div>span+span::before {
+                content: ' (';
+            }
+
+            #page_cv .cv-fiche .grid-cols-3>div>p+p::after,
+            #page_cv .cv-fiche .space-y-1>div>span+span::after {
+                content: ')';
+            }
+
+            /* Le piano : la spécialité, puis le niveau. */
+            #page_cv .cv-fiche>div>p+p::before {
+                content: ' — ';
             }
         }
 
@@ -3259,10 +3342,21 @@
                                 <span class="text-luxury-textMain">Baryton-basse</span>
                                 <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
+                                <!-- LE PIANO EST UN INSTRUMENT, PAS UNE ARME.
+                                     Il figurait dans le groupe des aptitudes
+                                     physiques — « Escrime artistique · Piano ·
+                                     Tir » — en gris de service, quand le chant
+                                     avait sa place à lui, en pleine encre. Or
+                                     ce sont deux musiques, et un rôle qui
+                                     demande l'une demande souvent l'autre :
+                                     elles se lisent au même rang. -->
+                                <span class="text-luxury-textMain">Piano</span>
+                                <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
+
                                 <span><span class="text-luxury-textMain">Trilingue</span> FR · RU · EN</span>
                                 <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
-                                <span>Escrime artistique · Piano · Tir</span>
+                                <span>Escrime artistique · Tir</span>
                                 <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
                                 <span>Permis A/B</span>
@@ -3926,12 +4020,18 @@
                         <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Profil</h3>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                    <!-- `cv-fiche` et `cv-fiche-cle` ne servent qu'à
+                         l'impression : elles donnent aux règles @media print de
+                         quoi désigner les rubriques et leurs intitulés sans
+                         descendre dans la structure des cadres, qui n'est pas
+                         la même d'une rubrique à l'autre. Aucun style à
+                         l'écran ne s'y accroche. -->
+                    <div class="cv-fiche grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
                         <!-- Taille -->
                         <div
                             class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-luxury-stripe even:bg-transparent text-sm">
                             <span
-                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Taille</span>
+                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Taille</span>
                             <span class="text-sm font-semibold text-luxury-textMain mt-0.5">187 cm</span>
                         </div>
 
@@ -3939,15 +4039,34 @@
                         <div
                             class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-luxury-stripe even:bg-transparent text-sm">
                             <span
-                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Chant</span>
+                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Chant</span>
                             <span class="text-sm font-semibold text-luxury-textMain mt-0.5">Baryton-basse</span>
+                        </div>
+
+                        <!-- Piano — VOISIN DU CHANT, ET DE MÊME TAILLE.
+                             Il occupait une case double, en deuxième rangée,
+                             sous les trois « vraies » cases : plus large, mais
+                             plus bas, et donc lu comme un complément. Or ce
+                             sont deux musiques, et un rôle qui demande l'une
+                             demande souvent l'autre. Même rang, même place,
+                             même case : c'est la seule façon qu'a une grille
+                             de dire que deux choses comptent autant. -->
+                        <div
+                            class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent text-sm">
+                            <span
+                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Piano</span>
+                            <p class="text-sm font-semibold text-luxury-textMain mt-0.5">Interprétation,
+                                Improvisation, Composition</p>
+                            <p class="text-[9px] text-luxury-textMuted font-mono">fin de 3ème cycle du
+                                Conservatoire
+                            </p>
                         </div>
 
                         <!-- Permis -->
                         <div
                             class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-luxury-stripe even:bg-transparent text-sm">
                             <span
-                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Permis</span>
+                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Permis</span>
                             <div class="flex gap-3 mt-0.5 items-center">
                                 <span class="flex items-center gap-1.5 text-luxury-textMain">
                                     <span class="text-sm font-bold font-mono leading-none">A</span>
@@ -3964,23 +4083,11 @@
                             </div>
                         </div>
 
-                        <!-- Piano -->
-                        <div
-                            class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent text-sm md:col-span-2 lg:col-span-1">
-                            <span
-                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Piano</span>
-                            <p class="text-sm font-semibold text-luxury-textMain mt-0.5">Interprétation,
-                                Improvisation, Composition</p>
-                            <p class="text-[9px] text-luxury-textMuted font-mono">fin de 3ème cycle du
-                                Conservatoire
-                            </p>
-                        </div>
-
                         <!-- Activités physiques -->
                         <div
                             class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent text-sm md:col-span-2">
                             <span
-                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1 block">Activités
+                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1 block">Activités
                                 physiques & sports</span>
                             <div class="flex flex-wrap gap-1">
                                 <span
@@ -4012,7 +4119,7 @@
                         <div
                             class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent text-sm md:col-span-2">
                             <span
-                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1 block">Expériences
+                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1 block">Expériences
                                 professionnelles</span>
                             <div class="grid grid-cols-3 gap-1 text-center">
                                 <div class="bg-luxury-surface border border-stone-200 rounded p-1">
@@ -4034,7 +4141,7 @@
                         <div
                             class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent md:col-span-1">
                             <span
-                                class="text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1.5 block">Langues</span>
+                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1.5 block">Langues</span>
                             <div class="space-y-1 text-xs">
                                 <div class="flex justify-between border-b border-stone-200/50 pb-0.5">
                                     <span class="text-luxury-textMain">Français</span>
