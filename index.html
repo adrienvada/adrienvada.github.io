@@ -796,6 +796,203 @@
                 opacity: 1 !important;
                 transform: none !important;
             }
+
+            /* ══ LE CV TIENT SUR UNE PAGE ══
+               Un CV de comédien se lit debout, en pile, entre deux
+               auditions. La seconde page ne se lit pas : elle se perd, ou
+               elle attend. Tout ce qui suit sert donc un seul chiffre —
+               1032 px, la hauteur utile d'un A4 à 96 dpi une fois retirées
+               les marges de 12 mm. Le CV en faisait 1536.
+
+               La coupe ne retire AUCUNE information. Elle retire des
+               retours à la ligne : chaque spectacle occupait cinq lignes
+               (année+titre, auteur, rôle, compagnie, badge) là où deux
+               suffisent. C'est de la mise en page, pas de l'élagage.
+
+               Tout est ici, dans @media print, et nulle part ailleurs :
+               l'écran ne bouge pas d'un pixel. */
+
+            /* — L'EN-TÊTE SE MET EN LIGNE —
+               À 703 px de large, la page imprimée est SOUS le seuil `md`
+               de Tailwind : elle hérite de la mise en page du téléphone,
+               portrait empilé au-dessus du nom, tout centré. Sur papier
+               c'est un gâchis vertical de cent pixels pour rien — le
+               papier n'a pas de largeur d'écran, il a la sienne. */
+            header .flex-col-reverse {
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 0.9rem !important;
+            }
+
+            header .flex-col-reverse>div:first-child {
+                text-align: left !important;
+            }
+
+            header .justify-center {
+                justify-content: flex-start !important;
+            }
+
+            header h1 {
+                font-size: 1.6rem !important;
+            }
+
+            header h2 {
+                margin-bottom: 0.25rem !important;
+            }
+
+            header .border-t {
+                padding-top: 0.4rem !important;
+            }
+
+            header .space-y-2>*+* {
+                margin-top: 0.3rem !important;
+            }
+
+            header a[href^="mailto:"] {
+                padding: 0 !important;
+                background: transparent !important;
+                color: #000 !important;
+            }
+
+            /* Le portrait perd un quart de son diamètre : il reste un
+               visage reconnaissable, il cesse d'être un médaillon. */
+            header button[aria-label="Ouvrir le book photo"]>span:first-child {
+                width: 68px !important;
+                height: 68px !important;
+            }
+
+            /* « Voir le book » ouvrait la galerie. Sur papier il ne mène
+               nulle part — il survivait par l'exception `header button`,
+               celle qui existe pour que le portrait ne disparaisse pas. */
+            header button[aria-label="Ouvrir le book photo"]>span:last-child {
+                display: none !important;
+            }
+
+            /* — LES RUBRIQUES SE RESSERRENT — */
+            section {
+                margin-bottom: 0.5rem !important;
+                padding-bottom: 0.3rem !important;
+            }
+
+            #page_cv section>div:first-child {
+                margin-bottom: 0.35rem !important;
+                padding-bottom: 0.2rem !important;
+            }
+
+            #page_cv section h3 {
+                font-size: 0.82rem !important;
+            }
+
+            /* — DEUX LIGNES PAR SPECTACLE, AU LIEU DE CINQ —
+               `.cv-role` et `.cv-subtitle` sont deux <p> frères : passés en
+               `inline`, ils se rangent d'eux-mêmes sur une seule ligne, que
+               le tiret vient articuler. Le titre et son année gardent la
+               leur. Rien n'est masqué, tout est remonté. */
+            #page_cv ul {
+                line-height: 1.3 !important;
+            }
+
+            /* Toutes les listes du CV, et pas seulement `.cv-item` : les
+               lignes de Formation n'ont pas cette classe (elles n'ouvrent
+               pas de tiroir) et gardaient leurs 8 px de `py-2`. */
+            #page_cv ul li {
+                padding: 2px 0 !important;
+            }
+
+            /* UNE SEULE LIGNE QUAND IL N'Y A PAS DE RÔLE. Un court métrage
+               et une formation n'ont qu'un titre et une maison : les deux
+               tiennent sur la même ligne, articulés par un tiret. Le
+               théâtre, lui, garde ses deux lignes — le rôle y est
+               l'information principale, et le badge se cale à droite du
+               titre.
+
+               `:has()` n'est pas indispensable : un navigateur qui ne le
+               connaît pas ignore la règle et retombe sur deux lignes. Le
+               CV déborde alors d'un cheveu, il ne casse pas. */
+            #page_cv ul li:not(:has(.cv-role)) .cv-title-row {
+                display: inline !important;
+            }
+
+            #page_cv ul li:not(:has(.cv-role)) .cv-subtitle::before {
+                content: ' — ';
+            }
+
+            #page_cv li .cv-title {
+                font-size: 10.5px !important;
+            }
+
+            #page_cv li .cv-year {
+                font-size: 8px !important;
+                padding: 0 3px !important;
+                margin-right: 4px !important;
+            }
+
+            #page_cv li .cv-badge {
+                font-size: 8px !important;
+                padding: 0 3px !important;
+            }
+
+            #page_cv li .cv-role,
+            #page_cv li .cv-subtitle {
+                display: inline !important;
+                font-size: 9.5px !important;
+                margin: 0 !important;
+            }
+
+            /* Le tiret n'articule QUE deux textes présents. Un court métrage
+               n'a pas de rôle : sans ce sélecteur d'adjacence, sa ligne
+               s'ouvrirait sur un tiret orphelin (« — De et avec Max Laure »). */
+            #page_cv li .cv-role+.cv-subtitle::before {
+                content: ' — ';
+            }
+
+            /* L'AUTEUR REVIENT SUR LA LIGNE DU TITRE. Sous 767 px, une
+               règle impose un saut avant l'incise entre parenthèses, pour
+               que les lignes du CV aient toutes la même hauteur sur un
+               écran étroit (voir .cv-title>span::before). La page imprimée
+               fait 703 px et hérite donc de cette règle — alors qu'elle a
+               tout l'espace, et que l'égalité des hauteurs n'a plus lieu
+               d'être : c'est justement ce qu'on cherche à défaire ici.
+               Une ligne de moins par spectacle, onze fois. */
+            #page_cv li .cv-title>span::before {
+                content: none !important;
+            }
+
+            /* LA RANGÉE REDEVIENT UNE RANGÉE. `.cv-row-toggle *` remet tous
+               les descendants à `display: revert` — indispensable pour que
+               la rubrique Théâtre survive au masquage global des <button>,
+               mais cela emporte aussi le flex de la ligne, et le badge
+               « En tournée » tombait alors sur une ligne à lui seul. On le
+               rétablit ici, calé sur la ligne de base du titre. */
+            #page_cv li .cv-row-toggle>div {
+                display: flex !important;
+                align-items: baseline !important;
+                justify-content: space-between !important;
+                gap: 6px !important;
+            }
+
+            #page_cv li .cv-row-toggle>div>div:first-child {
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+            }
+
+            #page_cv li .cv-row-toggle>div>div+div {
+                flex: 0 0 auto !important;
+            }
+
+            /* — LE PROFIL —
+               Déjà sur trois colonnes (voir la règle .grid plus haut) : il
+               ne lui reste qu'à respirer moins fort. */
+            #page_cv #cv-profil-grid,
+            #page_cv section .grid {
+                gap: 0.3rem !important;
+            }
+
+            #page_cv section .grid p,
+            #page_cv section .grid span,
+            #page_cv section .grid div {
+                line-height: 1.3 !important;
+            }
         }
 
         /* ── TÉLÉCHARGER LE CV ───────────────────────────────────────────

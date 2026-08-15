@@ -528,19 +528,57 @@ Le pire risque restant est donc un fichier versionné en retard, visible
 **seulement en aperçu de branche**. D'où la ligne du tableau en haut de ce
 document : après une modification du CV, on relance.
 
-### Ce qui n'a pas été touché, et qu'on pourra vouloir toucher
+### Le CV tient sur UNE page — et il faut qu'il continue
 
-- **Le trou en bas de la première page.** `section { page-break-inside: avoid }`
-  (dans le bloc `@media print`) garde chaque rubrique d'un seul tenant : quand
-  « Courts-métrages » ne tient pas dans ce qui reste, elle part entière à la
-  page suivante et laisse un blanc d'environ 15 %. C'est un choix, pas un
-  défaut — et c'est déjà ce que fait Ctrl+P aujourd'hui. Retirer la règle
-  comblerait le blanc au prix de titres séparés de leurs lignes.
-- **« Voir le book » s'imprime.** Le bloc `@media print` masque tous les
-  `button`, puis rétablit `header button` — sans quoi le portrait disparaîtrait
-  du CV. Ce bouton-là passe dans la brèche, et se retrouve dans le PDF où il ne
-  mène nulle part. Une exception nominative le retirerait, du PDF comme du
-  papier.
+Un CV de comédien se lit debout, en pile, entre deux auditions. La seconde page
+ne se lit pas : elle se perd, ou elle attend. Le CV en faisait deux ; il en fait
+une.
+
+Tout est dans le bloc `@media print` d'`index.html`, section
+**« LE CV TIENT SUR UNE PAGE »** — **l'écran ne bouge pas d'un pixel**. Et rien
+n'a été retiré : la coupe porte sur des retours à la ligne, pas sur du contenu.
+Un contrôle automatique le vérifie (55 fragments de CV relus dans le DOM, tous
+retrouvés dans le PDF).
+
+La cible est **1032 px** : la hauteur utile d'un A4 à 96 dpi, marges de 12 mm
+retirées. Où sont passés les 504 px de trop :
+
+| | avant | après | comment |
+|---|---|---|---|
+| En-tête | 250 | 132 | mis en ligne, portrait à 68 px, « Voir le book » retiré |
+| Théâtre (8 lignes) | 628 | 271 | **cinq lignes par spectacle ramenées à deux** |
+| Courts-métrages | 156 | 78 | une seule ligne : pas de rôle à afficher |
+| Profil | 237 | 208 | interlignage et gouttières resserrés |
+| Formation | 156 | 78 | une seule ligne, et le `py-2` enfin atteint |
+| **total** | **1536** | **854** | il reste **178 px** de marge |
+
+Trois pièges rencontrés, tous dus à des règles qui existaient pour de bonnes
+raisons ailleurs :
+
+- **La page imprimée fait 703 px de large, donc moins que le seuil `md`** de
+  Tailwind : elle héritait de la mise en page du téléphone (portrait empilé,
+  tout centré) alors que le papier a sa propre largeur. D'où l'en-tête remis en
+  ligne à la main.
+- **`.cv-title>span::before { content: "\A" }`** impose un retour avant
+  l'auteur sous 767 px, pour que les lignes du CV aient toutes la même hauteur
+  sur écran étroit. À l'impression, c'était une ligne perdue onze fois. Annulé.
+- **`.cv-row-toggle *  { display: revert !important }`** existe pour que la
+  rubrique Théâtre survive au masquage global des `<button>` — mais `revert`
+  emporte aussi le flex de la ligne, et le badge « En tournée » tombait seul sur
+  sa ligne. La rangée est rétablie explicitement, calée sur la ligne de base.
+
+**Si le CV redéborde un jour** (Adrien joue, la liste s'allonge), les 178 px de
+marge valent environ six spectacles. Ensuite, dans l'ordre du moins au plus
+coûteux : resserrer `Profil`, passer Théâtre sur une seule ligne comme les
+courts métrages, ou mettre Courts-métrages et Formation côte à côte sur deux
+colonnes. Le mesureur qui a servi à tout cela tient en quarante lignes — il
+relit les hauteurs sous le média `print` à 703 px, et c'est la seule mesure qui
+compte.
+
+> `:not(:has(.cv-role))` sélectionne les lignes sans rôle — courts métrages et
+> formations — pour les mettre sur une seule ligne. Un navigateur qui ne connaît
+> pas `:has()` ignore la règle et retombe sur deux lignes : le CV déborde d'un
+> cheveu, il ne casse pas.
 
 ---
 
