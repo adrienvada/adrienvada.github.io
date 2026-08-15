@@ -63,6 +63,62 @@ dix minutes ; les suivantes ont toutes échoué sur un laconique « Page build
 failed ». `actions/checkout` ne prend que le dernier commit : le poids de
 l'historique ne compte plus.
 
+### ⚠️ L'historique a été réécrit — ce que ça fait aux copies de travail
+
+L'historique du dépôt a été dégraissé (les originaux des photos de spectacle y
+avaient vécu, et un objet git ne s'oublie jamais). Une réécriture de ce genre
+**refabrique tous les commits** : même travail, même message, même date, mais
+une empreinte neuve. L'ancienne chaîne et la nouvelle n'ont plus un seul commit
+en commun.
+
+Conséquence : **toute copie locale antérieure à la réécriture est piégée.** Elle
+ne se met pas à jour toute seule et ne dit pas qu'elle est périmée — elle se
+plaint d'avoir *divergé* :
+
+```
+$ git branch -vv
+  main   d0f398b [origin/main: ahead 56, behind 88] Univers : le palmarès…
+
+$ git merge origin/main
+fatal: refusing to merge unrelated histories
+```
+
+Ces deux messages sont trompeurs. Il n'y a ni travail à sauver, ni divergence :
+il y a une branche restée accrochée à l'ancienne chaîne. La preuve se fait en
+deux commandes — le même changement existe des deux côtés, sous deux empreintes :
+
+```bash
+git log --format='%h %s' origin/main | grep "<le message du commit>"
+git show <ancien> | git patch-id --stable   # → même patch-id
+git show <nouveau> | git patch-id --stable  # → que celui-ci
+```
+
+**Le remède est de supprimer la branche locale, jamais de forcer.**
+
+```bash
+git branch -D main        # rien n'est perdu : le travail est déjà en amont
+git checkout main         # git la recrée depuis origin/main, au bon endroit
+```
+
+`--force` sur une poussée « pour régler ça » écraserait la nouvelle chaîne avec
+l'ancienne — c'est-à-dire remettrait en ligne un site d'avant, et lui rendrait
+les 441 Mo de photos qu'on venait de lui retirer.
+
+Pour repérer d'un coup si une branche locale est du mauvais côté :
+
+```bash
+for b in $(git for-each-ref --format='%(refname:short)' refs/heads/); do
+  git merge-base "$b" origin/main >/dev/null 2>&1 \
+    || echo "⚠ $b est sur l'ancienne chaîne"
+done
+```
+
+Aucun ancêtre commun = ancienne chaîne = à supprimer.
+
+> Le cas s'est produit le 15 août 2026 : une branche `main` locale, créée avant
+> la réécriture, ramenait l'état du site au 5 août à chaque `git checkout main`.
+> Elle a été supprimée ; les autres branches locales étaient saines.
+
 ### ⚠️ Une poussée toutes les dix minutes, pas plus
 
 **GitHub Pages n'accepte que 10 publications par heure.** Au-delà, les

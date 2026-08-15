@@ -21,9 +21,10 @@
 #  Et surtout : ce workflow a des JOURNAUX. Le bâtisseur historique ne
 #  disait que « Page build failed », sans un mot de plus.
 #
-#  L'historique reste à dégraisser un jour (git filter-repo, puis une
-#  poussée forcée qui réécrit toutes les empreintes) — mais c'est une
-#  opération à faire tête reposée, et elle n'est plus urgente.
+#  ⚠ L'HISTORIQUE A DEPUIS ÉTÉ DÉGRAISSÉ, et donc réécrit : toutes les
+#  empreintes de commit ont changé. Le chiffre de 441 Mo ci-dessus vaut
+#  pour l'avant. Ce que cela implique pour les copies de travail est
+#  expliqué dans README-build.md, section « L'historique a été réécrit ».
 # ============================================================
 name: Publier le site
 
