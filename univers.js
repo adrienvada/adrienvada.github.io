@@ -177,7 +177,7 @@ const SHOW_UNIVERSES = {
         ]
     },
 
-    "L'imaginaire forcé": {
+    "L’imaginaire forcé": {
         slug: 'imaginaireforce',
         title: 'L’Imaginaire forcé',
         subtitle: 'd’après Le Mariage forcé, de Molière',
@@ -189,7 +189,7 @@ const SHOW_UNIVERSES = {
             line: 'rgba(212,130,60,0.20)', glow: 'rgba(212,130,60,0.30)'
         },
         genre: 'Comédie',
-        synopsis: ['Quand la censure académique leur impose Le Mariage Forcé à la place du Malade Imaginaire, des comédiens font déraper la lecture jusqu\'à transformer la classe en un chantier théâtral et musical jubilatoire.'],
+        synopsis: ['Quand la censure académique leur impose Le Mariage forcé à la place du Malade imaginaire, des comédiens font déraper la lecture jusqu’à transformer la classe en un chantier théâtral et musical jubilatoire.'],
         sequence: []
     },
 
@@ -205,7 +205,7 @@ const SHOW_UNIVERSES = {
         castNote: 'Jeu et mise en scène collective.',
         credit: 'Arnaud Bertereau',
         genre: 'Théâtre documentaire',
-        synopsis: ['Inspirés d’affaires réelles, des extraits de procès révèlent la complexité d’une justice en souffrance face à l\'ampleur des violences conjugales.'],
+        synopsis: ['Inspirés d’affaires réelles, des extraits de procès révèlent la complexité d’une justice en souffrance face à l’ampleur des violences conjugales.'],
         sequence: [
             {
                 chapter: '1h05',
@@ -229,7 +229,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [4, 13, 14, 12], cadre: { 4: '18% 25%', 13: '30% 15%', 14: '36% 28%', 12: '52% 25%' }, c: ['', '', ''],
-                aside: ['Le spectacle, sobre, peut se jouer en tribunal comme en salle municipale ou établissement scolaire : la salle d\'audience est recrée.']
+                aside: ['Le spectacle, sobre, peut se jouer en tribunal comme en salle municipale ou établissement scolaire : la salle d’audience est recrée.']
             },
             {
                 q: ['« Peine perdue, alors ? » — « Non, au contraire : on travaille, on continue. »'],
@@ -237,14 +237,14 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [6], cadre: { 6: '57% 28%' }, c: [''],
-                over: ['« La justice est imparfaite parce qu’elle est humaine... »'],
+                over: ['« La justice est imparfaite parce qu’elle est humaine… »'],
                 overAt: 'bas'
             },
             {
-                text: '« ... Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps. »  '
+                text: '« … Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps. »  '
             },
             {
-                p: [25, 26], cadre: { 25: '55% 50%', 26: '33% 45%' }, c: ['Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen', 'Débat suivant une représentation au tribunal d\'Avignon', ''],
+                p: [25, 26], cadre: { 25: '55% 50%', 26: '33% 45%' }, c: ['Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen', 'Débat suivant une représentation au tribunal d’Avignon', ''],
             },
         ]
     },
@@ -298,7 +298,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [1, 2, 3], cadre: { 1: '48% 30%', 2: '35% 40%', 3: '60% 40%' }, c: ['', '', ''],
-                aside: ['Après la représentation, un échange permet d\'effectuer un travail de sensibilisation.']
+                aside: ['Après la représentation, un échange permet d’effectuer un travail de sensibilisation.']
             },
             {
                 q: ['« Pourquoi suis-je violent ? »'],
@@ -310,7 +310,7 @@ const SHOW_UNIVERSES = {
         ]
     },
 
-    "Cléophène, d'après Rodogune": {
+    "Cléophène, d’après Rodogune": {
         slug: 'cleophene',
         // Le CV écrit le titre entier ; en Cinzel 5rem il tiendrait sur
         // trois lignes. Le titre se réduit donc au nom, le reste passe
@@ -328,7 +328,7 @@ const SHOW_UNIVERSES = {
         credit: 'Arnaud Bertereau',
         genre: 'Tragédie',
         synopsis: ['Royaume de Pyrie, 124 av. J-C.',
-            'Lorsqu’un roi meurt et qu’il est père de jumeaux, lequel des deux est l’aîné et doit prendre sa place ? La reine veuve Cléophène, dépositaire du pouvoir, doit céder sa couronne, et elle seule connaît le secret de son successeur...'],
+            'Lorsqu’un roi meurt et qu’il est père de jumeaux, lequel des deux est l’aîné et doit prendre sa place ? La reine veuve Cléophène, dépositaire du pouvoir, doit céder sa couronne, et elle seule connaît le secret de son successeur…'],
         sequence: [
             {
                 chapter: '1h30',
@@ -340,10 +340,10 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [5], cadre: { 5: '15% 25%' },
-                c: ['Les Crescite poursuivent le travail de l\'alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir.'],
+                c: ['Les Crescite poursuivent le travail de l’alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir.'],
             },
             {
-                q: ['« Je vois dans le hasard tout les biens que j\'espère,', 'Mais ne puis être heureux sans le malheur d\'un frère. »'],
+                q: ['« Je vois dans le hasard tout les biens que j’espère,', 'Mais ne puis être heureux sans le malheur d’un frère. »'],
                 by: 'Antiochus, Acte I'
             },
             {
@@ -352,7 +352,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [20, 15, 17], cadre: { 20: '42% 30%', 15: '48% 15%', 17: '46% 22%' }, c: ['', ''],
-                aside: ['La princesse Rodogune, fille du roi ennemi, est tenue captives. Les deux princes héritiers l\'aiment, contre la loi de leur mère.']
+                aside: ['La princesse Rodogune, fille du roi ennemi, est tenue captives. Les deux princes héritiers l’aiment, contre la loi de leur mère.']
             },
             {
                 q: ['« Je puis, comme je veux, tourner le droit d’aînesse,', 'Et donne à ton rival ton sceptre et ta maîtresse. »'],
@@ -360,12 +360,12 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [21], cadre: { 21: '38% 32%' },
-                c: ['La mise en scène, volontairement spectaculaire, dépayse le spectateur dans un univers où sons et lumières soutiennent l\'immersion dans un drame antique épique.'],
+                c: ['La mise en scène, volontairement spectaculaire, dépayse le spectateur dans un univers où sons et lumières soutiennent l’immersion dans un drame antique épique.'],
 
             },
             {
                 p: [10, 13], cadre: { 10: '50% 65%', 13: '42% 45%' }, c: ['', ''],
-                aside: ['Corneille excelle lorqu\'il n\'est pas corseté par les unités ou la bienséance.']
+                aside: ['Corneille excelle lorsqu’il n’est pas corseté par les unités ou la bienséance.']
             },
             {
                 p: [7], cadre: { 7: '78% 50%' }, c: ['La rigueur sur le travail du vers sera la même que sur Bérénice.'],
@@ -380,11 +380,11 @@ const SHOW_UNIVERSES = {
                 over: ['« Jusqu’où serez-vous', 'semblables ? »'], overAt: 'droite'
             },
             {
-                text: 'Dans ce travail de la compagnie Crescite, les rebondissements vont arriver à chaque acte. L\'acte final termine en apothéose quasi burlesque, et donne à cette adaptation de Rodogune de Corneille toute sa dimension shakespearienne.'
+                text: 'Dans ce travail de la compagnie Crescite, les rebondissements vont arriver à chaque acte. L’acte final termine en apothéose quasi burlesque, et donne à cette adaptation de Rodogune de Corneille toute sa dimension shakespearienne.'
             },
             {
                 video: 'https://www.youtube.com/watch?v=bTr685C1YL8',
-                c: ['Bande annonce — Théâtre l\'Étincelle, Ville de Rouen']
+                c: ['Bande annonce — Théâtre l’Étincelle, Ville de Rouen']
             },
         ]
     },
@@ -421,7 +421,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [3, 1, 4], cadre: { 3: '80% 25%', 1: '33% 25%', 4: '12% 35%' }, c: ['', '', ''],
-                aside: ['« Quand la foudre frappe,', 'elle entre en toi en faisant un trou... »']
+                aside: ['« Quand la foudre frappe,', 'elle entre en toi en faisant un trou… »']
             },
             {
                 p: [23], cadre: { 23: '25% 40%' }, c: ['La cellule familiale, subterfuge qui permet de passer l’humain au microscope.']
@@ -432,13 +432,13 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [7], cadre: { 7: '70% 15%' },
-                over: ['« La foudre frappe n\’importe où,', 'n\’importe qui, n\’importe quand :', 'il n\'y a aucun sens à ça.\»'], overAt: 'droite'
+                over: ['« La foudre frappe n’importe où,', 'n’importe qui, n’importe quand :', 'il n’y a aucun sens à ça. »'], overAt: 'droite'
             },
             { p: [8, 26], cadre: { 8: '32% 25%', 26: '72% 28%' }, c: ['', ''] },
             { p: [2], cadre: { 2: '72% 30%' }, c: ['Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure.'] },
 
             {
-                text: 'Fulguré.e.s est un spectacle qui met à l’épreuve l\'humain dans sa capacité à se débattre et à trouver des réponses face à la peur, à l’incompréhensible et à l’injustice.'
+                text: 'Fulguré.e.s est un spectacle qui met à l’épreuve l’humain dans sa capacité à se débattre et à trouver des réponses face à la peur, à l’incompréhensible et à l’injustice.'
             },
         ]
     },
@@ -455,9 +455,9 @@ const SHOW_UNIVERSES = {
         cast: ['Angelo Jossec', 'Manon Rivier', 'Lauren Toulin', 'Adrien Vada'],
         credit: 'Olivier Héron',
         genre: 'Tragédie',
-        synopsis: 'Rome, an 79. \n Huit jours après la mort soudaine de l\'empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
+        synopsis: 'Rome, an 79.\nHuit jours après la mort soudaine de l’empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
         sequence: [
-            { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d\'un des plus beaux poèmes en alexandrin' },
+            { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d’un des plus beaux poèmes en alexandrin' },
             { p: [2], cadre: { 2: '55% 55%' }, c: ['Un triangle amoureux élevé au rang de la tragédie.'] },
             {
                 q: ['« Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice. »'], by: 'Bérénice, acte V'
@@ -466,11 +466,11 @@ const SHOW_UNIVERSES = {
             {
                 p: [12, 5], cadre: { 12: '58% 15%', 5: '30% 45%' }, c: ['Bérénice, Antiochus, Acte III', 'Paulin, Titus, Bérénice, Acte II'],
                 // REMPLISSAGE
-                aside: 'Une des plus belles partitions classique pour un personnage féminin qui sert « d\'exemple à l\'univers ».'
+                aside: 'Une des plus belles partitions classique pour un personnage féminin qui sert « d’exemple à l’univers ».'
             },
             {
                 q: '« Depuis huit jours je règne ; et jusques à ce jour,\n' +
-                    'Qu\'ai-je fait pour l\'honneur ? J\'ai tout fait pour l\'amour. »', by: 'Titus, acte IV'
+                    'Qu’ai-je fait pour l’honneur ? J’ai tout fait pour l’amour. »', by: 'Titus, acte IV'
             },
             {
                 p: [1, 9, 11], cadre: { 1: '48% 15%', 9: '68% 20%', 11: '48% 18%' }, c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
@@ -478,7 +478,7 @@ const SHOW_UNIVERSES = {
                 aside: 'La pureté des émotions transposée en thriller psychologique.'
             },
             {
-                p: [3], cadre: { 3: '62% 45%' }, c: ['Un travail au plus plus proche de l\'alexandrin racinien pour en éprouver la virtuosité.'],
+                p: [3], cadre: { 3: '62% 45%' }, c: ['Un travail au plus proche de l’alexandrin racinien pour en éprouver la virtuosité.'],
             },
             {
                 q: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »'],
@@ -512,7 +512,7 @@ const SHOW_UNIVERSES = {
         castNote: '* en alternance',
         credit: 'Clara Delmas',
         genre: 'Comédie',
-        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes. Déguisée en berger sous le nom de Ganymède, elle est accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d\'autre membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
+        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes. Déguisée en berger sous le nom de Ganymède, elle est accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d’autre membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
         sequence: [
             {
                 chapter: '2h',
@@ -520,10 +520,10 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [3],
-                over: ['« Le monde entier est un théâtre... »'], overAt: 'centre'
+                over: ['« Le monde entier est un théâtre… »'], overAt: 'centre'
             },
             {
-                q: ['« ...et tous les hommes et les femmes rien d’autre que des acteurs.', 'Ils ont leurs entrées et leurs sorties. »'],
+                q: ['« …et tous les hommes et les femmes rien d’autre que des acteurs.', 'Ils ont leurs entrées et leurs sorties. »'],
                 by: 'Jaques, ACTE II'
             },
             {
@@ -531,7 +531,7 @@ const SHOW_UNIVERSES = {
                 aside: 'Neuf comédiens incarnant gens de cour et paysans réunis dans la même forêt.'
             },
             {
-                p: [8], cadre: { 8: '38% 40%' }, c: ['Dans As you like it, le rythme surprend et change à chaque instant. C\'est lui qui doit nous emporter.'],
+                p: [8], cadre: { 8: '38% 40%' }, c: ['Dans As you like it, le rythme surprend et change à chaque instant. C’est lui qui doit nous emporter.'],
             },
             {
                 q: ['« Un humain au cours de sa vie joue plusieurs rôles,',
@@ -546,12 +546,12 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [15, 13], cadre: { 15: '50% 70%', 13: '40% 35%' },
-                c: ['Château de Villerville', 'Le Studio d\'Asnières'],
+                c: ['Château de Villerville', 'Le Studio d’Asnières'],
             },
         ]
     },
 
-    "L'Homme moderne": {
+    "L’Homme moderne": {
         slug: 'hommemoderne',
         kind: 'film',
         affiche: true,
@@ -583,7 +583,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [2, 3], cadre: { 2: '50% 40%', 3: '43% 31%' },
-                c: ['Le souvenir de Magali', 'L\'accueil de Melvin — épisode 1, Le date.']
+                c: ['Le souvenir de Magali', 'L’accueil de Melvin — épisode 1, Le date.']
             },
             {
                 q: ['« Je sais qu’il y a pas que ça qui compte.', 'Mais c’est important, non — d’assurer ? »'],
@@ -623,7 +623,7 @@ const SHOW_UNIVERSES = {
         ]
     },
 
-    "La peau des anges n'est pas si douce": {
+    "La peau des anges n’est pas si douce": {
         slug: 'peaudesanges',
         kind: 'film',
         affiche: true,
@@ -816,8 +816,18 @@ const SHOW_UNIVERSES = {
     //  sans casser l'autre.
     //
     //  L'index est construit une fois, à la première demande.
+    //  TOUTE APOSTROPHE VAUT L'APOSTROPHE DROITE, au m\u00eame titre que toute
+    //  espace vaut l'espace ordinaire, et pour la m\u00eame raison : \u00ab L'Homme
+    //  moderne \u00bb \u00e9crit avec la courbe et \u00ab L'Homme moderne \u00bb \u00e9crit avec la
+    //  droite d\u00e9signent le m\u00eame spectacle. Sans cette r\u00e8gle, corriger la
+    //  typographie d'un titre d'un seul c\u00f4t\u00e9 suffirait \u00e0 ce que son univers
+    //  ne s'ouvre plus \u2014 en silence, puisqu'une cl\u00e9 introuvable ne rend que
+    //  `null`. Les cl\u00e9s de SHOW_UNIVERSES peuvent donc rester telles qu'elles
+    //  sont pendant que l'affichage se soigne.
     const ESPACES = /[\s\u00a0\u202f\u2009\u2007\u2060]+/g;
-    const normaliserTitre = (t) => String(t || '').replace(ESPACES, ' ').trim();
+    const APOSTROPHES = /[\u2019\u02bc\u055a\uff07\u2018\u201b]/g;
+    const normaliserTitre = (t) => String(t || '')
+        .replace(ESPACES, ' ').replace(APOSTROPHES, "'").trim();
     let indexUnivers = null;
 
     function universeParTitre(brut) {
@@ -1558,13 +1568,23 @@ const SHOW_UNIVERSES = {
     // d'interrogation (« À la barre, peine perdue ? »), qu'il faudrait sinon
     // échapper — et une seule erreur d'échappement rendrait le spectacle
     // introuvable, silencieusement.
+    //
+    // LA COMPARAISON PASSE PAR normaliserTitre, COMME PARTOUT AILLEURS. Elle
+    // était la seule du fichier à comparer au caractère près, et cela a fini
+    // par se voir : le jour où les titres du CV sont passés à l'apostrophe
+    // courbe, les quatre spectacles dont le titre en porte une — L’imaginaire
+    // forcé, Cléophène, L’Homme moderne, La peau des anges — ont cessé de
+    // s'ouvrir par leur adresse. Le clic depuis le CV, lui, continuait de
+    // fonctionner : seule l'entrée en profondeur était morte, c'est-à-dire
+    // précisément le lien qu'on envoie à un directeur de casting.
     function liForSlug(slug) {
         if (!slug) return null;
         const cle = Object.keys(SHOW_UNIVERSES).find(k => SHOW_UNIVERSES[k].slug === slug);
         if (!cle) return null;
+        const vise = normaliserTitre(cle);
         return Array.prototype.find.call(
             document.querySelectorAll('.cv-item'),
-            li => li.dataset.cvShow === cle
+            li => normaliserTitre(li.dataset.cvShow) === vise
         ) || null;
     }
 

@@ -88,8 +88,8 @@ const SHOW_DATA = {
       type: "single",
       dateLabel: "18 déc. 2026",
       fullDate: "18 décembre 2026",
-      title: "Cléophène, d'après Rodogune",
-      location: "L'Eclat, Pont-Audemer (27)", city: "Pont-Audemer",
+      title: "Cléophène, d’après Rodogune",
+      location: "L’Éclat, Pont-Audemer (27)", city: "Pont-Audemer",
       time: "",
       bookingUrl: "",
       isSchool: false,
@@ -101,7 +101,7 @@ const SHOW_DATA = {
       type: "single",
       dateLabel: "26 janv. 2027",
       fullDate: "26 janvier 2027",
-      title: "Cléophène, d'après Rodogune",
+      title: "Cléophène, d’après Rodogune",
       location: "Le Forum, Falaise (14)", city: "Falaise",
       time: "",
       bookingUrl: "",
@@ -139,7 +139,7 @@ const SHOW_DATA = {
       type: "series",
       id: "panel-saintlo-cleophene",
       dateLabel: "29 - 30 janv. 2027",
-      title: "Cléophène, d'après Rodogune",
+      title: "Cléophène, d’après Rodogune",
       location: "Théâtre de la ville de Saint-Lô (50)", city: "Saint-Lô",
       shows: [
         {
@@ -164,7 +164,7 @@ const SHOW_DATA = {
       type: "single",
       dateLabel: "2 fév. 2027",
       fullDate: "2 février 2027",
-      title: "Cléophène, d'après Rodogune",
+      title: "Cléophène, d’après Rodogune",
       location: "La Ferme de Bel Ebat, Guyancourt (78)", city: "Guyancourt",
       time: "",
       bookingUrl: "",
@@ -230,18 +230,18 @@ const SHOW_DATA = {
   // -------------------------------------------------------------
   archives: {
     "Saison 2025 - 2026": [
-      { date: "13 mai 2026", title: "Cléophène, d'après Rodogune", location: "Salle Louis Jouvet, Rouen (76)", city: "Rouen" },
+      { date: "13 mai 2026", title: "Cléophène, d’après Rodogune", location: "Salle Louis Jouvet, Rouen (76)", city: "Rouen" },
       { date: "26 mars 2026", title: "Théâtre-forum", location: "UFR Santé, Rouen (76)", city: "Rouen" },
-      { date: "3 mars 2026", title: "Cléophène, d'après Rodogune", location: "Le Rive Gauche, St-Étienne-du-Rouvray (76)", city: "Saint-Étienne-du-Rouvray" },
+      { date: "3 mars 2026", title: "Cléophène, d’après Rodogune", location: "Le Rive Gauche, St-Étienne-du-Rouvray (76)", city: "Saint-Étienne-du-Rouvray" },
       { date: "15 janvier 2026", title: "Bérénice", location: "Lycée Le Corbusier, Saint-Étienne-du-Rouvray (76)", city: "Saint-Étienne-du-Rouvray" },
       { date: "18 décembre 2025", title: "Bérénice", location: "Lycée La Salle, Rouen (76)", city: "Rouen" },
-      { date: "9 décembre 2025", title: "Cléophène, d'après Rodogune", location: "L'Archipel, Granville (50)", city: "Granville" },
-      { date: "6 novembre 2025", title: "Bérénice", location: "Lycée Dumont d'Urville - Laplace, Caen (14)", city: "Caen" },
+      { date: "9 décembre 2025", title: "Cléophène, d’après Rodogune", location: "L’Archipel, Granville (50)", city: "Granville" },
+      { date: "6 novembre 2025", title: "Bérénice", location: "Lycée Dumont d’Urville - Laplace, Caen (14)", city: "Caen" },
       { date: "4 novembre 2025", title: "Bérénice", location: "Institut Saint-Lô, Saint-Lô (50)", city: "Saint-Lô" },
-      { date: "16 octobre 2025", title: "Cléophène, d'après Rodogune", location: "Théâtre Le Sillon, Petit-Couronne (76)", city: "Petit-Couronne" }
+      { date: "16 octobre 2025", title: "Cléophène, d’après Rodogune", location: "Théâtre Le Sillon, Petit-Couronne (76)", city: "Petit-Couronne" }
     ],
     "Saison 2024 - 2025": [
-      { date: "8 - 18 juillet 2025", title: "À la barre", location: "La Manufacture / Palais de justice d'Avignon (84)", city: "Avignon" },
+      { date: "8 - 18 juillet 2025", title: "À la barre", location: "La Manufacture / Palais de justice d’Avignon (84)", city: "Avignon" },
       { date: "25 juin 2025", title: "Audiences", location: "Festival théâtre à la cité - Quartier Saint-Sever, Rouen (76)", city: "Rouen" },
       { date: "10 juin 2025", title: "Audiences", location: "Canteleu (76)", city: "Canteleu" },
       { date: "11 mars 2025", title: "À la barre", location: "Hôtel de Ville de Rouen (76)", city: "Rouen" },
@@ -250,20 +250,20 @@ const SHOW_DATA = {
       { date: "17 janvier 2025", title: "Audiences", location: "Centre André Malraux, Rouen (76)", city: "Rouen" },
       { date: "12 décembre 2024", title: "Bérénice", location: "Lycée Raymond Queneau, Yvetot (76)", city: "Yvetot" },
       { date: "6 décembre 2024", title: "Bérénice", location: "Lycée Jean-Baptiste de la Salle, Rouen (76)", city: "Rouen" },
-      { date: "29 novembre 2024", title: "Cléophène, d'après Rodogune", location: "Athanor, Guérande (44)", city: "Guérande" },
-      { date: "26 novembre 2024", title: "Cléophène, d'après Rodogune", location: "Théâtre Le Rayon Vert, Saint-Valéry-en-Caux (76)", city: "Saint-Valéry-en-Caux" },
+      { date: "29 novembre 2024", title: "Cléophène, d’après Rodogune", location: "Athanor, Guérande (44)", city: "Guérande" },
+      { date: "26 novembre 2024", title: "Cléophène, d’après Rodogune", location: "Théâtre Le Rayon Vert, Saint-Valéry-en-Caux (76)", city: "Saint-Valéry-en-Caux" },
       { date: "25 novembre 2024", title: "À la barre", location: "Lycée les Buyères, Sotteville-lès-Rouen (76)", city: "Sotteville-lès-Rouen" },
       { date: "22 novembre 2024", title: "À la barre", location: "Hotel de ville de Notre-Dame de Bondeville (76)", city: "Notre-Dame-de-Bondeville" },
       { date: "21 novembre 2024", title: "Bérénice", location: "Lycée Vallée du Cailly, Déville-lès-Rouen (76)", city: "Déville-lès-Rouen" },
       { date: "18 novembre 2024", title: "Audiences", location: "Collège Boieldieu, Rouen (76)", city: "Rouen" },
       { date: "2 novembre 2024", title: "Bérénice", location: "La Rotonde, Fauville-en-Caux (76)", city: "Fauville-en-Caux" },
-      { date: "10 - 11 octobre 2024", title: "Cléophène, d'après Rodogune", location: "Théâtre Le Rayon Vert, Rouen (76)", city: "Rouen" }
+      { date: "10 - 11 octobre 2024", title: "Cléophène, d’après Rodogune", location: "Théâtre Le Rayon Vert, Rouen (76)", city: "Rouen" }
     ],
     "Saison 2023 - 2024": [
       { date: "14 juin 2024", title: "Bérénice", location: "Centre culturel Voltaire, Déville-lès-Rouen (76)", city: "Déville-lès-Rouen" },
-      { date: "1 juin 2024", title: "À la barre", location: "Historial Jeanne d'Arc, Rouen (76)", city: "Rouen" },
+      { date: "1 juin 2024", title: "À la barre", location: "Historial Jeanne d’Arc, Rouen (76)", city: "Rouen" },
       { date: "25 - 26 mai 2024", title: "À la barre", location: "Palais de justice de Rouen (76)", city: "Rouen" },
-      { date: "9 avril 2024", title: "L'Avenir de la planète se joue maintenant", location: "École élémentaire Pierre Corneille, Bolbec (76)", city: "Bolbec" },
+      { date: "9 avril 2024", title: "L’Avenir de la planète se joue maintenant", location: "École élémentaire Pierre Corneille, Bolbec (76)", city: "Bolbec" },
       { date: "26 mars 2024", title: "Bérénice", location: "Lycée Jean-Baptiste de La Salle, Rouen (76)", city: "Rouen" },
       { date: "1 février 2024", title: "Bérénice", location: "Collège Yard, Buchy (76)", city: "Buchy" },
       { date: "25 janvier 2024", title: "Bérénice", location: "Lycée Vallée du Cailly, Déville-lès-Rouen (76)", city: "Déville-lès-Rouen" },

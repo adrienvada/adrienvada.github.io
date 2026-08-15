@@ -53,10 +53,14 @@ const path = require('path');
 const MONTAGE = require('../univers-montage.js');
 
 // Toute espace — insécable, fine, insécable étroite — vaut une espace
-// ordinaire. Voir universeFor() dans univers.js : c'est la même règle, et
-// elle doit le rester.
+// ordinaire, et toute apostrophe vaut l'apostrophe droite. Voir
+// universeFor() dans univers.js : c'est la même règle, et elle doit le
+// rester. Sans la seconde moitié, soigner la typographie d'un titre d'un
+// seul côté détacherait sa page spectacle de sa ligne de CV — en silence.
 const ESPACES = /[\s\u00a0\u202f\u2009\u2007\u2060]+/g;
-const normaliserTitre = (t) => String(t || '').replace(ESPACES, ' ').trim();
+const APOSTROPHES = /[\u2019\u02bc\u055a\uff07\u2018\u201b]/g;
+const normaliserTitre = (t) => String(t || '')
+    .replace(ESPACES, ' ').replace(APOSTROPHES, "'").trim();
 
 const RACINE = path.join(__dirname, '..');
 const SITE = 'https://adrienvada.fr';
@@ -1467,7 +1471,8 @@ function main() {
         // SHOW_UNIVERSES — et une espace insécable a déjà suffi à les
         // séparer. On rapproche donc sur le titre normalisé, comme le fait
         // universeFor() dans univers.js.
-        const cv = cvParTitre[cle] || cvParTitre[normaliserTitre(cle)] || {};
+        const ligneCv = cvParTitre[cle] || cvParTitre[normaliserTitre(cle)] || null;
+        const cv = ligneCv || {};
         const dossier = path.join(SORTIE, uni.slug);
         fs.mkdirSync(dossier, { recursive: true });
         fs.writeFileSync(path.join(dossier, 'index.html'), pageSpectacle(uni, cle, cv, SHOW_DATA));
@@ -1511,7 +1516,14 @@ function main() {
             accent: uni.cvAccent || (uni.palette && uni.palette.accent) || '',
             paletteBg: (uni.palette && uni.palette.bg) || '',
             paletteText: (uni.palette && uni.palette.text) || '',
-            cv: Boolean(cvParTitre[cle])
+            // LA MÊME RÉSOLUTION QUE CI-DESSUS, ET SURTOUT PAS UNE AUTRE.
+            // Ce booléen ne sert qu'au rapport de fin — « aucune ligne de CV
+            // appariée ». Il interrogeait `cvParTitre[cle]` sans normaliser,
+            // alors que la lecture réelle, elle, normalise : le jour où les
+            // deux écritures ont divergé, la page a été correctement
+            // fabriquée ET signalée comme orpheline. Une alarme qui se trompe
+            // coûte plus cher que pas d'alarme du tout.
+            cv: Boolean(ligneCv)
         });
     });
 

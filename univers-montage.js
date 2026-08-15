@@ -259,7 +259,7 @@ const UniversMontage = (function () {
         if (m) return 'vimeo:' + m[1];
         if (VIMEO_ID.test(s)) return 'vimeo:' + s;
         console.warn(`[univers] ${uni.slug} : vidéo « ${raw} » non reconnue — le bloc est ignoré. ` +
-            `Attendu : une adresse YouTube ou Vimeo, ou l'identifiant seul.`);
+            `Attendu : une adresse YouTube ou Vimeo, ou l’identifiant seul.`);
         return '';
     }
 

@@ -71,8 +71,8 @@
     //    trois derniers, que le freinage rend de nouveau lisibles.
     var ROLES = [
         'ANTIOCHUS', 'LE JUGE',
-        'STEVEN', 'SGANARELLE', 'TOUCHSTONE', 'TITUS ANDRONICUS', 'LE PROCUREUR', "L'ACCUSÉ",
-        'LE GREFFIER', "L'AVOCAT", 'LE NARRATEUR',
+        'STEVEN', 'SGANARELLE', 'TOUCHSTONE', 'TITUS ANDRONICUS', 'LE PROCUREUR', "L’ACCUSÉ",
+        'LE GREFFIER', "L’AVOCAT", 'LE NARRATEUR',
         'ARTHUR', 'INSPECTEUR TOUTOU', 'CYRANO', 'ROBERT', 'PONTAGNAC', 'SMIRNOV',
         'LE PROFESSEUR', 'LE MÉDECIN',
         'LE JEUNE MEC', 'JEREM', 'ADRIEN'
