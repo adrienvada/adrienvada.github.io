@@ -58,6 +58,33 @@ jobs:
       - name: Préparer Pages
         uses: actions/configure-pages@v5
 
+      # ────────────────────────────────────────────────────────────
+      #  LE CV EN PDF, REFAIT À CHAQUE PUBLICATION
+      # ────────────────────────────────────────────────────────────
+      #  Le fichier est versionné : il part de toute façon avec le
+      #  dépôt, et c'est lui que servent les aperçus Cloudflare. On le
+      #  refait ici pour qu'un oubli de `node build/generer-cv-pdf.js`
+      #  ne puisse pas laisser un CV périmé en ligne.
+      #
+      #  `continue-on-error` n'est pas une négligence : c'est le
+      #  contrat. Si Playwright, Chromium ou le rendu échouent un jour,
+      #  la publication continue et sert la version versionnée — un CV
+      #  d'une modification en retard vaut infiniment mieux qu'un site
+      #  qui ne se publie plus. Le journal, lui, gardera la trace du
+      #  ratage.
+      #
+      #  L'installation est GLOBALE, et non locale : le dossier à
+      #  empaqueter est la racine du dépôt telle quelle, et un
+      #  node_modules de 300 Mo y ferait un passager clandestin de plus
+      #  dans un site qui pèse déjà 67 Mo à distribuer. Le script sait
+      #  trouver une installation globale (voir chargerPlaywright).
+      - name: Refaire le CV en PDF
+        continue-on-error: true
+        run: |
+          npm install -g playwright
+          npx playwright install --with-deps chromium
+          node build/generer-cv-pdf.js
+
       - name: Empaqueter le site
         uses: actions/upload-pages-artifact@v3
         with:

@@ -15,6 +15,7 @@ périmé. Il affiche simplement l'état d'avant.
 | une classe Tailwind dans `index.html`, `404.html`, `dates.js`, `galerie.js` | [la commande Tailwind](#régénérer-stylescss-obligatoire-après-modification-des-classes) | `styles.css` |
 | **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml` |
 | une **ligne du CV** dans `index.html` — titre, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
+| une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
 | le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…` |
 | une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
 | la **signature** — un nouvel export reMarkable | `python3 build/signature-vers-svg.py <export.pdf>` | `signature.webp` + le bloc SVG à coller |
@@ -48,8 +49,10 @@ npx --yes serve -l 8080 .
 
 ## Publier
 
-Pousser sur `main` déclenche `.github/workflows/publier.yml`, qui dépose le
-dépôt tel quel sur GitHub Pages. Quelques secondes.
+Pousser sur `main` déclenche `.github/workflows/publier.yml`, qui refait le
+[CV en PDF](#le-cv-en-pdf-ressourcescv-adrien-vadapdf) puis dépose le dépôt tel
+quel sur GitHub Pages. Une minute environ, dont l'essentiel pour installer
+Chromium — et cette étape-là ne peut pas faire échouer la publication.
 
 **Ce n'était pas le cas avant août 2026**, et le changement a une raison. Le
 bâtisseur historique de Pages reclonait le dépôt ENTIER à chaque publication :
@@ -458,6 +461,86 @@ Les molettes de lisibilité, toutes gratuites :
 chaque particule s'écarte de son ancre d'un hasard qui lui est propre, donc on
 repasse sur le nuage autant de fois qu'il faut. La silhouette ne bouge pas,
 seule la densité monte.
+
+---
+
+## Le CV en PDF (`ressources/cv-adrien-vada.pdf`)
+
+Le bouton du CV appelait `window.print()`. Le libellé disait « Imprimer /
+PDF », donc rien n'était mensonger — mais ce n'était pas un fichier : il
+fallait traverser la boîte de dialogue du navigateur, choisir « Enregistrer au
+format PDF », et l'on repartait avec un document nommé `adrienvada.fr.pdf`.
+Sur iPhone, le même geste passe par la feuille de partage et demande trois
+manipulations.
+
+Or le métier fait circuler des CV en pièce jointe. Ce que reçoit un directeur
+de casting doit s'appeler `cv-adrien-vada.pdf`, et s'obtenir d'un seul geste.
+Le bouton est donc devenu un `<a download>` qui pointe sur un vrai fichier.
+
+```bash
+node build/generer-cv-pdf.js
+```
+
+**Rien de la mise en page n'est écrit dans le script.** Il ouvre le site dans
+le Chromium de Playwright et lui demande d'imprimer : le PDF sort du **même
+moteur**, sous les **mêmes règles `@media print`** que Ctrl+P — la palette
+claire réimposée quel que soit le thème, les tiroirs de spectacle écartés, les
+rôles longs qui passent à la ligne, le récit retiré. Corriger une de ces règles
+corrige le PDF du même coup.
+
+C'est pour cette raison qu'on n'a **pas** pris jsPDF ni html2pdf : 350 à 700 Ko
+de bibliothèque — plus que `intro.js`, `styles.css` et `mask-points.js`
+réunis — pour une mise en page approximative là où Chromium applique son propre
+moteur d'impression.
+
+### Trois précautions, dans le script
+
+- **`avIntroSeen` et `avTheme`** sont posés avant le premier rendu. Sans le
+  premier, on attendrait cinq secondes de rideau et le canevas des particules
+  tournerait pendant l'impression ; sans le second, le rendu à l'écran qui
+  précède le tirage chargerait les variables sombres.
+- **`document.fonts.ready`** : imprimer avant l'arrivée de Cinzel et Montserrat
+  donnerait un CV en police de repli, aux césures — donc à la pagination —
+  différentes.
+- **Le titre du document est réécrit** juste avant le tirage. Chromium recopie
+  `document.title` dans le champ `/Title` du PDF, et c'est lui que montrent
+  l'Aperçu de macOS, Acrobat et la liste des pièces jointes d'un courriel. Le
+  titre du site — « Dates, CV & démos » — promettrait des dates et des démos
+  que le fichier ne contient pas.
+
+### Pourquoi le fichier est versionné ET refait à la publication
+
+Les deux, et ce n'est pas une ceinture avec des bretelles :
+
+- **versionné**, parce que c'est lui que servent les aperçus Cloudflare (qui
+  ne lisent que le dépôt, sans rien exécuter), et parce qu'il est le filet du
+  site si la régénération échouait un jour ;
+- **refait à chaque publication** (`.github/workflows/publier.yml`), pour
+  qu'un oubli de relance ne puisse pas laisser un CV périmé **en ligne**.
+
+L'étape porte `continue-on-error: true`, et c'est délibéré : si Playwright,
+Chromium ou le rendu tombent, la publication continue et sert la version
+versionnée. Un CV en retard d'une modification vaut infiniment mieux qu'un site
+qui ne se publie plus — c'est exactement la panne que ce workflow a été écrit
+pour éviter.
+
+Le pire risque restant est donc un fichier versionné en retard, visible
+**seulement en aperçu de branche**. D'où la ligne du tableau en haut de ce
+document : après une modification du CV, on relance.
+
+### Ce qui n'a pas été touché, et qu'on pourra vouloir toucher
+
+- **Le trou en bas de la première page.** `section { page-break-inside: avoid }`
+  (dans le bloc `@media print`) garde chaque rubrique d'un seul tenant : quand
+  « Courts-métrages » ne tient pas dans ce qui reste, elle part entière à la
+  page suivante et laisse un blanc d'environ 15 %. C'est un choix, pas un
+  défaut — et c'est déjà ce que fait Ctrl+P aujourd'hui. Retirer la règle
+  comblerait le blanc au prix de titres séparés de leurs lignes.
+- **« Voir le book » s'imprime.** Le bloc `@media print` masque tous les
+  `button`, puis rétablit `header button` — sans quoi le portrait disparaîtrait
+  du CV. Ce bouton-là passe dans la brèche, et se retrouve dans le PDF où il ne
+  mène nulle part. Une exception nominative le retirerait, du PDF comme du
+  papier.
 
 ---
 

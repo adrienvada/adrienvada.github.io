@@ -798,19 +798,24 @@
             }
         }
 
-        /* ── IMPRIMER / PDF ──────────────────────────────────────────────
+        /* ── TÉLÉCHARGER LE CV ───────────────────────────────────────────
            Une commande, pas une invitation. C'était un aplat doré pleine
            largeur sur mobile : l'élément le plus fort de la page, posé
-           juste avant le CV — alors qu'il ne fait qu'ouvrir la boîte
-           d'impression du navigateur. Le CV lui-même doit être ce qu'on
-           voit en premier.
+           juste avant le CV — alors qu'il ne fait que livrer un fichier.
+           Le CV lui-même doit être ce qu'on voit en premier.
 
            Il devient donc un lien discret : pas d'aplat, texte en gris de
-           service, l'or réservé au survol. Le bouton existe en deux
-           exemplaires — la barre de navigation n'a pas de place pour lui
-           sur écran étroit — mais ils partagent cette seule classe, de
-           sorte qu'ils ne puissent plus diverger comme ils l'avaient fait
-           (deux libellés, deux tailles, deux fers).
+           service, l'or réservé au survol. Il existe en deux exemplaires —
+           la barre de navigation n'a pas de place pour lui sur écran
+           étroit — mais ils partagent cette seule classe, de sorte qu'ils
+           ne puissent plus diverger comme ils l'avaient fait (deux
+           libellés, deux tailles, deux fers).
+
+           Ce sont désormais des <a download> et non plus des <button> : le
+           soulignement des liens ne revient pas (la préflight Tailwind pose
+           `text-decoration: inherit`), et l'un comme l'autre restent hors
+           du PDF — celui du haut par le `nav` en no-print, celui du bas par
+           sa propre classe.
 
            Le `display` reste à Tailwind (`hidden md:inline-flex`) : ce bloc
            est chargé APRÈS styles.css, y écrire un display écraserait
@@ -3249,12 +3254,25 @@
                 </a>
             </div>
 
-            <!-- Imprimer / PDF — discret, à droite des onglets (voir .pdf-btn) -->
-            <button type="button" onclick="window.print()" id="pdf-download-btn" class="pdf-btn hidden md:inline-flex">
+            <!-- Télécharger le CV — discret, à droite des onglets (voir .pdf-btn).
+
+                 UN LIEN, ET NON UN BOUTON. Ce bouton appelait `window.print()` :
+                 le libellé était honnête, mais on repartait avec un fichier
+                 nommé d'après le domaine, au terme d'une boîte de dialogue —
+                 et de trois manipulations sur iPhone. Le métier d'Adrien fait
+                 circuler des CV en pièce jointe : ce que reçoit un directeur
+                 de casting doit s'appeler `cv-adrien-vada.pdf`.
+
+                 Le fichier est fabriqué par build/generer-cv-pdf.js, avec le
+                 moteur d'impression de Chromium et les MÊMES règles @media
+                 print que Ctrl+P. Il est versionné, et régénéré à chaque
+                 publication : il ne peut pas dater. -->
+            <a href="/ressources/cv-adrien-vada.pdf" download="cv-adrien-vada.pdf" id="pdf-download-btn"
+                class="pdf-btn hidden md:inline-flex">
                 <svg class="ico" aria-hidden="true">
                     <use href="#i-solid-file-pdf"></use>
-                </svg> Imprimer / PDF
-            </button>
+                </svg> Télécharger le CV
+            </a>
         </nav>
 
         <!-- MAIN PAGES WRAPPER -->
@@ -3263,15 +3281,17 @@
             <!-- PAGE 1: CV -->
             <div id="page_cv" class="page active space-y-4">
                 <h2 class="sr-only">Curriculum Vitae</h2>
-                <!-- Imprimer / PDF, version mobile : la barre d'onglets prend
-                     toute la largeur sur écran étroit, le bouton ne peut pas
-                     y tenir. Même classe, même allure — seule la place change. -->
+                <!-- Télécharger le CV, version mobile : la barre d'onglets prend
+                     toute la largeur sur écran étroit, le lien ne peut pas
+                     y tenir. Même classe, même allure — seule la place change.
+                     C'est ici que le vrai fichier compte le plus : sur iPhone,
+                     l'ancien `window.print()` passait par la feuille de partage. -->
                 <div class="pdf-btn-row flex justify-end md:hidden no-print">
-                    <button type="button" onclick="window.print()" class="pdf-btn inline-flex">
+                    <a href="/ressources/cv-adrien-vada.pdf" download="cv-adrien-vada.pdf" class="pdf-btn inline-flex">
                         <svg class="ico" aria-hidden="true">
                             <use href="#i-solid-file-pdf"></use>
-                        </svg> Imprimer / PDF
-                    </button>
+                        </svg> Télécharger le CV
+                    </a>
                 </div>
 
                 <!-- SECTION 1.1: THÉÂTRE -->
