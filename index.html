@@ -6545,21 +6545,42 @@
             // Les durées des démos ne sont chargées qu'à l'ouverture de l'onglet Voix
             if (pageId === 'demos_voix') primeAudioMetadata();
 
-            // DÉFILER JUSQU'À LA PAGE, PAS JUSQU'AU DOCUMENT. Un `scrollTo(top:0)`
-            // visait le haut du DOCUMENT — au premier clic sur un onglet, la page
-            // ciblée est encore `display: none` au moment du clic natif du lien
-            // (le saut natif du navigateur ne peut donc rien faire sur un élément
-            // sans position), et seul ce `scrollTo` agissait : la vue passait
-            // au-dessus même de l'en-tête. Au clic suivant sur le MÊME onglet, le
-            // hash ne change pas, `showPage` n'est pas rappelé, et c'est alors le
-            // saut natif — cette fois efficace, la page étant déjà visible — qui
-            // aligne le haut de la page avec le haut de la fenêtre : la bonne
-            // position. `scrollIntoView` reproduit ce bon comportement nous-mêmes,
-            // dès le premier clic, sans dépendre de l'état du lien natif.
-            if (activePage) {
-                activePage.scrollIntoView({ block: 'start', behavior: animate ? 'smooth' : 'auto' });
-            } else {
+            // DÉFILER JUSQU'À LA PAGE, PAS JUSQU'AU DOCUMENT — mais l'en-tête se
+            // replie EN MÊME TEMPS (bio-collapse, --dur-panel : 400ms) et déplace
+            // la page ciblée pendant que ce défilement est en cours : une cible
+            // calculée une seule fois ne suit pas ce mouvement, et l'atterrissage
+            // se fait au milieu ou en bas de la page plutôt qu'à son début. Même
+            // remède qu'à la fermeture d'un univers (voir univers.js, « Refermer
+            // un univers rend la page où elle était ») : on réaffirme la position
+            // image par image le temps que l'en-tête se stabilise, et on lâche
+            // prise dès le premier geste de l'utilisateur.
+            if (!activePage) {
                 window.scrollTo({ top: 0, behavior: animate ? 'smooth' : 'auto' });
+            } else if (!animate) {
+                activePage.scrollIntoView({ block: 'start', behavior: 'auto' });
+            } else {
+                const html = document.documentElement;
+                const glissementInitial = html.style.scrollBehavior;
+                html.style.scrollBehavior = 'auto';   // sinon chaque saut s'anime tout seul (.scroll-smooth)
+
+                const jusqua = Date.now() + 420; // --dur-panel (400ms) + marge
+                let rendu = false;
+                const GESTES = ['wheel', 'touchstart', 'keydown', 'pointerdown'];
+                const rendreLaMain = () => {
+                    if (rendu) return;
+                    rendu = true;
+                    html.style.scrollBehavior = glissementInitial;
+                    GESTES.forEach(g => window.removeEventListener(g, rendreLaMain));
+                };
+                GESTES.forEach(g => window.addEventListener(g, rendreLaMain, { passive: true, once: true }));
+
+                const insister = () => {
+                    if (rendu) return;
+                    activePage.scrollIntoView({ block: 'start', behavior: 'instant' });
+                    if (Date.now() < jusqua) requestAnimationFrame(insister);
+                    else rendreLaMain();
+                };
+                insister();
             }
             revealVisibleSections();
         }
