@@ -2905,6 +2905,19 @@
     <!-- MAIN CONTAINER -->
     <div class="max-w-4xl mx-auto px-4 md:px-6 py-6 relative z-10 flex flex-col min-h-screen justify-between">
 
+        <!-- ── BANDEAU « PROCHAINEMENT » ──
+             Tout en haut de page, avant même l'en-tête : un CV se consulte une
+             fois, une affiche se reconsulte. Jusqu'ici, savoir qu'Adrien joue
+             le 22 octobre demandait un clic sur un onglet — autant dire que
+             personne ne le savait. Le bandeau lit la MÊME source que la page
+             Dates (dates.js, via splitUpcoming) : rien n'est saisi deux fois,
+             et il ne peut donc pas la contredire.
+             Posé `hidden` : c'est renderNextDate() qui l'ouvre, et seulement
+             s'il reste une représentation à venir. Une saison qui se termine
+             le fait disparaître toute seule, sans intervention.
+             `no-print` : la version imprimée est un CV, pas une affiche. -->
+        <div id="next-date-banner" hidden class="no-print mb-5 bio-collapse"></div>
+
         <!-- HEADER (Light Luxury Style) -->
         <header
             class="glass-card rounded-xl p-4 md:p-5 mb-5 shadow-sm border border-stone-200/50 hover:border-luxury-gold/30 transition duration-500">
@@ -3103,18 +3116,6 @@
                 </button>
             </div>
         </header>
-
-        <!-- ── BANDEAU « PROCHAINEMENT » ──
-             Un CV se consulte une fois ; une affiche se reconsulte. Jusqu'ici,
-             savoir qu'Adrien joue le 22 octobre demandait un clic sur un
-             onglet — autant dire que personne ne le savait. Le bandeau lit la
-             MÊME source que la page Dates (dates.js, via splitUpcoming) : rien
-             n'est saisi deux fois, et il ne peut donc pas la contredire.
-             Posé `hidden` : c'est renderNextDate() qui l'ouvre, et seulement
-             s'il reste une représentation à venir. Une saison qui se termine
-             le fait disparaître toute seule, sans intervention.
-             `no-print` : la version imprimée est un CV, pas une affiche. -->
-        <div id="next-date-banner" hidden class="no-print mb-5 bio-collapse"></div>
 
         <!-- NAVIGATION TABS (Splitted buttons) -->
         <!-- Sentinelle : un trait de rien du tout, juste au-dessus de la barre.
