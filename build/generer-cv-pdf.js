@@ -172,9 +172,18 @@ function servirLeDepot() {
         //    réimposent déjà la palette claire, mais le rendu à l'écran
         //    qui précède l'impression chargerait sinon les variables
         //    sombres, et certaines images décoratives avec.
+        //
+        //  `avIntroSeen` EST POSÉ DANS LES DEUX STOCKAGES, à dessein. Le
+        //  garde-fou a lu sessionStorage, puis localStorage — et ce jour-là
+        //  le rideau s'est remis à jouer pendant le tirage sans que rien ne
+        //  le dise : le PDF restait juste, mais il portait le canevas des
+        //  particules en image de fond, 1280 × 1600, et pesait quatre fois
+        //  son poids. Écrire les deux coûte une ligne et survit au prochain
+        //  changement d'avis, dans un sens comme dans l'autre.
         await page.addInitScript(() => {
             try {
                 sessionStorage.setItem('avIntroSeen', '1');
+                localStorage.setItem('avIntroSeen', '1');
                 localStorage.setItem('avTheme', 'light');
             } catch (e) { }
         });
