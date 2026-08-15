@@ -6454,13 +6454,26 @@
         //  et c'est le genre de faux qu'un moteur reprend tel quel. Le tiret
         //  est cherché ENTOURÉ D'ESPACES, sinon « CDN de Normandie-Rouen »
         //  perdrait la moitié de son nom.
+        // Sites officiels des compagnies/structures, confirmés par Adrien —
+        // absent d'ici, on ne met pas d'`url` plutôt que d'en deviner une.
+        const SITE_ORGANISATEUR = {
+            'Théâtre des Crescite': 'https://crescite.fr/',
+            'CDN de Normandie-Rouen': 'https://www.cdn-normandierouen.fr/',
+            'Compagnie Alchimie': 'https://compagnie-alchimie.fr/',
+            'Compagnie Bloomsbury': 'https://labloomsbury.wixsite.com/compagnie',
+        };
+
         function organisateursDuSpectacle(li) {
             const brut = li?.querySelector('.cv-subtitle')?.textContent || '';
             const noms = brut.split('/')
                 .map(s => s.replace(/\s+/g, ' ').trim().split(/ [—–] /)[0].trim())
                 .filter(Boolean);
             if (!noms.length) return null;
-            const org = noms.map(name => ({ "@type": "Organization", name }));
+            const org = noms.map(name => {
+                const o = { "@type": "Organization", name };
+                if (SITE_ORGANISATEUR[name]) o.url = SITE_ORGANISATEUR[name];
+                return o;
+            });
             return org.length === 1 ? org[0] : org;
         }
 
