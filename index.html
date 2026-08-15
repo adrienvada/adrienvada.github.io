@@ -6545,19 +6545,26 @@
             // Les durées des démos ne sont chargées qu'à l'ouverture de l'onglet Voix
             if (pageId === 'demos_voix') primeAudioMetadata();
 
-            // DÉFILER JUSQU'À LA PAGE, PAS JUSQU'AU DOCUMENT — mais l'en-tête se
-            // replie EN MÊME TEMPS (bio-collapse, --dur-panel : 400ms) et déplace
-            // la page ciblée pendant que ce défilement est en cours : une cible
-            // calculée une seule fois ne suit pas ce mouvement, et l'atterrissage
-            // se fait au milieu ou en bas de la page plutôt qu'à son début. Même
-            // remède qu'à la fermeture d'un univers (voir univers.js, « Refermer
-            // un univers rend la page où elle était ») : on réaffirme la position
-            // image par image le temps que l'en-tête se stabilise, et on lâche
-            // prise dès le premier geste de l'utilisateur.
-            if (!activePage) {
+            // DEUX DÉFILEMENTS DIFFÉRENTS SELON QU'ON ARRIVE OU QU'ON CLIQUE.
+            // `animate=false` ne sert QU'AU TOUT PREMIER CHARGEMENT (le seul appel
+            // ainsi plus bas) : on arrive sur adrienvada.fr par la porte d'entrée,
+            // l'en-tête et le bandeau « Prochainement » doivent être visibles —
+            // c'est le haut du DOCUMENT qu'il faut, quelle que soit la page visée.
+            // `animate=true` couvre tous les clics ultérieurs, CV compris : on
+            // change de contenu à l'intérieur d'un site déjà vu, donc c'est le
+            // haut de LA PAGE ciblée qu'il faut, l'en-tête n'a plus à revenir.
+            //
+            // Ce second cas doit en plus suivre l'en-tête qui se replie EN MÊME
+            // TEMPS (bio-collapse, --dur-panel : 400ms) et déplace la page ciblée
+            // pendant que ce défilement est en cours : une cible calculée une
+            // seule fois ne suit pas ce mouvement, et l'atterrissage se fait au
+            // milieu ou en bas de la page plutôt qu'à son début. Même remède qu'à
+            // la fermeture d'un univers (voir univers.js, « Refermer un univers
+            // rend la page où elle était ») : on réaffirme la position image par
+            // image le temps que l'en-tête se stabilise, et on lâche prise dès le
+            // premier geste de l'utilisateur.
+            if (!activePage || !animate) {
                 window.scrollTo({ top: 0, behavior: animate ? 'smooth' : 'auto' });
-            } else if (!animate) {
-                activePage.scrollIntoView({ block: 'start', behavior: 'auto' });
             } else {
                 const html = document.documentElement;
                 const glissementInitial = html.style.scrollBehavior;
