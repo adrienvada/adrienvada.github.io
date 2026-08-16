@@ -1192,10 +1192,23 @@ ajouter de `Disallow` sur ce dossier.**
 
 ## Mesure d'audience
 
-Umami (compte européen), balise dans le `<head>` d'`index.html`. Sans cookie,
-sans identifiant persistant, sans recoupement entre sites : la mesure reste
-dans le cadre que la CNIL exempte de consentement, et le site n'a donc pas de
-bandeau à imposer en premier écran.
+Umami (compte européen), balise dans le `<head>` de **toutes** les pages. Sans
+cookie, sans identifiant persistant, sans recoupement entre sites : la mesure
+reste dans le cadre que la CNIL exempte de consentement, et le site n'a donc
+pas de bandeau à imposer en premier écran.
+
+**Où vit la balise.** Trois endroits, et pas un de plus :
+
+| Page | Écrite par |
+|---|---|
+| `index.html` | à la main, avec l'interrupteur (voir plus bas) |
+| `404.html` | à la main |
+| `/spectacles/` et les onze pages spectacle | `build/generer-pages-spectacles.js`, constante `MESURE` |
+
+Ne pas oublier une page en ajoutant une page : pendant longtemps `index.html`
+était seule à compter, alors que les pages spectacle sont précisément celles
+qu'on fabrique pour être trouvées — douze adresses du sitemap sur treize ne
+disaient rien.
 
 Tout passe par **`track(nom, details)`** — aucun appel direct à `umami`
 ailleurs dans le code, pour n'avoir qu'un endroit à changer le jour où l'on
@@ -1209,13 +1222,48 @@ Deux façons de relever un geste :
 | **Déclarative** | `data-track="nom"` sur un lien ou un bouton, `data-track-detail="…"` en option. Fonctionne aussi sur ce qui est fabriqué après coup (dates, bandeau, filtres). |
 | **Explicite** | `track('nom', { … })` là où le geste n'est pas un clic. |
 
-Événements en place : `entree` (onglet d'arrivée), `intro` (coupée ou menée au
-sceau, et durée), `univers_ouvert` / `univers_ferme` (spectacle, durée de
-lecture), `demo_ecoute` (jalons 25 / 50 / 75 / 100 %, une seule fois par démo
-et par visite), `date_agenda`, `banner_next_date`.
+Événements en place. Ce qu'on a **regardé** :
+
+`entree` (onglet d'arrivée), `intro` (coupée ou menée au sceau, et durée),
+`univers_ouvert` / `univers_ferme` (spectacle, durée de lecture), `demo_ecoute`
+(jalons 25 / 50 / 75 / 100 %, une seule fois par démo et par visite).
+
+Ce qu'on a **fait** — les gestes qui sortent du site, et les seuls qui disent
+qu'un directeur de casting a fini de regarder :
+
+`contact_mail` (`en-tête` ou `pied` — l'e-mail figure deux fois, et l'on veut
+savoir lequel travaille), `cv_pdf` (`bureau` ou `mobile`), `fiche_pro`
+(`agences-artistiques`, `filmmakers`), `reseau` (`instagram`, `linkedin`,
+`spotify`), `demo_youtube`, `date_agenda`, `date_booking`, `banner_next_date`.
 
 **Ne jamais transmettre autre chose que ce que la page affiche déjà** : noms de
 spectacle, noms de démo. Rien qui identifie qui que ce soit.
+
+### Ne pas se compter soi-même
+
+`adrienvada.fr/?sansmesure` coupe la mesure sur l'appareil, `?sansmesure=0` la
+rétablit. Une adresse, donc un signet : la méthode officielle d'Umami passe par
+la console du navigateur, ce qui sur un téléphone n'est pas une manœuvre qu'on
+refait volontiers. Tant que c'est coupé, un petit mot passe en bas de l'écran
+à chaque visite — un interrupteur qu'on ne voit pas est un interrupteur auquel
+on ne croit pas.
+
+Trois verrous, posés ensemble parce qu'aucun des deux premiers n'a pu être
+vérifié depuis l'atelier (le proxy n'atteint pas `cloud.umami.is`) :
+
+1. `umami.disabled` — le verrou d'Umami, qui coupe les pages vues. Le stockage
+   local étant commun au domaine, il vaut d'un coup pour les quatorze pages.
+2. `data-before-send="avAvantEnvoi"` sur la balise d'`index.html` — Umami
+   demande son avis avant chaque envoi.
+3. le garde en tête de `track()` — le seul démontrable : cette fonction est
+   l'unique point de sortie du site.
+
+Le verrou nº 2 existe parce que le nº 1 est [rapporté comme n'arrêtant pas les
+événements sur mesure](https://github.com/umami-software/umami/issues/3031) —
+or ce site n'est presque que ça.
+
+Ça n'efface pas le passé, et ça ne vaut que sur l'appareil et le navigateur où
+l'on s'est armé. Vider ses données le désarme.
 
 **`data-domains="adrienvada.fr"`** sur la balise : la mesure ne compte que le
 domaine public. Le même `index.html` est aussi servi par les aperçus de branche

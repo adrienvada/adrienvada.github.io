@@ -22,6 +22,109 @@
             document.documentElement.setAttribute('data-theme', t);
         })();
 
+        // ════════════════════════════════════════════════════════════════
+        //  L'INTERRUPTEUR DE MESURE — ne pas se compter soi-même
+        //  ----------------------------------------------------------------
+        //  Adrien est de loin le visiteur le plus assidu de son site : il
+        //  le relit, il le montre, il vérifie une date. Chacun de ces
+        //  passages gonfle les chiffres qu'il consulte ensuite pour savoir
+        //  si le site sert à quelque chose — une mesure qui se mesure
+        //  elle-même ne dit plus rien.
+        //
+        //  POURQUOI PAS SIMPLEMENT LA MÉTHODE OFFICIELLE. L'outil propose
+        //  un drapeau, `umami.disabled`, qu'on pose à la console. Deux
+        //  défauts, et le second est rédhibitoire ici : ouvrir une console
+        //  sur un iPhone n'est pas une manœuvre qu'on refait de gaieté de
+        //  cœur, et ce drapeau est rapporté comme n'arrêtant PAS les
+        //  événements sur mesure (umami-software/umami#3031) — or ce site
+        //  n'est presque que ça : `intro`, `univers_ouvert`, `demo_ecoute`,
+        //  `cv_pdf`… Adrien cesserait de compter comme visiteur tout en
+        //  continuant à polluer tous les gestes.
+        //
+        //  TROIS VERROUS INDÉPENDANTS, parce qu'aucun ne se laisse vérifier
+        //  d'ici (le proxy de développement n'atteint pas cloud.umami.is,
+        //  donc le script réellement servi n'a pas pu être lu) :
+        //    1. `umami.disabled` — le verrou de l'outil lui-même, qui coupe
+        //       les pages vues, et le fait sur TOUT le domaine : les onze
+        //       pages spectacle, le répertoire et la page d'erreur n'ont
+        //       rien à porter de plus, le stockage local est commun.
+        //    2. `data-before-send` sur la balise — l'outil demande son avis
+        //       à `avAvantEnvoi` avant chaque envoi, quel qu'il soit.
+        //    3. le garde en tête de `track()` — celui-là est démontré : la
+        //       fonction est le SEUL point de sortie du site, aucun appel
+        //       direct à l'outil nulle part ailleurs.
+        //  Si l'un des deux premiers se révélait sans effet, les autres
+        //  tiendraient seuls.
+        //
+        //  ON L'ARME PAR UNE ADRESSE, ET NON PAR UNE CONSOLE :
+        //      adrienvada.fr/?sansmesure     coupe la mesure sur l'appareil
+        //      adrienvada.fr/?sansmesure=0   la rétablit
+        //  Un signet sur le téléphone suffit. Le paramètre est retiré de
+        //  l'URL dans la foulée : il n'a pas à traîner dans l'historique,
+        //  ni à partir dans un lien partagé.
+        //
+        //  ET IL SE VOIT. Un interrupteur qu'on ne voit pas est un
+        //  interrupteur auquel on ne croit pas : tant que la mesure est
+        //  coupée, un petit mot passe en bas de l'écran à chaque visite,
+        //  trois secondes et demie. C'est le seul moyen de savoir, six mois
+        //  plus tard et sans console, que ce téléphone-là est toujours
+        //  muet — et de comprendre du premier coup d'œil pourquoi les
+        //  chiffres sont retombés si l'on s'est armé par mégarde. Un
+        //  visiteur ordinaire n'a pas le drapeau et ne voit jamais rien.
+        //
+        //  CE QUE ÇA NE FERA PAS : effacer le passé, ni valoir sur un
+        //  appareil où l'on ne s'est pas armé. Le stockage local est propre
+        //  à un navigateur ; vider ses données le désarme.
+        // ════════════════════════════════════════════════════════════════
+        (function () {
+            var CLE = 'av.sansMesure';
+            function lire(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+            function poser(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+            function oter(k) { try { localStorage.removeItem(k); } catch (e) { } }
+
+            var params = new URLSearchParams(location.search);
+            var bascule = null;
+            if (params.has('sansmesure')) {
+                var v = (params.get('sansmesure') || '').toLowerCase();
+                bascule = (v === '0' || v === 'non' || v === 'off') ? 'reprise' : 'coupure';
+                if (bascule === 'coupure') { poser(CLE, '1'); poser('umami.disabled', '1'); }
+                else { oter(CLE); oter('umami.disabled'); }
+                params.delete('sansmesure');
+                var reste = params.toString();
+                history.replaceState(null, '', location.pathname + (reste ? '?' + reste : '') + location.hash);
+            }
+
+            var muet = !!lire(CLE);
+            window.avSansMesure = function () { return muet; };
+
+            // L'outil appelle ceci avant chaque envoi. Rendre la charge, c'est
+            // laisser partir ; rendre autre chose, c'est annuler.
+            window.avAvantEnvoi = function (type, charge) { return muet ? false : charge; };
+
+            if (!muet && bascule !== 'reprise') return;
+            var mot = bascule === 'reprise'
+                ? 'Mesure rétablie sur cet appareil.'
+                : 'Mesure coupée sur cet appareil.';
+            addEventListener('DOMContentLoaded', function () {
+                var d = document.createElement('div');
+                d.textContent = mot;
+                // Styles en dur : ce mot doit s'afficher même si la feuille de
+                // style n'a pas chargé, et il n'a rien à faire dans Tailwind
+                // pour trois secondes et demie par visite.
+                d.setAttribute('style', 'position:fixed;left:12px;bottom:12px;z-index:2147483647;'
+                    + 'background:#17140f;color:#bfa98a;border:1px solid rgba(191,169,138,.35);'
+                    + 'border-radius:6px;padding:6px 10px;font:500 11px/1.3 Montserrat,system-ui,sans-serif;'
+                    + 'letter-spacing:.04em;box-shadow:0 4px 14px rgba(0,0,0,.35);pointer-events:none;'
+                    + 'opacity:0;transition:opacity .4s ease');
+                document.body.appendChild(d);
+                requestAnimationFrame(function () { d.style.opacity = '1'; });
+                setTimeout(function () {
+                    d.style.opacity = '0';
+                    setTimeout(function () { d.remove(); }, 500);
+                }, 3500);
+            }, { once: true });
+        })();
+
         // L'ANCRE D'ARRIVÉE EST MISE DE CÔTÉ AVANT QUE LE NAVIGATEUR NE S'EN
         // SERVE. Arriver sur adrienvada.fr/#demos_voix lui demande de faire
         // défiler jusqu'au conteneur portant cet identifiant. Ce défilement
@@ -116,7 +219,7 @@
          compte rien.
          ══════════════════════════════════════════════════════════════ -->
     <script defer src="https://cloud.umami.is/script.js" data-website-id="23c34c7a-c28c-4b5b-b237-a154139b62da"
-        data-domains="adrienvada.fr"></script>
+        data-domains="adrienvada.fr" data-before-send="avAvantEnvoi"></script>
 
     <!-- Données structurées : fiche artiste (les représentations sont ajoutées par script depuis dates.js) -->
     <script type="application/ld+json">
@@ -5414,6 +5517,10 @@
 
         function track(nom, details) {
             try {
+                // Le troisième verrou de l'interrupteur (voir le <head>), et
+                // le seul dont on puisse démontrer la portée : cette fonction
+                // est l'unique point de sortie du site.
+                if (window.avSansMesure && window.avSansMesure()) return;
                 if (window.umami && typeof window.umami.track === 'function') {
                     window.umami.track(nom, details || undefined);
                 }
