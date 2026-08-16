@@ -52,6 +52,32 @@ const path = require('path');
 // séquence en une grille de photos.
 const MONTAGE = require('../univers-montage.js');
 
+// ════════════════════════════════════════════════════════════════
+//  LA BALISE DE MESURE
+//  Ces pages existent POUR ÊTRE TROUVÉES : c'est la raison d'être de ce
+//  script tout entier. Elles sont pourtant restées longtemps les seules
+//  du site à ne rien compter — douze adresses sur treize dans le
+//  sitemap, et pas une ligne de statistique. Quelqu'un qui arrivait de
+//  Google sur /spectacles/berenice/ n'existait nulle part : on fabriquait
+//  la porte sans jamais regarder qui la passait.
+//
+//  Une seule écriture ici, pour les deux gabarits — la page de spectacle
+//  et le répertoire. Le jour où le compte change, il n'y a qu'un
+//  identifiant à toucher dans ce fichier, et non onze pages générées.
+//
+//  `data-domains` : indispensable, et pour la même raison qu'en page
+//  d'accueil — Cloudflare sert une copie de tout le site à chaque
+//  branche, et sans cette restriction chaque relecture de maquette
+//  gonflerait les chiffres du vrai domaine.
+// ════════════════════════════════════════════════════════════════
+const MESURE = `    <!-- Mesure d'audience — Umami, sans cookie ni identifiant persistant.
+         Balise identique à celle du <head> d'index.html ; elle est écrite
+         ici par build/generer-pages-spectacles.js, ne la modifiez pas à la
+         main. Voir README-build.md, § Mesure d'audience. -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="23c34c7a-c28c-4b5b-b237-a154139b62da"
+        data-domains="adrienvada.fr"></script>
+`;
+
 // Toute espace — insécable, fine, insécable étroite — vaut une espace
 // ordinaire, et toute apostrophe vaut l'apostrophe droite. Voir
 // universeFor() dans univers.js : c'est la même règle, et elle doit le
@@ -348,6 +374,7 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     <link rel="canonical" href="${urlPage}">
     <meta name="theme-color" content="${esc(p.bg || '#0a0907')}">
 
+${MESURE}
     <meta property="og:type" content="article">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">
@@ -583,6 +610,8 @@ function pageRepertoire(fiches) {
         })();
     </script>
     <meta name="theme-color" content="#0a0907">
+
+${MESURE}
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">

@@ -8,6 +8,20 @@
     <meta name="theme-color" content="#0a0907">
     <title>Page introuvable — Adrien Vada</title>
 
+    <!-- Mesure d'audience — Umami, sans cookie ni identifiant persistant.
+         POURQUOI MESURER UNE PAGE D'ERREUR. C'est la seule du site dont le
+         contenu est une mauvaise nouvelle, et donc la seule qu'il faut
+         espérer voir vide. Sans balise, une adresse morte citée dans un
+         dossier de presse, un ancien lien de billetterie ou une faute de
+         frappe dans un QR code enverraient des gens dans le mur sans que
+         rien ne le signale — l'adresse demandée est justement ce que la
+         mesure enregistre, et c'est ce qui permet d'aller la réparer.
+         `data-domains` : mêmes raisons qu'ailleurs, les aperçus de branche
+         Cloudflare ne doivent rien peser. Voir README-build.md, § Mesure
+         d'audience. -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="23c34c7a-c28c-4b5b-b237-a154139b62da"
+        data-domains="adrienvada.fr"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Montserrat:wght@300;400;600;700&display=swap"
