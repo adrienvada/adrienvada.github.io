@@ -1442,7 +1442,19 @@
            l'encre. */
         .bio-handwritten {
             font-family: 'Caveat', 'Kalam', cursive;
-            font-weight: 500;
+            /* 400, ET C'EST LE PLANCHER DE LA FONTE — pas un choix parmi
+               d'autres. Caveat est déclarée `wght@400..700` : tout ce qu'on
+               écrirait en dessous est ramené à 400 par le navigateur.
+               Mesuré sur la phrase réelle, au fût moyen (longueur moyenne
+               des segments d'encre sur une ligne de balayage, à 200 px de
+               corps) : 700 donne 22,19 px, 500 en donnait 17,77, et 400
+               donne 15,60. Écrire 300 rend le chiffre de 400, au pixel
+               près — la preuve que l'axe est bridé.
+
+               Donc DOUZE POUR CENT de trait en moins, et pas un de plus.
+               Amincir de moitié demanderait de changer d'écriture, ce qui
+               est une autre décision que celle-ci. */
+            font-weight: 400;
             /* 1,15 rem — ET LE CHIFFRE VIENT DE L'ŒIL, PAS DU CORPS.
                Caveat a une hauteur d'x de 37 pour 100 de corps, quand
                Montserrat et Inter sont à 46 : à corps égal elle paraît un
