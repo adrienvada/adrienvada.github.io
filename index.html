@@ -1561,55 +1561,32 @@
             }
         }
 
-        /* ══ LE SIGNE QUI DIT « IL Y A UNE SUITE » ══════════════════════
+        /* ══ LA CORNE DE PAGE ══════════════════════════════════════════
            L'aperçu s'arrêtait au milieu d'un mot : l'interruption faisait
            l'invitation, et le bloc n'avait besoin d'aucune étiquette. La
-           phrase est maintenant entière, elle se referme sur son point — et
-           plus rien n'annonce le panneau qu'un clic ouvre. Au survol, le
-           filet doré le dit encore ; au doigt, rien.
+           phrase du téléphone est maintenant entière, refermée sur son
+           point — plus rien n'y annonçait le panneau qu'un clic ouvre. Au
+           survol, le filet doré le dit ; au doigt, rien.
 
-           Deux réponses sont ici, à comparer. Aucune n'écrit de mot :
-           un libellé sous une phrase manuscrite dirait tout haut ce que le
-           geste doit dire tout bas.
+           Le coin inférieur droit de la feuille est donc replié. Sur du
+           papier, un coin corné veut dire « il y a une suite » sans qu'on
+           ait rien à apprendre, et il appartient à la métaphore que le bloc
+           emploie déjà. Aucun mot n'est écrit : un libellé sous une phrase
+           manuscrite dirait tout haut ce que le geste doit dire tout bas.
 
-           ── A · LA LOUPE ──
-           `i-solid-expand`, qui sert DÉJÀ trois fois sur ce site : sur le
-           portrait qui ouvre le book, sur les photos d'univers et sur les
-           affiches. Il y veut dire « ceci s'ouvre en grand », et c'est
-           exactement ce que fait le récit. Pas de vocabulaire nouveau à
-           apprendre — c'est tout son intérêt.
+           DEUX PICTOGRAMMES ONT ÉTÉ ESSAYÉS AVANT, ET ÉCARTÉS. La loupe
+           servait déjà trois fois sur ce site — sur le portrait qui ouvre le
+           book, sur les photos d'univers, sur les affiches — où elle veut
+           dire « ceci s'ouvre en grand », ce qui était exactement juste.
+           Elle a été montée en aperçu, comparée, puis retirée : la corne dit
+           la même chose sans rien emprunter au vocabulaire des images, et
+           sans consommer un symbole du sprite. Le livre ouvert, lui, était
+           sémantiquement le meilleur — « lire » — mais il étiquette la
+           rubrique Livre Audio, sur cette même page : même dessin, deux
+           sens, un seul écran.
 
-           On avait d'abord pensé à `book-open`, sémantiquement plus juste
-           (« lire »). Il étiquette déjà la rubrique Livre Audio, sur cette
-           même page : même dessin, deux sens, un seul écran.
-
-           ── B · LA CORNE DE PAGE ──
-           Aucun pictogramme : le coin inférieur droit de la feuille est
-           replié. Sur du papier, un coin corné veut dire « il y a une
-           suite » sans qu'on ait rien à apprendre, et il appartient à la
-           métaphore que le bloc emploie déjà. Deux triangles : le fond de
-           page qui apparaît dans l'échancrure, et le dos du rabat, un ton
-           plus soutenu que la feuille.
-
-           LES DEUX VIVENT DANS LE DOM EN MÊME TEMPS, une classe décide
-           laquelle se montre. C'est ce qui permet de basculer de l'une à
-           l'autre sans recharger — voir le sélecteur d'aperçu, plus bas,
-           qui ne doit pas franchir la production. */
-        .recit-signe {
-            position: absolute;
-            right: 0.45rem;
-            bottom: 0.3rem;
-            font-size: 10px;
-            color: rgb(var(--c-gold) / 0.42);
-            pointer-events: none;
-            transition: color var(--dur-base) var(--ease-out);
-        }
-
-        /* La corne est portée par `::after` — `::before` tient déjà le grain
-           du papier. Le premier dégradé découpe le coin en y posant le fond
-           de page ; le second peint le rabat par-dessus, dans l'autre sens.
-           Le rayon inférieur droit est remis à zéro : une feuille qu'on
-           replie n'a plus d'angle arrondi à cet endroit. */
+           Elle est portée par `::after` ; `::before` tient déjà le grain du
+           papier. */
         .bio-handwritten-wrap::after {
             content: "";
             position: absolute;
@@ -1626,13 +1603,18 @@
                dessine, en trait d'un pixel sur la diagonale.
 
                LE PLI COURT EN « / », ET C'EST LE SEUL SENS JUSTE. Il a
-               d'abord couru en « \ » : la diagonale coupait alors le carré
-               en un triangle en haut à droite et un autre en bas à gauche,
-               si bien qu'aucun des deux n'était le COIN de la feuille. Une
-               corne se replie sur l'angle, pas en travers. Les trois
-               dégradés tournent donc d'un quart de tour : l'échancrure
+               d'abord couru dans l'autre : la diagonale coupait alors le
+               carré en un triangle en haut à droite et un autre en bas à
+               gauche, si bien qu'aucun des deux n'était le COIN de la
+               feuille. Une corne se replie sur l'angle, pas en travers. Les
+               trois dégradés tournent donc d'un quart de tour : l'échancrure
                occupe le bas-droit, le rabat le haut-gauche, et le pli les
-               sépare. */
+               sépare.
+
+               LES QUATRE ORIENTATIONS ONT ÉTÉ RENDUES CÔTE À CÔTE avant de
+               trancher, plutôt que déduites des angles : un dégradé à 135
+               degrés ne place pas ses moitiés là où le raisonnement le
+               promet, et on s'y était déjà trompé une fois. */
             background:
                 linear-gradient(135deg, transparent calc(50% - 0.5px), rgb(var(--c-gold) / 0.55) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
                 linear-gradient(135deg, transparent 0 50%, rgb(var(--c-surface)) 50%),
@@ -1641,26 +1623,6 @@
             pointer-events: none;
         }
 
-        /* LA LOUPE SE RÉSERVE SA VOIE. La phrase actuelle s'arrête bien
-           avant elle — vérifié au pixel, à 375 comme à 1280 px. Mais elle
-           est écrite en dur dans le balisage : le jour où on l'allonge d'un
-           mot, rien ne préviendrait, et le texte passerait sous le signe.
-           Une marge droite coûte quinze pixels et supprime la question. */
-        .signe-loupe .bio-handwritten-wrap {
-            padding-right: 1.5rem;
-        }
-
-        /* Une variante à la fois. */
-        .signe-loupe .bio-handwritten-wrap::after,
-        .signe-corne .recit-signe {
-            display: none;
-        }
-
-        @media (hover: hover) and (pointer: fine) {
-            .recit-appel:hover .recit-signe {
-                color: rgb(var(--c-gold-ink));
-            }
-        }
 
         .recit-appel:focus-visible {
             outline: 2px solid rgb(var(--c-gold));
@@ -3358,42 +3320,6 @@
             }
         }
 
-        /* ══ APERÇU SEULEMENT — À RETIRER AVANT LA PRODUCTION ═══════════
-           Ce sélecteur n'existe que pour trancher entre la loupe et la
-           corne. Il n'est relié à rien : la variante retenue se choisira en
-           gardant sa classe sur `.recit-appel` et en supprimant ce bloc,
-           son balisage et son script. Rien d'autre n'en dépend. */
-        #apercu-signe {
-            position: fixed;
-            z-index: 9998;
-            right: 12px;
-            bottom: 12px;
-            display: flex;
-            gap: 4px;
-            padding: 4px;
-            border-radius: 8px;
-            background: rgb(var(--c-surface));
-            border: 1px solid rgb(var(--c-s200));
-            box-shadow: 0 4px 14px rgb(0 0 0 / 0.14);
-            font: 700 10px/1 'Montserrat', sans-serif;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        #apercu-signe button {
-            padding: 6px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            color: rgb(var(--c-s500));
-            background: transparent;
-            border: 0;
-        }
-
-        #apercu-signe button[aria-pressed="true"] {
-            color: rgb(var(--c-on-gold));
-            background: rgb(var(--c-gold-ink));
-        }
-
     </style>
 </head>
 
@@ -3824,9 +3750,6 @@
                                         masque m’oblige à aller chercher.<span
                                             class="recit-suite"> J’ai vu Cyrano au cinéma quand
                                             j’avais…</span></span>
-                                    <svg class="recit-signe ico" aria-hidden="true">
-                                        <use href="#i-solid-expand"></use>
-                                    </svg>
                                 </span>
                             </button>
                         </div>
@@ -7962,37 +7885,6 @@
          c'est ce qui garantit qu'une page spectacle a le visage de son univers. -->
     <script src="univers-montage.js"></script>
     <script src="univers.js"></script>
-    <!-- ══ APERÇU SEULEMENT — À RETIRER AVANT LA PRODUCTION ══════════
-         Bascule entre les deux signes proposés pour l'aperçu de la bio.
-         La classe est posée sur `.recit-appel` et sur rien d'autre. -->
-    <div id="apercu-signe" role="group" aria-label="Aperçu : choix du signe">
-        <button type="button" data-signe="loupe" aria-pressed="true">Loupe</button>
-        <button type="button" data-signe="corne" aria-pressed="false">Corne</button>
-    </div>
-    <script>
-        (function () {
-            var appel = document.querySelector('.recit-appel');
-            var barre = document.getElementById('apercu-signe');
-            if (!appel || !barre) return;
-            var memoire = null;
-            try { memoire = localStorage.getItem('avApercuSigne'); } catch (e) { }
-            poser(memoire === 'corne' ? 'corne' : 'loupe');
-
-            function poser(quoi) {
-                appel.classList.remove('signe-loupe', 'signe-corne');
-                appel.classList.add('signe-' + quoi);
-                barre.querySelectorAll('button').forEach(function (b) {
-                    b.setAttribute('aria-pressed', String(b.dataset.signe === quoi));
-                });
-                try { localStorage.setItem('avApercuSigne', quoi); } catch (e) { }
-            }
-
-            barre.addEventListener('click', function (e) {
-                var b = e.target.closest('button[data-signe]');
-                if (b) poser(b.dataset.signe);
-            });
-        })();
-    </script>
 </body>
 
 </html>
