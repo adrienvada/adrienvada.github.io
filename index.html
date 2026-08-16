@@ -6554,23 +6554,31 @@
             // change de contenu à l'intérieur d'un site déjà vu, donc c'est le
             // haut de LA PAGE ciblée qu'il faut, l'en-tête n'a plus à revenir.
             //
-            // Ce second cas doit en plus suivre l'en-tête qui se replie EN MÊME
-            // TEMPS (bio-collapse, --dur-panel : 400ms) et déplace la page ciblée
+            // LA CIBLE DU CLIC EST LA BARRE D'ONGLETS, PAS LA PAGE. Onglet en
+            // haut de l'écran, encore dans son état normal (pas « collée » —
+            // voir suivreBarreCollante) : c'est ce cadrage qu'on veut retrouver
+            // à chaque clic, comme si on avait fait défiler jusque-là à la main.
+            //
+            // Ce cadrage doit en plus suivre l'en-tête qui se replie EN MÊME
+            // TEMPS (bio-collapse, --dur-panel : 400ms) et déplace la barre
             // pendant que ce défilement est en cours : une cible calculée une
-            // seule fois ne suit pas ce mouvement, et l'atterrissage se fait au
-            // milieu ou en bas de la page plutôt qu'à son début. Même remède qu'à
-            // la fermeture d'un univers (voir univers.js, « Refermer un univers
-            // rend la page où elle était ») : on réaffirme la position image par
-            // image le temps que l'en-tête se stabilise, et on lâche prise dès le
-            // premier geste de l'utilisateur.
-            if (!activePage || !animate) {
+            // seule fois ne suit pas ce mouvement, et l'atterrissage se fait
+            // trop bas, la barre pas encore remontée. Même famille de remède
+            // que pour la fermeture d'un univers (voir univers.js, « Refermer
+            // un univers rend la page où elle était ») — mais rattrapée en
+            // douceur, une fraction de l'écart à chaque image, plutôt que
+            // recalée d'un coup : ça suit une cible mouvante SANS le saut sec
+            // qu'un simple `scrollIntoView` répété donnerait, et ça ralentit
+            // naturellement en approchant, comme un vrai défilement animé.
+            const nav = document.getElementById('nav-barre');
+            if (!nav || !animate) {
                 window.scrollTo({ top: 0, behavior: animate ? 'smooth' : 'auto' });
             } else {
                 const html = document.documentElement;
                 const glissementInitial = html.style.scrollBehavior;
-                html.style.scrollBehavior = 'auto';   // sinon chaque saut s'anime tout seul (.scroll-smooth)
+                html.style.scrollBehavior = 'auto';   // sinon chaque pas s'anime tout seul (.scroll-smooth)
 
-                const jusqua = Date.now() + 420; // --dur-panel (400ms) + marge
+                const jusqua = Date.now() + 550; // --dur-panel (400ms) + marge d'amortissement
                 let rendu = false;
                 const GESTES = ['wheel', 'touchstart', 'keydown', 'pointerdown'];
                 const rendreLaMain = () => {
@@ -6581,13 +6589,19 @@
                 };
                 GESTES.forEach(g => window.addEventListener(g, rendreLaMain, { passive: true, once: true }));
 
-                const insister = () => {
+                const suivre = () => {
                     if (rendu) return;
-                    activePage.scrollIntoView({ block: 'start', behavior: 'instant' });
-                    if (Date.now() < jusqua) requestAnimationFrame(insister);
-                    else rendreLaMain();
+                    const cible = nav.getBoundingClientRect().top + window.scrollY;
+                    const ecart = cible - window.scrollY;
+                    if (Date.now() >= jusqua || Math.abs(ecart) < 0.5) {
+                        window.scrollTo({ top: cible, behavior: 'auto' });
+                        rendreLaMain();
+                        return;
+                    }
+                    window.scrollTo({ top: window.scrollY + ecart * 0.25, behavior: 'auto' });
+                    requestAnimationFrame(suivre);
                 };
-                insister();
+                suivre();
             }
             revealVisibleSections();
         }
