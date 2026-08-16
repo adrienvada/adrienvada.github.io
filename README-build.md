@@ -700,11 +700,12 @@ puis rejoint les archives le lendemain. Le champ `icsDate` (format
 
 ---
 
-## La barre d'onglets reste en haut (téléphone uniquement)
+## La barre d'onglets reste en haut (mobile et desktop)
 
-Sur petit écran, la barre se colle en haut au moment où elle allait sortir de
-l'écran. En haut de page, elle garde exactement son aspect habituel ; collée,
-elle prend un fond presque opaque et une ombre (`#nav-barre.est-collee`).
+Quelle que soit la taille de l'écran, la barre se colle en haut au moment où
+elle allait sortir de l'écran. En haut de page, elle garde exactement son
+aspect habituel ; collée, elle prend un fond presque opaque et une ombre
+(`#nav-barre.est-collee`).
 
 ⚠️ **Ne pas remettre `overflow-x: hidden` sur le `<body>`.** C'est ce qui
 empêchait `position: sticky` de fonctionner : `hidden` fait du `<body>` une
@@ -717,8 +718,7 @@ ils gardent le rognage et n'auront simplement pas la barre collante.
 L'état « collée » est détecté par une **sentinelle** placée juste au-dessus de
 la barre et surveillée par un `IntersectionObserver` (`suivreBarreCollante`) :
 aucun calcul à chaque pixel parcouru, et c'est le navigateur qui prévient au
-bon instant. L'observateur n'existe que sous 768 px, et se défait à la rotation
-de l'écran.
+bon instant.
 
 ---
 

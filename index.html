@@ -3152,13 +3152,14 @@
            définition, pour les deux. */
 
         /* ══════════════════════════════════════════════════════════════
-           LA BARRE D'ONGLETS RESTE EN HAUT — TÉLÉPHONE UNIQUEMENT
+           LA BARRE D'ONGLETS RESTE EN HAUT — MOBILE ET DESKTOP
            ══════════════════════════════════════════════════════════════
-           Sur un écran de téléphone, le CV est long et la barre disparaît au
-           bout de trois lignes : changer d'onglet demande alors de remonter
-           toute la page. Elle se colle donc en haut au moment précis où elle
-           allait sortir de l'écran — et pas avant : tant qu'on est en haut de
-           page, elle garde exactement l'aspect qu'elle a toujours eu.
+           Le CV est long, sur téléphone comme sur grand écran, et la barre
+           disparaît au bout de quelques lignes de défilement : changer
+           d'onglet demande alors de remonter toute la page. Elle se colle
+           donc en haut au moment précis où elle allait sortir de l'écran —
+           et pas avant : tant qu'on est en haut de page, elle garde
+           exactement l'aspect qu'elle a toujours eu.
 
            `position: sticky` fait tout le travail, à une condition qui a
            coûté du temps à trouver : AUCUN ANCÊTRE NE DOIT ÊTRE UNE BOÎTE DE
@@ -3168,56 +3169,51 @@
            `hidden` reste déclaré juste avant, pour les navigateurs qui ne
            connaissent pas encore `clip` (Safari d'avant 16) : ils gardent le
            rognage, ils n'auront simplement pas la barre collante.
-
-           Sur ordinateur, rien ne change : la barre est à portée de souris,
-           et la coller ne ferait que manger de la hauteur.
            ══════════════════════════════════════════════════════════════ */
         body {
             overflow-x: hidden;
             overflow-x: clip;
         }
 
-        @media (max-width: 767px) {
+        #nav-barre {
+            position: sticky;
+            /* PAS COLLÉE AU BORD : huit pixels de jour au-dessus d'elle.
+               À zéro, la barre semblait soudée à l'écran — une bande
+               d'interface plutôt qu'un élément de la page. Ce filet de
+               vide la fait FLOTTER : on voit le contenu défiler dessous
+               ET au-dessus, et l'ombre portée trouve enfin de la place
+               pour se lire. */
+            top: 8px;
+            /* Au-dessus du contenu qui défile dessous, très en dessous des
+               couches plein écran (book, vidéo, univers : 9999 et plus). */
+            z-index: 40;
+        }
+
+        /* Collée, elle flotte au-dessus du texte : il lui faut un fond qui
+           porte, et une ombre qui dise qu'elle est décollée de la page.
+           Au repos, aucune de ces deux règles ne s'applique. */
+        #nav-barre.est-collee {
+            /* Presque opaque, et non « translucide comme le reste » : sous
+               la barre défile du TEXTE, et six pour cent de transparence
+               suffisaient à le laisser fantômer derrière les onglets. Le
+               flou renforcé fait le reste — l'effet de verre demeure, la
+               lecture ne souffre plus. */
+            background: rgb(var(--c-surface) / 0.985);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            /* LE FILET ET LE HALO SUIVENT LA SALLE : regarder Bérénice
+               rosit aussi la barre. Le FOND, lui, ne bouge pas — du
+               texte défile dessous, et une barre teintée le rendrait
+               moins lisible pour un effet que personne n'a demandé. */
+            box-shadow: 0 8px 22px -10px rgb(0 0 0 / 0.55),
+                0 0 20px -8px color-mix(in srgb, var(--ambiance) 42%, transparent);
+            border-color: color-mix(in srgb, var(--ambiance) 30%, transparent);
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
             #nav-barre {
-                position: sticky;
-                /* PAS COLLÉE AU BORD : huit pixels de jour au-dessus d'elle.
-                   À zéro, la barre semblait soudée à l'écran — une bande
-                   d'interface plutôt qu'un élément de la page. Ce filet de
-                   vide la fait FLOTTER : on voit le contenu défiler dessous
-                   ET au-dessus, et l'ombre portée trouve enfin de la place
-                   pour se lire. */
-                top: 8px;
-                /* Au-dessus du contenu qui défile dessous, très en dessous des
-                   couches plein écran (book, vidéo, univers : 9999 et plus). */
-                z-index: 40;
-            }
-
-            /* Collée, elle flotte au-dessus du texte : il lui faut un fond qui
-               porte, et une ombre qui dise qu'elle est décollée de la page.
-               Au repos, aucune de ces deux règles ne s'applique. */
-            #nav-barre.est-collee {
-                /* Presque opaque, et non « translucide comme le reste » : sous
-                   la barre défile du TEXTE, et six pour cent de transparence
-                   suffisaient à le laisser fantômer derrière les onglets. Le
-                   flou renforcé fait le reste — l'effet de verre demeure, la
-                   lecture ne souffre plus. */
-                background: rgb(var(--c-surface) / 0.985);
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
-                /* LE FILET ET LE HALO SUIVENT LA SALLE : regarder Bérénice
-                   rosit aussi la barre. Le FOND, lui, ne bouge pas — du
-                   texte défile dessous, et une barre teintée le rendrait
-                   moins lisible pour un effet que personne n'a demandé. */
-                box-shadow: 0 8px 22px -10px rgb(0 0 0 / 0.55),
-                    0 0 20px -8px color-mix(in srgb, var(--ambiance) 42%, transparent);
-                border-color: color-mix(in srgb, var(--ambiance) 30%, transparent);
-            }
-
-            @media (prefers-reduced-motion: no-preference) {
-                #nav-barre {
-                    transition: background 240ms ease, box-shadow 240ms ease,
-                        border-color 240ms ease;
-                }
+                transition: background 240ms ease, box-shadow 240ms ease,
+                    border-color 240ms ease;
             }
         }
 
@@ -5906,7 +5902,7 @@
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  LA BARRE D'ONGLETS COLLÉE — téléphone uniquement
+        //  LA BARRE D'ONGLETS COLLÉE — mobile et desktop
         //  `position: sticky` colle la barre toute seule (voir la feuille de
         //  style) ; ce code ne sert qu'à SAVOIR qu'elle est collée, pour lui
         //  donner alors un fond qui porte et une ombre.
@@ -5921,28 +5917,10 @@
             const sentinelle = document.getElementById('nav-sentinelle');
             if (!barre || !sentinelle || !('IntersectionObserver' in window)) return;
 
-            // La barre ne colle que sous 768 px : inutile d'observer ailleurs.
-            const petitEcran = window.matchMedia('(max-width: 767px)');
-            let observateur = null;
-
-            const suivre = () => {
-                if (petitEcran.matches && !observateur) {
-                    observateur = new IntersectionObserver(
-                        ([e]) => barre.classList.toggle('est-collee', !e.isIntersecting),
-                        { threshold: 0 }
-                    );
-                    observateur.observe(sentinelle);
-                } else if (!petitEcran.matches && observateur) {
-                    observateur.disconnect();
-                    observateur = null;
-                    barre.classList.remove('est-collee');
-                }
-            };
-
-            suivre();
-            // Une rotation d'écran suffit à passer d'un cas à l'autre.
-            if (petitEcran.addEventListener) petitEcran.addEventListener('change', suivre);
-            else if (petitEcran.addListener) petitEcran.addListener(suivre);
+            new IntersectionObserver(
+                ([e]) => barre.classList.toggle('est-collee', !e.isIntersecting),
+                { threshold: 0 }
+            ).observe(sentinelle);
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -7466,8 +7444,7 @@
         const TAB_IDLE = ['text-stone-500', 'border-transparent'];
 
         // LE SEUIL : le défilement à partir duquel la barre d'onglets se colle
-        // en haut de l'écran (téléphone ; sur ordinateur elle reste dans le
-        // flux, et le seuil vaut alors simplement sa position).
+        // en haut de l'écran, mobile et desktop.
         //
         // On le mesure sur #nav-sentinelle, et JAMAIS sur la barre elle-même.
         // Une fois collée, la barre est peinte à `top` du bord de l'écran et
