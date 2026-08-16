@@ -3771,9 +3771,24 @@
                         </div>
                     </div>
 
-                    <!-- Contact : e-mail mis en avant, puis fiches et réseaux -->
+                    <!-- Contact : e-mail mis en avant, puis fiches et réseaux
+
+                         LES GESTES QUI SORTENT DU SITE SONT LES SEULS QUI
+                         COMPTENT VRAIMENT. Tout le reste — une visite, un
+                         onglet, une démo écoutée — dit qu'on a regardé. Écrire
+                         à Adrien, emporter son CV, ouvrir sa fiche Filmmakers :
+                         voilà les gestes d'un directeur de casting qui a fini
+                         de regarder et qui passe à la suite. C'était justement
+                         ce que la mesure ne voyait pas.
+                         Le même e-mail figure deux fois, ici et au pied de
+                         page ; `data-track-detail` les distingue, faute de
+                         quoi on ne saurait jamais lequel des deux travaille.
+                         Aucun de ces liens ne quitte l'onglet courant — un
+                         `mailto:` passe la main au logiciel de courrier, un
+                         `download` ne navigue pas, le reste ouvre un onglet
+                         neuf : le relevé part toujours avant. -->
                     <div class="border-t border-stone-200/60 pt-2.5 space-y-2">
-                        <a href="mailto:adrien.vada@gmail.com"
+                        <a href="mailto:adrien.vada@gmail.com" data-track="contact_mail" data-track-detail="en-tête"
                             class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-luxury-goldInk text-luxury-onGold text-xs font-bold font-montserrat tracking-wider uppercase hover:bg-luxury-goldDeep transition">
                             <svg class="ico text-[11px]" aria-hidden="true">
                                 <use href="#i-solid-envelope"></use>
@@ -3789,7 +3804,8 @@
                                 <div class="bio-collapse-inner">
                                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                                         <a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html"
-                                            target="_blank" rel="noopener"
+                                            target="_blank" rel="noopener" data-track="fiche_pro"
+                                            data-track-detail="agences-artistiques"
                                             class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
                                             <img src="ressources/images/design/agencesartistiques.png" alt="" width="11"
                                                 height="11" class="h-[11px] w-auto rounded-sm"> Agences Artistiques
@@ -3797,7 +3813,8 @@
                                         <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
                                         <a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian"
-                                            target="_blank" rel="noopener"
+                                            target="_blank" rel="noopener" data-track="fiche_pro"
+                                            data-track-detail="filmmakers"
                                             class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
                                             <img src="ressources/images/design/filmmakers.svg" alt="" width="11"
                                                 height="11" class="h-[11px] w-auto rounded-sm"> Filmmakers
@@ -3805,7 +3822,7 @@
                                         <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
                                         <a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank"
-                                            rel="noopener"
+                                            rel="noopener" data-track="reseau" data-track-detail="instagram"
                                             class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
                                             <img src="ressources/images/design/instagram.svg" alt="" width="11"
                                                 height="11" class="h-[11px] w-auto rounded-sm"> Instagram
@@ -3813,7 +3830,8 @@
                                         <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
                                         <a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/"
-                                            target="_blank" rel="noopener"
+                                            target="_blank" rel="noopener" data-track="reseau"
+                                            data-track-detail="linkedin"
                                             class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
                                             <img src="ressources/images/design/linkedin.svg" alt="" width="11"
                                                 height="11" class="h-[11px] w-auto rounded-sm"> LinkedIn
@@ -3923,7 +3941,7 @@
                  print que Ctrl+P. Il est versionné, et régénéré à chaque
                  publication : il ne peut pas dater. -->
             <a href="/ressources/cv-adrien-vada.pdf" download="cv-adrien-vada.pdf" id="pdf-download-btn"
-                class="pdf-btn hidden md:inline-flex">
+                data-track="cv_pdf" data-track-detail="bureau" class="pdf-btn hidden md:inline-flex">
                 <svg class="ico" aria-hidden="true">
                     <use href="#i-solid-file-pdf"></use>
                 </svg> Télécharger le CV
@@ -3942,7 +3960,8 @@
                      C'est ici que le vrai fichier compte le plus : sur iPhone,
                      l'ancien `window.print()` passait par la feuille de partage. -->
                 <div class="pdf-btn-row flex justify-end md:hidden no-print">
-                    <a href="/ressources/cv-adrien-vada.pdf" download="cv-adrien-vada.pdf" class="pdf-btn inline-flex">
+                    <a href="/ressources/cv-adrien-vada.pdf" download="cv-adrien-vada.pdf" data-track="cv_pdf"
+                        data-track-detail="mobile" class="pdf-btn inline-flex">
                         <svg class="ico" aria-hidden="true">
                             <use href="#i-solid-file-pdf"></use>
                         </svg> Télécharger le CV
@@ -4731,6 +4750,7 @@
                                         démo cinéma</h4>
                                 </div>
                                 <a href="https://www.youtube.com/watch?v=GOeL5AMGb_s" target="_blank" rel="noopener"
+                                    data-track="demo_youtube"
                                     aria-label="Voir la bande démo sur YouTube (nouvel onglet)"
                                     class="w-6.5 h-6.5 rounded bg-stone-50 border border-stone-200 flex items-center justify-center text-luxury-textMuted hover:text-red-600 transition duration-300">
                                     <svg class="ico text-xs" aria-hidden="true">
@@ -5079,7 +5099,7 @@
                     <p class="text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
                         Contact
                     </p>
-                    <a href="mailto:adrien.vada@gmail.com"
+                    <a href="mailto:adrien.vada@gmail.com" data-track="contact_mail" data-track-detail="pied"
                         class="text-sm font-semibold text-luxury-textMain hover:text-luxury-goldInk transition">adrien.vada@gmail.com</a>
                     <!-- Le répertoire (/spectacles/) : une page par spectacle,
                          lisible sans JavaScript, donc lisible par un moteur de
@@ -5096,27 +5116,31 @@
 
                 <ul class="flex items-center gap-3.5 list-none">
                     <li><a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html"
-                            target="_blank" rel="noopener" aria-label="Fiche Agences Artistiques (nouvel onglet)"
+                            target="_blank" rel="noopener" data-track="fiche_pro"
+                            data-track-detail="agences-artistiques" aria-label="Fiche Agences Artistiques (nouvel onglet)"
                             class="block transition hover:scale-105 hover:opacity-80">
                             <img src="ressources/images/design/agencesartistiques.png" alt="" width="14" height="14"
                                 class="h-[14px] w-auto rounded-sm"></a></li>
                     <li><a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank"
-                            rel="noopener" aria-label="Profil Filmmakers (nouvel onglet)"
+                            rel="noopener" data-track="fiche_pro" data-track-detail="filmmakers"
+                            aria-label="Profil Filmmakers (nouvel onglet)"
                             class="block transition hover:scale-105 hover:opacity-80">
                             <img src="ressources/images/design/filmmakers.svg" alt="" width="14" height="14"
                                 class="h-[14px] w-auto rounded-sm"></a></li>
                     <li><a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" rel="noopener"
-                            aria-label="Instagram (nouvel onglet)"
+                            data-track="reseau" data-track-detail="instagram" aria-label="Instagram (nouvel onglet)"
                             class="block transition hover:scale-105 hover:opacity-80">
                             <img src="ressources/images/design/instagram.svg" alt="" width="14" height="14"
                                 class="h-[14px] w-auto rounded-sm"></a></li>
                     <li><a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank"
-                            rel="noopener" aria-label="LinkedIn (nouvel onglet)"
+                            rel="noopener" data-track="reseau" data-track-detail="linkedin"
+                            aria-label="LinkedIn (nouvel onglet)"
                             class="block transition hover:scale-105 hover:opacity-80">
                             <img src="ressources/images/design/linkedin.svg" alt="" width="14" height="14"
                                 class="h-[14px] w-auto rounded-sm"></a></li>
                     <li><a href="https://open.spotify.com/intl-fr/artist/6eskUhQ2bQBxH1KhBxFPjz" target="_blank"
-                            rel="noopener" aria-label="Spotify (nouvel onglet)"
+                            rel="noopener" data-track="reseau" data-track-detail="spotify"
+                            aria-label="Spotify (nouvel onglet)"
                             class="block transition hover:scale-105 hover:opacity-80">
                             <img src="ressources/images/design/spotify.svg" alt="" width="14" height="14"
                                 class="h-[14px] w-auto rounded-sm"></a></li>
