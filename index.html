@@ -1413,15 +1413,23 @@
         .bio-handwritten {
             font-family: 'Caveat', 'Kalam', cursive;
             font-weight: 500;
-            /* UNE SEULE TAILLE, GRAND ÉCRAN COMME PETIT. Il y avait ici un
-               corps mobile bridé à 1,12 rem : avec l'extrait long d'alors,
-               un pixel de plus faisait passer le texte de trois lignes à
-               quatre et coûtait trente-deux pixels de haut. L'extrait
-               s'arrête maintenant à « m'oblige à… », et cette marche a
-               disparu avec lui — mesuré à 375 px, on tient deux lignes et
-               62 px jusqu'à 1,4 rem. La contrainte est tombée, la règle qui
-               la contournait aussi. */
-            font-size: 1.3rem;
+            /* 1,15 rem — ET LE CHIFFRE VIENT DE L'ŒIL, PAS DU CORPS.
+               Caveat a une hauteur d'x de 37 pour 100 de corps, quand
+               Montserrat et Inter sont à 46 : à corps égal elle paraît un
+               quart plus petite, et c'est pourquoi il lui en faut plus.
+
+               À 1,3 rem, l'aperçu était le DEUXIÈME plus gros texte de la
+               page — 20,8 px contre 36 pour le nom et 14 pour le métier —
+               et sur téléphone il rivalisait carrément avec le nom, 20,8
+               contre 21,6. À 1,15 rem son œil mesure 6,8 px, contre 6,4 pour
+               la ligne du métier : six pour cent au-dessus, ce qu'il faut
+               pour être une autre voix sans être un autre titre.
+
+               UNE SEULE TAILLE, grand écran comme petit. Il y avait ici un
+               corps mobile bridé, du temps où l'extrait faisait une phrase
+               et demie et basculait à quatre lignes. La phrase courte a
+               emporté la contrainte, et la règle qui la contournait. */
+            font-size: 1.15rem;
             line-height: 1.45;
             color: rgb(var(--c-text));
             transform: rotate(-0.4deg);
@@ -3594,7 +3602,7 @@
                                 aria-controls="recit" aria-label="Lire mon parcours en entier">
                                 <span class="bio-handwritten-wrap max-w-xl block text-left">
                                     <span class="bio-handwritten recit-extrait">Ce que j’aime, c’est ce que chaque
-                                        masque m’oblige à…</span>
+                                        masque m’oblige à…</span>
                                 </span>
                             </button>
                         </div>
