@@ -1343,12 +1343,20 @@
             display: grid;
             grid-template-rows: 1fr;
             opacity: 1;
-            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                margin-bottom var(--dur-panel) var(--ease-panel);
         }
 
+        /* `grid-template-rows: 0fr` ne réduit que la ligne de grille — la
+           marge EXTÉRIEURE de l'élément (ex. `mb-5` sur le bandeau
+           « Prochainement ») n'en fait pas partie et resterait sinon un
+           espace fantôme au-dessus de ce qui suit, une fois le contenu
+           invisible. On la ramène donc à zéro ici, plutôt que sur chaque
+           élément qui replie un `mb-*`. */
         .bio-collapse.bio-hidden {
             grid-template-rows: 0fr;
             opacity: 0;
+            margin-bottom: 0;
         }
 
         .bio-collapse>.bio-collapse-inner {
@@ -3614,24 +3622,18 @@
     <!-- MAIN CONTAINER -->
     <div class="max-w-4xl mx-auto px-4 md:px-6 py-6 relative z-10 flex flex-col min-h-screen justify-between">
 
-        <!-- REMONTÉ TOUT EN HAUT, AVANT MÊME LE PORTRAIT. Une date qui
-             approche est ce qu'un visiteur vient chercher en premier —
-             plus vite que le nom, qu'il connaît déjà s'il est venu. Le
-             bandeau était sous l'en-tête, c'est-à-dire après une carte
-             de deux cents pixels : sur téléphone, il fallait défiler
-             pour apprendre qu'on jouait la semaine suivante. -->
         <!-- ── BANDEAU « PROCHAINEMENT » ──
-             Un CV se consulte une fois ; une affiche se reconsulte. Jusqu'ici,
-             savoir qu'Adrien joue le 22 octobre demandait un clic sur un
-             onglet — autant dire que personne ne le savait. Le bandeau lit la
-             MÊME source que la page Dates (dates.js, via splitUpcoming) : rien
-             n'est saisi deux fois, et il ne peut donc pas la contredire.
+             Tout en haut de page, avant même l'en-tête : un CV se consulte une
+             fois, une affiche se reconsulte. Jusqu'ici, savoir qu'Adrien joue
+             le 22 octobre demandait un clic sur un onglet — autant dire que
+             personne ne le savait. Le bandeau lit la MÊME source que la page
+             Dates (dates.js, via splitUpcoming) : rien n'est saisi deux fois,
+             et il ne peut donc pas la contredire.
              Posé `hidden` : c'est renderNextDate() qui l'ouvre, et seulement
              s'il reste une représentation à venir. Une saison qui se termine
              le fait disparaître toute seule, sans intervention.
              `no-print` : la version imprimée est un CV, pas une affiche. -->
         <div id="next-date-banner" hidden class="no-print mb-5 bio-collapse"></div>
-
 
         <!-- HEADER (Light Luxury Style) -->
         <header
@@ -3844,7 +3846,6 @@
                 </button>
             </div>
         </header>
-
 
         <!-- NAVIGATION TABS (Splitted buttons) -->
         <!-- Sentinelle : un trait de rien du tout, juste au-dessus de la barre.
@@ -7259,6 +7260,12 @@
         const TAB_ACTIVE = ['text-luxury-goldInk', 'border-stone-200/80', 'bg-stone-200/40'];
         const TAB_IDLE = ['text-stone-500', 'border-transparent'];
 
+        // Jeton du rattrapage de défilement en cours (voir showPage) : un
+        // clic plus rapide que --dur-panel laisse la boucle précédente
+        // encore active, et les deux se disputeraient alors le scroll —
+        // incrémenter ce jeton à chaque appel invalide net la précédente.
+        let scrollJobId = 0;
+
         function showPage(pageId, animate = true) {
             if (activeAudioId) {
                 const audio = document.getElementById(activeAudioId);
@@ -7303,7 +7310,79 @@
             // Les durées des démos ne sont chargées qu'à l'ouverture de l'onglet Voix
             if (pageId === 'demos_voix') primeAudioMetadata();
 
-            window.scrollTo({ top: 0, behavior: animate ? 'smooth' : 'auto' });
+            // DEUX DÉFILEMENTS DIFFÉRENTS SELON QU'ON ARRIVE OU QU'ON CLIQUE.
+            // `animate=false` ne sert QU'AU TOUT PREMIER CHARGEMENT (le seul appel
+            // ainsi plus bas) : on arrive sur adrienvada.fr par la porte d'entrée,
+            // l'en-tête et le bandeau « Prochainement » doivent être visibles —
+            // c'est le haut du DOCUMENT qu'il faut, quelle que soit la page visée.
+            // `animate=true` couvre tous les clics ultérieurs, CV compris : on
+            // change de contenu à l'intérieur d'un site déjà vu, donc c'est le
+            // haut de LA PAGE ciblée qu'il faut, l'en-tête n'a plus à revenir.
+            //
+            // LA CIBLE DU CLIC EST LA BARRE D'ONGLETS, PAS LA PAGE. Onglet en
+            // haut de l'écran, encore dans son état normal (pas « collée » —
+            // voir suivreBarreCollante) : c'est ce cadrage qu'on veut retrouver
+            // à chaque clic, comme si on avait fait défiler jusque-là à la main.
+            //
+            // Ce cadrage doit en plus suivre l'en-tête qui se replie EN MÊME
+            // TEMPS (bio-collapse, --dur-panel : 400ms) et déplace la barre
+            // pendant que ce défilement est en cours : une cible calculée une
+            // seule fois ne suit pas ce mouvement, et l'atterrissage se fait
+            // trop bas, la barre pas encore remontée. Même famille de remède
+            // que pour la fermeture d'un univers (voir univers.js, « Refermer
+            // un univers rend la page où elle était ») — mais rattrapée en
+            // douceur, une fraction de l'écart à chaque image, plutôt que
+            // recalée d'un coup : ça suit une cible mouvante SANS le saut sec
+            // qu'un simple `scrollIntoView` répété donnerait, et ça ralentit
+            // naturellement en approchant, comme un vrai défilement animé.
+            const nav = document.getElementById('nav-barre');
+            if (!nav || !animate) {
+                window.scrollTo({ top: 0, behavior: animate ? 'smooth' : 'auto' });
+            } else {
+                // Un jeton propre à CET appel : si un clic plus rapide que la
+                // fenêtre de rattrapage relance showPage() entre-temps, l'ancien
+                // `suivre` doit s'effacer net plutôt que continuer à tirer le
+                // scroll vers SA cible en même temps que le nouveau — deux
+                // rattrapages concurrents, c'est ce qui rendait l'atterrissage
+                // aléatoire un clic sur deux.
+                const monJeton = ++scrollJobId;
+
+                const html = document.documentElement;
+                const glissementInitial = html.style.scrollBehavior;
+                html.style.scrollBehavior = 'auto';   // sinon chaque pas s'anime tout seul (.scroll-smooth)
+
+                const jusqua = Date.now() + 550; // --dur-panel (400ms) + marge d'amortissement
+                let rendu = false;
+                const GESTES = ['wheel', 'touchstart', 'keydown', 'pointerdown'];
+                const rendreLaMain = () => {
+                    if (rendu) return;
+                    rendu = true;
+                    html.style.scrollBehavior = glissementInitial;
+                    GESTES.forEach(g => window.removeEventListener(g, rendreLaMain));
+                };
+                GESTES.forEach(g => window.addEventListener(g, rendreLaMain, { passive: true, once: true }));
+
+                const suivre = () => {
+                    if (rendu || scrollJobId !== monJeton) return;
+                    const cible = nav.getBoundingClientRect().top + window.scrollY;
+                    // PAS DE SORTIE ANTICIPÉE SUR UN ÉCART DEVENU PETIT : tant que
+                    // le repli de l'en-tête continue (jusqu'à `jusqua`), la cible
+                    // elle-même bouge encore. S'arrêter dès qu'on s'en approche
+                    // relâchait la poursuite AVANT la fin du repli — la cible
+                    // continuait alors sa route sans nous, d'où l'atterrissage
+                    // tantôt juste, tantôt raté. Seule la fin de la fenêtre (ou un
+                    // geste de l'utilisateur) doit clore la poursuite.
+                    if (Date.now() >= jusqua) {
+                        window.scrollTo({ top: cible, behavior: 'auto' });
+                        rendreLaMain();
+                        return;
+                    }
+                    const ecart = cible - window.scrollY;
+                    if (Math.abs(ecart) >= 0.5) window.scrollTo({ top: window.scrollY + ecart * 0.25, behavior: 'auto' });
+                    requestAnimationFrame(suivre);
+                };
+                suivre();
+            }
             revealVisibleSections();
         }
 
