@@ -1059,12 +1059,20 @@
             display: grid;
             grid-template-rows: 1fr;
             opacity: 1;
-            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                margin-bottom var(--dur-panel) var(--ease-panel);
         }
 
+        /* `grid-template-rows: 0fr` ne réduit que la ligne de grille — la
+           marge EXTÉRIEURE de l'élément (ex. `mb-5` sur le bandeau
+           « Prochainement ») n'en fait pas partie et resterait sinon un
+           espace fantôme au-dessus de ce qui suit, une fois le contenu
+           invisible. On la ramène donc à zéro ici, plutôt que sur chaque
+           élément qui replie un `mb-*`. */
         .bio-collapse.bio-hidden {
             grid-template-rows: 0fr;
             opacity: 0;
+            margin-bottom: 0;
         }
 
         .bio-collapse>.bio-collapse-inner {
