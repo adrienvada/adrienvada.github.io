@@ -1536,11 +1536,17 @@
            la phrase achevée lui avait retirée.
 
            UN SEUL EXEMPLAIRE DU TEXTE COMMUN, et c'est tout l'intérêt de
-           n'envelopper que la queue. Deux blocs concurrents, l'un en
-           `md:hidden` et l'autre en `hidden md:inline`, auraient écrit deux
-           fois la même phrase dans le document : un lecteur d'écran
-           l'aurait entendue en double, et un moteur de recherche l'aurait
-           comptée deux fois.
+           n'envelopper que la queue. Deux blocs concurrents — l'un caché
+           sous le seuil, l'autre au-dessus — auraient écrit deux fois la
+           même phrase dans le document : un lecteur d'écran l'aurait
+           entendue en double, et un moteur de recherche comptée deux fois.
+
+           ⚠ ET ON NE CITE PAS ICI LES CLASSES UTILITAIRES QUI AURAIENT
+           SERVI. L'analyseur de Tailwind lit le fichier BRUT, commentaires
+           compris : les nommer suffisait à lui faire fabriquer les règles
+           correspondantes, pour des classes que personne n'emploie. C'est
+           la même mésaventure que le `.ring` tiré de `id="intro-seal-ring"`
+           — une prose qui pèse dans la feuille de style.
 
            `display: none` sort bien la suite de l'arbre d'accessibilité sur
            téléphone — ce n'est pas une perte : le récit entier est dans son
