@@ -1375,7 +1375,13 @@
             isolation: isolate;
             border-radius: 0.4rem;
             padding: 0.3rem 0.55rem;
-            background: radial-gradient(ellipse at 22% 20%, rgb(var(--c-gold) / 0.14), transparent 70%), rgb(var(--c-gold) / 0.05);
+            /* LAVIS PLAT, SANS HALO. Il y avait ici un dégradé qui
+               concentrait 14 % d'or au coin haut gauche — c'est-à-dire
+               exactement là où commence la lecture. Mesuré : l'encre y
+               tombait à 4,06:1, sous le seuil de 4,5:1 exigé pour du texte
+               courant, quand elle tenait 4,71:1 sur le reste du bloc. Le
+               papier avait sa plus mauvaise lumière au premier mot. */
+            background: rgb(var(--c-gold) / 0.05);
         }
 
         .bio-handwritten-wrap::before {
@@ -1389,16 +1395,32 @@
             pointer-events: none;
         }
 
+        /* UNE ÉCRITURE MANUSCRITE SE LIT GRANDE ET LÉGÈRE, jamais petite
+           et grasse. Celle-ci était les deux : 17 px en graisse 700, avec un
+           interligne de 1,28 — serré pour une main à hampes et jambages —
+           et de l'or sur de l'or. Quatre réglages qui se liguaient contre
+           elle, dont aucun n'était la fonte.
+
+           Elle passe donc à 21 px, en 500, sur un interligne de 1,45, et à
+           l'encre du texte : de 4,06:1 au coin le plus sombre, le contraste
+           monte à 16,3:1. Le bloc gagne dix-sept pixels de haut — c'est le
+           prix, et il est petit.
+
+           On avait craint que 500 n'affaiblisse un trait déjà fin. Vérifié
+           au rendu, avec la fonte réellement chargée : au nouveau corps, la
+           graisse 500 tient largement. C'était le CORPS qui manquait, pas
+           l'encre. */
         .bio-handwritten {
             font-family: 'Caveat', 'Kalam', cursive;
-            font-weight: 700;
-            /* Caveat a l'œil plus petit que Kalam : à corps égal elle
-               paraissait deux points plus bas. On remonte, et l'interligne
-               se resserre d'autant — une écriture fine n'a pas besoin
-               qu'on écarte ses lignes. */
-            font-size: 0.95rem;
-            line-height: 1.28;
-            color: rgb(var(--c-gold-ink));
+            font-weight: 500;
+            /* 1,12 rem ET PAS UN POINT DE PLUS SUR PETIT ÉCRAN. Mesuré à
+               375 px : l'extrait tient sur trois lignes jusqu'à 17,9 px, et
+               bascule à quatre dès 18,9. Un pixel de corps de plus coûte
+               trente-deux pixels de hauteur dans un en-tête qu'on lit au
+               pouce. On s'arrête donc juste avant la marche. */
+            font-size: 1.12rem;
+            line-height: 1.45;
+            color: rgb(var(--c-text));
             transform: rotate(-0.4deg);
         }
 
@@ -1411,7 +1433,7 @@
 
         @media (min-width: 768px) {
             .bio-handwritten {
-                font-size: 1.06rem;
+                font-size: 1.3rem;
                 transform: rotate(-0.5deg);
             }
         }
