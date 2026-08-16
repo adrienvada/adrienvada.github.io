@@ -21,6 +21,27 @@
             }
             document.documentElement.setAttribute('data-theme', t);
         })();
+
+        // L'ANCRE D'ARRIVÉE EST MISE DE CÔTÉ AVANT QUE LE NAVIGATEUR NE S'EN
+        // SERVE. Arriver sur adrienvada.fr/#demos_voix lui demande de faire
+        // défiler jusqu'au conteneur portant cet identifiant. Ce défilement
+        // n'est pas le nôtre : il survient APRÈS notre propre cadrage et
+        // gagne donc, laissant le visiteur à 561 px du haut, l'en-tête déjà
+        // passé — alors qu'arriver sur le site doit justement le montrer.
+        //
+        // On retire donc le fragment de l'URL avant le premier rendu : le
+        // navigateur n'a plus rien à viser. Le routeur le remet en place dès
+        // qu'il a cadré la page (voir « l'URL retrouve son ancre »), et il
+        // reste lisible entre-temps ici.
+        //
+        // univers.js, lui, continue de lire location.hash tel quel pour ses
+        // liens profonds (#/univers/berenice) : son écouteur DOMContentLoaded
+        // est inscrit après celui du routeur — ordre du document — donc
+        // l'URL est déjà rétablie quand il la consulte.
+        window.__ancreArrivee = (location.hash || '').substring(1);
+        if (window.__ancreArrivee) {
+            history.replaceState(null, '', location.pathname + location.search);
+        }
     </script>
 
     <meta name="theme-color" content="#0a0907" media="(prefers-color-scheme: dark)">
@@ -1357,6 +1378,15 @@
             grid-template-rows: 0fr;
             opacity: 0;
             margin-bottom: 0;
+        }
+
+        /* Repli instantané, posé le temps d'une image par showPage : quand on
+           recadre la vue sur la barre d'onglets, l'en-tête est déjà sorti par
+           le haut. Son repli n'a alors aucun spectateur, et le laisser courir
+           ses 400 ms ferait glisser le seuil de la barre pendant qu'on y
+           emmène la page — une cible mouvante à poursuivre pour rien. */
+        .bio-collapse.bio-sans-transition {
+            transition: none;
         }
 
         .bio-collapse>.bio-collapse-inner {
@@ -3457,7 +3487,10 @@
                 //
                 // #page_cv ne compte pas : c'est l'onglet par défaut, donc
                 // l'adresse nue sous un autre nom.
-                var h = location.hash || '';
+                // L'ancre a été mise de côté dans l'en-tête du document, et
+                // l'URL en a été débarrassée : c'est donc là qu'il faut la
+                // lire, pas dans location.hash, qui est vide à cet instant.
+                var h = window.__ancreArrivee ? '#' + window.__ancreArrivee : '';
                 var profond = h.length > 1 && h !== '#page_cv';
 
                 if (!forced && (reduce || seen || profond)) {
@@ -5475,14 +5508,71 @@
             setupScrollReveal();
             setupGallerySwipe();
 
-            const hash = window.location.hash.substring(1);
+            const hash = window.__ancreArrivee || '';
             const premierOnglet = hash && document.getElementById(hash) ? hash : 'page_cv';
             showPage(premierOnglet, false);
+
+            // L'URL RETROUVE SON ANCRE — mais pas au même moment selon ce
+            // qu'elle désigne, et c'est là que se cache le piège.
+            //
+            // Chrome ne résout pas le fragment une fois pour toutes : il
+            // garde son saut EN ATTENTE et le retente à chaque étape du
+            // chargement, tant que la page n'est pas finie (c'est ce qui
+            // fait marcher les ancres vers du contenu arrivé tardivement).
+            // Rendre l'ancre dès maintenant le réarmait donc, et le visiteur
+            // se retrouvait de nouveau 561 px plus bas.
+            //
+            //   • Identifiant d'un onglet — une cible réelle : on attend la
+            //     fin du chargement, où le navigateur y renonce.
+            //   • Tout le reste — une route d'univers (#/univers/berenice),
+            //     un fragment inconnu : il n'y a aucun élément à viser, donc
+            //     aucun saut à craindre. On la rend tout de suite, car
+            //     univers.js lit location.hash dès DOMContentLoaded et doit
+            //     l'y trouver.
+            if (hash) {
+                const rendreLAncre = () => history.replaceState(null, '', '#' + hash);
+                if (document.getElementById(hash)) {
+                    if (document.readyState === 'complete') rendreLAncre();
+                    else window.addEventListener('load', rendreLAncre, { once: true });
+                } else {
+                    rendreLAncre();
+                }
+            }
 
             // Par quelle porte entre-t-on ? Un lien partagé vers les démos voix
             // ne se lit pas comme une arrivée par la page d'accueil, et ça
             // change ce qu'il faut mettre en avant.
             track('entree', { onglet: premierOnglet });
+
+            // « Précédent » revient à un onglet, pas à une position. Sans
+            // ceci, le navigateur restaure en plus le défilement mémorisé
+            // pour l'entrée d'historique — après notre propre cadrage, donc
+            // par-dessus lui, et sur une page dont le contenu a changé : on
+            // retombait au hasard, parfois tout en bas. En « manual », le
+            // cadrage d'un retour arrière est exactement celui d'un clic.
+            if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+            // LES ONGLETS SONT DES LIENS, MAIS C'EST NOUS QUI DÉFILONS.
+            // Laissé à lui-même, `href="#page_dates"` fait défiler le
+            // navigateur jusqu'au conteneur visé — et `.scroll-smooth`
+            // l'anime. Ça faisait un SECOND défilement, vers une autre cible
+            // que la nôtre (le haut de la page, ~503 px, au lieu du seuil de
+            // la barre), lancé à une image d'écart : les deux se disputaient
+            // la vue, et l'atterrissage revenait à celui qui finissait en
+            // dernier — d'où un résultat différent selon le navigateur et la
+            // machine. On garde le href (URL partageable, ouverture dans un
+            // onglet, lecteurs d'écran) et on ne lui retire que le défilement.
+            document.getElementById('nav-tabs-container')?.addEventListener('click', (e) => {
+                // Clic milieu, ⌘/Ctrl-clic… : c'est une demande de nouvel
+                // onglet, elle ne nous regarde pas.
+                if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                const lien = e.target.closest('a[href^="#"]');
+                if (!lien) return;
+                const cible = lien.getAttribute('href').slice(1);
+                if (!document.getElementById(cible)) return;
+                e.preventDefault();
+                allerAOnglet(cible);
+            });
 
             window.addEventListener("hashchange", () => {
                 const newHash = window.location.hash.substring(1);
@@ -5805,9 +5895,11 @@
             revealFilterRows(true);
             renderDates();
             openDateSearch(true);
-            showPage('page_dates', true);
-            window.location.hash = 'page_dates';
-            document.getElementById('page_dates')?.scrollIntoView({ block: 'start' });
+            // Un seul chemin vers un onglet, donc un seul défilement. Cette
+            // ligne en enchaînait trois : showPage, puis `location.hash` (qui
+            // relançait showPage par hashchange), puis un scrollIntoView vers
+            // une troisième cible.
+            allerAOnglet('page_dates');
         }
 
         document.addEventListener('click', (e) => {
@@ -7119,11 +7211,49 @@
         const TAB_ACTIVE = ['text-luxury-goldInk', 'border-stone-200/80', 'bg-stone-200/40'];
         const TAB_IDLE = ['text-stone-500', 'border-transparent'];
 
-        // Jeton du rattrapage de défilement en cours (voir showPage) : un
-        // clic plus rapide que --dur-panel laisse la boucle précédente
-        // encore active, et les deux se disputeraient alors le scroll —
-        // incrémenter ce jeton à chaque appel invalide net la précédente.
-        let scrollJobId = 0;
+        // LE SEUIL : le défilement à partir duquel la barre d'onglets se colle
+        // en haut de l'écran (téléphone ; sur ordinateur elle reste dans le
+        // flux, et le seuil vaut alors simplement sa position).
+        //
+        // On le mesure sur #nav-sentinelle, et JAMAIS sur la barre elle-même.
+        // Une fois collée, la barre est peinte à `top` du bord de l'écran et
+        // n'en bouge plus : sa position absolue apparente vaut donc
+        // `scrollY + top`, une cible qui recule d'autant qu'on avance et
+        // qu'on ne rattrape jamais. La sentinelle, elle, reste dans le flux —
+        // sa position ne dépend pas du défilement.
+        //
+        // On retranche ce même `top` pour viser le pixel où la barre ALLAIT
+        // se coller : elle y est peinte exactement là où elle l'est une fois
+        // collée. Le recadrage ne la déplace donc pas d'un pixel, et c'est ce
+        // qui rend le changement d'onglet invisible.
+        function seuilBarre() {
+            const barre = document.getElementById('nav-barre');
+            const sentinelle = document.getElementById('nav-sentinelle');
+            if (!barre || !sentinelle) return 0;
+            return sentinelle.getBoundingClientRect().top + window.scrollY
+                - (parseFloat(getComputedStyle(barre).top) || 0);
+        }
+
+        // Défiler sans animation, malgré `.scroll-smooth` posé sur <html> :
+        // `behavior: 'auto'` s'en remet justement à la feuille de style, et
+        // `'instant'` lève une erreur sur les navigateurs d'avant 2022 plutôt
+        // que d'être ignoré. On neutralise donc la règle le temps du saut.
+        function defilerNet(y) {
+            const html = document.documentElement;
+            const avant = html.style.scrollBehavior;
+            html.style.scrollBehavior = 'auto';
+            window.scrollTo({ top: y, behavior: 'auto' });
+            html.style.scrollBehavior = avant;
+        }
+
+        // Changer d'onglet pour de bon : l'URL suit (lien partageable, bouton
+        // « précédent »), et c'est nous — nous seuls — qui décidons du
+        // défilement (voir le gestionnaire de clic des onglets).
+        function allerAOnglet(pageId) {
+            if (!document.getElementById(pageId)) return;
+            if ('#' + pageId !== window.location.hash) history.pushState(null, '', '#' + pageId);
+            showPage(pageId, true);
+        }
 
         function showPage(pageId, animate = true) {
             if (activeAudioId) {
@@ -7154,14 +7284,39 @@
             const pdfBtn = document.getElementById('pdf-download-btn');
             if (pdfBtn) pdfBtn.classList.toggle('invisible', pageId !== 'page_cv');
 
+            // CADRAGE — la question se pose AVANT de replier l'en-tête, dont
+            // le repli déplace le seuil d'une centaine de pixels.
+            //
+            // Un seul seuil répond aux deux cas, parce que le bas de l'en-tête
+            // et le point de collage de la barre sont le même endroit (543 et
+            // 545 px sur un téléphone de 412 px de large) :
+            //
+            //   • au-dessus — une partie de l'en-tête est encore à l'écran :
+            //     ON NE BOUGE PAS. L'en-tête se replie sous les yeux, la page
+            //     change dessous, la vue reste exactement où elle était ;
+            //   • au-dessous — la barre flotte déjà : on remonte pile au
+            //     seuil, où elle est peinte au même pixel qu'en flottant.
+            //     Rien ne bouge donc à l'œil, seul le contenu sous elle
+            //     est remplacé.
+            const recadrer = animate && window.scrollY > seuilBarre();
+
             // La bio, la signature casting, les liens externes et le bandeau
             // « Prochainement » n'ont de sens qu'en regard du CV : ailleurs
             // ils se replient en fondu et rendent leur place aux dates et
             // aux démos. Seuls restent alors la photo, le nom, le métier,
             // le mail et la barre de navigation.
-            document.querySelectorAll('.bio-collapse').forEach(el => {
-                el.classList.toggle('bio-hidden', pageId !== 'page_cv');
-            });
+            //
+            // Sauf si l'on recadre : l'en-tête est alors hors de l'écran, son
+            // repli se fait d'un coup (voir .bio-sans-transition) et la mise
+            // en page se stabilise dans la foulée — le seuil se calcule ainsi
+            // une seule fois, sur des valeurs définitives.
+            const replis = document.querySelectorAll('.bio-collapse');
+            if (recadrer) replis.forEach(el => el.classList.add('bio-sans-transition'));
+            replis.forEach(el => el.classList.toggle('bio-hidden', pageId !== 'page_cv'));
+            if (recadrer) {
+                document.body.offsetHeight;   // le repli est acquis avant qu'on rende sa transition
+                replis.forEach(el => el.classList.remove('bio-sans-transition'));
+            }
 
             // Un tiroir resté ouvert n'aurait plus de contexte hors du CV
             closeAllCvDrawers(null);
@@ -7169,79 +7324,14 @@
             // Les durées des démos ne sont chargées qu'à l'ouverture de l'onglet Voix
             if (pageId === 'demos_voix') primeAudioMetadata();
 
-            // DEUX DÉFILEMENTS DIFFÉRENTS SELON QU'ON ARRIVE OU QU'ON CLIQUE.
-            // `animate=false` ne sert QU'AU TOUT PREMIER CHARGEMENT (le seul appel
-            // ainsi plus bas) : on arrive sur adrienvada.fr par la porte d'entrée,
-            // l'en-tête et le bandeau « Prochainement » doivent être visibles —
-            // c'est le haut du DOCUMENT qu'il faut, quelle que soit la page visée.
-            // `animate=true` couvre tous les clics ultérieurs, CV compris : on
-            // change de contenu à l'intérieur d'un site déjà vu, donc c'est le
-            // haut de LA PAGE ciblée qu'il faut, l'en-tête n'a plus à revenir.
-            //
-            // LA CIBLE DU CLIC EST LA BARRE D'ONGLETS, PAS LA PAGE. Onglet en
-            // haut de l'écran, encore dans son état normal (pas « collée » —
-            // voir suivreBarreCollante) : c'est ce cadrage qu'on veut retrouver
-            // à chaque clic, comme si on avait fait défiler jusque-là à la main.
-            //
-            // Ce cadrage doit en plus suivre l'en-tête qui se replie EN MÊME
-            // TEMPS (bio-collapse, --dur-panel : 400ms) et déplace la barre
-            // pendant que ce défilement est en cours : une cible calculée une
-            // seule fois ne suit pas ce mouvement, et l'atterrissage se fait
-            // trop bas, la barre pas encore remontée. Même famille de remède
-            // que pour la fermeture d'un univers (voir univers.js, « Refermer
-            // un univers rend la page où elle était ») — mais rattrapée en
-            // douceur, une fraction de l'écart à chaque image, plutôt que
-            // recalée d'un coup : ça suit une cible mouvante SANS le saut sec
-            // qu'un simple `scrollIntoView` répété donnerait, et ça ralentit
-            // naturellement en approchant, comme un vrai défilement animé.
-            const nav = document.getElementById('nav-barre');
-            if (!nav || !animate) {
-                window.scrollTo({ top: 0, behavior: animate ? 'smooth' : 'auto' });
-            } else {
-                // Un jeton propre à CET appel : si un clic plus rapide que la
-                // fenêtre de rattrapage relance showPage() entre-temps, l'ancien
-                // `suivre` doit s'effacer net plutôt que continuer à tirer le
-                // scroll vers SA cible en même temps que le nouveau — deux
-                // rattrapages concurrents, c'est ce qui rendait l'atterrissage
-                // aléatoire un clic sur deux.
-                const monJeton = ++scrollJobId;
-
-                const html = document.documentElement;
-                const glissementInitial = html.style.scrollBehavior;
-                html.style.scrollBehavior = 'auto';   // sinon chaque pas s'anime tout seul (.scroll-smooth)
-
-                const jusqua = Date.now() + 550; // --dur-panel (400ms) + marge d'amortissement
-                let rendu = false;
-                const GESTES = ['wheel', 'touchstart', 'keydown', 'pointerdown'];
-                const rendreLaMain = () => {
-                    if (rendu) return;
-                    rendu = true;
-                    html.style.scrollBehavior = glissementInitial;
-                    GESTES.forEach(g => window.removeEventListener(g, rendreLaMain));
-                };
-                GESTES.forEach(g => window.addEventListener(g, rendreLaMain, { passive: true, once: true }));
-
-                const suivre = () => {
-                    if (rendu || scrollJobId !== monJeton) return;
-                    const cible = nav.getBoundingClientRect().top + window.scrollY;
-                    // PAS DE SORTIE ANTICIPÉE SUR UN ÉCART DEVENU PETIT : tant que
-                    // le repli de l'en-tête continue (jusqu'à `jusqua`), la cible
-                    // elle-même bouge encore. S'arrêter dès qu'on s'en approche
-                    // relâchait la poursuite AVANT la fin du repli — la cible
-                    // continuait alors sa route sans nous, d'où l'atterrissage
-                    // tantôt juste, tantôt raté. Seule la fin de la fenêtre (ou un
-                    // geste de l'utilisateur) doit clore la poursuite.
-                    if (Date.now() >= jusqua) {
-                        window.scrollTo({ top: cible, behavior: 'auto' });
-                        rendreLaMain();
-                        return;
-                    }
-                    const ecart = cible - window.scrollY;
-                    if (Math.abs(ecart) >= 0.5) window.scrollTo({ top: window.scrollY + ecart * 0.25, behavior: 'auto' });
-                    requestAnimationFrame(suivre);
-                };
-                suivre();
-            }
+            // `animate=false` ne sert QU'AU TOUT PREMIER CHARGEMENT (le seul
+            // appel ainsi plus bas) : on arrive sur adrienvada.fr par la porte
+            // d'entrée, l'en-tête et le bandeau « Prochainement » doivent être
+            // visibles — c'est le haut du DOCUMENT qu'il faut, quelle que soit
+            // la page visée. Tous les autres appels viennent d'un clic, et le
+            // cadrage a déjà été décidé plus haut.
+            if (!animate) defilerNet(0);
+            else if (recadrer) defilerNet(seuilBarre());
             revealVisibleSections();
         }
 
