@@ -1590,11 +1590,20 @@
                clair : le fond de page y est à trois unités de la feuille,
                l'échancrure ne se voyait donc pas. C'est le PLI qui fait
                lire un coin replié, pas la différence de teinte. On le
-               dessine, en trait d'un pixel sur la diagonale. */
+               dessine, en trait d'un pixel sur la diagonale.
+
+               LE PLI COURT EN « / », ET C'EST LE SEUL SENS JUSTE. Il a
+               d'abord couru en « \ » : la diagonale coupait alors le carré
+               en un triangle en haut à droite et un autre en bas à gauche,
+               si bien qu'aucun des deux n'était le COIN de la feuille. Une
+               corne se replie sur l'angle, pas en travers. Les trois
+               dégradés tournent donc d'un quart de tour : l'échancrure
+               occupe le bas-droit, le rabat le haut-gauche, et le pli les
+               sépare. */
             background:
-                linear-gradient(45deg, transparent calc(50% - 0.5px), rgb(var(--c-gold) / 0.55) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
-                linear-gradient(45deg, rgb(var(--c-surface)) 0 50%, transparent 50%),
-                linear-gradient(225deg, transparent 0 50%, rgb(var(--c-gold) / 0.34) 50%);
+                linear-gradient(135deg, transparent calc(50% - 0.5px), rgb(var(--c-gold) / 0.55) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+                linear-gradient(135deg, transparent 0 50%, rgb(var(--c-surface)) 50%),
+                linear-gradient(135deg, rgb(var(--c-gold) / 0.34) 0 50%, transparent 50%);
             border-bottom-right-radius: 0.4rem;
             pointer-events: none;
         }
