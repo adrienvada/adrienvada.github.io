@@ -2943,33 +2943,19 @@
            s'efface — jamais d'opacité qui bat sur le point lui-même, qui
            donnerait le rouge du « direct » télévisé.
            ══════════════════════════════════════════════════════════════ */
+        /* ⚠ LA PASTILLE NE BAT PLUS. Elle pulsait toutes les 2,6 s, pendant
+           que le phare tournait en 7 s : deux rythmes premiers entre eux
+           sur un objet de trente-sept pixels de haut, qui ne se rejoignaient
+           jamais. Depuis que la marquise donne la mesure, la pastille se
+           tait — un seul battement pour un seul objet. Elle reste, parce
+           qu'elle EST le point de la souche, mais elle ne fait plus que
+           marquer sa place. */
         .next-date-dot {
             width: 6px;
             height: 6px;
             border-radius: 9999px;
             flex-shrink: 0;
             background: rgb(var(--c-gold-ink));
-            animation: nextDatePulse 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        }
-
-        @keyframes nextDatePulse {
-            0% {
-                box-shadow: 0 0 0 0 rgb(var(--c-gold) / 0.5);
-            }
-
-            70% {
-                box-shadow: 0 0 0 6px rgb(var(--c-gold) / 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgb(var(--c-gold) / 0);
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .next-date-dot {
-                animation: none;
-            }
         }
 
         /* ── LE BOUTON « RÉSERVER » PREND SA LIGNE SUR PETIT ÉCRAN ──
@@ -2995,131 +2981,210 @@
             }
         }
 
-        /* ── LE PHARE DU BANDEAU « PROCHAINEMENT » ──
-           Un point de lumière fait LE TOUR du cadre, à intervalle régulier.
-           Même respiration que la guirlande du CV : un passage bref, un
-           long repos — une politesse qui signale, pas une réclame.
+        /* ══ LE CARTON DE PROGRAMME, ET SA MARQUISE ══════════════════════
+           Le bandeau « Prochainement » ne se distinguait que par une lueur
+           qui faisait le tour du cadre toutes les sept secondes. Deux
+           choses lui manquaient.
 
-           DEUX FORMES ONT ÉTÉ ESSAYÉES AVANT, ET AUCUNE NE TOURNAIT :
+           Il RESSEMBLAIT AUX AUTRES CARTES. Même verre, même filet, même
+           rayon — l'annonce de la prochaine représentation avait la forme
+           d'une rubrique de CV. Il devient ici un carton de programme :
+           une souche détachable à gauche, séparée par une perforation et
+           deux encoches, la date en Cinzel comme sur un frontispice, et un
+           grain de papier sous le tout. La forme dit ce que le texte dit.
 
-           · Un dégradé CONIQUE dont l'angle tourne. Il fait bien le tour,
-             mais un conique avance en ANGLE, et sur une carte bien plus
-             large que haute l'angle et la position n'ont aucun rapport
-             constant : au milieu du bord supérieur le faisceau rampe, vers
-             les coins il file trente fois plus vite, et sa largeur — fixée
-             en degrés — s'étire sur des centaines de pixels près des
-             angles. On voyait une lumière détraquée qui s'étalait.
+           IL PORTAIT DEUX HORLOGES. Le phare tournait en 7 s pendant que la
+           pastille dorée pulsait en 2,6 s — deux rythmes premiers entre eux
+           sur un objet de trente-sept pixels de haut. La pastille ne pulse
+           plus ; il ne reste qu'un rythme, celui de la marquise.
 
-           · Un dégradé LINÉAIRE qui se déplace. Vitesse enfin constante,
-             mais la bande est droite : elle traverse la carte de part en
-             part et allume donc le haut et le bas AU MÊME INSTANT. Ça ne
-             tourne pas, ça balaie — et le flou en faisait une bavure.
+           POURQUOI DES AMPOULES, ET POURQUOI SEULEMENT EN HAUT ET EN BAS.
+           Le bandeau fait 848 × 37 px, soit vingt-trois pour un. Cette
+           letterbox a déjà eu la peau de deux effets (voir l'historique du
+           phare : un dégradé conique qui rampait au milieu et filait dans
+           les coins, un linéaire qui allumait le haut et le bas ensemble).
+           Une marquise s'en accommode parce qu'elle ne cherche pas à faire
+           le tour : un fronton de théâtre a ses ampoules sur ses longs
+           bords, et sa chenille court à l'horizontale. La forme qui gênait
+           tout le monde est ici exactement la bonne.
 
-           CE QUI TOURNE VRAIMENT, c'est un point. Un dégradé radial compact
-           dont on déplace la POSITION le long des quatre bords : coin haut
-           gauche, coin haut droit, bas droit, bas gauche, retour. Le point
-           garde sa taille tout du long — un dégradé radial ne se déforme
-           pas quand on le déplace — et le masque de bordure n'en laisse
-           voir que le segment posé sur le filet. C'est un phare.
+           COMMENT LA CHENILLE EST FAITE — et c'est un tour de main qui vaut
+           d'être expliqué, parce qu'il n'a l'air de rien. Une ampoule ne
+           peut pas s'allumer « sur place » avec un seul dégradé. On empile
+           donc deux couches : toutes les ampoules en veilleuse, tous les
+           13 px ; et par-dessus, UNE ampoule vive tous les 39 px. On ne
+           déplace que la couche vive, par pas de 39 px en trois marches
+           (`steps(3)`). Comme les ampoules sont identiques et régulières,
+           avancer la lumière d'un cran est indiscernable d'allumer la
+           suivante — sauf qu'on n'anime qu'une position de fond, ce qui ne
+           coûte rien.
 
-           LE TEMPS EST RÉPARTI À LA LONGUEUR DES CÔTÉS, pas à parts égales :
-           44 % du tour pour chacun des deux longs bords, 6 % pour chacun des
-           petits. À parts égales, le point aurait rampé sur les côtés et
-           filé sur le dessus — on retombait sur le défaut du conique.
-
-           `linear` est délibéré : la moindre courbe de vitesse ramènerait
-           l'accélération qu'on vient de corriger. */
-        .next-date-shine {
+           Le haut court vers la droite, le bas vers la gauche : le regard
+           y lit un tour, sans qu'aucune lumière n'ait eu à négocier un
+           angle. */
+        .nd-carton {
             position: relative;
+            /* LE GRAIN DU CARTON. Trois pixels de trame, à trois centièmes
+               d'encre : on ne le voit pas, on le sent. Assez pour que la
+               surface cesse d'être un aplat de verre comme les autres. */
+            background-image: repeating-linear-gradient(0deg,
+                    rgb(var(--c-s400) / 0.035) 0 1px,
+                    transparent 1px 3px);
         }
 
-        .next-date-shine::after {
+        /* ── LES DEUX RAMPES D'AMPOULES ──
+           ELLES SONT À L'INTÉRIEUR DU CARTON, et ce n'est pas un choix de
+           goût. Une première version les faisait déborder de deux pixels
+           et demi, pour qu'elles soient POSÉES sur la corniche plutôt
+           qu'encastrées. Mesuré au rendu : `.bio-collapse-inner`, le
+           conteneur qui replie le bandeau hors du CV, porte un
+           `overflow: hidden` dont dépend son animation de hauteur. Toutes
+           les ampoules étaient donc coupées net en deux demi-lunes.
+
+           On ne touche pas à ce repli pour un décor. Les rampes rentrent
+           de deux pixels sous le filet : les ampoules sont entières, et
+           montées sur la face intérieure du cadre — ce que fait d'ailleurs
+           une boîte lumineuse. Le retrait latéral de 14 px les arrête
+           avant les angles arrondis, où elles se chevaucheraient. */
+        .nd-carton::before,
+        .nd-carton::after {
             content: "";
             position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            /* 2 px : le masque ne laisse voir QUE l'épaisseur du filet, et
-               il rogne au passage le halo du drop-shadow. À un pixel et demi,
-               le point passait sans qu'on le voie — mesuré, puis constaté à
-               l'écran. Deux suffisent, et le trait reste fin. */
-            padding: 2px;
-            /* AUCUN BLANC : c'est lui qui rendait le phare clinquant. Le point
-               est entièrement doré — du doré clair au cœur, l'or du thème
-               ensuite — et l'ensemble reste sous les deux tiers d'opacité.
-               Il signale, il n'éclaire pas. */
-            background: radial-gradient(closest-side,
-                    rgb(var(--c-gold-light) / 0.62) 0%,
-                    rgb(var(--c-gold) / 0.42) 34%,
-                    rgb(var(--c-gold) / 0) 72%);
-            /* Compact : c'est un point qui se déplace, pas une nappe. Assez
-               petit pour que le segment de bordure allumé reste court, assez
-               large pour que le point atteigne presque les coins. */
-            background-size: 72px 72px;
-            background-repeat: no-repeat;
-            /* Sans halo, il ne reste qu'un filet d'un pixel et demi : le
-               point passe sans qu'on le voie. Le flou est calé sur la
-               taille du point — 4 px, pas 3 fois plus — sinon on retrouve
-               la bavure qu'on vient de chasser. */
-            filter: drop-shadow(0 0 3px rgb(var(--c-gold) / 0.3));
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            opacity: 0;
+            left: 14px;
+            right: 14px;
+            height: 5px;
             pointer-events: none;
-            animation: next-date-phare 7s linear infinite;
+            background-repeat: repeat-x;
+            /* La couche vive d'abord, la veilleuse dessous : l'ordre compte,
+               c'est lui qui fait que l'ampoule allumée recouvre la sienne. */
+            background-image:
+                radial-gradient(circle 2.3px at 10.5px 50%, rgb(var(--c-gold-light) / 0.95) 0 2.3px, transparent 2.9px),
+                radial-gradient(circle 1.8px at 10.5px 50%, rgb(var(--c-gold) / 0.26) 0 1.8px, transparent 2.4px);
+            background-size: 63px 100%, 21px 100%;
+            filter: drop-shadow(0 0 2.5px rgb(var(--c-gold) / 0.55));
+            animation: nd-chenille 0.9s steps(3) infinite;
         }
 
-        @keyframes next-date-phare {
+        .nd-carton::before {
+            top: 2px;
+        }
 
-            /* LE POINT EST CENTRÉ SUR LE FILET, PAS À L'INTÉRIEUR. C'est
-               tout l'enjeu de ces `calc()`. `background-position` cale les
-               BORDS de l'image, pas son centre : à `0 0`, le point de 72 px
-               a son centre 36 px sous le bord supérieur — c'est-à-dire là où
-               son dégradé est déjà transparent. Le masque ne révélait donc
-               rigoureusement rien, et le phare restait éteint alors que tout
-               le reste était juste. Le décalage de 36 px — la moitié du
-               point — le remet sur le filet.
+        /* Le bas court à contresens du haut : deux rampes qui iraient dans
+           le même sens donneraient un défilement, pas un tour. */
+        .nd-carton::after {
+            bottom: 2px;
+            animation-direction: reverse;
+        }
 
-               Le tour dure 2,8 s. Puis 4,2 s de nuit. */
-            0% {
-                background-position: -36px -36px;
-                opacity: 0;
-            }
-
-            3% {
-                opacity: 1;
-            }
-
-            /* le bord du haut, de gauche à droite */
-            17.6% {
-                background-position: calc(100% + 36px) -36px;
-            }
-
-            /* le petit côté droit, en descendant */
-            20% {
-                background-position: calc(100% + 36px) calc(100% + 36px);
-            }
-
-            /* le bord du bas, de droite à gauche */
-            37.6% {
-                background-position: -36px calc(100% + 36px);
-                opacity: 1;
-            }
-
-            /* le petit côté gauche, en remontant — et on s'éteint */
-            40% {
-                background-position: -36px -36px;
-                opacity: 0;
-            }
-
-            100% {
-                background-position: -36px -36px;
-                opacity: 0;
+        @keyframes nd-chenille {
+            to {
+                /* Seule la couche vive avance ; la veilleuse ne bouge pas. */
+                background-position: 63px 0, 0 0;
             }
         }
 
+        /* ── LA SOUCHE, ET SA PERFORATION ──
+           « Prochainement » devient le talon qu'on détache : un vrai
+           panneau, d'un bord à l'autre du carton, très légèrement teinté
+           comme l'est le talon d'un billet.
+
+           LES MARGES NÉGATIVES ANNULENT EXACTEMENT LES MARGES INTÉRIEURES
+           DU CARTON — `py-2` vaut 8 px, `px-3.5` vaut 14 px, et ces deux
+           nombres sont écrits dans la classe du carton, trois lignes plus
+           bas dans le balisage. C'est ce qui rend la souche solide : elle
+           s'ancre sur la géométrie du carton, et non sur la hauteur du
+           texte qu'elle contient.
+
+           Une première version calait la découpe sur cette hauteur de
+           texte. Mesurée : les encoches tombaient trois pixels et demi
+           À L'INTÉRIEUR du carton, où elles ne découpaient rien. Une
+           découpe se cale sur le bord qu'elle entame, jamais sur ce
+           qu'il y a écrit à côté. */
+        .nd-souche {
+            position: relative;
+            margin: -8px 0 -8px -14px;
+            padding: 8px 14px;
+            border-right: 1px dashed rgb(var(--c-s300));
+            border-radius: 7px 0 0 7px;
+            background: rgb(var(--c-gold) / 0.05);
+        }
+
+        /* DEUX TROUS DE PERFORATION, ENTIERS ET DEDANS. Ils devaient
+           d'abord mordre sur les bords du carton, comme l'échancrure d'un
+           billet de train. Le même `overflow: hidden` que pour les
+           ampoules les coupait par la moitié. Or un billet perforé porte
+           aussi bien des TROUS PLEINS le long de sa ligne de découpe : on
+           prend cette forme-là, qui ne demande rien à personne.
+
+           Le liseré qui les cerne n'est pas une coquetterie : en thème
+           clair, le fond de page et celui du carton sont deux blancs
+           presque identiques, et sans ce trait le trou serait invisible —
+           c'est ce qu'a montré le premier rendu. */
+        .nd-souche::before {
+            content: "";
+            position: absolute;
+            right: -3.5px;
+            top: 1px;
+            bottom: 1px;
+            width: 7px;
+            pointer-events: none;
+            background:
+                radial-gradient(circle 3.5px at 3.5px 3.5px, rgb(var(--c-bg)) 0 2.8px, rgb(var(--c-s300)) 2.8px 3.4px, transparent 3.8px) top center / 7px 7px no-repeat,
+                radial-gradient(circle 3.5px at 3.5px 3.5px, rgb(var(--c-bg)) 0 2.8px, rgb(var(--c-s300)) 2.8px 3.4px, transparent 3.8px) bottom center / 7px 7px no-repeat;
+        }
+
+        /* La date prend la lettre du frontispice — celle du nom, celle de
+           l'ouverture de scène. Le lieu garde sa chasse fixe : deux
+           écritures, deux natures d'information. */
+        .nd-quand {
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: rgb(var(--c-gold-ink));
+        }
+
+        /* ── PETIT ÉCRAN ──
+           Le bandeau passe à deux lignes : la souche n'est plus à gauche du
+           texte mais au-dessus. Une perforation VERTICALE n'y découperait
+           plus rien — elle tomberait au milieu du vide. On la couche. */
+        @media (max-width: 767px) {
+            .nd-souche {
+                /* `100% + 28px` et non `100%` : les deux marges négatives de
+                   14 px sortent la souche du carton, et la base flex doit en
+                   tenir compte — sinon l'encombrement dépasse la rangée, le
+                   titre est chassé à droite et se fait couper. C'est ce qui
+                   s'est produit au premier essai. */
+                flex: 0 0 calc(100% + 28px);
+                margin: -8px -14px 0;
+                padding: 6px 14px;
+                border-right: 0;
+                border-bottom: 1px dashed rgb(var(--c-s300));
+                border-radius: 7px 7px 0 0;
+            }
+
+            /* Les encoches passent aux extrémités de la perforation, qui
+               est maintenant horizontale : elles mordent sur les bords
+               GAUCHE et DROIT du carton au lieu du haut et du bas. */
+            .nd-souche::before {
+                right: 1px;
+                left: 1px;
+                top: auto;
+                bottom: -3.5px;
+                width: auto;
+                height: 7px;
+                background:
+                    radial-gradient(circle 3.5px at 3.5px 3.5px, rgb(var(--c-bg)) 0 2.8px, rgb(var(--c-s300)) 2.8px 3.4px, transparent 3.8px) left center / 7px 7px no-repeat,
+                    radial-gradient(circle 3.5px at 3.5px 3.5px, rgb(var(--c-bg)) 0 2.8px, rgb(var(--c-s300)) 2.8px 3.4px, transparent 3.8px) right center / 7px 7px no-repeat;
+            }
+        }
+
+        /* « Moins d'animations » : les ampoules restent, la chenille
+           s'arrête. Un fronton éteint reste un fronton — on ne retire pas
+           le décor, on retire le mouvement. */
         @media (prefers-reduced-motion: reduce) {
-            .next-date-shine::after {
+
+            .nd-carton::before,
+            .nd-carton::after {
                 animation: none;
             }
         }
@@ -5591,14 +5656,15 @@
                 : '';
 
             bandeau.innerHTML = `
-                <div class="bio-collapse-inner"><div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                    <span class="flex items-center gap-1.5 flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
+                <div class="bio-collapse-inner"><div class="nd-carton glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                    <span class="nd-souche flex items-center gap-1.5 flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
                         <span class="next-date-dot" aria-hidden="true"></span> Prochainement
                     </span>
                     <a href="#page_dates" data-track="banner_next_date"
                        class="group flex-1 min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                         <span class="text-xs font-bold font-montserrat uppercase tracking-wide text-luxury-textMain group-hover:text-luxury-goldInk transition">${esc(p.title)}</span>
-                        <span class="text-[11px] text-luxury-textMuted font-mono">${esc(quand)}${lieu}</span>
+                        <span class="text-[11px] text-luxury-textMuted font-mono"><span
+                                class="nd-quand">${esc(quand)}</span>${lieu}</span>
                     </a>
                     ${reserver}
                 </div></div>`;
