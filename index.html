@@ -2950,54 +2950,63 @@
            est vivante, il ne réclame pas l'attention. L'anneau se dilate et
            s'efface — jamais d'opacité qui bat sur le point lui-même, qui
            donnerait le rouge du « direct » télévisé.
+
+           DEUX COUPS RAPPROCHÉS, PUIS LE SILENCE. Le point pulsait toutes
+           les 2,6 s, d'un battement égal — à ce train-là, l'œil cesse de le
+           voir au bout de trois tours, exactement comme on n'entend plus une
+           horloge. Il frappe maintenant deux fois coup sur coup, puis se
+           tait quatre secondes et demie. C'est un pouls, pas un métronome :
+           irrégulier à l'oreille, donc encore perceptible à la dixième
+           minute.
+
+           SEPT SECONDES, COMME LE PHARE, ET C'EST TOUT L'ENJEU. Les deux
+           animations du bandeau tournaient sur 2,6 s et 7 s — deux périodes
+           sans diviseur commun, qui ne retombaient jamais ensemble et se
+           chevauchaient au hasard. Elles partagent désormais la même mesure,
+           mais pas le même temps : le phare fait son tour dans les 2,8
+           premières secondes, la pastille attend que la nuit soit installée
+           et frappe à 3,4 s. Un événement, puis l'autre, puis rien — jamais
+           les deux à la fois.
            ══════════════════════════════════════════════════════════════ */
-        /* ── LA PASTILLE BAT DEUX FOIS, PUIS SE TAIT ──
-           Elle pulsait toutes les 2,6 s pendant que la lumière faisait son
-           tour en 7 s : deux horloges premières entre elles sur un objet de
-           trente-sept pixels de haut, qui ne tombaient jamais ensemble.
-
-           MÊME PÉRIODE QUE LA GUIRLANDE — cinq secondes — MAIS PAS LE MÊME
-           MOMENT. La lumière passe dans les neuf premiers dixièmes ; la
-           pastille attend que le silence soit installé et frappe deux coups
-           rapprochés vers la moitié du cycle, puis se tait deux secondes.
-           C'est ce décalage qui rend le bandeau vivant sans le rendre
-           bavard : deux événements par cycle, jamais simultanés, jamais
-           réguliers à l'oreille. Un pouls, pas un métronome.
-
-           Deux anneaux qui se dilatent et s'effacent — jamais d'opacité qui
-           bat sur le point lui-même, qui donnerait le rouge du « direct »
-           télévisé. */
         .next-date-dot {
             width: 6px;
             height: 6px;
             border-radius: 9999px;
             flex-shrink: 0;
             background: rgb(var(--c-gold-ink));
-            animation: nd-pouls 5s ease-out infinite;
+            animation: nextDatePulse 7s ease-out infinite;
         }
 
-        @keyframes nd-pouls {
+        @keyframes nextDatePulse {
 
             0%,
-            44% {
+            48% {
                 box-shadow: 0 0 0 0 rgb(var(--c-gold) / 0);
             }
 
-            46% {
-                box-shadow: 0 0 0 0 rgb(var(--c-gold) / 0.55);
+            /* premier coup */
+            49% {
+                box-shadow: 0 0 0 0 rgb(var(--c-gold) / 0.5);
             }
 
-            55% {
+            56% {
                 box-shadow: 0 0 0 6px rgb(var(--c-gold) / 0);
             }
 
+            /* le second, plus discret — un contretemps, pas un écho */
             57% {
-                box-shadow: 0 0 0 0 rgb(var(--c-gold) / 0.4);
+                box-shadow: 0 0 0 0 rgb(var(--c-gold) / 0.35);
             }
 
-            66%,
+            64%,
             100% {
                 box-shadow: 0 0 0 6px rgb(var(--c-gold) / 0);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .next-date-dot {
+                animation: none;
             }
         }
 
@@ -3024,318 +3033,132 @@
             }
         }
 
-        /* ══ LE CARTON DE PROGRAMME, ET SA MARQUISE ══════════════════════
-           Le bandeau « Prochainement » ne se distinguait que par une lueur
-           qui faisait le tour du cadre toutes les sept secondes. Deux
-           choses lui manquaient.
+        /* ── LE PHARE DU BANDEAU « PROCHAINEMENT » ──
+           Un point de lumière fait LE TOUR du cadre, à intervalle régulier.
+           Même respiration que la guirlande du CV : un passage bref, un
+           long repos — une politesse qui signale, pas une réclame.
 
-           Il RESSEMBLAIT AUX AUTRES CARTES. Même verre, même filet, même
-           rayon — l'annonce de la prochaine représentation avait la forme
-           d'une rubrique de CV. Il devient ici un carton de programme :
-           une souche détachable à gauche, séparée par une perforation et
-           deux encoches, la date en Cinzel comme sur un frontispice, et un
-           grain de papier sous le tout. La forme dit ce que le texte dit.
+           DEUX FORMES ONT ÉTÉ ESSAYÉES AVANT, ET AUCUNE NE TOURNAIT :
 
-           IL PORTAIT DEUX HORLOGES. Le phare tournait en 7 s pendant que la
-           pastille dorée pulsait en 2,6 s — deux rythmes premiers entre eux
-           sur un objet de trente-sept pixels de haut. La pastille ne pulse
-           plus ; il ne reste qu'un rythme, celui de la marquise.
+           · Un dégradé CONIQUE dont l'angle tourne. Il fait bien le tour,
+             mais un conique avance en ANGLE, et sur une carte bien plus
+             large que haute l'angle et la position n'ont aucun rapport
+             constant : au milieu du bord supérieur le faisceau rampe, vers
+             les coins il file trente fois plus vite, et sa largeur — fixée
+             en degrés — s'étire sur des centaines de pixels près des
+             angles. On voyait une lumière détraquée qui s'étalait.
 
-           POURQUOI DES AMPOULES, ET POURQUOI SEULEMENT EN HAUT ET EN BAS.
-           Le bandeau fait 848 × 37 px, soit vingt-trois pour un. Cette
-           letterbox a déjà eu la peau de deux effets (voir l'historique du
-           phare : un dégradé conique qui rampait au milieu et filait dans
-           les coins, un linéaire qui allumait le haut et le bas ensemble).
-           Une marquise s'en accommode parce qu'elle ne cherche pas à faire
-           le tour : un fronton de théâtre a ses ampoules sur ses longs
-           bords, et sa chenille court à l'horizontale. La forme qui gênait
-           tout le monde est ici exactement la bonne.
+           · Un dégradé LINÉAIRE qui se déplace. Vitesse enfin constante,
+             mais la bande est droite : elle traverse la carte de part en
+             part et allume donc le haut et le bas AU MÊME INSTANT. Ça ne
+             tourne pas, ça balaie — et le flou en faisait une bavure.
 
-           COMMENT LA CHENILLE EST FAITE — et c'est un tour de main qui vaut
-           d'être expliqué, parce qu'il n'a l'air de rien. Une ampoule ne
-           peut pas s'allumer « sur place » avec un seul dégradé. On empile
-           donc deux couches : toutes les ampoules en veilleuse, tous les
-           13 px ; et par-dessus, UNE ampoule vive tous les 39 px. On ne
-           déplace que la couche vive, par pas de 39 px en trois marches
-           (`steps(3)`). Comme les ampoules sont identiques et régulières,
-           avancer la lumière d'un cran est indiscernable d'allumer la
-           suivante — sauf qu'on n'anime qu'une position de fond, ce qui ne
-           coûte rien.
+           CE QUI TOURNE VRAIMENT, c'est un point. Un dégradé radial compact
+           dont on déplace la POSITION le long des quatre bords : coin haut
+           gauche, coin haut droit, bas droit, bas gauche, retour. Le point
+           garde sa taille tout du long — un dégradé radial ne se déforme
+           pas quand on le déplace — et le masque de bordure n'en laisse
+           voir que le segment posé sur le filet. C'est un phare.
 
-           Le haut court vers la droite, le bas vers la gauche : le regard
-           y lit un tour, sans qu'aucune lumière n'ait eu à négocier un
-           angle. */
-        .nd-carton {
+           LE TEMPS EST RÉPARTI À LA LONGUEUR DES CÔTÉS, pas à parts égales :
+           44 % du tour pour chacun des deux longs bords, 6 % pour chacun des
+           petits. À parts égales, le point aurait rampé sur les côtés et
+           filé sur le dessus — on retombait sur le défaut du conique.
+
+           `linear` est délibéré : la moindre courbe de vitesse ramènerait
+           l'accélération qu'on vient de corriger. */
+        .next-date-shine {
             position: relative;
-            /* LE GRAIN DU CARTON. Trois pixels de trame, à trois centièmes
-               d'encre : on ne le voit pas, on le sent. Assez pour que la
-               surface cesse d'être un aplat de verre comme les autres. */
-            background-image: repeating-linear-gradient(0deg,
-                    rgb(var(--c-s400) / 0.035) 0 1px,
-                    transparent 1px 3px);
         }
 
-        /* ── LES DEUX GUIRLANDES ──
-           UN CYCLE DE CINQ SECONDES, EN DEUX TEMPS. Une lumière traverse la
-           rampe en neuf dixièmes de seconde — c'est l'événement. Puis quatre
-           secondes où il ne se passe rien de vif : la veilleuse monte et
-           redescend en braise, très lentement, et c'est elle qui tient le
-           temps mort. Une guirlande qui court sans arrêt devient un
-           papillotement de vitrine ; une guirlande qui s'éteint tout à fait
-           laisse un objet inerte. Entre les deux, il y a la braise.
-
-           ELLES SONT À L'INTÉRIEUR DU CARTON, et ce n'est pas un choix de
-           goût. Une version antérieure les faisait déborder du filet, pour
-           qu'elles soient POSÉES sur la corniche. Mesuré au rendu :
-           `.bio-collapse-inner`, le conteneur qui replie le bandeau hors du
-           CV, porte un `overflow: hidden` dont dépend son animation de
-           hauteur — toutes les ampoules étaient coupées net en demi-lunes.
-           On ne touche pas à ce repli pour un décor.
-
-           POURQUOI DEUX ÉLÉMENTS ET NON DEUX PSEUDO-ÉLÉMENTS. Il faut DEUX
-           couches par rampe : la veilleuse, immobile, et la lumière vive,
-           qui passe. Un masque s'applique à l'élément entier et non à une
-           couche de fond — impossible, donc, de ne faire glisser que la
-           seconde depuis un seul pseudo-élément. La rampe porte sa
-           veilleuse, son `::after` porte la lumière vive et le masque qui
-           la découpe en fenêtre glissante.
-
-           LE MOUVEMENT EST CONTINU, sans `steps()`. La version précédente
-           avançait la lumière d'un cran à la fois : c'était juste, mais ça
-           sautait. Sur une rampe horizontale, un déplacement régulier n'a
-           aucun des défauts qui guettaient le tour de cadre — pas d'angle à
-           négocier, donc pas de vitesse qui s'emballe. */
-        .nd-rampe {
-            position: absolute;
-            left: 14px;
-            right: 14px;
-            height: 3px;
-            pointer-events: none;
-            /* La veilleuse : des ampoules fines, une tous les 18 px. */
-            background-image: radial-gradient(circle 1.1px at 9px 50%,
-                    rgb(var(--c-gold) / 0.5) 0 1.1px, transparent 1.5px);
-            background-size: 18px 100%;
-            background-repeat: repeat-x;
-            animation: nd-braise 5s ease-in-out infinite;
-        }
-
-        .nd-rampe-haut {
-            top: 2px;
-        }
-
-        .nd-rampe-bas {
-            bottom: 2px;
-        }
-
-        .nd-rampe::after {
+        .next-date-shine::after {
             content: "";
             position: absolute;
             inset: 0;
-            /* Les mêmes ampoules, mais allumées — et un rien plus grosses :
-               une ampoule qui s'allume paraît grossir. */
-            background-image: radial-gradient(circle 1.5px at 9px 50%,
-                    rgb(var(--c-gold-light) / 0.95) 0 1.5px, transparent 2px);
-            background-size: 18px 100%;
-            background-repeat: repeat-x;
-            filter: drop-shadow(0 0 2px rgb(var(--c-gold) / 0.6));
-            /* LA FENÊTRE DE LUMIÈRE, ET SA LARGEUR — qui a demandé deux
-               essais. Le masque fait trois fois la rampe ; sa partie
-               éclairante en occupe QUATRE POUR CENT, soit un huitième de la
-               largeur visible. Une première version lui en donnait un
-               tiers : rapporté à la rampe, cela faisait une bande large
-               comme elle tout entière, et les quarante-cinq ampoules
-               s'allumaient d'un bloc. On ne voyait pas une lumière passer,
-               on voyait la guirlande clignoter.
-
-               Les bords sont fondus sur deux pour cent de part et d'autre :
-               la lumière n'a pas de front. C'est ce fondu qui fait qu'on
-               voit des ampoules s'allumer et s'éteindre l'une après
-               l'autre, plutôt qu'un rectangle glisser. */
-            -webkit-mask-image: linear-gradient(90deg, transparent 0 45%, #fff 49% 53%, transparent 57% 100%);
-            mask-image: linear-gradient(90deg, transparent 0 45%, #fff 49% 53%, transparent 57% 100%);
-            -webkit-mask-size: 300% 100%;
-            mask-size: 300% 100%;
-            -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-            animation: nd-passage-droite 5s linear infinite;
-        }
-
-        /* Le bas court à contresens du haut. On lui donne ses PROPRES
-           images-clés plutôt qu'un `animation-direction: reverse` : inverser
-           le sens inverse aussi le temps, et le passage du bas serait tombé
-           dans la dernière seconde du cycle au lieu de la première. On
-           aurait eu deux événements par cycle là où on en veut un seul, à
-           deux voix. */
-        .nd-rampe-bas::after {
-            animation-name: nd-passage-gauche;
-        }
-
-        /* LA PLAGE UTILE VA DE 95 % À −8 %, ET C'EST TOUT SAUF ÉVIDENT.
-           Un masque trois fois plus large que sa rampe ne se déplace pas
-           d'un bord à l'autre entre 0 et 100 % : le pourcentage aligne le
-           point X de l'image sur le point X du cadre, si bien que 100 %
-           colle le bord DROIT du masque au bord droit de la rampe. Une
-           première version balayait de −100 % à 200 % en croyant border
-           large ; la fenêtre passait en réalité presque tout son temps hors
-           champ, et la lumière ne se voyait qu'un instant.
-
-           Avec une bande éclairante de quatre pour cent, la plage où elle
-           traverse effectivement la rampe va de 82 % à 18 %. Au-delà, elle
-           est hors champ — inutile de balayer plus large, on ne ferait que
-           perdre du temps d'animation à ne rien montrer.
-
-           Le passage occupe les 18 premiers pour cent du cycle — neuf
-           dixièmes de seconde sur cinq. Le reste du temps, la fenêtre est
-           garée au-delà du bord : la lumière vive n'existe plus. */
-        @keyframes nd-passage-droite {
-            0% {
-                -webkit-mask-position: 82% 0;
-                mask-position: 82% 0;
-            }
-
-            18%,
-            100% {
-                -webkit-mask-position: 18% 0;
-                mask-position: 18% 0;
-            }
-        }
-
-        @keyframes nd-passage-gauche {
-            0% {
-                -webkit-mask-position: 18% 0;
-                mask-position: 18% 0;
-            }
-
-            18%,
-            100% {
-                -webkit-mask-position: 82% 0;
-                mask-position: 82% 0;
-            }
-        }
-
-        /* LA BRAISE. Elle s'efface pendant le passage — la veilleuse n'a
-           rien à dire quand la lumière parle — puis remonte doucement
-           jusqu'au milieu du silence, et redescend. */
-        @keyframes nd-braise {
-
-            0%,
-            20% {
-                opacity: 0.35;
-            }
-
-            55% {
-                opacity: 1;
-            }
-
-            100% {
-                opacity: 0.35;
-            }
-        }
-
-        /* ── LA SOUCHE, ET SA PERFORATION ──
-           « Prochainement » devient le talon qu'on détache : un vrai
-           panneau, d'un bord à l'autre du carton, très légèrement teinté
-           comme l'est le talon d'un billet.
-
-           LES MARGES NÉGATIVES ANNULENT EXACTEMENT LES MARGES INTÉRIEURES
-           DU CARTON — `py-2` vaut 8 px, `px-3.5` vaut 14 px, et ces deux
-           nombres sont écrits dans la classe du carton, trois lignes plus
-           bas dans le balisage. C'est ce qui rend la souche solide : elle
-           s'ancre sur la géométrie du carton, et non sur la hauteur du
-           texte qu'elle contient.
-
-           Une première version calait la découpe sur cette hauteur de
-           texte. Mesurée : les encoches tombaient trois pixels et demi
-           À L'INTÉRIEUR du carton, où elles ne découpaient rien. Une
-           découpe se cale sur le bord qu'elle entame, jamais sur ce
-           qu'il y a écrit à côté. */
-        .nd-souche {
-            position: relative;
-            /* ELLE PREND TOUTE LA HAUTEUR DU CARTON, et pas seulement celle
-               de son libellé. Sans cela, dès que le titre passe à deux
-               lignes — ce qui arrive sur tout écran étroit — le talon
-               n'était plus qu'une bande de trente pixels flottant au milieu
-               d'un carton de quatre-vingt-six, sa perforation suspendue dans
-               le vide. Un talon se détache d'un bord à l'autre. */
-            align-self: stretch;
-            margin: -8px 0 -8px -14px;
-            padding: 8px 14px;
-            border-right: 1px dashed rgb(var(--c-s300));
-            border-radius: 7px 0 0 7px;
-            background: rgb(var(--c-gold) / 0.05);
-        }
-
-        /* DEUX TROUS DE PERFORATION, ENTIERS ET DEDANS. Ils devaient
-           d'abord mordre sur les bords du carton, comme l'échancrure d'un
-           billet de train. Le même `overflow: hidden` que pour les
-           ampoules les coupait par la moitié. Or un billet perforé porte
-           aussi bien des TROUS PLEINS le long de sa ligne de découpe : on
-           prend cette forme-là, qui ne demande rien à personne.
-
-           Le liseré qui les cerne n'est pas une coquetterie : en thème
-           clair, le fond de page et celui du carton sont deux blancs
-           presque identiques, et sans ce trait le trou serait invisible —
-           c'est ce qu'a montré le premier rendu. */
-        .nd-souche::before {
-            content: "";
-            position: absolute;
-            right: -3.5px;
-            top: 1px;
-            bottom: 1px;
-            width: 7px;
+            border-radius: inherit;
+            /* 2 px : le masque ne laisse voir QUE l'épaisseur du filet, et
+               il rogne au passage le halo du drop-shadow. À un pixel et demi,
+               le point passait sans qu'on le voie — mesuré, puis constaté à
+               l'écran. Deux suffisent, et le trait reste fin. */
+            padding: 2px;
+            /* AUCUN BLANC : c'est lui qui rendait le phare clinquant. Le point
+               est entièrement doré — du doré clair au cœur, l'or du thème
+               ensuite — et l'ensemble reste sous les deux tiers d'opacité.
+               Il signale, il n'éclaire pas. */
+            background: radial-gradient(closest-side,
+                    rgb(var(--c-gold-light) / 0.62) 0%,
+                    rgb(var(--c-gold) / 0.42) 34%,
+                    rgb(var(--c-gold) / 0) 72%);
+            /* Compact : c'est un point qui se déplace, pas une nappe. Assez
+               petit pour que le segment de bordure allumé reste court, assez
+               large pour que le point atteigne presque les coins. */
+            background-size: 72px 72px;
+            background-repeat: no-repeat;
+            /* Sans halo, il ne reste qu'un filet d'un pixel et demi : le
+               point passe sans qu'on le voie. Le flou est calé sur la
+               taille du point — 4 px, pas 3 fois plus — sinon on retrouve
+               la bavure qu'on vient de chasser. */
+            filter: drop-shadow(0 0 3px rgb(var(--c-gold) / 0.3));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
             pointer-events: none;
-            background:
-                radial-gradient(circle 3.5px at 3.5px 3.5px, rgb(var(--c-bg)) 0 2.8px, rgb(var(--c-s300)) 2.8px 3.4px, transparent 3.8px) top center / 7px 7px no-repeat,
-                radial-gradient(circle 3.5px at 3.5px 3.5px, rgb(var(--c-bg)) 0 2.8px, rgb(var(--c-s300)) 2.8px 3.4px, transparent 3.8px) bottom center / 7px 7px no-repeat;
+            animation: next-date-phare 7s linear infinite;
         }
 
-        /* La date prend la lettre du frontispice — celle du nom, celle de
-           l'ouverture de scène. Le lieu garde sa chasse fixe : deux
-           écritures, deux natures d'information. */
-        .nd-quand {
-            font-family: 'Cinzel', serif;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            color: rgb(var(--c-gold-ink));
-        }
+        @keyframes next-date-phare {
 
-        /* ── PETIT ÉCRAN : LA SOUCHE RESTE À GAUCHE ──
-           Une version antérieure la couchait au-dessus du titre sous 768 px.
-           C'était une erreur de lecture : le bandeau se lit « étiquette,
-           puis contenu », de gauche à droite, et cette lecture ne dépend pas
-           de la largeur de l'écran. Empilée, la souche cessait d'être un
-           talon pour devenir un titre de section.
+            /* LE POINT EST CENTRÉ SUR LE FILET, PAS À L'INTÉRIEUR. C'est
+               tout l'enjeu de ces `calc()`. `background-position` cale les
+               BORDS de l'image, pas son centre : à `0 0`, le point de 72 px
+               a son centre 36 px sous le bord supérieur — c'est-à-dire là où
+               son dégradé est déjà transparent. Le masque ne révélait donc
+               rigoureusement rien, et le phare restait éteint alors que tout
+               le reste était juste. Le décalage de 36 px — la moitié du
+               point — le remet sur le filet.
 
-           Rien à écrire ici, donc — et c'est le bon signe. Le lien de droite
-           porte déjà `flex-1 min-w-0` : il se comprime jusqu'à zéro plutôt
-           que de pousser la souche à la ligne, et c'est le TITRE qui passe à
-           la ligne dans sa propre colonne. Le bouton « Réserver », lui,
-           garde sa règle de bascule pleine largeur, plus haut. */
-
-        /* « Moins d'animations » : les ampoules restent, la braise et le
-           passage s'arrêtent, la pastille cesse de battre. Un fronton
-           éteint reste un fronton — on ne retire pas le décor, on retire le
-           mouvement. La veilleuse est figée à pleine opacité : à 0,35, la
-           guirlande aurait eu l'air d'une panne. */
-        @media (prefers-reduced-motion: reduce) {
-
-            .nd-rampe,
-            .nd-rampe::after,
-            .next-date-dot {
-                animation: none;
+               Le tour dure 2,8 s. Puis 4,2 s de nuit. */
+            0% {
+                background-position: -36px -36px;
+                opacity: 0;
             }
 
-            .nd-rampe {
+            3% {
                 opacity: 1;
             }
 
-            /* La fenêtre de lumière est garée hors champ par défaut ; sans
-               animation elle y resterait, et la rampe n'aurait plus qu'une
-               veilleuse. On la pose au milieu : quelques ampoules allumées,
-               immobiles. */
-            .nd-rampe::after {
-                -webkit-mask-position: 50% 0;
-                mask-position: 50% 0;
+            /* le bord du haut, de gauche à droite */
+            17.6% {
+                background-position: calc(100% + 36px) -36px;
+            }
+
+            /* le petit côté droit, en descendant */
+            20% {
+                background-position: calc(100% + 36px) calc(100% + 36px);
+            }
+
+            /* le bord du bas, de droite à gauche */
+            37.6% {
+                background-position: -36px calc(100% + 36px);
+                opacity: 1;
+            }
+
+            /* le petit côté gauche, en remontant — et on s'éteint */
+            40% {
+                background-position: -36px -36px;
+                opacity: 0;
+            }
+
+            100% {
+                background-position: -36px -36px;
+                opacity: 0;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .next-date-shine::after {
+                animation: none;
             }
         }
     </style>
@@ -5807,17 +5630,14 @@
                 : '';
 
             bandeau.innerHTML = `
-                <div class="bio-collapse-inner"><div class="nd-carton glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                    <span class="nd-rampe nd-rampe-haut" aria-hidden="true"></span>
-                    <span class="nd-rampe nd-rampe-bas" aria-hidden="true"></span>
-                    <span class="nd-souche flex items-center gap-1.5 flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
+                <div class="bio-collapse-inner"><div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                    <span class="flex items-center gap-1.5 flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
                         <span class="next-date-dot" aria-hidden="true"></span> Prochainement
                     </span>
                     <a href="#page_dates" data-track="banner_next_date"
                        class="group flex-1 min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                         <span class="text-xs font-bold font-montserrat uppercase tracking-wide text-luxury-textMain group-hover:text-luxury-goldInk transition">${esc(p.title)}</span>
-                        <span class="text-[11px] text-luxury-textMuted font-mono"><span
-                                class="nd-quand">${esc(quand)}</span>${lieu}</span>
+                        <span class="text-[11px] text-luxury-textMuted font-mono">${esc(quand)}${lieu}</span>
                     </a>
                     ${reserver}
                 </div></div>`;
