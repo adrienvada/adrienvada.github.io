@@ -1413,12 +1413,15 @@
         .bio-handwritten {
             font-family: 'Caveat', 'Kalam', cursive;
             font-weight: 500;
-            /* 1,12 rem ET PAS UN POINT DE PLUS SUR PETIT ÉCRAN. Mesuré à
-               375 px : l'extrait tient sur trois lignes jusqu'à 17,9 px, et
-               bascule à quatre dès 18,9. Un pixel de corps de plus coûte
-               trente-deux pixels de hauteur dans un en-tête qu'on lit au
-               pouce. On s'arrête donc juste avant la marche. */
-            font-size: 1.12rem;
+            /* UNE SEULE TAILLE, GRAND ÉCRAN COMME PETIT. Il y avait ici un
+               corps mobile bridé à 1,12 rem : avec l'extrait long d'alors,
+               un pixel de plus faisait passer le texte de trois lignes à
+               quatre et coûtait trente-deux pixels de haut. L'extrait
+               s'arrête maintenant à « m'oblige à… », et cette marche a
+               disparu avec lui — mesuré à 375 px, on tient deux lignes et
+               62 px jusqu'à 1,4 rem. La contrainte est tombée, la règle qui
+               la contournait aussi. */
+            font-size: 1.3rem;
             line-height: 1.45;
             color: rgb(var(--c-text));
             transform: rotate(-0.4deg);
@@ -1433,7 +1436,6 @@
 
         @media (min-width: 768px) {
             .bio-handwritten {
-                font-size: 1.3rem;
                 transform: rotate(-0.5deg);
             }
         }
@@ -3573,19 +3575,26 @@
                          citation : on ne se cite pas soi-même dans sa propre
                          lettre.
 
-                         Deux lignes, puis des points de suspension posés par
-                         le CSS (voir .recit-extrait). Le texte entier reste
-                         DANS le document : lecteurs d'écran, impression et
-                         moteurs de recherche l'ont en entier, seul
-                         l'affichage s'arrête. -->
+                         LA COUPE TOMBE SUR « À ». Elle tombait douze mots
+                         plus loin, après « je n'ai jamais quitté le… » — une
+                         phrase et demie, dont la seconde moitié racontait
+                         déjà quelque chose. Or un aperçu n'a pas à raconter :
+                         il a à donner envie. « Ce que j'aime, c'est ce que
+                         chaque masque m'oblige à… » s'arrête sur la
+                         préposition, c'est-à-dire au moment précis où la
+                         phrase promet son complément sans le livrer. Rien
+                         n'est répondu, donc on ouvre.
+
+                         Le texte entier reste DANS le document, dans le
+                         panneau du récit : lecteurs d'écran, impression et
+                         moteurs de recherche l'ont en entier. -->
                     <div class="bio-collapse" id="header-bio">
                         <div class="bio-collapse-inner">
                             <button type="button" class="recit-appel" data-recit-ouvrir aria-haspopup="dialog"
                                 aria-controls="recit" aria-label="Lire mon parcours en entier">
                                 <span class="bio-handwritten-wrap max-w-xl block text-left">
                                     <span class="bio-handwritten recit-extrait">Ce que j’aime, c’est ce que chaque
-                                        masque m’oblige à aller chercher. J’ai vu Cyrano au cinéma quand j’avais
-                                        onze ans, et je n’ai jamais quitté le…</span>
+                                        masque m’oblige à…</span>
                                 </span>
                             </button>
                         </div>
