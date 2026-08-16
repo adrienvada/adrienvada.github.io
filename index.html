@@ -21,6 +21,27 @@
             }
             document.documentElement.setAttribute('data-theme', t);
         })();
+
+        // L'ANCRE D'ARRIVÉE EST MISE DE CÔTÉ AVANT QUE LE NAVIGATEUR NE S'EN
+        // SERVE. Arriver sur adrienvada.fr/#demos_voix lui demande de faire
+        // défiler jusqu'au conteneur portant cet identifiant. Ce défilement
+        // n'est pas le nôtre : il survient APRÈS notre propre cadrage et
+        // gagne donc, laissant le visiteur à 561 px du haut, l'en-tête déjà
+        // passé — alors qu'arriver sur le site doit justement le montrer.
+        //
+        // On retire donc le fragment de l'URL avant le premier rendu : le
+        // navigateur n'a plus rien à viser. Le routeur le remet en place dès
+        // qu'il a cadré la page (voir « l'URL retrouve son ancre »), et il
+        // reste lisible entre-temps ici.
+        //
+        // univers.js, lui, continue de lire location.hash tel quel pour ses
+        // liens profonds (#/univers/berenice) : son écouteur DOMContentLoaded
+        // est inscrit après celui du routeur — ordre du document — donc
+        // l'URL est déjà rétablie quand il la consulte.
+        window.__ancreArrivee = (location.hash || '').substring(1);
+        if (window.__ancreArrivee) {
+            history.replaceState(null, '', location.pathname + location.search);
+        }
     </script>
 
     <meta name="theme-color" content="#0a0907" media="(prefers-color-scheme: dark)">
@@ -3404,7 +3425,10 @@
                 //
                 // #page_cv ne compte pas : c'est l'onglet par défaut, donc
                 // l'adresse nue sous un autre nom.
-                var h = location.hash || '';
+                // L'ancre a été mise de côté dans l'en-tête du document, et
+                // l'URL en a été débarrassée : c'est donc là qu'il faut la
+                // lire, pas dans location.hash, qui est vide à cet instant.
+                var h = window.__ancreArrivee ? '#' + window.__ancreArrivee : '';
                 var profond = h.length > 1 && h !== '#page_cv';
 
                 if (!forced && (reduce || seen || profond)) {
@@ -5415,9 +5439,36 @@
             setupScrollReveal();
             setupGallerySwipe();
 
-            const hash = window.location.hash.substring(1);
+            const hash = window.__ancreArrivee || '';
             const premierOnglet = hash && document.getElementById(hash) ? hash : 'page_cv';
             showPage(premierOnglet, false);
+
+            // L'URL RETROUVE SON ANCRE — mais pas au même moment selon ce
+            // qu'elle désigne, et c'est là que se cache le piège.
+            //
+            // Chrome ne résout pas le fragment une fois pour toutes : il
+            // garde son saut EN ATTENTE et le retente à chaque étape du
+            // chargement, tant que la page n'est pas finie (c'est ce qui
+            // fait marcher les ancres vers du contenu arrivé tardivement).
+            // Rendre l'ancre dès maintenant le réarmait donc, et le visiteur
+            // se retrouvait de nouveau 561 px plus bas.
+            //
+            //   • Identifiant d'un onglet — une cible réelle : on attend la
+            //     fin du chargement, où le navigateur y renonce.
+            //   • Tout le reste — une route d'univers (#/univers/berenice),
+            //     un fragment inconnu : il n'y a aucun élément à viser, donc
+            //     aucun saut à craindre. On la rend tout de suite, car
+            //     univers.js lit location.hash dès DOMContentLoaded et doit
+            //     l'y trouver.
+            if (hash) {
+                const rendreLAncre = () => history.replaceState(null, '', '#' + hash);
+                if (document.getElementById(hash)) {
+                    if (document.readyState === 'complete') rendreLAncre();
+                    else window.addEventListener('load', rendreLAncre, { once: true });
+                } else {
+                    rendreLAncre();
+                }
+            }
 
             // Par quelle porte entre-t-on ? Un lien partagé vers les démos voix
             // ne se lit pas comme une arrivée par la page d'accueil, et ça
