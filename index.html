@@ -776,6 +776,13 @@
                 padding: 0 3px !important;
             }
 
+            /* Le halo de la guirlande n'a rien à faire sur du papier : la
+               remise à plat ci-dessus ne vise que .cv-badge, pas son
+               pseudo-élément, qui s'imprimerait en tache grise. */
+            .cv-badge::after {
+                display: none !important;
+            }
+
             a[href^="mailto:"] {
                 border: 0 !important;
                 padding: 0 !important;
@@ -2356,16 +2363,27 @@
                saturation que l'encre a dû céder. */
         :root {
             --cv-badge-encre: 65%;
+            /* LA FORCE DU HALO DE GUIRLANDE (voir .cv-badge::after plus bas),
+               et elle n'est pas la même dans les deux thèmes. Une lueur
+               colorée a beaucoup moins à offrir sur un fond pâle que sur un
+               fond sombre : réglée pour le thème sombre, elle avait
+               pratiquement disparu en clair. Les deux valeurs sont donc
+               posées ici, côte à côte, avec l'encre du badge dont elles
+               partagent la logique. */
+            --cv-halo: 45%;
         }
 
         :root[data-theme="light"] {
             --cv-badge-encre: 45%;
+            --cv-halo: 78%;
         }
 
         .cv-has-universe .cv-badge {
             color: color-mix(in srgb, var(--cv-accent) var(--cv-badge-encre), rgb(var(--c-text)));
             background: color-mix(in srgb, var(--cv-accent) 12%, rgb(var(--c-surface)));
             border-color: color-mix(in srgb, var(--cv-accent) 42%, transparent);
+            /* Pour le halo de la guirlande, plus bas. */
+            position: relative;
         }
 
         /*  4. LE LAVIS, SUR PETIT ÉCRAN SEULEMENT. Un filet de 2 px se
@@ -2488,6 +2506,14 @@
             transition-duration: var(--dur-press);
         }
 
+        /* Et la pastille suit sa ligne : elle s'allume sous le doigt comme
+           elle s'allume au passage de la vague, ni plus ni moins. */
+        .cv-item.is-pressed.cv-has-universe .cv-badge::after,
+        .cv-has-universe:has(.cv-row-toggle:active) .cv-badge::after {
+            animation: none;
+            opacity: 1;
+        }
+
         /* À la souris, le même geste : la ligne visée s'arrête à la crête
            de la vague. Elle ne s'allume ni plus ni moins qu'au passage de
            la guirlande — on désigne ce qu'on voyait déjà. */
@@ -2496,6 +2522,12 @@
                 animation: none;
                 opacity: var(--cv-crete);
                 width: var(--cv-lueur-designee);
+                transition-duration: var(--dur-quick);
+            }
+
+            .cv-has-universe:hover .cv-badge::after {
+                animation: none;
+                opacity: 1;
                 transition-duration: var(--dur-quick);
             }
         }
@@ -2512,6 +2544,76 @@
             }
 
             34% {
+                opacity: 0;
+            }
+        }
+
+        /* ── LA PASTILLE S'ALLUME AVEC SA LIGNE ──
+           « En tournée », « En création » : cinq lignes du CV portent une
+           pastille, et elle prend déjà la couleur de son spectacle. Au
+           passage de la vague, elle reçoit en plus un halo de cette même
+           couleur — la ligne ne fait pas que se teinter, quelque chose s'y
+           allume. C'est le seul endroit du CV où une information se
+           distingue d'elle-même : les spectacles qui se jouent encore.
+
+           DEUX ÉLÉMENTS, UNE SEULE HORLOGE. Le lavis vit sur le ::after de
+           la ligne, le halo sur celui de la pastille — deux animations
+           distinctes, donc, mais de même durée et de même retard, toutes
+           deux déclarées en CSS sur des éléments présents dès le premier
+           rendu. Elles démarrent à la même image et ne peuvent pas dériver
+           l'une par rapport à l'autre. Rien à synchroniser en script, et
+           rien à rejouer quand --cv-rang change : le retard des deux se
+           recale ensemble.
+
+           SEULE L'OPACITÉ EST ANIMÉE, comme pour le lavis. Le halo est un
+           box-shadow FIGÉ que porte un pseudo-élément, et l'on ne fait
+           varier que son opacité. Animer le box-shadow lui-même ferait
+           repeindre la pastille à chaque image.
+
+           SES PROPRES BORNES, mais les mêmes instants. La crête du lavis
+           vaut .16 : un halo à .16 ne se verrait pas. Le halo monte donc à
+           1, sa force étant portée par l'alpha de son ombre, et non par
+           l'opacité. Les pourcentages, eux, sont ceux de cv-guirlande —
+           c'est ce qui les fait battre ensemble, et ils sont à garder
+           ensemble. */
+        .cv-has-universe .cv-badge::after {
+            content: '';
+            position: absolute;
+            /* Le halo part du filet de la pastille, pas de son intérieur. */
+            inset: -1px;
+            border-radius: inherit;
+            box-shadow: 0 0 9px 1px color-mix(in srgb, var(--cv-accent) var(--cv-halo), transparent);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--dur-base) var(--ease-out);
+            animation: cv-pastille-lueur 4s ease-in-out infinite;
+            animation-delay: calc(var(--cv-rang, 0) * .25s);
+        }
+
+        @keyframes cv-pastille-lueur {
+
+            0%,
+            100% {
+                opacity: 0;
+            }
+
+            14% {
+                opacity: 1;
+            }
+
+            34% {
+                opacity: 0;
+            }
+        }
+
+        /* « Moins d'animations » : le halo ne s'immobilise pas allumé, il
+           s'éteint. La pastille garde sa couleur — c'est elle qui porte
+           l'information, le halo n'en était que l'accent. Sans largeur
+           d'écran ici, contrairement au repli du lavis juste en dessous :
+           le halo bat sur tous les écrans, il doit se taire sur tous. */
+        @media (prefers-reduced-motion: reduce) {
+            .cv-has-universe .cv-badge::after {
+                animation: none;
                 opacity: 0;
             }
         }
