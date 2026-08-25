@@ -1513,6 +1513,45 @@
             overflow: hidden;
         }
 
+        /* ── LA SIGNATURE CASTING NE PASSE JAMAIS À DEUX LIGNES ──
+           « 187 cm · Baryton-basse · Piano · FR · RU · EN · Tir · Permis
+           A/B » : six faits qu'un directeur de casting lit d'un coup d'œil,
+           et qui ne valent que pris ensemble. Sur deux lignes, la seconde
+           devient une queue qu'on ne lit plus.
+
+           Le contenu occupe 293,3 px, et la ligne dispose de la largeur de
+           l'écran moins 54. Elle tient donc d'une seule pièce à partir de
+           347,3 px — tout téléphone en service. En dessous, il faut réduire
+           le corps, et on ne le réduit QUE là : au-dessus du seuil, rien de
+           cette règle ne s'applique et le texte reste à 10 px.
+
+           LE SEUIL EST POSÉ À 351 ET NON À 347, et la différence a été
+           payée pour de bon. Le premier essai coupait à 346 : à 347 px pile
+           — le premier écran à repasser en 10 px — il fallait 293 pour 293
+           disponibles, et la ligne basculait. Une égalité n'est pas une
+           marge : la décimale qu'on arrondit en la lisant, le navigateur ne
+           l'arrondit pas. Quatre pixels de rab mettent la bascule à
+           distance des rendus de fonte qui varient d'une plateforme à
+           l'autre.
+
+           POURQUOI 8,8 ET PAS 9. Mesuré à 320 px, la largeur du plus petit
+           écran encore en circulation — un iPhone 5, un SE de première
+           génération : à 9 px il faut 267 px pour 266 disponibles. Un
+           pixel. C'est le genre d'écart qu'on ne devine pas et qu'on ne
+           voit qu'en mesurant, et c'est aussi pourquoi il ne faut pas se
+           contenter d'arrondir au chiffre rond d'à côté. À 8,8 px il en
+           faut 262 : quatre pixels de marge, la ligne tient.
+
+           ⚠ CE SEUIL DÉPEND DU CONTENU. Ajouter un fait à la ligne le
+           déplace vers le haut, et la règle cessera de suffire sans que
+           rien ne le signale. Le jour où l'on en ajoute un, il faut
+           remesurer — ou en retirer un autre. */
+        @media (max-width: 351px) {
+            #header-signature .signature-casting {
+                font-size: 8.8px;
+            }
+        }
+
         /* ── Bio manuscrite ──
            Seule touche organique au milieu d'une mise en page très construite,
            mais discrète : taille proche du texte d'origine, Kalam plutôt
@@ -3892,7 +3931,7 @@
                     <div class="bio-collapse" id="header-signature">
                         <div class="bio-collapse-inner">
                             <div
-                                class="flex flex-wrap items-center justify-center md:justify-start gap-x-1.5 sm:gap-x-2 gap-y-1 mb-2 text-[10px] font-montserrat tracking-normal sm:tracking-wide text-luxury-textMuted">
+                                class="signature-casting flex flex-wrap items-center justify-center md:justify-start gap-x-1.5 sm:gap-x-2 gap-y-1 mb-2 text-[10px] font-montserrat tracking-normal sm:tracking-wide text-luxury-textMuted">
                                 <span class="text-luxury-textMain">187 cm</span>
                                 <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
