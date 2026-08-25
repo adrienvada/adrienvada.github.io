@@ -413,6 +413,19 @@ html[data-zoom="6"] { --colonnes: 6; }
 }
 
 /* ── Visionneuse plein écran (Lightbox) ── */
+
+/* LE FOND NE DÉFILE PAS DERRIÈRE LA PHOTO. Sans cela, le pouce qui glisse
+   à côté de l'image fait courir la grille par-dessous : on rouvre en ayant
+   perdu sa place, et le geste de balayage qui doit passer à la photo
+   suivante entre en concurrence avec le défilement de la page. C'est la
+   même technique que le panneau plein écran de l'accueil (u-locked), avec
+   la même conséquence à réparer : poser overflow:hidden sur <html> fait
+   ramener le défilement à zéro par le navigateur, et le retirer ne le rend
+   pas. C'est au script de le remettre — voir closeZoom(). */
+html.galerie-verrou {
+    overflow: hidden;
+}
+
 .galerie-zoom {
     position: fixed;
     inset: 0;
@@ -631,6 +644,33 @@ function genererHtml() {
             document.documentElement.setAttribute('data-theme', t);
             try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
         })();
+
+        // ════════════════════════════════════════════════════════════════
+        //  LE BOOK S'OUVRE AU PLUS LARGE — planche contact, pas diaporama
+        //  ----------------------------------------------------------------
+        //  On arrivait sur deux colonnes au téléphone, quatre à l'écran :
+        //  trois photos visibles, et le reste à découvrir en faisant
+        //  défiler. Or ce n'est pas ce qu'on vient chercher dans un book.
+        //  Un directeur de casting veut EMBRASSER la série d'un coup d'œil,
+        //  juger la variété des visages avant d'en regarder un ; c'est le
+        //  geste de la planche contact, où l'on entoure ensuite la bonne.
+        //  Le pincement reste là pour se rapprocher, et il n'a plus qu'un
+        //  sens à offrir en arrivant : écarter.
+        //
+        //  ON LE POSE ICI, ET NON AU CHARGEMENT DU SCRIPT PRINCIPAL, parce
+        //  qu'un attribut posé après le premier rendu se verrait : la grille
+        //  se peindrait à deux colonnes, puis se recomposerait à quatre sous
+        //  les yeux. Ce script-ci s'exécute avant que quoi que ce soit ne
+        //  soit peint, comme celui du thème juste au-dessus.
+        //
+        //  LE CHIFFRE EST CELUI DU HAUT DE L'ÉCHELLE, et il est écrit à un
+        //  seul endroit : la même expression sert de borne au pincement
+        //  (voir NIVEAUX plus bas). Le seuil de 640 px est celui de la
+        //  feuille de style, pas un choix indépendant.
+        // ════════════════════════════════════════════════════════════════
+        (function () {
+            document.documentElement.dataset.zoom = innerWidth < 640 ? '4' : '5';
+        })();
     </script>
     <meta name="theme-color" content="#0a0907">
 
@@ -695,7 +735,18 @@ ${JSON.stringify(schemaJson, null, 2)}
             <svg class="ico" aria-hidden="true"><use href="#i-solid-chevron-right"></use></svg>
         </button>
         <figure class="zoom-fig" id="zoom-fig">
-            <img id="zoom-img" alt="" decoding="async">
+            <!-- LA CLASSE, ET PAS SEULEMENT L'IDENTIFIANT. Cette image n'en
+                 portait pas : l'identifiant servait au script, et toute la
+                 mise à l'échelle — max-width, max-height, object-fit — était
+                 écrite pour la classe .zoom-img, qui ne visait donc rien.
+                 La photo
+                 s'affichait à sa taille naturelle, 955 × 1280, dans un écran
+                 de 390 : elle débordait de 573 px sous le bord bas et la page
+                 se mettait à défiler derrière la visionneuse. Sur ordinateur
+                 le défaut passait presque inaperçu, l'écran étant plus grand
+                 que la photo. Sur téléphone, il rendait la visionneuse
+                 inutilisable. -->
+            <img class="zoom-img" id="zoom-img" alt="" decoding="async">
             <figcaption class="zoom-caption" id="zoom-caption"></figcaption>
         </figure>
     </div>
@@ -737,17 +788,26 @@ ${JSON.stringify(schemaJson, null, 2)}
             }, 80);
         }
 
+        // On retient où l'on en était dans la planche AVANT de la verrouiller :
+        // le navigateur ramène le défilement à zéro dès qu'on pose
+        // overflow:hidden, et ne le rend pas au déverrouillage.
+        var defilementAvant = 0;
+
         function openZoom(index) {
             currentIndex = (index + PHOTOS.length) % PHOTOS.length;
+            defilementAvant = window.scrollY || document.documentElement.scrollTop || 0;
             zoomModal.hidden = false;
             void zoomModal.offsetHeight;
             zoomModal.classList.add('is-open');
+            document.documentElement.classList.add('galerie-verrou');
             updateZoomDisplay();
             document.getElementById('zoom-close')?.focus();
         }
 
         function closeZoom() {
             zoomModal.classList.remove('is-open');
+            document.documentElement.classList.remove('galerie-verrou');
+            window.scrollTo(0, defilementAvant);
             setTimeout(function () {
                 zoomModal.hidden = true;
                 zoomImg.src = '';
@@ -820,7 +880,14 @@ ${JSON.stringify(schemaJson, null, 2)}
         // ════════════════════════════════════════════════════════════════
         var mur = document.querySelector('main');
         var NIVEAUX = function () { return innerWidth < 640 ? [2, 3, 4] : [2, 3, 4, 5]; };
-        var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
+        // LE REPOS EST LE HAUT DE L'ÉCHELLE, comme à l'arrivée : c'est la
+        // planche contact qui fait le repos de cette page, et le pincement
+        // n'en écarte que pour se rapprocher (voir le script du <head>).
+        // Cette valeur ne sert plus qu'à deux choses — retrouver son rang
+        // dans l'échelle si l'attribut a disparu, et servir de secours à
+        // zoomCourant() — mais elle doit dire la même chose que lui, sans
+        // quoi le premier pincement partirait d'un cran qu'on ne voit pas.
+        var zoomRepos = function () { var n = NIVEAUX(); return n[n.length - 1]; };
         var zoomCourant = function () {
             return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
         };
@@ -840,6 +907,18 @@ ${JSON.stringify(schemaJson, null, 2)}
             if (v) document.documentElement.dataset.zoom = v;
             else delete document.documentElement.dataset.zoom;
         };
+
+        // UN QUART DE TOUR PEUT RENDRE LE NIVEAU IMPOSSIBLE. L'échelle n'a
+        // pas les mêmes barreaux des deux côtés du seuil de 640 px : cinq
+        // colonnes existent à l'écran, pas au téléphone. Ouvrir la page en
+        // paysage la pose donc à cinq, et la remettre en portrait garderait
+        // ces cinq colonnes sur 390 px de large — des vignettes de 78 px, et
+        // un pincement qui repartirait d'un cran introuvable. On ramène le
+        // niveau dans l'échelle du moment dès qu'il en sort. Le sens inverse
+        // n'a rien à corriger : quatre colonnes existent des deux côtés.
+        addEventListener('resize', function () {
+            if (NIVEAUX().indexOf(zoomCourant()) === -1) poseNiveau(zoomRepos());
+        });
         var pincement = 0, rapport = 1, sensVol = 0, versVol = 0,
             departs = null, cibles = null, tVol = 0, demandeVol = 0, verrou = false;
         var ecart = function (t) {

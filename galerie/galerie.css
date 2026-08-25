@@ -345,6 +345,19 @@ html[data-zoom="6"] { --colonnes: 6; }
 }
 
 /* ── Visionneuse plein écran (Lightbox) ── */
+
+/* LE FOND NE DÉFILE PAS DERRIÈRE LA PHOTO. Sans cela, le pouce qui glisse
+   à côté de l'image fait courir la grille par-dessous : on rouvre en ayant
+   perdu sa place, et le geste de balayage qui doit passer à la photo
+   suivante entre en concurrence avec le défilement de la page. C'est la
+   même technique que le panneau plein écran de l'accueil (u-locked), avec
+   la même conséquence à réparer : poser overflow:hidden sur <html> fait
+   ramener le défilement à zéro par le navigateur, et le retirer ne le rend
+   pas. C'est au script de le remettre — voir closeZoom(). */
+html.galerie-verrou {
+    overflow: hidden;
+}
+
 .galerie-zoom {
     position: fixed;
     inset: 0;
