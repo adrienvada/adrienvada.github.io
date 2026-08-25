@@ -710,8 +710,17 @@
         function updateZoomDisplay() {
             var item = PHOTOS[currentIndex];
             if (!item) return;
+            // L'ENTRÉE NE SE FAIT PLUS QU'EN OPACITÉ. Elle ajoutait un
+            // scale(0.97) qui grandissait jusqu'à 1 : depuis que la photo est
+            // agrandissable, cette propriété appartient au pincement, et deux
+            // écritures concurrentes sur la même transformation se seraient
+            // écrasées l'une l'autre — la photo serait retombée à sa taille
+            // d'origine au premier chargement d'image. La figure entière garde
+            // son propre scale(.96) à l'ouverture de la visionneuse (voir
+            // .zoom-fig) : le mouvement d'entrée n'est pas perdu, il est
+            // seulement porté par le cadre plutôt que par l'image.
             zoomImg.style.opacity = '0';
-            zoomImg.style.transform = 'scale(0.97)';
+            remetAPlat(false);
             zoomCaption.textContent = (currentIndex + 1) + ' / ' + PHOTOS.length;
 
             setTimeout(function () {
@@ -719,7 +728,6 @@
                 zoomImg.alt = item.alt;
                 zoomImg.onload = function () {
                     zoomImg.style.opacity = '1';
-                    zoomImg.style.transform = 'scale(1)';
                 };
                 // Précharge adjacente discrète
                 var next = new Image();
@@ -780,8 +788,11 @@
         document.getElementById('zoom-next')?.addEventListener('click', nextPhoto);
         document.getElementById('zoom-prev')?.addEventListener('click', prevPhoto);
 
-        // Fermeture au clic sur le fond
+        // Fermeture au clic sur le fond — sauf si ce clic est la fin d'un
+        // déplacement de photo agrandie relâché à côté d'elle : on ne ferme
+        // pas ce qu'on vient de déplacer.
         zoomModal.addEventListener('click', function (e) {
+            if (aTireSouris) { aTireSouris = false; return; }
             if (!zoomFig.contains(e.target) && !e.target.closest('.zoom-nav')) {
                 closeZoom();
             }
@@ -795,26 +806,217 @@
             else if (e.key === 'ArrowLeft') prevPhoto();
         });
 
-        // Swipe tactile sur la visionneuse
-        var touchStartX = 0;
-        var touchStartY = 0;
+        // ════════════════════════════════════════════════════════════════
+        //  GROSSIR LA PHOTO, ET ELLE SEULE
+        //  ----------------------------------------------------------------
+        //  Deux doigts sur une photo ouverte déclenchaient le zoom natif du
+        //  navigateur : c'est TOUTE la page qui grossissait — les flèches, la
+        //  croix, le compteur — et il fallait ensuite dézoomer le site pour
+        //  reprendre la main. Un book de comédien se regarde de près : on
+        //  veut voir un grain de peau, une lumière dans l'œil, pas une
+        //  interface agrandie.
+        //
+        //  Le geste est donc repris ici. La feuille de style coupe les
+        //  gestes par défaut sur la visionneuse (touch-action), et ce qui
+        //  suit les rejoue sur la seule image : pincement pour grossir,
+        //  glissement pour se déplacer dedans, double frappe pour aller et
+        //  venir entre les deux. Le reste de la page garde le zoom du
+        //  navigateur — la règle ne vaut que sur la visionneuse.
+        //
+        //  L'ANCRAGE EST LE POINT DÉLICAT. Grossir depuis le centre de
+        //  l'image fait fuir sous les doigts ce qu'on visait. On garde donc
+        //  fixe le point pincé : la translation est recalculée à chaque
+        //  changement d'échelle pour que ce point-là reste où il est
+        //  (grossitVers). C'est ce qui distingue un zoom qu'on pilote d'un
+        //  zoom qu'on subit.
+        //
+        //  ET LA PHOTO NE PEUT PAS S'ÉCHAPPER. Le déplacement est borné à ce
+        //  qui dépasse de l'écran : à échelle 1 il n'y a rien à déplacer, et
+        //  une fois agrandie on ne peut pas tirer l'image au point d'en
+        //  laisser voir le vide à côté.
+        //
+        //  LES GESTES NE SE MARCHENT PAS DESSUS : tant que la photo est à sa
+        //  taille, un glissement navigue — gauche/droite pour changer de
+        //  photo, vers le bas pour fermer, comme avant. Dès qu'elle est
+        //  agrandie, le même glissement la déplace, et ni la navigation ni
+        //  la fermeture ne se déclenchent : on ne quitte pas une photo qu'on
+        //  est en train d'examiner.
+        // ════════════════════════════════════════════════════════════════
+        var ECHELLE_MAX = 5;
+        var echelle = 1, tx = 0, ty = 0;
+
+        function borne(v, min, max) { return v < min ? min : (v > max ? max : v); }
+
+        // Ce qui dépasse de l'écran, de chaque côté : la moitié de l'excédent.
+        // offsetWidth donne la taille SANS transformation, contrairement à
+        // getBoundingClientRect — c'est ce qu'il faut ici, l'échelle étant
+        // appliquée à la main juste après.
+        function debordement() {
+            return {
+                x: Math.max(0, (zoomImg.offsetWidth * echelle - innerWidth) / 2),
+                y: Math.max(0, (zoomImg.offsetHeight * echelle - innerHeight) / 2)
+            };
+        }
+
+        function applique(anime) {
+            var d = debordement();
+            tx = borne(tx, -d.x, d.x);
+            ty = borne(ty, -d.y, d.y);
+            zoomImg.style.transition = anime
+                ? 'opacity .18s ease, transform .22s cubic-bezier(.2,.6,.2,1)'
+                : 'opacity .18s ease';
+            zoomImg.style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1)
+                + 'px) scale(' + echelle.toFixed(3) + ')';
+            zoomImg.classList.toggle('est-agrandie', echelle > 1.01);
+        }
+
+        function remetAPlat(anime) {
+            echelle = 1; tx = 0; ty = 0;
+            applique(anime);
+        }
+
+        // Change l'échelle en gardant immobile le point visé (px, py en
+        // coordonnées d'écran). Voir le commentaire ci-dessus : la position
+        // écran d'un point vaut centre + translation + position_locale ×
+        // échelle ; pour qu'elle ne bouge pas, la translation doit absorber
+        // la différence d'échelle.
+        function grossitVers(voulue, px, py, anime) {
+            var nouvelle = borne(voulue, 1, ECHELLE_MAX);
+            if (Math.abs(nouvelle - echelle) < 0.0005) return;
+            var r = zoomImg.getBoundingClientRect();
+            var ux = (px - (r.left + r.width / 2)) / echelle;
+            var uy = (py - (r.top + r.height / 2)) / echelle;
+            tx += ux * (echelle - nouvelle);
+            ty += uy * (echelle - nouvelle);
+            echelle = nouvelle;
+            applique(anime);
+        }
+
+        var doigts = 0, departX = 0, departY = 0, glisseX = 0, glisseY = 0;
+        var pincement = 0, echelleAvant = 1, aBouge = false, dernierTap = 0;
+        // Instant de la dernière double frappe tactile traitée — voir le
+        // garde du dblclick plus bas, qui sans lui défaisait le travail.
+        var frappeTraitee = 0;
+
+        function ecartDoigts(t) {
+            return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+        }
+
+        function saisitUnDoigt(t) {
+            departX = t.clientX; departY = t.clientY;
+            glisseX = tx; glisseY = ty;
+        }
+
         zoomModal.addEventListener('touchstart', function (e) {
-            if (!e.touches.length) return;
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
+            doigts = e.touches.length;
+            aBouge = false;
+            if (doigts === 2) {
+                pincement = ecartDoigts(e.touches);
+                echelleAvant = echelle;
+            } else if (doigts === 1) {
+                saisitUnDoigt(e.touches[0]);
+            }
+        }, { passive: true });
+
+        zoomModal.addEventListener('touchmove', function (e) {
+            if (e.touches.length === 2 && pincement) {
+                var ecart = ecartDoigts(e.touches);
+                grossitVers(echelleAvant * (ecart / pincement),
+                    (e.touches[0].clientX + e.touches[1].clientX) / 2,
+                    (e.touches[0].clientY + e.touches[1].clientY) / 2, false);
+                aBouge = true;
+            } else if (e.touches.length === 1 && echelle > 1.01) {
+                tx = glisseX + (e.touches[0].clientX - departX);
+                ty = glisseY + (e.touches[0].clientY - departY);
+                applique(false);
+                aBouge = true;
+            }
         }, { passive: true });
 
         zoomModal.addEventListener('touchend', function (e) {
+            // Un doigt levé sur deux : on ne termine rien, on repart du doigt
+            // qui reste. Sans cela, relâcher une pince en gardant un doigt
+            // posé faisait sauter l'image d'un coup, la saisie datant encore
+            // du premier contact.
+            if (e.touches.length === 1) {
+                pincement = 0;
+                saisitUnDoigt(e.touches[0]);
+                return;
+            }
+            if (e.touches.length > 0) return;
+            var etaitPince = pincement > 0;
+            pincement = 0;
             if (!e.changedTouches.length) return;
-            var diffX = touchStartX - e.changedTouches[0].clientX;
-            var diffY = touchStartY - e.changedTouches[0].clientY;
-            if (Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY)) {
-                if (diffX > 0) nextPhoto();
-                else prevPhoto();
-            } else if (Math.abs(diffY) > 80 && Math.abs(diffY) > Math.abs(diffX)) {
+            var fx = e.changedTouches[0].clientX, fy = e.changedTouches[0].clientY;
+
+            // Double frappe : aller et venir entre la taille d'écran et un
+            // grossissement de deux et demi, ancré là où l'on a frappé.
+            if (!aBouge && !etaitPince) {
+                var t = Date.now();
+                if (t - dernierTap < 300) {
+                    dernierTap = 0;
+                    frappeTraitee = t;
+                    if (echelle > 1.01) remetAPlat(true);
+                    else grossitVers(2.5, fx, fy, true);
+                    return;
+                }
+                dernierTap = t;
+            }
+
+            if (echelle > 1.01) return;   // agrandie : le glissement l'a déplacée
+            var dx = departX - fx, dy = departY - fy;
+            if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0) nextPhoto(); else prevPhoto();
+            } else if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) {
                 closeZoom();
             }
         }, { passive: true });
+
+        // À la molette, sur ordinateur : le curseur tient lieu de doigts.
+        zoomModal.addEventListener('wheel', function (e) {
+            if (zoomModal.hidden) return;
+            e.preventDefault();
+            grossitVers(echelle * Math.exp(-e.deltaY * 0.0022), e.clientX, e.clientY, false);
+        }, { passive: false });
+
+        // Double-clic, à la souris. LE GARDE N'EST PAS UNE PRÉCAUTION, C'EST
+        // UNE RÉPARATION : le navigateur fabrique un dblclick à partir d'une
+        // double frappe tactile, après le touchend. Sans lui, les deux
+        // gestionnaires se déclenchaient l'un après l'autre sur le même
+        // geste — le premier grossissait, le second voyait une photo
+        // agrandie et la remettait à plat. Au doigt, la double frappe ne
+        // faisait donc rien du tout, sans la moindre erreur pour le dire.
+        zoomImg.addEventListener('dblclick', function (e) {
+            e.stopPropagation();
+            if (Date.now() - frappeTraitee < 700) return;
+            if (echelle > 1.01) remetAPlat(true);
+            else grossitVers(2.5, e.clientX, e.clientY, true);
+        });
+
+        // Déplacement à la souris, une fois agrandie. Le drapeau aTireSouris
+        // empêche le clic de fin de course de refermer la visionneuse quand
+        // on a relâché hors de l'image.
+        var souris = null, aTireSouris = false;
+        zoomImg.addEventListener('mousedown', function (e) {
+            if (echelle <= 1.01) return;
+            e.preventDefault();
+            souris = { x: e.clientX, y: e.clientY, tx: tx, ty: ty };
+            aTireSouris = false;
+        });
+        addEventListener('mousemove', function (e) {
+            if (!souris) return;
+            tx = souris.tx + (e.clientX - souris.x);
+            ty = souris.ty + (e.clientY - souris.y);
+            aTireSouris = true;
+            applique(false);
+        });
+        addEventListener('mouseup', function () { souris = null; });
+
+        // Tourner l'écran change ce qui dépasse : on reborne, sans quoi la
+        // photo resterait tirée au-delà de son nouveau cadre.
+        addEventListener('resize', function () {
+            if (!zoomModal.hidden) applique(false);
+        });
 
         // ════════════════════════════════════════════════════════════════
         //  PINCH-TO-ZOOM SUR LA GRILLE (façon Répertoire spectacles)

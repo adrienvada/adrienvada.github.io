@@ -410,6 +410,31 @@ html.galerie-verrou {
     border-radius: 4px;
     box-shadow: 0 16px 48px -8px rgba(0, 0, 0, .85);
     transition: opacity .18s ease, transform .18s ease;
+    /* Le grossissement part du centre : c'est ce que suppose le calcul
+       d'ancrage du script, qui replace la translation pour que le point
+       sous les doigts ne bouge pas. Changer cette origine fausserait
+       l'ancrage sans rien casser de visible au premier coup d'œil. */
+    transform-origin: center center;
+}
+
+/* LE PINCEMENT EST À NOUS, PAS AU NAVIGATEUR. Sans cette ligne, deux
+   doigts sur la photo déclenchent le zoom natif de la page : c'est toute
+   l'interface qui grossit — les flèches, la croix, le compteur — et l'on
+   se retrouve à devoir dézoomer le site pour reprendre la main. En
+   coupant les gestes par défaut sur la visionneuse, le pincement ne
+   grossit plus que l'image. Le reste de la page garde le sien : la règle
+   ne vaut que tant que la visionneuse est ouverte, puisqu'elle est seule
+   à porter cette classe. */
+.galerie-zoom {
+    touch-action: none;
+}
+
+.zoom-img.est-agrandie {
+    cursor: grab;
+}
+
+.zoom-img.est-agrandie:active {
+    cursor: grabbing;
 }
 
 .zoom-caption {
