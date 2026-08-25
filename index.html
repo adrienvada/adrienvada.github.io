@@ -3883,19 +3883,6 @@
     <!-- MAIN CONTAINER -->
     <div class="max-w-4xl mx-auto px-4 md:px-6 py-6 relative z-10 flex flex-col min-h-screen justify-between">
 
-        <!-- ── BANDEAU « PROCHAINEMENT » ──
-             Tout en haut de page, avant même l'en-tête : un CV se consulte une
-             fois, une affiche se reconsulte. Jusqu'ici, savoir qu'Adrien joue
-             le 22 octobre demandait un clic sur un onglet — autant dire que
-             personne ne le savait. Le bandeau lit la MÊME source que la page
-             Dates (dates.js, via splitUpcoming) : rien n'est saisi deux fois,
-             et il ne peut donc pas la contredire.
-             Posé `hidden` : c'est renderNextDate() qui l'ouvre, et seulement
-             s'il reste une représentation à venir. Une saison qui se termine
-             le fait disparaître toute seule, sans intervention.
-             `no-print` : la version imprimée est un CV, pas une affiche. -->
-        <div id="next-date-banner" hidden class="no-print mb-5 bio-collapse"></div>
-
         <!-- HEADER (Light Luxury Style) -->
         <header
             class="glass-card rounded-xl p-4 md:p-5 mb-5 shadow-sm border border-stone-200/50 hover:border-luxury-gold/30 transition duration-500">
@@ -4180,6 +4167,35 @@
                         </svg> Télécharger le CV
                     </a>
                 </div>
+
+                <!-- ── BANDEAU « PROCHAINEMENT » ──
+                     En tête du CV, juste avant le théâtre : la prochaine date
+                     est la suite de la liste qu'on s'apprête à lire, pas une
+                     annonce posée sur la page. Elle se lit donc dans la foulée
+                     du titre du spectacle qu'elle concerne, et non à côté du
+                     portrait. Savoir qu'Adrien joue le 22 octobre ne demande
+                     toujours pas d'aller voir l'onglet Dates.
+
+                     Le bandeau lit la MÊME source que la page Dates (dates.js,
+                     via splitUpcoming) : rien n'est saisi deux fois, et il ne
+                     peut donc pas la contredire.
+
+                     Posé `hidden` : c'est renderNextDate() qui l'ouvre, et
+                     seulement s'il reste une représentation à venir. Une saison
+                     qui se termine le fait disparaître toute seule, sans
+                     intervention — et `space-y-4` du parent ne compte pas les
+                     éléments `hidden`, donc il ne laisse pas de blanc derrière
+                     lui.
+
+                     Ni `bio-collapse` ni marge propre, contrairement à sa
+                     version d'avant : il vivait alors hors des pages et devait
+                     se replier lui-même dès qu'on quittait le CV. Ici, la page
+                     qui le contient s'en charge, et l'espacement vient de la
+                     liste.
+
+                     `no-print` : la version imprimée est un CV, pas une
+                     affiche. -->
+                <div id="next-date-banner" hidden class="no-print"></div>
 
                 <!-- SECTION 1.1: THÉÂTRE -->
                 <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
@@ -5999,14 +6015,22 @@
             // dernier — d'où un résultat différent selon le navigateur et la
             // machine. On garde le href (URL partageable, ouverture dans un
             // onglet, lecteurs d'écran) et on ne lui retire que le défilement.
-            document.getElementById('nav-tabs-container')?.addEventListener('click', (e) => {
+            // Posé sur le DOCUMENT, et non sur la seule barre d'onglets : le
+            // bandeau « Prochainement » renvoie lui aussi vers #page_dates,
+            // et depuis qu'il vit dans le CV il serait le seul lien d'onglet
+            // de la page à garder le double défilement qu'on vient d'ôter aux
+            // autres. La règle vaut donc partout : un lien dont le fragment
+            // désigne un conteneur de page est un changement d'onglet.
+            document.addEventListener('click', (e) => {
                 // Clic milieu, ⌘/Ctrl-clic… : c'est une demande de nouvel
                 // onglet, elle ne nous regarde pas.
                 if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                 const lien = e.target.closest('a[href^="#"]');
                 if (!lien) return;
                 const cible = lien.getAttribute('href').slice(1);
-                if (!document.getElementById(cible)) return;
+                // Un fragment qui ne vise pas une PAGE — une route d'univers,
+                // une ancre interne — n'a rien à faire ici.
+                if (!document.getElementById(cible)?.classList.contains('page')) return;
                 e.preventDefault();
                 allerAOnglet(cible);
             });
@@ -6178,7 +6202,7 @@
                 : '';
 
             bandeau.innerHTML = `
-                <div class="bio-collapse-inner"><div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     <span class="flex items-center gap-1.5 flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
                         <span class="next-date-dot" aria-hidden="true"></span> Prochainement
                     </span>
@@ -6188,7 +6212,7 @@
                         <span class="text-[11px] text-luxury-textMuted font-mono">${esc(quand)}${lieu}</span>
                     </a>
                     ${reserver}
-                </div></div>`;
+                </div>`;
             bandeau.hidden = false;
         }
 
