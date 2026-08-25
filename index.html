@@ -1460,9 +1460,18 @@
             outline-color: rgb(var(--c-gold-light));
         }
 
-        /* ── Bio de l'en-tête : visible seulement sur l'onglet CV ──
-           Même technique que les tiroirs de dates : grid-template-rows
-           0fr→1fr anime la hauteur sans la connaître à l'avance. */
+        /* ── Ce qui, dans l'en-tête, n'a de sens qu'en regard du CV ──
+           La signature casting, les liens externes, le métier, le bandeau
+           « Prochainement » : l'en-tête étant commun aux quatre onglets,
+           ces morceaux-là doivent s'escamoter quand on va aux dates ou aux
+           démos. Même technique que les tiroirs de dates : grid-template-rows
+           0fr→1fr anime la hauteur sans la connaître à l'avance.
+
+           La phrase manuscrite s'appelait aussi ici, du temps où elle
+           ouvrait l'en-tête. Elle est descendue au bas de l'onglet CV, où
+           elle n'a plus rien à replier — la page entière s'efface pour
+           elle. Le nom `bio-collapse` lui survit, et c'est le seul endroit
+           où l'on peut encore lire d'où il venait. */
         .bio-collapse {
             display: grid;
             grid-template-rows: 1fr;
@@ -3799,63 +3808,6 @@
                         </div>
                     </div>
 
-                    <!-- Présentation : affichée uniquement sur l'onglet CV.
-                         Le repli utilise grid-template-rows 0fr→1fr, qui permet
-                         d'animer la hauteur sans la connaître à l'avance (une
-                         transition sur max-height obligerait à fixer une valeur
-                         arbitraire, et saccaderait au repli). -->
-                    <!-- LA PREMIÈRE PHRASE DE LA LETTRE, ET RIEN D'AUTRE.
-                         Il y avait ici une citation encadrée, puis, dessous,
-                         l'amorce du récit : deux fois la même voix, à deux
-                         endroits, disant deux choses. Le haut de page est
-                         maintenant le DÉBUT DU TEXTE qu'on ouvre — mêmes
-                         mots, même écriture, qui se poursuit simplement sur
-                         le papier. Les guillemets sont tombés avec la
-                         citation : on ne se cite pas soi-même dans sa propre
-                         lettre.
-
-                         UNE PHRASE, ENTIÈRE, ET RIEN DE PLUS. L'aperçu
-                         courait sur une phrase et demie ; sa seconde moitié
-                         racontait déjà quelque chose, alors qu'un aperçu n'a
-                         pas à raconter. Il s'est ensuite arrêté sur la
-                         préposition — « m'oblige à… » — pour que
-                         l'interruption fasse elle-même l'invitation. La
-                         première phrase est finalement rendue entière : elle
-                         se suffit, et elle dit tout ce qu'on veut faire
-                         entendre d'abord.
-
-                         ⚠ CE QUI APPELAIT LE CLIC A DONC DISPARU. C'était
-                         la coupure : une phrase suspendue oblige à ouvrir.
-                         Une phrase achevée, non. Restent l'aria-label pour
-                         qui écoute la page, et le cadre doré qui s'allume au
-                         survol pour qui a une souris — mais au doigt, plus
-                         rien ne dit qu'il y a une suite. Si cela manque, la
-                         réponse n'est pas de recouper la phrase : c'est un
-                         signe discret sous la feuille.
-
-                         L'ESPACE ENTRE « m'oblige » ET « à » RESTE
-                         INSÉCABLE. Elle avait été posée pour empêcher que la
-                         préposition ne reste seule en fin d'aperçu ; elle
-                         sert maintenant la règle générale, qui veut qu'un
-                         mot d'une lettre ne termine pas une ligne.
-
-                         Le texte entier reste DANS le document, dans le
-                         panneau du récit : lecteurs d'écran, impression et
-                         moteurs de recherche l'ont en entier. -->
-                    <div class="bio-collapse" id="header-bio">
-                        <div class="bio-collapse-inner">
-                            <button type="button" class="recit-appel" data-recit-ouvrir aria-haspopup="dialog"
-                                aria-controls="recit" aria-label="Lire mon parcours en entier">
-                                <span class="bio-handwritten-wrap max-w-xl block text-left">
-                                    <span class="bio-handwritten recit-extrait">Ce que j’aime, c’est ce que chaque
-                                        masque m’oblige à aller chercher.<span
-                                            class="recit-suite"> J’ai vu Cyrano au cinéma quand
-                                            j’avais…</span></span>
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-
                     <!-- Contact : e-mail mis en avant, puis fiches et réseaux
 
                          LES GESTES QUI SORTENT DU SITE SONT LES SEULS QUI
@@ -4683,6 +4635,72 @@
                         </li>
                     </ul>
                 </section>
+
+                <!-- ══ LA LETTRE SE SIGNE EN BAS DE PAGE ══════════════════
+                     Cette phrase manuscrite ouvrait l'en-tête, sous le nom :
+                     c'était la première chose qu'on lisait d'Adrien, avant
+                     un seul de ses rôles. Elle y était à contre-emploi. Qui
+                     ouvre ce site vient chercher un CV — des dates, des
+                     rôles, une formation —, et une confidence posée avant
+                     les faits réclame une attention qu'on n'a pas encore
+                     décidé d'accorder. Ici, après les quatre-vingts lignes
+                     du CV, elle ne barre plus la route : elle attend celui
+                     qui est allé jusqu'au bout, et c'est à lui, précisément,
+                     qu'elle a quelque chose à dire. Une page de CV se termine
+                     toujours par une signature ; celle-ci en est une.
+
+                     ELLE N'A PLUS BESOIN DE SE REPLIER. Dans l'en-tête, un
+                     enrobage `bio-collapse` l'escamotait dès qu'on quittait
+                     l'onglet CV — l'en-tête, lui, est commun aux quatre
+                     onglets. Elle vit maintenant DANS l'onglet : passer aux
+                     dates efface la page entière, et il ne reste rien à
+                     replier. Deux éléments de moins à entretenir, et une
+                     transition de moins à synchroniser avec le recadrage de
+                     la barre.
+
+                     UNE PHRASE, ENTIÈRE, ET RIEN DE PLUS. L'aperçu courait
+                     jadis sur une phrase et demie ; sa seconde moitié
+                     racontait déjà quelque chose, alors qu'un aperçu n'a pas
+                     à raconter. La première phrase se suffit, et elle dit
+                     tout ce qu'on veut faire entendre d'abord.
+
+                     ⚠ CE QUI APPELAIT LE CLIC A DISPARU AVEC LA COUPURE.
+                     Une phrase suspendue oblige à ouvrir ; une phrase
+                     achevée, non. Restent l'aria-label pour qui écoute la
+                     page, et le cadre doré qui s'allume au survol pour qui a
+                     une souris — mais au doigt, rien ne dit qu'il y a une
+                     suite. Si cela manque, la réponse n'est pas de recouper
+                     la phrase : c'est un signe discret sous la feuille. La
+                     corne de page en est un, et elle est déjà là.
+
+                     L'ESPACE ENTRE « m'oblige » ET « à » RESTE INSÉCABLE :
+                     un mot d'une lettre ne termine pas une ligne.
+
+                     Le texte entier reste DANS le document, dans le panneau
+                     du récit — lecteurs d'écran, impression et moteurs de
+                     recherche l'ont en entier.
+
+                     LA FEUILLE PREND TOUTE LA COLONNE, et c'est le
+                     déménagement qui l'exige. Elle était bridée à 36 rem :
+                     dans l'en-tête, où elle occupait une colonne étroite,
+                     c'était la bonne mesure. Ici, sous des cartes de 848 px,
+                     ces 576 px faisaient un moignon décalé qui n'alignait
+                     son bord droit sur rien. À pleine largeur elle tombe au
+                     pixel sur les cartes du dessus, et la phrase passe de
+                     deux lignes à une seule — 59 px de haut, puis 34. Une
+                     ligne unique au pied d'un CV, ce n'est plus un
+                     paragraphe dont il faudrait surveiller la mesure : c'est
+                     une signature. Sur téléphone rien ne change, l'écran y
+                     est plus étroit que la bride ne l'était. -->
+                <button type="button" class="recit-appel" data-recit-ouvrir aria-haspopup="dialog"
+                    aria-controls="recit" aria-label="Lire mon parcours en entier">
+                    <span class="bio-handwritten-wrap block text-left">
+                        <span class="bio-handwritten recit-extrait">Ce que j’aime, c’est ce que chaque
+                            masque m’oblige à aller chercher.<span
+                                class="recit-suite"> J’ai vu Cyrano au cinéma quand
+                                j’avais…</span></span>
+                    </span>
+                </button>
 
             </div>
 
