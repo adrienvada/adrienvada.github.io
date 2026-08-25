@@ -986,14 +986,15 @@
 
             /* Le portrait perd un quart de son diamètre : il reste un
                visage reconnaissable, il cesse d'être un médaillon. */
+            header [aria-label="Ouvrir la galerie photo"]>span:first-child,
             header button[aria-label="Ouvrir le book photo"]>span:first-child {
                 width: 68px !important;
                 height: 68px !important;
             }
 
-            /* « Voir le book » ouvrait la galerie. Sur papier il ne mène
-               nulle part — il survivait par l'exception `header button`,
-               celle qui existe pour que le portrait ne disparaisse pas. */
+            /* « Galerie photo » ouvrait la galerie. Sur papier il ne mène
+               nulle part : on l'efface. */
+            header [aria-label="Ouvrir la galerie photo"]>span:last-child,
             header button[aria-label="Ouvrir le book photo"]>span:last-child {
                 display: none !important;
             }
@@ -3983,9 +3984,9 @@
                     </div>
                 </div>
 
-                <!-- Avatar : ouvre le book photo -->
-                <button type="button" class="relative group flex-shrink-0 flex flex-col items-center"
-                    onclick="openGallery(0)" aria-label="Ouvrir le book photo">
+                <!-- Avatar : ouvre la galerie photo -->
+                <a href="galerie/" class="relative group flex-shrink-0 flex flex-col items-center no-underline text-inherit"
+                    aria-label="Ouvrir la galerie photo">
                     <span
                         class="relative block w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border border-stone-200 p-0.5 bg-luxury-surface transition hover:border-luxury-gold duration-500 shadow-sm">
                         <picture>
@@ -4011,9 +4012,9 @@
                         class="text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk flex items-center gap-1 mt-1.5 opacity-80 group-hover:opacity-100 transition">
                         <svg class="ico" aria-hidden="true">
                             <use href="#i-solid-camera"></use>
-                        </svg> Voir le book
+                        </svg> Galerie photo
                     </span>
-                </button>
+                </a>
             </div>
         </header>
 
