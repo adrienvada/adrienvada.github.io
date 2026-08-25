@@ -2582,7 +2582,10 @@
             /* Le halo part du filet de la pastille, pas de son intérieur. */
             inset: -1px;
             border-radius: inherit;
-            box-shadow: 0 0 9px 1px color-mix(in srgb, var(--cv-accent) var(--cv-halo), transparent);
+            /* Large : le halo déborde franchement de la pastille au lieu de
+               la souligner. C'est ce débordement qui le fait lire comme une
+               lumière qui s'allume, et non comme un contour qui s'épaissit. */
+            box-shadow: 0 0 27px 3px color-mix(in srgb, var(--cv-accent) var(--cv-halo), transparent);
             opacity: 0;
             pointer-events: none;
             transition: opacity var(--dur-base) var(--ease-out);
