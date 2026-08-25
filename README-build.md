@@ -13,6 +13,7 @@ périmé. Il affiche simplement l'état d'avant.
 | Ce que vous modifiez | À relancer | Ce que ça réécrit |
 |---|---|---|
 | une classe Tailwind dans `index.html`, `404.html`, `dates.js`, `galerie.js` | [la commande Tailwind](#régénérer-stylescss-obligatoire-après-modification-des-classes) | `styles.css` |
+| **`galerie.js`** — ajout ou ordre des photos du book | `node build/generer-page-galerie.js` | `/galerie/…` |
 | **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml` |
 | une **ligne du CV** dans `index.html` — titre, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |

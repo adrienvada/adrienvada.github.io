@@ -1578,6 +1578,12 @@ function main() {
         <priority>1.0</priority>
     </url>`,
     `    <url>
+        <loc>${SITE}/galerie/</loc>
+        <lastmod>${jour}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>`,
+    `    <url>
         <loc>${SITE}/spectacles/</loc>
         <lastmod>${jour}</lastmod>
         <changefreq>monthly</changefreq>
@@ -1595,7 +1601,8 @@ function main() {
     console.log(`  ${faites.length} pages spectacle générées dans /spectacles/`);
     faites.forEach(f => console.log(`    /spectacles/${f.slug}/   ${f.titre}${f.cv ? '' : '   (aucune ligne de CV appariée)'}`));
     console.log(`  /spectacles/            répertoire (plaque tournante)`);
-    console.log(`  sitemap.xml : ${faites.length + 2} adresses`);
+    console.log(`  /galerie/               galerie photo`);
+    console.log(`  sitemap.xml : ${faites.length + 3} adresses`);
 }
 
 main();
