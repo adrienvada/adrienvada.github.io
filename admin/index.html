@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dates — administration</title>
+    <!-- Page privée : pas d'indexation. Le robots.txt ne l'interdit pas
+         volontairement (voir son commentaire) : c'est cette balise qui compte. -->
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#0a0907">
+    <link rel="icon" type="image/svg+xml" href="../favicon_io/favicon.svg">
+    <script>
+        // Même thème que l'accueil (avTheme), appliqué avant le premier rendu.
+        (function () {
+            var t = 'dark', stored = null;
+            try { stored = localStorage.getItem('avTheme'); } catch (e) { }
+            if (stored === 'light' || stored === 'dark') t = stored;
+            else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) t = 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Cinzel:wght@600&display=swap">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         ADMINISTRATION DES DATES
+         ══════════════════════════════════════════════════════════════
+         Cette page écrit dans la table Supabase `representations`, celle
+         que le site lit en direct (dates-live.js). Elle n'est utilisable
+         qu'avec une session ouverte au nom d'adrien.vada@gmail.com : les
+         règles d'accès de la table (supabase/schema.sql) refusent tout
+         autre compte, même connecté.
+
+         CONNEXION SANS MOT DE PASSE. On saisit son adresse, Supabase
+         envoie un lien, on l'ouvre : la session est ouverte sur cet
+         appareil et y reste. Il n'y a rien à retenir.
+
+         APRÈS UNE MODIFICATION, le site se met à jour tout seul. Avant le
+         prochain commit, en revanche, il faut recopier la table dans
+         dates.js : `node build/exporter-dates.js` — voir README-build.md.
+         ══════════════════════════════════════════════════════════════ -->
+    <style>
+        :root {
+            --bg: #0a0907; --bg-2: #14120f; --ink: #ede8df; --ink-2: #a39c8f;
+            --ligne: rgba(255, 255, 255, .09); --or: #c9a55a; --or-encre: #e0c47f;
+            --danger: #d9776b; --ok: #8fc79a;
+        }
+        :root[data-theme="light"] {
+            --bg: #faf9f5; --bg-2: #f1eee6; --ink: #1c1a16; --ink-2: #6b665c;
+            --ligne: rgba(0, 0, 0, .09); --or: #9a7a2e; --or-encre: #7d6120;
+            --danger: #b23d30; --ok: #2f7a45;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; background: var(--bg); color: var(--ink); }
+        body { font: 15px/1.5 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+        main { max-width: 760px; margin: 0 auto; padding: 24px 16px 80px; }
+        h1 { font: 600 22px/1.2 'Cinzel', serif; letter-spacing: .04em; margin: 0 0 4px; }
+        h2 { font: 600 12px/1 'Inter', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--or); margin: 32px 0 12px; }
+        .sous { color: var(--ink-2); font-size: 13px; margin: 0 0 20px; }
+        a { color: var(--or-encre); }
+        [hidden] { display: none !important; }
+
+        .carte { background: var(--bg-2); border: 1px solid var(--ligne); border-radius: 12px; padding: 16px; }
+        .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .grille .large { grid-column: 1 / -1; }
+        @media (max-width: 520px) { .grille { grid-template-columns: 1fr; } }
+        label { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+        input[type=text], input[type=email], input[type=url], input[type=date] {
+            width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--ligne);
+            background: var(--bg); color: var(--ink); font: inherit;
+        }
+        input:focus { outline: 2px solid var(--or); outline-offset: 1px; }
+        .case { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); margin-top: 22px; }
+        .case input { width: 18px; height: 18px; accent-color: var(--or); }
+
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; align-items: center; }
+        button { font: inherit; font-weight: 500; padding: 10px 16px; border-radius: 8px; cursor: pointer; border: 1px solid var(--ligne); background: var(--bg); color: var(--ink); }
+        button.primaire { background: var(--or); border-color: var(--or); color: #1a1408; }
+        button.discret { border-color: transparent; background: transparent; color: var(--ink-2); padding: 6px 8px; font-size: 13px; }
+        button.discret:hover { color: var(--ink); }
+        button.danger { color: var(--danger); }
+        button:disabled { opacity: .5; cursor: default; }
+
+        .message { font-size: 13px; padding: 10px 12px; border-radius: 8px; margin-top: 12px; border: 1px solid var(--ligne); }
+        .message.erreur { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
+        .message.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+
+        .entete { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+        .entete .compte { font-size: 12px; color: var(--ink-2); }
+
+        .liste { list-style: none; margin: 0; padding: 0; }
+        .liste li { display: grid; grid-template-columns: 110px 1fr auto; gap: 10px 14px; padding: 12px 0; border-top: 1px solid var(--ligne); align-items: start; }
+        .liste li:first-child { border-top: 0; }
+        .liste .jour { font-weight: 600; white-space: nowrap; }
+        .liste .jour small { display: block; font-weight: 400; color: var(--ink-2); }
+        .liste .titre { font-weight: 500; }
+        .liste .lieu { color: var(--ink-2); font-size: 13px; }
+        .liste .badges { margin-top: 4px; }
+        .badge { display: inline-block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--ligne); color: var(--ink-2); margin-right: 6px; }
+        .badge.or { color: var(--or-encre); border-color: color-mix(in srgb, var(--or) 50%, transparent); }
+        .liste .boutons { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; }
+        .liste li.passee { opacity: .55; }
+        @media (max-width: 520px) {
+            .liste li { grid-template-columns: 1fr; }
+            .liste .boutons { flex-direction: row; justify-content: flex-start; }
+        }
+        .mois { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin: 20px 0 6px; }
+        .vide { color: var(--ink-2); font-size: 14px; padding: 16px 0; }
+        .pied { margin-top: 40px; font-size: 12px; color: var(--ink-2); border-top: 1px solid var(--ligne); padding-top: 16px; }
+        code { font-size: 12px; background: var(--bg-2); padding: 1px 5px; border-radius: 4px; }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="entete">
+            <div>
+                <h1>Dates de spectacle</h1>
+                <p class="sous">Ce qui est enregistré ici s'affiche sur <a href="../#page_dates">adrienvada.fr</a> immédiatement.</p>
+            </div>
+            <div id="compte" class="compte" hidden>
+                <span id="compte-mail"></span> · <button class="discret" id="btn-sortir" type="button">Se déconnecter</button>
+            </div>
+        </div>
+
+        <!-- ── Chargement ── -->
+        <section id="etat-chargement" class="carte">Connexion à la base…</section>
+
+        <!-- ── Connexion ── -->
+        <section id="etat-connexion" class="carte" hidden>
+            <h2 style="margin-top:0">Connexion</h2>
+            <form id="form-connexion">
+                <label for="mail">Adresse mail</label>
+                <input type="email" id="mail" value="adrien.vada@gmail.com" autocomplete="email" required>
+                <div class="actions">
+                    <button class="primaire" type="submit" id="btn-lien">M'envoyer le lien de connexion</button>
+                </div>
+                <div id="msg-connexion" class="message" hidden></div>
+            </form>
+            <p class="sous" style="margin:14px 0 0">Pas de mot de passe : un lien arrive par mail, on l'ouvre sur cet appareil, et la session reste ouverte.</p>
+        </section>
+
+        <!-- ── Compte non autorisé ── -->
+        <section id="etat-refus" class="carte" hidden>
+            <p style="margin:0">Ce compte est connecté mais n'a pas le droit d'écrire : seule l'adresse <strong>adrien.vada@gmail.com</strong> y est autorisée.</p>
+        </section>
+
+        <!-- ── Édition ── -->
+        <section id="etat-edition" hidden>
+            <h2 id="titre-form">Nouvelle date</h2>
+            <form id="form-date" class="carte" autocomplete="off">
+                <input type="hidden" id="f-id">
+                <div class="grille">
+                    <div class="large">
+                        <label for="f-spectacle">Spectacle <span class="sous" style="display:inline">(le titre exact du CV)</span></label>
+                        <input type="text" id="f-spectacle" list="l-spectacles" required placeholder="Bérénice">
+                        <datalist id="l-spectacles"></datalist>
+                    </div>
+                    <div class="large">
+                        <label for="f-lieu">Lieu, tel qu'affiché</label>
+                        <input type="text" id="f-lieu" list="l-lieux" required placeholder="Le Forum, Falaise (14)">
+                        <datalist id="l-lieux"></datalist>
+                    </div>
+                    <div>
+                        <label for="f-ville">Ville (pour les filtres)</label>
+                        <input type="text" id="f-ville" list="l-villes" required placeholder="Falaise">
+                        <datalist id="l-villes"></datalist>
+                    </div>
+                    <div>
+                        <label for="f-jour">Jour</label>
+                        <input type="date" id="f-jour" required>
+                    </div>
+                    <div>
+                        <label for="f-heure">Heure <span class="sous" style="display:inline">(vide si inconnue)</span></label>
+                        <input type="text" id="f-heure" placeholder="19h00" inputmode="numeric" pattern="^$|^\d{1,2}h\d{2}$">
+                    </div>
+                    <div>
+                        <label class="case"><input type="checkbox" id="f-scolaire"> Séance scolaire</label>
+                    </div>
+                    <div class="large">
+                        <label for="f-url">Lien de réservation <span class="sous" style="display:inline">(vide = réservations pas encore ouvertes)</span></label>
+                        <input type="url" id="f-url" placeholder="https://…">
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="primaire" type="submit" id="btn-enregistrer">Enregistrer</button>
+                    <button type="button" id="btn-annuler" hidden>Annuler</button>
+                </div>
+                <div id="msg-form" class="message" hidden></div>
+            </form>
+
+            <div class="entete" style="margin-top:32px">
+                <h2 style="margin:0">À venir</h2>
+                <button class="discret" type="button" id="btn-passees">Afficher les dates passées</button>
+            </div>
+            <ul id="liste" class="liste"></ul>
+            <div id="liste-vide" class="vide" hidden>Aucune date à venir.</div>
+        </section>
+
+        <p class="pied">Le site lit cette table en direct. Avant le prochain <em>commit</em> du site, recopier la table dans <code>dates.js</code> : <code>node build/exporter-dates.js</code>, puis <code>node build/generer-pages-spectacles.js</code>.</p>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js"></script>
+    <script src="../dates-live.js"></script>
+    <script>
+        (function () {
+            'use strict';
+            const L = window.DatesLive;
+            const COMPTE_AUTORISE = 'adrien.vada@gmail.com';
+            const sb = window.supabase.createClient(L.SUPABASE_URL, L.SUPABASE_CLE);
+
+            const $ = id => document.getElementById(id);
+            const etats = ['etat-chargement', 'etat-connexion', 'etat-refus', 'etat-edition'];
+            function montrer(id) { etats.forEach(e => { $(e).hidden = e !== id; }); }
+            function message(el, texte, type) {
+                el.textContent = texte || '';
+                el.className = 'message' + (type ? ' ' + type : '');
+                el.hidden = !texte;
+            }
+
+            let lignes = [];
+            let montrerPassees = false;
+            const aujourdhui = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+
+            // ── Session ──
+            async function demarrer() {
+                const { data: { session } } = await sb.auth.getSession();
+                appliquerSession(session);
+                sb.auth.onAuthStateChange((_evt, s) => appliquerSession(s));
+            }
+            function appliquerSession(session) {
+                const mail = session && session.user && session.user.email;
+                $('compte').hidden = !mail;
+                $('compte-mail').textContent = mail || '';
+                if (!mail) { montrer('etat-connexion'); return; }
+                if (mail.toLowerCase() !== COMPTE_AUTORISE) { montrer('etat-refus'); return; }
+                montrer('etat-edition');
+                charger();
+            }
+
+            $('form-connexion').addEventListener('submit', async e => {
+                e.preventDefault();
+                const email = $('mail').value.trim();
+                $('btn-lien').disabled = true;
+                message($('msg-connexion'), 'Envoi du lien…');
+                const { error } = await sb.auth.signInWithOtp({
+                    email,
+                    options: { emailRedirectTo: location.origin + location.pathname }
+                });
+                $('btn-lien').disabled = false;
+                if (error) {
+                    const trop = /rate|limit|seconds/i.test(error.message);
+                    message($('msg-connexion'), trop
+                        ? 'Trop de demandes : le compte gratuit n\'envoie que quelques mails par heure. Réessaie dans quelques minutes.'
+                        : 'Impossible d\'envoyer le lien : ' + error.message, 'erreur');
+                    return;
+                }
+                message($('msg-connexion'), 'Lien envoyé à ' + email + '. Ouvre-le sur cet appareil.', 'ok');
+            });
+            $('btn-sortir').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+
+            // ── Lecture ──
+            async function charger() {
+                const { data, error } = await sb.from(L.TABLE).select('*').order('jour').order('heure');
+                if (error) { message($('msg-form'), 'Lecture impossible : ' + error.message, 'erreur'); return; }
+                lignes = data || [];
+                remplirListesDeSaisie();
+                rendreListe();
+            }
+
+            function remplirListesDeSaisie() {
+                const distinct = cle => [...new Set(lignes.map(l => l[cle]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'));
+                const option = v => `<option value="${echapper(v)}">`;
+                $('l-spectacles').innerHTML = distinct('spectacle').map(option).join('');
+                $('l-lieux').innerHTML = distinct('lieu').map(option).join('');
+                $('l-villes').innerHTML = distinct('ville').map(option).join('');
+            }
+
+            function echapper(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+            const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+            function moisDe(iso) { const [a, m] = iso.split('-'); return `${MOIS[Number(m) - 1]} ${a}`; }
+            function jourSemaine(iso) { const [a, m, j] = iso.split('-').map(Number); return ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'][new Date(a, m - 1, j).getDay()]; }
+
+            function rendreListe() {
+                const visibles = lignes.filter(l => montrerPassees || l.jour >= aujourdhui);
+                $('liste-vide').hidden = visibles.length > 0;
+                $('btn-passees').textContent = montrerPassees ? 'Masquer les dates passées' : 'Afficher les dates passées';
+                let mois = '', html = '';
+                visibles.forEach(l => {
+                    const m = moisDe(l.jour);
+                    if (m !== mois) { mois = m; html += `<div class="mois">${echapper(m)}</div>`; }
+                    const passee = l.jour < aujourdhui;
+                    html += `<li class="${passee ? 'passee' : ''}" data-id="${l.id}">
+                        <div class="jour">${jourSemaine(l.jour)} ${L.jourCourt(l.jour)}<small>${echapper(l.heure) || '&nbsp;'}</small></div>
+                        <div>
+                            <div class="titre">${echapper(l.spectacle)}</div>
+                            <div class="lieu">${echapper(l.lieu)}</div>
+                            <div class="badges">${l.scolaire ? '<span class="badge">Scolaire</span>' : ''}${l.reservation_url ? '<span class="badge or">Réservation ouverte</span>' : ''}</div>
+                        </div>
+                        <div class="boutons">
+                            <button class="discret" type="button" data-action="modifier">Modifier</button>
+                            <button class="discret" type="button" data-action="dupliquer">Dupliquer</button>
+                            <button class="discret danger" type="button" data-action="supprimer">Supprimer</button>
+                        </div>
+                    </li>`;
+                });
+                $('liste').innerHTML = html;
+            }
+
+            $('btn-passees').addEventListener('click', () => { montrerPassees = !montrerPassees; rendreListe(); });
+
+            $('liste').addEventListener('click', async e => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const id = Number(btn.closest('li').dataset.id);
+                const l = lignes.find(x => x.id === id);
+                if (!l) return;
+                if (btn.dataset.action === 'modifier') { remplirFormulaire(l, false); }
+                if (btn.dataset.action === 'dupliquer') {
+                    // Même spectacle, même lieu, le lendemain : le cas courant d'une série.
+                    const [a, m, j] = l.jour.split('-').map(Number);
+                    const d = new Date(a, m - 1, j + 1);
+                    const lendemain = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    remplirFormulaire(Object.assign({}, l, { id: null, jour: lendemain }), true);
+                }
+                if (btn.dataset.action === 'supprimer') {
+                    if (!confirm(`Supprimer « ${l.spectacle} », ${L.jourCourt(l.jour)} à ${l.ville} ?`)) return;
+                    const { error } = await sb.from(L.TABLE).delete().eq('id', id);
+                    if (error) { message($('msg-form'), 'Suppression impossible : ' + error.message, 'erreur'); return; }
+                    message($('msg-form'), 'Date supprimée.', 'ok');
+                    charger();
+                }
+            });
+
+            // ── Formulaire ──
+            function remplirFormulaire(l, copie) {
+                $('f-id').value = l.id || '';
+                $('f-spectacle').value = l.spectacle || '';
+                $('f-lieu').value = l.lieu || '';
+                $('f-ville').value = l.ville || '';
+                $('f-jour').value = l.jour || '';
+                $('f-heure').value = l.heure || '';
+                $('f-url').value = l.reservation_url || '';
+                $('f-scolaire').checked = !!l.scolaire;
+                $('titre-form').textContent = l.id ? 'Modifier la date' : (copie ? 'Nouvelle date (copie)' : 'Nouvelle date');
+                $('btn-annuler').hidden = !l.id && !copie;
+                message($('msg-form'), '');
+                $('form-date').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                $('f-jour').focus();
+            }
+            function viderFormulaire() {
+                remplirFormulaire({}, false);
+                $('btn-annuler').hidden = true;
+            }
+            $('btn-annuler').addEventListener('click', viderFormulaire);
+
+            $('form-date').addEventListener('submit', async e => {
+                e.preventDefault();
+                const id = $('f-id').value ? Number($('f-id').value) : null;
+                const heure = $('f-heure').value.trim().replace(/^(\d{1,2})[h:](\d{2})$/, (_, h, m) => `${h}h${m}`);
+                const ligne = {
+                    spectacle: L.typographie($('f-spectacle').value),
+                    lieu: L.typographie($('f-lieu').value),
+                    ville: L.typographie($('f-ville').value),
+                    jour: $('f-jour').value,
+                    heure,
+                    reservation_url: $('f-url').value.trim(),
+                    scolaire: $('f-scolaire').checked
+                };
+                $('btn-enregistrer').disabled = true;
+                const req = id ? sb.from(L.TABLE).update(ligne).eq('id', id) : sb.from(L.TABLE).insert(ligne);
+                const { error } = await req;
+                $('btn-enregistrer').disabled = false;
+                if (error) {
+                    const doublon = error.code === '23505';
+                    message($('msg-form'), doublon
+                        ? 'Cette soirée existe déjà (même spectacle, même lieu, même jour, même heure).'
+                        : 'Enregistrement impossible : ' + error.message, 'erreur');
+                    return;
+                }
+                message($('msg-form'), id ? 'Date modifiée.' : 'Date ajoutée.', 'ok');
+                const garderPourSerie = !id;   // après un ajout, on garde spectacle et lieu : la date suivante est souvent la même série
+                const memo = garderPourSerie ? { spectacle: ligne.spectacle, lieu: ligne.lieu, ville: ligne.ville, heure: ligne.heure } : {};
+                viderFormulaire();
+                if (garderPourSerie) { $('f-spectacle').value = memo.spectacle; $('f-lieu').value = memo.lieu; $('f-ville').value = memo.ville; $('f-heure').value = memo.heure; }
+                charger();
+            });
+
+            demarrer();
+        })();
+    </script>
+</body>
+
+</html>

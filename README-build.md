@@ -16,6 +16,7 @@ périmé. Il affiche simplement l'état d'avant.
 | **`galerie.js`** — ajout ou ordre des photos du book | `node build/generer-page-galerie.js` | `/galerie/…` |
 | **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml` |
 | une **ligne du CV** dans `index.html` — titre, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
+| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | `node build/exporter-dates.js`, puis la commande ci-dessus | `dates.js`, puis `/spectacles/…` |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
 | le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…` |
 | une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
@@ -689,15 +690,77 @@ que deux choses comptent autant.
 
 ## Mettre à jour les dates de représentation
 
-Tout se passe dans `dates.js`.
+Les dates à venir ne s'écrivent plus dans un fichier : elles vivent dans une
+**base Supabase**, et se modifient depuis **[adrienvada.fr/admin/](https://adrienvada.fr/admin/)**
+— depuis un téléphone, en tournée, sans commit ni publication. Le site les
+lit en direct.
+
+### Depuis le téléphone : `/admin/`
+
+1. Ouvrir `/admin/`, saisir son adresse mail, recevoir le lien, l'ouvrir.
+   La session reste ouverte sur l'appareil ; il n'y a pas de mot de passe.
+2. Ajouter, modifier, dupliquer (la même série, le lendemain), supprimer.
+   Chaque enregistrement est **immédiatement visible** sur le site.
+
+Une ligne = une soirée. Deux représentations le même jour, c'est deux
+lignes. Les soirées d'un même spectacle au même lieu, rapprochées, sont
+regroupées en « série » par le site lui-même — rien à saisir pour ça.
+
+Le **titre du spectacle** doit être exactement celui du CV : c'est lui qui
+relie une date à sa ligne du CV et à sa page spectacle. La page de saisie
+propose les titres déjà connus, et corrige la typographie (espace insécable
+avant `?`, `!`, `:`).
+
+Seule l'adresse **adrien.vada@gmail.com** peut écrire : c'est une règle de
+la base (`supabase/schema.sql`), pas de la page. Un autre compte, même
+connecté, est refusé.
+
+### Sur l'ordinateur, avant un commit : `exporter-dates.js`
+
+Le site lit la base en direct, mais **trois choses lisent encore
+`dates.js`** : le repli si la base ne répond pas, les pages spectacle
+générées, et le PDF du CV. Dès qu'une date a changé dans `/admin/`, avant le
+prochain commit :
+
+```bash
+node build/exporter-dates.js
+node build/generer-pages-spectacles.js
+```
+
+Le premier recopie la base entre les repères `⇊ ⇈` de `dates.js` ; tout ce
+qui est hors des repères (titre de saison, archives) reste à la main. Le
+second refait les pages spectacle avec les nouvelles dates.
+
+**Ne modifiez plus la partie `upcoming` de `dates.js` à la main** : le
+prochain export l'écraserait sans prévenir. Le bon endroit, c'est `/admin/`.
+
+### Ce qui n'a pas changé
 
 Les dates **passées basculent automatiquement** dans « Archives & dates
-passées » : plus besoin de les déplacer à la main. Une représentation reste
-affichée dans « prochaines dates » pendant toute la journée où elle a lieu,
-puis rejoint les archives le lendemain. Le champ `icsDate` (format
-`AAAA-MM-JJ`) est ce qui pilote ce comportement — il est donc **obligatoire**.
+passées » : une représentation reste dans « prochaines dates » toute la
+journée où elle a lieu, puis rejoint les archives le lendemain. `archives`
+ne sert qu'aux saisons antérieures, conservées à la main dans `dates.js`.
 
-`archives` ne sert plus qu'aux saisons antérieures, conservées telles quelles.
+### Comment ça tient — et ce qui peut lâcher
+
+- **`dates-live.js`** interroge la table au chargement de l'accueil. Si elle
+  répond en moins de trois secondes, il remplace les dates et relance les
+  rendus. Sinon, rien ne se passe : `dates.js` reste affiché. Aucune erreur
+  visible dans les deux cas.
+- **La clé dans le code est publique par construction** (« publishable ») :
+  elle ne permet que ce que les règles d'accès autorisent aux anonymes,
+  c'est-à-dire lire. La clé « secret » du projet ne doit jamais entrer dans
+  ce dépôt.
+- **Le projet Supabase gratuit se met en pause après une semaine sans
+  requête.** Le workflow `.github/workflows/reveiller-supabase.yml` fait une
+  lecture deux fois par semaine pour l'en empêcher. Si malgré tout le site
+  retombe sur `dates.js` (dates figées), c'est là qu'il faut regarder : le
+  tableau de bord Supabase propose de relancer le projet en un clic.
+- Le projet s'appelle **adrienvada-site**, dans l'organisation
+  « adrienvada's Org » — distinct du projet du jeu Godot. La table est
+  décrite dans `supabase/schema.sql`, l'import initial dans
+  `supabase/import-initial.sql` ; les deux ont déjà été joués et servent de
+  mémoire.
 
 ---
 

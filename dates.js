@@ -1,8 +1,23 @@
 /**
  * FICHIER DE CONFIGURATION DES DATES DE SPECTACLE
- * 
- * Pour ajouter, modifier ou retirer une date, modifiez simplement ce fichier.
- * Respectez bien la syntaxe (virgules, guillemets, crochets).
+ *
+ * DEUX PARTIES, DEUX RÈGLES.
+ *
+ *  · Les DATES À VENIR (`upcoming`) vivent désormais dans la table
+ *    Supabase `representations`, qu'on modifie depuis /admin/ — depuis
+ *    un téléphone, sans commit. Le site les lit en direct (dates-live.js)
+ *    et ce fichier n'en garde qu'une COPIE, entre les repères ⇊ ⇈,
+ *    régénérée par :
+ *
+ *        node build/exporter-dates.js
+ *
+ *    Cette copie sert de repli si la base ne répond pas, et alimente les
+ *    pages spectacle générées. Ne modifiez pas cette partie à la main :
+ *    le prochain export l'écraserait.
+ *
+ *  · Les ARCHIVES (`archives`) et le titre de saison restent ici, à la
+ *    main, comme avant. Respectez bien la syntaxe (virgules, guillemets,
+ *    crochets).
  */
 
 const SHOW_DATA = {
@@ -20,10 +35,12 @@ const SHOW_DATA = {
   //   représentation n'apparaîtra dans aucun filtre de lieu.
   // -------------------------------------------------------------
   upcoming: [
-    // ── 22 - 23 octobre 2026 : À la barre (Rouen) [Série] ──
+    // ⇊ GÉNÉRÉ — build/exporter-dates.js recopie ici la table Supabase. Ne pas éditer à la main. ⇊
+    // Dernier export : 11 septembre 2026 à 17:22 — 17 soirée(s), 10 entrée(s).
+    // ── 22 - 23 oct. 2026 : À la barre, peine perdue ? (Rouen) [Série] ──
     {
       type: "series",
-      id: "panel-rouen",
+      id: "panel-a-la-barre-peine-perdue-rouen-2026-10-22",
       dateLabel: "22 - 23 oct. 2026",
       title: "À la barre, peine perdue ?",
       location: "Tribunal judiciaire de Rouen (76)", city: "Rouen",
@@ -31,7 +48,7 @@ const SHOW_DATA = {
         {
           dateLabel: "22 oct. 2026",
           time: "19h00",
-          bookingUrl: "", // Vide = "Les réservations ne sont pas encore ouvertes"
+          bookingUrl: "",
           isSchool: false,
           icsDate: "2026-10-22"
         },
@@ -45,10 +62,10 @@ const SHOW_DATA = {
       ]
     },
 
-    // ── 12 novembre 2026 : À la barre (Saint-Quentin) [Série] ──
+    // ── 12 nov. 2026 : À la barre, peine perdue ? (Saint-Quentin) [Série] ──
     {
       type: "series",
-      id: "panel-saintquentin",
+      id: "panel-a-la-barre-peine-perdue-saint-quentin-2026-11-12",
       dateLabel: "12 nov. 2026",
       title: "À la barre, peine perdue ?",
       location: "Tribunal judiciaire de Saint-Quentin (02)", city: "Saint-Quentin",
@@ -70,7 +87,7 @@ const SHOW_DATA = {
       ]
     },
 
-    // ── 25 novembre 2026 : À la barre (Le Grand-Quevilly) [Date unique] ──
+    // ── 25 nov. 2026 : À la barre, peine perdue ? (Grand-Quevilly) [Date unique] ──
     {
       type: "single",
       dateLabel: "25 nov. 2026",
@@ -83,7 +100,7 @@ const SHOW_DATA = {
       icsDate: "2026-11-25"
     },
 
-    // ── 18 décembre 2026 : Cléophène (Pont-Audemer) [Date unique] ──
+    // ── 18 déc. 2026 : Cléophène, d’après Rodogune (Pont-Audemer) [Date unique] ──
     {
       type: "single",
       dateLabel: "18 déc. 2026",
@@ -96,7 +113,7 @@ const SHOW_DATA = {
       icsDate: "2026-12-18"
     },
 
-    // ── 26 janvier 2027 : Cléophène (Falaise) [Date unique] ──
+    // ── 26 janv. 2027 : Cléophène, d’après Rodogune (Falaise) [Date unique] ──
     {
       type: "single",
       dateLabel: "26 janv. 2027",
@@ -109,10 +126,10 @@ const SHOW_DATA = {
       icsDate: "2027-01-26"
     },
 
-    // ── 29 - 30 janvier 2027 : Bérénice (Saint-Lô) [Série] ──
+    // ── 29 - 30 janv. 2027 : Bérénice (Saint-Lô) [Série] ──
     {
       type: "series",
-      id: "panel-saintlo-berenice",
+      id: "panel-berenice-saint-lo-2027-01-29",
       dateLabel: "29 - 30 janv. 2027",
       title: "Bérénice",
       location: "Théâtre de la ville de Saint-Lô (50)", city: "Saint-Lô",
@@ -134,10 +151,10 @@ const SHOW_DATA = {
       ]
     },
 
-    // ── 29 - 30 janvier 2027 : Cléophène (Saint-Lô) [Série] ──
+    // ── 29 - 30 janv. 2027 : Cléophène, d’après Rodogune (Saint-Lô) [Série] ──
     {
       type: "series",
-      id: "panel-saintlo-cleophene",
+      id: "panel-cleophene-d-apres-rodogune-saint-lo-2027-01-29",
       dateLabel: "29 - 30 janv. 2027",
       title: "Cléophène, d’après Rodogune",
       location: "Théâtre de la ville de Saint-Lô (50)", city: "Saint-Lô",
@@ -159,10 +176,10 @@ const SHOW_DATA = {
       ]
     },
 
-    // ── 2 février 2027 : Cléophène (Guyancourt) [Date unique] ──
+    // ── 2 fév. 2027 : Cléophène, d’après Rodogune (Guyancourt) [Date unique] ──
     {
       type: "single",
-      dateLabel: "2 fév. 2027",
+      dateLabel: "2 fév. 2027",
       fullDate: "2 février 2027",
       title: "Cléophène, d’après Rodogune",
       location: "La Ferme de Bel Ebat, Guyancourt (78)", city: "Guyancourt",
@@ -172,6 +189,7 @@ const SHOW_DATA = {
       icsDate: "2027-02-02"
     },
 
+    // ── 12 mars 2027 : À la barre, peine perdue ? (Barentin) [Date unique] ──
     {
       type: "single",
       dateLabel: "12 mars 2027",
@@ -184,10 +202,10 @@ const SHOW_DATA = {
       icsDate: "2027-03-12"
     },
 
-    // ── 18 - 21 mai 2027 : Bérénice (Lycée Corneille) [Série] ──
+    // ── 18 - 21 mai 2027 : Bérénice (Rouen) [Série] ──
     {
       type: "series",
-      id: "panel-corneille",
+      id: "panel-berenice-rouen-2027-05-18",
       dateLabel: "18 - 21 mai 2027",
       title: "Bérénice",
       location: "Lycée Corneille, Rouen (76)", city: "Rouen",
@@ -196,21 +214,21 @@ const SHOW_DATA = {
           dateLabel: "18 mai 2027",
           time: "",
           bookingUrl: "",
-          isSchool: true, // "Séances scolaires"
+          isSchool: true,
           icsDate: "2027-05-18"
         },
         {
           dateLabel: "19 mai 2027",
           time: "",
           bookingUrl: "",
-          isSchool: true, // "Séances scolaires"
+          isSchool: true,
           icsDate: "2027-05-19"
         },
         {
           dateLabel: "20 mai 2027",
           time: "",
           bookingUrl: "",
-          isSchool: true, // "Séances scolaires"
+          isSchool: true,
           icsDate: "2027-05-20"
         },
         {
@@ -222,6 +240,7 @@ const SHOW_DATA = {
         }
       ]
     }
+    // ⇈ FIN DE LA PARTIE GÉNÉRÉE ⇈
   ],
 
   // -------------------------------------------------------------

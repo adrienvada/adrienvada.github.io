@@ -1,0 +1,42 @@
+# ============================================================
+#  RÉVEIL HEBDOMADAIRE DE SUPABASE
+# ============================================================
+#  Le projet Supabase gratuit qui porte les dates de spectacle se
+#  met EN PAUSE après une semaine sans aucune requête. Un site à
+#  faible trafic peut très bien passer une semaine sans visite :
+#  au réveil, la base ne répond plus, le site retombe sur la copie
+#  de dates.js — pas de panne visible, mais des dates figées jusqu'à
+#  ce que quelqu'un relance le projet à la main dans le tableau de
+#  bord.
+#
+#  Ce workflow fait une lecture de la table deux fois par semaine.
+#  C'est exactement ce que fait un visiteur : ça compte comme de
+#  l'activité, et le projet ne s'endort jamais.
+#
+#  La clé est la clé PUBLIQUE (« publishable »), la même que dans
+#  dates-live.js : elle ne permet que de lire. Aucun secret ici.
+# ============================================================
+name: Réveiller Supabase
+
+on:
+  schedule:
+    # Lundi et jeudi à 06:17 UTC — deux passages par semaine, pour
+    # qu'un raté de l'ordonnanceur GitHub (ça arrive) ne suffise pas
+    # à laisser passer sept jours.
+    - cron: '17 6 * * 1,4'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  lecture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Lire une ligne de la table representations
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            'https://omekkqjinvppadsoinvj.supabase.co/rest/v1/representations?select=id&limit=1' \
+            -H 'apikey: sb_publishable_TODW6NdmDly8eR9UxjG-6g_eyAa4gjB')
+          echo "Supabase a répondu HTTP $code"
+          test "$code" = "200"

@@ -4,8 +4,16 @@
     {
       "name": "site",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8749"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8749"
+      ],
       "port": 8749
+    },
+    {
+      "name": "site-attache",
+      "url": "http://localhost:8749"
     }
   ]
 }
