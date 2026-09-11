@@ -65,10 +65,11 @@
 
     // ── Session ────────────────────────────────────────────────────
     async function demarrer() {
-        // Mode aperçu, sur la machine de développement seulement : la page
-        // s'affiche comme connectée pour juger de sa mise en page, sans
-        // session. Toute écriture est refusée par la base (règles d'accès).
-        if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).has('apercu')) {
+        // Mode aperçu, hors production seulement (machine de développement,
+        // aperçus de branche Cloudflare) : la page s'affiche comme connectée
+        // pour juger de sa mise en page, sans session. Toute écriture est
+        // refusée par la base (règles d'accès) — on ne peut rien y casser.
+        if (/^(localhost|127\.0\.0\.1|.*\.workers\.dev)$/.test(location.hostname) && new URLSearchParams(location.search).has('apercu')) {
             montrer('etat-edition'); chargerTout(); return;
         }
         const { data: { session } } = await sb.auth.getSession();
