@@ -6668,8 +6668,16 @@
                 return item.time || '';
             };
 
+            // UN VRAI BOUTON, PAS UN LIEN SOULIGNÉ. À côté de la pastille
+            // « ajouter à l'agenda » (calBadge, un aplat doré plein), un texte
+            // en 10 px sans fond se lisait comme une mention secondaire —
+            // alors que réserver est l'action qui compte le plus sur cette
+            // page. Même traitement que le bouton du bandeau « Prochainement »
+            // (bg-luxury-goldInk / text-luxury-onGold) : un aplat, pas un lien.
             const bookingLink = (url) => url
-                ? `<a href="${esc(url)}" target="_blank" rel="noopener" class="text-[10px] font-bold uppercase tracking-wider text-luxury-goldInk hover:underline flex items-center gap-1 flex-shrink-0">Réserver <svg class="ico text-[9px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
+                ? `<a href="${esc(url)}" target="_blank" rel="noopener"
+                       class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-luxury-goldInk text-luxury-onGold text-[10px] font-bold uppercase tracking-wider shadow-sm hover:bg-luxury-goldDeep transition-colors">
+                       Réserver <svg class="ico text-[9px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
                 : '';
 
             // Badge cliquable « ajouter à l'agenda »
