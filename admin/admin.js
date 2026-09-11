@@ -91,26 +91,74 @@
         chargerTout();
     }
 
+    function direConnexion(texte, ton) {
+        const msg = $('msg-connexion');
+        msg.hidden = !texte;
+        msg.className = 'text-xs mt-3 ' + (ton === 'erreur' ? 'text-red-400' : ton === 'ok' ? 'text-luxury-goldInk' : 'text-luxury-textMuted');
+        msg.textContent = texte || '';
+    }
+
+    // Par mot de passe : le chemin normal, sans mail.
     $('form-connexion').addEventListener('submit', async e => {
         e.preventDefault();
-        const email = $('mail').value.trim();
-        const btn = $('btn-lien'), msg = $('msg-connexion');
-        btn.disabled = true;
-        msg.hidden = false; msg.className = 'text-xs text-luxury-textMuted mt-3'; msg.textContent = 'Envoi du lien…';
-        const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
-        btn.disabled = false;
+        const email = $('mail').value.trim(), password = $('mdp').value;
+        if (!password) { direConnexion('Saisis ton mot de passe, ou demande un lien par mail.', 'erreur'); $('mdp').focus(); return; }
+        $('btn-entrer').disabled = true;
+        direConnexion('Connexion…');
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        $('btn-entrer').disabled = false;
         if (error) {
-            const trop = /rate|limit|seconds/i.test(error.message);
-            msg.className = 'text-xs text-red-400 mt-3';
-            msg.textContent = trop
-                ? 'Trop de demandes : le compte gratuit n\'envoie que quelques mails par heure. Réessaie dans quelques minutes.'
-                : 'Impossible d\'envoyer le lien : ' + error.message;
+            direConnexion(/invalid/i.test(error.message)
+                ? 'Mot de passe refusé. Pas encore de mot de passe ? Entre par le lien mail, puis choisis-le dans « Mot de passe ».'
+                : 'Connexion impossible : ' + error.message, 'erreur');
             return;
         }
-        msg.className = 'text-xs text-luxury-goldInk mt-3';
-        msg.textContent = 'Lien envoyé à ' + email + '. Ouvre-le sur cet appareil : tu arriveras ici, connecté.';
+        direConnexion('');
+    });
+
+    // Par lien mail : la première fois, ou en secours.
+    $('btn-lien').addEventListener('click', async () => {
+        const email = $('mail').value.trim();
+        $('btn-lien').disabled = true;
+        direConnexion('Envoi du lien…');
+        const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
+        $('btn-lien').disabled = false;
+        if (error) {
+            direConnexion(/rate|limit|seconds/i.test(error.message)
+                ? 'Trop de demandes : le compte gratuit n\'envoie que quelques mails par heure. Réessaie dans quelques minutes, ou entre par mot de passe.'
+                : 'Impossible d\'envoyer le lien : ' + error.message, 'erreur');
+            return;
+        }
+        direConnexion('Lien envoyé à ' + email + '. Ouvre-le sur cet appareil : tu arriveras ici, connecté.', 'ok');
     });
     $('btn-sortir').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+
+    // ── Définir ou changer le mot de passe (session ouverte) ───────
+    const ficheMdp = $('fiche-mdp');
+    function ouvrirMdp() {
+        $('mdp-nouveau').value = ''; $('mdp-confirme').value = ''; $('msg-mdp').hidden = true;
+        if (sessionCourante) $('mdp-mail').value = sessionCourante;
+        if (!ficheMdp.open) ficheMdp.showModal();
+        setTimeout(() => $('mdp-nouveau').focus(), 50);
+    }
+    function fermerMdp() { if (ficheMdp.open) ficheMdp.close(); }
+    $('btn-mdp').addEventListener('click', ouvrirMdp);
+    $('btn-annuler-mdp').addEventListener('click', fermerMdp);
+    $('btn-fermer-mdp').addEventListener('click', fermerMdp);
+    ficheMdp.addEventListener('click', e => { if (e.target === ficheMdp) fermerMdp(); });
+    $('form-mdp').addEventListener('submit', async e => {
+        e.preventDefault();
+        const a = $('mdp-nouveau').value, b = $('mdp-confirme').value, msg = $('msg-mdp');
+        const erreur = t => { msg.hidden = false; msg.textContent = t; };
+        if (a.length < 8) { erreur('Huit caractères au moins.'); return; }
+        if (a !== b) { erreur('Les deux saisies ne sont pas identiques.'); return; }
+        $('btn-enregistrer-mdp').disabled = true;
+        const { error } = await sb.auth.updateUser({ password: a });
+        $('btn-enregistrer-mdp').disabled = false;
+        if (error) { erreur('Impossible d\'enregistrer : ' + error.message); return; }
+        fermerMdp();
+        toast('Mot de passe enregistré');
+    });
 
     // ── Lecture ────────────────────────────────────────────────────
     async function chargerTout() {

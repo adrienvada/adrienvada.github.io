@@ -65,8 +65,10 @@
                     <span class="text-luxury-textMuted font-normal text-base md:text-lg">· dates de spectacle</span>
                 </h1>
             </div>
-            <div id="compte" class="text-[10px] text-luxury-textMuted flex items-center gap-2 font-mono" hidden>
+            <div id="compte" class="text-[10px] text-luxury-textMuted flex items-center gap-3 font-mono" hidden>
                 <span id="compte-mail"></span>
+                <button type="button" id="btn-mdp"
+                    class="uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">Mot de passe</button>
                 <button type="button" id="btn-sortir"
                     class="uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">Se déconnecter</button>
             </div>
@@ -83,13 +85,23 @@
                 </div>
                 <h2 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Connexion</h2>
             </div>
+            <!-- Deux façons d'entrer. Le mot de passe d'abord : il ne dépend
+                 pas du quota de mails du compte gratuit (quelques liens par
+                 heure). Le lien mail reste là pour la première fois, ou si le
+                 mot de passe est oublié. -->
             <form id="form-connexion" novalidate>
                 <label class="adm-etiquette" for="mail">Adresse mail</label>
-                <input class="adm-champ" type="email" id="mail" value="adrien.vada@gmail.com" autocomplete="email" required>
-                <button class="adm-cta w-full mt-4" type="submit" id="btn-lien">Recevoir le lien de connexion</button>
+                <input class="adm-champ" type="email" id="mail" value="adrien.vada@gmail.com" autocomplete="username" required>
+                <label class="adm-etiquette mt-3" for="mdp">Mot de passe</label>
+                <input class="adm-champ" type="password" id="mdp" autocomplete="current-password" placeholder="••••••••">
+                <button class="adm-cta w-full mt-4" type="submit" id="btn-entrer">Se connecter</button>
                 <p id="msg-connexion" class="text-xs text-luxury-textMuted mt-3" hidden></p>
+                <div class="flex items-center gap-3 my-4 text-[10px] uppercase tracking-widest text-luxury-textMuted">
+                    <span class="flex-1 border-t border-stone-200/60"></span>ou<span class="flex-1 border-t border-stone-200/60"></span>
+                </div>
+                <button class="adm-secondaire w-full" type="button" id="btn-lien">Recevoir un lien de connexion par mail</button>
             </form>
-            <p class="text-[11px] text-luxury-textMuted mt-4 leading-relaxed">Pas de mot de passe : un lien arrive par mail. On l'ouvre sur cet appareil, et on reste connecté.</p>
+            <p class="text-[11px] text-luxury-textMuted mt-4 leading-relaxed">Pas encore de mot de passe ? Entre une fois par le lien mail, puis choisis-le dans « Mot de passe », en haut de la page. Le lien mail est limité à quelques envois par heure.</p>
         </section>
 
         <!-- ── Compte non autorisé ── -->
@@ -211,6 +223,38 @@
                 <button class="adm-secondaire text-red-400 ml-auto" type="button" id="btn-supprimer-fiche" hidden>
                     <svg class="ico" aria-hidden="true"><use href="#i-adm-trash"></use></svg> Supprimer
                 </button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- ── Définir ou changer le mot de passe ── -->
+    <dialog id="fiche-mdp" class="adm-fiche" aria-labelledby="fiche-mdp-titre">
+        <form id="form-mdp" class="adm-fiche-corps" novalidate>
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div>
+                    <h2 id="fiche-mdp-titre" class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Mot de passe</h2>
+                    <p class="text-[11px] text-luxury-textMuted mt-0.5">Pour entrer sans attendre de mail. Ton téléphone pourra le retenir.</p>
+                </div>
+                <button type="button" id="btn-fermer-mdp" aria-label="Fermer"
+                    class="w-8 h-8 rounded-full flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk border border-stone-200 flex-shrink-0">
+                    <svg class="ico text-[12px]" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
+                </button>
+            </div>
+            <input type="email" id="mdp-mail" autocomplete="username" value="adrien.vada@gmail.com" hidden>
+            <div class="space-y-4">
+                <div>
+                    <label class="adm-etiquette" for="mdp-nouveau">Nouveau mot de passe <em>— 8 caractères au moins</em></label>
+                    <input class="adm-champ" type="password" id="mdp-nouveau" autocomplete="new-password" minlength="8" required>
+                </div>
+                <div>
+                    <label class="adm-etiquette" for="mdp-confirme">Le même, une seconde fois</label>
+                    <input class="adm-champ" type="password" id="mdp-confirme" autocomplete="new-password" minlength="8" required>
+                </div>
+            </div>
+            <p id="msg-mdp" class="text-xs text-red-400 mt-4" hidden></p>
+            <div class="flex items-center gap-2 mt-5">
+                <button class="adm-cta flex-1" type="submit" id="btn-enregistrer-mdp">Enregistrer le mot de passe</button>
+                <button class="adm-secondaire" type="button" id="btn-annuler-mdp">Annuler</button>
             </div>
         </form>
     </dialog>

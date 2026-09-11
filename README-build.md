@@ -697,8 +697,12 @@ lit en direct.
 
 ### Depuis le téléphone : `/admin/`
 
-1. Ouvrir `/admin/`, saisir son adresse mail, recevoir le lien, l'ouvrir.
-   La session reste ouverte sur l'appareil ; il n'y a pas de mot de passe.
+1. Ouvrir `/admin/` et entrer par **mot de passe**. La première fois, ou
+   s'il est oublié : « Recevoir un lien de connexion par mail », puis, une
+   fois entré, « Mot de passe » en haut de la page pour le définir. Le lien
+   mail est limité par Supabase à quelques envois par heure sur le compte
+   gratuit — c'est pour ça que le mot de passe existe. La session reste
+   ouverte sur l'appareil.
 2. La page montre les dates **comme sur l'accueil** — mêmes pastilles,
    mêmes séries dépliables — avec, sur chaque soirée, trois gestes :
    **Modifier**, **Dupliquer** (même spectacle, même lieu, le lendemain :
