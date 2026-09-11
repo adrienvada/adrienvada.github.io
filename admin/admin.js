@@ -75,11 +75,13 @@
         appliquerSession(session);
         sb.auth.onAuthStateChange((_evt, s) => appliquerSession(s));
     }
-    let sessionCourante = null;
+    // `undefined` tant qu'aucune session n'a été examinée, puis l'adresse
+    // connectée ou `null` : on ne redessine que si l'état change vraiment.
+    let sessionCourante;
     function appliquerSession(session) {
-        const mail = session && session.user && session.user.email;
+        const mail = (session && session.user && session.user.email) || null;
         if (mail === sessionCourante) return;
-        sessionCourante = mail || null;
+        sessionCourante = mail;
         $('compte').hidden = !mail;
         $('compte-mail').textContent = mail || '';
         if (!mail) { montrer('etat-connexion'); return; }
