@@ -1,0 +1,279 @@
+/* ══════════════════════════════════════════════════════════════
+   ADMINISTRATION DES DATES — feuille propre à /admin/
+   ══════════════════════════════════════════════════════════════
+   La page emprunte à l'accueil ses classes Tailwind (styles.css, où
+   admin/ est déclaré dans tailwind.config.js) et ses jetons de thème.
+   Les jetons ci-dessous sont une COPIE du bloc :root de index.html :
+   la page vit hors de l'accueil et n'a pas accès à son <style>. Si
+   l'accueil change une couleur, la recopier ici — c'est le seul
+   endroit du site où l'on duplique ces valeurs, à dessein, pour que
+   l'administration ressemble trait pour trait à la page des dates.
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+    --c-bg: 10 9 7;
+    --c-surface: 23 20 16;
+    --c-text: 242 236 224;
+    --c-muted: 176 167 152;
+
+    --c-s50: 27 24 19;
+    --c-s100: 33 29 23;
+    --c-s200: 58 51 41;
+    --c-s300: 82 73 59;
+    --c-s400: 138 128 112;
+    --c-s500: 168 157 140;
+    --c-s600: 190 179 161;
+    --c-s700: 214 204 186;
+    --c-s800: 234 226 212;
+
+    --c-gold: 191 169 138;
+    --c-gold-light: 224 210 186;
+    --c-gold-ink: 201 180 148;
+    --c-gold-deep: 214 196 168;
+    --c-on-gold: 12 10 8;
+
+    --c-stripe: rgba(255, 255, 255, 0.035);
+    --c-warn: 240 191 118;
+
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-panel: cubic-bezier(0.4, 0, 0.2, 1);
+    --dur-quick: 180ms;
+    --dur-base: 320ms;
+    --dur-panel: 400ms;
+
+    --glass-bg: rgba(255, 255, 255, 0.035);
+    --glass-border: rgba(255, 255, 255, 0.07);
+    --glass-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.5);
+    --panel-bg: rgba(255, 255, 255, 0.022);
+    --panel-border: rgba(255, 255, 255, 0.05);
+    --row-hover: rgba(255, 255, 255, 0.045);
+    --page-glow: radial-gradient(ellipse 90% 60% at 50% 0%, #17140f 0%, #0b0906 55%, #060504 100%);
+}
+
+:root[data-theme="light"] {
+    --c-bg: 250 249 245;
+    --c-surface: 255 255 255;
+    --c-text: 26 26 31;
+    --c-muted: 87 87 97;
+
+    --c-s50: 250 250 249;
+    --c-s100: 245 245 244;
+    --c-s200: 231 229 228;
+    --c-s300: 214 211 209;
+    --c-s400: 168 162 158;
+    --c-s500: 120 113 108;
+    --c-s600: 87 83 78;
+    --c-s700: 68 64 60;
+    --c-s800: 41 37 36;
+
+    --c-gold: 150 126 91;
+    --c-gold-light: 191 169 138;
+    --c-gold-ink: 130 108 74;
+    --c-gold-deep: 107 88 57;
+    --c-on-gold: 255 255 255;
+
+    --c-stripe: rgba(0, 0, 0, 0.015);
+    --c-warn: 180 83 9;
+
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(0, 0, 0, 0.05);
+    --glass-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+    --panel-bg: rgba(0, 0, 0, 0.01);
+    --panel-border: rgba(0, 0, 0, 0.03);
+    --row-hover: rgba(0, 0, 0, 0.02);
+    --page-glow: none;
+}
+
+html {
+    background: rgb(var(--c-bg));
+    color-scheme: dark;
+    overflow-y: scroll;
+}
+:root[data-theme="light"] html, :root[data-theme="light"] { color-scheme: light; }
+
+body {
+    background-color: rgb(var(--c-bg));
+    background-image: var(--page-glow);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* L'attribut hidden doit gagner sur les utilitaires d'affichage (flex…). */
+[hidden] { display: none !important; }
+
+/* ── Mêmes surfaces que l'accueil ── */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+}
+.glass-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+}
+.ico {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    vertical-align: -0.125em;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+.ico-trait { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── Séries dépliables, comme sur la page des dates ── */
+.date-expand-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
+    opacity: 0;
+}
+.date-expand-panel.expanded { grid-template-rows: 1fr; opacity: 1; }
+.date-expand-panel > .date-expand-inner { overflow: hidden; }
+.date-row-clickable { cursor: pointer; }
+.date-row-clickable:hover {
+    border-color: rgb(var(--c-gold) / 0.45) !important;
+    box-shadow: 0 0 0 1px rgb(var(--c-gold) / 0.14);
+    background: var(--row-hover);
+}
+.date-toggle-chevron { transition: transform var(--dur-panel) var(--ease-panel); }
+.date-toggle-chevron.rotated { transform: rotate(180deg); }
+
+/* ── Puces de choix (spectacle) : les mêmes que les filtres de l'accueil ── */
+.filter-chip { cursor: pointer; white-space: nowrap; }
+.filter-chip[aria-pressed="true"] {
+    background: rgb(var(--c-gold-ink)) !important;
+    border-color: rgb(var(--c-gold-ink)) !important;
+    color: rgb(var(--c-on-gold)) !important;
+}
+
+/* ── Boutons d'action sur une soirée ──
+   Trois gestes, toujours dans le même ordre : modifier, dupliquer,
+   supprimer. Sur téléphone, ils prennent une ligne entière sous la
+   soirée, avec leur nom ; sur grand écran, ils se rangent à droite. */
+.adm-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.adm-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    padding: 6px 9px; border-radius: 6px;
+    border: 1px solid rgb(var(--c-s200));
+    background: rgb(var(--c-s100) / 0.6);
+    color: rgb(var(--c-muted));
+    transition: color var(--dur-quick), border-color var(--dur-quick), background var(--dur-quick);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.adm-btn:hover, .adm-btn:focus-visible { color: rgb(var(--c-gold-ink)); border-color: rgb(var(--c-gold) / 0.6); outline: none; }
+.adm-btn.danger:hover, .adm-btn.danger:focus-visible { color: rgb(220 90 70); border-color: rgb(220 90 70 / 0.5); }
+.adm-btn .ico { font-size: 11px; }
+@media (max-width: 767px) {
+    .adm-actions { width: 100%; min-width: 0; justify-content: stretch; margin-top: 4px; }
+    .adm-actions .adm-btn { flex: 1 1 0; min-width: 0; justify-content: center; padding: 8px 2px; font-size: 9px; letter-spacing: .02em; gap: 4px; }
+}
+
+/* ── Le grand bouton doré « Ajouter une date » ── */
+.adm-cta {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase;
+    padding: 11px 18px; border-radius: 8px;
+    background: rgb(var(--c-gold-ink)); color: rgb(var(--c-on-gold));
+    border: 1px solid rgb(var(--c-gold-ink));
+    box-shadow: 0 6px 18px -8px rgb(var(--c-gold) / 0.6);
+    transition: transform var(--dur-quick), background var(--dur-quick);
+    cursor: pointer;
+}
+.adm-cta:hover { background: rgb(var(--c-gold-deep)); }
+.adm-cta:active { transform: scale(0.98); }
+.adm-cta:disabled { opacity: .55; cursor: default; }
+.adm-secondaire {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: 10px 14px; border-radius: 8px;
+    border: 1px solid rgb(var(--c-s200)); background: transparent; color: rgb(var(--c-muted));
+    cursor: pointer;
+}
+.adm-secondaire:hover { color: rgb(var(--c-text)); border-color: rgb(var(--c-gold) / 0.6); }
+
+/* ── Champs ── */
+.adm-champ {
+    width: 100%; padding: 10px 12px; border-radius: 8px;
+    background: rgb(var(--c-surface)); color: rgb(var(--c-text));
+    border: 1px solid rgb(var(--c-s200)); font-size: 14px; line-height: 1.3;
+    transition: border-color var(--dur-quick);
+}
+.adm-champ::placeholder { color: rgb(var(--c-muted) / 0.7); }
+.adm-champ:focus { outline: none; border-color: rgb(var(--c-gold)); box-shadow: 0 0 0 3px rgb(var(--c-gold) / 0.15); }
+input[type="date"].adm-champ { min-height: 42px; }
+.adm-etiquette {
+    display: block; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    font-family: 'Montserrat', sans-serif; color: rgb(var(--c-muted)); margin-bottom: 6px;
+}
+.adm-etiquette em { font-style: normal; font-weight: 400; letter-spacing: 0; text-transform: none; opacity: .8; }
+
+/* Interrupteur « séance scolaire » */
+.adm-interrupteur { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; font-size: 13px; }
+.adm-interrupteur input { position: absolute; opacity: 0; width: 0; height: 0; }
+.adm-interrupteur .glissiere {
+    width: 38px; height: 22px; border-radius: 999px; position: relative; flex-shrink: 0;
+    background: rgb(var(--c-s200)); border: 1px solid rgb(var(--c-s300) / 0.5);
+    transition: background var(--dur-quick);
+}
+.adm-interrupteur .glissiere::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+    background: rgb(var(--c-s600)); transition: transform var(--dur-quick), background var(--dur-quick);
+}
+.adm-interrupteur input:checked + .glissiere { background: rgb(var(--c-gold-ink)); border-color: rgb(var(--c-gold-ink)); }
+.adm-interrupteur input:checked + .glissiere::after { transform: translateX(16px); background: rgb(var(--c-on-gold)); }
+.adm-interrupteur input:focus-visible + .glissiere { box-shadow: 0 0 0 3px rgb(var(--c-gold) / 0.25); }
+
+/* ── La fiche d'édition : un panneau qui glisse depuis le bas ──
+   Sur téléphone il occupe presque tout l'écran ; sur grand écran
+   c'est une fenêtre centrée. Un seul balisage pour les deux. */
+dialog.adm-fiche {
+    border: 0; padding: 0; margin: 0; background: transparent; max-width: none; max-height: none;
+    width: 100%; height: 100%; inset: 0; position: fixed;
+    display: none; align-items: flex-end; justify-content: center;
+}
+dialog.adm-fiche[open] { display: flex; }
+dialog.adm-fiche::backdrop { background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(3px); }
+.adm-fiche-corps {
+    width: 100%; max-width: 640px; max-height: 94dvh; overflow-y: auto; overscroll-behavior: contain;
+    border-radius: 16px 16px 0 0;
+    background: rgb(var(--c-surface)); color: rgb(var(--c-text));
+    border: 1px solid var(--glass-border); border-bottom: 0;
+    box-shadow: 0 -12px 40px -10px rgba(0, 0, 0, 0.6);
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+    animation: adm-monter var(--dur-panel) var(--ease-panel);
+}
+@keyframes adm-monter { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (min-width: 640px) {
+    dialog.adm-fiche { align-items: center; padding: 24px; }
+    .adm-fiche-corps { border-radius: 16px; border-bottom: 1px solid var(--glass-border); padding: 22px; }
+}
+
+/* ── Message éphémère en bas de l'écran ── */
+.adm-toast {
+    position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translate(-50%, 12px);
+    background: rgb(var(--c-gold-ink)); color: rgb(var(--c-on-gold));
+    font-size: 12px; font-weight: 600; padding: 9px 14px; border-radius: 999px;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+    opacity: 0; pointer-events: none; transition: opacity var(--dur-base), transform var(--dur-base) var(--ease-out);
+    z-index: 60; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.adm-toast.visible { opacity: 1; transform: translate(-50%, 0); }
+.adm-toast.erreur { background: rgb(180 60 45); color: #fff; }
+
+/* Une soirée passée s'efface un peu, comme dans les archives */
+.adm-passee { opacity: .6; }
+.adm-passee:hover { opacity: 1; }
+
+/* Ligne « ajouter une soirée à cette série », au pied d'une série */
+.adm-ajout-serie {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; color: rgb(var(--c-gold-ink));
+    padding: 6px 4px; background: none; border: 0; cursor: pointer;
+}
+.adm-ajout-serie:hover { text-decoration: underline; }

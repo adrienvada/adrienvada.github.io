@@ -100,7 +100,10 @@
             else groupes.push({ cle, lignes: [l], premier: l.jour, dernier: l.jour });
         });
 
+        // `id` : l'identifiant de la ligne en base. Le site l'ignore ; la
+        // page d'administration s'en sert pour retrouver la ligne à modifier.
         const soiree = l => ({
+            id: l.id,
             dateLabel: jourCourt(l.jour),
             time: l.heure || '',
             bookingUrl: l.reservation_url || '',

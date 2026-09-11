@@ -12,7 +12,7 @@ périmé. Il affiche simplement l'état d'avant.
 
 | Ce que vous modifiez | À relancer | Ce que ça réécrit |
 |---|---|---|
-| une classe Tailwind dans `index.html`, `404.html`, `dates.js`, `galerie.js` | [la commande Tailwind](#régénérer-stylescss-obligatoire-après-modification-des-classes) | `styles.css` |
+| une classe Tailwind dans `index.html`, `404.html`, `dates.js`, `galerie.js`, `admin/` | [la commande Tailwind](#régénérer-stylescss-obligatoire-après-modification-des-classes) | `styles.css` |
 | **`galerie.js`** — ajout ou ordre des photos du book | `node build/generer-page-galerie.js` | `/galerie/…` |
 | **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml` |
 | une **ligne du CV** dans `index.html` — titre, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
@@ -699,17 +699,36 @@ lit en direct.
 
 1. Ouvrir `/admin/`, saisir son adresse mail, recevoir le lien, l'ouvrir.
    La session reste ouverte sur l'appareil ; il n'y a pas de mot de passe.
-2. Ajouter, modifier, dupliquer (la même série, le lendemain), supprimer.
-   Chaque enregistrement est **immédiatement visible** sur le site.
+2. La page montre les dates **comme sur l'accueil** — mêmes pastilles,
+   mêmes séries dépliables — avec, sur chaque soirée, trois gestes :
+   **Modifier**, **Dupliquer** (même spectacle, même lieu, le lendemain :
+   le geste d'une série), **Supprimer**. Le bouton doré ajoute une date ;
+   au pied d'une série, « Ajouter une soirée à cette série » fait de même
+   sans rien retaper. Chaque enregistrement est **immédiatement visible**
+   sur le site.
 
 Une ligne = une soirée. Deux représentations le même jour, c'est deux
 lignes. Les soirées d'un même spectacle au même lieu, rapprochées, sont
 regroupées en « série » par le site lui-même — rien à saisir pour ça.
 
-Le **titre du spectacle** doit être exactement celui du CV : c'est lui qui
-relie une date à sa ligne du CV et à sa page spectacle. La page de saisie
-propose les titres déjà connus, et corrige la typographie (espace insécable
-avant `?`, `!`, `:`).
+Le **spectacle se choisit parmi des puces**, pas dans un champ libre : les
+spectacles du CV marqués « En tournée » puis « En création », puis ceux
+qui ont déjà des dates, puis « Autre… » pour un titre nouveau. La liste
+est lue dans `index.html` (les `data-cv-show` et leur badge) : une seule
+source, la même que l'accueil. C'est important, parce que le **titre doit
+être exactement celui du CV** — au caractère près, apostrophe comprise :
+c'est lui qui relie une date à sa ligne du CV et à sa page spectacle. La
+page corrige aussi la typographie (espace insécable avant `?`, `!`, `:`).
+
+La page est faite de `admin/index.html`, `admin/admin.css` (les jetons de
+thème y sont **recopiés** depuis le `:root` d'`index.html` — si l'accueil
+change une couleur, la recopier) et `admin/admin.js`. Elle emprunte ses
+classes Tailwind à `styles.css` : `admin/` est déclaré dans
+`tailwind.config.js`, donc **toute classe nouvelle dans admin/ demande de
+régénérer `styles.css`**, comme pour l'accueil. Pour juger de sa mise en
+page sans se connecter, sur la machine de développement seulement :
+`http://localhost:8749/admin/?apercu` (lecture seule, la base refuse
+d'écrire sans session).
 
 Seule l'adresse **adrien.vada@gmail.com** peut écrire : c'est une règle de
 la base (`supabase/schema.sql`), pas de la page. Un autre compte, même
