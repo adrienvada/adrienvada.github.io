@@ -167,9 +167,26 @@
 
     async function charger() {
         const { data, error } = await sb.from(L.TABLE).select('*').order('jour').order('heure');
-        if (error) { toast('Lecture impossible : ' + error.message, true); return; }
+        if (error) {
+            // Une session périmée que Supabase ne parvient plus à rafraîchir
+            // renvoie 401 : on repasse par la connexion plutôt que d'afficher
+            // une liste vide sans explication.
+            if (error.code === 'PGRST301' || /JWT|401/i.test(error.message)) {
+                await sb.auth.signOut(); sessionCourante = undefined; appliquerSession(null);
+                direConnexion('La session avait expiré : reconnecte-toi.', 'erreur');
+                return;
+            }
+            $('liste-a-venir').innerHTML = `<p class="text-xs text-red-400 italic p-2">Lecture impossible : ${esc(error.message)}</p>`;
+            toast('Lecture impossible : ' + error.message, true);
+            return;
+        }
         lignes = data || [];
-        rendre();
+        try { rendre(); }
+        catch (e) {
+            // Ne devrait pas arriver ; si ça arrive (fichier du site plus
+            // ancien que celui-ci, juste après une publication), on le dit.
+            $('liste-a-venir').innerHTML = `<p class="text-xs text-red-400 italic p-2">Affichage impossible (${esc(e.message)}). Recharge la page dans une minute.</p>`;
+        }
     }
 
     /**
@@ -288,7 +305,12 @@
     function rendreBloc(sousEnsemble, passee) {
         if (!sousEnsemble.length) return '';
         const parId = new Map(sousEnsemble.map(l => [l.id, l]));
-        return L.versShowData(sousEnsemble).map(e => {
+        const entrees = L.versShowData(sousEnsemble);
+        if (!entrees.every(e => e.type === 'series' ? e.shows.every(s => parId.has(s.id)) : parId.has(e.id))) {
+            throw new Error('dates-live.js est plus ancien que cette page');
+        }
+        if (passee) entrees.reverse(); // les plus récentes en tête, comme dans les archives
+        return entrees.map(e => {
             if (e.type === 'series') return serie(e, e.shows.map(s => parId.get(s.id)), passee);
             return ligneSimple(parId.get(e.id), passee);
         }).join('');
