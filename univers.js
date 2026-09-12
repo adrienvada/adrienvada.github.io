@@ -272,15 +272,15 @@ const SHOW_UNIVERSES = {
         cast: ['Steeve Brunet', 'Marine Chambrier', 'Adrien Vada'],
         genre: 'Spectacle de prévention',
         synopsis: ['Un spectacle de prévention, joué au collège.',
-            'Violences sexistes et sexuelles, stéréotypes, consentement — à travers le prisme de la justice.'],
+            'Violences sexistes et sexuelles, stéréotypes, consentement, à travers le prisme de la justice.'],
         sequence: [
             {
                 chapter: '40 min',
-                chapterTitle: 'Puis 30 minutes de débat — niveaux 4ᵉ et 3ᵉ'
+                chapterTitle: 'Puis 30 minutes de débat, niveaux 4ᵉ et 3ᵉ'
             },
             {
                 p: [8], cadre: { 8: '45% 55%' },
-                c: ['Adapté d’À la barre pour le collège, créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ.']
+                c: ['Créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ.']
             },
             {
                 q: ['« Victime. Irréparable. Accusé. Avocat.',
@@ -290,7 +290,7 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [6, 5], cadre: { 6: '42% 20%', 5: '48% 18%' }, c: ['', ''],
-                aside: ['Les différents tribunaux, leur composition, le déroulé d’un procès — et ce qu’on y dit vraiment.']
+                aside: ['Le fonctionnement des tribunaux à travers des affaires de violences en ligne, de harcèlement scolaire, et de rapport général au consentement.']
             },
             {
                 p: [4], cadre: { 4: '62% 20%' },
