@@ -1689,7 +1689,15 @@ const SHOW_UNIVERSES = {
                 else if (e.key === 'ArrowRight') showZoom(zoomIndex + 1);
                 return;
             }
-            if (e.key === 'Escape') { e.stopPropagation(); close(); }
+            if (e.key === 'Escape') {
+                e.stopPropagation();
+                // Une page /spectacles/ n'a rien à « fermer » : #show-universe
+                // y est la page entière, pas un panneau posé par-dessus le CV.
+                // La refermer viderait l'écran sans rien remettre derrière —
+                // Échap doit donc reprendre le chemin par lequel on est arrivé.
+                if (document.body.classList.contains('u-page-spectacle')) history.back();
+                else close();
+            }
         }, true);
 
         // Le CV appelle openShowUniverse() avant de replier son tiroir.
