@@ -1249,7 +1249,7 @@ html.u-locked body {
 .u-date {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     gap: 4px 12px;
     padding: 14px 4px;
     border-bottom: 1px solid var(--u-line);
@@ -1283,6 +1283,154 @@ html.u-locked body {
     font-size: .85rem;
     font-style: italic;
     margin: 0 0 30px;
+}
+
+/* ── Boutons de représentation : agenda + réservation ──
+   Posés à droite de chaque ligne, ils poussent naturellement au bout
+   grâce au flex-wrap de .u-date — pas de marge auto nécessaire, la
+   ligne se termine ici qu'on soit sur .u-date-where ou .u-date-time. */
+.u-date-cal {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    color: var(--u-muted);
+    background: transparent;
+    border: 1px solid var(--u-line);
+    cursor: pointer;
+    transition: background var(--dur-base) var(--ease-out),
+        border-color var(--dur-base) var(--ease-out),
+        color var(--dur-base) var(--ease-out);
+}
+
+.u-date-cal:hover {
+    color: var(--u-on-accent);
+    background: var(--u-accent);
+    border-color: var(--u-accent);
+}
+
+.u-date-book {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--u-on-accent);
+    background: var(--u-accent);
+    transition: filter var(--dur-base) var(--ease-out);
+}
+
+.u-date-book:hover {
+    filter: brightness(1.1);
+}
+
+/* ── Fenêtre « Ajouter à l'agenda » ──
+   Une seule instance par panneau (voir univers.js), placée dans
+   #show-universe : elle sert aussi bien le panneau ouvert depuis le CV
+   que les pages statiques /spectacles/, qui partagent ce conteneur. */
+.u-cal-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.u-cal-modal.is-open {
+    opacity: 1;
+}
+
+.u-cal-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--u-bg) 70%, transparent);
+    backdrop-filter: blur(6px);
+}
+
+.u-cal-modal-card {
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    padding: 26px 22px 22px;
+    border-radius: 14px;
+    background: var(--u-surface, var(--u-bg));
+    border: 1px solid var(--u-line);
+    color: var(--u-text);
+    text-align: left;
+    transform: scale(.96);
+    transition: transform var(--dur-base) var(--ease-out);
+}
+
+.u-cal-modal.is-open .u-cal-modal-card {
+    transform: scale(1);
+}
+
+.u-cal-modal-card h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.05rem;
+    margin: 0 0 4px;
+    color: var(--u-accent-ink);
+}
+
+.u-cal-modal-subtitle {
+    font-size: .8rem;
+    color: var(--u-muted);
+    margin: 0 0 18px;
+}
+
+.u-cal-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    color: var(--u-muted);
+    border: 1px solid var(--u-line);
+    cursor: pointer;
+}
+
+.u-cal-modal-close:hover {
+    color: var(--u-text);
+    border-color: var(--u-accent);
+}
+
+.u-cal-modal-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.u-cal-modal-options button {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--u-line);
+    background: transparent;
+    color: var(--u-text);
+    font-size: .82rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--dur-base) var(--ease-out),
+        border-color var(--dur-base) var(--ease-out);
+}
+
+.u-cal-modal-options button:hover {
+    background: var(--u-accent);
+    border-color: var(--u-accent);
+    color: var(--u-on-accent);
 }
 
 /* ── Le palmarès ──

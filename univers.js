@@ -795,6 +795,7 @@ const SHOW_UNIVERSES = {
 
     const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let overlay, scroller, lastFocus = null, isOpen = false, rafId = 0;
+    let calModalData = null;
 
 
     // ── LE LIEN ENTRE UNE LIGNE DE CV ET SON UNIVERS ─────────────────
@@ -1620,11 +1621,203 @@ const SHOW_UNIVERSES = {
         });
     }
 
+    // ── Ajouter une date au calendrier, depuis une page spectacle ──────
+    //  Même geste que le bandeau « Prochainement » et la page Dates, mais
+    //  ici la donnée voyage dans l'attribut `data-cal` de chaque bouton
+    //  (posé par datesHtml, dans univers-montage.js — qui ne touche pas au
+    //  DOM et ne peut donc pas ouvrir cette fenêtre lui-même). Une seule
+    //  petite fenêtre, injectée une fois dans #show-universe : elle sert
+    //  aussi bien le panneau ouvert depuis le CV que les pages statiques,
+    //  qui partagent toutes deux ce même conteneur.
+    const AGENDA_MODAL_HTML = `
+        <div id="u-cal-modal" class="u-cal-modal" hidden>
+            <div class="u-cal-modal-backdrop" data-u-cal-close></div>
+            <div class="u-cal-modal-card" role="dialog" aria-modal="true" aria-labelledby="u-cal-modal-title">
+                <button type="button" class="u-cal-modal-close" data-u-cal-close aria-label="Fermer">
+                    <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
+                </button>
+                <h3 id="u-cal-modal-title">Ajouter à l'agenda</h3>
+                <p class="u-cal-modal-subtitle"></p>
+                <div class="u-cal-modal-options">
+                    <button type="button" data-cal-type="google">Google Agenda</button>
+                    <button type="button" data-cal-type="outlook">Outlook</button>
+                    <button type="button" data-cal-type="ics">Fichier .ics</button>
+                    <button type="button" data-cal-type="share" hidden>Partager</button>
+                </div>
+            </div>
+        </div>`;
+
+    function openAgendaModal(data) {
+        calModalData = data;
+        const modal = overlay.querySelector('#u-cal-modal');
+        if (!modal) return;
+        const sub = modal.querySelector('.u-cal-modal-subtitle');
+        if (sub) {
+            const cleanSubtitle = data.subtitle ? ` (${data.subtitle})` : '';
+            sub.textContent = `${data.icsDate || ''}${cleanSubtitle} • ${data.location || ''}`;
+        }
+        const shareBtn = modal.querySelector('[data-cal-type="share"]');
+        if (shareBtn) {
+            let canShareFile = false;
+            try {
+                const testFile = new File([''], 'test.ics', { type: 'text/calendar' });
+                canShareFile = !!(navigator.canShare && navigator.canShare({ files: [testFile] }));
+            } catch (e) { canShareFile = false; }
+            shareBtn.hidden = !canShareFile;
+        }
+        modal.hidden = false;
+        requestAnimationFrame(() => modal.classList.add('is-open'));
+    }
+
+    function closeAgendaModal() {
+        const modal = overlay?.querySelector('#u-cal-modal');
+        if (!modal || modal.hidden) return;
+        modal.classList.remove('is-open');
+        calModalData = null;
+        setTimeout(() => { modal.hidden = true; }, 240);
+    }
+
+    // Porte le même calcul que calOptionClick() dans index.html — ics,
+    // Google et Outlook lus depuis le même vocabulaire (icsDate, time ou
+    // times). Dupliqué plutôt que partagé : univers-montage.js doit rester
+    // sans DOM pour servir aussi au script de build (voir son en-tête).
+    function agendaAction(type, data) {
+        if (!data) return;
+        const parts = String(data.icsDate || '').split('-');
+        if (parts.length !== 3) return;
+        const y = parts[0], m = parts[1], d = parts[2];
+
+        const now = new Date();
+        const dtstamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        const cleanTitle = (data.title || '').replace(/[,;\\]/g, ' ');
+        const cleanSubtitle = data.subtitle ? ` (${data.subtitle.replace(/[,;\\]/g, ' ')})` : '';
+        const summary = `${cleanTitle}${cleanSubtitle}`;
+        const location = (data.location || '').replace(/[,;\\]/g, ' ');
+        const timeStr = Array.isArray(data.times) ? data.times.join(' & ') : String(data.time || '');
+        const description = `Représentation : ${summary}\\nLieu : ${location}\\n${timeStr ? 'Horaire : ' + timeStr : 'Horaire à confirmer'}`;
+
+        if (typeof track === 'function') track('date_agenda', { spectacle: data.title || '', par: type });
+
+        if (type === 'google') {
+            let datesParam = '';
+            const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
+            if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
+                const tm = timeMatches[0];
+                const hour = String(tm[1]).padStart(2, '0');
+                const min = String(tm[2] || '00').padStart(2, '0');
+                const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
+                datesParam = `${y}${m}${d}T${hour}${min}00/${y}${m}${d}T${endHour}${min}00`;
+            } else {
+                const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+                dateObj.setDate(dateObj.getDate() + 1);
+                datesParam = `${y}${m}${d}/${dateObj.getFullYear()}${String(dateObj.getMonth() + 1).padStart(2, '0')}${String(dateObj.getDate()).padStart(2, '0')}`;
+            }
+            window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(summary)}&dates=${datesParam}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`, '_blank', 'noopener');
+            closeAgendaModal();
+            return;
+        }
+
+        if (type === 'outlook') {
+            let startISO = '', endISO = '', isAllDay = false;
+            const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
+            if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
+                const tm = timeMatches[0];
+                const hour = String(tm[1]).padStart(2, '0');
+                const min = String(tm[2] || '00').padStart(2, '0');
+                const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
+                startISO = `${y}-${m}-${d}T${hour}:${min}:00`;
+                endISO = `${y}-${m}-${d}T${endHour}:${min}:00`;
+            } else {
+                isAllDay = true;
+                startISO = `${y}-${m}-${d}T09:00:00`;
+                endISO = `${y}-${m}-${d}T18:00:00`;
+            }
+            window.open(`https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=${encodeURIComponent(summary)}&startdt=${encodeURIComponent(startISO)}&enddt=${encodeURIComponent(endISO)}&location=${encodeURIComponent(location)}&body=${encodeURIComponent(description)}${isAllDay ? '&allday=true' : ''}`, '_blank', 'noopener');
+            closeAgendaModal();
+            return;
+        }
+
+        // Fichier .ics standard ('ics' ou 'share')
+        const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
+        const vevents = [];
+        if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
+            timeMatches.forEach((tm, idx) => {
+                const hour = String(tm[1]).padStart(2, '0');
+                const min = String(tm[2] || '00').padStart(2, '0');
+                const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
+                vevents.push([
+                    'BEGIN:VEVENT',
+                    `UID:event-${y}${m}${d}-${hour}${min}-${Date.now()}-${idx}@adrienvada.fr`,
+                    `DTSTAMP:${dtstamp}`,
+                    `DTSTART:${y}${m}${d}T${hour}${min}00`,
+                    `DTEND:${y}${m}${d}T${endHour}${min}00`,
+                    `SUMMARY:${summary}`, `LOCATION:${location}`, `DESCRIPTION:${description}`,
+                    'END:VEVENT'
+                ].join('\r\n'));
+            });
+        } else {
+            const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+            dateObj.setDate(dateObj.getDate() + 1);
+            const nextY = dateObj.getFullYear();
+            const nextM = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const nextD = String(dateObj.getDate()).padStart(2, '0');
+            vevents.push([
+                'BEGIN:VEVENT',
+                `UID:event-${y}${m}${d}-${Date.now()}@adrienvada.fr`,
+                `DTSTAMP:${dtstamp}`,
+                `DTSTART;VALUE=DATE:${y}${m}${d}`,
+                `DTEND;VALUE=DATE:${nextY}${nextM}${nextD}`,
+                `SUMMARY:${summary}`, `LOCATION:${location}`, `DESCRIPTION:${description}`,
+                'END:VEVENT'
+            ].join('\r\n'));
+        }
+
+        const icsContent = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Adrien Vada//Spectacles//FR',
+            ...vevents, 'END:VCALENDAR'].join('\r\n');
+        const filename = `${cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'spectacle'}-${y}-${m}-${d}.ics`;
+
+        if (type === 'share' && navigator.canShare) {
+            try {
+                const file = new File([icsContent], filename, { type: 'text/calendar' });
+                if (navigator.canShare({ files: [file] })) {
+                    navigator.share({ files: [file], title: 'Ajouter à l’agenda' }).catch(() => { });
+                    closeAgendaModal();
+                    return;
+                }
+            } catch (e) { }
+        }
+
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+        closeAgendaModal();
+    }
+
     function init() {
         overlay = document.getElementById('show-universe');
         if (!overlay) return;
 
+        // Une seule fenêtre pour tout le panneau : le CV comme les pages
+        // /spectacles/ passent par ce même #show-universe (voir demarrerStatique).
+        overlay.insertAdjacentHTML('beforeend', AGENDA_MODAL_HTML);
+
         overlay.addEventListener('click', (e) => {
+            // La fenêtre « ajouter à l'agenda » d'abord : elle vit dans ce même
+            // conteneur, ses propres clics ne doivent pas retomber plus bas.
+            const calBtn = e.target.closest('.u-date-cal');
+            if (calBtn) {
+                let data = null;
+                try { data = JSON.parse(calBtn.dataset.cal || '{}'); } catch (err) { }
+                if (data) openAgendaModal(data);
+                return;
+            }
+            const calOption = e.target.closest('[data-cal-type]');
+            if (calOption) { agendaAction(calOption.dataset.calType, calModalData); return; }
+            if (e.target.closest('[data-u-cal-close]')) { closeAgendaModal(); return; }
+
             // L'agrandissement d'abord : sa croix porte aussi la classe
             // .u-close, elle ne doit pas refermer tout l'univers.
             if (e.target.closest('.u-zoom-close')) { closeZoom(); return; }
@@ -1683,6 +1876,7 @@ const SHOW_UNIVERSES = {
 
         document.addEventListener('keydown', (e) => {
             if (!isOpen) return;
+            if (calModalData && e.key === 'Escape') { e.stopPropagation(); closeAgendaModal(); return; }
             if (zoomIsOpen()) {
                 if (e.key === 'Escape') { e.stopPropagation(); closeZoom(); }
                 else if (e.key === 'ArrowLeft') showZoom(zoomIndex - 1);

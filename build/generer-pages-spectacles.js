@@ -338,8 +338,11 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     // datesHtml attend le vocabulaire de dates.js (dateLabel, location,
     // isSchool) ; datesDe() renvoie le sien. On traduit ici plutôt que de
     // tordre l'un des deux : le moteur partagé ne doit pas connaître ce script.
+    // icsDate et bookingUrl alimentent les boutons « agenda » et « réserver » ;
+    // title/subtitle sont constants pour la page, pas portés par datesDe().
     const perfs = dates.map(d => ({
-        dateLabel: d.label, location: d.lieu, time: d.heure, isSchool: d.scolaire
+        dateLabel: d.label, location: d.lieu, time: d.heure, isSchool: d.scolaire,
+        icsDate: d.iso, bookingUrl: d.billetterie, title: titre, subtitle: uni.subtitle || ''
     }));
 
     const panneau = MONTAGE.panelHtml(info, uni, {

@@ -543,10 +543,26 @@ const UniversMontage = (function () {
         const rows = perfs.map(p => {
             const t = Array.isArray(p.times) && p.times.length ? p.times.join(' & ') : (p.time || '');
             const school = p.isSchool ? ' <span class="u-warn">· séance scolaire</span>' : '';
+            // LES DONNÉES VOYAGENT DANS L'ATTRIBUT, PAS L'OUVERTURE DU
+            // CALENDRIER. Ce fichier ne touche pas au DOM (voir l'en-tête) —
+            // c'est univers.js qui lit `data-cal` au clic et construit le
+            // .ics / les liens Google-Outlook. Un bouton sans icsDate ne
+            // mène nulle part, donc on ne le pose pas.
+            const calBtn = p.icsDate
+                ? `<button type="button" class="u-date-cal" data-cal="${escape(JSON.stringify({
+                    title: p.title || '', subtitle: p.subtitle || '', location: p.location || '',
+                    icsDate: p.icsDate, time: p.time || '', times: p.times || null
+                }))}" aria-label="Ajouter au calendrier">
+                    <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
+                </button>` : '';
+            const bookBtn = p.bookingUrl
+                ? `<a href="${escape(p.bookingUrl)}" target="_blank" rel="noopener" class="u-date-book">Réserver
+                       <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>` : '';
             return `<li class="u-date">
                 <span class="u-date-when">${escape(p.dateLabel)}</span>
                 <span class="u-date-where">${escape(p.location)}</span>
                 <span class="u-date-time">${t ? escape(t) : 'horaire à confirmer'}${school}</span>
+                ${calBtn}${bookBtn}
             </li>`;
         }).join('');
         return `<ul class="u-dates">${rows}</ul>`;
