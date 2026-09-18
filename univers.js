@@ -2114,8 +2114,12 @@ const SHOW_UNIVERSES = {
         const top = document.createElement('div');
         top.className = 'flex items-center gap-2';
         while (badges.firstChild) top.appendChild(badges.firstChild);
+        // À GAUCHE, PAS À DROITE : le badge est plus large que la pastille,
+        // et items-end les aurait alignés sur leur bord droit — sous
+        // l'oblique, pas sous le badge. items-start les cale au même bord
+        // gauche, comme le badge et la flèche le sont déjà entre eux.
         badges.classList.remove('items-center');
-        badges.classList.add('flex-col', 'items-end', 'gap-1.5');
+        badges.classList.add('flex-col', 'items-start', 'gap-1.5');
         badges.appendChild(top);
 
         const titre = uni.title || li.dataset.cvShow || '';

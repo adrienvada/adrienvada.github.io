@@ -2442,10 +2442,12 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 20px;
-            height: 20px;
+            /* 16/9, comme la vidéo qu'elle ouvre — plus une vignette qu'une
+               icône, pour peser autant que le badge posé juste au-dessus. */
+            width: 52px;
+            aspect-ratio: 16 / 9;
             flex-shrink: 0;
-            border-radius: 999px;
+            border-radius: 5px;
             color: color-mix(in srgb, var(--cv-accent) 80%, rgb(var(--c-text)));
             background: color-mix(in srgb, var(--cv-accent) 14%, rgb(var(--c-surface)));
             border: 1px solid color-mix(in srgb, var(--cv-accent) 42%, transparent);
@@ -2460,9 +2462,9 @@
         }
 
         .cv-trailer .ico {
-            font-size: 8px;
-            /* Le triangle de lecture penche visuellement à gauche dans son
-               cercle ; ce filet le recentre à l'œil. */
+            font-size: 11px;
+            /* Le triangle de lecture penche visuellement à gauche ; ce
+               filet le recentre à l'œil dans le cadre. */
             margin-left: 1px;
         }
 
