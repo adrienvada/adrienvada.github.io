@@ -2108,16 +2108,6 @@ const SHOW_UNIVERSES = {
         if (!badges || badges.querySelector('.cv-trailer')) return;
         const badge = badges.querySelector('.cv-badge');
         const chevron = badges.querySelector('.cv-chevron');
-        if (!badge) return;
-
-        // LA PASTILLE S'ALIGNE SUR LE BADGE, PAS SUR LA FLÈCHE. Le badge et
-        // la pastille vivent dans leur propre colonne, alignée sur son bord
-        // droit à elle ; la flèche reste à côté, HORS de cette colonne — si
-        // elle y était, son bord droit à elle deviendrait la référence, et
-        // la pastille se retrouverait sous elle plutôt que sous le badge.
-        const col = document.createElement('div');
-        col.className = 'flex flex-col items-end gap-1.5';
-        col.appendChild(badge);
 
         const titre = uni.title || li.dataset.cvShow || '';
         const pill = document.createElement('a');
@@ -2129,11 +2119,28 @@ const SHOW_UNIVERSES = {
         pill.setAttribute('data-track', 'cv_trailer');
         pill.setAttribute('data-track-detail', titre);
         pill.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg>';
-        col.appendChild(pill);
 
         badges.classList.remove('items-center');
-        badges.classList.add('items-start');
-        badges.insertBefore(col, chevron || null);
+        if (badge) {
+            // LA PASTILLE S'ALIGNE SUR LE BADGE, PAS SUR LA FLÈCHE. Le badge
+            // et la pastille vivent dans leur propre colonne, alignée sur son
+            // bord droit à elle ; la flèche reste à côté, HORS de cette
+            // colonne — si elle y était, son bord droit à elle deviendrait
+            // la référence, et la pastille se retrouverait sous elle plutôt
+            // que sous le badge.
+            const col = document.createElement('div');
+            col.className = 'flex flex-col items-end gap-1.5';
+            col.appendChild(badge);
+            col.appendChild(pill);
+            badges.classList.add('items-start');
+            badges.insertBefore(col, chevron || null);
+        } else {
+            // PAS DE BADGE (courts métrages, films) : rien à mettre en
+            // colonne avec la pastille — elle s'aligne alors directement
+            // sur la flèche, seule référence disponible.
+            badges.classList.add('flex-col', 'items-end', 'gap-1.5');
+            badges.appendChild(pill);
+        }
     }
 
     // ── L'appui maintenu ─────────────────────────────────────────────
