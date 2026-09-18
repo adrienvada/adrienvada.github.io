@@ -2040,6 +2040,7 @@ const SHOW_UNIVERSES = {
             }
 
             addWhisper(li, uni);
+            addTrailerPill(li, uni);
         });
         calerLesCretes();
         suivreLeTheme();
@@ -2087,6 +2088,47 @@ const SHOW_UNIVERSES = {
         el.style.setProperty('--wd-step',
             Math.min(240, Math.max(56, Math.round(3280 / i))) + 'ms');
         row.insertBefore(el, badges);
+    }
+
+    // ── La bande-annonce, en pastille sous le badge ────────────────────
+    //  Un lien DIRECT vers la vidéo, pas un raccourci vers le panneau :
+    //  le geste demandé est d'y accéder tout de suite, pas de rouvrir
+    //  l'univers pour aller la chercher dans son défilé. On prend la
+    //  première vidéo du montage — c'est la bande-annonce sur les fiches
+    //  qui en posent une, et il n'y en a jamais deux.
+    function addTrailerPill(li, uni) {
+        const beat = (uni.sequence || []).find(b => b && b.video);
+        if (!beat) return;
+        const ref = videoRef(uni, beat.video);
+        if (!ref) return;
+        const [kind, id] = ref.split(':');
+        const url = kind === 'yt' ? `https://www.youtube.com/watch?v=${id}` : `https://vimeo.com/${id}`;
+
+        const badges = li.querySelector('.cv-row-toggle > div')?.lastElementChild;
+        if (!badges || badges.querySelector('.cv-trailer')) return;
+
+        // Le badge et le chevron occupaient la seule ligne de ce coin de la
+        // carte ; on les regroupe dans leur propre rangée pour empiler la
+        // pastille dessous, plutôt que de les mélanger dans une ligne qui
+        // s'étirerait mal.
+        const top = document.createElement('div');
+        top.className = 'flex items-center gap-2';
+        while (badges.firstChild) top.appendChild(badges.firstChild);
+        badges.classList.remove('items-center');
+        badges.classList.add('flex-col', 'items-end', 'gap-1.5');
+        badges.appendChild(top);
+
+        const titre = uni.title || li.dataset.cvShow || '';
+        const pill = document.createElement('a');
+        pill.href = url;
+        pill.target = '_blank';
+        pill.rel = 'noopener';
+        pill.className = 'cv-trailer';
+        pill.setAttribute('aria-label', `Voir la bande-annonce — ${titre}`);
+        pill.setAttribute('data-track', 'cv_trailer');
+        pill.setAttribute('data-track-detail', titre);
+        pill.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg>';
+        badges.appendChild(pill);
     }
 
     // ── L'appui maintenu ─────────────────────────────────────────────

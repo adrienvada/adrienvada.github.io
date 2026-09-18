@@ -2433,6 +2433,39 @@
             position: relative;
         }
 
+        /* LA BANDE-ANNONCE, EN PASTILLE SOUS LE BADGE. Posée par
+           addTrailerPill() (univers.js) seulement quand le montage du
+           spectacle contient une vidéo — jamais recopiée dans le balisage.
+           Dans la couleur du spectacle, comme le badge au-dessus, mais en
+           retrait pour ne pas lui faire concurrence au repos. */
+        .cv-trailer {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            border-radius: 999px;
+            color: color-mix(in srgb, var(--cv-accent) 80%, rgb(var(--c-text)));
+            background: color-mix(in srgb, var(--cv-accent) 14%, rgb(var(--c-surface)));
+            border: 1px solid color-mix(in srgb, var(--cv-accent) 42%, transparent);
+            transition: background var(--dur-base) var(--ease-out),
+                color var(--dur-base) var(--ease-out);
+        }
+
+        .cv-trailer:hover,
+        .cv-trailer:focus-visible {
+            background: var(--cv-accent);
+            color: rgb(var(--c-surface));
+        }
+
+        .cv-trailer .ico {
+            font-size: 8px;
+            /* Le triangle de lecture penche visuellement à gauche dans son
+               cercle ; ce filet le recentre à l'œil. */
+            margin-left: 1px;
+        }
+
         /*  4. LE LAVIS, SUR PETIT ÉCRAN SEULEMENT. Un filet de 2 px se
                remarque sur une liste large ; sur 380 px de large, il se
                perd. La couleur traverse alors la ligne en s'évanouissant.
