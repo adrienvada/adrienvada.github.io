@@ -36,7 +36,7 @@ const SHOW_DATA = {
   // -------------------------------------------------------------
   upcoming: [
     // ⇊ GÉNÉRÉ — build/exporter-dates.js recopie ici la table Supabase. Ne pas éditer à la main. ⇊
-    // Dernier export : 11 septembre 2026 à 17:22 — 17 soirée(s), 10 entrée(s).
+    // Dernier export : 18 septembre 2026 à 07:01 — 24 soirée(s), 14 entrée(s).
     // ── 22 - 23 oct. 2026 : À la barre, peine perdue ? (Rouen) [Série] ──
     {
       type: "series",
@@ -48,14 +48,14 @@ const SHOW_DATA = {
         {
           dateLabel: "22 oct. 2026",
           time: "19h00",
-          bookingUrl: "",
+          bookingUrl: "https://www.cdn-normandierouen.fr/saison-26-27/la-barre-peine-perdue",
           isSchool: false,
           icsDate: "2026-10-22"
         },
         {
           dateLabel: "23 oct. 2026",
           time: "19h00",
-          bookingUrl: "",
+          bookingUrl: "https://www.cdn-normandierouen.fr/saison-26-27/la-barre-peine-perdue",
           isSchool: false,
           icsDate: "2026-10-23"
         }
@@ -74,13 +74,13 @@ const SHOW_DATA = {
           dateLabel: "12 nov. 2026",
           time: "14h15",
           bookingUrl: "",
-          isSchool: false,
+          isSchool: true,
           icsDate: "2026-11-12"
         },
         {
           dateLabel: "12 nov. 2026",
           time: "20h00",
-          bookingUrl: "",
+          bookingUrl: "https://billetterie-saint-quentin.mapado.com/event/757061-a-la-barre-peine-perdue",
           isSchool: false,
           icsDate: "2026-11-12"
         }
@@ -100,17 +100,54 @@ const SHOW_DATA = {
       icsDate: "2026-11-25"
     },
 
-    // ── 18 déc. 2026 : Cléophène, d’après Rodogune (Pont-Audemer) [Date unique] ──
+    // ── 1 déc. 2026 : L’imaginaire forcé (Saint-Pierre-lès-Elbeuf) [Série] ──
     {
-      type: "single",
+      type: "series",
+      id: "panel-l-imaginaire-force-saint-pierre-les-elbeuf-2026-12-01",
+      dateLabel: "1 déc. 2026",
+      title: "L’imaginaire forcé",
+      location: "Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76)", city: "Saint-Pierre-lès-Elbeuf",
+      shows: [
+        {
+          dateLabel: "1 déc. 2026",
+          time: "14h00",
+          bookingUrl: "",
+          isSchool: true,
+          icsDate: "2026-12-01"
+        },
+        {
+          dateLabel: "1 déc. 2026",
+          time: "19h00",
+          bookingUrl: "",
+          isSchool: false,
+          icsDate: "2026-12-01"
+        }
+      ]
+    },
+
+    // ── 18 déc. 2026 : Cléophène, d’après Rodogune (Pont-Audemer) [Série] ──
+    {
+      type: "series",
+      id: "panel-cleophene-d-apres-rodogune-pont-audemer-2026-12-18",
       dateLabel: "18 déc. 2026",
-      fullDate: "18 décembre 2026",
       title: "Cléophène, d’après Rodogune",
       location: "L’Éclat, Pont-Audemer (27)", city: "Pont-Audemer",
-      time: "",
-      bookingUrl: "",
-      isSchool: false,
-      icsDate: "2026-12-18"
+      shows: [
+        {
+          dateLabel: "18 déc. 2026",
+          time: "14h00",
+          bookingUrl: "https://www.ville-pont-audemer.fr/agenda/cleophene-cie-crescite/cleophene-cie-crescite-2026-12-18/",
+          isSchool: false,
+          icsDate: "2026-12-18"
+        },
+        {
+          dateLabel: "18 déc. 2026",
+          time: "20h00",
+          bookingUrl: "https://www.ville-pont-audemer.fr/agenda/cleophene-cie-crescite/cleophene-cie-crescite-2026-12-18/",
+          isSchool: false,
+          icsDate: "2026-12-18"
+        }
+      ]
     },
 
     // ── 26 janv. 2027 : Cléophène, d’après Rodogune (Falaise) [Date unique] ──
@@ -120,8 +157,8 @@ const SHOW_DATA = {
       fullDate: "26 janvier 2027",
       title: "Cléophène, d’après Rodogune",
       location: "Le Forum, Falaise (14)", city: "Falaise",
-      time: "",
-      bookingUrl: "",
+      time: "20h00",
+      bookingUrl: "https://www.vostickets.net/billet/FR/representation-FALAISE-34843-0.wb?REFID=RBI2AAAAAAAAAAAAQQA",
       isSchool: false,
       icsDate: "2027-01-26"
     },
@@ -138,13 +175,13 @@ const SHOW_DATA = {
           dateLabel: "29 janv. 2027",
           time: "",
           bookingUrl: "",
-          isSchool: false,
+          isSchool: true,
           icsDate: "2027-01-29"
         },
         {
           dateLabel: "30 janv. 2027",
-          time: "",
-          bookingUrl: "",
+          time: "18h00",
+          bookingUrl: "https://www.vostickets.net/billet/FR/representation-SAINT_LO-32786-0.wb?REFID=coU2AAAAAAAAAAAAkwE",
           isSchool: false,
           icsDate: "2027-01-30"
         }
@@ -163,13 +200,13 @@ const SHOW_DATA = {
           dateLabel: "29 janv. 2027",
           time: "",
           bookingUrl: "",
-          isSchool: false,
+          isSchool: true,
           icsDate: "2027-01-29"
         },
         {
           dateLabel: "30 janv. 2027",
-          time: "",
-          bookingUrl: "",
+          time: "20h30",
+          bookingUrl: "https://www.vostickets.net/billet/FR/representation-SAINT_LO-32787-0.wb?REFID=coU2AAAAAAAAAAAAkwE",
           isSchool: false,
           icsDate: "2027-01-30"
         }
@@ -184,7 +221,7 @@ const SHOW_DATA = {
       title: "Cléophène, d’après Rodogune",
       location: "La Ferme de Bel Ebat, Guyancourt (78)", city: "Guyancourt",
       time: "",
-      bookingUrl: "",
+      bookingUrl: "https://www.scenes2guyancourt.fr/agenda/cleophene/",
       isSchool: false,
       icsDate: "2027-02-02"
     },
@@ -200,6 +237,57 @@ const SHOW_DATA = {
       bookingUrl: "",
       isSchool: false,
       icsDate: "2027-03-12"
+    },
+
+    // ── 8 avr. 2027 : L’imaginaire forcé (Déville-lès-Rouen) [Date unique] ──
+    {
+      type: "single",
+      dateLabel: "8 avr. 2027",
+      fullDate: "8 avril 2027",
+      title: "L’imaginaire forcé",
+      location: "Collège Sainte-Marie, Déville-lès-Rouen (76)", city: "Déville-lès-Rouen",
+      time: "",
+      bookingUrl: "",
+      isSchool: true,
+      icsDate: "2027-04-08"
+    },
+
+    // ── 12 avr. 2027 : L’imaginaire forcé (Darnétal) [Date unique] ──
+    {
+      type: "single",
+      dateLabel: "12 avr. 2027",
+      fullDate: "12 avril 2027",
+      title: "L’imaginaire forcé",
+      location: "Collège, Darnétal (76)", city: "Darnétal",
+      time: "matin",
+      bookingUrl: "",
+      isSchool: true,
+      icsDate: "2027-04-12"
+    },
+
+    // ── 15 avr. 2027 : L’imaginaire forcé (Cherbourg) [Série] ──
+    {
+      type: "series",
+      id: "panel-l-imaginaire-force-cherbourg-2027-04-15",
+      dateLabel: "15 avr. 2027",
+      title: "L’imaginaire forcé",
+      location: "Collège, Cherbourg (50)", city: "Cherbourg",
+      shows: [
+        {
+          dateLabel: "15 avr. 2027",
+          time: "après-midi",
+          bookingUrl: "",
+          isSchool: true,
+          icsDate: "2027-04-15"
+        },
+        {
+          dateLabel: "15 avr. 2027",
+          time: "matin",
+          bookingUrl: "",
+          isSchool: true,
+          icsDate: "2027-04-15"
+        }
+      ]
     },
 
     // ── 18 - 21 mai 2027 : Bérénice (Rouen) [Série] ──
