@@ -6661,7 +6661,6 @@
             if (resetEl) resetEl.classList.toggle('hidden', !filtersActive());
 
             const amberBadge = `<span class="text-[10px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><svg class="ico text-[9px]" aria-hidden="true"><use href="#i-solid-circle-info"></use></svg> Les réservations ne sont pas encore ouvertes</span>`;
-            const schoolWarningBadge = `<span class="text-[10px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><svg class="ico text-[9px]" aria-hidden="true"><use href="#i-solid-lock"></use></svg> Accès restreint : contactez-moi directement pour savoir si on peut vous trouver une place ! 😉</span>`;
 
             const getTimeStr = (item) => {
                 if (Array.isArray(item.times) && item.times.length > 0) return item.times.join(' & ');
@@ -6715,7 +6714,7 @@
                                         </div>
                                         <div class="flex flex-col min-w-0 flex-1">
                                             ${rep.isSchool
-                                    ? `<span class="text-[10px] text-stone-600 italic block">Séance scolaire</span>${schoolWarningBadge}`
+                                    ? `<span class="text-[10px] text-luxury-warn italic block">Séance scolaire</span>`
                                     : (!rep.bookingUrl ? amberBadge : '')}
                                         </div>
                                     </div>
@@ -6773,7 +6772,7 @@
                                     <div class="min-w-0 flex-1">
                                         <h4 class="font-bold text-luxury-textMain text-xs leading-tight">${esc(show.title)}${subtitleHtml}</h4>
                                         ${show.isSchool
-                                ? `<span class="text-[10px] text-stone-600 italic mt-0.5 block">Séance scolaire</span>${schoolWarningBadge}`
+                                ? `<span class="text-[10px] text-luxury-warn italic mt-0.5 block">Séance scolaire</span>`
                                 : (!show.bookingUrl ? amberBadge : '')}
                                     </div>
                                 </div>
