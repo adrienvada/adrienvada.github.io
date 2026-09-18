@@ -13,7 +13,7 @@
  *
  *  Ce script fabrique, pour chaque spectacle, une page réelle à son adresse —
  *  /spectacles/berenice/ — avec son texte dans le HTML, ses photos, ses dates
- *  et ses données structurées. Quelqu'un qui cherche « Bérénice Théâtre des
+ *  et ses données structurées. Quelqu'un qui cherche « Bérénice Compagnie
  *  Crescite » peut désormais tomber sur Adrien plutôt que sur la billetterie.
  *
  *  LA SOURCE RESTE UNIQUE

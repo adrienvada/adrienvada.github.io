@@ -1872,7 +1872,7 @@ const SHOW_UNIVERSES = {
         el.className = 'cv-whisper';
         // Caché aux lecteurs d'écran : l'élément vit DANS le bouton, et son
         // texte s'ajouterait au nom de la ligne — « Cassandres, Rôle…,
-        // Théâtre des Crescite, Rome an 79, huit jours après la mort… ».
+        // Compagnie Crescite, Rome an 79, huit jours après la mort… ».
         // Le synopsis leur est donné en entier dans l'univers, à un clic.
         el.setAttribute('aria-hidden', 'true');
         // Mot à mot, comme le synopsis s'inscrit dans l'univers : `--i` est
