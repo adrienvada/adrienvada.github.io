@@ -2106,21 +2106,18 @@ const SHOW_UNIVERSES = {
 
         const badges = li.querySelector('.cv-row-toggle > div')?.lastElementChild;
         if (!badges || badges.querySelector('.cv-trailer')) return;
+        const badge = badges.querySelector('.cv-badge');
+        const chevron = badges.querySelector('.cv-chevron');
+        if (!badge) return;
 
-        // Le badge et le chevron occupaient la seule ligne de ce coin de la
-        // carte ; on les regroupe dans leur propre rangée pour empiler la
-        // pastille dessous, plutôt que de les mélanger dans une ligne qui
-        // s'étirerait mal.
-        const top = document.createElement('div');
-        top.className = 'flex items-center gap-2';
-        while (badges.firstChild) top.appendChild(badges.firstChild);
-        // À GAUCHE, PAS À DROITE : le badge est plus large que la pastille,
-        // et items-end les aurait alignés sur leur bord droit — sous
-        // l'oblique, pas sous le badge. items-start les cale au même bord
-        // gauche, comme le badge et la flèche le sont déjà entre eux.
-        badges.classList.remove('items-center');
-        badges.classList.add('flex-col', 'items-start', 'gap-1.5');
-        badges.appendChild(top);
+        // LA PASTILLE S'ALIGNE SUR LE BADGE, PAS SUR LA FLÈCHE. Le badge et
+        // la pastille vivent dans leur propre colonne, alignée sur son bord
+        // droit à elle ; la flèche reste à côté, HORS de cette colonne — si
+        // elle y était, son bord droit à elle deviendrait la référence, et
+        // la pastille se retrouverait sous elle plutôt que sous le badge.
+        const col = document.createElement('div');
+        col.className = 'flex flex-col items-end gap-1.5';
+        col.appendChild(badge);
 
         const titre = uni.title || li.dataset.cvShow || '';
         const pill = document.createElement('a');
@@ -2132,7 +2129,11 @@ const SHOW_UNIVERSES = {
         pill.setAttribute('data-track', 'cv_trailer');
         pill.setAttribute('data-track-detail', titre);
         pill.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg>';
-        badges.appendChild(pill);
+        col.appendChild(pill);
+
+        badges.classList.remove('items-center');
+        badges.classList.add('items-start');
+        badges.insertBefore(col, chevron || null);
     }
 
     // ── L'appui maintenu ─────────────────────────────────────────────
