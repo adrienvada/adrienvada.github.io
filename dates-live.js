@@ -166,6 +166,12 @@
             if (typeof buildFilterChips === 'function') buildFilterChips();
             if (typeof renderDates === 'function') renderDates();
             if (typeof renderNextDate === 'function') renderNextDate();
+            // Une page /spectacles/ : son pied a été écrit à la génération
+            // et peut annoncer « les dates seront annoncées ici » alors que
+            // la base en porte six. univers.js le refait à partir de ce qui
+            // vient d'arriver. Sur l'accueil, la fonction existe aussi et ne
+            // fait rien — elle commence par vérifier la classe du <body>.
+            if (typeof rafraichirDatesSpectacle === 'function') rafraichirDatesSpectacle();
             // Un tiroir du CV déjà déplié a été rempli depuis dates.js :
             // on le vide pour qu'il se remplisse à nouveau, à jour.
             document.querySelectorAll('.cv-drawer-body[data-filled="1"]').forEach(corps => {

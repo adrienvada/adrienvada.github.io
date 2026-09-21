@@ -108,6 +108,126 @@
   }
 }
 </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TheaterEvent",
+  "name": "L’Imaginaire forcé",
+  "startDate": "2026-12-01",
+  "url": "https://adrienvada.fr/spectacles/imaginaireforce/",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "location": {
+    "@type": "Place",
+    "name": "Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76)",
+    "address": "Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76)"
+  },
+  "performer": {
+    "@type": "Person",
+    "@id": "https://adrienvada.fr/#adrien-vada",
+    "name": "Adrien Vada"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TheaterEvent",
+  "name": "L’Imaginaire forcé",
+  "startDate": "2026-12-01",
+  "url": "https://adrienvada.fr/spectacles/imaginaireforce/",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "location": {
+    "@type": "Place",
+    "name": "Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76)",
+    "address": "Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76)"
+  },
+  "performer": {
+    "@type": "Person",
+    "@id": "https://adrienvada.fr/#adrien-vada",
+    "name": "Adrien Vada"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TheaterEvent",
+  "name": "L’Imaginaire forcé",
+  "startDate": "2027-04-08",
+  "url": "https://adrienvada.fr/spectacles/imaginaireforce/",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "location": {
+    "@type": "Place",
+    "name": "Collège Sainte-Marie, Déville-lès-Rouen (76)",
+    "address": "Collège Sainte-Marie, Déville-lès-Rouen (76)"
+  },
+  "performer": {
+    "@type": "Person",
+    "@id": "https://adrienvada.fr/#adrien-vada",
+    "name": "Adrien Vada"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TheaterEvent",
+  "name": "L’Imaginaire forcé",
+  "startDate": "2027-04-12",
+  "url": "https://adrienvada.fr/spectacles/imaginaireforce/",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "location": {
+    "@type": "Place",
+    "name": "Collège, Darnétal (76)",
+    "address": "Collège, Darnétal (76)"
+  },
+  "performer": {
+    "@type": "Person",
+    "@id": "https://adrienvada.fr/#adrien-vada",
+    "name": "Adrien Vada"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TheaterEvent",
+  "name": "L’Imaginaire forcé",
+  "startDate": "2027-04-15",
+  "url": "https://adrienvada.fr/spectacles/imaginaireforce/",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "location": {
+    "@type": "Place",
+    "name": "Collège, Cherbourg (50)",
+    "address": "Collège, Cherbourg (50)"
+  },
+  "performer": {
+    "@type": "Person",
+    "@id": "https://adrienvada.fr/#adrien-vada",
+    "name": "Adrien Vada"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TheaterEvent",
+  "name": "L’Imaginaire forcé",
+  "startDate": "2027-04-15",
+  "url": "https://adrienvada.fr/spectacles/imaginaireforce/",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "location": {
+    "@type": "Place",
+    "name": "Collège, Cherbourg (50)",
+    "address": "Collège, Cherbourg (50)"
+  },
+  "performer": {
+    "@type": "Person",
+    "@id": "https://adrienvada.fr/#adrien-vada",
+    "name": "Adrien Vada"
+  }
+}
+</script>
 </head>
 
 <!-- La classe u-page-spectacle est le signal que guette univers.js : elle lui
@@ -115,8 +235,17 @@
      l'écriture du titre, la parallaxe, les révélations au défilement,
      l'agrandissement des photos. C'est le MÊME moteur que sur l'accueil, et
      c'est pourquoi la page ne se contente pas de ressembler à son univers :
-     elle se comporte comme lui. -->
-<body class="u-page-spectacle">
+     elle se comporte comme lui.
+
+     data-u-show porte le titre EXACT du spectacle — la clé de SHOW_UNIVERSES,
+     celle qu'écrit aussi dates.js. C'est par elle qu'univers.js retrouve les
+     représentations de CETTE page au moment de rafraîchir son pied.
+
+     data-u-creation dit ce qu'un pied sans date ne peut pas deviner : un
+     spectacle sans représentation à venir est-il ARRÊTÉ ou PAS ENCORE CRÉÉ ?
+     Sur l'accueil c'est le badge de la ligne du CV qui tranche ; cette page
+     n'a pas de CV, on le lui écrit donc noir sur blanc. -->
+<body class="u-page-spectacle" data-u-show="L’imaginaire forcé" data-u-creation="1">
     <!-- SPRITE-ICONES:DEBUT -->
     <!-- Les 39 icônes du site, et rien d'autre. Généré par
          build/construire-sprite-icones.py — ne pas modifier à la main.
@@ -316,15 +445,10 @@
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
                  traverser tout le défilé de photos pour savoir quand voir le
                  spectacle — or c'est souvent la seule raison de la visite.
-
-                 SAUF POUR UN SPECTACLE ARRÊTÉ : il n'y a rien à quoi accéder,
-                 et un bouton d'action promettant des représentations qui
-                 n'existent plus ferait une promesse en l'air. La ligne le dit
-                 simplement, et n'appelle pas le clic. Les représentations
-                 passées restent au pied de l'univers. -->
+                 Ce que les dates y changent est dans heroActionsHtml. -->
             <div class="u-hero-actions">
                 <button type="button" class="u-btn" data-u-jump>
-                        Le spectacle
+                        Accéder aux dates
                         <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
                     </button>
             </div>
@@ -349,11 +473,66 @@
         <div class="u-figs"></div>
 
         <footer class="u-foot" id="u-foot">
-            <h3 class="u-foot-title">Spectacle en création</h3>
-            <p class="u-empty">Les dates de tournée seront annoncées ici.</p>
+            <h3 class="u-foot-title">Prochaines représentations</h3>
+            <ul class="u-dates"><li class="u-date">
+                <div class="u-date-info">
+                    <span class="u-date-when">1 déc. 2026</span>
+                    <span class="u-date-where">Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76)</span>
+                    <span class="u-date-time">14h00<span class="u-warn">séance scolaire</span></span>
+                </div>
+                <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;L’Imaginaire forcé&quot;,&quot;subtitle&quot;:&quot;d’après Le Mariage forcé, de Molière&quot;,&quot;location&quot;:&quot;Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76)&quot;,&quot;icsDate&quot;:&quot;2026-12-01&quot;,&quot;time&quot;:&quot;14h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
+                    <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
+                </button></div>
+            </li><li class="u-date">
+                <div class="u-date-info">
+                    <span class="u-date-when">1 déc. 2026</span>
+                    <span class="u-date-where">Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76)</span>
+                    <span class="u-date-time">19h00</span>
+                </div>
+                <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;L’Imaginaire forcé&quot;,&quot;subtitle&quot;:&quot;d’après Le Mariage forcé, de Molière&quot;,&quot;location&quot;:&quot;Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76)&quot;,&quot;icsDate&quot;:&quot;2026-12-01&quot;,&quot;time&quot;:&quot;19h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
+                    <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
+                </button><a href="https://www.vostickets.net/billet/FR/representation-ST_PIERRE_LES_ELBEUF-34764-0.wb?REFID=_hE3AAAAAAAAAAAAegA" target="_blank" rel="noopener" class="u-date-book">Réserver
+                       <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
+            </li><li class="u-date">
+                <div class="u-date-info">
+                    <span class="u-date-when">8 avr. 2027</span>
+                    <span class="u-date-where">Collège Sainte-Marie, Déville-lès-Rouen (76)</span>
+                    <span class="u-date-time">horaire à confirmer<span class="u-warn">séance scolaire</span></span>
+                </div>
+                <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;L’Imaginaire forcé&quot;,&quot;subtitle&quot;:&quot;d’après Le Mariage forcé, de Molière&quot;,&quot;location&quot;:&quot;Collège Sainte-Marie, Déville-lès-Rouen (76)&quot;,&quot;icsDate&quot;:&quot;2027-04-08&quot;,&quot;time&quot;:&quot;&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
+                    <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
+                </button></div>
+            </li><li class="u-date">
+                <div class="u-date-info">
+                    <span class="u-date-when">12 avr. 2027</span>
+                    <span class="u-date-where">Collège, Darnétal (76)</span>
+                    <span class="u-date-time">matin<span class="u-warn">séance scolaire</span></span>
+                </div>
+                <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;L’Imaginaire forcé&quot;,&quot;subtitle&quot;:&quot;d’après Le Mariage forcé, de Molière&quot;,&quot;location&quot;:&quot;Collège, Darnétal (76)&quot;,&quot;icsDate&quot;:&quot;2027-04-12&quot;,&quot;time&quot;:&quot;matin&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
+                    <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
+                </button></div>
+            </li><li class="u-date">
+                <div class="u-date-info">
+                    <span class="u-date-when">15 avr. 2027</span>
+                    <span class="u-date-where">Collège, Cherbourg (50)</span>
+                    <span class="u-date-time">après-midi<span class="u-warn">séance scolaire</span></span>
+                </div>
+                <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;L’Imaginaire forcé&quot;,&quot;subtitle&quot;:&quot;d’après Le Mariage forcé, de Molière&quot;,&quot;location&quot;:&quot;Collège, Cherbourg (50)&quot;,&quot;icsDate&quot;:&quot;2027-04-15&quot;,&quot;time&quot;:&quot;après-midi&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
+                    <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
+                </button></div>
+            </li><li class="u-date">
+                <div class="u-date-info">
+                    <span class="u-date-when">15 avr. 2027</span>
+                    <span class="u-date-where">Collège, Cherbourg (50)</span>
+                    <span class="u-date-time">matin<span class="u-warn">séance scolaire</span></span>
+                </div>
+                <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;L’Imaginaire forcé&quot;,&quot;subtitle&quot;:&quot;d’après Le Mariage forcé, de Molière&quot;,&quot;location&quot;:&quot;Collège, Cherbourg (50)&quot;,&quot;icsDate&quot;:&quot;2027-04-15&quot;,&quot;time&quot;:&quot;matin&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
+                    <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
+                </button></div>
+            </li></ul>
             <div class="u-actions">
                 
-                
+                <a class="u-btn u-btn-ghost" href="/#page_dates">Voir toutes les dates</a>
             </div>
             
             
@@ -378,6 +557,23 @@
             </figure>
         </div>
     </div>
+
+    <!-- LES DATES, LUES ICI COMME SUR L'ACCUEIL.
+         Le pied de cette page a été écrit à la génération : c'est un repli
+         honnête — il s'affiche sans JavaScript et part avec le fichier —
+         mais il vieillit. Il ne bougeait qu'au prochain passage des deux
+         scripts de build, si bien qu'une date saisie dans /admin/ pouvait
+         rester invisible ici pendant des semaines, alors que l'accueil
+         l'annonçait déjà.
+
+         Ces deux fichiers rendent la page vivante, dans l'ordre qu'ils ont
+         sur l'accueil : dates.js pose la copie de repli, dates-live.js la
+         remplace si Supabase répond. univers.js, chargé ensuite, redessine
+         le pied à partir de l'une ou de l'autre. Le HTML généré ne sert donc
+         plus qu'à celui qui n'exécute rien — un robot, un navigateur sans
+         script — et le visiteur voit toujours l'état du jour. -->
+    <script src="../../dates.js"></script>
+    <script src="../../dates-live.js"></script>
 
     <!-- Le moteur, dans l'ordre : le montage d'abord (univers.js s'en sert),
          puis univers.js, qui reconnaît la classe du <body> et anime le

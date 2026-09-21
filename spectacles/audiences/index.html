@@ -115,8 +115,17 @@
      l'écriture du titre, la parallaxe, les révélations au défilement,
      l'agrandissement des photos. C'est le MÊME moteur que sur l'accueil, et
      c'est pourquoi la page ne se contente pas de ressembler à son univers :
-     elle se comporte comme lui. -->
-<body class="u-page-spectacle">
+     elle se comporte comme lui.
+
+     data-u-show porte le titre EXACT du spectacle — la clé de SHOW_UNIVERSES,
+     celle qu'écrit aussi dates.js. C'est par elle qu'univers.js retrouve les
+     représentations de CETTE page au moment de rafraîchir son pied.
+
+     data-u-creation dit ce qu'un pied sans date ne peut pas deviner : un
+     spectacle sans représentation à venir est-il ARRÊTÉ ou PAS ENCORE CRÉÉ ?
+     Sur l'accueil c'est le badge de la ligne du CV qui tranche ; cette page
+     n'a pas de CV, on le lui écrit donc noir sur blanc. -->
+<body class="u-page-spectacle" data-u-show="Audiences">
     <!-- SPRITE-ICONES:DEBUT -->
     <!-- Les 39 icônes du site, et rien d'autre. Généré par
          build/construire-sprite-icones.py — ne pas modifier à la main.
@@ -316,12 +325,7 @@
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
                  traverser tout le défilé de photos pour savoir quand voir le
                  spectacle — or c'est souvent la seule raison de la visite.
-
-                 SAUF POUR UN SPECTACLE ARRÊTÉ : il n'y a rien à quoi accéder,
-                 et un bouton d'action promettant des représentations qui
-                 n'existent plus ferait une promesse en l'air. La ligne le dit
-                 simplement, et n'appelle pas le clic. Les représentations
-                 passées restent au pied de l'univers. -->
+                 Ce que les dates y changent est dans heroActionsHtml. -->
             <div class="u-hero-actions">
                 <p class="u-hero-note">Ce spectacle n’est plus à l’affiche</p>
             </div>
@@ -460,6 +464,23 @@
             </figure>
         </div>
     </div>
+
+    <!-- LES DATES, LUES ICI COMME SUR L'ACCUEIL.
+         Le pied de cette page a été écrit à la génération : c'est un repli
+         honnête — il s'affiche sans JavaScript et part avec le fichier —
+         mais il vieillit. Il ne bougeait qu'au prochain passage des deux
+         scripts de build, si bien qu'une date saisie dans /admin/ pouvait
+         rester invisible ici pendant des semaines, alors que l'accueil
+         l'annonçait déjà.
+
+         Ces deux fichiers rendent la page vivante, dans l'ordre qu'ils ont
+         sur l'accueil : dates.js pose la copie de repli, dates-live.js la
+         remplace si Supabase répond. univers.js, chargé ensuite, redessine
+         le pied à partir de l'une ou de l'autre. Le HTML généré ne sert donc
+         plus qu'à celui qui n'exécute rien — un robot, un navigateur sans
+         script — et le visiteur voit toujours l'état du jour. -->
+    <script src="../../dates.js"></script>
+    <script src="../../dates-live.js"></script>
 
     <!-- Le moteur, dans l'ordre : le montage d'abord (univers.js s'en sert),
          puis univers.js, qui reconnaît la classe du <body> et anime le

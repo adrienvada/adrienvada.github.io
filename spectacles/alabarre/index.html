@@ -218,8 +218,8 @@
   "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
   "location": {
     "@type": "Place",
-    "name": "Hôtel de ville de Barentin (76)",
-    "address": "Hôtel de ville de Barentin (76)"
+    "name": "Salle du Conseil Communautaire Caux Austreberthe, Hôtel de Ville de Barentin (76)",
+    "address": "Salle du Conseil Communautaire Caux Austreberthe, Hôtel de Ville de Barentin (76)"
   },
   "performer": {
     "@type": "Person",
@@ -235,8 +235,17 @@
      l'écriture du titre, la parallaxe, les révélations au défilement,
      l'agrandissement des photos. C'est le MÊME moteur que sur l'accueil, et
      c'est pourquoi la page ne se contente pas de ressembler à son univers :
-     elle se comporte comme lui. -->
-<body class="u-page-spectacle">
+     elle se comporte comme lui.
+
+     data-u-show porte le titre EXACT du spectacle — la clé de SHOW_UNIVERSES,
+     celle qu'écrit aussi dates.js. C'est par elle qu'univers.js retrouve les
+     représentations de CETTE page au moment de rafraîchir son pied.
+
+     data-u-creation dit ce qu'un pied sans date ne peut pas deviner : un
+     spectacle sans représentation à venir est-il ARRÊTÉ ou PAS ENCORE CRÉÉ ?
+     Sur l'accueil c'est le badge de la ligne du CV qui tranche ; cette page
+     n'a pas de CV, on le lui écrit donc noir sur blanc. -->
+<body class="u-page-spectacle" data-u-show="À la barre, peine perdue ?">
     <!-- SPRITE-ICONES:DEBUT -->
     <!-- Les 39 icônes du site, et rien d'autre. Généré par
          build/construire-sprite-icones.py — ne pas modifier à la main.
@@ -436,12 +445,7 @@
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
                  traverser tout le défilé de photos pour savoir quand voir le
                  spectacle — or c'est souvent la seule raison de la visite.
-
-                 SAUF POUR UN SPECTACLE ARRÊTÉ : il n'y a rien à quoi accéder,
-                 et un bouton d'action promettant des représentations qui
-                 n'existent plus ferait une promesse en l'air. La ligne le dit
-                 simplement, et n'appelle pas le clic. Les représentations
-                 passées restent au pied de l'univers. -->
+                 Ce que les dates y changent est dans heroActionsHtml. -->
             <div class="u-hero-actions">
                 <button type="button" class="u-btn" data-u-jump>
                         Accéder aux dates
@@ -615,7 +619,8 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Tribunal judiciaire de Rouen (76)&quot;,&quot;icsDate&quot;:&quot;2026-10-22&quot;,&quot;time&quot;:&quot;19h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button></div>
+                </button><a href="https://www.cdn-normandierouen.fr/saison-26-27/la-barre-peine-perdue" target="_blank" rel="noopener" class="u-date-book">Réserver
+                       <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">
                     <span class="u-date-when">23 oct. 2026</span>
@@ -624,12 +629,13 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Tribunal judiciaire de Rouen (76)&quot;,&quot;icsDate&quot;:&quot;2026-10-23&quot;,&quot;time&quot;:&quot;19h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button></div>
+                </button><a href="https://www.cdn-normandierouen.fr/saison-26-27/la-barre-peine-perdue" target="_blank" rel="noopener" class="u-date-book">Réserver
+                       <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">
                     <span class="u-date-when">12 nov. 2026</span>
                     <span class="u-date-where">Tribunal judiciaire de Saint-Quentin (02)</span>
-                    <span class="u-date-time">14h15</span>
+                    <span class="u-date-time">14h15<span class="u-warn">séance scolaire</span></span>
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Tribunal judiciaire de Saint-Quentin (02)&quot;,&quot;icsDate&quot;:&quot;2026-11-12&quot;,&quot;time&quot;:&quot;14h15&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
@@ -642,23 +648,25 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Tribunal judiciaire de Saint-Quentin (02)&quot;,&quot;icsDate&quot;:&quot;2026-11-12&quot;,&quot;time&quot;:&quot;20h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button></div>
+                </button><a href="https://billetterie-saint-quentin.mapado.com/event/757061-a-la-barre-peine-perdue" target="_blank" rel="noopener" class="u-date-book">Réserver
+                       <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">
                     <span class="u-date-when">25 nov. 2026</span>
                     <span class="u-date-where">Hôtel de Ville de Grand-Quevilly (76)</span>
-                    <span class="u-date-time">horaire à confirmer</span>
+                    <span class="u-date-time">20h00</span>
                 </div>
-                <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Hôtel de Ville de Grand-Quevilly (76)&quot;,&quot;icsDate&quot;:&quot;2026-11-25&quot;,&quot;time&quot;:&quot;&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
+                <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Hôtel de Ville de Grand-Quevilly (76)&quot;,&quot;icsDate&quot;:&quot;2026-11-25&quot;,&quot;time&quot;:&quot;20h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button></div>
+                </button><a href="https://mediatheque.ville-grand-quevilly.fr/cms/articleview/id/1155" target="_blank" rel="noopener" class="u-date-book">Réserver
+                       <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">
                     <span class="u-date-when">12 mars 2027</span>
-                    <span class="u-date-where">Hôtel de ville de Barentin (76)</span>
+                    <span class="u-date-where">Salle du Conseil Communautaire Caux Austreberthe, Hôtel de Ville de Barentin (76)</span>
                     <span class="u-date-time">horaire à confirmer</span>
                 </div>
-                <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Hôtel de ville de Barentin (76)&quot;,&quot;icsDate&quot;:&quot;2027-03-12&quot;,&quot;time&quot;:&quot;&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
+                <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Salle du Conseil Communautaire Caux Austreberthe, Hôtel de Ville de Barentin (76)&quot;,&quot;icsDate&quot;:&quot;2027-03-12&quot;,&quot;time&quot;:&quot;&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
                 </button></div>
             </li></ul>
@@ -693,6 +701,23 @@
             </figure>
         </div>
     </div>
+
+    <!-- LES DATES, LUES ICI COMME SUR L'ACCUEIL.
+         Le pied de cette page a été écrit à la génération : c'est un repli
+         honnête — il s'affiche sans JavaScript et part avec le fichier —
+         mais il vieillit. Il ne bougeait qu'au prochain passage des deux
+         scripts de build, si bien qu'une date saisie dans /admin/ pouvait
+         rester invisible ici pendant des semaines, alors que l'accueil
+         l'annonçait déjà.
+
+         Ces deux fichiers rendent la page vivante, dans l'ordre qu'ils ont
+         sur l'accueil : dates.js pose la copie de repli, dates-live.js la
+         remplace si Supabase répond. univers.js, chargé ensuite, redessine
+         le pied à partir de l'une ou de l'autre. Le HTML généré ne sert donc
+         plus qu'à celui qui n'exécute rien — un robot, un navigateur sans
+         script — et le visiteur voit toujours l'état du jour. -->
+    <script src="../../dates.js"></script>
+    <script src="../../dates-live.js"></script>
 
     <!-- Le moteur, dans l'ordre : le montage d'abord (univers.js s'en sert),
          puis univers.js, qui reconnaît la classe du <body> et anime le

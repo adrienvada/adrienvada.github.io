@@ -459,13 +459,39 @@ ${MESURE}
      l'écriture du titre, la parallaxe, les révélations au défilement,
      l'agrandissement des photos. C'est le MÊME moteur que sur l'accueil, et
      c'est pourquoi la page ne se contente pas de ressembler à son univers :
-     elle se comporte comme lui. -->
-<body class="u-page-spectacle">
+     elle se comporte comme lui.
+
+     data-u-show porte le titre EXACT du spectacle — la clé de SHOW_UNIVERSES,
+     celle qu'écrit aussi dates.js. C'est par elle qu'univers.js retrouve les
+     représentations de CETTE page au moment de rafraîchir son pied.
+
+     data-u-creation dit ce qu'un pied sans date ne peut pas deviner : un
+     spectacle sans représentation à venir est-il ARRÊTÉ ou PAS ENCORE CRÉÉ ?
+     Sur l'accueil c'est le badge de la ligne du CV qui tranche ; cette page
+     n'a pas de CV, on le lui écrit donc noir sur blanc. -->
+<body class="u-page-spectacle" data-u-show="${MONTAGE.escape(cle)}"${enCreation ? ' data-u-creation="1"' : ''}>
     ${SPRITE}
     <div id="show-universe">
         <a class="u-retour" href="../../">← Adrien Vada</a>
         ${corps}
     </div>
+
+    <!-- LES DATES, LUES ICI COMME SUR L'ACCUEIL.
+         Le pied de cette page a été écrit à la génération : c'est un repli
+         honnête — il s'affiche sans JavaScript et part avec le fichier —
+         mais il vieillit. Il ne bougeait qu'au prochain passage des deux
+         scripts de build, si bien qu'une date saisie dans /admin/ pouvait
+         rester invisible ici pendant des semaines, alors que l'accueil
+         l'annonçait déjà.
+
+         Ces deux fichiers rendent la page vivante, dans l'ordre qu'ils ont
+         sur l'accueil : dates.js pose la copie de repli, dates-live.js la
+         remplace si Supabase répond. univers.js, chargé ensuite, redessine
+         le pied à partir de l'une ou de l'autre. Le HTML généré ne sert donc
+         plus qu'à celui qui n'exécute rien — un robot, un navigateur sans
+         script — et le visiteur voit toujours l'état du jour. -->
+    <script src="../../dates.js"></script>
+    <script src="../../dates-live.js"></script>
 
     <!-- Le moteur, dans l'ordre : le montage d'abord (univers.js s'en sert),
          puis univers.js, qui reconnaît la classe du <body> et anime le
