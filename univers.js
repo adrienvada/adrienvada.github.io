@@ -1852,7 +1852,12 @@ const SHOW_UNIVERSES = {
                 return;
             }
 
-            if (e.target.closest('.u-close')) { close(); return; }
+            const closeEl = e.target.closest('.u-close');
+            // Sur une page statique, .u-close est un vrai lien vers le
+            // répertoire (voir panelHtml) : le laisser naviguer, pas
+            // appeler close(), qui n'a rien à refermer ici et déclencherait
+            // en plus un suivi « univers_ferme » qui n'a pas eu lieu.
+            if (closeEl && closeEl.tagName !== 'A') { close(); return; }
 
             // « Accéder aux dates » : on saute au pied du panneau. Les
             // photos restent au-dessus, on ne les a pas perdues.
@@ -2119,6 +2124,11 @@ const SHOW_UNIVERSES = {
         pill.setAttribute('data-track', 'cv_trailer');
         pill.setAttribute('data-track-detail', titre);
         pill.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg>';
+        // ARRÊTER LA PROPAGATION ICI, PAS PLUS HAUT. Ce lien vit à
+        // l'intérieur du <button> qui ouvre l'univers — un clic dessus
+        // remontait donc jusqu'à lui et ouvrait AUSSI le panneau dans
+        // l'onglet en cours, en plus de la vidéo dans le nouvel onglet.
+        pill.addEventListener('click', (e) => e.stopPropagation());
 
         badges.classList.remove('items-center');
         if (badge) {

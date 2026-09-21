@@ -1346,6 +1346,18 @@ html.u-locked body {
     transition: opacity var(--dur-base) var(--ease-out);
 }
 
+/* [HIDDEN] NE SUFFIT PAS SEUL : `display: grid` ci-dessus, posé par une
+   règle d'auteur, l'emporte sur le display:none par défaut du navigateur
+   pour [hidden] — cette redéclaration est nécessaire, comme partout
+   ailleurs sur le site où un composant force son propre display (voir
+   #intro-overlay[hidden] dans index.html). Sans elle, la fenêtre —
+   invisible mais en position:fixed plein écran — couvrait la page entière
+   et bloquait tout clic et tout défilement dès le chargement, sur les
+   pages statiques où #show-universe n'est lui-même jamais [hidden]. */
+.u-cal-modal[hidden] {
+    display: none;
+}
+
 .u-cal-modal.is-open {
     opacity: 1;
 }

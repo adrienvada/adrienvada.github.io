@@ -420,9 +420,14 @@ const UniversMontage = (function () {
     //  `opts.dates`      le bloc des représentations, déjà rendu.
     //  `opts.enCreation` distingue « pas encore créé » de « plus à l'affiche ».
     //  `opts.statique`   page autonome : on retire ce qui n'a pas de sens
-    //             hors du panneau — la croix, la barre de progression,
+    //             hors du panneau — la barre de progression,
     //             l'agrandissement — et on remplace les gestes qui pilotent
-    //             le site par de vrais liens.
+    //             le site par de vrais liens. La croix elle-même reste :
+    //             un directeur de casting qui atterrit ici depuis le
+    //             répertoire veut un moyen évident d'y revenir, même si
+    //             « refermer » n'a pas de sens sur une page à part entière.
+    //             Elle redevient donc un LIEN vers le répertoire, pas un
+    //             bouton qui rejoue close() — rien à rejouer ici.
     function panelHtml(info, uni, opts) {
         const { dates = '', enCreation = false, statique = false } = opts || {};
         const figures = beatsHtml(uni, info.title);
@@ -433,7 +438,11 @@ const UniversMontage = (function () {
         const tm = titleMetrics(info.title);
 
         return `
-        ${statique ? '' : `<button type="button" class="u-close" aria-label="Fermer l’univers du spectacle">
+        ${statique
+                ? `<a href="/spectacles/" class="u-close" aria-label="Retour au répertoire des spectacles">
+            <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
+        </a>`
+                : `<button type="button" class="u-close" aria-label="Fermer l’univers du spectacle">
             <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
         </button>`}
         <!-- La barre de progression vaut aussi pour une page autonome : le
