@@ -16,7 +16,7 @@ périmé. Il affiche simplement l'état d'avant.
 | **`galerie.js`** — ajout ou ordre des photos du book | `node build/generer-page-galerie.js` | `/galerie/…` |
 | **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml` |
 | une **ligne du CV** dans `index.html` — titre, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
-| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | `node build/exporter-dates.js`, puis la commande ci-dessus | `dates.js`, puis `/spectacles/…` |
+| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis la commande ci-dessus | `dates.js`, puis `/spectacles/…` |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
 | le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…` |
 | une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
@@ -740,10 +740,23 @@ connecté, est refusé.
 
 ### Sur l'ordinateur, avant un commit : `exporter-dates.js`
 
-Le site lit la base en direct, mais **trois choses lisent encore
-`dates.js`** : le repli si la base ne répond pas, les pages spectacle
-générées, et le PDF du CV. Dès qu'une date a changé dans `/admin/`, avant le
-prochain commit :
+**Une date saisie dans `/admin/` est en ligne tout de suite**, sur l'accueil
+comme sur les pages `/spectacles/…` : les deux lisent la base en direct. Il
+n'y a rien à relancer dans l'urgence, et surtout rien à committer pour
+qu'une date paraisse.
+
+Ce qui lit encore la COPIE de `dates.js` — et qui vieillit donc jusqu'au
+prochain export :
+
+- le **repli** quand la base ne répond pas (projet en pause, réseau coupé) ;
+- le **HTML généré** des pages spectacle : ce que voit un visiteur sans
+  JavaScript, et ce que lisent les robots d'indexation, `TheaterEvent`
+  compris — une date absente de `dates.js` ne remontera pas dans les
+  résultats enrichis de Google, même si la page l'affiche ;
+- le **PDF du CV**.
+
+Aucun des trois n'est urgent, aucun ne doit être oublié. Avant le prochain
+commit, donc :
 
 ```bash
 node build/exporter-dates.js
@@ -756,6 +769,30 @@ second refait les pages spectacle avec les nouvelles dates.
 
 **Ne modifiez plus la partie `upcoming` de `dates.js` à la main** : le
 prochain export l'écraserait sans prévenir. Le bon endroit, c'est `/admin/`.
+
+### Pourquoi les pages spectacle lisent les dates elles aussi
+
+Elles ne le faisaient pas : leur pied était écrit une fois pour toutes à la
+génération. Une date saisie dans `/admin/` s'affichait donc sur l'accueil et
+restait invisible sur `/spectacles/…` jusqu'à ce que quelqu'un relance les
+deux commandes ci-dessus et committe — ce qui est arrivé à *L'Imaginaire
+forcé*, qui annonçait « les dates de tournée seront annoncées ici » pendant
+que l'accueil en affichait six.
+
+Ces pages chargent donc maintenant `dates.js` et `dates-live.js`, comme
+l'accueil, et `univers.js` refait leur pied au chargement
+(`rafraichirDatesSpectacle`). Il ne refait QUE ce que les dates commandent —
+le bouton du hero, le titre du pied, la liste, le renvoi vers l'agenda ;
+les quatre fragments viennent d'`univers-montage.js`, les mêmes qui ont servi
+à écrire la page. Le montage de photos n'est pas touché.
+
+Deux effets à connaître :
+
+- le HTML généré reste **le repli sans JavaScript**, et c'est à ce titre
+  qu'il faut continuer de le régénérer (voir ci-dessus) ;
+- une date **passée** disparaît d'elle-même du pied le lendemain, sans
+  régénération : « à venir » se calcule désormais au jour de la visite, plus
+  au jour de la génération.
 
 ### Ce qui n'a pas changé
 

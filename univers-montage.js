@@ -408,6 +408,65 @@ const UniversMontage = (function () {
         </div>`;
     }
 
+    // ── CE QUE LES DATES CHANGENT DANS LE PANNEAU ──────────────────
+    //  Quatre endroits, et quatre seulement, dépendent des dates : le
+    //  bouton du hero, le titre du pied, la liste elle-même, et le
+    //  renvoi vers l'agenda. Ils étaient écrits en toutes lettres dans
+    //  panelHtml — ce qui allait tant que le panneau se dessinait d'un
+    //  bloc, une fois pour toutes.
+    //
+    //  Une page /spectacles/ ne peut plus s'en contenter : elle relit
+    //  les dates après coup (Supabase), et doit refaire CES QUATRE
+    //  ENDROITS sans toucher au reste — ni au montage de photos, ni à
+    //  l'écriture du titre déjà jouée. Les voici donc nommés une fois,
+    //  et appelés des deux côtés : par panelHtml au premier dessin, par
+    //  rafraichirDatesSpectacle() dans univers.js à chaque mise à jour.
+    //  Un libellé changé ici change partout ; c'est bien l'intention.
+    //
+    //  `etat` : { isFilm, dates, enCreation, statique, key }.
+    function heroActionsHtml(etat, uni) {
+        const { isFilm, dates, enCreation } = etat;
+        if (isFilm) {
+            return `<button type="button" class="u-btn" data-u-jump>
+                        ${escape((uni && uni.heroCta) || 'Le film')}
+                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
+                    </button>`;
+        }
+        // SPECTACLE ARRÊTÉ : il n'y a rien à quoi accéder, et un bouton
+        // d'action promettant des représentations qui n'existent plus ferait
+        // une promesse en l'air. La ligne le dit, et n'appelle pas le clic.
+        if (!dates && !enCreation) return `<p class="u-hero-note">Ce spectacle n’est plus à l’affiche</p>`;
+        return `<button type="button" class="u-btn" data-u-jump>
+                        ${dates ? 'Accéder aux dates' : 'Le spectacle'}
+                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
+                    </button>`;
+    }
+
+    function footTitleText(etat) {
+        const { isFilm, dates, enCreation } = etat;
+        return isFilm ? 'Le film'
+            : dates ? 'Prochaines représentations'
+                : enCreation ? 'Spectacle en création' : 'Ce spectacle n’est plus à l’affiche';
+    }
+
+    function footDatesHtml(etat) {
+        const { isFilm, dates, enCreation } = etat;
+        if (isFilm) return '';
+        return dates || (enCreation
+            ? `<p class="u-empty">Les dates de tournée seront annoncées ici.</p>`
+            : `<p class="u-empty">Les représentations passées sont dans l’onglet Dates.</p>`);
+    }
+
+    // Le renvoi vers l'agenda du site. Sur une page autonome c'est un vrai
+    // lien ; dans le panneau, un bouton qui referme et fait défiler.
+    function footGhostHtml(etat) {
+        const { isFilm, dates, enCreation, statique, key } = etat;
+        if (isFilm || (enCreation && !dates)) return '';
+        return statique
+            ? `<a class="u-btn u-btn-ghost" href="/#page_dates">Voir toutes les dates</a>`
+            : `<button type="button" class="u-btn u-btn-ghost" data-u-dates="${escape(key)}">Voir toutes les dates</button>`;
+    }
+
     // ── LE PANNEAU ENTIER ──────────────────────────────────────────
     //  Le gabarit d'un univers : l'en-tête, le montage, le générique.
     //  Il servait au seul panneau plein écran ; il sert désormais aussi
@@ -436,6 +495,10 @@ const UniversMontage = (function () {
         // le hero comme le pied s'y accordent.
         const isFilm = uni.kind === 'film';
         const tm = titleMetrics(info.title);
+        // Les quatre fragments qui dépendent des dates, écrits une seule
+        // fois plus haut : la page /spectacles/ les rejouera tels quels
+        // quand Supabase aura répondu.
+        const etat = { isFilm, dates, enCreation, statique, key: info.key };
 
         return `
         ${statique
@@ -465,24 +528,9 @@ const UniversMontage = (function () {
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
                  traverser tout le défilé de photos pour savoir quand voir le
                  spectacle — or c'est souvent la seule raison de la visite.
-
-                 SAUF POUR UN SPECTACLE ARRÊTÉ : il n'y a rien à quoi accéder,
-                 et un bouton d'action promettant des représentations qui
-                 n'existent plus ferait une promesse en l'air. La ligne le dit
-                 simplement, et n'appelle pas le clic. Les représentations
-                 passées restent au pied de l'univers. -->
+                 Ce que les dates y changent est dans heroActionsHtml. -->
             <div class="u-hero-actions">
-                ${isFilm
-                ? `<button type="button" class="u-btn" data-u-jump>
-                        ${escape(uni.heroCta || 'Le film')}
-                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
-                    </button>`
-                : dates || enCreation
-                    ? `<button type="button" class="u-btn" data-u-jump>
-                        ${dates ? 'Accéder aux dates' : 'Le spectacle'}
-                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
-                    </button>`
-                    : `<p class="u-hero-note">Ce spectacle n’est plus à l’affiche</p>`}
+                ${heroActionsHtml(etat, uni)}
             </div>
 
             <span class="u-scroll" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span>
@@ -505,18 +553,11 @@ const UniversMontage = (function () {
         <div class="u-figs">${figures}</div>
 
         <footer class="u-foot" id="u-foot">
-            <h3 class="u-foot-title">${isFilm ? 'Le film'
-                : dates ? 'Prochaines représentations'
-                    : enCreation ? 'Spectacle en création' : 'Ce spectacle n’est plus à l’affiche'}</h3>
-            ${isFilm ? '' : dates || (enCreation
-                ? `<p class="u-empty">Les dates de tournée seront annoncées ici.</p>`
-                : `<p class="u-empty">Les représentations passées sont dans l’onglet Dates.</p>`)}
+            <h3 class="u-foot-title">${escape(footTitleText(etat))}</h3>
+            ${footDatesHtml(etat)}
             <div class="u-actions">
                 ${info.url ? `<a class="u-btn" href="${escape(info.url)}" target="_blank" rel="noopener">${isFilm ? 'Fiche du film' : 'Page du spectacle'} <svg class="ico" aria-hidden="true"><use href="#i-solid-up-right-from-square"></use></svg></a>` : ''}
-                ${isFilm || (enCreation && !dates) ? ''
-                : statique
-                    ? `<a class="u-btn u-btn-ghost" href="/#page_dates">Voir toutes les dates</a>`
-                    : `<button type="button" class="u-btn u-btn-ghost" data-u-dates="${escape(info.key)}">Voir toutes les dates</button>`}
+                ${footGhostHtml(etat)}
             </div>
             ${prixBlock(uni)}
             ${castBlock(uni)}
@@ -590,6 +631,7 @@ const UniversMontage = (function () {
 
     return {
         panelHtml, datesHtml, escape, toLines, splitWords, splitChars, titleMetrics, revealWords,
+        heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
         longestLine, photoSrc, framePos, figureHtml, overHtml, videoRef,
         videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock,
         FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT

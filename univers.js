@@ -788,6 +788,7 @@ const SHOW_UNIVERSES = {
     // se relit sans avoir à vérifier deux cents points d'appel.
     const {
         panelHtml, datesHtml, escape, toLines, splitWords, splitChars, titleMetrics, revealWords,
+        heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
         longestLine, photoSrc, framePos, figureHtml, overHtml, videoRef,
         videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock,
         FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT
@@ -875,7 +876,7 @@ const SHOW_UNIVERSES = {
     };
 
     // ── Dates : relues dans dates.js, jamais dupliquées ici ──────────
-    function datesBlock(key) {
+    function datesBlock(key, uni) {
         if (typeof upcomingPerformances !== 'function') return '';
         // Le dessin est dans univers-montage.js, partagé avec les pages
         // /spectacles/. Ici, on ne fait que réunir les représentations de
@@ -884,7 +885,18 @@ const SHOW_UNIVERSES = {
         // écrivent le titre chacun de leur côté, et une insécable de plus
         // ou de moins ne doit pas vider la liste des dates.
         const vise = normaliserTitre(key);
-        return datesHtml(upcomingPerformances().filter(p => normaliserTitre(p.title) === vise));
+        const perfs = upcomingPerformances().filter(p => normaliserTitre(p.title) === vise);
+        if (!uni) return datesHtml(perfs);
+        // LE NOM QUE LE VISITEUR EMPORTE DANS SON AGENDA est celui du
+        // spectacle, pas la clé technique de dates.js. La table écrit
+        // « L'imaginaire forcé » et ignore le sous-titre ; l'univers écrit
+        // « L'Imaginaire forcé, d'après Le Mariage forcé, de Molière », et
+        // c'est ce que le panneau affiche en grand juste au-dessus. Le .ics
+        // dit donc la même chose que la page — comme le faisaient déjà les
+        // pages /spectacles/ générées, qui prenaient le titre de l'univers.
+        return datesHtml(perfs.map(p => Object.assign({}, p, {
+            title: uni.title || key, subtitle: uni.subtitle || ''
+        })));
     }
 
     // Les titres du CV portent souvent une incise en <span> — l'auteur,
@@ -1081,7 +1093,7 @@ const SHOW_UNIVERSES = {
     function render(li, uni) {
         const info = rowInfo(li, uni);
         overlay.innerHTML = panelHtml(info, uni, {
-            dates: datesBlock(info.key),
+            dates: datesBlock(info.key, uni),
             // Sans date à venir, un spectacle peut être arrêté OU pas encore
             // créé : le badge de la ligne du CV est ce qui les distingue.
             enCreation: window.cvShowIsEnCreation?.(li) || false
@@ -1935,9 +1947,96 @@ const SHOW_UNIVERSES = {
         overlay.addEventListener('scroll', onScroll, { passive: true });
         observeCaptions();
         lastScrollTop = 0;
+        // AVANT l'écriture : le pied se refait en silence, la page n'a pas
+        // encore bougé. Si rien n'a changé depuis la génération, l'opération
+        // réécrit à l'identique et personne ne voit rien.
+        rafraichirDatesSpectacle();
         playWriting();
         onScroll();
     }
+
+    // ── LE PIED D'UNE PAGE SPECTACLE SE REMET À L'HEURE ─────────────
+    //  La page /spectacles/ a son pied écrit en dur, à la génération. C'est
+    //  un repli honnête — il part avec le fichier, se lit sans JavaScript,
+    //  s'indexe — mais il est daté du jour où le script est passé. Deux
+    //  choses le périment :
+    //
+    //    · une date SAISIE depuis /admin/ — elle va dans Supabase, que
+    //      l'accueil lit en direct et que cette page ignorait ; il fallait
+    //      relancer les deux scripts de build et committer pour qu'elle
+    //      paraisse ici. C'est ainsi que L'Imaginaire forcé a pu annoncer
+    //      « les dates seront annoncées ici » pendant que l'accueil en
+    //      affichait six ;
+    //    · une date PASSÉE — « à venir » se calcule par rapport au jour
+    //      de la génération, pas au jour de la visite.
+    //
+    //  On refait donc ici ce que les dates commandent, et RIEN D'AUTRE :
+    //  le bouton du hero, le titre du pied, la liste, le renvoi vers
+    //  l'agenda. Les quatre fragments viennent d'univers-montage.js, les
+    //  mêmes qui ont servi à écrire la page — ils ne sont pas réécrits ici.
+    //  Le montage de photos, lui, n'est pas touché : l'écriture du titre
+    //  et le défilé continuent comme si de rien n'était.
+    //
+    //  Appelée deux fois : au démarrage (dates.js, la copie de repli) puis,
+    //  si Supabase répond, par dates-live.js.
+    function rafraichirDatesSpectacle() {
+        const corps = document.body;
+        if (!corps || !corps.classList.contains('u-page-spectacle')) return;
+        // `overlay` n'est renseigné qu'à partir d'init(). Supabase peut
+        // répondre avant : on retrouve alors le conteneur soi-même plutôt
+        // que d'abandonner la mise à jour en silence.
+        const racine = overlay || document.getElementById('show-universe');
+        if (!racine) return;
+        // Le titre exact du spectacle, écrit par le générateur (voir
+        // build/generer-pages-spectacles.js). Sans lui on ne saurait pas de
+        // quel spectacle cette page parle — et on ne devine pas.
+        const cle = corps.dataset.uShow || '';
+        const uni = universeParTitre(cle);
+        if (!uni) return;
+
+        const etat = {
+            isFilm: uni.kind === 'film',
+            dates: datesBlock(cle, uni),
+            // Sans date à venir, un spectacle peut être arrêté OU pas encore
+            // créé. Sur l'accueil, le badge du CV tranche ; ici, l'attribut.
+            enCreation: corps.dataset.uCreation === '1',
+            statique: true,
+            key: cle
+        };
+
+        const actions = racine.querySelector('.u-hero-actions');
+        if (actions) actions.innerHTML = heroActionsHtml(etat, uni);
+
+        const pied = racine.querySelector('.u-foot');
+        if (!pied) return;
+
+        const titre = pied.querySelector('.u-foot-title');
+        if (titre) titre.textContent = footTitleText(etat);
+
+        // La liste (ou la phrase qui en tient lieu) vit juste sous le titre.
+        // On retire celle qui s'y trouve avant de poser la nouvelle, plutôt
+        // que d'en empiler deux.
+        pied.querySelectorAll(':scope > .u-dates, :scope > .u-empty').forEach(n => n.remove());
+        const bloc = footDatesHtml(etat);
+        if (bloc && titre) titre.insertAdjacentHTML('afterend', bloc);
+
+        // « Voir toutes les dates » n'a pas lieu d'être pour un spectacle en
+        // création sans date : il renverrait vers un agenda qui ne le
+        // mentionne pas.
+        const barre = pied.querySelector('.u-actions');
+        if (barre) {
+            barre.querySelectorAll(':scope > .u-btn-ghost').forEach(n => n.remove());
+            const ghost = footGhostHtml(etat);
+            if (ghost) barre.insertAdjacentHTML('beforeend', ghost);
+        }
+    }
+
+    // dates-live.js appelle ce nom quand Supabase a répondu. Il est posé au
+    // niveau du module, et non dans init() : la réponse peut arriver avant
+    // le DOMContentLoaded, et un nom encore absent ferait passer la mise à
+    // jour à la trappe, en silence. La fonction ne fait rien d'elle-même
+    // hors d'une page /spectacles/.
+    window.rafraichirDatesSpectacle = rafraichirDatesSpectacle;
 
     // ── Ce que le CV promet ──────────────────────────────────────────
     //  Deux signaux, posés ici plutôt que dans le balisage : c'est ce

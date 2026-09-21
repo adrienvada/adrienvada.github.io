@@ -404,3 +404,89 @@ const SHOW_DATA = {
     ]
   }
 };
+
+/* ══════════════════════════════════════════════════════════════════
+ *  LIRE CES DATES — le tri, ici, une seule fois
+ * ══════════════════════════════════════════════════════════════════
+ *  Ces quatre fonctions vivaient dans index.html, au milieu de son
+ *  script. Elles n'y avaient rien à faire : ce sont les mêmes gestes
+ *  pour tout le monde — écarter ce qui est passé, aplatir les séries,
+ *  ranger par date. La page d'accueil s'en servait ; les pages
+ *  /spectacles/ en ont besoin à leur tour pour tenir leurs dates à
+ *  jour, et univers-montage.js annonçait déjà, en commentaire, que
+ *  « le navigateur la tire de dates.js par upcomingPerformances() ».
+ *  C'est désormais vrai.
+ *
+ *  Elles sont déclarées en portée de script, comme SHOW_DATA : tout
+ *  fichier chargé après celui-ci les trouve sans rien importer.
+ * ══════════════════════════════════════════════════════════════════ */
+
+// Minuit aujourd'hui : une représentation reste « à venir » tout le jour même
+function todayStamp() {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+function icsToTime(icsDate) {
+    const parts = String(icsDate || '').split('-');
+    if (parts.length !== 3) return NaN;
+    return new Date(+parts[0], +parts[1] - 1, +parts[2]).getTime();
+}
+
+// Sépare les dates encore à venir de celles qui sont passées.
+// Évite d'avoir à déplacer les entrées à la main dans ce fichier.
+function splitUpcoming(entries) {
+    const today = todayStamp();
+    const upcoming = [], past = [];
+    (entries || []).forEach(entry => {
+        if (entry.type === 'series' && Array.isArray(entry.shows)) {
+            const future = entry.shows.filter(r => !(icsToTime(r.icsDate) < today));
+            const over = entry.shows.filter(r => icsToTime(r.icsDate) < today);
+            if (future.length) upcoming.push(Object.assign({}, entry, { shows: future }));
+            if (over.length) {
+                past.push({
+                    date: over.length > 1
+                        ? `${over[0].dateLabel} → ${over[over.length - 1].dateLabel}`
+                        : over[0].dateLabel,
+                    title: entry.subtitle ? `${entry.title}, ${entry.subtitle}` : entry.title,
+                    location: entry.location
+                });
+            }
+        } else if (icsToTime(entry.icsDate) < today) {
+            past.push({
+                date: entry.fullDate || entry.dateLabel,
+                title: entry.subtitle ? `${entry.title}, ${entry.subtitle}` : entry.title,
+                location: entry.location
+            });
+        } else {
+            upcoming.push(entry);
+        }
+    });
+    past.reverse(); // les plus récentes en tête, comme dans les archives
+    return { upcoming, past };
+}
+
+// Aplatit SHOW_DATA en une liste de représentations à venir : une
+// entrée par SOIRÉE, séries comprises, de la plus proche à la plus
+// lointaine.
+function upcomingPerformances() {
+    if (typeof SHOW_DATA === 'undefined') return [];
+    const { upcoming } = splitUpcoming(SHOW_DATA.upcoming);
+    const out = [];
+    upcoming.forEach(show => {
+        const base = { title: show.title, subtitle: show.subtitle || '', location: show.location, city: show.city };
+        if (show.type === 'series' && show.shows) {
+            show.shows.forEach(r => out.push(Object.assign({}, base, {
+                dateLabel: r.dateLabel, icsDate: r.icsDate, time: r.time, times: r.times,
+                isSchool: r.isSchool, bookingUrl: r.bookingUrl
+            })));
+        } else {
+            out.push(Object.assign({}, base, {
+                dateLabel: show.dateLabel || show.date, icsDate: show.icsDate,
+                time: show.time, times: show.times, isSchool: show.isSchool,
+                bookingUrl: show.bookingUrl
+            }));
+        }
+    });
+    return out.sort((a, b) => icsToTime(a.icsDate) - icsToTime(b.icsDate));
+}
