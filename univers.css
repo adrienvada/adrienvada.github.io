@@ -1246,13 +1246,37 @@ html.u-locked body {
     text-align: left;
 }
 
+/* DEUX COLONNES : .u-date-info (date, lieu, horaire) absorbe seule le
+   retour à la ligne ; .u-date-actions ne s'enroule jamais et reste donc
+   toujours au même endroit à droite — avant, une ligne unique en
+   flex-wrap laissait les boutons retomber à un endroit différent d'une
+   représentation à l'autre, selon ce qui débordait. */
 .u-date {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
     padding: 14px 4px;
     border-bottom: 1px solid var(--u-line);
+}
+
+.u-date-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.u-date-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    /* Aligné sur la date, en tête de ligne, pas sur le centre d'un bloc
+       d'info qui peut compter une ou deux lignes selon la séance. */
+    margin-top: 1px;
 }
 
 .u-date-when {
@@ -1268,7 +1292,14 @@ html.u-locked body {
     flex: 1 1 12ch;
 }
 
+/* SUPERPOSÉ, PAS ACCOLÉ : quand une séance scolaire ajoute sa mention,
+   elle prend sa propre ligne (voir datesHtml, univers-montage.js) plutôt
+   que de s'accoler à l'horaire avec un « · » — ce qui allongeait la
+   ligne assez pour faire décrocher .u-date-actions. */
 .u-date-time {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     font-family: ui-monospace, monospace;
     font-size: .72rem;
     color: var(--u-muted);
@@ -1286,9 +1317,8 @@ html.u-locked body {
 }
 
 /* ── Boutons de représentation : agenda + réservation ──
-   Posés à droite de chaque ligne, ils poussent naturellement au bout
-   grâce au flex-wrap de .u-date — pas de marge auto nécessaire, la
-   ligne se termine ici qu'on soit sur .u-date-where ou .u-date-time. */
+   Vivent dans .u-date-actions, à droite, hors du flux qui s'enroule
+   (.u-date-info) — voir plus haut. */
 .u-date-cal {
     flex-shrink: 0;
     width: 26px;

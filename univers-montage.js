@@ -551,7 +551,12 @@ const UniversMontage = (function () {
         if (!perfs || !perfs.length) return '';
         const rows = perfs.map(p => {
             const t = Array.isArray(p.times) && p.times.length ? p.times.join(' & ') : (p.time || '');
-            const school = p.isSchool ? ' <span class="u-warn">· séance scolaire</span>' : '';
+            // SUPERPOSÉE, PAS ACCOLÉE : « · séance scolaire » à la suite de
+            // l'horaire allongeait la ligne au point de faire passer les
+            // boutons à la ligne suivante, à un endroit différent d'une
+            // représentation à l'autre. Un second bloc, empilé sous le
+            // premier, tient dans la même largeur quel que soit l'horaire.
+            const school = p.isSchool ? `<span class="u-warn">séance scolaire</span>` : '';
             // LES DONNÉES VOYAGENT DANS L'ATTRIBUT, PAS L'OUVERTURE DU
             // CALENDRIER. Ce fichier ne touche pas au DOM (voir l'en-tête) —
             // c'est univers.js qui lit `data-cal` au clic et construit le
@@ -567,11 +572,17 @@ const UniversMontage = (function () {
             const bookBtn = p.bookingUrl
                 ? `<a href="${escape(p.bookingUrl)}" target="_blank" rel="noopener" class="u-date-book">Réserver
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>` : '';
+            // DEUX COLONNES, PAS UNE SEULE LIGNE QUI S'ENROULE. .u-date-info
+            // absorbe seule le retour à la ligne (date, lieu, horaire) ;
+            // .u-date-actions ne s'enroule jamais et reste donc toujours au
+            // même endroit à droite, quelle que soit la longueur du reste.
             return `<li class="u-date">
-                <span class="u-date-when">${escape(p.dateLabel)}</span>
-                <span class="u-date-where">${escape(p.location)}</span>
-                <span class="u-date-time">${t ? escape(t) : 'horaire à confirmer'}${school}</span>
-                ${calBtn}${bookBtn}
+                <div class="u-date-info">
+                    <span class="u-date-when">${escape(p.dateLabel)}</span>
+                    <span class="u-date-where">${escape(p.location)}</span>
+                    <span class="u-date-time">${t ? escape(t) : 'horaire à confirmer'}${school}</span>
+                </div>
+                <div class="u-date-actions">${calBtn}${bookBtn}</div>
             </li>`;
         }).join('');
         return `<ul class="u-dates">${rows}</ul>`;
