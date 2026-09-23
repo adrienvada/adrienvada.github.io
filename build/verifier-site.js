@@ -15,15 +15,21 @@
  *    · la règle de l'ouverture (lien direct : pas de rideau ; depuis un
  *      autre site : une fois) ;
  *    · la fenêtre d'agenda d'un univers ouvert depuis le CV ;
+ *    · l'onglet Dates : feuilles, intercalaires de mois, séances en
+ *      cases (une date seule aussi), nom du spectacle qui mène à sa
+ *      page, rangement par spectacle, sommaire qui mène aux dates, une
+ *      image pour chaque représentation annoncée aux moteurs ;
  *    · l'impression sans les pastilles ▶ ;
  *    · le site sans JavaScript ;
- *    · les pages spectacle (h1, <main>, données structurées) ;
+ *    · les pages spectacle (h1, <main>, données structurées, une image
+ *      pour chaque représentation) ;
  *    · le sitemap, qui doit annoncer toutes les pages spectacle.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
- *  dates sont coupées (le site sait s'en passer). Une représentation
- *  fictive est glissée dans les dates le temps du test de l'agenda :
- *  il ne dépend donc pas de la saison en cours.
+ *  dates sont coupées (le site sait s'en passer). Des représentations
+ *  fictives sont glissées dans les dates le temps des tests de l'agenda
+ *  et de l'onglet Dates : ils ne dépendent donc pas de la saison en
+ *  cours.
  *
  *      cd build && npm ci && npm run navigateur   (une fois)
  *      npm --prefix build run verifier
@@ -159,6 +165,147 @@ function exige(condition, message) {
             await c.close();
         });
 
+        await verifie('l’onglet Dates : feuilles, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire, une image par représentation', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await p.waitForTimeout(500);
+            // Une saison fictive, à un mois d'ici : une date seule, puis une
+            // série de deux soirs dont la première séance est scolaire. Elle
+            // porte un lien de billetterie : une séance scolaire ne doit pas
+            // proposer « Réserver » pour autant. Avant elles, une date de
+            // Bérénice, spectacle qui a sa page : son nom doit y mener. Le
+            // spectacle fictif n'en a pas : son nom ne mène nulle part.
+            await p.evaluate(() => {
+                const iso = (n) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + n);
+                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                };
+                const titre = 'Spectacle de vérification';
+                SHOW_DATA.upcoming = [
+                    {
+                        type: 'single', title: 'Bérénice', location: 'Scène de vérification (76)', city: 'Rouen',
+                        dateLabel: iso(20), icsDate: iso(20), time: '20h00', bookingUrl: '', isSchool: false
+                    },
+                    {
+                        type: 'single', title: titre, location: 'Théâtre de vérification (76)', city: 'Rouen',
+                        dateLabel: iso(30), icsDate: iso(30), time: '20h00', bookingUrl: 'https://example.org/billets', isSchool: false
+                    },
+                    {
+                        type: 'series', id: 'panel-verification', title: titre, location: 'Salle de vérification (76)', city: 'Rouen',
+                        dateLabel: iso(40), shows: [
+                            { dateLabel: iso(40), icsDate: iso(40), time: '14h00', bookingUrl: 'https://example.org/billets', isSchool: true },
+                            { dateLabel: iso(41), icsDate: iso(41), time: '20h00', bookingUrl: 'https://example.org/billets', isSchool: false }
+                        ]
+                    }
+                ];
+                buildFilterChips();
+                renderDates();
+            });
+            const parDate = await p.evaluate(() => {
+                const liste = document.getElementById('upcoming-dates-container');
+                const serie = liste.querySelector('.dl--serie');
+                return {
+                    intercalaires: liste.querySelectorAll('.dl-intercalaire h4').length,
+                    feuilles: liste.querySelectorAll('.dl-feuille .dl-num').length,
+                    cases: serie ? serie.querySelectorAll('.dl-seance').length : 0,
+                    scolaireSansReserver: serie ? !serie.querySelector('.dl-seance--scolaire .dl-reserver') : false,
+                    reserver: liste.querySelectorAll('.dl-reserver').length,
+                    sommaire: !document.getElementById('dates-sommaire').hidden
+                        && !!document.querySelector('#dates-sommaire .dl-grille [data-dl-aller]')
+                };
+            });
+            exige(parDate.intercalaires >= 1, 'aucun intercalaire de mois');
+            exige(parDate.feuilles === 3, `${parDate.feuilles} feuille(s) d’éphéméride pour trois lignes`);
+            exige(parDate.cases === 2, `la série montre ${parDate.cases} case(s) au lieu de deux`);
+            exige(parDate.scolaireSansReserver, 'une séance scolaire propose « Réserver »');
+            exige(parDate.reserver === 2, `${parDate.reserver} bouton(s) « Réserver » au lieu de deux`);
+            exige(parDate.sommaire, 'le sommaire de la saison n’est pas là');
+
+            // Une date seule a sa case, comme chaque soir d'une série : son
+            // heure et « Réserver » s'y lisent au même endroit.
+            const seule = await p.evaluate(() => {
+                const l = [...document.querySelectorAll('#upcoming-dates-container .dl--seule')]
+                    .find((x) => /Spectacle de vérification/.test(x.querySelector('.dl-titre')?.textContent || ''));
+                return l ? {
+                    cases: l.querySelectorAll('.dl-seance').length,
+                    heure: l.querySelector('.dl-seance .dl-s-heure')?.textContent || '',
+                    reserver: !!l.querySelector('.dl-seance .dl-reserver')
+                } : null;
+            });
+            exige(seule && seule.cases === 1 && seule.heure === '20h00' && seule.reserver,
+                `une date seule n’a pas sa case (heure, « Réserver ») : ${JSON.stringify(seule)}`);
+
+            // Les représentations annoncées aux moteurs ont toutes une image,
+            // même celles d'un spectacle sans photo (la Search Console le
+            // relève) : ici, le spectacle fictif.
+            const evenements = await p.evaluate(() => {
+                const el = document.getElementById('events-jsonld');
+                const liste = el ? JSON.parse(el.textContent) : [];
+                return { n: liste.length, sansImage: liste.filter((e) => !e.image).map((e) => e.name) };
+            });
+            exige(evenements.n >= 2, `${evenements.n} représentation(s) annoncée(s) aux moteurs`);
+            exige(!evenements.sansImage.length, `représentation(s) sans image : ${evenements.sansImage.join(', ')}`);
+
+            // Le nom d'un spectacle mène à sa page, sur sa ligne comme dans la
+            // prochaine représentation ; sans page, pas de lien, jamais un
+            // lien mort : chaque adresse visée doit répondre.
+            const liens = await p.evaluate(async () => {
+                const titres = [...document.querySelectorAll('#upcoming-dates-container .dl-titre')];
+                const tous = [...document.querySelectorAll('#page_dates a.dl-vers-page')].map((a) => a.getAttribute('href'));
+                const morts = [];
+                for (const href of new Set(tous)) {
+                    const r = await fetch(href).catch(() => null);
+                    if (!r || !r.ok) morts.push(href);
+                }
+                return {
+                    ligne: titres.filter((t) => /Bérénice/.test(t.textContent)).map((t) => t.querySelector('a.dl-vers-page')?.getAttribute('href') || null),
+                    sansPage: titres.filter((t) => /vérification/.test(t.textContent)).some((t) => t.querySelector('a')),
+                    prochaine: document.querySelector('#dates-sommaire .dl-prochaine a.dl-vers-page')?.getAttribute('href') || null,
+                    morts
+                };
+            });
+            exige(liens.ligne.join() === 'spectacles/berenice/', `la ligne de Bérénice ne mène pas à sa page : ${JSON.stringify(liens.ligne)}`);
+            exige(!liens.sansPage, 'le nom d’un spectacle sans page porte un lien');
+            exige(liens.prochaine === 'spectacles/berenice/', 'la prochaine représentation ne mène pas à la page du spectacle');
+            exige(!liens.morts.length, `lien(s) mort(s) : ${liens.morts.join(', ')}`);
+
+            // L'agenda d'une case de série ouvre sa fenêtre.
+            await p.locator('#upcoming-dates-container .dl--serie .dl-seance .dl-agenda').first().click();
+            await p.waitForTimeout(300);
+            exige(await p.evaluate(() => /vérification/.test(document.getElementById('cal-modal-title')?.textContent || '')),
+                'la fenêtre d’agenda ne s’ouvre pas depuis une case de séance');
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(300);
+
+            // Par spectacle, et le choix est retenu.
+            await p.click('[data-dates-vue="spectacle"]');
+            const parSpectacle = await p.evaluate(() => {
+                const entetes = [...document.querySelectorAll('#upcoming-dates-container .dl-intercalaire--spectacle h4')];
+                return {
+                    entetes: entetes.map((h) => h.textContent),
+                    liens: entetes.map((h) => h.querySelector('a.dl-vers-page')?.getAttribute('href') || '-'),
+                    retenu: localStorage.getItem('av.datesVue')
+                };
+            });
+            exige(parSpectacle.entetes.join() === 'Bérénice,Spectacle de vérification',
+                `rangement par spectacle : ${JSON.stringify(parSpectacle.entetes)}`);
+            exige(parSpectacle.liens.join() === 'spectacles/berenice/,-',
+                `en-têtes par spectacle et leurs pages : ${JSON.stringify(parSpectacle.liens)}`);
+            exige(parSpectacle.retenu === 'spectacle', 'le rangement choisi n’est pas retenu');
+
+            // Un rond du sommaire ramène par date, jusqu'à sa ligne.
+            await p.locator('#dates-sommaire [data-dl-aller]').first().click();
+            await p.waitForTimeout(300);
+            exige(await p.evaluate(() => document.querySelector('[data-dates-vue][aria-pressed="true"]').dataset.datesVue === 'date'
+                && !!document.querySelector('#upcoming-dates-container .dl.dl-eclaire')),
+                'le sommaire ne mène pas à la ligne visée');
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
         await verifie('les pastilles ▶ des bandes-annonces ne sont pas imprimées', async () => {
             const c = await visiteur();
             const p = await c.newPage();
@@ -188,7 +335,7 @@ function exige(condition, message) {
         const dossiers = fs.readdirSync(path.join(RACINE, 'spectacles'), { withFileTypes: true })
             .filter((e) => e.isDirectory()).map((e) => e.name);
 
-        await verifie(`les ${dossiers.length} pages spectacle ont leur h1, leur <main> et des données structurées lisibles`, async () => {
+        await verifie(`les ${dossiers.length} pages spectacle ont leur h1, leur <main> et des données structurées lisibles, chaque représentation avec son image`, async () => {
             const c = await visiteur();
             for (const slug of dossiers) {
                 const p = await c.newPage();
@@ -196,19 +343,28 @@ function exige(condition, message) {
                 await p.goto(`${base}/spectacles/${slug}/`, { waitUntil: 'load' });
                 const etat = await p.evaluate(() => {
                     let jsonld = 0, illisibles = 0;
+                    const sansImage = [];
+                    // Tout objet du bloc, à toute profondeur (tableaux, @graph).
+                    const parcourir = (o) => {
+                        if (Array.isArray(o)) return o.forEach(parcourir);
+                        if (!o || typeof o !== 'object') return;
+                        if (o['@type'] === 'TheaterEvent' && !o.image) sansImage.push(o.startDate);
+                        Object.values(o).forEach(parcourir);
+                    };
                     document.querySelectorAll('script[type="application/ld+json"]').forEach((s) => {
                         jsonld++;
-                        try { JSON.parse(s.textContent); } catch (e) { illisibles++; }
+                        try { parcourir(JSON.parse(s.textContent)); } catch (e) { illisibles++; }
                     });
                     return {
                         h1: document.querySelectorAll('h1').length,
                         main: document.querySelectorAll('main').length,
-                        jsonld, illisibles
+                        jsonld, illisibles, sansImage
                     };
                 });
                 exige(etat.h1 === 1, `${slug} : ${etat.h1} titre(s) h1`);
                 exige(etat.main === 1, `${slug} : ${etat.main} élément(s) <main>`);
                 exige(etat.jsonld > 0 && !etat.illisibles, `${slug} : données structurées absentes ou illisibles`);
+                exige(!etat.sansImage.length, `${slug} : représentation(s) sans image (${etat.sansImage.join(', ')})`);
                 exige(!erreurs.length, `${slug} : ${erreurs.join(' | ')}`);
                 await p.close();
             }

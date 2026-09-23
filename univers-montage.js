@@ -852,10 +852,17 @@ const UniversMontage = (function () {
         // Sans heure, on dit au moins le JOUR de la fin : une représentation
         // du 25 novembre se termine le 25 novembre.
         if (!ev.endDate) ev.endDate = rep.jour;
+        // Google veut une image pour chaque événement (la Search Console le
+        // relève). Sans photo du spectacle — un univers sans montage, ou pas
+        // d'univers du tout —, celle de l'interprète, qui joue ce soir-là :
+        // la photo de partage du site, comme pour les pages spectacle.
+        if (!ev.image) ev.image = `${SITE}/ressources/images/og-adrien-vada.jpg`;
         const org = organisateurs(compagnie);
         if (org) ev.organizer = org;
         // Pas de prix ni de devise : nous n'en avons pas, et les inventer
-        // serait pire que le silence. L'offre ne dit que la billetterie.
+        // serait pire que le silence. L'offre ne dit que la billetterie. La
+        // Search Console le relève (« price » et « priceCurrency » manquants),
+        // sans gravité : l'événement s'affiche quand même.
         const billet = lienSur(rep.billetterie);
         if (billet) {
             ev.offers = { '@type': 'Offer', url: billet, availability: 'https://schema.org/InStock', validFrom: rep.jour };
