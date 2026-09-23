@@ -73,6 +73,10 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - sans JavaScript, le site reste lisible ;
 - chaque page spectacle a son `h1`, son `<main>` et des données structurées
   lisibles, où chaque représentation a son image ;
+- chaque page spectacle s'anime et s'ouvre comme son univers ouvert depuis le
+  CV : mêmes transitions d'apparition (opacité, mouvement, flou) et mêmes
+  animations, élément par élément, et même haut de page (année, titre,
+  auteur, rôle, compagnie) ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
 Il tourne sur **chaque demande de fusion** (`.github/workflows/verifier.yml`) :
@@ -87,7 +91,8 @@ ici : c'est ce qui l'empêche de revenir.
 | une classe Tailwind dans `index.html`, `404.html`, `dates.js`, `galerie.js`, `admin/` | [la commande Tailwind](#régénérer-stylescss-obligatoire-après-modification-des-classes) | `styles.css` |
 | **`galerie.js`** — ajout ou ordre des photos du book, texte `alt` | [`python3 build/variantes-images.py`](#ajouter-une-photo-au-book), puis `node build/generer-page-galerie.js` | les vignettes, puis `/galerie/…` |
 | **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml` |
-| une **ligne du CV** dans `index.html` — titre, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
+| une **ligne du CV** dans `index.html` — titre, auteur, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
+| le **vocabulaire du mouvement** dans `index.html` (`--ease-*`, `--dur-*`) | la même commande | idem : les pages spectacle le relisent (voir [Un seul moteur](#un-seul-moteur-un-seul-visage)) |
 | une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis la commande ci-dessus | `dates.js`, puis `/spectacles/…` |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
 | le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées comprises |
@@ -1510,6 +1515,25 @@ d'ouverture en clip-path (aucune ligne de CV d'où partir), et le bouton
 
 C'est la classe `u-page-spectacle` sur le `<body>` qui déclenche tout :
 `univers.js` la reconnaît et appelle `demarrerStatique()`.
+
+**Le mouvement aussi vient de l'accueil.** `univers.css` règle ses transitions
+sur le vocabulaire du site — deux courbes, quatre durées (`--ease-out`,
+`--dur-base`…) — qu'il ne définit pas : c'est `index.html` qui le pose sur sa
+racine. Une page spectacle ne charge pas `index.html`, et une `transition`
+qui nomme une variable absente est rejetée en bloc par le navigateur : sur
+ces pages, les lettres du titre, les mots du synopsis et les photos
+arrivaient d'un coup, sans leur flou ni leur fondu, alors que le moteur
+tournait. Le générateur relit donc ce vocabulaire dans `index.html`
+(`chargerMouvement()`) et le pose dans le `<style>` de chaque page ; il
+échoue si `univers.css` nomme une durée qu'`index.html` ne définit pas.
+**Changer une courbe ou une durée dans `index.html`, c'est donc relancer
+le générateur.**
+
+**Le haut de page aussi.** La page lit la ligne du CV comme le panneau
+(`rowInfo()`) : l'auteur de l'incise du titre (« Racine ») sous le titre
+quand l'univers n'a pas de `subtitle`, et le rôle avec son libellé
+(« Rôle · Antiochus »). Le contrôle automatique compare les deux, spectacle
+par spectacle.
 
 **Corriger le montage ou son dessin à un endroit le corrige partout.** Il y a
 eu deux moteurs pendant un temps, et le second aplatissait la séquence en une

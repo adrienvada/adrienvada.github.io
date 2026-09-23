@@ -64,6 +64,10 @@
          #show-universe. Mêmes variables, mêmes valeurs : c'est ce qui donne
          à la page la couleur exacte de son univers. -->
     <style>
+        /* Le mouvement de l'accueil — relu dans index.html (voir
+           chargerMouvement) : sans lui, les transitions d'univers.css
+           tombaient à zéro sur cette page. */
+        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; }
         body { margin: 0; background: #eae4d3; }
         #show-universe {
             --u-bg: #eae4d3;

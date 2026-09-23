@@ -28,6 +28,8 @@
  *    · le site sans JavaScript ;
  *    · les pages spectacle (h1, <main>, données structurées, une image
  *      pour chaque représentation) ;
+ *    · les mêmes pages, qui doivent s'animer et s'ouvrir comme leur
+ *      univers ouvert depuis le CV ;
  *    · le sitemap, qui doit annoncer toutes les pages spectacle.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
@@ -522,6 +524,62 @@ function exige(condition, message) {
                 exige(!erreurs.length, `${slug} : ${erreurs.join(' | ')}`);
                 await p.close();
             }
+            await c.close();
+        });
+
+        // UN SEUL MOTEUR, UN SEUL MOUVEMENT. Une page /spectacles/ charge le
+        // même univers.css que le panneau de l'accueil — mais c'est index.html
+        // qui pose le vocabulaire du mouvement (--ease-*, --dur-*). Sans lui,
+        // sur la page, toute transition qui le nommait était rejetée : les
+        // lettres, les mots et les photos arrivaient d'un coup, sans flou ni
+        // fondu, et rien ne le signalait. On compare donc, spectacle par
+        // spectacle, ce qui fait l'effet — les transitions d'opacité, de
+        // mouvement, de flou, et les animations — et ce que dit le haut de
+        // page, entre le panneau ouvert à son adresse et la page.
+        await verifie(`les ${dossiers.length} pages spectacle s’animent et s’ouvrent comme leur univers ouvert depuis le CV`, async () => {
+            const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            const releve = () => {
+                const o = document.getElementById('show-universe');
+                const ELEMENTS = ['.u-ch', '.u-wd', '.u-rw', '.u-reveal', '.u-fig', '.u-fig img', '.u-fig-media',
+                    '.u-group .u-fig-media', '.u-cap span', '.u-quote', '.u-chapter', '.u-text', '.u-foot', '.u-meta',
+                    '.u-hero-actions', '.u-scroll', '.u-author', '.u-synopsis', '.u-progress span'];
+                const out = {};
+                for (const s of ELEMENTS) {
+                    const e = o && o.querySelector(s);
+                    if (!e) continue;
+                    const cs = getComputedStyle(e);
+                    const props = cs.transitionProperty.split(/,\s*/), durees = cs.transitionDuration.split(/,\s*/);
+                    // La couleur, elle, suit le changement de thème sur
+                    // l'accueil (une règle générale d'index.html) : ce n'est
+                    // pas l'effet d'apparition qu'on vérifie.
+                    const effet = props.map((pr, i) => [pr, durees[i % durees.length]])
+                        .filter(([pr, d]) => /^(all|opacity|transform|filter|clip-path|translate|scale)$/.test(pr) && d !== '0s')
+                        .map((x) => x.join(' ')).join(', ');
+                    out[s] = `${effet || 'aucune transition'} · ${cs.animationName} ${cs.animationDuration}`;
+                }
+                const texte = (s) => (o && o.querySelector(s)?.textContent || '').replace(/\s+/g, ' ').trim();
+                out.haut = ['.u-eyebrow', '.u-title', '.u-author', '.u-meta'].map(texte).join(' | ');
+                return out;
+            };
+            const ecarts = [];
+            for (const slug of dossiers) {
+                await p.goto(`${base}/#/univers/${slug}`, { waitUntil: 'load' });
+                await p.waitForFunction(() => document.getElementById('show-universe')?.classList.contains('is-open'), null, { timeout: 8000 })
+                    .catch(() => { throw new Error(`${slug} : l’univers ne s’ouvre pas à son adresse`); });
+                await p.waitForTimeout(400);
+                const panneau = await p.evaluate(releve);
+                await p.goto(`${base}/spectacles/${slug}/`, { waitUntil: 'load' });
+                await p.waitForTimeout(400);
+                const page = await p.evaluate(releve);
+                exige(page['.u-ch'] && !page['.u-ch'].startsWith('aucune'), `${slug} : les lettres du titre n’ont plus de transition sur la page`);
+                for (const k of new Set([...Object.keys(panneau), ...Object.keys(page)])) {
+                    if (panneau[k] !== page[k]) ecarts.push(`${slug} ${k} — panneau « ${panneau[k] ?? 'absent'} », page « ${page[k] ?? 'absent'} »`);
+                }
+            }
+            exige(!ecarts.length, `${ecarts.length} écart(s), dont ${ecarts.slice(0, 2).join(' ; ')}`);
+            exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
         });
 
