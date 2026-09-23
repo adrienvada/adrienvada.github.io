@@ -56,7 +56,7 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   CV (une représentation fictive est glissée dans les dates le temps du test :
   il ne dépend pas de la saison) ;
 - l'onglet Dates : feuilles d'éphéméride, intercalaires de mois et leur
-  liseré, séances en cases, une date seule comprise (et pas de « Réserver »
+  liseré (à la couleur de son mois), séances en cases, une date seule comprise (et pas de « Réserver »
   sur une séance scolaire), nom du spectacle qui mène à sa page (et aucun lien
   pour un spectacle sans page, aucun lien mort), rangement par spectacle
   retenu, sommaire qui mène à la bonne ligne, une image pour chaque
@@ -984,8 +984,20 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   `av.datesVue`).
 - **Le liseré.** Chaque groupe porte un trait au bord gauche de la carte, du
   haut de son intercalaire à sa dernière ligne, interrompu entre deux groupes :
-  on voit où finit un mois et où commence le suivant. L'or du site pour un
-  mois, la couleur de la pièce pour un spectacle (`--dl-lisere`).
+  on voit où finit un mois et où commence le suivant. **Chaque mois a sa
+  couleur, qui suit les saisons** (`--dl-mois-1` à `--dl-mois-12`) :
+
+  | Saison | Mois |
+  |---|---|
+  | Automne, roux | septembre ambre, octobre orange, novembre corail |
+  | Hiver, froid | décembre prune, janvier pervenche, février bleu ciel |
+  | Printemps, vert | mars sarcelle, avril vert, mai olive |
+  | Été, doré | juin, juillet, août, du jaune à l'ambre |
+
+  Les douze sont à la même clarté perçue (OKLCH, L = 0,63) : aucune ne domine,
+  et chacune garde au moins 3,3:1 de contraste sur le fond clair comme sur le
+  fond sombre. Rangé par spectacle, le liseré prend la couleur de la pièce
+  (`--dl-lisere`).
 - **Pas de carton « Prochainement » ici.** Il n'est qu'en tête du CV
   (`renderNextDate()`) : le jour, l'heure et le lieu, le nom du spectacle qui
   mène à sa page, « Réserver » et l'agenda ; sa date mène à l'onglet Dates.

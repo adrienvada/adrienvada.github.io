@@ -15,11 +15,12 @@
  *    · la règle de l'ouverture (lien direct : pas de rideau ; depuis un
  *      autre site : une fois) ;
  *    · la fenêtre d'agenda d'un univers ouvert depuis le CV ;
- *    · l'onglet Dates : feuilles, intercalaires de mois et leur liseré,
- *      séances en cases (une date seule aussi), nom du spectacle qui
- *      mène à sa page, rangement par spectacle, sommaire qui mène aux
- *      dates, une image pour chaque représentation annoncée aux moteurs ;
- *      le carton « Prochainement », en tête du CV et nulle part ailleurs ;
+ *    · l'onglet Dates : feuilles, intercalaires de mois et leur liseré
+ *      (une couleur par mois), séances en cases (une date seule aussi),
+ *      nom du spectacle qui mène à sa page, rangement par spectacle,
+ *      sommaire qui mène aux dates, une image pour chaque représentation
+ *      annoncée aux moteurs ; le carton « Prochainement », en tête du CV
+ *      et nulle part ailleurs ;
  *    · l'impression sans les pastilles ▶ ;
  *    · le site sans JavaScript ;
  *    · les pages spectacle (h1, <main>, données structurées, une image
@@ -294,17 +295,30 @@ function exige(condition, message) {
             await p.keyboard.press('Escape');
             await p.waitForTimeout(300);
 
-            // Chaque mois porte son liseré, que son intercalaire prolonge.
+            // Chaque mois porte son liseré, à sa couleur — douze couleurs, qui
+            // suivent les saisons, toutes différentes —, et son intercalaire
+            // le prolonge.
             const lisere = await p.evaluate(() => {
-                const g = document.querySelector('#upcoming-dates-container .dl-groupe');
+                const page = document.getElementById('page_dates');
+                const g = document.querySelector('#upcoming-dates-container .dl-groupe[data-mois]');
                 const avant = g && getComputedStyle(g, '::before');
                 const entete = g && g.querySelector('.dl-intercalaire');
+                const style = getComputedStyle(page);
+                const couleurs = Array.from({ length: 12 }, (_, i) => style.getPropertyValue(`--dl-mois-${i + 1}`).trim());
+                // La couleur attendue, telle que le navigateur la rend.
+                const sonde = document.createElement('span');
+                sonde.style.color = g ? `var(--dl-mois-${g.dataset.mois})` : '';
+                page.appendChild(sonde);
+                const attendue = getComputedStyle(sonde).color;
+                sonde.remove();
                 return {
-                    trait: !!avant && avant.width === '3px' && avant.backgroundColor !== 'rgba(0, 0, 0, 0)',
-                    entete: !!entete && /inset/.test(getComputedStyle(entete).boxShadow)
+                    trait: !!avant && avant.width === '3px' && avant.backgroundColor === attendue,
+                    entete: !!entete && /inset/.test(getComputedStyle(entete).boxShadow),
+                    douze: couleurs.every(Boolean) && new Set(couleurs).size === 12
                 };
             });
-            exige(lisere.trait && lisere.entete, `le liseré des mois manque : ${JSON.stringify(lisere)}`);
+            exige(lisere.trait && lisere.entete && lisere.douze,
+                `le liseré des mois manque ou n’a pas la couleur de son mois : ${JSON.stringify(lisere)}`);
 
             // L'agenda d'une case de série ouvre sa fenêtre.
             await p.locator('#upcoming-dates-container .dl--serie .dl-seance .dl-agenda').first().click();

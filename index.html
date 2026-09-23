@@ -3160,6 +3160,30 @@
         #page_dates {
             --dl-a: rgb(var(--c-gold-ink));
             --dl-sa: rgb(var(--c-on-gold));
+
+            /* LES COULEURS DES MOIS, pour leur liseré. Une teinte par mois, qui
+               suit les saisons : l'automne roux (septembre ambre, octobre
+               orange, novembre corail), l'hiver froid (décembre prune, janvier
+               pervenche, février bleu ciel), le printemps vert (mars sarcelle,
+               avril vert, mai olive), l'été doré (juin, juillet, août). D'un
+               mois à l'autre la teinte glisse ; d'une saison à l'autre elle
+               change de famille.
+               Toutes à la même clarté perçue (OKLCH, L = 0,63) : aucune ne
+               crie plus fort que sa voisine, et chacune garde au moins 3,3:1
+               de contraste sur le fond clair comme sur le fond sombre — un
+               seul jeu de couleurs pour les deux thèmes. */
+            --dl-mois-1: #6684db;
+            --dl-mois-2: #1593d1;
+            --dl-mois-3: #169d97;
+            --dl-mois-4: #469f58;
+            --dl-mois-5: #759731;
+            --dl-mois-6: #978c0d;
+            --dl-mois-7: #a48610;
+            --dl-mois-8: #b27f02;
+            --dl-mois-9: #bc7806;
+            --dl-mois-10: #c86e31;
+            --dl-mois-11: #ce6653;
+            --dl-mois-12: #b668b0;
         }
 
         /* Viser un mois, un spectacle ou une ligne depuis le sommaire. Le
@@ -3179,8 +3203,9 @@
         /* LE LISERÉ. Chaque groupe — un mois, ou un spectacle — porte un
            trait au bord gauche de la carte, du haut de son intercalaire à sa
            dernière ligne. Il s'interrompt entre deux groupes : on voit d'un
-           coup d'œil où finit un mois et où commence le suivant. L'or du
-           site pour un mois, la couleur de la pièce pour un spectacle.
+           coup d'œil où finit un mois et où commence le suivant. Chaque mois
+           a sa couleur, qui suit les saisons (--dl-mois-*, plus haut) ; un
+           spectacle, la sienne. L'or du site reste pour « Date à préciser ».
            L'intercalaire, qui reste accroché et couvre ce qui défile, porte
            le même trait (voir plus bas) : il ne s'interrompt pas sous lui. */
         .dl-groupe--spectacle {
@@ -7934,7 +7959,9 @@
             return dlParMois(entrees).map(g => {
                 const id = `dl-mois-${g.cle}`;
                 const nom = g.a === null ? 'Date à préciser' : `${dlCap(DL_MOIS[g.m])} <span>${g.a}</span>`;
-                return `<section class="dl-groupe" id="${id}" aria-labelledby="${id}-t">`
+                // Le liseré prend la couleur du mois (voir --dl-mois-*).
+                const lisere = g.m === null ? '' : ` data-mois="${g.m + 1}" style="--dl-lisere:var(--dl-mois-${g.m + 1})"`;
+                return `<section class="dl-groupe" id="${id}" aria-labelledby="${id}-t"${lisere}>`
                     + `<div class="dl-intercalaire"><h4 id="${id}-t" tabindex="-1">${nom}</h4><span class="dl-compte">${dlPluriel(g.n, 'représentation')}</span></div>`
                     + g.entrees.map(e => dlLigne(e, vue)).join('')
                     + '</section>';
