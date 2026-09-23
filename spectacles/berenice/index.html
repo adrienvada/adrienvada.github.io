@@ -51,10 +51,13 @@
     <noscript><link rel="stylesheet" href="../../univers-statique.css"></noscript>
 
     <script>
-        // Visiter une fiche, c'est être entré : le retour vers l'accueil ne
-        // doit pas lever le rideau d'introduction — « entrer par une porte
-        // dérobée reste entrer » (intro.js).
-        try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+        // Visiter une fiche, c'est avoir commencé sa visite : le retour vers
+        // l'accueil ne doit pas lever le rideau d'introduction au milieu du
+        // parcours. C'est la mémoire de la VISITE (sessionStorage), pas celle
+        // de l'appareil : l'ouverture n'a pas joué, et un visiteur qui
+        // reviendra un autre jour depuis un autre site y aura droit — voir
+        // « Le lien direct entre sans rideau » dans index.html.
+        try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -502,7 +505,7 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;Bérénice&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Théâtre de la ville de Saint-Lô (50)&quot;,&quot;dateLabel&quot;:&quot;30 janv. 2027&quot;,&quot;icsDate&quot;:&quot;2027-01-30&quot;,&quot;time&quot;:&quot;18h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier : 30 janv. 2027, Théâtre de la ville de Saint-Lô (50)">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button><a href="https://www.vostickets.net/billet/FR/representation-SAINT_LO-32786-0.wb?REFID=coU2AAAAAAAAAAAAkwE" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — 30 janv. 2027, Théâtre de la ville de Saint-Lô (50) (nouvel onglet)</span>
+                </button><a href="https://www.vostickets.net/billet/FR/representation-SAINT_LO-32786-0.wb?REFID=coU2AAAAAAAAAAAAkwE" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="Bérénice">Réserver<span class="u-sr"> — 30 janv. 2027, Théâtre de la ville de Saint-Lô (50) (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">

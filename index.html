@@ -4047,15 +4047,67 @@
     </div>
     <script>
         // Anti-scintillement : masque l'ouverture de scène instantanément,
-        // avant même le premier rendu, si elle a déjà été vue sur cet
-        // appareil, si l'utilisateur préfère moins d'animations, ou si
-        // l'adresse demandait autre chose que la porte d'entrée.
+        // avant même le premier rendu, quand elle n'a pas lieu d'être :
+        // déjà jouée sur cet appareil, visite déjà commencée, préférence pour
+        // moins d'animations, adresse profonde — ou arrivée par un LIEN DIRECT.
+        //
+        // ════════════════════════════════════════════════════════════════
+        //  LE LIEN DIRECT ENTRE SANS RIDEAU
+        //  ----------------------------------------------------------------
+        //  Qui arrive DIRECTEMENT — l'adresse tapée, un favori, le lien d'un
+        //  mail, d'un SMS ou du CV en PDF — vient voir Adrien : c'est le
+        //  directeur de casting à qui l'on a envoyé l'adresse. Il entre tout
+        //  de suite au CV. Qui arrive d'AILLEURS — un moteur de recherche,
+        //  Instagram, le site d'un théâtre — découvre le site : l'ouverture
+        //  joue pour lui, une fois, si elle n'a jamais joué sur cet appareil.
+        //
+        //  Ce qui fait la différence est la page d'où l'on vient
+        //  (document.referrer) :
+        //    · aucune — adresse tapée, favori, application, PDF : direct ;
+        //    · une application Android (« android-app:// », que Gmail ou les
+        //      SMS posent là où iOS ne pose rien) : direct ;
+        //    · une messagerie en ligne (mail.…, webmail.…, Outlook) : direct ;
+        //    · le site lui-même : on y circule déjà, pas de rideau ;
+        //    · tout autre site : l'ouverture peut jouer.
+        //  LA LIMITE : Gmail ouvert dans un navigateur fait passer ses liens
+        //  par google.com, qu'on ne distingue pas d'une recherche Google. Pour
+        //  une candidature, `adrienvada.fr/?direct` entre toujours sans rideau,
+        //  quel que soit le chemin ; le paramètre est retiré de l'adresse.
+        //
+        //  DEUX MÉMOIRES, ET NON PLUS UNE. `localStorage` retient que
+        //  l'ouverture a JOUÉ sur cet appareil — et seulement cela : une
+        //  entrée directe ne compte plus comme vue, et le jour où ce visiteur
+        //  arrive d'ailleurs, il y a droit. `sessionStorage` retient que la
+        //  VISITE a commencé, par quelque porte que ce soit : revenir à
+        //  l'accueil en cours de route ne lève jamais le rideau au milieu du
+        //  spectacle. Les pages /spectacles/ et /galerie/ posent la seconde.
+        // ════════════════════════════════════════════════════════════════
         (function () {
+            function arriveeDirecte(origine) {
+                if (!origine) return true;
+                if (/^android-app:/i.test(origine)) return true;
+                var hote = new URL(origine).hostname;
+                return /(^|\.)(web)?mail\d*\./i.test(hote)
+                    || /(^|\.)outlook\.(live|office|office365)\.com$/i.test(hote)
+                    || /\.safelinks\.protection\.outlook\.com$/i.test(hote);
+            }
+            function depuisLeSite(origine) {
+                try { return !!origine && new URL(origine).hostname === location.hostname; }
+                catch (e) { return false; }
+            }
             try {
+                var params = new URLSearchParams(location.search);
                 // ?intro=1 dans l'URL force le rejeu (pratique pour régler l'effet)
-                var forced = /[?&]intro=1\b/.test(location.search);
+                var forced = params.get('intro') === '1';
+                var demandeDirecte = params.has('direct');
+                if (demandeDirecte) {
+                    params.delete('direct');
+                    var reste = params.toString();
+                    history.replaceState(null, '', location.pathname + (reste ? '?' + reste : '') + location.hash);
+                }
                 var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                var seen = localStorage.getItem('avIntroSeen');
+                var jouee = localStorage.getItem('avIntroSeen');
+                var visiteEntamee = sessionStorage.getItem('avIntroSeen');
 
                 // ARRIVÉE EN PROFONDEUR. L'ouverture de scène est la porte
                 // d'entrée du site : elle ne vaut que pour qui arrive à
@@ -4063,8 +4115,8 @@
                 // l'univers d'un spectacle (#/univers/berenice), les dates —
                 // a été partagée POUR ce qu'elle montre : un directeur de
                 // casting qui ouvre ce lien doit voir le spectacle, pas un
-                // rideau de vingt secondes devant. Le fragment est lu ici,
-                // avant que le routage ne le remplace par #page_cv.
+                // rideau devant. Le fragment est lu ici, avant que le routage
+                // ne le remplace par #page_cv.
                 //
                 // #page_cv ne compte pas : c'est l'onglet par défaut, donc
                 // l'adresse nue sous un autre nom.
@@ -4074,14 +4126,18 @@
                 var h = window.__ancreArrivee ? '#' + window.__ancreArrivee : '';
                 var profond = h.length > 1 && h !== '#page_cv';
 
-                if (!forced && (reduce || seen || profond)) {
+                var origine = document.referrer;
+                var direct = demandeDirecte || depuisLeSite(origine);
+                if (!direct) {
+                    try { direct = arriveeDirecte(origine); } catch (e) { direct = true; }
+                }
+
+                if (forced || !(reduce || jouee || visiteEntamee || profond || direct)) {
+                    localStorage.setItem('avIntroSeen', '1');
+                } else {
                     document.getElementById('intro-overlay').hidden = true;
                 }
-                // L'appareil est marqué dans tous les cas : entrer par une
-                // porte dérobée reste entrer. Sans cela, revenir à l'adresse
-                // nue en cours de visite lèverait le rideau au milieu du
-                // spectacle — le contraire de ce qu'il est censé faire.
-                localStorage.setItem('avIntroSeen', '1');
+                sessionStorage.setItem('avIntroSeen', '1');
             } catch (e) {
                 // Navigation privée / stockage bloqué : on montre l'intro sans bloquer le site
             }

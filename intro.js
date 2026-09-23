@@ -2,8 +2,10 @@
  * ============================================================
  *  OUVERTURE DE SCÈNE — masque de théâtre en particules + nom
  * ============================================================
- *  Une fois par session (voir le garde anti-scintillement dans
- *  index.html), avant de révéler le CV :
+ *  Une fois par appareil, et seulement pour qui arrive d'un autre site —
+ *  un lien direct (adresse tapée, mail, PDF) entre sans rideau. C'est le
+ *  garde anti-scintillement d'index.html qui en décide, et qui ne charge
+ *  ce fichier que si l'ouverture joue. Avant de révéler le CV :
  *
  *   1. Un masque de théâtre reconstitué en poussière de particules,
  *      en rotation lente, qui réagit localement au curseur/doigt
@@ -33,7 +35,7 @@
     'use strict';
 
     var overlay = document.getElementById('intro-overlay');
-    if (!overlay || overlay.hidden) return; // déjà vue cette session / reduced-motion
+    if (!overlay || overlay.hidden) return; // rideau levé d'avance par le garde d'index.html
 
     var canvas = document.getElementById('intro-canvas');
     var tickerEl = document.getElementById('intro-scramble');

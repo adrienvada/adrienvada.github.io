@@ -51,10 +51,13 @@
     <noscript><link rel="stylesheet" href="../../univers-statique.css"></noscript>
 
     <script>
-        // Visiter une fiche, c'est être entré : le retour vers l'accueil ne
-        // doit pas lever le rideau d'introduction — « entrer par une porte
-        // dérobée reste entrer » (intro.js).
-        try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+        // Visiter une fiche, c'est avoir commencé sa visite : le retour vers
+        // l'accueil ne doit pas lever le rideau d'introduction au milieu du
+        // parcours. C'est la mémoire de la VISITE (sessionStorage), pas celle
+        // de l'appareil : l'ouverture n'a pas joué, et un visiteur qui
+        // reviendra un autre jour depuis un autre site y aura droit — voir
+        // « Le lien direct entre sans rideau » dans index.html.
+        try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur

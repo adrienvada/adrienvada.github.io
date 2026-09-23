@@ -18,10 +18,10 @@
             if (stored === 'light' || stored === 'dark') { t = stored; }
             else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) { t = 'light'; }
             document.documentElement.setAttribute('data-theme', t);
-            // Visiter le répertoire, c'est être entré : le retour vers
-            // l'accueil ne doit pas lever le rideau d'introduction —
-            // « entrer par une porte dérobée reste entrer » (intro.js).
-            try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+            // Visiter le répertoire, c'est avoir commencé sa visite : le
+            // retour vers l'accueil ne lève pas le rideau (mémoire de la
+            // visite, pas de l'appareil — voir la fiche d'un spectacle).
+            try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
         })();
     </script>
     <meta name="theme-color" content="#0a0907">

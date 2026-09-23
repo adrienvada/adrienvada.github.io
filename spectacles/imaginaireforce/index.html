@@ -51,10 +51,13 @@
     <noscript><link rel="stylesheet" href="../../univers-statique.css"></noscript>
 
     <script>
-        // Visiter une fiche, c'est être entré : le retour vers l'accueil ne
-        // doit pas lever le rideau d'introduction — « entrer par une porte
-        // dérobée reste entrer » (intro.js).
-        try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+        // Visiter une fiche, c'est avoir commencé sa visite : le retour vers
+        // l'accueil ne doit pas lever le rideau d'introduction au milieu du
+        // parcours. C'est la mémoire de la VISITE (sessionStorage), pas celle
+        // de l'appareil : l'ouverture n'a pas joué, et un visiteur qui
+        // reviendra un autre jour depuis un autre site y aura droit — voir
+        // « Le lien direct entre sans rideau » dans index.html.
+        try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -290,7 +293,7 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;L’Imaginaire forcé&quot;,&quot;subtitle&quot;:&quot;d’après Le Mariage forcé, de Molière&quot;,&quot;location&quot;:&quot;Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76)&quot;,&quot;dateLabel&quot;:&quot;1 déc. 2026&quot;,&quot;icsDate&quot;:&quot;2026-12-01&quot;,&quot;time&quot;:&quot;19h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier : 1 déc. 2026, Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76)">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button><a href="https://www.vostickets.net/billet/FR/representation-ST_PIERRE_LES_ELBEUF-34764-0.wb?REFID=_hE3AAAAAAAAAAAAegA" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — 1 déc. 2026, Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76) (nouvel onglet)</span>
+                </button><a href="https://www.vostickets.net/billet/FR/representation-ST_PIERRE_LES_ELBEUF-34764-0.wb?REFID=_hE3AAAAAAAAAAAAegA" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="L’Imaginaire forcé">Réserver<span class="u-sr"> — 1 déc. 2026, Espace Culturel Philippe Torreton, Saint-Pierre-lès-Elbeuf (76) (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">

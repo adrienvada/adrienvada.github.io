@@ -700,9 +700,12 @@ const UniversMontage = (function () {
             // visible est « Réserver », le même sur chaque ligne : la date et
             // le lieu le complètent pour un lecteur d'écran, qui entendrait
             // sinon six « Réserver » sans savoir lequel est lequel.
+            // `data-track` : le clic est compté comme ceux de l'onglet Dates
+            // (même nom d'événement), sur l'accueil comme sur les pages
+            // spectacle — voir brancherMesure dans univers.js.
             const billetterie = lienSur(p.bookingUrl);
             const bookBtn = billetterie
-                ? `<a href="${escape(billetterie)}" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — ${escape(quand)} (nouvel onglet)</span>
+                ? `<a href="${escape(billetterie)}" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="${escape(p.title || '')}">Réserver<span class="u-sr"> — ${escape(quand)} (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>` : '';
             // DEUX COLONNES, PAS UNE SEULE LIGNE QUI S'ENROULE. .u-date-info
             // absorbe seule le retour à la ligne (date, lieu, horaire) ;

@@ -51,10 +51,13 @@
     <noscript><link rel="stylesheet" href="../../univers-statique.css"></noscript>
 
     <script>
-        // Visiter une fiche, c'est être entré : le retour vers l'accueil ne
-        // doit pas lever le rideau d'introduction — « entrer par une porte
-        // dérobée reste entrer » (intro.js).
-        try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+        // Visiter une fiche, c'est avoir commencé sa visite : le retour vers
+        // l'accueil ne doit pas lever le rideau d'introduction au milieu du
+        // parcours. C'est la mémoire de la VISITE (sessionStorage), pas celle
+        // de l'appareil : l'ouverture n'a pas joué, et un visiteur qui
+        // reviendra un autre jour depuis un autre site y aura droit — voir
+        // « Le lien direct entre sans rideau » dans index.html.
+        try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -598,7 +601,7 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;Cléophène&quot;,&quot;subtitle&quot;:&quot;d’après Rodogune, de Corneille&quot;,&quot;location&quot;:&quot;L’Éclat, Pont-Audemer (27)&quot;,&quot;dateLabel&quot;:&quot;18 déc. 2026&quot;,&quot;icsDate&quot;:&quot;2026-12-18&quot;,&quot;time&quot;:&quot;14h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier : 18 déc. 2026, L’Éclat, Pont-Audemer (27)">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button><a href="https://www.ville-pont-audemer.fr/agenda/cleophene-cie-crescite/cleophene-cie-crescite-2026-12-18/" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — 18 déc. 2026, L’Éclat, Pont-Audemer (27) (nouvel onglet)</span>
+                </button><a href="https://www.ville-pont-audemer.fr/agenda/cleophene-cie-crescite/cleophene-cie-crescite-2026-12-18/" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="Cléophène">Réserver<span class="u-sr"> — 18 déc. 2026, L’Éclat, Pont-Audemer (27) (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">
@@ -608,7 +611,7 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;Cléophène&quot;,&quot;subtitle&quot;:&quot;d’après Rodogune, de Corneille&quot;,&quot;location&quot;:&quot;L’Éclat, Pont-Audemer (27)&quot;,&quot;dateLabel&quot;:&quot;18 déc. 2026&quot;,&quot;icsDate&quot;:&quot;2026-12-18&quot;,&quot;time&quot;:&quot;20h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier : 18 déc. 2026, L’Éclat, Pont-Audemer (27)">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button><a href="https://www.ville-pont-audemer.fr/agenda/cleophene-cie-crescite/cleophene-cie-crescite-2026-12-18/" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — 18 déc. 2026, L’Éclat, Pont-Audemer (27) (nouvel onglet)</span>
+                </button><a href="https://www.ville-pont-audemer.fr/agenda/cleophene-cie-crescite/cleophene-cie-crescite-2026-12-18/" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="Cléophène">Réserver<span class="u-sr"> — 18 déc. 2026, L’Éclat, Pont-Audemer (27) (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">
@@ -618,7 +621,7 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;Cléophène&quot;,&quot;subtitle&quot;:&quot;d’après Rodogune, de Corneille&quot;,&quot;location&quot;:&quot;Le Forum, Falaise (14)&quot;,&quot;dateLabel&quot;:&quot;26 janv. 2027&quot;,&quot;icsDate&quot;:&quot;2027-01-26&quot;,&quot;time&quot;:&quot;20h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier : 26 janv. 2027, Le Forum, Falaise (14)">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button><a href="https://www.vostickets.net/billet/FR/representation-FALAISE-34843-0.wb?REFID=RBI2AAAAAAAAAAAAQQA" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — 26 janv. 2027, Le Forum, Falaise (14) (nouvel onglet)</span>
+                </button><a href="https://www.vostickets.net/billet/FR/representation-FALAISE-34843-0.wb?REFID=RBI2AAAAAAAAAAAAQQA" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="Cléophène">Réserver<span class="u-sr"> — 26 janv. 2027, Le Forum, Falaise (14) (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">
@@ -637,7 +640,7 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;Cléophène&quot;,&quot;subtitle&quot;:&quot;d’après Rodogune, de Corneille&quot;,&quot;location&quot;:&quot;Théâtre de la ville de Saint-Lô (50)&quot;,&quot;dateLabel&quot;:&quot;30 janv. 2027&quot;,&quot;icsDate&quot;:&quot;2027-01-30&quot;,&quot;time&quot;:&quot;20h30&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier : 30 janv. 2027, Théâtre de la ville de Saint-Lô (50)">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button><a href="https://www.vostickets.net/billet/FR/representation-SAINT_LO-32787-0.wb?REFID=coU2AAAAAAAAAAAAkwE" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — 30 janv. 2027, Théâtre de la ville de Saint-Lô (50) (nouvel onglet)</span>
+                </button><a href="https://www.vostickets.net/billet/FR/representation-SAINT_LO-32787-0.wb?REFID=coU2AAAAAAAAAAAAkwE" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="Cléophène">Réserver<span class="u-sr"> — 30 janv. 2027, Théâtre de la ville de Saint-Lô (50) (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">
@@ -647,7 +650,7 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;Cléophène&quot;,&quot;subtitle&quot;:&quot;d’après Rodogune, de Corneille&quot;,&quot;location&quot;:&quot;La Ferme de Bel Ebat, Guyancourt (78)&quot;,&quot;dateLabel&quot;:&quot;2 fév. 2027&quot;,&quot;icsDate&quot;:&quot;2027-02-02&quot;,&quot;time&quot;:&quot;&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier : 2 fév. 2027, La Ferme de Bel Ebat, Guyancourt (78)">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button><a href="https://www.scenes2guyancourt.fr/agenda/cleophene/" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — 2 fév. 2027, La Ferme de Bel Ebat, Guyancourt (78) (nouvel onglet)</span>
+                </button><a href="https://www.scenes2guyancourt.fr/agenda/cleophene/" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="Cléophène">Réserver<span class="u-sr"> — 2 fév. 2027, La Ferme de Bel Ebat, Guyancourt (78) (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li></ul>
             <div class="u-actions">

@@ -51,10 +51,13 @@
     <noscript><link rel="stylesheet" href="../../univers-statique.css"></noscript>
 
     <script>
-        // Visiter une fiche, c'est être entré : le retour vers l'accueil ne
-        // doit pas lever le rideau d'introduction — « entrer par une porte
-        // dérobée reste entrer » (intro.js).
-        try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+        // Visiter une fiche, c'est avoir commencé sa visite : le retour vers
+        // l'accueil ne doit pas lever le rideau d'introduction au milieu du
+        // parcours. C'est la mémoire de la VISITE (sessionStorage), pas celle
+        // de l'appareil : l'ouverture n'a pas joué, et un visiteur qui
+        // reviendra un autre jour depuis un autre site y aura droit — voir
+        // « Le lien direct entre sans rideau » dans index.html.
+        try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -597,7 +600,7 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Tribunal judiciaire de Rouen (76)&quot;,&quot;dateLabel&quot;:&quot;22 oct. 2026&quot;,&quot;icsDate&quot;:&quot;2026-10-22&quot;,&quot;time&quot;:&quot;19h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier : 22 oct. 2026, Tribunal judiciaire de Rouen (76)">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button><a href="https://www.cdn-normandierouen.fr/saison-26-27/la-barre-peine-perdue" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — 22 oct. 2026, Tribunal judiciaire de Rouen (76) (nouvel onglet)</span>
+                </button><a href="https://www.cdn-normandierouen.fr/saison-26-27/la-barre-peine-perdue" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="À la barre, peine perdue ?">Réserver<span class="u-sr"> — 22 oct. 2026, Tribunal judiciaire de Rouen (76) (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">
@@ -607,7 +610,7 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Tribunal judiciaire de Rouen (76)&quot;,&quot;dateLabel&quot;:&quot;23 oct. 2026&quot;,&quot;icsDate&quot;:&quot;2026-10-23&quot;,&quot;time&quot;:&quot;19h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier : 23 oct. 2026, Tribunal judiciaire de Rouen (76)">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button><a href="https://www.cdn-normandierouen.fr/saison-26-27/la-barre-peine-perdue" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — 23 oct. 2026, Tribunal judiciaire de Rouen (76) (nouvel onglet)</span>
+                </button><a href="https://www.cdn-normandierouen.fr/saison-26-27/la-barre-peine-perdue" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="À la barre, peine perdue ?">Réserver<span class="u-sr"> — 23 oct. 2026, Tribunal judiciaire de Rouen (76) (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">
@@ -626,7 +629,7 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Tribunal judiciaire de Saint-Quentin (02)&quot;,&quot;dateLabel&quot;:&quot;12 nov. 2026&quot;,&quot;icsDate&quot;:&quot;2026-11-12&quot;,&quot;time&quot;:&quot;20h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier : 12 nov. 2026, Tribunal judiciaire de Saint-Quentin (02)">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button><a href="https://billetterie-saint-quentin.mapado.com/event/757061-a-la-barre-peine-perdue" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — 12 nov. 2026, Tribunal judiciaire de Saint-Quentin (02) (nouvel onglet)</span>
+                </button><a href="https://billetterie-saint-quentin.mapado.com/event/757061-a-la-barre-peine-perdue" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="À la barre, peine perdue ?">Réserver<span class="u-sr"> — 12 nov. 2026, Tribunal judiciaire de Saint-Quentin (02) (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">
@@ -636,7 +639,7 @@
                 </div>
                 <div class="u-date-actions"><button type="button" class="u-date-cal" data-cal="{&quot;title&quot;:&quot;À la barre, peine perdue ?&quot;,&quot;subtitle&quot;:&quot;&quot;,&quot;location&quot;:&quot;Hôtel de Ville de Grand-Quevilly (76)&quot;,&quot;dateLabel&quot;:&quot;25 nov. 2026&quot;,&quot;icsDate&quot;:&quot;2026-11-25&quot;,&quot;time&quot;:&quot;20h00&quot;,&quot;times&quot;:null}" aria-label="Ajouter au calendrier : 25 nov. 2026, Hôtel de Ville de Grand-Quevilly (76)">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button><a href="https://mediatheque.ville-grand-quevilly.fr/cms/articleview/id/1155" target="_blank" rel="noopener" class="u-date-book">Réserver<span class="u-sr"> — 25 nov. 2026, Hôtel de Ville de Grand-Quevilly (76) (nouvel onglet)</span>
+                </button><a href="https://mediatheque.ville-grand-quevilly.fr/cms/articleview/id/1155" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="À la barre, peine perdue ?">Réserver<span class="u-sr"> — 25 nov. 2026, Hôtel de Ville de Grand-Quevilly (76) (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></div>
             </li><li class="u-date">
                 <div class="u-date-info">

@@ -712,7 +712,9 @@ function genererHtml() {
             if (stored === 'light' || stored === 'dark') { t = stored; }
             else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) { t = 'light'; }
             document.documentElement.setAttribute('data-theme', t);
-            try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+            // La visite a commencé : le retour vers l'accueil ne lève pas le
+            // rideau d'introduction (mémoire de la visite, pas de l'appareil).
+            try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
         })();
 
         // ════════════════════════════════════════════════════════════════

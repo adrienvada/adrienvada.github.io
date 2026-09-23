@@ -2075,7 +2075,37 @@ const SHOW_UNIVERSES = {
     //  les mots attendent à `opacity: 0`. C'est pourquoi elle embarque
     //  univers-statique.css dans un <noscript>, qui remet tout à l'état
     //  lisible. Voir build/generer-pages-spectacles.js.
+    // ── LA MESURE, SUR LES PAGES SPECTACLE AUSSI ─────────────────────
+    //  track() est défini par l'accueil (index.html) : c'est l'unique
+    //  point de sortie du site vers l'outil de mesure, et c'est lui qui,
+    //  par délégation, compte tout élément marqué `data-track`. Les pages
+    //  /spectacles/ chargent univers.js mais pas ce script-là : leurs
+    //  clics « Réserver » ne comptaient nulle part — alors que ces pages
+    //  existent POUR être trouvées, et qu'un clic « Réserver » est le
+    //  seul chiffre qui dise si elles servent à quelque chose. Même
+    //  fonction et même verrou (l'interrupteur « ?sansmesure », lu dans
+    //  le stockage où l'accueil le pose), même délégation.
+    function brancherMesure() {
+        if (typeof window.track !== 'function') {
+            window.track = function (nom, details) {
+                try {
+                    if (localStorage.getItem('av.sansMesure')) return;
+                    if (window.umami && typeof window.umami.track === 'function') {
+                        window.umami.track(nom, details || undefined);
+                    }
+                } catch (e) { /* la mesure ne casse jamais la page */ }
+            };
+        }
+        document.addEventListener('click', (e) => {
+            const cible = e.target.closest?.('[data-track]');
+            if (!cible) return;
+            const detail = cible.getAttribute('data-track-detail');
+            window.track(cible.getAttribute('data-track'), detail ? { detail } : undefined);
+        }, true);
+    }
+
     function demarrerStatique() {
+        brancherMesure();
         scroller = overlay;
         isOpen = true;
         overlay.classList.add('is-open');
