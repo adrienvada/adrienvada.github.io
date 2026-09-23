@@ -3772,9 +3772,9 @@
         }
 
         /* ── Le sommaire : la saison d'un regard ──
-           La prochaine représentation n'y est plus : c'est le carton
-           « Prochainement », le même qu'en tête du CV, posé au-dessus de la
-           carte (voir renderNextDate). */
+           La prochaine représentation n'y est plus : elle a son carton en
+           tête du CV (voir renderNextDate), et la liste ci-dessous commence
+           par elle. */
         .dates-sommaire {
             margin-bottom: 1.1rem;
         }
@@ -5192,8 +5192,8 @@
 
                      Le bandeau lit la MÊME source que la page Dates (dates.js,
                      via splitUpcoming) : rien n'est saisi deux fois, et il ne
-                     peut donc pas la contredire. Le même carton ouvre l'onglet
-                     Dates (#dates-prochaine), écrit par la même fonction.
+                     peut donc pas la contredire. L'onglet Dates, lui, n'a pas
+                     de carton : sa liste commence déjà par la prochaine date.
 
                      Posé `hidden` : c'est renderNextDate() qui l'ouvre, et
                      seulement s'il reste une représentation à venir. Une saison
@@ -5288,15 +5288,10 @@
             return repli;
         }
 
-        // ── LA PROCHAINE REPRÉSENTATION : UN CARTON, DEUX PLACES ──
-        //  Le même carton en tête du CV (#next-date-banner) et en tête de
-        //  l'onglet Dates (#dates-prochaine), chaque fois juste avant la
-        //  première carte de l'onglet : même fonction, même balisage, même
-        //  source. Les deux ne peuvent ni se contredire ni diverger d'allure.
-        //
-        //  Une seule différence, de conduite et non d'aspect : depuis le CV,
-        //  la date mène à l'onglet Dates ; dans l'onglet Dates, on y est
-        //  déjà, elle reste du texte.
+        // ── LA PROCHAINE REPRÉSENTATION, EN TÊTE DU CV ──
+        //  Le carton n'est qu'au CV : l'onglet Dates n'en a pas, sa liste
+        //  commence déjà par la prochaine date. Le jour, l'heure et le lieu ;
+        //  la date mène à l'onglet Dates ; « Réserver » et l'agenda.
         //
         //  Le nom du spectacle mène à sa page, comme partout dans les dates.
         //  univers.js, qui sait quelle page, n'arrive qu'en fin de document :
@@ -5308,10 +5303,9 @@
         window.calProchaine = null;
 
         function renderNextDate() {
-            const places = ['next-date-banner', 'dates-prochaine']
-                .map(id => document.getElementById(id)).filter(Boolean);
-            if (!places.length) return;
-            const cacher = () => places.forEach(el => { el.hidden = true; el.innerHTML = ''; el.__rendu = ''; });
+            const bandeau = document.getElementById('next-date-banner');
+            if (!bandeau) return;
+            const cacher = () => { bandeau.hidden = true; bandeau.innerHTML = ''; bandeau.__rendu = ''; };
             if (typeof SHOW_DATA === 'undefined') return cacher();
 
             const toutes = flattenUpcoming(splitUpcoming(SHOW_DATA.upcoming).upcoming);
@@ -5360,15 +5354,11 @@
                 : '';
             const actions = reserver || agenda ? `<span class="next-date-actions">${reserver}${agenda}</span>` : '';
 
-            places.forEach(el => {
-                const quandClasses = 'text-[11px] text-luxury-textMuted font-mono break-words min-w-0';
-                const date = el.id === 'next-date-banner'
-                    ? `<a href="#page_dates" data-track="banner_next_date" class="${quandClasses} hover:text-luxury-goldInk transition">${quand}</a>`
-                    : `<span class="${quandClasses}">${quand}</span>`;
-                // gap-y-2 : au CV, le nom et la date sont deux liens l'un sous
-                // l'autre ; 8 px les tiennent à 24 px de centre à centre, la
-                // distance minimale entre deux cibles tactiles (WCAG 2.5.8).
-                const html = `
+            const date = `<a href="#page_dates" data-track="banner_next_date" class="text-[11px] text-luxury-textMuted font-mono break-words min-w-0 hover:text-luxury-goldInk transition">${quand}</a>`;
+            // gap-y-2 : le nom et la date sont deux liens l'un sous l'autre ;
+            // 8 px les tiennent à 24 px de centre à centre, la distance
+            // minimale entre deux cibles tactiles (WCAG 2.5.8).
+            const html = `
                 <div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     <span class="flex items-center gap-1.5 flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
                         <span class="next-date-dot" aria-hidden="true"></span> Prochainement
@@ -5376,13 +5366,12 @@
                     <span class="next-date-quoi flex-[1_1_10rem] min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-2">${nom}${date}</span>
                     ${actions}
                 </div>`;
-                // Rien n'a changé ? Rien ne bouge : réécrire le carton relancerait
-                // le phare et la pastille, qui ne passent qu'une fois.
-                if (el.__rendu === html) return;
-                el.__rendu = html;
-                el.innerHTML = html;
-                el.hidden = false;
-            });
+            // Rien n'a changé ? Rien ne bouge : réécrire le carton relancerait
+            // le phare et la pastille, qui ne passent qu'une fois.
+            if (bandeau.__rendu === html) return;
+            bandeau.__rendu = html;
+            bandeau.innerHTML = html;
+            bandeau.hidden = false;
         }
 
         renderNextDate();
@@ -6084,12 +6073,6 @@
             <!-- PAGE 2: DATES THEATRE -->
             <div id="page_dates" class="page space-y-4">
                 <h2 class="sr-only">Dates de Spectacles</h2>
-                <!-- LA PROCHAINE REPRÉSENTATION : le même carton qu'en tête du CV,
-                     à la même place — juste avant la première carte. Écrit ici,
-                     pendant la lecture de la page (comme celui du CV), pour que
-                     la carte de la saison ne saute pas quand il arrive. -->
-                <div id="dates-prochaine" hidden class="no-print"></div>
-                <script>renderNextDate();</script>
                 <!-- FUTURE DATES (Compacted spacing, larger font) -->
                 <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
                     <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
@@ -7964,9 +7947,9 @@
         //  Ce tableau ne filtre rien, il MÈNE : un mois, un spectacle ou un
         //  rond conduisent aux lignes qu'ils résument (voir dlAller).
         //  Filtrer aurait fait disparaître le reste de la page sous les
-        //  doigts ; y conduire ne retire rien. (La prochaine représentation,
-        //  elle, est le carton « Prochainement » posé au-dessus de la carte,
-        //  le même qu'en tête du CV : voir renderNextDate.)
+        //  doigts ; y conduire ne retire rien. (La prochaine représentation
+        //  n'est pas répétée ici : elle a son carton en tête du CV — voir
+        //  renderNextDate —, et la liste commence par elle.)
         function dlSommaire(entrees) {
             const datees = entrees.filter(e => e.debut);
             if (!datees.length) return '';
@@ -8184,8 +8167,8 @@
 
         // Délégation : les boutons agenda des dates (le rendu les refait à
         // chaque filtre, d'où l'écoute au niveau du document), et celui du
-        // carton « Prochainement », qui porte sa date à part : il vit aussi
-        // dans le CV, hors des rendus de l'onglet Dates.
+        // carton « Prochainement », qui porte sa date à part : il vit dans le
+        // CV, hors des rendus de l'onglet Dates.
         document.addEventListener('click', (e) => {
             const cal = e.target.closest('[data-cal-index], [data-cal-prochaine]');
             if (!cal) return;
