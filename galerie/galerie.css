@@ -1,6 +1,6 @@
 /* GALERIE PHOTO (/galerie/) — feuille générée (build/generer-page-galerie.js)
    Même univers visuel que le répertoire de spectacles : Cinzel, Inter, Montserrat,
-   or sur noir, grain de pellicule, grille zoomable au pincement. */
+   or sur noir, grain de pellicule, grille dont la densité se règle aux boutons − et +. */
 *, *::before, *::after { box-sizing: border-box; }
 
 @property --ambiance {
@@ -73,7 +73,12 @@ body::after {
 main {
     max-width: 68rem;
     margin: 0 auto;
-    touch-action: pan-y;
+}
+
+/* Réservé aux lecteurs d'écran : l'annonce de la visionneuse. */
+.sr {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
 a { color: var(--accent-ink); }
@@ -149,6 +154,32 @@ a { color: var(--accent-ink); }
 .bascule:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
 .bascule .ico { font-size: .95rem; }
 .ico { display: block; width: 1em; height: 1em; fill: currentColor; }
+
+.outils { display: flex; align-items: center; gap: .5rem; }
+/* La densité de la planche — mêmes pastilles que la bascule. */
+.densite { display: flex; gap: .3rem; }
+.densite-btn {
+    display: grid;
+    place-items: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    flex: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font: 500 1.15rem/1 'Inter', system-ui, sans-serif;
+    transition: border-color .3s ease, opacity .3s ease, background-color .35s ease;
+}
+.densite-btn:hover:not(:disabled) { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+/* Au bout de l'échelle, le bouton s'éteint (et le clavier le saute). */
+.densite-btn:disabled { opacity: .35; cursor: default; }
+.densite-btn:focus-visible, .bascule:focus-visible, .retour:focus-visible,
+.zoom-close:focus-visible, .zoom-nav:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
 
 /* ── Titre et manchette ── */
 .tete {
@@ -328,7 +359,7 @@ h1 {
     transition: transform 1.3s cubic-bezier(.2, .6, .2, 1);
 }
 
-/* ── Gestion du zoom multi-colonnes (Pinch-to-zoom) ── */
+/* ── La densité de la planche (boutons − et +) ── */
 html[data-zoom] .repertoire {
     grid-template-columns: repeat(var(--colonnes, 3), 1fr);
 }
@@ -439,7 +470,7 @@ html.galerie-verrou {
 
 .zoom-caption {
     font-family: 'Montserrat', sans-serif;
-    font-size: .68rem;
+    font-size: .74rem;
     font-weight: 600;
     letter-spacing: .18em;
     text-transform: uppercase;
@@ -504,11 +535,11 @@ html.galerie-verrou {
 @media (max-width: 640px) {
     body { padding: 0 .9rem 2.6rem; }
     .tete { padding: 2.3rem 0 1.6rem; }
-    .sur-titre { font-size: .58rem; letter-spacing: .22em; margin-bottom: .8rem; }
+    .sur-titre { font-size: .69rem; letter-spacing: .2em; margin-bottom: .8rem; }
     .ornement { margin-top: 1.1rem; width: 8.5rem; }
     .repertoire { grid-template-columns: repeat(2, 1fr); gap: 1rem .65rem; padding: 1.2rem 0 .4rem; }
     .barre { top: .55rem; margin-top: .5rem; }
-    .bascule { width: 2.1rem; height: 2.1rem; }
+    .bascule, .densite-btn { width: 2.1rem; height: 2.1rem; }
     .zoom-close { top: .8rem; right: .8rem; width: 2.3rem; height: 2.3rem; }
     .zoom-nav { width: 2.4rem; height: 2.4rem; }
     .zoom-prev { left: 8px; }

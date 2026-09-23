@@ -38,6 +38,21 @@ const UniversMontage = (function () {
         ? esc(v)
         : String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
 
+    // ── UN LIEN DE RÉSERVATION NE MÈNE QU'À UNE PAGE WEB ─────────────
+    //  L'adresse vient de la base (saisie dans /admin/) et finit dans un
+    //  href. escape() en neutralise les guillemets, pas le PROTOCOLE : une
+    //  adresse en « javascript: » s'exécuterait au clic, et une adresse
+    //  sans « https:// » — le cas courant d'un copier-coller — devenait un
+    //  lien relatif qui envoyait le spectateur sur la page 404 du site.
+    //  On n'accepte donc que http(s), on complète le « www. » que tout le
+    //  monde tape, et tout le reste ne produit pas de bouton.
+    function lienSur(url) {
+        const s = String(url ?? '').trim();
+        if (/^https?:\/\/[^\s"'<>]+$/i.test(s)) return s;
+        if (/^www\.[^\s"'<>]+$/i.test(s)) return 'https://' + s;
+        return '';
+    }
+
     // ── LE CADRAGE ───────────────────────────────────────────────────
     //  Les cadres du défilé recadrent en `object-fit: cover`. Sans autre
     //  indication, c'est le CENTRE GÉOMÉTRIQUE du fichier qui survit — pas
@@ -132,7 +147,10 @@ const UniversMontage = (function () {
     function splitChars(str) {
         let i = 0;
         return String(str).split(/[^\S ]+/).filter(Boolean).map(word =>
-            `<span class="u-word">` + word.split('').map(ch =>
+            // aria-hidden : un lecteur d'écran épellerait ces blocs lettre
+            // par lettre (« B, é, r, é… »). Le titre lui est donné d'un
+            // seul tenant par l'aria-label que panelHtml pose sur le titre.
+            `<span class="u-word" aria-hidden="true">` + word.split('').map(ch =>
                 `<span class="u-ch" style="--i:${i++}">${escape(ch)}</span>`
             ).join('') + `</span>`
         ).join(' ');
@@ -178,6 +196,40 @@ const UniversMontage = (function () {
         return `ressources/images/univers/${uni.slug}/${n}.jpg`;
     }
 
+    // ── LA BONNE TAILLE POUR CHAQUE ÉCRAN ────────────────────────────
+    //  Chaque photo existe aussi en WebP de 640 et 1280 px — et 1920 pour
+    //  le plein cadre (build/variantes-images.py). Un téléphone les reçoit
+    //  à la place de l'original de 2400 px : trois à dix fois moins lourd.
+    //
+    //  SOUS 900 PX DE LARGE SEULEMENT (`media`). Au-delà, c'est l'original
+    //  qui sert, exactement comme avant : un grand écran le mérite, et il
+    //  n'y a rien à y regagner.
+    //
+    //  `sizes` dit au navigateur quelle largeur la photo OCCUPERA — pas
+    //  celle de son cadre. En plein cadre, sur un téléphone tenu droit, une
+    //  photo en paysage doit couvrir un cadre plus haut que large : elle
+    //  s'étale alors sur 1,3 hauteur d'écran (130vh). Annoncer la largeur du
+    //  cadre (100vw) ferait choisir une version trop petite — donc floue.
+    const TAILLES = {
+        plein: { largeurs: [640, 1280, 1920], sizes: '(orientation: portrait) 130vh, 100vw' },
+        groupe: { largeurs: [640, 1280], sizes: '(orientation: portrait) 60vh, 50vw' },
+        affiche: { largeurs: [640, 1280], sizes: '90vw' },
+        video: { largeurs: [640, 1280], sizes: '100vw' }
+    };
+
+    // <picture> plutôt qu'un srcset nu : l'écran large et le navigateur qui
+    // ne lirait pas le WebP retombent tous deux sur le <img> et l'original.
+    // L'agrandissement lit le `src` du <img> : il montre toujours l'original.
+    function pictureHtml(src, genre, imgAttrs) {
+        const t = TAILLES[genre] || TAILLES.groupe;
+        const base = String(src).replace(/\.jpg$/, '');
+        const jeu = t.largeurs.map(w => `${base}-${w}.webp ${w}w`).join(', ');
+        return `<picture>
+                    <source type="image/webp" media="(max-width: 900px)" srcset="${escape(jeu)}" sizes="${t.sizes}">
+                    <img src="${escape(src)}" ${imgAttrs}>
+                </picture>`;
+    }
+
     function framePos(uni, beat, n) {
         const raw = beat.cadre && beat.cadre[n];
         if (raw == null || raw === '') return '';
@@ -204,12 +256,16 @@ const UniversMontage = (function () {
 
     function figureHtml(ph, layout, index, title, eager, over) {
         const cap = ph.caption || '';
+        // UNE PHOTO SANS LÉGENDE GARDE UN NOM À ELLE. Elle prenait le titre
+        // du spectacle : neuf boutons « Agrandir : Fulguré.e.s » à la suite,
+        // qu'un lecteur d'écran ne distinguait pas. Son rang les départage.
+        const nom = cap || `${title}, photo ${index + 1}`;
         return `<figure class="u-fig u-fig--${layout}" style="--i:${index}">
             <button type="button" class="u-fig-media" data-u-zoom="${index}"
-                    aria-label="Agrandir : ${escape(cap || title)}">
-                <img src="${escape(ph.src)}" alt="${escape(cap || title)}"
-                     ${ph.pos ? `style="object-position:${ph.pos}"` : ''}
-                     loading="${eager ? 'eager' : 'lazy'}" decoding="async">
+                    aria-label="Agrandir : ${escape(nom)}">
+                ${pictureHtml(ph.src, layout === 'plein' ? 'plein' : 'groupe',
+                    `alt="${escape(nom)}" ${ph.pos ? `style="object-position:${ph.pos}"` : ''}
+                     loading="${eager ? 'eager' : 'lazy'}" decoding="async"`)}
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             ${over || ''}
@@ -284,10 +340,13 @@ const UniversMontage = (function () {
                 `jaquette locale (champ \`jaquette\`) — le bloc est ignoré.`);
             return '';
         }
+        // La jaquette locale (Vimeo) a ses versions allégées ; l'affiche de
+        // YouTube, servie par YouTube, n'en a pas chez nous.
+        const imgAttrs = `alt="" loading="lazy" decoding="async"`;
         return `<figure class="u-video u-reveal">
             <button type="button" class="u-video-play" data-u-video="${ref}"
                     aria-label="Lire la vidéo : ${escape(cap || title)}">
-                <img src="${escape(poster)}"${repli} alt="" loading="lazy" decoding="async">
+                ${repli ? `<img src="${escape(poster)}"${repli} ${imgAttrs}>` : pictureHtml(poster, 'video', imgAttrs)}
                 <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
             </button>
             ${cap ? `<figcaption class="u-cap"><span>${escape(cap)}</span></figcaption>` : ''}
@@ -307,8 +366,8 @@ const UniversMontage = (function () {
         return `<figure class="u-fig u-affiche" style="--i:0">
             <button type="button" class="u-fig-media" data-u-zoom="0"
                     aria-label="Agrandir l’affiche du film">
-                <img src="ressources/images/univers/${uni.slug}/affiche.jpg"
-                     alt="Affiche — ${escape(title)}" loading="eager" decoding="async">
+                ${pictureHtml(`ressources/images/univers/${uni.slug}/affiche.jpg`, 'affiche',
+                    `alt="Affiche — ${escape(title)}" loading="eager" decoding="async"`)}
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
         </figure>`;
@@ -349,7 +408,12 @@ const UniversMontage = (function () {
                     src: photoSrc(uni, n), caption: (beat.c && beat.c[i]) || '',
                     pos: framePos(uni, beat, n)
                 },
-                layout, index, title, index++ < 3,
+                // Seule la première photo part d'emblée : c'est elle que le
+                // panneau attend avant de se dévoiler (awaitFirstPhoto, dans
+                // univers.js). Les autres attendent d'approcher de l'écran —
+                // elles ne concurrencent plus les scripts ni la police du
+                // titre. Un film ouvre sur son affiche, déjà partie, elle.
+                layout, index, title, index++ === 0 && !uni.affiche,
                 (layout === 'plein' && i === 0) ? overHtml(beat) : ''
             )).join('');
 
@@ -499,8 +563,9 @@ const UniversMontage = (function () {
         // fois plus haut : la page /spectacles/ les rejouera tels quels
         // quand Supabase aura répondu.
         const etat = { isFilm, dates, enCreation, statique, key: info.key };
+        const niveau = statique ? 'h1' : 'h2';
 
-        return `
+        const html = `
         ${statique
                 ? `<a href="/spectacles/" class="u-close" aria-label="Retour au répertoire des spectacles">
             <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
@@ -520,7 +585,16 @@ const UniversMontage = (function () {
                  avant même le titre. Il est pris sur l'univers et non sur la
                  ligne du CV, qui ne le porte pas. -->
             <p class="u-eyebrow">${escape(info.year)}${uni.genre ? ' · ' + escape(uni.genre) : ''}${info.badge ? ' · ' + escape(info.badge) : ''}</p>
-            <h2 class="u-title" style="--u-title-chars:${tm.chars};--u-title-len:${tm.len}">${splitChars(info.title)}</h2>
+            <!-- LE TITRE, D'UN SEUL TENANT POUR QUI NE LE VOIT PAS. Les lettres
+                 tombent une à une et sont donc cachées aux lecteurs d'écran
+                 (voir splitChars) ; aria-label leur donne le mot entier.
+                 PAS de copie du titre en texte masqué : un moteur la lirait
+                 collée aux lettres, « BéréniceBérénice ». Les lettres, elles,
+                 restent le texte du titre pour qui l'indexe.
+                 Sur une page autonome c'est le titre de la page, de premier
+                 niveau ; dans le panneau de l'accueil, qui a déjà le sien, de
+                 second niveau. -->
+            <${niveau} class="u-title" id="u-titre" aria-label="${escape(info.title)}" style="--u-title-chars:${tm.chars};--u-title-len:${tm.len}">${splitChars(info.title)}</${niveau}>
             ${info.author ? `<p class="u-author">${escape(info.author)}</p>` : ''}
             ${uni.synopsis ? `<p class="u-synopsis">${splitWords(uni.synopsis)}</p>` : ''}
             <p class="u-meta">${escape(info.role)}${info.company ? '<br>' + escape(info.company) : ''}</p>
@@ -556,7 +630,7 @@ const UniversMontage = (function () {
             <h3 class="u-foot-title">${escape(footTitleText(etat))}</h3>
             ${footDatesHtml(etat)}
             <div class="u-actions">
-                ${info.url ? `<a class="u-btn" href="${escape(info.url)}" target="_blank" rel="noopener">${isFilm ? 'Fiche du film' : 'Page du spectacle'} <svg class="ico" aria-hidden="true"><use href="#i-solid-up-right-from-square"></use></svg></a>` : ''}
+                ${info.url ? `<a class="u-btn" href="${escape(info.url)}" target="_blank" rel="noopener">${isFilm ? 'Fiche du film' : 'Page du spectacle'}<span class="u-sr"> (nouvel onglet)</span> <svg class="ico" aria-hidden="true"><use href="#i-solid-up-right-from-square"></use></svg></a>` : ''}
                 ${footGhostHtml(etat)}
             </div>
             ${prixBlock(uni)}
@@ -581,6 +655,16 @@ const UniversMontage = (function () {
                 <figcaption></figcaption>
             </figure>
         </div>`;
+
+        // SUR UNE PAGE AUTONOME, TOUS LES TITRES MONTENT D'UN CRAN. Le titre
+        // du spectacle y est le h1 de la page : les chapitres et le pied
+        // passent de h3 à h2, le palmarès et la distribution de h4 à h3.
+        // Sans cela la hiérarchie sautait un niveau (h1 puis h3), ce qu'un
+        // lecteur d'écran fait entendre comme un trou dans le plan. La
+        // feuille de style vise les deux niveaux (voir .u-chapter).
+        return statique
+            ? html.replace(/<(\/?)h3\b/g, '<$1h2').replace(/<(\/?)h4\b/g, '<$1h3')
+            : html;
     }
 
     // ── Les représentations, au pied de l'univers ──────────────────
@@ -603,15 +687,25 @@ const UniversMontage = (function () {
             // c'est univers.js qui lit `data-cal` au clic et construit le
             // .ics / les liens Google-Outlook. Un bouton sans icsDate ne
             // mène nulle part, donc on ne le pose pas.
+            // Ce qui distingue cette ligne des autres, pour les libellés.
+            const quand = [p.dateLabel, p.location].filter(Boolean).join(', ');
             const calBtn = p.icsDate
                 ? `<button type="button" class="u-date-cal" data-cal="${escape(JSON.stringify({
                     title: p.title || '', subtitle: p.subtitle || '', location: p.location || '',
-                    icsDate: p.icsDate, time: p.time || '', times: p.times || null
-                }))}" aria-label="Ajouter au calendrier">
+                    dateLabel: p.dateLabel || '', icsDate: p.icsDate, time: p.time || '', times: p.times || null
+                }))}" aria-label="Ajouter au calendrier : ${escape(quand)}">
                     <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
                 </button>` : '';
-            const bookBtn = p.bookingUrl
-                ? `<a href="${escape(p.bookingUrl)}" target="_blank" rel="noopener" class="u-date-book">Réserver
+            // Le lien ne part que vers une page web (voir lienSur). Son texte
+            // visible est « Réserver », le même sur chaque ligne : la date et
+            // le lieu le complètent pour un lecteur d'écran, qui entendrait
+            // sinon six « Réserver » sans savoir lequel est lequel.
+            // `data-track` : le clic est compté comme ceux de l'onglet Dates
+            // (même nom d'événement), sur l'accueil comme sur les pages
+            // spectacle — voir brancherMesure dans univers.js.
+            const billetterie = lienSur(p.bookingUrl);
+            const bookBtn = billetterie
+                ? `<a href="${escape(billetterie)}" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="${escape(p.title || '')}">Réserver<span class="u-sr"> — ${escape(quand)} (nouvel onglet)</span>
                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>` : '';
             // DEUX COLONNES, PAS UNE SEULE LIGNE QUI S'ENROULE. .u-date-info
             // absorbe seule le retour à la ligne (date, lieu, horaire) ;
@@ -629,10 +723,160 @@ const UniversMontage = (function () {
         return `<ul class="u-dates">${rows}</ul>`;
     }
 
+    // ── LES REPRÉSENTATIONS POUR LES MOTEURS DE RECHERCHE ─────────────
+    //  Une représentation datée devient un événement schema.org
+    //  (TheaterEvent) : c'est ce qui permet à une date de remonter dans les
+    //  résultats enrichis de Google. Il était fabriqué DEUX FOIS — sur
+    //  l'accueil, complet, et dans les pages /spectacles/, réduit à trois
+    //  champs (ni heure, ni organisateur, ni image) alors que ce sont
+    //  précisément ces pages qu'on fabrique pour être trouvées. Le voici
+    //  écrit une fois, pour les deux.
+    //
+    //  Rien n'y est inventé : chaque champ vient d'un endroit du site — le
+    //  synopsis et la durée de l'univers, la compagnie de la ligne du CV,
+    //  le lieu, la ville, l'heure et la billetterie de la base.
+    const SITE = 'https://adrienvada.fr';
+
+    // Sites officiels des compagnies, confirmés par Adrien — une compagnie
+    // absente d'ici n'a pas d'`url` plutôt qu'une adresse devinée.
+    const SITE_ORGANISATEUR = {
+        'Compagnie Crescite': 'https://crescite.fr/',
+        'CDN de Normandie-Rouen': 'https://www.cdn-normandierouen.fr/',
+        'Compagnie Alchimie': 'https://compagnie-alchimie.fr/',
+        'Compagnie Bloomsbury': 'https://labloomsbury.wixsite.com/compagnie',
+    };
+
+    //  La durée est écrite en tête du montage, telle qu'on l'annonce au
+    //  public : « 1h05 », « 40 min ». Le même champ sert ailleurs à
+    //  numéroter des chapitres (« 4 épisodes ») — on ne retient que ce qui
+    //  EST une durée, et seulement dans le premier temps du montage.
+    const DUREE_LISIBLE = /^(?:(\d{1,2})\s*h\s*(\d{0,2})|(\d{1,3})\s*min)$/;
+    function dureeMinutes(uni) {
+        const bloc = (uni?.sequence || []).find(b => b && b.chapter);
+        const m = bloc && String(bloc.chapter).trim().match(DUREE_LISIBLE);
+        if (!m) return 0;
+        return m[3] ? +m[3] : (+m[1]) * 60 + (+(m[2] || 0));
+    }
+
+    //  L'affiche si le spectacle en a une, sinon la première photo de son
+    //  montage — la même règle que le répertoire.
+    function photoPrincipale(uni) {
+        if (!uni) return '';
+        if (uni.affiche) return `ressources/images/univers/${uni.slug}/affiche.jpg`;
+        const bloc = (uni.sequence || []).find(b => b && Array.isArray(b.p) && b.p.length);
+        return bloc ? photoSrc(uni, bloc.p[0]) : '';
+    }
+
+    //  La compagnie est écrite sous le titre, dans le CV, avec deux
+    //  conventions constantes : la BARRE OBLIQUE sépare deux coproducteurs,
+    //  le TIRET CADRATIN sépare la compagnie de son metteur en scène
+    //  (« Compagnie Crescite — Angelo Jossec »). On coupe donc au tiret
+    //  entouré d'espaces : un metteur en scène n'est pas l'organisation qui
+    //  produit, et « CDN de Normandie-Rouen » garde son trait d'union.
+    function organisateurs(compagnie) {
+        const noms = String(compagnie || '').split('/')
+            .map(x => x.replace(/\s+/g, ' ').trim().split(/ [—–] /)[0].trim())
+            .filter(Boolean);
+        if (!noms.length) return null;
+        const org = noms.map(name => {
+            const o = { '@type': 'Organization', name };
+            if (SITE_ORGANISATEUR[name]) o.url = SITE_ORGANISATEUR[name];
+            return o;
+        });
+        return org.length === 1 ? org[0] : org;
+    }
+
+    //  L'HEURE N'A DE SENS QU'AVEC SON FUSEAU. « 20:00 » sans décalage est
+    //  une heure flottante, que Google interprète comme il peut. Toutes les
+    //  représentations sont en France métropolitaine : +01:00 en hiver,
+    //  +02:00 en été, selon la date elle-même.
+    function decalageParis(jour) {
+        try {
+            const f = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', timeZoneName: 'longOffset' });
+            const nom = f.formatToParts(new Date(`${jour}T12:00:00Z`)).find(x => x.type === 'timeZoneName');
+            const m = nom && nom.value.match(/([+-]\d{2}:\d{2})/);
+            return m ? m[1] : '+01:00';
+        } catch (e) { return '+01:00'; }
+    }
+
+    /**
+     * Une représentation → un TheaterEvent.
+     *   rep : { titre, sousTitre, lieu, ville, jour (AAAA-MM-JJ), heure, billetterie }
+     *   ctx : { uni, compagnie } — ce que le site sait du spectacle (facultatif)
+     */
+    function evenementTheatre(rep, ctx) {
+        if (!rep || !rep.jour) return null;
+        const { uni = null, compagnie = '' } = ctx || {};
+        const m = String(rep.heure || '').match(/(\d{1,2})[hH:](\d{2})?/);
+        const tz = decalageParis(rep.jour);
+        const deux = (n) => String(n).padStart(2, '0');
+        const debut = m ? `${rep.jour}T${deux(m[1])}:${m[2] || '00'}:00${tz}` : rep.jour;
+
+        const lieu = { '@type': 'Place', name: rep.lieu || rep.ville || '' };
+        // Une adresse STRUCTURÉE : la ville et le pays, que Google exige
+        // pour situer l'événement. Le lieu seul (« Tribunal judiciaire de
+        // Rouen (76) ») ne disait pas où chercher.
+        lieu.address = { '@type': 'PostalAddress', addressCountry: 'FR' };
+        if (rep.ville) lieu.address.addressLocality = rep.ville;
+        const dept = String(rep.lieu || '').match(/\((\d{2,3})\)\s*$/);
+        if (dept) lieu.address.addressRegion = dept[1];
+
+        const ev = {
+            '@context': 'https://schema.org',
+            '@type': 'TheaterEvent',
+            name: rep.sousTitre ? `${rep.titre} (${rep.sousTitre})` : rep.titre,
+            startDate: debut,
+            eventStatus: 'https://schema.org/EventScheduled',
+            eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+            location: lieu,
+            performer: { '@type': 'Person', '@id': `${SITE}/#adrien-vada`, name: 'Adrien Vada' },
+            // La page du spectacle quand il en a une : c'est elle qu'un
+            // moteur doit montrer, pas l'onglet des dates de l'accueil.
+            url: uni && uni.slug ? `${SITE}/spectacles/${uni.slug}/` : `${SITE}/#page_dates`
+        };
+        if (uni) {
+            const syn = toLines(uni.synopsis || '').join(' ').replace(/\s+/g, ' ').trim();
+            if (syn) ev.description = syn;
+            const img = photoPrincipale(uni);
+            if (img) ev.image = `${SITE}/${img}`;
+            // L'heure de fin se déduit de la durée annoncée — seulement si
+            // l'on connaît l'heure de DÉBUT.
+            const min = dureeMinutes(uni);
+            if (m && min) {
+                const [a, mo, j] = rep.jour.split('-').map(Number);
+                const f = new Date(Date.UTC(a, mo - 1, j, +m[1], +(m[2] || 0) + min));
+                ev.endDate = `${f.getUTCFullYear()}-${deux(f.getUTCMonth() + 1)}-${deux(f.getUTCDate())}` +
+                    `T${deux(f.getUTCHours())}:${deux(f.getUTCMinutes())}:00${tz}`;
+            }
+        }
+        // Sans heure, on dit au moins le JOUR de la fin : une représentation
+        // du 25 novembre se termine le 25 novembre.
+        if (!ev.endDate) ev.endDate = rep.jour;
+        const org = organisateurs(compagnie);
+        if (org) ev.organizer = org;
+        // Pas de prix ni de devise : nous n'en avons pas, et les inventer
+        // serait pire que le silence. L'offre ne dit que la billetterie.
+        const billet = lienSur(rep.billetterie);
+        if (billet) {
+            ev.offers = { '@type': 'Offer', url: billet, availability: 'https://schema.org/InStock', validFrom: rep.jour };
+        }
+        return ev;
+    }
+
+    // UN BLOC JSON-LD EST DU TEXTE DANS UN <script>. JSON.stringify n'y
+    // échappe pas « </ » : un nom de lieu qui contiendrait « </script>»
+    // refermerait le bloc et ferait du reste du HTML — exécuté. On échappe
+    // donc les chevrons, ce que tout lecteur JSON relit à l'identique.
+    function jsonLd(objet) {
+        return JSON.stringify(objet, null, 2)
+            .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+    }
+
     return {
-        panelHtml, datesHtml, escape, toLines, splitWords, splitChars, titleMetrics, revealWords,
+        panelHtml, datesHtml, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, photoPrincipale, organisateurs,
+        toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
-        longestLine, photoSrc, framePos, figureHtml, overHtml, videoRef,
+        longestLine, photoSrc, pictureHtml, framePos, figureHtml, overHtml, videoRef,
         videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock,
         FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT
     };

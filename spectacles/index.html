@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- PAGE GÉNÉRÉE — ne pas modifier à la main (build/generer-pages-spectacles.js). -->
-    <title>Répertoire — Adrien Vada</title>
+    <title>Répertoire : spectacles et films — Adrien Vada</title>
     <meta name="description" content="Les spectacles et films d’Adrien Vada : rôles, distributions, dates et photographies.">
     <link rel="canonical" href="https://adrienvada.fr/spectacles/">
     <script>
@@ -18,10 +18,10 @@
             if (stored === 'light' || stored === 'dark') { t = stored; }
             else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) { t = 'light'; }
             document.documentElement.setAttribute('data-theme', t);
-            // Visiter le répertoire, c'est être entré : le retour vers
-            // l'accueil ne doit pas lever le rideau d'introduction —
-            // « entrer par une porte dérobée reste entrer » (intro.js).
-            try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+            // Visiter le répertoire, c'est avoir commencé sa visite : le
+            // retour vers l'accueil ne lève pas le rideau (mémoire de la
+            // visite, pas de l'appareil — voir la fiche d'un spectacle).
+            try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
         })();
     </script>
     <meta name="theme-color" content="#0a0907">
@@ -36,16 +36,15 @@
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">
-    <meta property="og:title" content="Répertoire — Adrien Vada">
+    <meta property="og:title" content="Répertoire : spectacles et films — Adrien Vada">
     <meta property="og:description" content="Les spectacles et films d’Adrien Vada : rôles, distributions, dates et photographies.">
     <meta property="og:image" content="https://adrienvada.fr/ressources/images/og-adrien-vada.jpg">
     <meta property="og:url" content="https://adrienvada.fr/spectacles/">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/svg+xml" href="../favicon_io/favicon.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap">
+    <!-- Les polices du site, servies par le site (ressources/polices/). -->
+    <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../ressources/polices/polices.css">
     <link rel="stylesheet" href="spectacle.css">
     <style>
         :root {
@@ -66,7 +65,7 @@
         body:has(.carte[data-slug="fulgurees"] a:hover),
         body:has(.carte[data-slug="fulgurees"].regarde) { --ambiance: #4d5fc4; }
         body:has(.carte[data-slug="berenice"] a:hover),
-        body:has(.carte[data-slug="berenice"].regarde) { --ambiance: #c0637e; }
+        body:has(.carte[data-slug="berenice"].regarde) { --ambiance: #b95370; }
         body:has(.carte[data-slug="asyoulikeit"] a:hover),
         body:has(.carte[data-slug="asyoulikeit"].regarde) { --ambiance: #c2d94b; }
         body:has(.carte[data-slug="hommemoderne"] a:hover),
@@ -173,10 +172,18 @@
          le même guet que la barre d'onglets de l'accueil. -->
     <div class="barre-sentinelle" aria-hidden="true"></div>
     <header class="barre">
-        <a class="retour" href="../">← Adrien Vada</a>
-        <button type="button" class="bascule" data-bascule aria-pressed="false" aria-label="Passer au thème clair" title="Passer au thème clair">
-            <svg class="ico" data-bascule-icone aria-hidden="true"><use href="#i-solid-sun"></use></svg>
-        </button>
+        <a class="retour" href="../"><span aria-hidden="true">←</span> Adrien Vada</a>
+        <div class="outils">
+            <!-- La densité du mur : moins d'affiches par rang (+), plus (−).
+                 Cachés sans script, qui seul sait les faire agir. -->
+            <div class="densite" role="group" aria-label="Taille des affiches">
+                <button type="button" class="densite-btn" data-densite="1" hidden aria-label="Affiches plus petites" title="Affiches plus petites"><span aria-hidden="true">−</span></button>
+                <button type="button" class="densite-btn" data-densite="-1" hidden aria-label="Affiches plus grandes" title="Affiches plus grandes"><span aria-hidden="true">+</span></button>
+            </div>
+            <button type="button" class="bascule" data-bascule aria-label="Passer au thème clair" title="Passer au thème clair">
+                <svg class="ico" data-bascule-icone aria-hidden="true"><use href="#i-solid-sun"></use></svg>
+            </button>
+        </div>
     </header>
     <main>
         <header class="tete">
@@ -226,9 +233,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#c8102e;--i:2" data-slug="alabarre" data-vt="fiche-alabarre" data-src2="../ressources/images/univers/alabarre/20.jpg" data-pos2="35% 35%">
+        <li class="carte" style="--ac:#c8102e;--i:2" data-slug="alabarre" data-vt="fiche-alabarre" data-couverture="2.250" data-src2="../ressources/images/univers/alabarre/20-1280.webp" data-src2-repli="../ressources/images/univers/alabarre/20.jpg" data-pos2="35% 35%">
             <a href="alabarre/">
-                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/alabarre/19.jpg" style="--pos:45% 25%" alt="" loading="lazy" decoding="async"></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Inspirés</span> <span class="mot" style="--m:1">d’affaires</span> <span class="mot" style="--m:2">réelles,</span> <span class="mot" style="--m:3">des</span> <span class="mot" style="--m:4">extraits</span> <span class="mot" style="--m:5">de</span> <span class="mot" style="--m:6">procès</span> <span class="mot" style="--m:7">révèlent</span> <span class="mot" style="--m:8">la</span> <span class="mot" style="--m:9">complexité</span> <span class="mot" style="--m:10">d’une</span> <span class="mot" style="--m:11">justice</span> <span class="mot" style="--m:12">en</span> <span class="mot" style="--m:13">souffrance</span> <span class="mot" style="--m:14">face</span> <span class="mot" style="--m:15">à</span> <span class="mot" style="--m:16">l’ampleur</span> <span class="mot" style="--m:17">des</span> <span class="mot" style="--m:18">violences</span> <span class="mot" style="--m:19">conjugales.</span></p></span></span>
+                <span class="cadre"><span class="media media--photo"><picture><source type="image/webp" srcset="../ressources/images/univers/alabarre/19-640.webp 640w, ../ressources/images/univers/alabarre/19-1280.webp 1280w" sizes="(max-width: 640px) 113vw, 540px"><img src="../ressources/images/univers/alabarre/19.jpg" style="--pos:45% 25%" alt="" loading="lazy" decoding="async"></picture></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Inspirés</span> <span class="mot" style="--m:1">d’affaires</span> <span class="mot" style="--m:2">réelles,</span> <span class="mot" style="--m:3">des</span> <span class="mot" style="--m:4">extraits</span> <span class="mot" style="--m:5">de</span> <span class="mot" style="--m:6">procès</span> <span class="mot" style="--m:7">révèlent</span> <span class="mot" style="--m:8">la</span> <span class="mot" style="--m:9">complexité</span> <span class="mot" style="--m:10">d’une</span> <span class="mot" style="--m:11">justice</span> <span class="mot" style="--m:12">en</span> <span class="mot" style="--m:13">souffrance</span> <span class="mot" style="--m:14">face</span> <span class="mot" style="--m:15">à</span> <span class="mot" style="--m:16">l’ampleur</span> <span class="mot" style="--m:17">des</span> <span class="mot" style="--m:18">violences</span> <span class="mot" style="--m:19">conjugales.</span></p></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2026 · Théâtre documentaire</span>
@@ -239,9 +246,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#8fbfe8;--i:3" data-slug="audiences" data-vt="fiche-audiences" data-src2="../ressources/images/univers/audiences/6.jpg" data-pos2="42% 20%">
+        <li class="carte" style="--ac:#8fbfe8;--i:3" data-slug="audiences" data-vt="fiche-audiences" data-couverture="1.992" data-src2="../ressources/images/univers/audiences/6-1280.webp" data-src2-repli="../ressources/images/univers/audiences/6.jpg" data-pos2="42% 20%">
             <a href="audiences/">
-                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/audiences/8.jpg" style="--pos:45% 55%" alt="" loading="lazy" decoding="async"></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Un</span> <span class="mot" style="--m:1">spectacle</span> <span class="mot" style="--m:2">de</span> <span class="mot" style="--m:3">prévention,</span> <span class="mot" style="--m:4">joué</span> <span class="mot" style="--m:5">au</span> <span class="mot" style="--m:6">collège.</span> <span class="mot" style="--m:7">Violences</span> <span class="mot" style="--m:8">sexistes</span> <span class="mot" style="--m:9">et</span> <span class="mot" style="--m:10">sexuelles,</span> <span class="mot" style="--m:11">stéréotypes,</span> <span class="mot" style="--m:12">consentement,</span> <span class="mot" style="--m:13">à</span> <span class="mot" style="--m:14">travers</span> <span class="mot" style="--m:15">le</span> <span class="mot" style="--m:16">prisme</span> <span class="mot" style="--m:17">de</span> <span class="mot" style="--m:18">la</span> <span class="mot" style="--m:19">justice.</span></p></span></span>
+                <span class="cadre"><span class="media media--photo"><picture><source type="image/webp" srcset="../ressources/images/univers/audiences/8-640.webp 640w, ../ressources/images/univers/audiences/8-1280.webp 1280w" sizes="(max-width: 640px) 100vw, 479px"><img src="../ressources/images/univers/audiences/8.jpg" style="--pos:45% 55%" alt="" loading="lazy" decoding="async"></picture></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Un</span> <span class="mot" style="--m:1">spectacle</span> <span class="mot" style="--m:2">de</span> <span class="mot" style="--m:3">prévention,</span> <span class="mot" style="--m:4">joué</span> <span class="mot" style="--m:5">au</span> <span class="mot" style="--m:6">collège.</span> <span class="mot" style="--m:7">Violences</span> <span class="mot" style="--m:8">sexistes</span> <span class="mot" style="--m:9">et</span> <span class="mot" style="--m:10">sexuelles,</span> <span class="mot" style="--m:11">stéréotypes,</span> <span class="mot" style="--m:12">consentement,</span> <span class="mot" style="--m:13">à</span> <span class="mot" style="--m:14">travers</span> <span class="mot" style="--m:15">le</span> <span class="mot" style="--m:16">prisme</span> <span class="mot" style="--m:17">de</span> <span class="mot" style="--m:18">la</span> <span class="mot" style="--m:19">justice.</span></p></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2025 · Spectacle de prévention</span>
@@ -252,9 +259,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#d9a24a;--i:4" data-slug="cleophene" data-vt="fiche-cleophene" data-src2="../ressources/images/univers/cleophene/9.jpg" data-pos2="50% 35%">
+        <li class="carte" style="--ac:#d9a24a;--i:4" data-slug="cleophene" data-vt="fiche-cleophene" data-couverture="2.250" data-src2="../ressources/images/univers/cleophene/9-1280.webp" data-src2-repli="../ressources/images/univers/cleophene/9.jpg" data-pos2="50% 35%">
             <a href="cleophene/">
-                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/cleophene/5.jpg" style="--pos:15% 25%" alt="" loading="lazy" decoding="async"></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Royaume</span> <span class="mot" style="--m:1">de</span> <span class="mot" style="--m:2">Pyrie,</span> <span class="mot" style="--m:3">124</span> <span class="mot" style="--m:4">av.</span> <span class="mot" style="--m:5">J-C.</span> <span class="mot" style="--m:6">Lorsqu’un</span> <span class="mot" style="--m:7">roi</span> <span class="mot" style="--m:8">meurt</span> <span class="mot" style="--m:9">et</span> <span class="mot" style="--m:10">qu’il</span> <span class="mot" style="--m:11">est</span> <span class="mot" style="--m:12">père</span> <span class="mot" style="--m:13">de</span> <span class="mot" style="--m:14">jumeaux,</span> <span class="mot" style="--m:15">lequel</span> <span class="mot" style="--m:16">des</span> <span class="mot" style="--m:17">deux</span> <span class="mot" style="--m:18">est</span> <span class="mot" style="--m:19">l’aîné</span> <span class="mot" style="--m:20">et</span> <span class="mot" style="--m:21">doit</span> <span class="mot" style="--m:22">prendre</span> <span class="mot" style="--m:23">sa</span> <span class="mot" style="--m:24">place</span> <span class="mot" style="--m:25">?</span> <span class="mot" style="--m:26">La</span> <span class="mot" style="--m:27">reine</span> <span class="mot" style="--m:28">veuve</span> <span class="mot" style="--m:29">Cléophène,</span> <span class="mot" style="--m:30">dépositaire</span> <span class="mot" style="--m:31">du</span> <span class="mot" style="--m:32">pouvoir,</span> <span class="mot" style="--m:33">doit…</span></p></span></span>
+                <span class="cadre"><span class="media media--photo"><picture><source type="image/webp" srcset="../ressources/images/univers/cleophene/5-640.webp 640w, ../ressources/images/univers/cleophene/5-1280.webp 1280w" sizes="(max-width: 640px) 113vw, 540px"><img src="../ressources/images/univers/cleophene/5.jpg" style="--pos:15% 25%" alt="" loading="lazy" decoding="async"></picture></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Royaume</span> <span class="mot" style="--m:1">de</span> <span class="mot" style="--m:2">Pyrie,</span> <span class="mot" style="--m:3">124</span> <span class="mot" style="--m:4">av.</span> <span class="mot" style="--m:5">J-C.</span> <span class="mot" style="--m:6">Lorsqu’un</span> <span class="mot" style="--m:7">roi</span> <span class="mot" style="--m:8">meurt</span> <span class="mot" style="--m:9">et</span> <span class="mot" style="--m:10">qu’il</span> <span class="mot" style="--m:11">est</span> <span class="mot" style="--m:12">père</span> <span class="mot" style="--m:13">de</span> <span class="mot" style="--m:14">jumeaux,</span> <span class="mot" style="--m:15">lequel</span> <span class="mot" style="--m:16">des</span> <span class="mot" style="--m:17">deux</span> <span class="mot" style="--m:18">est</span> <span class="mot" style="--m:19">l’aîné</span> <span class="mot" style="--m:20">et</span> <span class="mot" style="--m:21">doit</span> <span class="mot" style="--m:22">prendre</span> <span class="mot" style="--m:23">sa</span> <span class="mot" style="--m:24">place</span> <span class="mot" style="--m:25">?</span> <span class="mot" style="--m:26">La</span> <span class="mot" style="--m:27">reine</span> <span class="mot" style="--m:28">veuve</span> <span class="mot" style="--m:29">Cléophène,</span> <span class="mot" style="--m:30">dépositaire</span> <span class="mot" style="--m:31">du</span> <span class="mot" style="--m:32">pouvoir,</span> <span class="mot" style="--m:33">doit…</span></p></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2024 · Tragédie</span>
@@ -265,9 +272,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#4d5fc4;--i:5" data-slug="fulgurees" data-vt="fiche-fulgurees" data-src2="../ressources/images/univers/fulgurees/3.jpg" data-pos2="80% 25%">
+        <li class="carte" style="--ac:#4d5fc4;--i:5" data-slug="fulgurees" data-vt="fiche-fulgurees" data-couverture="2.250" data-src2="../ressources/images/univers/fulgurees/3-1280.webp" data-src2-repli="../ressources/images/univers/fulgurees/3.jpg" data-pos2="80% 25%">
             <a href="fulgurees/">
-                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/fulgurees/10.jpg" style="--pos:47% 35%" alt="" loading="lazy" decoding="async"></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Une</span> <span class="mot" style="--m:1">fratrie.</span> <span class="mot" style="--m:2">Un</span> <span class="mot" style="--m:3">village.</span> <span class="mot" style="--m:4">Perdu.</span> <span class="mot" style="--m:5">La</span> <span class="mot" style="--m:6">foudre</span> <span class="mot" style="--m:7">y</span> <span class="mot" style="--m:8">a</span> <span class="mot" style="--m:9">frappé</span> <span class="mot" style="--m:10">il</span> <span class="mot" style="--m:11">y</span> <span class="mot" style="--m:12">a</span> <span class="mot" style="--m:13">quelques</span> <span class="mot" style="--m:14">années</span> <span class="mot" style="--m:15">et</span> <span class="mot" style="--m:16">y</span> <span class="mot" style="--m:17">a</span> <span class="mot" style="--m:18">laissé</span> <span class="mot" style="--m:19">des</span> <span class="mot" style="--m:20">survivant.e.s</span> <span class="mot" style="--m:21">:</span> <span class="mot" style="--m:22">les</span> <span class="mot" style="--m:23">fulguré.e.s.</span> <span class="mot" style="--m:24">À</span> <span class="mot" style="--m:25">l’occasion</span> <span class="mot" style="--m:26">d’un</span> <span class="mot" style="--m:27">nouvel</span> <span class="mot" style="--m:28">an,</span> <span class="mot" style="--m:29">la</span> <span class="mot" style="--m:30">fratrie</span> <span class="mot" style="--m:31">s’y</span> <span class="mot" style="--m:32">perd</span> <span class="mot" style="--m:33">et…</span></p></span></span>
+                <span class="cadre"><span class="media media--photo"><picture><source type="image/webp" srcset="../ressources/images/univers/fulgurees/10-640.webp 640w, ../ressources/images/univers/fulgurees/10-1280.webp 1280w" sizes="(max-width: 640px) 113vw, 540px"><img src="../ressources/images/univers/fulgurees/10.jpg" style="--pos:47% 35%" alt="" loading="lazy" decoding="async"></picture></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Une</span> <span class="mot" style="--m:1">fratrie.</span> <span class="mot" style="--m:2">Un</span> <span class="mot" style="--m:3">village.</span> <span class="mot" style="--m:4">Perdu.</span> <span class="mot" style="--m:5">La</span> <span class="mot" style="--m:6">foudre</span> <span class="mot" style="--m:7">y</span> <span class="mot" style="--m:8">a</span> <span class="mot" style="--m:9">frappé</span> <span class="mot" style="--m:10">il</span> <span class="mot" style="--m:11">y</span> <span class="mot" style="--m:12">a</span> <span class="mot" style="--m:13">quelques</span> <span class="mot" style="--m:14">années</span> <span class="mot" style="--m:15">et</span> <span class="mot" style="--m:16">y</span> <span class="mot" style="--m:17">a</span> <span class="mot" style="--m:18">laissé</span> <span class="mot" style="--m:19">des</span> <span class="mot" style="--m:20">survivant.e.s</span> <span class="mot" style="--m:21">:</span> <span class="mot" style="--m:22">les</span> <span class="mot" style="--m:23">fulguré.e.s.</span> <span class="mot" style="--m:24">À</span> <span class="mot" style="--m:25">l’occasion</span> <span class="mot" style="--m:26">d’un</span> <span class="mot" style="--m:27">nouvel</span> <span class="mot" style="--m:28">an,</span> <span class="mot" style="--m:29">la</span> <span class="mot" style="--m:30">fratrie</span> <span class="mot" style="--m:31">s’y</span> <span class="mot" style="--m:32">perd</span> <span class="mot" style="--m:33">et…</span></p></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2023 · Fable contemporaine</span>
@@ -278,9 +285,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#c0637e;--i:6" data-slug="berenice" data-vt="fiche-berenice" data-src2="../ressources/images/univers/berenice/18.jpg" data-pos2="52% 45%">
+        <li class="carte" style="--ac:#b95370;--i:6" data-slug="berenice" data-vt="fiche-berenice" data-couverture="1.000" data-src2="../ressources/images/univers/berenice/18-1280.webp" data-src2-repli="../ressources/images/univers/berenice/18.jpg" data-pos2="52% 45%">
             <a href="berenice/">
-                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/berenice/2.jpg" style="--pos:55% 55%" alt="" loading="lazy" decoding="async"></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Rome,</span> <span class="mot" style="--m:1">an</span> <span class="mot" style="--m:2">79.</span> <span class="mot" style="--m:3">Huit</span> <span class="mot" style="--m:4">jours</span> <span class="mot" style="--m:5">après</span> <span class="mot" style="--m:6">la</span> <span class="mot" style="--m:7">mort</span> <span class="mot" style="--m:8">soudaine</span> <span class="mot" style="--m:9">de</span> <span class="mot" style="--m:10">l’empereur</span> <span class="mot" style="--m:11">Vespasien,</span> <span class="mot" style="--m:12">le</span> <span class="mot" style="--m:13">destin</span> <span class="mot" style="--m:14">de</span> <span class="mot" style="--m:15">Bérénice,</span> <span class="mot" style="--m:16">Titus</span> <span class="mot" style="--m:17">et</span> <span class="mot" style="--m:18">Antiochus</span> <span class="mot" style="--m:19">bascule.</span></p></span></span>
+                <span class="cadre"><span class="media media--photo"><picture><source type="image/webp" srcset="../ressources/images/univers/berenice/2-640.webp 640w, ../ressources/images/univers/berenice/2-1280.webp 1280w" sizes="(max-width: 640px) 50vw, 240px"><img src="../ressources/images/univers/berenice/2.jpg" style="--pos:55% 55%" alt="" loading="lazy" decoding="async"></picture></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Rome,</span> <span class="mot" style="--m:1">an</span> <span class="mot" style="--m:2">79.</span> <span class="mot" style="--m:3">Huit</span> <span class="mot" style="--m:4">jours</span> <span class="mot" style="--m:5">après</span> <span class="mot" style="--m:6">la</span> <span class="mot" style="--m:7">mort</span> <span class="mot" style="--m:8">soudaine</span> <span class="mot" style="--m:9">de</span> <span class="mot" style="--m:10">l’empereur</span> <span class="mot" style="--m:11">Vespasien,</span> <span class="mot" style="--m:12">le</span> <span class="mot" style="--m:13">destin</span> <span class="mot" style="--m:14">de</span> <span class="mot" style="--m:15">Bérénice,</span> <span class="mot" style="--m:16">Titus</span> <span class="mot" style="--m:17">et</span> <span class="mot" style="--m:18">Antiochus</span> <span class="mot" style="--m:19">bascule.</span></p></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2022 · Tragédie</span>
@@ -291,9 +298,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#c2d94b;--i:7" data-slug="asyoulikeit" data-vt="fiche-asyoulikeit" data-src2="../ressources/images/univers/asyoulikeit/16.jpg" data-pos2="45% 50%">
+        <li class="carte" style="--ac:#c2d94b;--i:7" data-slug="asyoulikeit" data-vt="fiche-asyoulikeit" data-couverture="2.264" data-src2="../ressources/images/univers/asyoulikeit/16-1280.webp" data-src2-repli="../ressources/images/univers/asyoulikeit/16.jpg" data-pos2="45% 50%">
             <a href="asyoulikeit/">
-                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/asyoulikeit/3.jpg" alt="" loading="lazy" decoding="async"></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Bannie</span> <span class="mot" style="--m:1">de</span> <span class="mot" style="--m:2">la</span> <span class="mot" style="--m:3">cour,</span> <span class="mot" style="--m:4">Rosalind</span> <span class="mot" style="--m:5">s’enfuit</span> <span class="mot" style="--m:6">dans</span> <span class="mot" style="--m:7">la</span> <span class="mot" style="--m:8">forêt</span> <span class="mot" style="--m:9">des</span> <span class="mot" style="--m:10">Ardennes.</span> <span class="mot" style="--m:11">Déguisée</span> <span class="mot" style="--m:12">en</span> <span class="mot" style="--m:13">berger</span> <span class="mot" style="--m:14">sous</span> <span class="mot" style="--m:15">le</span> <span class="mot" style="--m:16">nom</span> <span class="mot" style="--m:17">de</span> <span class="mot" style="--m:18">Ganymède,</span> <span class="mot" style="--m:19">elle</span> <span class="mot" style="--m:20">est</span> <span class="mot" style="--m:21">accompagnée</span> <span class="mot" style="--m:22">de</span> <span class="mot" style="--m:23">son</span> <span class="mot" style="--m:24">bouffon</span> <span class="mot" style="--m:25">Touchstone</span> <span class="mot" style="--m:26">et</span> <span class="mot" style="--m:27">de</span> <span class="mot" style="--m:28">sa</span> <span class="mot" style="--m:29">cousine</span> <span class="mot" style="--m:30">Celia.</span> <span class="mot" style="--m:31">Elle</span> <span class="mot" style="--m:32">y</span> <span class="mot" style="--m:33">retrouvera…</span></p></span></span>
+                <span class="cadre"><span class="media media--photo"><picture><source type="image/webp" srcset="../ressources/images/univers/asyoulikeit/3-640.webp 640w, ../ressources/images/univers/asyoulikeit/3-1280.webp 1280w" sizes="(max-width: 640px) 114vw, 544px"><img src="../ressources/images/univers/asyoulikeit/3.jpg" alt="" loading="lazy" decoding="async"></picture></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Bannie</span> <span class="mot" style="--m:1">de</span> <span class="mot" style="--m:2">la</span> <span class="mot" style="--m:3">cour,</span> <span class="mot" style="--m:4">Rosalind</span> <span class="mot" style="--m:5">s’enfuit</span> <span class="mot" style="--m:6">dans</span> <span class="mot" style="--m:7">la</span> <span class="mot" style="--m:8">forêt</span> <span class="mot" style="--m:9">des</span> <span class="mot" style="--m:10">Ardennes.</span> <span class="mot" style="--m:11">Déguisée</span> <span class="mot" style="--m:12">en</span> <span class="mot" style="--m:13">berger</span> <span class="mot" style="--m:14">sous</span> <span class="mot" style="--m:15">le</span> <span class="mot" style="--m:16">nom</span> <span class="mot" style="--m:17">de</span> <span class="mot" style="--m:18">Ganymède,</span> <span class="mot" style="--m:19">elle</span> <span class="mot" style="--m:20">est</span> <span class="mot" style="--m:21">accompagnée</span> <span class="mot" style="--m:22">de</span> <span class="mot" style="--m:23">son</span> <span class="mot" style="--m:24">bouffon</span> <span class="mot" style="--m:25">Touchstone</span> <span class="mot" style="--m:26">et</span> <span class="mot" style="--m:27">de</span> <span class="mot" style="--m:28">sa</span> <span class="mot" style="--m:29">cousine</span> <span class="mot" style="--m:30">Celia.</span> <span class="mot" style="--m:31">Elle</span> <span class="mot" style="--m:32">y</span> <span class="mot" style="--m:33">retrouvera…</span></p></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2022 · Comédie</span>
@@ -313,9 +320,9 @@
                 <span class="groupe-filet" aria-hidden="true"></span>
             </h2>
             <ul class="repertoire">
-        <li class="carte" style="--ac:#cf8352;--i:0" data-slug="hommemoderne" data-vt="fiche-hommemoderne" data-src2="../ressources/images/univers/hommemoderne/1.jpg" data-pos2="74% 36%">
+        <li class="carte" style="--ac:#cf8352;--i:0" data-slug="hommemoderne" data-vt="fiche-hommemoderne" data-couverture="1.006" data-src2="../ressources/images/univers/hommemoderne/1-1280.webp" data-src2-repli="../ressources/images/univers/hommemoderne/1.jpg" data-pos2="74% 36%">
             <a href="hommemoderne/">
-                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/hommemoderne/affiche.jpg" alt="" loading="lazy" decoding="async"></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Arthur</span> <span class="mot" style="--m:1">veut</span> <span class="mot" style="--m:2">devenir</span> <span class="mot" style="--m:3">un</span> <span class="mot" style="--m:4">homme</span> <span class="mot" style="--m:5">moderne.</span> <span class="mot" style="--m:6">Melvin,</span> <span class="mot" style="--m:7">coach</span> <span class="mot" style="--m:8">en</span> <span class="mot" style="--m:9">peignoir,</span> <span class="mot" style="--m:10">a</span> <span class="mot" style="--m:11">la</span> <span class="mot" style="--m:12">méthode</span> <span class="mot" style="--m:13">:</span> <span class="mot" style="--m:14">exercices,</span> <span class="mot" style="--m:15">carnet,</span> <span class="mot" style="--m:16">chanson.</span> <span class="mot" style="--m:17">Quatre</span> <span class="mot" style="--m:18">séances</span> <span class="mot" style="--m:19">pour</span> <span class="mot" style="--m:20">tout</span> <span class="mot" style="--m:21">réapprendre</span> <span class="mot" style="--m:22">—</span> <span class="mot" style="--m:23">à</span> <span class="mot" style="--m:24">commencer</span> <span class="mot" style="--m:25">par</span> <span class="mot" style="--m:26">Magali.</span></p></span></span>
+                <span class="cadre"><span class="media media--photo"><picture><source type="image/webp" srcset="../ressources/images/univers/hommemoderne/affiche-640.webp 640w, ../ressources/images/univers/hommemoderne/affiche-1280.webp 1280w" sizes="(max-width: 640px) 51vw, 242px"><img src="../ressources/images/univers/hommemoderne/affiche.jpg" alt="" loading="lazy" decoding="async"></picture></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Arthur</span> <span class="mot" style="--m:1">veut</span> <span class="mot" style="--m:2">devenir</span> <span class="mot" style="--m:3">un</span> <span class="mot" style="--m:4">homme</span> <span class="mot" style="--m:5">moderne.</span> <span class="mot" style="--m:6">Melvin,</span> <span class="mot" style="--m:7">coach</span> <span class="mot" style="--m:8">en</span> <span class="mot" style="--m:9">peignoir,</span> <span class="mot" style="--m:10">a</span> <span class="mot" style="--m:11">la</span> <span class="mot" style="--m:12">méthode</span> <span class="mot" style="--m:13">:</span> <span class="mot" style="--m:14">exercices,</span> <span class="mot" style="--m:15">carnet,</span> <span class="mot" style="--m:16">chanson.</span> <span class="mot" style="--m:17">Quatre</span> <span class="mot" style="--m:18">séances</span> <span class="mot" style="--m:19">pour</span> <span class="mot" style="--m:20">tout</span> <span class="mot" style="--m:21">réapprendre</span> <span class="mot" style="--m:22">—</span> <span class="mot" style="--m:23">à</span> <span class="mot" style="--m:24">commencer</span> <span class="mot" style="--m:25">par</span> <span class="mot" style="--m:26">Magali.</span></p></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2023 · Comédie</span>
@@ -326,9 +333,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#2c4a8f;--i:1" data-slug="peaudesanges" data-vt="fiche-peaudesanges" data-src2="../ressources/images/univers/peaudesanges/1.jpg" data-pos2="50% 35%">
+        <li class="carte" style="--ac:#2c4a8f;--i:1" data-slug="peaudesanges" data-vt="fiche-peaudesanges" data-couverture="1.500" data-src2="../ressources/images/univers/peaudesanges/1-1280.webp" data-src2-repli="../ressources/images/univers/peaudesanges/1.jpg" data-pos2="50% 35%">
             <a href="peaudesanges/">
-                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/peaudesanges/affiche.jpg" alt="" loading="lazy" decoding="async"></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Il</span> <span class="mot" style="--m:1">était</span> <span class="mot" style="--m:2">une</span> <span class="mot" style="--m:3">fois</span> <span class="mot" style="--m:4">la</span> <span class="mot" style="--m:5">véritable</span> <span class="mot" style="--m:6">histoire</span> <span class="mot" style="--m:7">des</span> <span class="mot" style="--m:8">tableaux</span> <span class="mot" style="--m:9">de</span> <span class="mot" style="--m:10">Vermeer.</span> <span class="mot" style="--m:11">Tout</span> <span class="mot" style="--m:12">le</span> <span class="mot" style="--m:13">monde</span> <span class="mot" style="--m:14">l’a</span> <span class="mot" style="--m:15">oubliée.</span> <span class="mot" style="--m:16">Certains</span> <span class="mot" style="--m:17">détails</span> <span class="mot" style="--m:18">de</span> <span class="mot" style="--m:19">la</span> <span class="mot" style="--m:20">vie</span> <span class="mot" style="--m:21">d’une</span> <span class="mot" style="--m:22">femme</span> <span class="mot" style="--m:23">doivent</span> <span class="mot" style="--m:24">rester</span> <span class="mot" style="--m:25">secrets.</span></p></span></span>
+                <span class="cadre"><span class="media media--photo"><picture><source type="image/webp" srcset="../ressources/images/univers/peaudesanges/affiche-640.webp 640w, ../ressources/images/univers/peaudesanges/affiche-1280.webp 1280w" sizes="(max-width: 640px) 75vw, 360px"><img src="../ressources/images/univers/peaudesanges/affiche.jpg" alt="" loading="lazy" decoding="async"></picture></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Il</span> <span class="mot" style="--m:1">était</span> <span class="mot" style="--m:2">une</span> <span class="mot" style="--m:3">fois</span> <span class="mot" style="--m:4">la</span> <span class="mot" style="--m:5">véritable</span> <span class="mot" style="--m:6">histoire</span> <span class="mot" style="--m:7">des</span> <span class="mot" style="--m:8">tableaux</span> <span class="mot" style="--m:9">de</span> <span class="mot" style="--m:10">Vermeer.</span> <span class="mot" style="--m:11">Tout</span> <span class="mot" style="--m:12">le</span> <span class="mot" style="--m:13">monde</span> <span class="mot" style="--m:14">l’a</span> <span class="mot" style="--m:15">oubliée.</span> <span class="mot" style="--m:16">Certains</span> <span class="mot" style="--m:17">détails</span> <span class="mot" style="--m:18">de</span> <span class="mot" style="--m:19">la</span> <span class="mot" style="--m:20">vie</span> <span class="mot" style="--m:21">d’une</span> <span class="mot" style="--m:22">femme</span> <span class="mot" style="--m:23">doivent</span> <span class="mot" style="--m:24">rester</span> <span class="mot" style="--m:25">secrets.</span></p></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2022 · Film sur l’art</span>
@@ -339,9 +346,9 @@
                 </span>
             </a>
         </li>
-        <li class="carte" style="--ac:#de7a5a;--i:2" data-slug="lerapt" data-vt="fiche-lerapt" data-src2="../ressources/images/univers/lerapt/1.jpg" data-pos2="66% 40%">
+        <li class="carte" style="--ac:#de7a5a;--i:2" data-slug="lerapt" data-vt="fiche-lerapt" data-couverture="1.000" data-src2="../ressources/images/univers/lerapt/1-1280.webp" data-src2-repli="../ressources/images/univers/lerapt/1.jpg" data-pos2="66% 40%">
             <a href="lerapt/">
-                <span class="cadre"><span class="media media--photo"><img src="../ressources/images/univers/lerapt/affiche.jpg" alt="" loading="lazy" decoding="async"></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Deux</span> <span class="mot" style="--m:1">ouvrières</span> <span class="mot" style="--m:2">enlèvent</span> <span class="mot" style="--m:3">le</span> <span class="mot" style="--m:4">fils</span> <span class="mot" style="--m:5">de</span> <span class="mot" style="--m:6">leur</span> <span class="mot" style="--m:7">patron</span> <span class="mot" style="--m:8">pour</span> <span class="mot" style="--m:9">en</span> <span class="mot" style="--m:10">tirer</span> <span class="mot" style="--m:11">une</span> <span class="mot" style="--m:12">rançon.</span> <span class="mot" style="--m:13">Elles</span> <span class="mot" style="--m:14">se</span> <span class="mot" style="--m:15">trompent</span> <span class="mot" style="--m:16">d’homme</span> <span class="mot" style="--m:17">:</span> <span class="mot" style="--m:18">c’est</span> <span class="mot" style="--m:19">un</span> <span class="mot" style="--m:20">vendeur</span> <span class="mot" style="--m:21">de</span> <span class="mot" style="--m:22">ventilation</span> <span class="mot" style="--m:23">ravi</span> <span class="mot" style="--m:24">d’échapper</span> <span class="mot" style="--m:25">à</span> <span class="mot" style="--m:26">son</span> <span class="mot" style="--m:27">quotidien.</span></p></span></span>
+                <span class="cadre"><span class="media media--photo"><picture><source type="image/webp" srcset="../ressources/images/univers/lerapt/affiche-640.webp 640w, ../ressources/images/univers/lerapt/affiche-1280.webp 1280w" sizes="(max-width: 640px) 50vw, 240px"><img src="../ressources/images/univers/lerapt/affiche.jpg" alt="" loading="lazy" decoding="async"></picture></span><span class="volet-couleur" aria-hidden="true"></span><span class="lueur" aria-hidden="true"></span><span class="chuchote" aria-hidden="true"><span class="voile"></span><p><span class="mot" style="--m:0">Deux</span> <span class="mot" style="--m:1">ouvrières</span> <span class="mot" style="--m:2">enlèvent</span> <span class="mot" style="--m:3">le</span> <span class="mot" style="--m:4">fils</span> <span class="mot" style="--m:5">de</span> <span class="mot" style="--m:6">leur</span> <span class="mot" style="--m:7">patron</span> <span class="mot" style="--m:8">pour</span> <span class="mot" style="--m:9">en</span> <span class="mot" style="--m:10">tirer</span> <span class="mot" style="--m:11">une</span> <span class="mot" style="--m:12">rançon.</span> <span class="mot" style="--m:13">Elles</span> <span class="mot" style="--m:14">se</span> <span class="mot" style="--m:15">trompent</span> <span class="mot" style="--m:16">d’homme</span> <span class="mot" style="--m:17">:</span> <span class="mot" style="--m:18">c’est</span> <span class="mot" style="--m:19">un</span> <span class="mot" style="--m:20">vendeur</span> <span class="mot" style="--m:21">de</span> <span class="mot" style="--m:22">ventilation</span> <span class="mot" style="--m:23">ravi</span> <span class="mot" style="--m:24">d’échapper</span> <span class="mot" style="--m:25">à</span> <span class="mot" style="--m:26">son</span> <span class="mot" style="--m:27">quotidien.</span></p></span></span>
                 <span class="txt">
                     <span class="fil">
                         <span class="annee">2019 · Comédie</span>
@@ -382,6 +389,12 @@
             if (c.dataset.pos2) i.style.setProperty('--pos', c.dataset.pos2);
             // Le fondu n'a de sens que sur une image ENTIÈRE : la classe
             // n'arrive qu'au décodage — jamais de pixels qui surgissent.
+            if (c.dataset.src2Repli) {
+                i.onerror = function () {
+                    i.onerror = null;
+                    i.src = c.dataset.src2Repli;
+                };
+            }
             i.src = c.dataset.src2;
             var prete = function () { i.classList.add('prete'); };
             if (i.decode) { i.decode().then(prete).catch(prete); } else { i.onload = prete; }
@@ -528,151 +541,15 @@
             addEventListener('resize', replanifieScene);
             replanifieScene();
 
-            // La galerie au pincement, façon Google Photos : pas de page
-            // qui zoome — CHAQUE VIGNETTE PARCOURT SON CHEMIN vers sa
-            // place dans l'autre rang, au rythme des doigts. Au début du
-            // vol, on mesure les positions d'arrivée (un aller-retour de
-            // grille invisible) ; pendant le geste, chaque carte est
-            // interpolée — translation et échelle — vers son point de
-            // chute ; au relâcher, la bascule part en View Transition qui
-            // résorbe le dernier millimètre, ou tout revient en place.
-            var mur = document.querySelector('main');
-            var NIVEAUX = function () { return innerWidth < 640 ? [2, 3, 4] : [2, 3, 4, 5]; };
-            var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
-            var zoomCourant = function () {
-                return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
-            };
-            var niveauVoisin = function (sens) {
-                var n = NIVEAUX();
-                var i = n.indexOf(zoomCourant());
-                if (i === -1) i = n.indexOf(zoomRepos());
-                var v = n[i + sens];
-                return v === undefined ? 0 : v;
-            };
-            var mesure = function () {
-                var m = {};
-                cartes.forEach(function (c) { m[c.dataset.slug] = c.getBoundingClientRect(); });
-                return m;
-            };
-            var poseNiveau = function (v) {
-                if (v) document.documentElement.dataset.zoom = v;
-                else delete document.documentElement.dataset.zoom;
-            };
-            var pincement = 0, rapport = 1, sensVol = 0, versVol = 0,
-                departs = null, cibles = null, tVol = 0, demandeVol = 0, verrou = false;
-            var ecart = function (t) {
-                return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
-            };
-            var nettoieVol = function () {
-                if (demandeVol) { cancelAnimationFrame(demandeVol); demandeVol = 0; }
-                cartes.forEach(function (c) {
-                    c.style.transform = ''; c.style.transformOrigin = ''; c.style.transition = '';
-                });
-            };
-            var oublieVol = function () { sensVol = 0; versVol = 0; departs = cibles = null; tVol = 0; };
-            // Prépare une étape de vol : TOUJOURS sur grille propre — mesurer
-            // avec des transformations encore posées, c'est mesurer un mirage,
-            // et c'est de là que venaient les divergences.
-            var prepareVol = function (sens) {
-                nettoieVol();
-                var vers = niveauVoisin(sens);
-                if (!vers) { oublieVol(); return; }
-                var courant = document.documentElement.dataset.zoom || '';
-                departs = mesure();
-                poseNiveau(vers);
-                cibles = mesure();
-                if (courant) document.documentElement.dataset.zoom = courant;
-                else delete document.documentElement.dataset.zoom;
-                sensVol = sens; versVol = vers;
-            };
-            var vole = function () {
-                demandeVol = 0;
-                if (!departs || !cibles) return;
-                for (var k = 0; k < cartes.length; k++) {
-                    var c = cartes[k];
-                    var a = departs[c.dataset.slug], b = cibles[c.dataset.slug];
-                    if (!a || !b || !a.width) continue;
-                    var dx = (b.left - a.left) * tVol, dy = (b.top - a.top) * tVol;
-                    var s = 1 + (b.width / a.width - 1) * tVol;
-                    c.style.transformOrigin = '0 0';
-                    c.style.transform = 'translate(' + dx.toFixed(1) + 'px, ' + dy.toFixed(1) + 'px) scale(' + s.toFixed(4) + ')';
-                }
-            };
-            var replanifieVol = function () { if (!demandeVol) demandeVol = requestAnimationFrame(vole); };
-            mur.addEventListener('touchstart', function (e) {
-                if (e.touches.length !== 2 || verrou) return;
-                // Auto-guérison : un reste de vol qui traînerait est balayé
-                // avant toute mesure.
-                if (!versVol) nettoieVol();
-                pincement = ecart(e.touches); rapport = 1;
-            }, { passive: true });
-            mur.addEventListener('touchmove', function (e) {
-                if (e.touches.length !== 2 || !pincement || verrou) return;
-                e.preventDefault();
-                rapport = ecart(e.touches) / pincement;
-                // Zone morte : un tremblement autour de 1 ne choisit pas de
-                // sens — c'est lui qui faisait battre les re-mesures.
-                if (!sensVol && Math.abs(rapport - 1) < .05) return;
-                var sens = rapport > 1 ? -1 : 1;
-                if (sens !== sensVol) prepareVol(sens);
-                if (!versVol) return;
-                tVol = Math.max(0, Math.min(1, sens === -1 ? (rapport - 1) / .5 : (1 - rapport) / .34));
-                replanifieVol();
-                // Chemin parcouru en entier EN PLEIN GESTE : les cartes sont
-                // déjà à destination — bascule synchrone, sans View
-                // Transition à contresens du doigt, et le geste enchaîne.
-                if (tVol >= 1) {
-                    var vers = versVol;
-                    oublieVol(); nettoieVol();
-                    poseNiveau(vers); replanifieScene();
-                    pincement = ecart(e.touches); rapport = 1;
-                }
-            }, { passive: false });
-            mur.addEventListener('touchend', function (e) {
-                if (e.touches.length >= 2 || !pincement) return;
-                pincement = 0;
-                if (verrou) return;
-                if (versVol && tVol >= .45) {
-                    // La View Transition résorbe le chemin restant, sous verrou.
-                    var vers = versVol;
-                    oublieVol();
-                    verrou = true;
-                    var applique = function () {
-                        poseNiveau(vers); nettoieVol(); replanifieScene(); verrou = false;
-                    };
-                    if (document.startViewTransition) {
-                        cartes.forEach(function (c) { c.style.viewTransitionName = 'c-' + c.dataset.slug; });
-                        var t = document.startViewTransition(applique);
-                        t.finished.then(function () { }, function () { }).then(function () {
-                            cartes.forEach(function (c) { c.style.viewTransitionName = ''; });
-                        });
-                    } else { applique(); }
-                } else if (versVol) {
-                    // Pas de cran : chaque carte revole en arrière, en douceur.
-                    oublieVol();
-                    if (demandeVol) { cancelAnimationFrame(demandeVol); demandeVol = 0; }
-                    cartes.forEach(function (c) {
-                        c.style.transition = 'transform .22s ease';
-                        c.style.transform = '';
-                    });
-                    setTimeout(function () {
-                        cartes.forEach(function (c) {
-                            c.style.transition = ''; c.style.transformOrigin = '';
-                        });
-                    }, 240);
-                }
-            });
-            mur.addEventListener('touchcancel', function () {
-                pincement = 0;
-                if (verrou) return;
-                oublieVol(); nettoieVol();
-            });
-
             // La vitrine scintille : toutes les quelques secondes, une
             // carte posée — jamais celle qu'on regarde — reçoit un
             // nouveau passage de dorure. Une seule à la fois, rien quand
-            // l'onglet dort.
-            setInterval(function () {
+            // l'onglet dort. TROIS FOIS, puis la vitrine se tient
+            // tranquille : un éclat qui revient sans fin dans le coin de
+            // l'œil empêche de lire le reste, et rien ne permettait de
+            // l'arrêter (WCAG 2.2.2).
+            var passages = 0;
+            var scintille = setInterval(function () {
                 if (document.hidden) return;
                 var posees = cartes.filter(function (c) {
                     return c.classList.contains('en-scene') &&
@@ -682,8 +559,72 @@
                 var elue = posees[Math.floor(Math.random() * posees.length)];
                 elue.classList.add('reluit');
                 setTimeout(function () { elue.classList.remove('reluit'); }, 1450);
+                if (++passages >= 3) clearInterval(scintille);
             }, 4600);
         }
+
+        // ── La densité du mur, aux boutons − et + ──
+        // Elle se réglait au pincement, façon Google Photos. Mais pour
+        // cela la page confisquait le pincement au navigateur
+        // (touch-action), et plus personne ne pouvait AGRANDIR LA PAGE —
+        // le geste même dont a besoin qui voit mal (WCAG 1.4.4). Le
+        // pincement est rendu au navigateur ; la densité passe à deux
+        // boutons, que le clavier atteint aussi. Les affiches glissent
+        // toujours jusqu'à leur nouvelle place (View Transition) ; sans
+        // soutien, ou en mouvement réduit, la grille bascule d'un coup.
+        var reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // Une colonne unique au téléphone : l'affiche en grand, pour qui
+        // voit mal — le pincement ne l'offrait pas.
+        var NIVEAUX = function () { return innerWidth < 640 ? [1, 2, 3, 4] : [2, 3, 4, 5]; };
+        var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
+        var zoomCourant = function () {
+            return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
+        };
+        var boutonsDensite = Array.prototype.slice.call(document.querySelectorAll('[data-densite]'));
+        function majBoutons() {
+            var n = NIVEAUX(), c = zoomCourant();
+            boutonsDensite.forEach(function (b) {
+                // +1 : une colonne de plus, donc des affiches plus petites.
+                b.disabled = +b.dataset.densite > 0 ? c >= n[n.length - 1] : c <= n[0];
+            });
+        }
+        // Les photos annoncent leur nouvelle taille affichée : le
+        // navigateur va chercher la version plus grande si elle manque.
+        function majTailles(colonnes) {
+            cartes.forEach(function (c) {
+                var f = parseFloat(c.dataset.couverture || '1');
+                var s = '(max-width: 640px) ' + Math.ceil(f * 100 / colonnes) + 'vw, ' +
+                    Math.ceil(f * 960 / colonnes) + 'px';
+                var source = c.querySelector('source');
+                if (source) source.setAttribute('sizes', s);
+            });
+        }
+        function poseDensite(v) {
+            var applique = function () {
+                document.documentElement.dataset.zoom = v;
+                majTailles(v);
+                majBoutons();
+                if (typeof replanifieScene === 'function') replanifieScene();
+            };
+            if (document.startViewTransition && !reduit) {
+                cartes.forEach(function (c) { c.style.viewTransitionName = 'c-' + c.dataset.slug; });
+                var t = document.startViewTransition(applique);
+                t.finished.then(function () { }, function () { }).then(function () {
+                    cartes.forEach(function (c) { c.style.viewTransitionName = ''; });
+                });
+            } else { applique(); }
+        }
+        boutonsDensite.forEach(function (b) {
+            b.hidden = false;
+            b.addEventListener('click', function () {
+                var n = NIVEAUX(), i = n.indexOf(zoomCourant());
+                if (i === -1) i = n.indexOf(zoomRepos());
+                var v = n[i + (+b.dataset.densite)];
+                if (v) poseDensite(v);
+            });
+        });
+        majBoutons();
+        addEventListener('resize', majBoutons);
 
         // La barre flotte dès que sa sentinelle sort de l'écran — le même
         // guet que la barre d'onglets de l'accueil : aucun calcul au fil
@@ -707,7 +648,6 @@
             if (bascule) {
                 bascule.setAttribute('aria-label', action);
                 bascule.setAttribute('title', action);
-                bascule.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
                 var u = bascule.querySelector('use');
                 if (u) u.setAttribute('href', versClair ? '#i-solid-sun' : '#i-solid-moon');
             }

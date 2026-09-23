@@ -2,8 +2,10 @@
  * ============================================================
  *  OUVERTURE DE SCÈNE — masque de théâtre en particules + nom
  * ============================================================
- *  Une fois par session (voir le garde anti-scintillement dans
- *  index.html), avant de révéler le CV :
+ *  Une fois par appareil, et seulement pour qui arrive d'un autre site —
+ *  un lien direct (adresse tapée, mail, PDF) entre sans rideau. C'est le
+ *  garde anti-scintillement d'index.html qui en décide, et qui ne charge
+ *  ce fichier que si l'ouverture joue. Avant de révéler le CV :
  *
  *   1. Un masque de théâtre reconstitué en poussière de particules,
  *      en rotation lente, qui réagit localement au curseur/doigt
@@ -33,7 +35,7 @@
     'use strict';
 
     var overlay = document.getElementById('intro-overlay');
-    if (!overlay || overlay.hidden) return; // déjà vue cette session / reduced-motion
+    if (!overlay || overlay.hidden) return; // rideau levé d'avance par le garde d'index.html
 
     var canvas = document.getElementById('intro-canvas');
     var tickerEl = document.getElementById('intro-scramble');
@@ -1191,7 +1193,7 @@
     var sceauMontre = false;   // la séquence est-elle allée jusqu'au tampon ?
     var demarreA = 0;          // début réel de l'intro (0 = elle n'a pas joué)
 
-    function dismiss() {
+    function dismiss(e) {
         if (isDismissed) return;
         isDismissed = true;
         dismissedAt = performance.now();
@@ -1203,8 +1205,11 @@
         // Rien n'est envoyé quand l'intro n'a pas joué (mouvement réduit,
         // deuxième visite dans la session) : ce serait compter des spectateurs
         // à qui l'on n'a rien montré.
-        if (demarreA) {
-            window.track?.('intro', {
+        // Écrit sans « ?. » : ce fichier est en JavaScript d'avant 2020 de bout
+        // en bout, et UNE seule syntaxe récente suffit à ce qu'un navigateur
+        // ancien refuse le fichier entier — le rideau ne se levait alors plus.
+        if (demarreA && typeof window.track === 'function') {
+            window.track('intro', {
                 fin: sceauMontre ? 'sceau' : 'coupee',
                 secondes: Math.round((dismissedAt - demarreA) / 1000)
             });
@@ -1213,7 +1218,14 @@
         overlay.classList.add('intro-out');
         document.body.classList.remove('modal-open');
 
-        var focusWasInside = overlay.contains(document.activeElement);
+        // AU CLAVIER, LE FOCUS SE POSE TOUJOURS SUR L'EN-TÊTE. La première
+        // touche lève le rideau ET fait son effet ordinaire : une tabulation
+        // amène le focus sur « Passer »… qui disparaît avec le rideau. Le
+        // focus tombait alors sur <body>, et la tabulation suivante repartait
+        // de zéro. La touche est lue ici, avant qu'elle n'ait déplacé quoi
+        // que ce soit : on sait donc déjà où il faudra reposer le focus.
+        var focusWasInside = overlay.contains(document.activeElement) ||
+            !!(e && e.type === 'keydown');
         setTimeout(function () {
             stopParticleLoop();
             overlay.hidden = true;
@@ -1286,6 +1298,11 @@
         startParticlesWhenReady(0);
         runSequence();
     }
+
+    // Le garde d'index.html (après #intro-overlay) lève le rideau lui-même
+    // si ce drapeau manque quand la page a fini de charger : c'est qu'on
+    // n'est jamais arrivé jusqu'ici.
+    window.__introPret = true;
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', start);

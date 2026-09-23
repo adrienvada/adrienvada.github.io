@@ -7,10 +7,14 @@
  *  à partir de la liste déclarée dans galerie.js (GALLERY_IMAGES).
  *
  *  Il reprend l'architecture tactile et visuelle du répertoire de spectacles :
- *    · Grille responsive multi-colonnes
- *    · Pincement tactile (pinch-to-zoom 2 à 5 colonnes avec FLIP)
+ *    · Grille responsive multi-colonnes, dont la densité se règle aux
+ *      boutons − et + (le pincement reste au navigateur : il agrandit la page)
  *    · Visionneuse plein écran haute définition (navigation, swipe, clavier)
  *    · Barre d'en-tête collante, retour accueil et bascule de thème
+ *
+ *  Les vignettes sont les versions WebP recadrées en 3:4 que fabrique
+ *  build/variantes-images.py (320, 640, 960 px) : à relancer d'abord après
+ *  un ajout au book.
  *
  *  QUAND LE RELANCER
  *  -----------------
@@ -68,7 +72,7 @@ const IMAGES = chargerGalerie();
 function genererCss() {
     return `/* GALERIE PHOTO (/galerie/) — feuille générée (build/generer-page-galerie.js)
    Même univers visuel que le répertoire de spectacles : Cinzel, Inter, Montserrat,
-   or sur noir, grain de pellicule, grille zoomable au pincement. */
+   or sur noir, grain de pellicule, grille dont la densité se règle aux boutons − et +. */
 *, *::before, *::after { box-sizing: border-box; }
 
 @property --ambiance {
@@ -141,7 +145,12 @@ body::after {
 main {
     max-width: 68rem;
     margin: 0 auto;
-    touch-action: pan-y;
+}
+
+/* Réservé aux lecteurs d'écran : l'annonce de la visionneuse. */
+.sr {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
 a { color: var(--accent-ink); }
@@ -217,6 +226,32 @@ a { color: var(--accent-ink); }
 .bascule:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
 .bascule .ico { font-size: .95rem; }
 .ico { display: block; width: 1em; height: 1em; fill: currentColor; }
+
+.outils { display: flex; align-items: center; gap: .5rem; }
+/* La densité de la planche — mêmes pastilles que la bascule. */
+.densite { display: flex; gap: .3rem; }
+.densite-btn {
+    display: grid;
+    place-items: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    flex: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font: 500 1.15rem/1 'Inter', system-ui, sans-serif;
+    transition: border-color .3s ease, opacity .3s ease, background-color .35s ease;
+}
+.densite-btn:hover:not(:disabled) { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+/* Au bout de l'échelle, le bouton s'éteint (et le clavier le saute). */
+.densite-btn:disabled { opacity: .35; cursor: default; }
+.densite-btn:focus-visible, .bascule:focus-visible, .retour:focus-visible,
+.zoom-close:focus-visible, .zoom-nav:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
 
 /* ── Titre et manchette ── */
 .tete {
@@ -396,7 +431,7 @@ h1 {
     transition: transform 1.3s cubic-bezier(.2, .6, .2, 1);
 }
 
-/* ── Gestion du zoom multi-colonnes (Pinch-to-zoom) ── */
+/* ── La densité de la planche (boutons − et +) ── */
 html[data-zoom] .repertoire {
     grid-template-columns: repeat(var(--colonnes, 3), 1fr);
 }
@@ -507,7 +542,7 @@ html.galerie-verrou {
 
 .zoom-caption {
     font-family: 'Montserrat', sans-serif;
-    font-size: .68rem;
+    font-size: .74rem;
     font-weight: 600;
     letter-spacing: .18em;
     text-transform: uppercase;
@@ -572,11 +607,11 @@ html.galerie-verrou {
 @media (max-width: 640px) {
     body { padding: 0 .9rem 2.6rem; }
     .tete { padding: 2.3rem 0 1.6rem; }
-    .sur-titre { font-size: .58rem; letter-spacing: .22em; margin-bottom: .8rem; }
+    .sur-titre { font-size: .69rem; letter-spacing: .2em; margin-bottom: .8rem; }
     .ornement { margin-top: 1.1rem; width: 8.5rem; }
     .repertoire { grid-template-columns: repeat(2, 1fr); gap: 1rem .65rem; padding: 1.2rem 0 .4rem; }
     .barre { top: .55rem; margin-top: .5rem; }
-    .bascule { width: 2.1rem; height: 2.1rem; }
+    .bascule, .densite-btn { width: 2.1rem; height: 2.1rem; }
     .zoom-close { top: .8rem; right: .8rem; width: 2.3rem; height: 2.3rem; }
     .zoom-nav { width: 2.4rem; height: 2.4rem; }
     .zoom-prev { left: 8px; }
@@ -599,25 +634,35 @@ function genererHtml() {
     const titre = 'Galerie photo — Adrien Vada';
     const desc = 'Le book photographique d’Adrien Vada : portraits et photographies de plateau.';
 
+    // LES VIGNETTES SONT CELLES DE build/variantes-images.py : recadrées en
+    // 3:4 comme la grille, en trois largeurs. Elles faisaient 176 px et
+    // s'affichaient sur 300 à 500 pixels d'écran — floues, justement là où
+    // un directeur de casting juge un visage. `sizes` dit la largeur d'une
+    // case au repos (quatre colonnes au téléphone, cinq à l'écran) ; le
+    // script la réécrit quand la densité change, et le navigateur va
+    // chercher la version plus grande s'il lui en faut une.
+    const vignette = (img, largeur) =>
+        `../ressources/images/galerie/vignettes/${img.file.replace(/\.[^.]+$/, '')}-${largeur}.webp`;
     const photosJson = IMAGES.map((img, i) => {
         const full = img.folder === 'profil'
             ? `../ressources/images/${img.file}`
             : `../ressources/images/galerie/${img.file}`;
-        const thumb = `../ressources/images/galerie/thumbs/${img.file.replace(/\.[^.]+$/, '')}.jpg`;
         return {
             full,
-            thumb,
-            alt: `Photo ${i + 1} du book d’Adrien Vada`,
+            srcset: [320, 640, 960].map(l => `${vignette(img, l)} ${l}w`).join(', '),
+            thumb: vignette(img, 640),
+            // Le texte alternatif vient de galerie.js ; à défaut, le rang.
+            alt: img.alt || `Photo ${i + 1} du book d’Adrien Vada`,
             index: i
         };
     });
 
     const cartes = photosJson.map((p, i) => `
         <li class="carte" style="--ac:#bfa98a;--i:${i}" data-index="${i}">
-            <button type="button" class="carte-btn" data-zoom-photo="${i}" aria-label="Agrandir la photo ${i + 1}">
+            <button type="button" class="carte-btn" data-zoom-photo="${i}" aria-label="Agrandir : ${esc(p.alt)}">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="${esc(p.thumb)}" alt="${esc(p.alt)}" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="${esc(p.srcset)}" sizes="(max-width: 640px) 25vw, 218px"><img src="${esc(p.full)}" alt="${esc(p.alt)}" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -667,7 +712,9 @@ function genererHtml() {
             if (stored === 'light' || stored === 'dark') { t = stored; }
             else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) { t = 'light'; }
             document.documentElement.setAttribute('data-theme', t);
-            try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+            // La visite a commencé : le retour vers l'accueil ne lève pas le
+            // rideau d'introduction (mémoire de la visite, pas de l'appareil).
+            try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
         })();
 
         // ════════════════════════════════════════════════════════════════
@@ -679,8 +726,8 @@ function genererHtml() {
         //  Un directeur de casting veut EMBRASSER la série d'un coup d'œil,
         //  juger la variété des visages avant d'en regarder un ; c'est le
         //  geste de la planche contact, où l'on entoure ensuite la bonne.
-        //  Le pincement reste là pour se rapprocher, et il n'a plus qu'un
-        //  sens à offrir en arrivant : écarter.
+        //  Le bouton + reste là pour se rapprocher, et il n'a plus qu'un
+        //  sens à offrir en arrivant : agrandir.
         //
         //  ON LE POSE ICI, ET NON AU CHARGEMENT DU SCRIPT PRINCIPAL, parce
         //  qu'un attribut posé après le premier rendu se verrait : la grille
@@ -689,8 +736,8 @@ function genererHtml() {
         //  soit peint, comme celui du thème juste au-dessus.
         //
         //  LE CHIFFRE EST CELUI DU HAUT DE L'ÉCHELLE, et il est écrit à un
-        //  seul endroit : la même expression sert de borne au pincement
-        //  (voir NIVEAUX plus bas). Le seuil de 640 px est celui de la
+        //  seul endroit : la même expression sert de borne aux boutons de
+        //  densité (voir NIVEAUX plus bas). Le seuil de 640 px est celui de la
         //  feuille de style, pas un choix indépendant.
         // ════════════════════════════════════════════════════════════════
         (function () {
@@ -712,10 +759,9 @@ function genererHtml() {
     <meta property="og:url" content="${url}">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/svg+xml" href="../favicon_io/favicon.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap">
+    <!-- Les polices du site, servies par le site (ressources/polices/). -->
+    <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../ressources/polices/polices.css">
     <link rel="stylesheet" href="galerie.css">
     <script type="application/ld+json">
 ${JSON.stringify(schemaJson, null, 2)}
@@ -728,10 +774,18 @@ ${JSON.stringify(schemaJson, null, 2)}
     <!-- Sentinelle de barre collante -->
     <div class="barre-sentinelle" aria-hidden="true"></div>
     <header class="barre">
-        <a class="retour" href="../">← Adrien Vada</a>
-        <button type="button" class="bascule" data-bascule aria-pressed="false" aria-label="Passer au thème clair" title="Passer au thème clair">
-            <svg class="ico" data-bascule-icone aria-hidden="true"><use href="#i-solid-sun"></use></svg>
-        </button>
+        <a class="retour" href="../"><span aria-hidden="true">←</span> Adrien Vada</a>
+        <div class="outils">
+            <!-- La densité de la planche : moins de photos par rang (+), plus
+                 (−). Cachés sans script, qui seul sait les faire agir. -->
+            <div class="densite" role="group" aria-label="Taille des photos">
+                <button type="button" class="densite-btn" data-densite="1" hidden aria-label="Photos plus petites" title="Photos plus petites"><span aria-hidden="true">−</span></button>
+                <button type="button" class="densite-btn" data-densite="-1" hidden aria-label="Photos plus grandes" title="Photos plus grandes"><span aria-hidden="true">+</span></button>
+            </div>
+            <button type="button" class="bascule" data-bascule aria-label="Passer au thème clair" title="Passer au thème clair">
+                <svg class="ico" data-bascule-icone aria-hidden="true"><use href="#i-solid-sun"></use></svg>
+            </button>
+        </div>
     </header>
 
     <main>
@@ -772,8 +826,12 @@ ${JSON.stringify(schemaJson, null, 2)}
                  que la photo. Sur téléphone, il rendait la visionneuse
                  inutilisable. -->
             <img class="zoom-img" id="zoom-img" alt="" decoding="async">
-            <figcaption class="zoom-caption" id="zoom-caption"></figcaption>
+            <figcaption class="zoom-caption" id="zoom-caption" aria-hidden="true"></figcaption>
         </figure>
+        <!-- Ce que la légende « 3 / 19 » montre, dit en entier à qui ne la
+             voit pas : le rang ET ce que montre la photo, à chaque
+             changement. -->
+        <p class="sr" id="zoom-annonce" aria-live="polite"></p>
     </div>
 
     <script>
@@ -786,6 +844,7 @@ ${JSON.stringify(schemaJson, null, 2)}
         var zoomImg = document.getElementById('zoom-img');
         var zoomCaption = document.getElementById('zoom-caption');
         var zoomFig = document.getElementById('zoom-fig');
+        var zoomAnnonce = document.getElementById('zoom-annonce');
         var cartes = Array.from(document.querySelectorAll('.carte'));
 
         // ════════════════════════════════════════════════════════════════
@@ -806,6 +865,7 @@ ${JSON.stringify(schemaJson, null, 2)}
             zoomImg.style.opacity = '0';
             remetAPlat(false);
             zoomCaption.textContent = (currentIndex + 1) + ' / ' + PHOTOS.length;
+            zoomAnnonce.textContent = 'Photo ' + (currentIndex + 1) + ' sur ' + PHOTOS.length + ' : ' + item.alt;
 
             setTimeout(function () {
                 zoomImg.src = item.full;
@@ -826,6 +886,27 @@ ${JSON.stringify(schemaJson, null, 2)}
         // overflow:hidden, et ne le rend pas au déverrouillage.
         var defilementAvant = 0;
 
+        // LA VISIONNEUSE EST UNE PIÈCE FERMÉE. Pendant qu'elle est ouverte,
+        // tout le reste de la page devient inerte : la touche Tab ne
+        // s'échappe plus vers la grille cachée dessous, et un lecteur
+        // d'écran ne la lit plus. À la fermeture, le focus revient sur la
+        // vignette de la photo qu'on regardait — celle d'où l'on est parti,
+        // ou celle où l'on est arrivé en feuilletant. Il retombait tout en
+        // haut du document, et il fallait retraverser la planche.
+        var inertes = [];
+
+        function isoleVisionneuse() {
+            inertes = Array.prototype.filter.call(document.body.children, function (el) {
+                return el !== zoomModal && !el.inert && ['SCRIPT', 'STYLE', 'LINK'].indexOf(el.tagName) === -1;
+            });
+            inertes.forEach(function (el) { el.inert = true; });
+        }
+
+        function libereVisionneuse() {
+            inertes.forEach(function (el) { el.inert = false; });
+            inertes = [];
+        }
+
         function openZoom(index) {
             currentIndex = (index + PHOTOS.length) % PHOTOS.length;
             defilementAvant = window.scrollY || document.documentElement.scrollTop || 0;
@@ -833,14 +914,19 @@ ${JSON.stringify(schemaJson, null, 2)}
             void zoomModal.offsetHeight;
             zoomModal.classList.add('is-open');
             document.documentElement.classList.add('galerie-verrou');
+            isoleVisionneuse();
             updateZoomDisplay();
             document.getElementById('zoom-close')?.focus();
         }
 
         function closeZoom() {
+            if (zoomModal.hidden) return;
             zoomModal.classList.remove('is-open');
             document.documentElement.classList.remove('galerie-verrou');
             window.scrollTo(0, defilementAvant);
+            libereVisionneuse();
+            var retour = document.querySelector('[data-zoom-photo="' + currentIndex + '"]');
+            if (retour) retour.focus();
             setTimeout(function () {
                 zoomModal.hidden = true;
                 zoomImg.src = '';
@@ -1103,161 +1189,99 @@ ${JSON.stringify(schemaJson, null, 2)}
         });
 
         // ════════════════════════════════════════════════════════════════
-        //  PINCH-TO-ZOOM SUR LA GRILLE (façon Répertoire spectacles)
+        //  LA DENSITÉ DE LA PLANCHE, AUX BOUTONS − ET +
+        //  ----------------------------------------------------------------
+        //  Elle se réglait au pincement, façon Google Photos. Mais pour cela
+        //  la page confisquait le pincement au navigateur (touch-action) :
+        //  plus personne ne pouvait AGRANDIR LA PAGE, le geste même dont a
+        //  besoin qui voit mal (WCAG 1.4.4). Le pincement est rendu au
+        //  navigateur — dans la visionneuse, il grossit toujours la photo —
+        //  et la densité passe à deux boutons, que le clavier atteint aussi.
+        //  Les photos glissent jusqu'à leur nouvelle place (View
+        //  Transition) ; sans soutien, ou en mouvement réduit, la grille
+        //  bascule d'un coup.
         // ════════════════════════════════════════════════════════════════
-        var mur = document.querySelector('main');
-        var NIVEAUX = function () { return innerWidth < 640 ? [2, 3, 4] : [2, 3, 4, 5]; };
+        var reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // Une colonne unique au téléphone : la photo en grand, pour qui
+        // voit mal — le pincement ne l'offrait pas.
+        var NIVEAUX = function () { return innerWidth < 640 ? [1, 2, 3, 4] : [2, 3, 4, 5]; };
         // LE REPOS EST LE HAUT DE L'ÉCHELLE, comme à l'arrivée : c'est la
-        // planche contact qui fait le repos de cette page, et le pincement
-        // n'en écarte que pour se rapprocher (voir le script du <head>).
-        // Cette valeur ne sert plus qu'à deux choses — retrouver son rang
-        // dans l'échelle si l'attribut a disparu, et servir de secours à
-        // zoomCourant() — mais elle doit dire la même chose que lui, sans
-        // quoi le premier pincement partirait d'un cran qu'on ne voit pas.
+        // planche contact qui fait le repos de cette page (voir le script
+        // du <head>).
         var zoomRepos = function () { var n = NIVEAUX(); return n[n.length - 1]; };
         var zoomCourant = function () {
             return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
         };
-        var niveauVoisin = function (sens) {
-            var n = NIVEAUX();
-            var i = n.indexOf(zoomCourant());
-            if (i === -1) i = n.indexOf(zoomRepos());
-            var v = n[i + sens];
-            return v === undefined ? 0 : v;
-        };
-        var mesure = function () {
-            var m = {};
-            cartes.forEach(function (c, idx) { m[idx] = c.getBoundingClientRect(); });
-            return m;
-        };
-        var poseNiveau = function (v) {
-            if (v) document.documentElement.dataset.zoom = v;
-            else delete document.documentElement.dataset.zoom;
-        };
+        var boutonsDensite = Array.prototype.slice.call(document.querySelectorAll('[data-densite]'));
+
+        function majBoutons() {
+            var n = NIVEAUX(), c = zoomCourant();
+            boutonsDensite.forEach(function (b) {
+                // +1 : une colonne de plus, donc des photos plus petites.
+                b.disabled = +b.dataset.densite > 0 ? c >= n[n.length - 1] : c <= n[0];
+            });
+        }
+
+        // Chaque vignette annonce la largeur de sa case : le navigateur va
+        // chercher la version plus grande quand elle grandit.
+        function majTailles(colonnes) {
+            var s = '(max-width: 640px) ' + Math.ceil(100 / colonnes) + 'vw, ' + Math.ceil(1088 / colonnes) + 'px';
+            document.querySelectorAll('.carte source').forEach(function (el) { el.setAttribute('sizes', s); });
+        }
+
+        function poseNiveau(v) {
+            var applique = function () {
+                document.documentElement.dataset.zoom = v;
+                majTailles(v);
+                majBoutons();
+            };
+            if (document.startViewTransition && !reduit) {
+                cartes.forEach(function (c, idx) { c.style.viewTransitionName = 'photo-' + idx; });
+                var vt = document.startViewTransition(applique);
+                vt.finished.then(function () { }, function () { }).then(function () {
+                    cartes.forEach(function (c) { c.style.viewTransitionName = ''; });
+                });
+            } else { applique(); }
+        }
+
+        boutonsDensite.forEach(function (b) {
+            b.hidden = false;
+            b.addEventListener('click', function () {
+                var n = NIVEAUX(), i = n.indexOf(zoomCourant());
+                if (i === -1) i = n.indexOf(zoomRepos());
+                var v = n[i + (+b.dataset.densite)];
+                if (v) poseNiveau(v);
+            });
+        });
 
         // UN QUART DE TOUR PEUT RENDRE LE NIVEAU IMPOSSIBLE. L'échelle n'a
         // pas les mêmes barreaux des deux côtés du seuil de 640 px : cinq
         // colonnes existent à l'écran, pas au téléphone. Ouvrir la page en
         // paysage la pose donc à cinq, et la remettre en portrait garderait
-        // ces cinq colonnes sur 390 px de large — des vignettes de 78 px, et
-        // un pincement qui repartirait d'un cran introuvable. On ramène le
-        // niveau dans l'échelle du moment dès qu'il en sort. Le sens inverse
-        // n'a rien à corriger : quatre colonnes existent des deux côtés.
+        // ces cinq colonnes sur 390 px de large — des vignettes de 78 px.
+        // On ramène le niveau dans l'échelle du moment dès qu'il en sort.
         addEventListener('resize', function () {
-            if (NIVEAUX().indexOf(zoomCourant()) === -1) poseNiveau(zoomRepos());
-        });
-        var pincement = 0, rapport = 1, sensVol = 0, versVol = 0,
-            departs = null, cibles = null, tVol = 0, demandeVol = 0, verrou = false;
-        var ecart = function (t) {
-            return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
-        };
-        var nettoieVol = function () {
-            if (demandeVol) { cancelAnimationFrame(demandeVol); demandeVol = 0; }
-            cartes.forEach(function (c) {
-                c.style.transform = ''; c.style.transformOrigin = ''; c.style.transition = '';
-            });
-        };
-        var oublieVol = function () { sensVol = 0; versVol = 0; departs = cibles = null; tVol = 0; };
-        var prepareVol = function (sens) {
-            nettoieVol();
-            var vers = niveauVoisin(sens);
-            if (!vers) { oublieVol(); return; }
-            var courant = document.documentElement.dataset.zoom || '';
-            departs = mesure();
-            poseNiveau(vers);
-            cibles = mesure();
-            if (courant) document.documentElement.dataset.zoom = courant;
-            else delete document.documentElement.dataset.zoom;
-            sensVol = sens; versVol = vers;
-        };
-        var animeVol = function () {
-            demandeVol = 0;
-            if (!departs || !cibles) return;
-            var t = Math.max(0, Math.min(1, tVol));
-            cartes.forEach(function (c, idx) {
-                var d = departs[idx], f = cibles[idx];
-                if (!d || !f) return;
-                var sx = (d.width + (f.width - d.width) * t) / d.width;
-                var sy = (d.height + (f.height - d.height) * t) / d.height;
-                var dx = (f.left - d.left) * t;
-                var dy = (f.top - d.top) * t;
-                c.style.transformOrigin = 'top left';
-                c.style.transform = 'translate(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px) scale(' + sx.toFixed(4) + ',' + sy.toFixed(4) + ')';
-            });
-        };
-
-        mur.addEventListener('touchstart', function (e) {
-            if (e.touches.length === 2 && !verrou && !zoomModal.classList.contains('is-open')) {
-                pincement = ecart(e.touches);
-                rapport = 1;
-                oublieVol();
+            if (NIVEAUX().indexOf(zoomCourant()) === -1) {
+                document.documentElement.dataset.zoom = zoomRepos();
+                majTailles(zoomRepos());
             }
-        }, { passive: true });
-
-        mur.addEventListener('touchmove', function (e) {
-            if (e.touches.length !== 2 || !pincement || verrou) return;
-            var nouveau = ecart(e.touches);
-            rapport = nouveau / pincement;
-            var sens = 0;
-            if (rapport > 1.05) sens = -1; // Écarter = zoomer (moins de colonnes)
-            else if (rapport < 0.95) sens = 1; // Pincer = dézoomer (plus de colonnes)
-            if (!sens) {
-                if (sensVol) { oublieVol(); nettoieVol(); }
-                return;
-            }
-            if (sens !== sensVol) prepareVol(sens);
-            if (!versVol) return;
-            tVol = sens > 0 ? (1 - rapport) / 0.38 : (rapport - 1) / 0.38;
-            if (!demandeVol) demandeVol = requestAnimationFrame(animeVol);
-        }, { passive: true });
-
-        mur.addEventListener('touchend', function (e) {
-            if (e.touches.length > 0) return;
-            pincement = 0;
-            if (verrou) return;
-            if (versVol && tVol >= 0.32) {
-                var vers = versVol;
-                oublieVol(); nettoieVol();
-                verrou = true;
-                var applique = function () {
-                    poseNiveau(vers);
-                    setTimeout(function () { verrou = false; }, 80);
-                };
-                if (document.startViewTransition) {
-                    cartes.forEach(function (c, idx) { c.style.viewTransitionName = 'photo-' + idx; });
-                    var vt = document.startViewTransition(applique);
-                    vt.finished.then(function () { }, function () { }).then(function () {
-                        cartes.forEach(function (c) { c.style.viewTransitionName = ''; });
-                    });
-                } else { applique(); }
-            } else if (versVol) {
-                oublieVol();
-                if (demandeVol) { cancelAnimationFrame(demandeVol); demandeVol = 0; }
-                cartes.forEach(function (c) {
-                    c.style.transition = 'transform .22s ease';
-                    c.style.transform = '';
-                });
-                setTimeout(function () {
-                    cartes.forEach(function (c) {
-                        c.style.transition = ''; c.style.transformOrigin = '';
-                    });
-                }, 240);
-            }
+            majBoutons();
         });
+        majTailles(zoomCourant());
+        majBoutons();
 
-        mur.addEventListener('touchcancel', function () {
-            pincement = 0;
-            if (verrou) return;
-            oublieVol(); nettoieVol();
-        });
-
-        // Scintillement régulier
-        setInterval(function () {
+        // Un scintillement de loin en loin — TROIS fois, puis la planche se
+        // tient tranquille : un éclat qui revient sans fin dans le coin de
+        // l'œil empêche de regarder le reste, et rien ne permettait de
+        // l'arrêter (WCAG 2.2.2). Rien en mouvement réduit.
+        var passages = 0;
+        var scintille = reduit ? 0 : setInterval(function () {
             if (document.hidden || zoomModal.classList.contains('is-open')) return;
             var elue = cartes[Math.floor(Math.random() * cartes.length)];
             if (!elue) return;
             elue.classList.add('reluit');
             setTimeout(function () { elue.classList.remove('reluit'); }, 1450);
+            if (++passages >= 3) clearInterval(scintille);
         }, 4500);
 
         // ════════════════════════════════════════════════════════════════
@@ -1280,7 +1304,6 @@ ${JSON.stringify(schemaJson, null, 2)}
             if (bascule) {
                 bascule.setAttribute('aria-label', action);
                 bascule.setAttribute('title', action);
-                bascule.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
                 var u = bascule.querySelector('use');
                 if (u) u.setAttribute('href', versClair ? '#i-solid-sun' : '#i-solid-moon');
             }

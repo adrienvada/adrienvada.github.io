@@ -69,10 +69,30 @@
     // retrouve sa ligne du CV — une espace ordinaire romprait le lien.
     function typographie(s) {
         return String(s ?? '')
+            // Les caractères de commande et les deux séparateurs de ligne
+            // Unicode (U+2028, U+2029) n'ont rien à faire dans un titre ou un
+            // lieu. Ils sont invisibles à la saisie, et le second est
+            // dangereux : recopié dans un commentaire de dates.js par
+            // l'export, il y met fin à la ligne — la suite du titre devenait
+            // du code exécuté par chaque visiteur.
+            .replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ')
             .replace(/[ \u202f]+([?!:;])/g, NB + '$1')
             .replace(/«[ ]+/g, '«' + NB).replace(/[ ]+»/g, NB + '»')
             .replace(/[ \t\r\n]+/g, ' ')
             .trim();
+    }
+
+    // ── UN LIEN DE RÉSERVATION NE MÈNE QU'À UNE PAGE WEB ──
+    //  Jumelle de lienSur() dans univers-montage.js, qui sert le même rôle
+    //  côté pages spectacle (et sous Node, où ce fichier-ci n'est pas lu).
+    //  L'adresse finit dans un href : « javascript: » s'y exécuterait, et
+    //  une adresse sans « https:// » devenait un lien relatif — vers la
+    //  page 404 du site. On complète le « www. » et on écarte le reste.
+    function lienSur(url) {
+        const s = String(url ?? '').trim();
+        if (/^https?:\/\/[^\s"'<>]+$/i.test(s)) return s;
+        if (/^www\.[^\s"'<>]+$/i.test(s)) return 'https://' + s;
+        return '';
     }
 
     function utc(iso) { const d = decouper(iso); return Date.UTC(d.a, d.m - 1, d.j); }
@@ -106,7 +126,7 @@
             id: l.id,
             dateLabel: jourCourt(l.jour),
             time: l.heure || '',
-            bookingUrl: l.reservation_url || '',
+            bookingUrl: lienSur(l.reservation_url),
             isSchool: !!l.scolaire,
             icsDate: l.jour
         });
@@ -137,7 +157,7 @@
     // entre à-venir et passé (splitUpcoming), comme pour dates.js.
     const ADRESSE_LECTURE = `${SUPABASE_URL}/rest/v1/${TABLE}?select=*&order=jour.asc,heure.asc`;
 
-    const api = { SUPABASE_URL, SUPABASE_CLE, TABLE, ADRESSE_LECTURE, versShowData, typographie, jourCourt, jourLong };
+    const api = { SUPABASE_URL, SUPABASE_CLE, TABLE, ADRESSE_LECTURE, versShowData, typographie, lienSur, jourCourt, jourLong };
 
     // ── Node (build/exporter-dates.js) : on n'exporte que le calcul ──
     if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }

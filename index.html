@@ -23,6 +23,34 @@
         })();
 
         // ════════════════════════════════════════════════════════════════
+        //  LE SITE N'EST CACHÉ QUE SI LE SCRIPT EST LÀ POUR LE MONTRER
+        //  ----------------------------------------------------------------
+        //  Les sections du CV attendent à opacity 0 que le défilement les
+        //  révèle, et le rideau d'ouverture couvre la page jusqu'au clic.
+        //  Tout cela était écrit en dur : sans JavaScript — désactivé, bloqué,
+        //  ou simplement un fichier qui n'arrive pas sur une connexion qui
+        //  flanche — le site restait un écran noir, et « Passer » ne
+        //  répondait pas. Les pages spectacle, elles, avaient leur repli.
+        //
+        //  Désormais le masquage attend ce drapeau, posé ici avant le premier
+        //  rendu. Sans script, il n'existe pas : tout est visible, le rideau
+        //  ne tombe pas (voir le <noscript> plus bas). Et si le script de la
+        //  page n'a pas démarré quand le document est prêt — une erreur, un
+        //  navigateur trop ancien pour sa syntaxe —, on retire le drapeau :
+        //  mieux vaut un CV sans effet d'apparition qu'un CV invisible.
+        (function () {
+            var racine = document.documentElement;
+            racine.classList.add('js-revele');
+            addEventListener('DOMContentLoaded', function () {
+                // Après les autres écouteurs du même événement : c'est l'un
+                // d'eux qui lève le drapeau __revelePret.
+                setTimeout(function () {
+                    if (!window.__revelePret) racine.classList.remove('js-revele');
+                }, 0);
+            });
+        })();
+
+        // ════════════════════════════════════════════════════════════════
         //  L'INTERRUPTEUR DE MESURE — ne pas se compter soi-même
         //  ----------------------------------------------------------------
         //  Adrien est de loin le visiteur le plus assidu de son site : il
@@ -171,12 +199,29 @@
         content="Adrien Vada, comédien : théâtre, cinéma et voix. Prochaines dates de représentation, CV, bande démo caméra et démos voix.">
     <meta name="twitter:image" content="https://adrienvada.fr/ressources/images/og-adrien-vada.jpg">
 
-    <!-- Preload for critical fonts  -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@200;300;400;500;600;700&family=Caveat:wght@400..700&display=swap"
-        rel="stylesheet">
+    <!-- LES POLICES VIVENT SUR LE SITE (ressources/polices/). Elles venaient
+         de Google Fonts : une feuille bloquante sur un autre domaine, deux
+         connexions à ouvrir avant le premier rendu, et l'adresse IP de chaque
+         visiteur transmise à Google. Même domaine désormais : la feuille part
+         en même temps que styles.css, sans connexion de plus.
+         Les deux familles de la première page — Montserrat pour le nom et les
+         onglets, Inter pour le texte courant — sont demandées d'avance :
+         sans cela le navigateur ne les découvre qu'en lisant la feuille, un
+         aller-retour plus tard. `crossorigin` est exigé pour une police, même
+         servie par le site lui-même. -->
+    <link rel="preload" href="/ressources/polices/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/ressources/polices/polices.css">
+
+    <!-- SANS JAVASCRIPT, LE SITE RESTE UN SITE. Pas de rideau (personne pour
+         le lever), et tous les onglets à la suite plutôt qu'un seul : sans
+         script, un clic sur « Dates » ne peut pas les faire changer. -->
+    <noscript>
+        <style>
+            #intro-overlay { display: none !important; }
+            .page { display: block !important; opacity: 1 !important; transform: none !important; }
+        </style>
+    </noscript>
 
     <!-- Tailwind compilé (voir README-build.md : à régénérer après toute
          modification des classes dans index.html / 404.html / *.js) -->
@@ -345,10 +390,9 @@
             --page-glow: none;
         }
 
-        /* Surfaces toujours sombres (lightbox, lecteur vidéo, ouverture de
-           scène) : elles gardent la palette sombre quel que soit le thème de
-           la page, sinon leurs contenus deviendraient illisibles sur noir. */
-        #gallery-modal,
+        /* Surfaces toujours sombres (lecteur vidéo, ouverture de scène) :
+           elles gardent la palette sombre quel que soit le thème de la
+           page, sinon leurs contenus deviendraient illisibles sur noir. */
         #video-modal,
         #intro-overlay {
             --c-surface: 23 20 16;
@@ -682,14 +726,33 @@
             transform: translateY(0) scale(1);
         }
 
-        /* Scroll reveal effects */
-        .reveal {
+        /* HIDDEN VEUT DIRE CACHÉ. Les fenêtres fermées portaient l'attribut
+           `hidden` ET une classe Tailwind `flex` : la classe gagnait (même
+           poids, écrite après), et une fenêtre « fermée » restait affichée,
+           transparente, au clavier et aux lecteurs d'écran — neuf arrêts de
+           tabulation invisibles au bas de la page, et trois fenêtres
+           fantômes annoncées au repos. L'attribut reprend le dernier mot. */
+        [hidden] {
+            display: none !important;
+        }
+
+        /* LE FOCUS NE SE CACHE PAS SOUS LA BARRE COLLÉE. En remontant au
+           clavier, le navigateur amenait l'élément tout juste sous le bord
+           de l'écran — c'est-à-dire sous la barre d'onglets, qui le couvrait
+           en entier. Cette marge lui dit de s'arrêter plus bas. */
+        html {
+            scroll-padding-top: 84px;
+        }
+
+        /* Scroll reveal effects — seulement si le script est là pour révéler
+           (drapeau js-revele, posé dans l'en-tête du document). */
+        .js-revele .reveal {
             opacity: 0;
             transform: translateY(15px);
             transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .reveal.active {
+        .js-revele .reveal.active {
             opacity: 1;
             transform: translateY(0);
         }
@@ -794,7 +857,6 @@
             footer,
             button,
             .reserve-btn,
-            #gallery-modal,
             #video-modal,
             #calendar-modal,
             .play-btn,
@@ -864,7 +926,7 @@
                 color: #000000 !important;
             }
 
-            header h2 {
+            header .metier {
                 color: #333333 !important;
             }
 
@@ -966,7 +1028,7 @@
                 font-size: 1.6rem !important;
             }
 
-            header h2 {
+            header .metier {
                 margin-bottom: 0.25rem !important;
             }
 
@@ -1237,7 +1299,7 @@
             padding: 6px 10px;
             border-radius: 6px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.1em;
             text-transform: uppercase;
@@ -1364,8 +1426,9 @@
                 font-size: 1.35rem !important;
             }
 
-            h2 {
-                font-size: 10px !important;
+            h2,
+            header .metier {
+                font-size: 11px !important;
                 letter-spacing: 0.12em !important;
             }
 
@@ -1407,7 +1470,7 @@
 
             nav a,
             nav button {
-                font-size: 10px !important;
+                font-size: 11px !important;
                 padding: 5px 6px !important;
             }
 
@@ -1417,8 +1480,44 @@
             }
 
             #page_cv ul li .cv-subtitle {
-                font-size: 10px !important;
+                font-size: 11px !important;
             }
+        }
+
+        /* ── LA BARRE D'ONGLETS SOUS 380 PX ──
+           Quatre onglets et la bascule de thème n'y tiennent plus côte à
+           côte : « Démos voix » glissait sous le soleil de la bascule dès
+           360 px, et le couvrait à moitié à 320. Les icônes des onglets
+           s'effacent — leurs mots suffisent à les distinguer — et rendent
+           les soixante pixels qui manquaient. */
+        @media (max-width: 380px) {
+            #nav-tabs-container a > svg {
+                display: none;
+            }
+        }
+
+        /* ── CE QUI BOUGE S'ARRÊTE ──
+           La guirlande du CV, la lueur des pastilles, le phare et le pouls
+           du bandeau « Prochainement » tournaient en boucle, sans fin et
+           sans rien pour les arrêter. Or une animation qui dure plus de
+           cinq secondes à côté du contenu doit pouvoir être mise en pause
+           (WCAG 2.2.2) : pour qui a du mal à se concentrer, un point qui
+           bat dans le coin de l'œil empêche de lire le reste.
+           Elles jouent donc UNE fois : la vague descend le CV, le phare
+           fait son tour, le point frappe ses deux coups — puis la page se
+           tait. Elles rejouent quand on revient sur l'onglet CV (la page
+           masquée perd ses animations, et les retrouve à l'affichage).
+
+           ET ELLES ATTENDENT QU'ON LES VOIE. Une animation unique qui
+           partirait au chargement se jouerait sous le rideau de l'ouverture,
+           pour personne. `modal-open` est posé tant qu'un voile couvre la
+           page : l'horloge des animations y est suspendue — délais compris —
+           et repart de zéro quand le voile se lève. */
+        body.modal-open .cv-has-universe::after,
+        body.modal-open .cv-has-universe .cv-badge::after,
+        body.modal-open .next-date-dot,
+        body.modal-open .next-date-shine::after {
+            animation-play-state: paused;
         }
 
         /* ── Accessibilité : respect du réglage système « moins d'animations » ── */
@@ -1463,7 +1562,6 @@
             border-radius: 3px;
         }
 
-        #gallery-modal :focus-visible,
         #video-modal :focus-visible {
             outline-color: rgb(var(--c-gold-light));
         }
@@ -1485,7 +1583,7 @@
             grid-template-rows: 1fr;
             opacity: 1;
             transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
-                margin-bottom var(--dur-panel) var(--ease-panel);
+                margin-bottom var(--dur-panel) var(--ease-panel), visibility 0s;
         }
 
         /* `grid-template-rows: 0fr` ne réduit que la ligne de grille — la
@@ -1494,10 +1592,21 @@
            espace fantôme au-dessus de ce qui suit, une fois le contenu
            invisible. On la ramène donc à zéro ici, plutôt que sur chaque
            élément qui replie un `mb-*`. */
+        /* REPLIÉ, IL SORT AUSSI DU PARCOURS AU CLAVIER. Un repli par hauteur
+           et opacité laisse le contenu dans la page : ses liens restaient
+           atteignables à la touche Tab, invisibles — 22 des 40 premiers
+           arrêts de l'onglet Dates tombaient sur quelque chose qu'on ne
+           voyait pas. `visibility: hidden` les en retire. Elle ne bascule
+           qu'à la FIN du repli (le délai égale sa durée), pour que
+           l'animation se voie ; à l'ouverture, elle revient aussitôt. La
+           même règle vaut pour les quatre autres tiroirs du site. */
         .bio-collapse.bio-hidden {
             grid-template-rows: 0fr;
             opacity: 0;
             margin-bottom: 0;
+            visibility: hidden;
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                margin-bottom var(--dur-panel) var(--ease-panel), visibility 0s linear var(--dur-panel);
         }
 
         /* Repli instantané, posé le temps d'une image par showPage : quand on
@@ -1513,44 +1622,13 @@
             overflow: hidden;
         }
 
-        /* ── LA SIGNATURE CASTING NE PASSE JAMAIS À DEUX LIGNES ──
-           « 187 cm · Baryton-basse · Piano · FR · RU · EN · Tir · Permis
-           A/B » : six faits qu'un directeur de casting lit d'un coup d'œil,
-           et qui ne valent que pris ensemble. Sur deux lignes, la seconde
-           devient une queue qu'on ne lit plus.
-
-           Le contenu occupe 293,3 px, et la ligne dispose de la largeur de
-           l'écran moins 54. Elle tient donc d'une seule pièce à partir de
-           347,3 px — tout téléphone en service. En dessous, il faut réduire
-           le corps, et on ne le réduit QUE là : au-dessus du seuil, rien de
-           cette règle ne s'applique et le texte reste à 10 px.
-
-           LE SEUIL EST POSÉ À 351 ET NON À 347, et la différence a été
-           payée pour de bon. Le premier essai coupait à 346 : à 347 px pile
-           — le premier écran à repasser en 10 px — il fallait 293 pour 293
-           disponibles, et la ligne basculait. Une égalité n'est pas une
-           marge : la décimale qu'on arrondit en la lisant, le navigateur ne
-           l'arrondit pas. Quatre pixels de rab mettent la bascule à
-           distance des rendus de fonte qui varient d'une plateforme à
-           l'autre.
-
-           POURQUOI 8,8 ET PAS 9. Mesuré à 320 px, la largeur du plus petit
-           écran encore en circulation — un iPhone 5, un SE de première
-           génération : à 9 px il faut 267 px pour 266 disponibles. Un
-           pixel. C'est le genre d'écart qu'on ne devine pas et qu'on ne
-           voit qu'en mesurant, et c'est aussi pourquoi il ne faut pas se
-           contenter d'arrondir au chiffre rond d'à côté. À 8,8 px il en
-           faut 262 : quatre pixels de marge, la ligne tient.
-
-           ⚠ CE SEUIL DÉPEND DU CONTENU. Ajouter un fait à la ligne le
-           déplace vers le haut, et la règle cessera de suffire sans que
-           rien ne le signale. Le jour où l'on en ajoute un, il faut
-           remesurer — ou en retirer un autre. */
-        @media (max-width: 351px) {
-            #header-signature .signature-casting {
-                font-size: 8.8px;
-            }
-        }
+        /* LA LIGNE DE SIGNATURE PASSE À LA LIGNE SUR LES PETITS ÉCRANS.
+           Elle tenait d'un seul tenant jusqu'à 320 px au prix d'un corps de
+           8,8 px — illisible sans lunettes, sur la ligne même qu'un
+           directeur de casting vient lire. Elle est désormais à 11 px
+           partout, et se replie sur deux lignes quand la place manque
+           (flex-wrap) : une ligne de plus vaut mieux qu'un texte qu'on ne
+           lit pas. */
 
         /* ── Bio manuscrite ──
            Seule touche organique au milieu d'une mise en page très construite,
@@ -1687,8 +1765,11 @@
         /* PAS DE « LIRE LA SUITE ». La phrase s'arrête au milieu d'un mot :
            c'est l'interruption elle-même qui appelle, et une étiquette
            posée dessous ne ferait que dire tout haut ce que les trois
-           points disent déjà. Le bouton garde un aria-label, lui : un
-           lecteur d'écran ne voit pas une coupure, il faut la lui nommer.
+           points disent déjà. Un lecteur d'écran, lui, ne voit pas une
+           coupure : il entend la phrase, puis « Lire mon parcours en
+           entier », écrit pour lui seul (sr-only). PAS d'aria-label : il
+           remplacerait la phrase visible, et qui pilote à la voix dirait
+           « Ce que j'aime… » sans que le bouton le reconnaisse.
 
            Au survol, c'est la FEUILLE du haut qui réagit, pas le bouton :
            le cadre doré est déjà là, on ne va pas en poser un second
@@ -2241,13 +2322,19 @@
         .cv-expand-panel {
             display: grid;
             grid-template-rows: 0fr;
-            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                visibility 0s linear var(--dur-panel);
             opacity: 0;
+            /* Replié, hors du parcours au clavier — voir .bio-collapse. */
+            visibility: hidden;
         }
 
         .cv-expand-panel.expanded {
             grid-template-rows: 1fr;
             opacity: 1;
+            visibility: visible;
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                visibility 0s;
         }
 
         .cv-expand-panel>.cv-expand-inner {
@@ -2468,6 +2555,30 @@
             margin-left: 1px;
         }
 
+        /* LA PLACE ET LE LIEN. La pastille ne peut pas être un lien DANS le
+           bouton de la ligne (HTML invalide, lien invisible aux lecteurs
+           d'écran) : le bouton garde une réserve de la même taille, vide et
+           invisible, et le vrai lien — frère du bouton — se pose dessus en
+           absolu (placerPastille, dans univers.js). La ligne est déjà
+           positionnée (.cv-has-universe). */
+        .cv-trailer-place {
+            visibility: hidden;
+        }
+
+        .cv-trailer-lien {
+            position: absolute;
+            z-index: 2;
+        }
+
+        /* UN CV SUR PAPIER N'A PAS DE BOUTON « LECTURE ». Les pastilles
+           s'imprimaient dans le PDF envoyé aux castings : cinq triangles en
+           marge, qui décalaient deux badges et ne menaient nulle part. */
+        @media print {
+            .cv-trailer {
+                display: none !important;
+            }
+        }
+
         /*  4. LE LAVIS, SUR PETIT ÉCRAN SEULEMENT. Un filet de 2 px se
                remarque sur une liste large ; sur 380 px de large, il se
                perd. La couleur traverse alors la ligne en s'évanouissant.
@@ -2566,7 +2677,8 @@
            repeindre quoi que ce soit, et le CV en porte une dizaine. */
         .cv-has-universe::after {
             opacity: 0;
-            animation: cv-guirlande 4s ease-in-out infinite;
+            /* UNE VAGUE, PAS UNE BOUCLE — voir « Ce qui bouge s'arrête ». */
+            animation: cv-guirlande 4s ease-in-out 1;
             animation-delay: calc(var(--cv-rang, 0) * .25s);
         }
 
@@ -2671,7 +2783,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity var(--dur-base) var(--ease-out);
-            animation: cv-pastille-lueur 4s ease-in-out infinite;
+            animation: cv-pastille-lueur 4s ease-in-out 1;
             animation-delay: calc(var(--cv-rang, 0) * .25s);
         }
 
@@ -2739,7 +2851,7 @@
 
         .cv-whisper p {
             margin: 0;
-            font-size: 10px;
+            font-size: 11px;
             font-style: italic;
             /* De l'air. Une interligne serrée donnait une colonne de
                journal ; celle-ci laisse le texte respirer comme une
@@ -2921,17 +3033,44 @@
             }
         }
 
+        /* ── Lecteurs audio : la piste se vise au doigt ──
+           La piste fait 4 px de haut, et c'était aussi sa zone de clic :
+           sur téléphone, viser la seconde voulue tenait de l'adresse. Deux
+           bordures TRANSPARENTES de 10 px l'agrandissent à 24 px — la taille
+           minimale d'une cible (WCAG 2.5.8) — sans rien changer à l'œil :
+           le fond s'arrête à la bordure (background-clip), la barre dorée
+           est rognée au même endroit (overflow), et les marges négatives
+           rendent à la mise en page les 20 px ajoutés.
+           L'arrondi est écrit « 2px / 12px » : l'arrondi intérieur, celui
+           que l'on voit, vaut l'extérieur moins la bordure. 12 − 10 laisse
+           en hauteur les 2 px d'une piste de 4 — le demi-cercle d'avant.
+           (Cette feuille passe après styles.css : elle l'emporte sur
+           rounded-full et h-1 à spécificité égale.) */
+        .progress-bar-container {
+            box-sizing: content-box;
+            border-block: 10px solid transparent;
+            margin-block: -10px;
+            background-clip: padding-box;
+            border-radius: 2px / 12px;
+        }
+
         /* ── Recherche des dates : panneau repliable + révélation par étapes ── */
         .filter-collapse {
             display: grid;
             grid-template-rows: 0fr;
             opacity: 0;
-            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                visibility 0s linear var(--dur-panel);
+            /* Replié, hors du parcours au clavier — voir .bio-collapse. */
+            visibility: hidden;
         }
 
         .filter-collapse.is-open {
             grid-template-rows: 1fr;
             opacity: 1;
+            visibility: visible;
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                visibility 0s;
         }
 
         .filter-collapse>.filter-collapse-inner {
@@ -2989,12 +3128,18 @@
             display: grid;
             grid-template-rows: 0fr;
             opacity: 0;
-            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                visibility 0s linear var(--dur-panel);
+            /* Replié, hors du parcours au clavier — voir .bio-collapse. */
+            visibility: hidden;
         }
 
         .drawer-panel.expanded {
             grid-template-rows: 1fr;
             opacity: 1;
+            visibility: visible;
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                visibility 0s;
         }
 
         .drawer-panel>.drawer-inner {
@@ -3013,13 +3158,19 @@
         .date-expand-panel {
             display: grid;
             grid-template-rows: 0fr;
-            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out);
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                visibility 0s linear var(--dur-panel);
             opacity: 0;
+            /* Replié, hors du parcours au clavier — voir .bio-collapse. */
+            visibility: hidden;
         }
 
         .date-expand-panel.expanded {
             grid-template-rows: 1fr;
             opacity: 1;
+            visibility: visible;
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                visibility 0s;
         }
 
         .date-expand-panel>.date-expand-inner {
@@ -3284,7 +3435,7 @@
 
         .intro-cta-hint {
             font-family: 'Montserrat', sans-serif;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.22em;
             text-transform: uppercase;
@@ -3338,14 +3489,36 @@
              ailleurs : ces règles doivent continuer à l'emporter sur celles
              qui les précédaient et à céder devant celles qui les suivaient.
              Le remonter avant le <style> a suffi, au premier essai, à rendre
-             carrée une croix de fermeture qui est ronde depuis toujours. -->
-    <link rel="stylesheet" href="univers.css">
+             carrée une croix de fermeture qui est ronde depuis toujours.
+
+             ELLE NE RETIENT PLUS L'AFFICHAGE. Ses 50 ko ne servent qu'au
+             panneau d'un spectacle, qu'on ouvre d'un clic : le navigateur
+             les attendait pourtant avant de peindre quoi que ce soit.
+             `media="print"` la fait télécharger sans rien bloquer, puis elle
+             passe à `all` dès qu'elle est là — à la même place dans la
+             cascade, puisque c'est la position du <link> qui compte, pas
+             l'instant de son arrivée. univers.js ne déplie pas un panneau
+             avant qu'elle soit appliquée (voir feuilleUniversPrete).
+             Sans JavaScript, le <noscript> la charge normalement. -->
+    <link rel="stylesheet" href="univers.css" media="print" onload="this.media='all'" data-feuille-univers>
+    <noscript><link rel="stylesheet" href="univers.css"></noscript>
 
     <style type="text/css">
-        /* Les icônes : la règle `.ico` vit dans univers.css, chargée plus
-           haut. Elle y est parce que le montage d'un univers en pose partout
-           et que les pages /spectacles/ en ont besoin aussi — une seule
-           définition, pour les deux. */
+        /* Les icônes : la règle de référence `.ico` vit dans univers.css,
+           parce que le montage d'un univers en pose partout et que les pages
+           /spectacles/ en ont besoin aussi. Elle est RECOPIÉE ici, et c'est
+           la seule : univers.css arrive désormais après le premier rendu
+           (voir son <link>), et sans elle chaque icône de l'accueil se
+           peindrait d'abord à la taille par défaut d'un SVG — 300 × 150.
+           Les deux copies sont à tenir identiques. */
+        .ico {
+            width: 1em;
+            height: 1em;
+            display: inline-block;
+            vertical-align: -0.125em;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
 
         /* ══════════════════════════════════════════════════════════════
            LA BARRE D'ONGLETS RESTE EN HAUT — MOBILE ET DESKTOP
@@ -3424,9 +3597,9 @@
            les 2,6 s, d'un battement égal — à ce train-là, l'œil cesse de le
            voir au bout de trois tours, exactement comme on n'entend plus une
            horloge. Il frappe maintenant deux fois coup sur coup, puis se
-           tait quatre secondes et demie. C'est un pouls, pas un métronome :
-           irrégulier à l'oreille, donc encore perceptible à la dixième
-           minute.
+           tait quatre secondes et demie. C'est un pouls, pas un métronome.
+           (Il ne joue plus qu'UNE mesure de sept secondes, phare compris :
+           voir « Ce qui bouge s'arrête ».)
 
            SEPT SECONDES, COMME LE PHARE, ET C'EST TOUT L'ENJEU. Les deux
            animations du bandeau tournaient sur 2,6 s et 7 s — deux périodes
@@ -3443,7 +3616,7 @@
             border-radius: 9999px;
             flex-shrink: 0;
             background: rgb(var(--c-gold-ink));
-            animation: nextDatePulse 7s ease-out infinite;
+            animation: nextDatePulse 7s ease-out 1;
         }
 
         @keyframes nextDatePulse {
@@ -3573,7 +3746,7 @@
             mask-composite: exclude;
             opacity: 0;
             pointer-events: none;
-            animation: next-date-phare 7s linear infinite;
+            animation: next-date-phare 7s linear 1;
         }
 
         @keyframes next-date-phare {
@@ -3874,15 +4047,67 @@
     </div>
     <script>
         // Anti-scintillement : masque l'ouverture de scène instantanément,
-        // avant même le premier rendu, si elle a déjà été vue sur cet
-        // appareil, si l'utilisateur préfère moins d'animations, ou si
-        // l'adresse demandait autre chose que la porte d'entrée.
+        // avant même le premier rendu, quand elle n'a pas lieu d'être :
+        // déjà jouée sur cet appareil, visite déjà commencée, préférence pour
+        // moins d'animations, adresse profonde — ou arrivée par un LIEN DIRECT.
+        //
+        // ════════════════════════════════════════════════════════════════
+        //  LE LIEN DIRECT ENTRE SANS RIDEAU
+        //  ----------------------------------------------------------------
+        //  Qui arrive DIRECTEMENT — l'adresse tapée, un favori, le lien d'un
+        //  mail, d'un SMS ou du CV en PDF — vient voir Adrien : c'est le
+        //  directeur de casting à qui l'on a envoyé l'adresse. Il entre tout
+        //  de suite au CV. Qui arrive d'AILLEURS — un moteur de recherche,
+        //  Instagram, le site d'un théâtre — découvre le site : l'ouverture
+        //  joue pour lui, une fois, si elle n'a jamais joué sur cet appareil.
+        //
+        //  Ce qui fait la différence est la page d'où l'on vient
+        //  (document.referrer) :
+        //    · aucune — adresse tapée, favori, application, PDF : direct ;
+        //    · une application Android (« android-app:// », que Gmail ou les
+        //      SMS posent là où iOS ne pose rien) : direct ;
+        //    · une messagerie en ligne (mail.…, webmail.…, Outlook) : direct ;
+        //    · le site lui-même : on y circule déjà, pas de rideau ;
+        //    · tout autre site : l'ouverture peut jouer.
+        //  LA LIMITE : Gmail ouvert dans un navigateur fait passer ses liens
+        //  par google.com, qu'on ne distingue pas d'une recherche Google. Pour
+        //  une candidature, `adrienvada.fr/?direct` entre toujours sans rideau,
+        //  quel que soit le chemin ; le paramètre est retiré de l'adresse.
+        //
+        //  DEUX MÉMOIRES, ET NON PLUS UNE. `localStorage` retient que
+        //  l'ouverture a JOUÉ sur cet appareil — et seulement cela : une
+        //  entrée directe ne compte plus comme vue, et le jour où ce visiteur
+        //  arrive d'ailleurs, il y a droit. `sessionStorage` retient que la
+        //  VISITE a commencé, par quelque porte que ce soit : revenir à
+        //  l'accueil en cours de route ne lève jamais le rideau au milieu du
+        //  spectacle. Les pages /spectacles/ et /galerie/ posent la seconde.
+        // ════════════════════════════════════════════════════════════════
         (function () {
+            function arriveeDirecte(origine) {
+                if (!origine) return true;
+                if (/^android-app:/i.test(origine)) return true;
+                var hote = new URL(origine).hostname;
+                return /(^|\.)(web)?mail\d*\./i.test(hote)
+                    || /(^|\.)outlook\.(live|office|office365)\.com$/i.test(hote)
+                    || /\.safelinks\.protection\.outlook\.com$/i.test(hote);
+            }
+            function depuisLeSite(origine) {
+                try { return !!origine && new URL(origine).hostname === location.hostname; }
+                catch (e) { return false; }
+            }
             try {
+                var params = new URLSearchParams(location.search);
                 // ?intro=1 dans l'URL force le rejeu (pratique pour régler l'effet)
-                var forced = /[?&]intro=1\b/.test(location.search);
+                var forced = params.get('intro') === '1';
+                var demandeDirecte = params.has('direct');
+                if (demandeDirecte) {
+                    params.delete('direct');
+                    var reste = params.toString();
+                    history.replaceState(null, '', location.pathname + (reste ? '?' + reste : '') + location.hash);
+                }
                 var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                var seen = localStorage.getItem('avIntroSeen');
+                var jouee = localStorage.getItem('avIntroSeen');
+                var visiteEntamee = sessionStorage.getItem('avIntroSeen');
 
                 // ARRIVÉE EN PROFONDEUR. L'ouverture de scène est la porte
                 // d'entrée du site : elle ne vaut que pour qui arrive à
@@ -3890,8 +4115,8 @@
                 // l'univers d'un spectacle (#/univers/berenice), les dates —
                 // a été partagée POUR ce qu'elle montre : un directeur de
                 // casting qui ouvre ce lien doit voir le spectacle, pas un
-                // rideau de vingt secondes devant. Le fragment est lu ici,
-                // avant que le routage ne le remplace par #page_cv.
+                // rideau devant. Le fragment est lu ici, avant que le routage
+                // ne le remplace par #page_cv.
                 //
                 // #page_cv ne compte pas : c'est l'onglet par défaut, donc
                 // l'adresse nue sous un autre nom.
@@ -3901,17 +4126,57 @@
                 var h = window.__ancreArrivee ? '#' + window.__ancreArrivee : '';
                 var profond = h.length > 1 && h !== '#page_cv';
 
-                if (!forced && (reduce || seen || profond)) {
+                var origine = document.referrer;
+                var direct = demandeDirecte || depuisLeSite(origine);
+                if (!direct) {
+                    try { direct = arriveeDirecte(origine); } catch (e) { direct = true; }
+                }
+
+                if (forced || !(reduce || jouee || visiteEntamee || profond || direct)) {
+                    localStorage.setItem('avIntroSeen', '1');
+                } else {
                     document.getElementById('intro-overlay').hidden = true;
                 }
-                // L'appareil est marqué dans tous les cas : entrer par une
-                // porte dérobée reste entrer. Sans cela, revenir à l'adresse
-                // nue en cours de visite lèverait le rideau au milieu du
-                // spectacle — le contraire de ce qu'il est censé faire.
-                localStorage.setItem('avIntroSeen', '1');
+                sessionStorage.setItem('avIntroSeen', '1');
             } catch (e) {
                 // Navigation privée / stockage bloqué : on montre l'intro sans bloquer le site
             }
+
+            // LE RIDEAU N'APPORTE SA MACHINERIE QUE S'IL JOUE. intro.js et
+            // mask-points.js pèsent 130 ko à eux deux (45 compressés), et ils
+            // étaient chargés à chaque visite — alors que l'ouverture ne se
+            // joue qu'une fois par appareil. Ils ne sont donc demandés que si
+            // le rideau est encore baissé à cet instant.
+            // `async = false` : ils s'exécutent DANS L'ORDRE (intro.js lit le
+            // nuage de points de mask-points.js), mais sans plus bloquer la
+            // lecture de la page — le CV n'attend plus leur arrivée.
+            // `modal-open` est posé dès maintenant, et non plus seulement
+            // au démarrage d'intro.js : la page ne défile pas sous le rideau,
+            // et les animations du CV attendent qu'il se lève (voir « Ce qui
+            // bouge s'arrête »).
+            var scene = document.getElementById('intro-overlay');
+            if (scene && !scene.hidden) {
+                document.body.classList.add('modal-open');
+                ['mask-points.js', 'intro.js'].forEach(function (src) {
+                    var el = document.createElement('script');
+                    el.src = src;
+                    el.async = false;
+                    document.body.appendChild(el);
+                });
+            }
+
+            // LE RIDEAU NE DOIT JAMAIS RESTER SANS MACHINISTE. Seul intro.js
+            // sait le lever — au clic, au clavier, ou au bout de vingt
+            // secondes. S'il n'a pas démarré quand la page a fini de charger
+            // (fichier perdu en route, navigateur trop ancien pour sa syntaxe),
+            // personne ne le lèverait : l'écran restait noir et « Passer » ne
+            // répondait pas. On le lève donc soi-même, sans animation.
+            addEventListener('load', function () {
+                if (window.__introPret) return;
+                var rideau = document.getElementById('intro-overlay');
+                if (rideau) rideau.hidden = true;
+                document.body.classList.remove('modal-open');
+            });
         })();
     </script>
 
@@ -3925,14 +4190,14 @@
                 <!-- Info column -->
                 <div class="w-full md:flex-1 text-center md:text-left">
                     <h1 class="text-3xl md:text-4xl font-extrabold font-montserrat tracking-tight text-luxury-textMain">
-                        Adrien <span class="text-luxury-gold font-cinzel">VADA</span>
+                        Adrien <span class="text-luxury-gold font-cinzel uppercase">Vada</span>
                     </h1>
                     <div class="bio-collapse" id="header-metier">
                         <div class="bio-collapse-inner">
-                            <h2
-                                class="text-sm font-normal font-montserrat tracking-[0.2em] text-luxury-textMuted uppercase mt-0.5 mb-2">
+                            <p
+                                class="metier text-sm font-normal font-montserrat tracking-[0.2em] text-luxury-textMuted uppercase mt-0.5 mb-2">
                                 Artiste interprète
-                            </h2>
+                            </p>
                         </div>
                     </div>
 
@@ -3953,7 +4218,7 @@
                     <div class="bio-collapse" id="header-signature">
                         <div class="bio-collapse-inner">
                             <div
-                                class="signature-casting flex flex-wrap items-center justify-center md:justify-start gap-x-1.5 sm:gap-x-2 gap-y-1 mb-2 text-[10px] font-montserrat tracking-normal sm:tracking-wide text-luxury-textMuted">
+                                class="signature-casting flex flex-wrap items-center justify-center md:justify-start gap-x-1.5 sm:gap-x-2 gap-y-1 mb-2 text-[12px] font-montserrat tracking-normal sm:tracking-wide text-luxury-textMuted">
                                 <span class="text-luxury-textMain">187 cm</span>
                                 <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
@@ -4036,7 +4301,7 @@
                                             data-track-detail="agences-artistiques"
                                             class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
                                             <img src="ressources/images/design/agencesartistiques.png" alt="" width="11"
-                                                height="11" class="h-[11px] w-auto rounded-sm"> Agences Artistiques
+                                                height="11" class="h-[11px] w-auto rounded-sm"> Agences Artistiques<span class="sr-only"> (nouvel onglet)</span>
                                         </a>
                                         <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
@@ -4045,7 +4310,7 @@
                                             data-track-detail="filmmakers"
                                             class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
                                             <img src="ressources/images/design/filmmakers.svg" alt="" width="11"
-                                                height="11" class="h-[11px] w-auto rounded-sm"> Filmmakers
+                                                height="11" class="h-[11px] w-auto rounded-sm"> Filmmakers<span class="sr-only"> (nouvel onglet)</span>
                                         </a>
                                         <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
@@ -4053,7 +4318,7 @@
                                             rel="noopener" data-track="reseau" data-track-detail="instagram"
                                             class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
                                             <img src="ressources/images/design/instagram.svg" alt="" width="11"
-                                                height="11" class="h-[11px] w-auto rounded-sm"> Instagram
+                                                height="11" class="h-[11px] w-auto rounded-sm"> Instagram<span class="sr-only"> (nouvel onglet)</span>
                                         </a>
                                         <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
@@ -4062,7 +4327,7 @@
                                             data-track-detail="linkedin"
                                             class="hover:text-luxury-goldInk flex items-center gap-1.5 transition">
                                             <img src="ressources/images/design/linkedin.svg" alt="" width="11"
-                                                height="11" class="h-[11px] w-auto rounded-sm"> LinkedIn
+                                                height="11" class="h-[11px] w-auto rounded-sm"> LinkedIn<span class="sr-only"> (nouvel onglet)</span>
                                         </a>
                                     </div>
                                 </div>
@@ -4097,7 +4362,7 @@
                     </span>
                     <!-- Helper label underneath avatar -->
                     <span
-                        class="text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk flex items-center gap-1 mt-1.5 opacity-80 group-hover:opacity-100 transition">
+                        class="text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk flex items-center gap-1 mt-1.5">
                         <svg class="ico" aria-hidden="true">
                             <use href="#i-solid-camera"></use>
                         </svg> Galerie photo
@@ -4174,7 +4439,7 @@
                      bouton, un seul endroit, accessible depuis n'importe quel
                      onglet — pas seulement le CV. Libellé et icône posés par
                      applyTheme ; jumeau de celui du pied de page. -->
-                <button type="button" data-theme-toggle aria-pressed="false"
+                <button type="button" data-theme-toggle
                     class="no-print flex-shrink-0 w-7 h-7 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk hover:border-luxury-gold transition-all duration-300">
                     <svg class="ico text-[12px] text-amber-400" data-theme-toggle-icon aria-hidden="true">
                         <use href="#i-solid-sun"></use>
@@ -4231,6 +4496,120 @@
                      `no-print` : la version imprimée est un CV, pas une
                      affiche. -->
                 <div id="next-date-banner" hidden class="no-print"></div>
+                <!-- LE BANDEAU EST RENDU ICI, PENDANT LA LECTURE DE LA PAGE, et non
+                     plus au chargement complet. Posé après coup, il poussait
+                     vers le bas un CV déjà affiché — la première ligne, que
+                     l'on était en train de lire, sautait de 118 px (mesuré :
+                     un décalage de mise en page de 0,09 à 0,10). Il ne se
+                     voyait pas tant que la page attendait ses polices chez
+                     Google pour s'afficher ; depuis qu'elle s'affiche vite,
+                     il se voyait.
+                     Les dates (dates.js) sont donc chargées juste avant, et
+                     le bandeau est écrit juste après son emplacement : le CV
+                     qui suit n'est mis en page qu'une fois le bandeau en
+                     place. Ces fonctions servent ensuite au reste de la page,
+                     qui les trouve déjà là. -->
+                <script src="dates.js"></script>
+                <script>
+        // Un lien de réservation ne part que vers une page web : lienSur()
+        // écarte « javascript: » et complète « www. » (voir dates-live.js,
+        // qui fait le même tri dès la lecture de la base). Tant que ce
+        // fichier n'est pas là — le bandeau ci-dessous est rendu avant —, le
+        // même tri est fait ici, à l'identique : sans cela le bouton
+        // « Réserver » d'une adresse en « www. » n'apparaîtrait qu'au second
+        // rendu, et le bandeau changerait de hauteur sous les yeux.
+        function lienSur(url) {
+            if (window.DatesLive && DatesLive.lienSur) return DatesLive.lienSur(url);
+            const u = String(url == null ? '' : url).trim();
+            if (/^https?:\/\/[^\s"'<>]+$/i.test(u)) return u;
+            if (/^www\.[^\s"'<>]+$/i.test(u)) return 'https://' + u;
+            return '';
+        }
+
+        // Échappement systématique des données injectées via innerHTML
+        function esc(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Une série de trois soirs vaut trois représentations. Sans cet
+        // aplatissement, le deuxième soir d'une série passerait derrière un
+        // spectacle plus lointain simplement parce qu'il est déclaré plus haut
+        // dans le fichier — l'ordre du fichier n'est pas l'ordre du calendrier.
+        function flattenUpcoming(entries) {
+            const out = [];
+            (entries || []).forEach(entry => {
+                const reps = (entry.type === 'series' && Array.isArray(entry.shows))
+                    ? entry.shows
+                    : [entry];
+                reps.forEach(r => out.push({
+                    time: icsToTime(r.icsDate),
+                    dateLabel: r.dateLabel || entry.dateLabel || '',
+                    title: entry.title || '',
+                    location: entry.location || '',
+                    bookingUrl: r.bookingUrl || entry.bookingUrl || '',
+                    isSchool: Boolean(r.isSchool || entry.isSchool)
+                }));
+            });
+            return out;
+        }
+
+        // « Ce soir » et « Demain » se lisent plus vite qu'une date — et ce
+        // sont précisément les deux jours où l'information décide de quelque
+        // chose. Au-delà, la date chiffrée reste plus utile que « dans 9 jours ».
+        function relativeDayLabel(time, repli) {
+            if (isNaN(time)) return repli;
+            const ecart = Math.round((time - todayStamp()) / 86400000);
+            if (ecart === 0) return 'Ce soir';
+            if (ecart === 1) return 'Demain';
+            return repli;
+        }
+
+        function renderNextDate() {
+            const bandeau = document.getElementById('next-date-banner');
+            if (!bandeau) return;
+            if (typeof SHOW_DATA === 'undefined') { bandeau.hidden = true; return; }
+
+            const toutes = flattenUpcoming(splitUpcoming(SHOW_DATA.upcoming).upcoming);
+            // Une entrée sans icsDate exploitable ne peut pas être classée :
+            // elle ne sert de secours que si aucune autre n'est datée.
+            const datees = toutes.filter(r => !isNaN(r.time)).sort((a, b) => a.time - b.time);
+            const p = datees[0] || toutes[0];
+
+            if (!p) { bandeau.hidden = true; return; }
+
+            const quand = relativeDayLabel(p.time, p.dateLabel);
+            const lieu = p.location ? `<span class="text-stone-300 mx-1" aria-hidden="true">·</span>${esc(p.location)}` : '';
+
+            // Pas de bouton pour une séance scolaire : l'accès y est restreint,
+            // et proposer « Réserver » ferait une promesse que la page Dates
+            // dément trois lignes plus bas.
+            const billetterie = lienSur(p.bookingUrl);
+            const reserver = (billetterie && !p.isSchool)
+                ? `<a href="${esc(billetterie)}" target="_blank" rel="noopener" data-track="date_booking"
+                       data-track-detail="${esc(p.title)}"
+                       class="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-luxury-goldInk text-luxury-onGold text-[11px] font-bold font-montserrat tracking-wider uppercase hover:bg-luxury-goldDeep transition">
+                       Réserver <svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
+                : '';
+
+            bandeau.innerHTML = `
+                <div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                    <span class="flex items-center gap-1.5 flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
+                        <span class="next-date-dot" aria-hidden="true"></span> Prochainement
+                    </span>
+                    <a href="#page_dates" data-track="banner_next_date"
+                       class="group flex-[1_1_10rem] min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <span class="text-xs font-bold font-montserrat uppercase tracking-wide text-luxury-textMain group-hover:text-luxury-goldInk transition">${esc(p.title)}</span>
+                        <span class="text-[11px] text-luxury-textMuted font-mono break-words min-w-0">${esc(quand)}${lieu}</span>
+                    </a>
+                    ${reserver}
+                </div>`;
+            bandeau.hidden = false;
+        }
+
+        renderNextDate();
+                </script>
 
                 <!-- SECTION 1.1: THÉÂTRE -->
                 <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
@@ -4252,23 +4631,23 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2027</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2027</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Cassandres
                                                 <span
                                                     class="text-luxury-textMuted italic font-normal normal-case">(Angelo
                                                     Jossec)</span></span>
                                         </div>
-                                        <p class="cv-role text-[11px] text-luxury-textMain mt-1">
+                                        <p class="cv-role text-[12px] text-luxury-textMain mt-1">
                                             <span class="text-luxury-goldInk font-semibold">Rôle</span> · Rôles
                                             multiples
                                         </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Compagnie
+                                        <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">Compagnie
                                             Crescite — Angelo Jossec</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span
-                                            class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
+                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
                                             création</span>
                                         <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true">
                                             <use href="#i-solid-chevron-down"></use>
@@ -4292,22 +4671,22 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">L’Imaginaire
                                                 Forcé <span
                                                     class="text-luxury-textMuted italic font-normal normal-case">(d’après
                                                     Molière)</span></span>
                                         </div>
-                                        <p class="cv-role text-[11px] text-luxury-textMain mt-1">
+                                        <p class="cv-role text-[12px] text-luxury-textMain mt-1">
                                             <span class="text-luxury-goldInk font-semibold">Rôle</span> · Sganarelle
                                         </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Compagnie
+                                        <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">Compagnie
                                             Crescite — Angelo Jossec</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span
-                                            class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
+                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
                                             création</span>
                                         <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true">
                                             <use href="#i-solid-chevron-down"></use>
@@ -4332,23 +4711,23 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">À
                                                 la barre, peine perdue ? <span
                                                     class="text-luxury-textMuted italic font-normal normal-case">(Ronan
                                                     Chéneau)</span></span>
                                         </div>
-                                        <p class="cv-role text-[11px] text-luxury-textMain mt-1">
+                                        <p class="cv-role text-[12px] text-luxury-textMain mt-1">
                                             <span class="text-luxury-goldInk font-semibold">Rôle</span> · Juge, accusé,
                                             greffier, avocat, narrateur
                                         </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">CDN de
+                                        <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">CDN de
                                             Normandie-Rouen</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span
-                                            class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
+                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
                                             tournée</span>
                                         <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true">
                                             <use href="#i-solid-chevron-down"></use>
@@ -4373,18 +4752,18 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Audiences<span
                                                     class="text-luxury-textMuted italic font-normal normal-case">
                                                     (Écriture
                                                     collective)</span></span>
                                         </div>
-                                        <p class="cv-role text-[11px] text-luxury-textMain mt-1">
+                                        <p class="cv-role text-[12px] text-luxury-textMain mt-1">
                                             <span class="text-luxury-goldInk font-semibold">Rôle</span> · Procureur
                                             général, juge, accusé, narrateur
                                         </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">CDN de
+                                        <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">CDN de
                                             Normandie-Rouen / Compagnie du P’tit Ballon</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
@@ -4410,21 +4789,21 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Cléophène,
                                                 d’après Rodogune <span
                                                     class="text-luxury-textMuted italic font-normal normal-case">(Corneille)</span></span>
                                         </div>
-                                        <p class="cv-role text-[11px] text-luxury-textMain mt-1">
+                                        <p class="cv-role text-[12px] text-luxury-textMain mt-1">
                                             <span class="text-luxury-goldInk font-semibold">Rôle</span> · Antiochus
                                         </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Compagnie
+                                        <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">Compagnie
                                             Crescite — Angelo Jossec</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span
-                                            class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
+                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
                                             tournée</span>
                                         <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true">
                                             <use href="#i-solid-chevron-down"></use>
@@ -4448,18 +4827,18 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2023</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2023</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Fulguré.e.s
                                                 <span
                                                     class="text-luxury-textMuted italic font-normal normal-case">(Jérémie
                                                     Fabre)</span></span>
                                         </div>
-                                        <p class="cv-role text-[11px] text-luxury-textMain mt-1">
+                                        <p class="cv-role text-[12px] text-luxury-textMain mt-1">
                                             <span class="text-luxury-goldInk font-semibold">Rôle</span> · Adrien / Le
                                             jeune mec / Jerem
                                         </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Compagnie
+                                        <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">Compagnie
                                             Alchimie — Amélie Chalmey</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
@@ -4485,21 +4864,21 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Bérénice
                                                 <span
                                                     class="text-luxury-textMuted italic font-normal normal-case">(Racine)</span></span>
                                         </div>
-                                        <p class="cv-role text-[11px] text-luxury-textMain mt-1">
+                                        <p class="cv-role text-[12px] text-luxury-textMain mt-1">
                                             <span class="text-luxury-goldInk font-semibold">Rôle</span> · Antiochus
                                         </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Compagnie
+                                        <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">Compagnie
                                             Crescite — Angelo Jossec</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span
-                                            class="cv-badge flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
+                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
                                             tournée</span>
                                         <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true">
                                             <use href="#i-solid-chevron-down"></use>
@@ -4524,16 +4903,16 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">As
                                                 You Like It <span
                                                     class="text-luxury-textMuted italic font-normal normal-case">(Shakespeare)</span></span>
                                         </div>
-                                        <p class="cv-role text-[11px] text-luxury-textMain mt-1">
+                                        <p class="cv-role text-[12px] text-luxury-textMain mt-1">
                                             <span class="text-luxury-goldInk font-semibold">Rôle</span> · Touchstone
                                         </p>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Compagnie
+                                        <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">Compagnie
                                             Bloomsbury — Nicolas Gaspar</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
@@ -4581,13 +4960,13 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2023</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2023</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">L’Homme
                                                 moderne <span
                                                     class="text-luxury-textMuted italic font-normal normal-case">(mini-série)</span></span>
                                         </div>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">De et avec
+                                        <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">De et avec
                                             Max Laure</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
@@ -4607,12 +4986,12 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">La
                                                 peau des anges n’est pas si douce</span>
                                         </div>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Réalisé par
+                                        <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">Réalisé par
                                             Emma Fridé</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
@@ -4631,12 +5010,12 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2019</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2019</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Le
                                                 rapt</span>
                                         </div>
-                                        <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">Réalisé par
+                                        <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">Réalisé par
                                             Cécile Dessillons et Ladane Dehdar</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
@@ -4678,7 +5057,7 @@
                         <div
                             class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-luxury-stripe even:bg-transparent text-sm">
                             <span
-                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Taille</span>
+                                class="cv-fiche-cle text-[11px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Taille</span>
                             <span class="text-sm font-semibold text-luxury-textMain mt-0.5">187 cm</span>
                         </div>
 
@@ -4686,7 +5065,7 @@
                         <div
                             class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-luxury-stripe even:bg-transparent text-sm">
                             <span
-                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Chant</span>
+                                class="cv-fiche-cle text-[11px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Chant</span>
                             <span class="text-sm font-semibold text-luxury-textMain mt-0.5">Baryton-basse</span>
                         </div>
 
@@ -4701,10 +5080,10 @@
                         <div
                             class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent text-sm">
                             <span
-                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Piano</span>
+                                class="cv-fiche-cle text-[11px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Piano</span>
                             <p class="text-sm font-semibold text-luxury-textMain mt-0.5">Interprétation,
                                 Improvisation, Composition</p>
-                            <p class="text-[9px] text-luxury-textMuted font-mono">fin de 3e cycle du
+                            <p class="text-[11px] text-luxury-textMuted font-mono">fin de 3e cycle du
                                 Conservatoire
                             </p>
                         </div>
@@ -4713,7 +5092,7 @@
                         <div
                             class="glass-panel rounded-lg p-2.5 flex flex-col justify-between odd:bg-luxury-stripe even:bg-transparent text-sm">
                             <span
-                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Permis</span>
+                                class="cv-fiche-cle text-[11px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat">Permis</span>
                             <div class="flex gap-3 mt-0.5 items-center">
                                 <span class="flex items-center gap-1.5 text-luxury-textMain">
                                     <span class="text-sm font-bold font-mono leading-none">A</span>
@@ -4734,30 +5113,30 @@
                         <div
                             class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent text-sm md:col-span-2">
                             <span
-                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1 block">Activités
+                                class="cv-fiche-cle text-[11px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1 block">Activités
                                 physiques & sports</span>
                             <div class="flex flex-wrap gap-1">
                                 <span
-                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Boxe
+                                    class="text-[12px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Boxe
                                     anglaise</span>
                                 <span
-                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Karaté</span>
+                                    class="text-[12px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Karaté</span>
                                 <span
-                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Natation</span>
+                                    class="text-[12px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Natation</span>
                                 <span
-                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Escrime
+                                    class="text-[12px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Escrime
                                     artistique</span>
                                 <span
-                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain"
+                                    class="text-[12px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain"
                                     title="Technique d’intervention opérationnelle rapprochée">
                                     <a href="https://fr.wikipedia.org/wiki/Technique_d%27intervention_op%C3%A9rationnelle_rapproch%C3%A9e"
-                                        target="_blank" class="hover:underline">TIOR <svg class="ico text-[7px]"
+                                        target="_blank" rel="noopener" class="hover:underline">TIOR <svg class="ico text-[7px]"
                                             aria-hidden="true">
                                             <use href="#i-solid-up-right-from-square"></use>
-                                        </svg></a>
+                                        </svg><span class="sr-only"> (Wikipédia, nouvel onglet)</span></a>
                                 </span>
                                 <span
-                                    class="text-[10px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Tir
+                                    class="text-[12px] bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded text-luxury-textMain">Tir
                                     militaire (arme de poing, fusil d’assaut)</span>
                             </div>
                         </div>
@@ -4766,20 +5145,20 @@
                         <div
                             class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent text-sm md:col-span-2">
                             <span
-                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1 block">Expériences
+                                class="cv-fiche-cle text-[11px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1 block">Expériences
                                 professionnelles</span>
                             <div class="grid grid-cols-3 gap-1 text-center">
                                 <div class="bg-luxury-surface border border-stone-200 rounded p-1">
-                                    <p class="text-[10px] text-luxury-textMain font-semibold">Armée de Terre</p>
-                                    <p class="text-[9px] text-luxury-textMuted font-mono">Guyane française</p>
+                                    <p class="text-[12px] text-luxury-textMain font-semibold">Armée de Terre</p>
+                                    <p class="text-[11px] text-luxury-textMuted font-mono">Guyane française</p>
                                 </div>
                                 <div class="bg-luxury-surface border border-stone-200 rounded p-1">
-                                    <p class="text-[10px] text-luxury-textMain font-semibold">Gendarmerie</p>
-                                    <p class="text-[9px] text-luxury-textMuted font-mono">Normandie</p>
+                                    <p class="text-[12px] text-luxury-textMain font-semibold">Gendarmerie</p>
+                                    <p class="text-[11px] text-luxury-textMuted font-mono">Normandie</p>
                                 </div>
                                 <div class="bg-luxury-surface border border-stone-200 rounded p-1">
-                                    <p class="text-[10px] text-luxury-textMain font-semibold">SNCF</p>
-                                    <p class="text-[9px] text-luxury-textMuted font-mono">Île-de-France</p>
+                                    <p class="text-[12px] text-luxury-textMain font-semibold">SNCF</p>
+                                    <p class="text-[11px] text-luxury-textMuted font-mono">Île-de-France</p>
                                 </div>
                             </div>
                         </div>
@@ -4788,7 +5167,7 @@
                         <div
                             class="glass-panel rounded-lg p-2.5 odd:bg-luxury-stripe even:bg-transparent md:col-span-1">
                             <span
-                                class="cv-fiche-cle text-[9px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1.5 block">Langues</span>
+                                class="cv-fiche-cle text-[11px] uppercase font-bold tracking-wider text-luxury-goldInk font-montserrat mb-1.5 block">Langues</span>
                             <div class="space-y-1 text-xs">
                                 <div class="flex justify-between border-b border-stone-200/50 pb-0.5">
                                     <span class="text-luxury-textMain">Français</span>
@@ -4824,33 +5203,33 @@
                             class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-luxury-stripe even:bg-transparent">
                             <div class="cv-title-row">
                                 <span
-                                    class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
+                                    class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
                                 <span class="cv-title inline align-middle font-bold text-luxury-textMain text-xs">Jeu
                                     caméra et casting</span>
                             </div>
-                            <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
+                            <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">
                                 Mon Coach Academy</p>
                         </li>
                         <li
                             class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-luxury-stripe even:bg-transparent">
                             <div class="cv-title-row">
                                 <span
-                                    class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
+                                    class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
                                 <span class="cv-title inline align-middle font-bold text-luxury-textMain text-xs">Voix
                                     en studio professionnel</span>
                             </div>
-                            <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
+                            <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">
                                 Coachs Associés</p>
                         </li>
                         <li
                             class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-luxury-stripe even:bg-transparent">
                             <div class="cv-title-row">
                                 <span
-                                    class="cv-year inline-block align-middle mr-1.5 text-[9px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2018 - 2021</span>
+                                    class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2018 - 2021</span>
                                 <span class="cv-title inline align-middle font-bold text-luxury-textMain text-xs">Art
                                     dramatique</span>
                             </div>
-                            <p class="cv-subtitle text-[11px] text-luxury-textMuted mt-0.5">
+                            <p class="cv-subtitle text-[12px] text-luxury-textMuted mt-0.5">
                                 Conservatoire à rayonnement régional de Rouen</p>
                         </li>
                     </ul>
@@ -4913,13 +5292,14 @@
                      une signature. Sur téléphone rien ne change, l'écran y
                      est plus étroit que la bride ne l'était. -->
                 <button type="button" class="recit-appel" data-recit-ouvrir aria-haspopup="dialog"
-                    aria-controls="recit" aria-label="Lire mon parcours en entier">
+                    aria-controls="recit">
                     <span class="bio-handwritten-wrap block text-left">
                         <span class="bio-handwritten recit-extrait">Ce que j’aime, c’est ce que chaque
                             masque m’oblige à aller chercher.<span
                                 class="recit-suite"> J’ai vu Cyrano au cinéma quand
                                 j’avais…</span></span>
                     </span>
+                    <span class="sr-only"> — Lire mon parcours en entier</span>
                 </button>
 
             </div>
@@ -4951,7 +5331,7 @@
                         <div class="flex justify-start mb-2">
                             <button type="button" id="dates-search-open" aria-expanded="false"
                                 aria-controls="dates-search-panel"
-                                class="inline-flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-luxury-textMuted hover:text-luxury-goldInk border border-stone-200 hover:border-luxury-gold rounded-full px-2.5 py-1 transition">
+                                class="inline-flex items-center gap-1.5 text-[11px] uppercase font-bold tracking-wider text-luxury-textMuted hover:text-luxury-goldInk border border-stone-200 hover:border-luxury-gold rounded-full px-2.5 py-1 transition">
                                 <svg class="ico text-[10px]" aria-hidden="true">
                                     <use href="#i-solid-magnifying-glass"></use>
                                 </svg>
@@ -4972,7 +5352,7 @@
                                             aria-label="Rechercher parmi les représentations"
                                             class="w-full pl-8 pr-8 py-2 rounded-lg bg-luxury-surface border border-stone-200 text-xs text-luxury-textMain placeholder:text-luxury-textMuted focus:border-luxury-gold focus:outline-none transition">
                                         <button type="button" id="dates-search-clear" aria-label="Effacer la recherche"
-                                            class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk transition">
+                                            class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk transition">
                                             <svg class="ico text-[11px]" aria-hidden="true">
                                                 <use href="#i-solid-xmark"></use>
                                             </svg>
@@ -4982,13 +5362,13 @@
                                     <div class="mt-2 space-y-1.5">
                                         <div class="filter-row flex items-start gap-2" data-row="1">
                                             <span
-                                                class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Spectacle</span>
+                                                class="text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Spectacle</span>
                                             <div class="flex flex-wrap gap-1" id="filter-shows" role="group"
                                                 aria-label="Filtrer par spectacle"></div>
                                         </div>
                                         <div class="filter-row flex items-start gap-2" data-row="2">
                                             <span
-                                                class="text-[9px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Ville</span>
+                                                class="text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Ville</span>
                                             <div class="flex flex-wrap gap-1" id="filter-places" role="group"
                                                 aria-label="Filtrer par ville"></div>
                                         </div>
@@ -4996,10 +5376,10 @@
 
                                     <div
                                         class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-stone-200/40">
-                                        <p class="text-[10px] text-luxury-textMuted font-mono" id="dates-count"
+                                        <p class="text-[11px] text-luxury-textMuted font-mono" id="dates-count"
                                             aria-live="polite"></p>
                                         <button type="button" id="dates-reset"
-                                            class="hidden text-[10px] uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">
+                                            class="hidden text-[11px] uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">
                                             Réinitialiser
                                         </button>
                                     </div>
@@ -5125,12 +5505,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">L’Oréal
+                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">L’Oréal
                                         <span
-                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Grave, doux, sincère (home studio)</span></span>
                                     <span id="time-audio-loreal"
-                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center">0:00
                                         / 0:00</span>
                                 </div>
                                 <div data-audio-seek="audio-loreal" role="slider" tabindex="0" aria-valuemin="0"
@@ -5156,12 +5536,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Nexity
+                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Nexity
                                         <span
-                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Confiant, lumineux (Europe 1)</span></span>
                                     <span id="time-audio-nexity"
-                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center">0:00
                                         / 0:00</span>
                                 </div>
                                 <div data-audio-seek="audio-nexity" role="slider" tabindex="0" aria-valuemin="0"
@@ -5187,12 +5567,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Uber
+                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Uber
                                         <span
-                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Sobre, intime, droit (Coachs Associés)</span></span>
                                     <span id="time-audio-uber"
-                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center">0:00
                                         / 0:00</span>
                                 </div>
                                 <div data-audio-seek="audio-uber" role="slider" tabindex="0" aria-valuemin="0"
@@ -5220,12 +5600,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Play-Off
+                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Play-Off
                                         NBA <span
-                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Dynamique, sport, jeunes (Coachs Associés)</span></span>
                                     <span id="time-audio-nba"
-                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center">0:00
                                         / 0:00</span>
                                 </div>
                                 <div data-audio-seek="audio-nba" role="slider" tabindex="0" aria-valuemin="0"
@@ -5252,12 +5632,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Se
+                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Se
                                         Loger <span
-                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Rythmé, espiègle (Coachs Associés)</span></span>
                                     <span id="time-audio-seloger"
-                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center">0:00
                                         / 0:00</span>
                                 </div>
                                 <div data-audio-seek="audio-seloger" role="slider" tabindex="0" aria-valuemin="0"
@@ -5300,12 +5680,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Docu
+                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Docu
                                         Animalier <span
-                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Narration (Maquette Home Studio)</span></span>
                                     <span id="time-audio-docuhome"
-                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center">0:00
                                         / 0:00</span>
                                 </div>
                                 <div data-audio-seek="audio-docuhome" role="slider" tabindex="0" aria-valuemin="0"
@@ -5347,12 +5727,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">Les
+                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Les
                                         enfants du fleuve <span
-                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Lecture narrative (Coachs Associés)</span></span>
                                     <span id="time-audio-book"
-                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center">0:00
                                         / 0:00</span>
                                 </div>
                                 <div data-audio-seek="audio-book" role="slider" tabindex="0" aria-valuemin="0"
@@ -5397,12 +5777,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain truncate font-montserrat uppercase tracking-wider text-[10px]">3,
+                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">3,
                                         2, 1 Go ! <span
-                                            class="text-luxury-textMuted font-normal lowercase italic text-[9px] font-inter">
+                                            class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Nathan, voix adolescent (home studio)</span></span>
                                     <span id="time-audio-doublage-nathan"
-                                        class="font-mono text-luxury-textMuted text-[9px] self-end sm:self-center">0:00
+                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center">0:00
                                         / 0:00</span>
                                 </div>
                                 <div data-audio-seek="audio-doublage-nathan" role="slider" tabindex="0"
@@ -5426,7 +5806,7 @@
             class="glass-card rounded-xl p-4 mt-5 border border-stone-200/50 bg-luxury-surface/70 shadow-sm no-print">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div class="text-center sm:text-left">
-                    <p class="text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
+                    <p class="text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
                         Contact
                     </p>
                     <a href="mailto:adrien.vada@gmail.com" data-track="contact_mail" data-track-detail="pied"
@@ -5439,39 +5819,43 @@
                          resteraient des îles sans rien qui y mène. -->
                     <p class="mt-1">
                         <a href="/spectacles/"
-                            class="text-[10px] uppercase font-bold tracking-widest text-luxury-textMuted hover:text-luxury-goldInk transition">Répertoire
+                            class="text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted hover:text-luxury-goldInk transition">Répertoire
                             des spectacles</a>
                     </p>
                 </div>
 
+                <!-- Des icônes de 14 px, mais des cibles de 24 (WCAG 2.5.8) :
+                     5 px de marge intérieure autour de l'image, rendus aussitôt
+                     par une marge négative — l'œil ne voit rien bouger, le
+                     doigt trouve une zone deux fois et demie plus grande. -->
                 <ul class="flex items-center gap-3.5 list-none">
                     <li><a href="https://www.agencesartistiques.com/Fiche-Artiste/781133-adrien-vada.html"
                             target="_blank" rel="noopener" data-track="fiche_pro"
                             data-track-detail="agences-artistiques" aria-label="Fiche Agences Artistiques (nouvel onglet)"
-                            class="block transition hover:scale-105 hover:opacity-80">
+                            class="block p-[5px] -m-[5px] transition hover:scale-105 hover:opacity-80">
                             <img src="ressources/images/design/agencesartistiques.png" alt="" width="14" height="14"
                                 class="h-[14px] w-auto rounded-sm"></a></li>
                     <li><a href="https://www.filmmakers.eu/fr/actors/adrien-vada-djerbetian" target="_blank"
                             rel="noopener" data-track="fiche_pro" data-track-detail="filmmakers"
                             aria-label="Profil Filmmakers (nouvel onglet)"
-                            class="block transition hover:scale-105 hover:opacity-80">
+                            class="block p-[5px] -m-[5px] transition hover:scale-105 hover:opacity-80">
                             <img src="ressources/images/design/filmmakers.svg" alt="" width="14" height="14"
                                 class="h-[14px] w-auto rounded-sm"></a></li>
                     <li><a href="https://www.instagram.com/adrien.vada.djerbetian" target="_blank" rel="noopener"
                             data-track="reseau" data-track-detail="instagram" aria-label="Instagram (nouvel onglet)"
-                            class="block transition hover:scale-105 hover:opacity-80">
+                            class="block p-[5px] -m-[5px] transition hover:scale-105 hover:opacity-80">
                             <img src="ressources/images/design/instagram.svg" alt="" width="14" height="14"
                                 class="h-[14px] w-auto rounded-sm"></a></li>
                     <li><a href="https://www.linkedin.com/in/adrien-vada-djerbetian-82b4971aa/" target="_blank"
                             rel="noopener" data-track="reseau" data-track-detail="linkedin"
                             aria-label="LinkedIn (nouvel onglet)"
-                            class="block transition hover:scale-105 hover:opacity-80">
+                            class="block p-[5px] -m-[5px] transition hover:scale-105 hover:opacity-80">
                             <img src="ressources/images/design/linkedin.svg" alt="" width="14" height="14"
                                 class="h-[14px] w-auto rounded-sm"></a></li>
                     <li><a href="https://open.spotify.com/intl-fr/artist/6eskUhQ2bQBxH1KhBxFPjz" target="_blank"
                             rel="noopener" data-track="reseau" data-track-detail="spotify"
                             aria-label="Spotify (nouvel onglet)"
-                            class="block transition hover:scale-105 hover:opacity-80">
+                            class="block p-[5px] -m-[5px] transition hover:scale-105 hover:opacity-80">
                             <img src="ressources/images/design/spotify.svg" alt="" width="14" height="14"
                                 class="h-[14px] w-auto rounded-sm"></a></li>
 
@@ -5480,7 +5864,7 @@
                     <!-- Bascule clair / sombre : libellé et icône sont posés
                          par le script (voir applyTheme) pour rester cohérents
                          avec le thème réellement appliqué. -->
-                    <li><button type="button" data-theme-toggle aria-pressed="false"
+                    <li><button type="button" data-theme-toggle
                             class="w-7 h-7 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk hover:border-luxury-gold transition-all duration-300">
                             <svg class="ico text-[12px] text-amber-400" data-theme-toggle-icon aria-hidden="true">
                                 <use href="#i-solid-sun"></use>
@@ -5489,51 +5873,6 @@
                 </ul>
             </div>
         </footer>
-    </div>
-
-    <!-- FULLSCREEN PHOTO GALLERY MODAL -->
-    <div id="gallery-modal" role="dialog" aria-modal="true" aria-label="Book photo d’Adrien Vada" hidden
-        class="fixed inset-0 bg-black/95 backdrop-blur-md z-[9999] flex flex-col justify-between items-center py-5 px-4 pointer-events-none opacity-0 transition-opacity duration-300">
-        <!-- Close overlay trigger -->
-        <div class="absolute inset-0 z-0" onclick="closeGallery()" aria-hidden="true"></div>
-
-        <!-- Upper Bar -->
-        <div class="relative z-10 w-full max-w-4xl flex justify-between items-center px-4">
-            <span id="gallery-counter" aria-live="polite"
-                class="text-[10px] font-mono text-luxury-goldInk font-bold bg-white/5 border border-white/10 px-2.5 py-1 rounded-full"></span>
-            <button type="button" onclick="closeGallery()" aria-label="Fermer le book"
-                class="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center text-stone-300 hover:text-white transition duration-300">
-                <svg class="ico text-sm" aria-hidden="true">
-                    <use href="#i-solid-xmark"></use>
-                </svg>
-            </button>
-        </div>
-
-        <!-- Image Container -->
-        <div class="relative z-10 flex-grow w-full flex items-center justify-center max-w-3xl py-4">
-            <button type="button" onclick="prevGalleryImage(event)" aria-label="Photo précédente"
-                class="absolute left-2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 border border-white/10 flex items-center justify-center text-white hover:text-luxury-goldInk transition duration-300">
-                <svg class="ico text-sm" aria-hidden="true">
-                    <use href="#i-solid-chevron-left"></use>
-                </svg>
-            </button>
-
-            <img id="gallery-img" src="" alt=""
-                class="max-w-[85%] max-h-[75vh] md:max-h-[80vh] object-contain rounded shadow-xl transition-all duration-300 transform scale-95 opacity-0">
-
-            <button type="button" onclick="nextGalleryImage(event)" aria-label="Photo suivante"
-                class="absolute right-2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 border border-white/10 flex items-center justify-center text-white hover:text-luxury-goldInk transition duration-300">
-                <svg class="ico text-sm" aria-hidden="true">
-                    <use href="#i-solid-chevron-right"></use>
-                </svg>
-            </button>
-        </div>
-
-        <!-- Bottom Thumbnails bar -->
-        <div class="relative z-10 w-full max-w-4xl flex justify-start gap-1.5 overflow-x-auto px-4 py-2 scroll-smooth"
-            id="gallery-thumbs-container" role="tablist" aria-label="Miniatures du book">
-            <!-- Statically populated from script -->
-        </div>
     </div>
 
     <!-- PREMIUM YOUTUBE VIDEO MODAL OVERLAY -->
@@ -5547,7 +5886,7 @@
             id="video-modal-card">
             <!-- Header bar inside video modal -->
             <div class="bg-stone-50 px-4 py-2 border-b border-stone-200 flex justify-between items-center">
-                <span class="text-[10px] font-mono font-bold text-luxury-goldInk tracking-wider uppercase"><svg
+                <span class="text-[11px] font-mono font-bold text-luxury-goldInk tracking-wider uppercase"><svg
                         class="ico mr-2 text-luxury-goldInk" aria-hidden="true">
                         <use href="#i-solid-play"></use>
                     </svg> LECTURE VIDÉO</span>
@@ -5613,7 +5952,7 @@
                             </div>
                             <div>
                                 <div class="text-xs font-bold text-stone-800">Google Agenda</div>
-                                <div class="text-[10px] text-stone-500">Ouverture directe en ligne ou dans
+                                <div class="text-[12px] text-stone-500">Ouverture directe en ligne ou dans
                                     l’application</div>
                             </div>
                         </div>
@@ -5633,7 +5972,7 @@
                             </div>
                             <div>
                                 <div class="text-xs font-bold text-stone-800">Apple Calendar / Autre (.ics)</div>
-                                <div class="text-[10px] text-stone-500">Fichier standard compatible Apple, Outlook
+                                <div class="text-[12px] text-stone-500">Fichier standard compatible Apple, Outlook
                                     bureau…</div>
                             </div>
                         </div>
@@ -5653,7 +5992,7 @@
                             </div>
                             <div>
                                 <div class="text-xs font-bold text-stone-800">Microsoft Outlook Web</div>
-                                <div class="text-[10px] text-stone-500">Ouverture directe dans Outlook Live en ligne
+                                <div class="text-[12px] text-stone-500">Ouverture directe dans Outlook Live en ligne
                                 </div>
                             </div>
                         </div>
@@ -5673,7 +6012,7 @@
                             </div>
                             <div>
                                 <div class="text-xs font-bold text-stone-800">Autre application mobile…</div>
-                                <div class="text-[10px] text-stone-500">Menu de partage natif du téléphone</div>
+                                <div class="text-[12px] text-stone-500">Menu de partage natif du téléphone</div>
                             </div>
                         </div>
                         <svg class="ico text-stone-300 group-hover:text-luxury-goldInk text-xs" aria-hidden="true">
@@ -5685,38 +6024,17 @@
         </div>
     </div>
 
-    <!-- VANILLA JS SCRIPTS -->
-    <script src="dates.js"></script>
-    <!-- Dates en direct depuis Supabase ; dates.js reste le repli si la base
+    <!-- VANILLA JS SCRIPTS
+         (dates.js est chargé plus haut, juste avant le bandeau
+         « Prochainement » : voir là-bas pourquoi.)
+         Dates en direct depuis Supabase ; dates.js reste le repli si la base
          ne répond pas. Voir l'en-tête de dates-live.js. -->
     <script src="dates-live.js"></script>
-    <script src="galerie.js"></script>
-    <script src="mask-points.js"></script>
-    <script src="intro.js"></script>
     <script>
         // ════════════════════════════════════════════════════════════════
         //  ÉTAT GLOBAL
         // ════════════════════════════════════════════════════════════════
-        // Images du book chargées depuis galerie.js (voir ce fichier pour l'ordre)
-        const GALLERY_FULL = GALLERY_IMAGES.map(img =>
-            img.folder === 'profil'
-                ? `ressources/images/${img.file}`
-                : `ressources/images/galerie/${img.file}`
-        );
-        const GALLERY_THUMB = GALLERY_IMAGES.map(img =>
-            `ressources/images/galerie/thumbs/${img.file.replace(/\.[^.]+$/, '')}.jpg`
-        );
-
-        let currentImageIndex = 0;
         let activeAudioId = null;
-        let galleryThumbsReady = false;
-
-        // Échappement systématique des données injectées via innerHTML
-        function esc(value) {
-            return String(value == null ? '' : value)
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        }
 
         // ════════════════════════════════════════════════════════════════
         //  MESURE — le seul point de sortie
@@ -5792,7 +6110,9 @@
             document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
                 btn.setAttribute('aria-label', action);
                 btn.setAttribute('title', action);
-                btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+                // PAS d'aria-pressed : le libellé dit déjà l'action. Les deux
+                // ensemble faisaient entendre « Passer au thème sombre,
+                // enfoncé » — une action à venir ET un état, contradictoires.
 
                 const icon = btn.querySelector('[data-theme-toggle-icon]');
                 if (icon) {
@@ -5800,8 +6120,11 @@
                     // chaque astre se distinguent d'un coup d'œil, alors qu'un
                     // soleil en simple contour se confond avec un engrenage.
                     setIcon(icon, toLight ? 'solid-sun' : 'solid-moon');
-                    icon.classList.remove('text-amber-400', 'text-indigo-300', 'text-luxury-goldInk');
-                    icon.classList.add(toLight ? 'text-amber-400' : 'text-indigo-300');
+                    // La lune n'apparaît qu'en thème clair, sur fond clair : un
+                    // bleu nuit franc (indigo-600, 6:1) et non plus pastel
+                    // (indigo-300 n'y faisait que 1,9:1).
+                    icon.classList.remove('text-amber-400', 'text-indigo-600', 'text-luxury-goldInk');
+                    icon.classList.add(toLight ? 'text-amber-400' : 'text-indigo-600');
                 }
                 const label = btn.querySelector('[data-theme-toggle-label]');
                 if (label) label.textContent = toLight ? 'Thème clair' : 'Thème sombre';
@@ -5912,8 +6235,7 @@
                 } else if (layer === 'recit') {
                     window.fermerLeRecit?.();
                 } else if (openModalEl) {
-                    if (openModalEl.id === 'gallery-modal') closeGallery();
-                    else if (openModalEl.id === 'video-modal') closeVideoModal();
+                    if (openModalEl.id === 'video-modal') closeVideoModal();
                     else closeCalendarModal();
                 }
             } finally {
@@ -5942,9 +6264,16 @@
             });
             openModalEl = modal;
             pushOverlayState('modal');
+            // Le reste de la page devient inerte (voir isolerCouche, dans
+            // univers.js) : le piège à tabulation ci-dessous ne suffisait pas
+            // — une fois le focus DANS le lecteur YouTube, les touches ne
+            // remontaient plus jusqu'ici, et Tab sortait de la fenêtre.
+            libererSousModale = window.isolerCouche ? window.isolerCouche(modal) : null;
             const first = modal.querySelector(FOCUSABLE);
             if (first) first.focus();
         }
+
+        let libererSousModale = null;
 
         function closeModal(modalId, cardId) {
             const modal = document.getElementById(modalId);
@@ -5958,6 +6287,7 @@
             openModalEl = null;
             document.body.classList.remove('modal-open');
             dropOverlayState('modal');
+            if (libererSousModale) { libererSousModale(); libererSousModale = null; }
 
             const finish = () => { modal.hidden = true; };
             // Attendre la fin du fondu, avec repli si transitionend ne se déclenche pas
@@ -5997,7 +6327,6 @@
             setupCvDrawers();
             initAudioPlayers();
             setupScrollReveal();
-            setupGallerySwipe();
 
             const hash = window.__ancreArrivee || '';
             const premierOnglet = hash && document.getElementById(hash) ? hash : 'page_cv';
@@ -6089,14 +6418,9 @@
             document.addEventListener('keydown', (e) => {
                 trapFocus(e);
                 if (e.key === 'Escape' && openModalEl) {
-                    if (openModalEl.id === 'gallery-modal') closeGallery();
-                    else if (openModalEl.id === 'video-modal') closeVideoModal();
+                    if (openModalEl.id === 'video-modal') closeVideoModal();
                     else if (openModalEl.id === 'calendar-modal') closeCalendarModal();
                     return;
-                }
-                if (openModalEl && openModalEl.id === 'gallery-modal') {
-                    if (e.key === 'ArrowLeft') prevGalleryImage();
-                    else if (e.key === 'ArrowRight') nextGalleryImage();
                 }
             });
         });
@@ -6143,80 +6467,6 @@
         //  chemin que la page Dates. Le bandeau ne peut donc pas la
         //  contredire, et une date ajoutée là-bas apparaît ici sans rien faire.
         // ════════════════════════════════════════════════════════════════
-
-        // Une série de trois soirs vaut trois représentations. Sans cet
-        // aplatissement, le deuxième soir d'une série passerait derrière un
-        // spectacle plus lointain simplement parce qu'il est déclaré plus haut
-        // dans le fichier — l'ordre du fichier n'est pas l'ordre du calendrier.
-        function flattenUpcoming(entries) {
-            const out = [];
-            (entries || []).forEach(entry => {
-                const reps = (entry.type === 'series' && Array.isArray(entry.shows))
-                    ? entry.shows
-                    : [entry];
-                reps.forEach(r => out.push({
-                    time: icsToTime(r.icsDate),
-                    dateLabel: r.dateLabel || entry.dateLabel || '',
-                    title: entry.title || '',
-                    location: entry.location || '',
-                    bookingUrl: r.bookingUrl || entry.bookingUrl || '',
-                    isSchool: Boolean(r.isSchool || entry.isSchool)
-                }));
-            });
-            return out;
-        }
-
-        // « Ce soir » et « Demain » se lisent plus vite qu'une date — et ce
-        // sont précisément les deux jours où l'information décide de quelque
-        // chose. Au-delà, la date chiffrée reste plus utile que « dans 9 jours ».
-        function relativeDayLabel(time, repli) {
-            if (isNaN(time)) return repli;
-            const ecart = Math.round((time - todayStamp()) / 86400000);
-            if (ecart === 0) return 'Ce soir';
-            if (ecart === 1) return 'Demain';
-            return repli;
-        }
-
-        function renderNextDate() {
-            const bandeau = document.getElementById('next-date-banner');
-            if (!bandeau) return;
-            if (typeof SHOW_DATA === 'undefined') { bandeau.hidden = true; return; }
-
-            const toutes = flattenUpcoming(splitUpcoming(SHOW_DATA.upcoming).upcoming);
-            // Une entrée sans icsDate exploitable ne peut pas être classée :
-            // elle ne sert de secours que si aucune autre n'est datée.
-            const datees = toutes.filter(r => !isNaN(r.time)).sort((a, b) => a.time - b.time);
-            const p = datees[0] || toutes[0];
-
-            if (!p) { bandeau.hidden = true; return; }
-
-            const quand = relativeDayLabel(p.time, p.dateLabel);
-            const lieu = p.location ? `<span class="text-stone-300 mx-1" aria-hidden="true">·</span>${esc(p.location)}` : '';
-
-            // Pas de bouton pour une séance scolaire : l'accès y est restreint,
-            // et proposer « Réserver » ferait une promesse que la page Dates
-            // dément trois lignes plus bas.
-            const reserver = (p.bookingUrl && !p.isSchool)
-                ? `<a href="${esc(p.bookingUrl)}" target="_blank" rel="noopener" data-track="date_booking"
-                       data-track-detail="${esc(p.title)}"
-                       class="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-luxury-goldInk text-luxury-onGold text-[10px] font-bold font-montserrat tracking-wider uppercase hover:bg-luxury-goldDeep transition">
-                       Réserver <svg class="ico text-[9px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
-                : '';
-
-            bandeau.innerHTML = `
-                <div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                    <span class="flex items-center gap-1.5 flex-shrink-0 text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
-                        <span class="next-date-dot" aria-hidden="true"></span> Prochainement
-                    </span>
-                    <a href="#page_dates" data-track="banner_next_date"
-                       class="group flex-1 min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                        <span class="text-xs font-bold font-montserrat uppercase tracking-wide text-luxury-textMain group-hover:text-luxury-goldInk transition">${esc(p.title)}</span>
-                        <span class="text-[11px] text-luxury-textMuted font-mono">${esc(quand)}${lieu}</span>
-                    </a>
-                    ${reserver}
-                </div>`;
-            bandeau.hidden = false;
-        }
 
         function toggleDatePanel(panelId, btn) {
             const panel = document.getElementById(panelId);
@@ -6267,7 +6517,7 @@
 
             const linkBtn = url
                 ? `<a href="${esc(url)}" target="_blank" rel="noopener"
-                       class="flex-shrink-0 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-luxury-goldInk border border-luxury-gold/40 hover:border-luxury-gold hover:bg-luxury-gold/10 px-2 py-1 rounded transition"
+                       class="flex-shrink-0 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-luxury-goldInk border border-luxury-gold/40 hover:border-luxury-gold hover:bg-luxury-gold/10 px-2 py-1 rounded transition"
                        aria-label="Page officielle du spectacle ${esc(key || '')} (nouvel onglet)">Page du spectacle
                        <svg class="ico text-[8px]" aria-hidden="true"><use href="#i-solid-up-right-from-square"></use></svg></a>`
                 : '';
@@ -6275,16 +6525,16 @@
             let list;
             let header = '';
             if (dates.length) {
-                header = `<p class="text-[9px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat pt-1">
+                header = `<p class="text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat pt-1">
                         Prochaines représentations</p>`;
                 list = dates.map(p => {
                     const t = performanceTimeStr(p);
                     const school = p.isSchool
                         ? ` <span class="text-luxury-warn">· séance scolaire</span>` : '';
                     return `<div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 py-1 border-b border-stone-200/30 last:border-0">
-                        <span class="font-mono text-[10px] font-bold text-luxury-goldInk whitespace-nowrap">${esc(p.dateLabel)}</span>
-                        <span class="text-[11px] text-luxury-textMain">${esc(p.location)}</span>
-                        <span class="text-[10px] text-luxury-textMuted font-mono">${t ? esc(t) : 'horaire à confirmer'}${school}</span>
+                        <span class="font-mono text-[11px] font-bold text-luxury-goldInk whitespace-nowrap">${esc(p.dateLabel)}</span>
+                        <span class="text-[12px] text-luxury-textMain">${esc(p.location)}</span>
+                        <span class="text-[11px] text-luxury-textMuted font-mono">${t ? esc(t) : 'horaire à confirmer'}${school}</span>
                     </div>`;
                 }).join('');
             } else {
@@ -6292,12 +6542,12 @@
                 // indique s'il est en préparation ou s'il n'est plus au répertoire.
                 // Pas d'en-tête ici : l'italique porte l'information à elle seule.
                 list = isEnCreation(li)
-                    ? `<p class="text-[11px] text-luxury-textMuted italic py-1">Le spectacle est en création.</p>`
-                    : `<p class="text-[11px] text-luxury-textMuted italic py-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    ? `<p class="text-[12px] text-luxury-textMuted italic py-1">Le spectacle est en création.</p>`
+                    : `<p class="text-[12px] text-luxury-textMuted italic py-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span>Le spectacle est arrêté.</span>
                         <button type="button" data-cv-past-show="${esc(key)}"
-                            class="not-italic text-[10px] font-bold uppercase tracking-wider text-luxury-goldInk hover:underline inline-flex items-center gap-1">
-                            Voir les représentations passées <svg class="ico text-[9px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></button>
+                            class="not-italic text-[11px] font-bold uppercase tracking-wider text-luxury-goldInk hover:underline inline-flex items-center gap-1">
+                            Voir les représentations passées <svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></button>
                     </p>`;
             }
 
@@ -6325,6 +6575,14 @@
             // relançait showPage par hashchange), puis un scrollIntoView vers
             // une troisième cible.
             allerAOnglet('page_dates');
+            // LE FOCUS ARRIVE AVEC LA PAGE. Venu d'un univers refermé, il
+            // restait sur <body> : la touche Tab suivante repartait du haut
+            // du site au lieu des dates qu'on venait demander.
+            const titre = document.querySelector('#page_dates h3');
+            if (titre) {
+                titre.setAttribute('tabindex', '-1');
+                titre.focus({ preventScroll: true });
+            }
         }
 
         document.addEventListener('click', (e) => {
@@ -6458,7 +6716,7 @@
         }
 
         function chipHtml(label, group, value, active) {
-            return `<button type="button" class="filter-chip text-[10px] px-2 py-1 rounded-full border border-stone-200 bg-stone-100 text-luxury-textMuted hover:border-luxury-gold transition"
+            return `<button type="button" class="filter-chip text-[12px] px-2 py-1 rounded-full border border-stone-200 bg-stone-100 text-luxury-textMuted hover:border-luxury-gold transition"
                 data-filter-group="${group}" data-filter-value="${esc(value)}"
                 aria-pressed="${active ? 'true' : 'false'}">${esc(label)}</button>`;
         }
@@ -6639,7 +6897,7 @@
             }
             if (resetEl) resetEl.classList.toggle('hidden', !filtersActive());
 
-            const amberBadge = `<span class="text-[10px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><svg class="ico text-[9px]" aria-hidden="true"><use href="#i-solid-circle-info"></use></svg> Les réservations ne sont pas encore ouvertes</span>`;
+            const amberBadge = `<span class="text-[12px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-circle-info"></use></svg> Les réservations ne sont pas encore ouvertes</span>`;
 
             const getTimeStr = (item) => {
                 if (Array.isArray(item.times) && item.times.length > 0) return item.times.join(' & ');
@@ -6652,16 +6910,16 @@
             // alors que réserver est l'action qui compte le plus sur cette
             // page. Même traitement que le bouton du bandeau « Prochainement »
             // (bg-luxury-goldInk / text-luxury-onGold) : un aplat, pas un lien.
-            const bookingLink = (url) => url
-                ? `<a href="${esc(url)}" target="_blank" rel="noopener"
-                       class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-luxury-goldInk text-luxury-onGold text-[10px] font-bold uppercase tracking-wider shadow-sm hover:bg-luxury-goldDeep transition-colors">
-                       Réserver <svg class="ico text-[9px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
+            const bookingLink = (url) => lienSur(url)
+                ? `<a href="${esc(lienSur(url))}" target="_blank" rel="noopener"
+                       class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-luxury-goldInk text-luxury-onGold text-[11px] font-bold uppercase tracking-wider shadow-sm hover:bg-luxury-goldDeep transition-colors">
+                       Réserver <svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
                 : '';
 
             // Badge cliquable « ajouter à l'agenda »
             const calBadge = (idx, label, cls) =>
                 `<button type="button" data-cal-index="${idx}"
-                    class="${cls} font-mono font-bold text-luxury-onGold px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap hover:bg-luxury-goldDeep transition-colors inline-flex items-center gap-1 shadow-sm"
+                    class="${cls} font-mono font-bold text-luxury-onGold px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap hover:bg-luxury-goldDeep transition-colors inline-flex items-center gap-1 shadow-sm"
                     aria-label="Ajouter au calendrier : ${esc(label)}">${label} <svg class="ico text-[10px] text-luxury-onGold ml-0.5" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button>`;
 
             let upcomingHtml = '';
@@ -6669,7 +6927,7 @@
                 upcoming.forEach((show, idx) => {
                     const panelId = show.id || `panel-series-${idx}`;
                     const subtitleHtml = show.subtitle
-                        ? ` <span class="font-normal italic text-[10px] text-luxury-textMuted">(${esc(show.subtitle)})</span>` : '';
+                        ? ` <span class="font-normal italic text-[12px] text-luxury-textMuted">(${esc(show.subtitle)})</span>` : '';
 
                     if (show.type === 'series' && show.shows) {
                         let showsHtml = '';
@@ -6682,7 +6940,7 @@
                             const repTimeStr = getTimeStr(rep);
                             const label = esc(repTimeStr ? `${rep.dateLabel} • ${repTimeStr}` : rep.dateLabel);
                             const repTimeBelow = !repTimeStr
-                                ? `<span class="text-[10px] text-luxury-textMuted italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>` : '';
+                                ? `<span class="text-[11px] text-luxury-textMuted italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>` : '';
 
                             showsHtml += `
                                 <div class="glass-panel rounded px-2.5 py-2 border border-stone-200/20 flex items-center justify-between gap-2">
@@ -6693,7 +6951,7 @@
                                         </div>
                                         <div class="flex flex-col min-w-0 flex-1">
                                             ${rep.isSchool
-                                    ? `<span class="text-[10px] text-luxury-warn italic block">Séance scolaire</span>`
+                                    ? `<span class="text-[12px] text-luxury-warn italic block">Séance scolaire</span>`
                                     : (!rep.bookingUrl ? amberBadge : '')}
                                         </div>
                                     </div>
@@ -6708,15 +6966,15 @@
                                     class="w-full text-left glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 date-row-clickable">
                                     <span class="flex items-center gap-3 min-w-0 flex-1">
                                         <span class="flex flex-col items-start flex-shrink-0 w-[165px]">
-                                            <span class="font-mono font-bold text-luxury-onGold bg-luxury-goldInk/90 border border-luxury-goldInk px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap shadow-sm">${esc(show.dateLabel || show.date)}</span>
+                                            <span class="font-mono font-bold text-luxury-onGold bg-luxury-goldInk border border-luxury-goldInk px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap shadow-sm">${esc(show.dateLabel || show.date)}</span>
                                         </span>
                                         <span class="min-w-0 flex-1">
                                             <span class="font-bold text-luxury-textMain text-xs leading-tight block">${esc(show.title)}${subtitleHtml}</span>
                                         </span>
                                     </span>
-                                    <span class="text-[10px] text-luxury-textMuted flex items-center gap-2 md:text-right flex-shrink-0 pl-0.5 md:pl-0">
+                                    <span class="text-[12px] text-luxury-textMuted flex items-center gap-2 md:text-right flex-shrink-0 pl-0.5 md:pl-0">
                                         <span><svg class="ico text-luxury-goldInk text-[8px]" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg> ${esc(show.location)}</span>
-                                        <svg class="ico text-[9px] text-stone-500 date-toggle-chevron" id="chevron-${esc(panelId.replace('panel-', ''))}" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>
+                                        <svg class="ico text-[10px] text-stone-500 date-toggle-chevron" id="chevron-${esc(panelId.replace('panel-', ''))}" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>
                                     </span>
                                 </button>
                                 <div class="date-expand-panel" id="${esc(panelId)}">
@@ -6739,7 +6997,7 @@
                             ? `${show.dateLabel || show.date} • ${showTimeStr}`
                             : (show.dateLabel || show.date));
                         const singleTimeBelow = !showTimeStr
-                            ? `<span class="text-[10px] text-luxury-textMuted italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>` : '';
+                            ? `<span class="text-[11px] text-luxury-textMuted italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>` : '';
 
                         upcomingHtml += `
                             <div class="glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5">
@@ -6751,11 +7009,11 @@
                                     <div class="min-w-0 flex-1">
                                         <h4 class="font-bold text-luxury-textMain text-xs leading-tight">${esc(show.title)}${subtitleHtml}</h4>
                                         ${show.isSchool
-                                ? `<span class="text-[10px] text-luxury-warn italic mt-0.5 block">Séance scolaire</span>`
+                                ? `<span class="text-[12px] text-luxury-warn italic mt-0.5 block">Séance scolaire</span>`
                                 : (!show.bookingUrl ? amberBadge : '')}
                                     </div>
                                 </div>
-                                <div class="text-[10px] text-luxury-textMuted flex items-center justify-between gap-2 flex-shrink-0 pl-0.5 md:pl-0">
+                                <div class="text-[12px] text-luxury-textMuted flex items-center justify-between gap-2 flex-shrink-0 pl-0.5 md:pl-0">
                                     <span><svg class="ico text-luxury-goldInk text-[8px]" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg> ${esc(show.location)}</span>
                                     ${bookingLink(show.bookingUrl)}
                                 </div>
@@ -6810,7 +7068,7 @@
                     const showsHtml = rows.map(show => `
                         <div class="py-1 odd:bg-luxury-stripe px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
                             <span><strong>${esc(show.date)}</strong> : ${esc(show.title)}</span>
-                            <span class="text-stone-500 text-[11px] md:text-right">${esc(show.location)}</span>
+                            <span class="text-stone-600 text-[12px] md:text-right">${esc(show.location)}</span>
                         </div>`).join('');
 
                     const panelId = 'archive-panel-' + seasonIdx++;
@@ -6876,7 +7134,7 @@
             //  arrivée, pas le milieu.
             const PREPARATION = 430;
             const REDUIT = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            let rendreLeFocus = null, minuteur = 0, minuteurPrep = 0;
+            let rendreLeFocus = null, minuteur = 0, minuteurPrep = 0, liberer = null;
 
             // ── L'ENCRE SUIT LE DOIGT ───────────────────────────────────
             //  Ce n'est pas une animation déclenchée : c'est une FONCTION DE
@@ -7254,6 +7512,9 @@
                 // La page cesse de défiler derrière : même mécanisme que les
                 // univers, une seule classe pour les deux.
                 document.documentElement.classList.add('u-locked');
+                // Et elle devient inerte : la touche Tab sortait de la lettre
+                // pour aller dans l'en-tête caché dessous.
+                liberer = window.isolerCouche ? window.isolerCouche(panneau) : null;
                 defile.scrollTop = 0;
                 panneau.classList.remove('est-prete');
                 //  D'ABORD LA FEUILLE, SEULE ET VIDE. Rien de lourd ne tourne
@@ -7294,6 +7555,7 @@
                 // feuille d'un coup, sans qu'elle ait le temps de se replier.
                 clearTimeout(minuteur);
                 minuteur = setTimeout(() => { panneau.hidden = true; }, DUREE_SORTIE);
+                if (liberer) { liberer(); liberer = null; }
                 if (rendreLeFocus && document.contains(rendreLeFocus)) rendreLeFocus.focus();
                 rendreLeFocus = null;
             }
@@ -7332,149 +7594,36 @@
 
         // ── Données structurées des représentations (schema.org/TheaterEvent) ──
         //
-        //  CE QUI MANQUAIT, ET POURQUOI ON PEUT LE DIRE SANS L'INVENTER.
-        //  La Search Console signalait cinq champs absents — organizer,
-        //  endDate, description, image, offers. Quatre d'entre eux étaient
-        //  déjà sur le site, ailleurs : le synopsis et la durée vivent dans
-        //  l'univers du spectacle, la compagnie sous son titre dans le CV,
-        //  les photos dans son montage. Ce bloc ne fait que rassembler ce
-        //  qui existe — il n'écrit AUCUNE donnée nouvelle. Un spectacle sans
-        //  univers (Théâtre-forum, par exemple) rend simplement moins de
-        //  champs, ce qui vaut mieux qu'un champ rempli au jugé.
-        const DUREE_LISIBLE = /^(?:(\d{1,2})\s*h\s*(\d{0,2})|(\d{1,3})\s*min)$/;
-
-        //  La durée est écrite en tête du montage, telle qu'on l'annonce au
-        //  public : « 1h05 », « 40 min ». Le même champ sert ailleurs à
-        //  numéroter des chapitres (« I », « 4 épisodes ») — d'où le filtre :
-        //  on ne retient que ce qui EST une durée, et seulement le premier
-        //  temps du montage, seul endroit où la convention tienne.
-        function minutesDuSpectacle(uni) {
-            const bloc = (uni?.sequence || []).find(b => b && b.chapter);
-            const m = bloc && String(bloc.chapter).trim().match(DUREE_LISIBLE);
-            if (!m) return 0;
-            return m[3] ? +m[3] : (+m[1]) * 60 + (+(m[2] || 0));
-        }
-
-        //  Même règle que le répertoire (photosDe, dans le générateur) :
-        //  l'affiche si le spectacle en a une, sinon la première photo de
-        //  son montage. Google veut une adresse absolue.
-        function photoDuSpectacle(uni) {
-            if (!uni) return '';
-            let rel = '';
-            if (uni.affiche) rel = `ressources/images/univers/${uni.slug}/affiche.jpg`;
-            else {
-                const bloc = (uni.sequence || []).find(b => b && Array.isArray(b.p) && b.p.length);
-                if (bloc) rel = `ressources/images/univers/${uni.slug}/${bloc.p[0]}.jpg`;
-            }
-            return rel ? new URL(rel, document.baseURI).href : '';
-        }
-
-        //  La compagnie est écrite sous le titre, dans le CV, et cette ligne
-        //  suit deux conventions constantes : la BARRE OBLIQUE sépare deux
-        //  coproducteurs (« CDN de Normandie-Rouen / Compagnie du P'tit
-        //  Ballon »), le TIRET CADRATIN sépare la compagnie de son metteur
-        //  en scène (« Compagnie Crescite — Angelo Jossec »).
-        //
-        //  On coupe donc au tiret : un metteur en scène est une personne, pas
-        //  l'organisation qui produit — le déclarer comme telle serait faux,
-        //  et c'est le genre de faux qu'un moteur reprend tel quel. Le tiret
-        //  est cherché ENTOURÉ D'ESPACES, sinon « CDN de Normandie-Rouen »
-        //  perdrait la moitié de son nom.
-        // Sites officiels des compagnies/structures, confirmés par Adrien —
-        // absent d'ici, on ne met pas d'`url` plutôt que d'en deviner une.
-        const SITE_ORGANISATEUR = {
-            'Compagnie Crescite': 'https://crescite.fr/',
-            'CDN de Normandie-Rouen': 'https://www.cdn-normandierouen.fr/',
-            'Compagnie Alchimie': 'https://compagnie-alchimie.fr/',
-            'Compagnie Bloomsbury': 'https://labloomsbury.wixsite.com/compagnie',
-        };
-
-        function organisateursDuSpectacle(li) {
-            const brut = li?.querySelector('.cv-subtitle')?.textContent || '';
-            const noms = brut.split('/')
-                .map(s => s.replace(/\s+/g, ' ').trim().split(/ [—–] /)[0].trim())
-                .filter(Boolean);
-            if (!noms.length) return null;
-            const org = noms.map(name => {
-                const o = { "@type": "Organization", name };
-                if (SITE_ORGANISATEUR[name]) o.url = SITE_ORGANISATEUR[name];
-                return o;
-            });
-            return org.length === 1 ? org[0] : org;
-        }
-
+        //  Le calcul vit dans univers-montage.js (evenementTheatre), partagé
+        //  avec les pages /spectacles/ : les deux fabriquaient chacun le leur,
+        //  et celui des pages — celles qu'on fabrique pour être trouvées — ne
+        //  portait ni heure, ni organisateur, ni image. Ici on ne fait que
+        //  réunir ce que la page sait de chaque date : le spectacle et sa
+        //  ligne de CV (spectacleParTitre, dans univers.js), dont on lit la
+        //  compagnie sous le titre. Rien n'est inventé ; un spectacle sans
+        //  univers rend simplement moins de champs.
         function injectEventStructuredData(upcoming) {
+            if (typeof UniversMontage === 'undefined') return;
             const events = [];
-            const push = (title, subtitle, location, icsDate, time, bookingUrl) => {
-                if (!icsDate) return;
-                const m = String(time || '').match(/(\d{1,2})[hH:](\d{2})?/);
-                const debut = m ? `${icsDate}T${String(m[1]).padStart(2, '0')}:${m[2] || '00'}:00` : icsDate;
-                const ev = {
-                    "@context": "https://schema.org",
-                    "@type": "TheaterEvent",
-                    "name": subtitle ? `${title} (${subtitle})` : title,
-                    "startDate": debut,
-                    "eventStatus": "https://schema.org/EventScheduled",
-                    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-                    "location": { "@type": "Place", "name": location, "address": location },
-                    "performer": { "@type": "Person", "@id": "https://adrienvada.fr/#adrien-vada", "name": "Adrien Vada" },
-                    "url": "https://adrienvada.fr/#page_dates"
-                };
-
+            const push = (show, r) => {
+                // Une séance scolaire n'est pas ouverte au public : l'annoncer
+                // à un moteur promettrait des places qui n'existent pas.
+                if (r.isSchool || show.isSchool) return;
                 const trouve = typeof window.spectacleParTitre === 'function'
-                    ? window.spectacleParTitre(title) : null;
-                if (trouve) {
-                    const { uni, li } = trouve;
-                    const syn = Array.isArray(uni.synopsis) ? uni.synopsis.join(' ') : uni.synopsis;
-                    if (syn) ev.description = String(syn).replace(/\s+/g, ' ').trim();
-                    const img = photoDuSpectacle(uni);
-                    if (img) ev.image = img;
-                    const org = organisateursDuSpectacle(li);
-                    if (org) ev.organizer = org;
-                    //  L'HEURE de fin se déduit de la durée annoncée — mais
-                    //  seulement si l'on connaît l'heure de DÉBUT : ajouter
-                    //  1h05 à une date sans heure ne veut rien dire.
-                    const min = minutesDuSpectacle(uni);
-                    if (m && min) {
-                        const f = new Date(debut);
-                        f.setMinutes(f.getMinutes() + min);
-                        const deux = (n) => String(n).padStart(2, '0');
-                        ev.endDate = `${f.getFullYear()}-${deux(f.getMonth() + 1)}-${deux(f.getDate())}` +
-                            `T${deux(f.getHours())}:${deux(f.getMinutes())}:00`;
-                    }
-                }
-                //  Sans heure de début — treize dates sur dix-sept aujourd'hui
-                //  n'en portent pas — on dit au moins le JOUR de la fin : une
-                //  représentation du 25 novembre se termine le 25 novembre.
-                //  C'est vrai, c'est vérifiable, et cela n'ajoute aucune
-                //  précision qu'on n'ait pas. Le champ gagnera son heure tout
-                //  seul le jour où la date recevra la sienne dans dates.js.
-                if (!ev.endDate) ev.endDate = icsDate;
-
-                //  PAS D'OFFRE TANT QU'IL N'Y A PAS DE BILLETTERIE. Google
-                //  attend dans `offers` un prix et une devise ; nous n'avons
-                //  ni l'un ni l'autre, et les inventer serait pire que le
-                //  silence — c'est une information qu'un spectateur croirait.
-                //  Le champ apparaîtra de lui-même le jour où une date
-                //  recevra son lien de réservation dans dates.js.
-                if (bookingUrl) {
-                    ev.offers = {
-                        "@type": "Offer",
-                        "url": bookingUrl,
-                        "availability": "https://schema.org/InStock",
-                        "validFrom": icsDate
-                    };
-                }
-                events.push(ev);
+                    ? window.spectacleParTitre(show.title) : null;
+                const heure = Array.isArray(r.times) ? r.times[0] : r.time;
+                const ev = UniversMontage.evenementTheatre({
+                    titre: show.title, sousTitre: show.subtitle, lieu: show.location, ville: show.city,
+                    jour: r.icsDate, heure, billetterie: r.bookingUrl || show.bookingUrl
+                }, {
+                    uni: trouve ? trouve.uni : null,
+                    compagnie: trouve && trouve.li ? (trouve.li.querySelector('.cv-subtitle')?.textContent || '') : ''
+                });
+                if (ev) events.push(ev);
             };
             (upcoming || []).forEach(show => {
-                if (show.type === 'series' && show.shows) {
-                    show.shows.forEach(r => push(show.title, show.subtitle, show.location, r.icsDate,
-                        Array.isArray(r.times) ? r.times[0] : r.time, r.bookingUrl || show.bookingUrl));
-                } else {
-                    push(show.title, show.subtitle, show.location, show.icsDate,
-                        Array.isArray(show.times) ? show.times[0] : show.time, show.bookingUrl);
-                }
+                if (show.type === 'series' && show.shows) show.shows.forEach(r => push(show, r));
+                else push(show, show);
             });
             if (!events.length) return;
             const old = document.getElementById('events-jsonld');
@@ -7642,6 +7791,17 @@
         // ════════════════════════════════════════════════════════════════
         const TAB_ACTIVE = ['text-luxury-goldInk', 'border-stone-200/80', 'bg-stone-200/40'];
         const TAB_IDLE = ['text-stone-500', 'border-transparent'];
+        // LE TITRE DE LA FENÊTRE SUIT L'ONGLET. C'est lui qu'un lecteur
+        // d'écran annonce au changement, et lui que montrent l'historique et
+        // la barre d'onglets du navigateur : « Adrien Vada — Comédien » sur
+        // quatre entrées d'historique ne disait pas laquelle était la bonne.
+        // Le CV garde le titre écrit dans le <head>, celui des moteurs.
+        const TITRES_ONGLETS = {
+            page_cv: document.title,
+            page_dates: 'Dates théâtres — Adrien Vada',
+            demos_camera: 'Démos caméra — Adrien Vada',
+            demos_voix: 'Démos voix — Adrien Vada',
+        };
 
         // LE SEUIL : le défilement à partir duquel la barre d'onglets se colle
         // en haut de l'écran, mobile et desktop.
@@ -7711,6 +7871,8 @@
                 activeTabButton.classList.add(...TAB_ACTIVE);
                 activeTabButton.setAttribute('aria-current', 'page');
             }
+
+            if (TITRES_ONGLETS[pageId]) document.title = TITRES_ONGLETS[pageId];
 
             const pdfBtn = document.getElementById('pdf-download-btn');
             if (pdfBtn) pdfBtn.classList.toggle('invisible', pageId !== 'page_cv');
@@ -7784,6 +7946,10 @@
                 sec.classList.add('reveal');
                 revealObserver.observe(sec);
             });
+            // Le garde de l'en-tête attend ce signal : sans lui, il rendrait
+            // les sections visibles d'office (voir « le site n'est caché que si
+            // le script est là pour le montrer »).
+            window.__revelePret = true;
         }
 
         // Après un changement d'onglet, les sections déjà visibles doivent apparaître
@@ -7796,114 +7962,6 @@
                     revealObserver.unobserve(el);
                 }
             });
-        }
-
-        // ════════════════════════════════════════════════════════════════
-        //  BOOK PHOTO (lightbox)
-        // ════════════════════════════════════════════════════════════════
-        // Les vignettes ne sont créées qu'à la première ouverture : aucune
-        // photo n'est téléchargée tant que le book n'est pas consulté.
-        function initGalleryThumbnails() {
-            const thumbsContainer = document.getElementById('gallery-thumbs-container');
-            if (!thumbsContainer || galleryThumbsReady) return;
-            thumbsContainer.innerHTML = '';
-            GALLERY_THUMB.forEach((thumbSrc, idx) => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.setAttribute('aria-label', `Afficher la photo ${idx + 1} sur ${GALLERY_THUMB.length}`);
-                btn.className = 'flex-shrink-0 rounded overflow-hidden';
-                const thumb = document.createElement('img');
-                thumb.src = thumbSrc;
-                thumb.alt = '';
-                thumb.width = 44; thumb.height = 44;
-                thumb.loading = 'lazy';
-                thumb.decoding = 'async';
-                thumb.className = thumbClass(idx === currentImageIndex);
-                btn.appendChild(thumb);
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    currentImageIndex = idx;
-                    updateGalleryImage();
-                };
-                thumbsContainer.appendChild(btn);
-            });
-            galleryThumbsReady = true;
-        }
-
-        function thumbClass(isActive) {
-            return `w-9 h-9 md:w-11 md:h-11 object-cover rounded border transition duration-300 hover:scale-105 ${isActive
-                ? 'border-luxury-gold opacity-100 shadow-md'
-                : 'border-transparent opacity-45 hover:opacity-85'}`;
-        }
-
-        function updateThumbnailHighlight() {
-            const thumbsContainer = document.getElementById('gallery-thumbs-container');
-            document.querySelectorAll('#gallery-thumbs-container img').forEach((thumb, idx) => {
-                const isActive = idx === currentImageIndex;
-                thumb.className = thumbClass(isActive);
-                if (isActive && thumbsContainer) {
-                    const target = thumb.offsetLeft - (thumbsContainer.clientWidth / 2) + (thumb.offsetWidth / 2);
-                    thumbsContainer.scrollTo({ left: target, behavior: 'smooth' });
-                }
-            });
-        }
-
-        function openGallery(index) {
-            currentImageIndex = index;
-            initGalleryThumbnails();
-            openModal('gallery-modal');
-            updateGalleryImage();
-        }
-
-        function closeGallery() {
-            const img = document.getElementById('gallery-img');
-            img.style.opacity = '0';
-            img.style.transform = 'scale(0.95)';
-            closeModal('gallery-modal');
-        }
-
-        function updateGalleryImage() {
-            const img = document.getElementById('gallery-img');
-            const counter = document.getElementById('gallery-counter');
-            img.style.opacity = '0';
-            img.style.transform = 'scale(0.97) translateY(4px)';
-
-            counter.innerText = `${currentImageIndex + 1} / ${GALLERY_FULL.length}`;
-
-            setTimeout(() => {
-                img.src = GALLERY_FULL[currentImageIndex];
-                img.alt = `Photo ${currentImageIndex + 1} du book d’Adrien Vada`;
-                updateThumbnailHighlight();
-                img.onload = () => {
-                    img.style.opacity = '1';
-                    img.style.transform = 'scale(1) translateY(0)';
-                };
-                // Pré-charge discrète de la photo suivante
-                const next = new Image();
-                next.src = GALLERY_FULL[(currentImageIndex + 1) % GALLERY_FULL.length];
-            }, 120);
-        }
-
-        function prevGalleryImage(e) {
-            if (e) e.stopPropagation();
-            currentImageIndex = (currentImageIndex - 1 + GALLERY_FULL.length) % GALLERY_FULL.length;
-            updateGalleryImage();
-        }
-
-        function nextGalleryImage(e) {
-            if (e) e.stopPropagation();
-            currentImageIndex = (currentImageIndex + 1) % GALLERY_FULL.length;
-            updateGalleryImage();
-        }
-
-        function setupGallerySwipe() {
-            const modal = document.getElementById('gallery-modal');
-            let startX = 0;
-            modal.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
-            modal.addEventListener('touchend', (e) => {
-                const diff = startX - e.changedTouches[0].clientX;
-                if (Math.abs(diff) > 50) diff > 0 ? nextGalleryImage() : prevGalleryImage();
-            }, { passive: true });
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -7934,6 +7992,10 @@
                 const title = btn.closest('.glass-panel')?.querySelector('.audio-title');
                 const label = title ? title.textContent.replace(/\s+/g, ' ').trim() : 'la démo';
                 btn.setAttribute('aria-label', `Écouter ${label}`);
+                // Bouton à bascule dès le départ, et pas seulement après la
+                // première écoute : « Écouter …, non enfoncé » dit d'emblée
+                // qu'un second appui mettra en pause.
+                btn.setAttribute('aria-pressed', 'false');
                 btn.addEventListener('click', () => toggleAudio(id));
 
                 audio.addEventListener('loadedmetadata', () => initAudioMetadata(id));

@@ -448,8 +448,11 @@ const SHOW_UNIVERSES = {
         // Blanc majeur, rose et noir mineurs : la lumière crue d'une
         // séparation, le rose seulement là où ça touche.
         palette: {
+            // L'accent a été assombri d'un cran (#c0637e → #b95370) : le
+            // blanc des boutons n'y atteignait que 3,9:1, sous le seuil de
+            // lecture de 4,5. La teinte est la même, un peu plus soutenue.
             bg: '#f6f3ef', surface: '#ffffff', text: '#181215', muted: '#6d5d63',
-            accent: '#c0637e', accentInk: '#a34a66', onAccent: '#ffffff',
+            accent: '#b95370', accentInk: '#a34a66', onAccent: '#ffffff',
             line: 'rgba(24,18,21,0.13)', glow: 'rgba(192,99,126,0.30)'
         },
         cast: ['Angelo Jossec', 'Manon Rivier', 'Lauren Toulin', 'Adrien Vada'],
@@ -562,8 +565,14 @@ const SHOW_UNIVERSES = {
         // Melvin, l’abricot de l’accent ; le pull d’Arthur, le bleu du
         // halo. La série entière tient dans ce face-à-face de couleurs.
         palette: {
-            bg: '#e6dbc8', surface: '#f4edde', text: '#241b12', muted: '#6f6252',
-            accent: '#cf8352', accentInk: '#a4602f', onAccent: '#ffffff',
+            // L'ENCRE DES BOUTONS EST SOMBRE, et non blanche : du blanc sur
+            // l'abricot ne donnait que 3:1, et assombrir l'accent jusqu'au
+            // seuil l'aurait fait virer au brun. Le texte des boutons prend
+            // donc l'encre du parchemin (5,8:1), et l'abricot reste l'abricot.
+            // L'encre écrite et le gris ont été foncés d'un cran pour la même
+            // raison (texte fin sur fond clair : 3,6 et 4,3:1 avant).
+            bg: '#e6dbc8', surface: '#f4edde', text: '#241b12', muted: '#695d4e',
+            accent: '#cf8352', accentInk: '#8a5128', onAccent: '#241b12',
             line: 'rgba(36,27,18,0.15)', glow: 'rgba(74,108,138,0.38)'
         },
         genre: 'Comédie',
@@ -699,7 +708,7 @@ const SHOW_UNIVERSES = {
         // sable des dunes, l'accent le rouge de la Fiat et des perruques —
         // le halo du titre, lui, prend le ciel.
         palette: {
-            bg: '#eae4d3', surface: '#f7f3e8', text: '#211f18', muted: '#6d6857',
+            bg: '#eae4d3', surface: '#f7f3e8', text: '#211f18', muted: '#696454',
             accent: '#c2402f', accentInk: '#9d2f1e', onAccent: '#ffffff',
             line: 'rgba(33,31,24,0.15)', glow: 'rgba(154,180,210,0.40)'
         },
@@ -797,6 +806,38 @@ const SHOW_UNIVERSES = {
     const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let overlay, scroller, lastFocus = null, isOpen = false, rafId = 0;
     let calModalData = null;
+    // Ce qu'il faudra défaire en refermant : la page rendue inerte derrière
+    // le panneau, le titre d'onglet d'avant.
+    let libererPage = null, titreAvant = '';
+
+    // ── LE FOCUS RESTE DANS LA COUCHE OUVERTE ────────────────────────
+    //  Un panneau plein écran, un agrandissement, une petite fenêtre : ce
+    //  qui est dessous reste dans la page, et donc au clavier. La touche
+    //  Tab finissait par y passer — le focus disparaissait derrière la
+    //  couche, et un lecteur d'écran lisait le CV à travers elle.
+    //
+    //  `inert` règle les deux d'un coup : tout ce qui n'est ni la couche ni
+    //  l'un de ses ancêtres devient inatteignable, au clavier comme à
+    //  l'oreille. On remonte de la couche jusqu'à <body> en rendant inertes
+    //  les frères rencontrés à chaque étage — sauf ceux qui l'étaient déjà,
+    //  qu'on ne touche pas : on ne défait jamais que ce qu'on a fait. Les
+    //  couches s'empilent (univers, puis agrandissement, puis agenda) ;
+    //  chacune rend la fonction qui la défait.
+    //
+    //  Exposée (window.isolerCouche) : les fenêtres de l'accueil s'en
+    //  servent aussi — voir index.html.
+    function isolerCouche(couche) {
+        const rendus = [];
+        for (let el = couche; el && el.parentElement && el !== document.body; el = el.parentElement) {
+            for (const frere of el.parentElement.children) {
+                if (frere === el || frere.inert || /^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(frere.tagName)) continue;
+                frere.inert = true;
+                rendus.push(frere);
+            }
+        }
+        return () => rendus.forEach(n => { n.inert = false; });
+    }
+    window.isolerCouche = isolerCouche;
 
 
     // ── LE LIEN ENTRE UNE LIGNE DE CV ET SON UNIVERS ─────────────────
@@ -1029,22 +1070,6 @@ const SHOW_UNIVERSES = {
 
 
 
-    // Aplatit la séquence en une liste de photos, dans l'ordre du défilé.
-    // Ne sert qu'à connaître la PREMIÈRE photo, celle qu'on attend avant
-    // d'afficher le montage. L'agrandissement, lui, relit le DOM (zoomList) :
-    // une seconde liste tenue en parallèle finissait par se désaccorder de
-    // ce qui était réellement affiché.
-    function flatPhotos(uni) {
-        const out = [];
-        (uni.sequence || []).forEach(beat => {
-            if (!beat.p) return;
-            beat.p.forEach((n, i) => out.push({
-                src: photoSrc(uni, n),
-                caption: (beat.c && beat.c[i]) || ''
-            }));
-        });
-        return out;
-    }
 
 
 
@@ -1098,6 +1123,12 @@ const SHOW_UNIVERSES = {
             // créé : le badge de la ligne du CV est ce qui les distingue.
             enCreation: window.cvShowIsEnCreation?.(li) || false
         });
+        // innerHTML vient d'effacer la fenêtre « ajouter à l'agenda », qui
+        // vit dans ce même conteneur : on la repose. Sans cette ligne, les
+        // boutons agenda d'un univers ouvert depuis le CV ne faisaient RIEN
+        // — ils ne marchaient que sur les pages /spectacles/, où le panneau
+        // n'est jamais redessiné.
+        poserFenetreAgenda();
     }
 
     function applyPalette(p) {
@@ -1224,8 +1255,15 @@ const SHOW_UNIVERSES = {
     // vitesse de la main : c'est ce lien direct entre le geste et le texte
     // qui fait l'effet, et il se perd dès qu'on se contente d'un
     // IntersectionObserver.
+    // LE TEXTE EST ENTIER AVANT D'ATTEINDRE LE HAUT DE L'ÉCRAN, ET LE RESTE.
+    // La phrase finissait de s'écrire aux deux tiers de la montée, et
+    // s'effaçait de nouveau quand on remontait : au repos, le bas de l'écran
+    // n'était jamais lisible en entier — gênant pour qui lit lentement ou de
+    // près, agrandissement du système compris. Elle est désormais complète
+    // quand son bloc passe le milieu de l'écran, et ne se défait plus : le
+    // geste écrit toujours la phrase, il ne la reprend pas.
     function updateReveals(h) {
-        const start = h * 0.94, end = h * 0.36;
+        const start = h * 0.94, end = h * 0.6;
         overlay.querySelectorAll('.u-reveal').forEach(block => {
             const r = block.getBoundingClientRect();
             if (r.bottom < -100 || r.top > h + 100) return;
@@ -1235,12 +1273,8 @@ const SHOW_UNIVERSES = {
             // Le dernier mot doit s'allumer un peu avant la fin de la
             // course, sinon la phrase n'est jamais complète à l'écran.
             const n = Math.round(clamp01(p * 1.12) * words.length);
-            if (block._uLit === n) return;
-            if (n > (block._uLit || 0)) {
-                for (let i = block._uLit || 0; i < n; i++) words[i].classList.add('is-lit');
-            } else {
-                for (let i = n; i < (block._uLit || 0); i++) words[i].classList.remove('is-lit');
-            }
+            if (n <= (block._uLit || 0)) return;
+            for (let i = block._uLit || 0; i < n; i++) words[i].classList.add('is-lit');
             block._uLit = n;
             block.classList.toggle('is-lit', n >= words.length);
         });
@@ -1346,6 +1380,11 @@ const SHOW_UNIVERSES = {
 
     // On passe le BOUTON cliqué, pas un numéro : sa position dans le défilé
     // fait foi.
+    // Ce qui a ouvert l'agrandissement, et ce qu'il a rendu inerte : le
+    // focus y retourne à la fermeture — sans cela il tombait sur <body>, et
+    // la touche Tab repartait du haut du panneau.
+    let zoomDepuis = null, zoomLibere = null;
+
     function openZoom(btn) {
         const box = zoomEl();
         if (!box) return;
@@ -1356,6 +1395,8 @@ const SHOW_UNIVERSES = {
         void box.offsetHeight;
         box.classList.add('is-open');
         window.pushOverlayState?.('u-zoom');
+        zoomDepuis = btn;
+        zoomLibere = isolerCouche(box);
         box.querySelector('.u-zoom-close')?.focus({ preventScroll: true });
     }
 
@@ -1364,6 +1405,9 @@ const SHOW_UNIVERSES = {
         if (!box || box.hidden) return;
         box.classList.remove('is-open');
         window.dropOverlayState?.('u-zoom');
+        if (zoomLibere) { zoomLibere(); zoomLibere = null; }
+        if (zoomDepuis && zoomDepuis.isConnected) zoomDepuis.focus({ preventScroll: true });
+        zoomDepuis = null;
         // Le vidage est différé le temps du fondu. S'il a été rouvert
         // entre-temps sur une autre photo, ce vidage-là n'a plus lieu d'être :
         // il effacerait l'image qu'on vient d'ouvrir.
@@ -1389,18 +1433,21 @@ const SHOW_UNIVERSES = {
     // temps : on doit toujours pouvoir renoncer.
     const MAX_WAIT_MS = 2500;
 
-    function awaitFirstPhoto(uni) {
-        // Un film s'ouvre sur son affiche : c'est donc elle qu'on attend.
-        const first = uni.affiche
-            ? `ressources/images/univers/${uni.slug}/affiche.jpg`
-            : flatPhotos(uni)[0]?.src;
+    function awaitFirstPhoto() {
+        // On attend L'IMAGE DU PANNEAU ELLE-MÊME — et non une copie chargée à
+        // part. Depuis que les téléphones reçoivent une version allégée
+        // (<picture>, voir univers-montage.js), une copie faite d'après le
+        // `src` aurait téléchargé l'original de 2400 px EN PLUS de la version
+        // affichée : le double du poids, pour attendre la mauvaise image.
+        // Un film s'ouvre sur son affiche : c'est elle, la première image.
+        const first = overlay.querySelector('.u-figs img');
         if (!first) return Promise.resolve();
         return Promise.race([
             new Promise(resolve => {
-                const im = new Image();
-                im.src = first;
-                (im.decode ? im.decode() : Promise.resolve()).then(resolve, resolve);
-                im.onload = im.onerror = resolve;
+                if (first.decode) first.decode().then(resolve, resolve);
+                else if (first.complete) resolve();
+                else first.addEventListener('load', resolve, { once: true });
+                first.addEventListener('error', resolve, { once: true });
             }),
             // Filet : une image manquante ou un réseau qui traîne ne doit
             // jamais laisser le panneau bloqué sur son voile de chargement.
@@ -1413,9 +1460,44 @@ const SHOW_UNIVERSES = {
     let ouvertDepuis = 0;      // horodatage d'ouverture, pour mesurer la lecture
     let defilementAvant = 0;   // où l'on en était dans la page avant d'ouvrir
 
+    // LA FEUILLE DES UNIVERS PEUT ARRIVER APRÈS LA PAGE. Sur l'accueil,
+    // elle ne retient plus l'affichage (voir son <link> dans index.html) :
+    // elle se télécharge à part et s'applique quand elle est là. Un clic
+    // ne la devance pour ainsi dire jamais ; une adresse d'univers ouverte
+    // directement, si. Le panneau attend donc qu'elle soit appliquée —
+    // sans elle, il se déplierait nu, texte brut sur la page.
+    // Les pages /spectacles/ la chargent normalement : pas de marqueur,
+    // rien à attendre.
+    const lienFeuille = document.querySelector('link[data-feuille-univers]');
+
+    function feuilleUniversPrete() {
+        if (!lienFeuille || lienFeuille.media === 'all') return true;
+        // Arrivée, mais pas encore basculée : on bascule soi-même.
+        if (lienFeuille.sheet) { lienFeuille.media = 'all'; return true; }
+        return false;
+    }
+
+    function attendreFeuilleUnivers(suite) {
+        let fait = false;
+        const une = () => {
+            if (fait) return;
+            fait = true;
+            lienFeuille.media = 'all';
+            suite();
+        };
+        lienFeuille.addEventListener('load', une, { once: true });
+        // Perdue en route : on ouvre quand même, mieux vaut un panneau
+        // brut qu'un clic sans réponse.
+        lienFeuille.addEventListener('error', une, { once: true });
+    }
+
     function open(li, fromHistory) {
         const uni = universeFor(li);
         if (!uni) return false;
+        if (!feuilleUniversPrete()) {
+            attendreFeuilleUnivers(() => open(li, fromHistory));
+            return true;
+        }
 
         const token = ++openToken;
         lastFocus = document.activeElement;
@@ -1424,6 +1506,11 @@ const SHOW_UNIVERSES = {
         applyPalette(uni.palette);
         overlay.dataset.slug = uni.slug;
         scroller = overlay;
+        // Le panneau s'appelle comme le spectacle : c'est ce qu'un lecteur
+        // d'écran annonce en y entrant (« Bérénice, dialogue »), au lieu du
+        // générique « Univers du spectacle ».
+        overlay.removeAttribute('aria-label');
+        overlay.setAttribute('aria-labelledby', 'u-titre');
 
         const r = li.getBoundingClientRect();
         const vw = window.innerWidth, vh = window.innerHeight;
@@ -1444,7 +1531,7 @@ const SHOW_UNIVERSES = {
         overlay.classList.add('is-open');
         overlay.style.clipPath = 'inset(0px 0px 0px 0px round 0px)';
 
-        awaitFirstPhoto(uni).then(() => {
+        awaitFirstPhoto().then(() => {
             // Panneau refermé, ou déjà rouvert sur un autre spectacle,
             // pendant le chargement : ce résultat ne vaut plus rien.
             if (token !== openToken || !isOpen) return;
@@ -1482,7 +1569,16 @@ const SHOW_UNIVERSES = {
         observeCaptions();
         lastScrollTop = 0;
         playWriting();
+        // LA PAGE DERRIÈRE DEVIENT INERTE. Le panneau couvre l'écran, mais le
+        // CV restait atteignable au clavier : après la dernière photo, la
+        // touche Tab repartait dans l'en-tête caché dessous, et un lecteur
+        // d'écran pouvait y lire à travers le panneau.
+        libererPage = isolerCouche(overlay);
         overlay.querySelector('.u-close')?.focus({ preventScroll: true });
+        // L'onglet porte le nom de ce qu'on regarde — dans l'historique, dans
+        // la liste des onglets, et pour qui navigue à l'oreille.
+        titreAvant = document.title;
+        document.title = `${uni.title || li.dataset.cvShow || ''} · Adrien Vada`;
         return true;
     }
 
@@ -1552,6 +1648,10 @@ const SHOW_UNIVERSES = {
         }
         const done = () => { overlay.hidden = true; overlay.innerHTML = ''; };
         if (REDUCED) done(); else setTimeout(done, 420);
+        // La page redevient vivante AVANT de lui rendre le focus : un élément
+        // inerte ne peut pas le recevoir.
+        if (libererPage) { libererPage(); libererPage = null; }
+        if (titreAvant) { document.title = titreAvant; titreAvant = ''; }
         lastFocus?.focus?.({ preventScroll: true });
     }
 
@@ -1573,7 +1673,12 @@ const SHOW_UNIVERSES = {
 
     function slugFromHash() {
         const h = location.hash || '';
-        return h.startsWith(ROUTE) ? decodeURIComponent(h.slice(ROUTE.length)) : '';
+        if (!h.startsWith(ROUTE)) return '';
+        // Une adresse tronquée — un « % » orphelin en fin de lien partagé —
+        // faisait lever une erreur ici, et la page restait avec son texte
+        // invisible : l'écriture ne démarrait jamais. On l'ignore, tout
+        // simplement : un slug illisible est un slug inconnu.
+        try { return decodeURIComponent(h.slice(ROUTE.length)); } catch (e) { return ''; }
     }
 
     // Retrouve la ligne de CV d'un slug. La comparaison se fait sur le dataset
@@ -1659,14 +1764,30 @@ const SHOW_UNIVERSES = {
             </div>
         </div>`;
 
-    function openAgendaModal(data) {
+    // La fenêtre vit dans #show-universe. Sur l'accueil le panneau est
+    // redessiné à chaque ouverture (render), qui l'efface : elle est donc
+    // reposée à chaque fois, et une seule — jamais deux.
+    function poserFenetreAgenda() {
+        if (overlay && !overlay.querySelector('#u-cal-modal')) {
+            overlay.insertAdjacentHTML('beforeend', AGENDA_MODAL_HTML);
+        }
+    }
+
+    // Même contrat que l'agrandissement : on y entre au clavier, on n'en
+    // sort pas par Tab, et le focus revient au bouton qui l'a ouverte.
+    let agendaDepuis = null, agendaLibere = null;
+
+    function openAgendaModal(data, depuis) {
         calModalData = data;
         const modal = overlay.querySelector('#u-cal-modal');
         if (!modal) return;
+        agendaDepuis = depuis || null;
         const sub = modal.querySelector('.u-cal-modal-subtitle');
         if (sub) {
             const cleanSubtitle = data.subtitle ? ` (${data.subtitle})` : '';
-            sub.textContent = `${data.icsDate || ''}${cleanSubtitle} • ${data.location || ''}`;
+            // La date telle qu'on la lit (« Vendredi 29 janvier 2027 »), et
+            // non « 2027-01-29 » : l'ISO ne sert qu'à fabriquer l'agenda.
+            sub.textContent = `${data.dateLabel || data.icsDate || ''}${cleanSubtitle} • ${data.location || ''}`;
         }
         const shareBtn = modal.querySelector('[data-cal-type="share"]');
         if (shareBtn) {
@@ -1679,6 +1800,8 @@ const SHOW_UNIVERSES = {
         }
         modal.hidden = false;
         requestAnimationFrame(() => modal.classList.add('is-open'));
+        agendaLibere = isolerCouche(modal);
+        modal.querySelector('[data-cal-type]')?.focus({ preventScroll: true });
     }
 
     function closeAgendaModal() {
@@ -1686,6 +1809,9 @@ const SHOW_UNIVERSES = {
         if (!modal || modal.hidden) return;
         modal.classList.remove('is-open');
         calModalData = null;
+        if (agendaLibere) { agendaLibere(); agendaLibere = null; }
+        if (agendaDepuis && agendaDepuis.isConnected) agendaDepuis.focus({ preventScroll: true });
+        agendaDepuis = null;
         setTimeout(() => { modal.hidden = true; }, 240);
     }
 
@@ -1814,7 +1940,7 @@ const SHOW_UNIVERSES = {
 
         // Une seule fenêtre pour tout le panneau : le CV comme les pages
         // /spectacles/ passent par ce même #show-universe (voir demarrerStatique).
-        overlay.insertAdjacentHTML('beforeend', AGENDA_MODAL_HTML);
+        poserFenetreAgenda();
 
         overlay.addEventListener('click', (e) => {
             // La fenêtre « ajouter à l'agenda » d'abord : elle vit dans ce même
@@ -1823,7 +1949,7 @@ const SHOW_UNIVERSES = {
             if (calBtn) {
                 let data = null;
                 try { data = JSON.parse(calBtn.dataset.cal || '{}'); } catch (err) { }
-                if (data) openAgendaModal(data);
+                if (data) openAgendaModal(data, calBtn);
                 return;
             }
             const calOption = e.target.closest('[data-cal-type]');
@@ -1880,6 +2006,15 @@ const SHOW_UNIVERSES = {
                 overlay.querySelectorAll(REVEALED).forEach(f => f.classList.add('is-in'));
                 overlay.querySelectorAll('.u-rw').forEach(w => w.classList.add('is-lit'));
                 foot.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+                // LE FOCUS SUIT LE SAUT. La page défilait jusqu'aux dates, mais
+                // le focus restait sur le bouton, là-haut : la touche Tab
+                // suivante renvoyait à la première photo, et il fallait
+                // traverser tout le montage pour atteindre une date.
+                const titre = foot.querySelector('.u-foot-title');
+                if (titre) {
+                    titre.setAttribute('tabindex', '-1');
+                    titre.focus({ preventScroll: true });
+                }
                 return;
             }
 
@@ -1940,7 +2075,37 @@ const SHOW_UNIVERSES = {
     //  les mots attendent à `opacity: 0`. C'est pourquoi elle embarque
     //  univers-statique.css dans un <noscript>, qui remet tout à l'état
     //  lisible. Voir build/generer-pages-spectacles.js.
+    // ── LA MESURE, SUR LES PAGES SPECTACLE AUSSI ─────────────────────
+    //  track() est défini par l'accueil (index.html) : c'est l'unique
+    //  point de sortie du site vers l'outil de mesure, et c'est lui qui,
+    //  par délégation, compte tout élément marqué `data-track`. Les pages
+    //  /spectacles/ chargent univers.js mais pas ce script-là : leurs
+    //  clics « Réserver » ne comptaient nulle part — alors que ces pages
+    //  existent POUR être trouvées, et qu'un clic « Réserver » est le
+    //  seul chiffre qui dise si elles servent à quelque chose. Même
+    //  fonction et même verrou (l'interrupteur « ?sansmesure », lu dans
+    //  le stockage où l'accueil le pose), même délégation.
+    function brancherMesure() {
+        if (typeof window.track !== 'function') {
+            window.track = function (nom, details) {
+                try {
+                    if (localStorage.getItem('av.sansMesure')) return;
+                    if (window.umami && typeof window.umami.track === 'function') {
+                        window.umami.track(nom, details || undefined);
+                    }
+                } catch (e) { /* la mesure ne casse jamais la page */ }
+            };
+        }
+        document.addEventListener('click', (e) => {
+            const cible = e.target.closest?.('[data-track]');
+            if (!cible) return;
+            const detail = cible.getAttribute('data-track-detail');
+            window.track(cible.getAttribute('data-track'), detail ? { detail } : undefined);
+        }, true);
+    }
+
     function demarrerStatique() {
+        brancherMesure();
         scroller = overlay;
         isOpen = true;
         overlay.classList.add('is-open');
@@ -2122,6 +2287,16 @@ const SHOW_UNIVERSES = {
             const uni = universeFor(li);
             if (!uni) return;
             li.classList.add('cv-has-universe');
+            // CETTE LIGNE OUVRE UNE FENÊTRE, ELLE NE SE DÉPLIE PAS. Le balisage
+            // lui donne l'état d'un tiroir (aria-expanded, aria-controls) : un
+            // lecteur d'écran annonçait « replié » pour quelque chose qui ne se
+            // déplie jamais. On dit ce qui arrive vraiment.
+            const bouton = li.querySelector('.cv-row-toggle');
+            if (bouton) {
+                bouton.removeAttribute('aria-expanded');
+                bouton.removeAttribute('aria-controls');
+                bouton.setAttribute('aria-haspopup', 'dialog');
+            }
             // `cvAccent` prime sur l'accent de l'univers quand les deux ne
             // peuvent pas être la même couleur — voir Audiences et
             // Fulguré.e.s. Sinon l'accent suffit.
@@ -2209,30 +2384,39 @@ const SHOW_UNIVERSES = {
         const url = kind === 'yt' ? `https://www.youtube.com/watch?v=${id}` : `https://vimeo.com/${id}`;
 
         const badges = li.querySelector('.cv-row-toggle > div')?.lastElementChild;
-        if (!badges || badges.querySelector('.cv-trailer')) return;
+        if (!badges || li.querySelector('.cv-trailer')) return;
         const badge = badges.querySelector('.cv-badge');
         const chevron = badges.querySelector('.cv-chevron');
+
+        // LA PLACE, DANS LE BOUTON ; LE LIEN, HORS DU BOUTON. Un lien ne peut
+        // pas vivre dans un <button> : c'est interdit par le HTML, un lecteur
+        // d'écran ne l'annonçait pas comme lien (son nom se collait à celui
+        // de la ligne), et certains navigateurs n'y posaient jamais le focus.
+        // La pastille garde donc sa place dans la colonne du badge — une
+        // réserve invisible de la même taille — et le vrai lien, frère du
+        // bouton, vient se poser exactement dessus (voir placerPastilles).
+        const place = document.createElement('span');
+        place.className = 'cv-trailer cv-trailer-place';
+        place.setAttribute('aria-hidden', 'true');
 
         const titre = uni.title || li.dataset.cvShow || '';
         const pill = document.createElement('a');
         pill.href = url;
         pill.target = '_blank';
         pill.rel = 'noopener';
-        pill.className = 'cv-trailer';
-        pill.setAttribute('aria-label', `Voir la bande-annonce — ${titre}`);
+        pill.className = 'cv-trailer cv-trailer-lien';
+        pill.setAttribute('aria-label', `Voir la bande-annonce — ${titre} (nouvel onglet)`);
         pill.setAttribute('data-track', 'cv_trailer');
         pill.setAttribute('data-track-detail', titre);
         pill.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg>';
-        // ARRÊTER LA PROPAGATION ICI, PAS PLUS HAUT. Ce lien vit à
-        // l'intérieur du <button> qui ouvre l'univers — un clic dessus
-        // remontait donc jusqu'à lui et ouvrait AUSSI le panneau dans
-        // l'onglet en cours, en plus de la vidéo dans le nouvel onglet.
+        // La ligne entière écoute les clics (repli des tiroirs, appui
+        // maintenu) : celui-ci ne la concerne pas.
         pill.addEventListener('click', (e) => e.stopPropagation());
 
         badges.classList.remove('items-center');
         if (badge) {
             // LA PASTILLE S'ALIGNE SUR LE BADGE, PAS SUR LA FLÈCHE. Le badge
-            // et la pastille vivent dans leur propre colonne, alignée sur son
+            // et sa réserve vivent dans leur propre colonne, alignée sur son
             // bord droit à elle ; la flèche reste à côté, HORS de cette
             // colonne — si elle y était, son bord droit à elle deviendrait
             // la référence, et la pastille se retrouverait sous elle plutôt
@@ -2240,7 +2424,7 @@ const SHOW_UNIVERSES = {
             const col = document.createElement('div');
             col.className = 'flex flex-col items-end gap-1.5';
             col.appendChild(badge);
-            col.appendChild(pill);
+            col.appendChild(place);
             badges.classList.add('items-start');
             badges.insertBefore(col, chevron || null);
         } else {
@@ -2248,8 +2432,36 @@ const SHOW_UNIVERSES = {
             // colonne avec la pastille — elle s'aligne alors directement
             // sur la flèche, seule référence disponible.
             badges.classList.add('flex-col', 'items-end', 'gap-1.5');
-            badges.appendChild(pill);
+            badges.appendChild(place);
         }
+        li.appendChild(pill);
+        li.classList.add('a-bande-annonce');
+        suivrePastille(li);
+    }
+
+    // ── LE LIEN SE POSE SUR SA RÉSERVE ───────────────────────────────
+    //  La ligne est positionnée (.cv-has-universe) : le lien s'y cale en
+    //  absolu, aux coordonnées de la réserve. On le replace chaque fois que
+    //  la ligne change de taille — polices arrivées, égalisation des
+    //  hauteurs, pivotement, et surtout retour sur l'onglet CV : caché, il
+    //  n'a pas de mise en page, et une mesure faite là rendrait zéro.
+    function placerPastille(li) {
+        const place = li.querySelector('.cv-trailer-place');
+        const lien = li.querySelector('.cv-trailer-lien');
+        if (!place || !lien) return;
+        const r = li.getBoundingClientRect();
+        const p = place.getBoundingClientRect();
+        if (!r.width || !p.width) return;
+        lien.style.top = (p.top - r.top) + 'px';
+        lien.style.left = (p.left - r.left) + 'px';
+    }
+
+    let guetPastilles = null;
+    function suivrePastille(li) {
+        if (!('ResizeObserver' in window)) { requestAnimationFrame(() => placerPastille(li)); return; }
+        guetPastilles = guetPastilles || new ResizeObserver(entrees =>
+            entrees.forEach(e => placerPastille(e.target)));
+        guetPastilles.observe(li);
     }
 
     // ── L'appui maintenu ─────────────────────────────────────────────

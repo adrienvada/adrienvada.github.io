@@ -41,6 +41,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 // LE MOTEUR DE MONTAGE, celui-là même dont se sert le panneau plein écran de
 // la page d'accueil (voir univers-montage.js). C'est tout l'objet de ce
@@ -272,37 +273,130 @@ function datesDe(cle, SHOW_DATA) {
 }
 
 // ── Données structurées ─────────────────────────────────────────────
-function donneesStructurees(uni, titre, desc, dates, urlPage, photoOg) {
+//  L'ŒUVRE, puis UNE REPRÉSENTATION = UN ÉVÉNEMENT. Les événements sont
+//  fabriqués par le moteur partagé (evenementTheatre, dans
+//  univers-montage.js), le MÊME que la page d'accueil appelle en direct :
+//  heure et fuseau de Paris, adresse structurée, organisateur, billetterie.
+//  Ils étaient écrits ici à la main, en plus pauvre — une date sans heure,
+//  un lieu pour toute adresse — et Google les refusait pour ces manques.
+//  Les séances SCOLAIRES n'en sont pas : elles ne sont pas ouvertes au
+//  public, et les annoncer dans un moteur promettrait des places qui
+//  n'existent pas.
+function donneesStructurees(uni, titre, desc, dates, urlPage, photoOg, cv) {
     const adrien = { '@type': 'Person', '@id': SITE + '/#adrien-vada', name: 'Adrien Vada' };
     const graphe = [];
+    const annee = (String(cv.annee || '').match(/\d{4}/) || [])[0];
+    const passee = annee && +annee <= new Date().getFullYear();
 
     if (uni.kind === 'film') {
-        graphe.push({
+        const film = {
             '@context': 'https://schema.org', '@type': 'Movie',
-            name: titre, description: desc, url: urlPage,
+            name: titre, description: desc, url: urlPage, inLanguage: 'fr',
             image: photoOg || undefined, actor: adrien
-        });
+        };
+        // « Réalisé par X et Y » : la ligne de CV nomme les réalisateurs.
+        const realise = String(cv.compagnie || '').match(/^R[ée]alis[ée]e?s?\s+par\s+(.+)$/i);
+        if (realise) {
+            film.director = realise[1].split(/\s*(?:,|\bet\b)\s*/).filter(Boolean)
+                .map(nom => ({ '@type': 'Person', name: nom }));
+        }
+        if (passee) film.dateCreated = annee;
+        graphe.push(film);
     } else {
-        graphe.push({
+        const oeuvre = {
             '@context': 'https://schema.org', '@type': 'CreativeWork',
-            name: titre, description: desc, url: urlPage,
+            name: titre, description: desc, url: urlPage, inLanguage: 'fr',
+            genre: uni.genre || 'Théâtre',
             image: photoOg || undefined, contributor: adrien
-        });
-        // Une représentation datée = un événement. C'est ce qui permet à une
-        // date de remonter dans les résultats enrichis, comme sur la page
-        // d'accueil (voir l'injection TheaterEvent dans index.html).
-        dates.filter(d => d.iso).forEach(d => {
-            graphe.push({
-                '@context': 'https://schema.org', '@type': 'TheaterEvent',
-                name: titre, startDate: d.iso, url: urlPage,
-                eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-                location: { '@type': 'Place', name: d.lieu, address: d.lieu },
-                performer: adrien,
-                organizer: uni.compagnie ? { '@type': 'Organization', name: uni.compagnie } : undefined
-            });
+        };
+        const producteur = MONTAGE.organisateurs(cv.compagnie || '');
+        if (producteur) oeuvre.producer = producteur;
+        if (passee) oeuvre.dateCreated = annee;
+        graphe.push(oeuvre);
+        dates.filter(d => d.iso && !d.scolaire).forEach(d => {
+            const ev = MONTAGE.evenementTheatre({
+                titre: uni.title || titre, sousTitre: uni.subtitle || '', lieu: d.lieu, ville: d.ville,
+                jour: d.iso, heure: d.heure, billetterie: d.billetterie
+            }, { uni, compagnie: cv.compagnie || '' });
+            if (ev) graphe.push(ev);
         });
     }
     return graphe;
+}
+
+// ── Le titre et le résumé que montre un moteur ──────────────────────
+//  C'était « Bérénice · Adrien Vada », et pour résumé les trois cents
+//  premiers caractères du synopsis, coupés au milieu d'un mot. Or c'est
+//  tout ce qu'on lit d'une page dans une liste de résultats : il faut
+//  qu'on y trouve ce qu'on a cherché. On cherche une pièce par sa
+//  COMPAGNIE (« Bérénice Crescite ») et un comédien par son RÔLE.
+//
+//  La compagnie ne garde que son nom (« Compagnie Crescite », sans le
+//  metteur en scène qui la suit sur la ligne du CV), et seulement si le
+//  titre reste lisible : au-delà de 65 signes, Google le tronque, et
+//  c'est elle qu'on sacrifie. Un film dit qu'il en est un.
+const LONGUEUR_TITRE = 65;
+const LONGUEUR_RESUME = 155;
+
+const compagnieCourte = (cie) => String(cie || '').split(/\s+—\s+|\s+\/\s+/)[0].trim();
+
+function titreDe(uni, titre, cv) {
+    const base = `${titre}${uni.subtitle ? ' — ' + uni.subtitle : ''}`;
+    const film = uni.kind === 'film';
+    const contexte = film ? (uni.subtitle ? '' : 'court-métrage') : compagnieCourte(cv.compagnie);
+    const riche = contexte ? `${base} · ${contexte} · Adrien Vada` : '';
+    return riche && riche.length <= LONGUEUR_TITRE ? riche : `${base} · Adrien Vada`;
+}
+
+//  Le résumé dit QUI, OÙ et AVEC QUEL RÔLE, puis ouvre le synopsis ; il
+//  s'arrête à 155 signes, sur un mot entier, par des points de
+//  suspension. « Bérénice, Compagnie Crescite — avec Adrien Vada
+//  (Antiochus). Rome, an 79. Huit jours après… »
+function descriptionDe(uni, titre, cv) {
+    const role = String(uni.role || cv.role || '').replace(/^R[oô]les?\s*·\s*/i, '').trim();
+    const cie = compagnieCourte(cv.compagnie);
+    const qui = uni.kind === 'film'
+        ? (cie ? `${titre}, ${cie.charAt(0).toLowerCase()}${cie.slice(1)}` : titre)
+        : (cie ? `${titre}, ${cie}` : titre);
+    const tete = `${qui} — avec Adrien Vada${role ? ` (${role})` : ''}.`;
+    const synopsis = lignes(uni.synopsis).join(' ').replace(/\s+/g, ' ').trim();
+    const tout = synopsis ? `${tete} ${synopsis}` : tete;
+    if (tout.length <= LONGUEUR_RESUME) return tout;
+    const coupe = tout.slice(0, LONGUEUR_RESUME - 1);
+    return coupe.slice(0, coupe.lastIndexOf(' ')).replace(/[\s,;:.—–-]+$/, '') + '…';
+}
+
+// ── Le sprite de la page, et lui seul ───────────────────────────────
+//  Le sprite complet — quarante et un dessins — était recopié dans chaque
+//  page. On n'y garde que ceux que la page peut montrer : les icônes que
+//  cite son HTML, plus toutes celles que les deux scripts du moteur
+//  peuvent poser en direct (agenda, lecture vidéo, dates rafraîchies…).
+//  On les relit dans leur source plutôt que d'en tenir une liste : une
+//  icône ajoutée au moteur y est aussitôt comptée.
+const ICONES_DU_MOTEUR = (() => {
+    const ids = new Set();
+    ['univers.js', 'univers-montage.js'].forEach(f => {
+        const src = lire(f);
+        for (const m of src.matchAll(/#i-([a-z0-9-]+)/g)) ids.add('i-' + m[1]);
+        // setIcon(el, 'solid-pause') : le nom sans son préfixe.
+        for (const m of src.matchAll(/['"`]((?:solid|brands|regular)-[a-z0-9-]+)['"`]/g)) ids.add('i-' + m[1]);
+    });
+    return ids;
+})();
+
+function spriteUtile(html) {
+    const ids = new Set(ICONES_DU_MOTEUR);
+    for (const m of html.matchAll(/#i-([a-z0-9-]+)/g)) ids.add('i-' + m[1]);
+    const symboles = [...SPRITE.matchAll(/<symbol id="([^"]+)"[\s\S]*?<\/symbol>/g)]
+        .filter(m => ids.has(m[1])).map(m => m[0]);
+    // L'enveloppe du sprite (son <svg> et ses repères) est reprise telle
+    // quelle : seuls les <symbol> sont triés.
+    const ouverture = SPRITE.match(/<svg\b[^>]*>/);
+    return ouverture
+        ? `<!-- Sprite d'icônes : les ${symboles.length} dessins dont cette page peut avoir
+         besoin, pris dans celui d'index.html. Icônes FontAwesome Free,
+         licence CC BY 4.0 (fontawesome.com). -->\n    ${ouverture[0]}${symboles.join('')}</svg>`
+        : SPRITE;
 }
 
 // ── Gabarit d'une page ──────────────────────────────────────────────
@@ -311,11 +405,10 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     const dates = datesDe(cle, SHOW_DATA);
     const photos = photosDe(uni);
     const urlPage = `${SITE}/spectacles/${uni.slug}/`;
-    const desc = lignes(uni.synopsis).join(' ').replace(/\s+/g, ' ').trim().slice(0, 300)
-        || `${titre} — avec Adrien Vada.`;
+    const desc = descriptionDe(uni, titre, cv);
     const photoOg = photos[0] ? `${SITE}/${photos[0].src}` : `${SITE}/ressources/images/og-adrien-vada.jpg`;
     const p = uni.palette || {};
-    const titreComplet = `${titre}${uni.subtitle ? ' — ' + uni.subtitle : ''} · Adrien Vada`;
+    const titreComplet = titreDe(uni, titre, cv);
 
     // `info` a exactement la forme que rowInfo() produit dans le navigateur en
     // lisant la ligne du CV. Ici c'est le même contenu, relu dans index.html
@@ -354,12 +447,16 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     // Les chemins d'images du montage sont relatifs à la racine du site ;
     // cette page vit deux dossiers plus bas. On les rebase plutôt que de
     // toucher au moteur, dont ce n'est pas le problème.
+    // TOUS les candidats d'un srcset, et pas seulement le premier : les
+    // versions allégées des photos (640, 1280, 1920) s'y suivent, séparées
+    // par des virgules — seule la première gardait son chemin.
     const corps = panneau
-        .replace(/(src|data-u-src|srcset)="ressources\//g, '$1="../../ressources/')
+        .replace(/(src|data-u-src)="ressources\//g, '$1="../../ressources/')
+        .replace(/srcset="([^"]*)"/g, (_, v) => `srcset="${v.replace(/(^|,\s*)ressources\//g, '$1../../ressources/')}"`)
         .replace(/url\((['"]?)ressources\//g, 'url($1../../ressources/');
 
-    const jsonld = donneesStructurees(uni, titre, desc, dates, urlPage, photoOg)
-        .map(o => `<script type="application/ld+json">\n${JSON.stringify(o, null, 2)}\n</script>`)
+    const jsonld = donneesStructurees(uni, titre, desc, dates, urlPage, photoOg, cv)
+        .map(o => `<script type="application/ld+json">\n${MONTAGE.jsonLd(o)}\n</script>`)
         .join('\n    ');
 
     return `<!DOCTYPE html>
@@ -393,10 +490,12 @@ ${MESURE}
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-96x96.png" sizes="96x96">
     <link rel="icon" type="image/svg+xml" href="../../favicon_io/favicon.svg">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@200;300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <!-- Les polices du site, servies par le site (ressources/polices/). Le
+         titre est en Cinzel et le synopsis en Inter : ce sont les deux
+         premières choses qui s'écrivent, on les demande donc d'avance. -->
+    <link rel="preload" href="../../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../../ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../ressources/polices/polices.css">
     <link rel="stylesheet" href="../../univers.css">
 
     <!-- Le repli quand le script ne charge pas. Les mots du montage attendent
@@ -407,10 +506,13 @@ ${MESURE}
     <noscript><link rel="stylesheet" href="../../univers-statique.css"></noscript>
 
     <script>
-        // Visiter une fiche, c'est être entré : le retour vers l'accueil ne
-        // doit pas lever le rideau d'introduction — « entrer par une porte
-        // dérobée reste entrer » (intro.js).
-        try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+        // Visiter une fiche, c'est avoir commencé sa visite : le retour vers
+        // l'accueil ne doit pas lever le rideau d'introduction au milieu du
+        // parcours. C'est la mémoire de la VISITE (sessionStorage), pas celle
+        // de l'appareil : l'ouverture n'a pas joué, et un visiteur qui
+        // reviendra un autre jour depuis un autre site y aura droit — voir
+        // « Le lien direct entre sans rideau » dans index.html.
+        try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -432,7 +534,7 @@ ${MESURE}
         /* Le retour au site : la seule chose que la page ajoute au montage. */
         .u-retour {
             position: absolute; top: 1.2rem; left: 1.4rem; z-index: 4;
-            font: 700 .68rem/1 'Montserrat', system-ui, sans-serif;
+            font: 700 .74rem/1 'Montserrat', system-ui, sans-serif;
             letter-spacing: .16em; text-transform: uppercase;
             color: var(--u-muted); text-decoration: none;
         }
@@ -470,11 +572,14 @@ ${MESURE}
      Sur l'accueil c'est le badge de la ligne du CV qui tranche ; cette page
      n'a pas de CV, on le lui écrit donc noir sur blanc. -->
 <body class="u-page-spectacle" data-u-show="${MONTAGE.escape(cle)}"${enCreation ? ' data-u-creation="1"' : ''}>
-    ${SPRITE}
-    <div id="show-universe">
-        <a class="u-retour" href="../../">← Adrien Vada</a>
+    ${spriteUtile(corps)}
+    <!-- <main> : le contenu principal de la page, annoncé comme tel. Un
+         lecteur d'écran y saute d'une touche ; un moteur sait où commence
+         ce qui compte. -->
+    <main id="show-universe">
+        <a class="u-retour" href="../../"><span aria-hidden="true">←</span> Adrien Vada</a>
         ${corps}
-    </div>
+    </main>
 
     <!-- LES DATES, LUES ICI COMME SUR L'ACCUEIL.
          Le pied de cette page a été écrit à la génération : c'est un repli
@@ -528,13 +633,59 @@ function miniSprite(ids) {
         : '';
 }
 
-function pageRepertoire(fiches) {
+// ── L'image d'une carte ─────────────────────────────────────────────
+//  Les kakemonos chargeaient la photo ENTIÈRE du montage — 2 400 px et
+//  jusqu'à 900 ko — pour une carte de 240 px : 4,7 Mo pour la page. Ils
+//  prennent désormais la version allégée qui suffit (640 ou 1 280 px, voir
+//  build/variantes-images.py), l'original restant le repli.
+//
+//  CE QUE `sizes` ANNONCE, C'EST LA TAILLE AFFICHÉE DE LA PHOTO, pas celle
+//  de la carte. Une photo en paysage recadrée dans une carte en portrait
+//  (2/3) est agrandie jusqu'à en couvrir la HAUTEUR : elle s'affiche sur
+//  1,5 × (largeur ÷ hauteur) fois la largeur de la carte — 2,25 fois pour
+//  un 3/2. Annoncer la seule largeur de la carte ferait choisir une
+//  version deux fois trop petite, et l'affiche serait floue. Ce facteur
+//  est lu dans l'en-tête du JPEG, photo par photo, et voyage sur la carte
+//  (data-couverture) : le script le reprend quand la densité change.
+function dimensionsJpeg(rel) {
+    try {
+        const b = fs.readFileSync(path.join(RACINE, rel));
+        let i = 2;
+        while (i + 9 < b.length) {
+            if (b[i] !== 0xFF) { i++; continue; }
+            const m = b[i + 1];
+            // Les marqueurs SOF portent la taille de l'image (hors DHT,
+            // JPG et DAC, qui partagent la plage sans la porter).
+            if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) {
+                return { h: b.readUInt16BE(i + 5), w: b.readUInt16BE(i + 7) };
+            }
+            i += 2 + b.readUInt16BE(i + 2);
+        }
+    } catch (e) { /* illisible : facteur par défaut */ }
+    return null;
+}
+
+const couverture = (rel) => {
+    const d = dimensionsJpeg(rel);
+    return d && d.h ? Math.max(1, 1.5 * d.w / d.h) : 2.25;
+};
+
+//  Au repos : deux colonnes au téléphone, quatre cartes de 240 px au plus
+//  sur grand écran. Le script réécrit ces tailles à chaque changement de
+//  densité (voir majTailles).
+const taillesCarte = (f, colonnesMobile = 2, colonnesEcran = 4) =>
+    `(max-width: 640px) ${Math.ceil(f * 100 / colonnesMobile)}vw, ${Math.ceil(f * 960 / colonnesEcran)}px`;
+
+function imageCarte(src, pos, f) {
+    const base = '../' + src.replace(/\.jpg$/, '');
+    return `<picture><source type="image/webp" srcset="${esc(base)}-640.webp 640w, ${esc(base)}-1280.webp 1280w" sizes="${taillesCarte(f)}">`
+        + `<img src="../${esc(src)}"${pos ? ` style="--pos:${esc(pos)}"` : ''} alt="" loading="lazy" decoding="async"></picture>`;
+}
+
+function pageRepertoire(fiches, misAJour) {
     const url = `${SITE}/spectacles/`;
+    const titrePage = 'Répertoire : spectacles et films — Adrien Vada';
     const desc = 'Les spectacles et films d’Adrien Vada : rôles, distributions, dates et photographies.';
-    // « août 2026 » — le répertoire est réécrit à chaque passage du script,
-    // autant le dire au visiteur : une devanture datée inspire confiance.
-    const misAJour = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' })
-        .format(new Date());
 
     const carte = (f, i) => {
         // La couleur du spectacle signe sa carte — filet sous le titre, halo
@@ -546,18 +697,21 @@ function pageRepertoire(fiches) {
         // recadrée en portrait sur le point du montage (--pos), et le
         // deuxième regard attend dans data-src2 — il ne se charge qu'au
         // premier survol, jamais d'avance.
+        const f1 = f.vignette ? couverture(f.vignette) : 1;
         const media = f.vignette
-            ? `<span class="media media--photo"><img src="../${esc(f.vignette)}"${f.vignettePos ? ` style="--pos:${esc(f.vignettePos)}"` : ''} alt="" loading="lazy" decoding="async"></span>`
+            ? `<span class="media media--photo">${imageCarte(f.vignette, f.vignettePos, f1)}</span>`
             : `<span class="media"><span class="carton" style="--cbg:${esc(f.paletteBg || '#171410')};--ctx:${esc(f.paletteText || '#f2ece0')}">
                     <span class="carton-orne" aria-hidden="true">✦</span>
                     <span class="carton-titre">${esc(f.titre)}</span>
                     <span class="carton-orne" aria-hidden="true">✦</span>
                 </span></span>`;
+        // Le deuxième regard, en version allégée lui aussi ; l'original en
+        // repli, pour un navigateur qui ne lirait pas le WebP.
         const second = f.vignette && f.vignette2
-            ? ` data-src2="../${esc(f.vignette2)}"${f.vignette2Pos ? ` data-pos2="${esc(f.vignette2Pos)}"` : ''}`
+            ? ` data-src2="../${esc(f.vignette2.replace(/\.jpg$/, ''))}-1280.webp" data-src2-repli="../${esc(f.vignette2)}"${f.vignette2Pos ? ` data-pos2="${esc(f.vignette2Pos)}"` : ''}`
             : '';
         return `
-        <li class="carte" style="--ac:${esc(accent)};--i:${i}" data-slug="${esc(f.slug)}" data-vt="fiche-${esc(f.slug)}"${second}>
+        <li class="carte" style="--ac:${esc(accent)};--i:${i}" data-slug="${esc(f.slug)}" data-vt="fiche-${esc(f.slug)}"${f.vignette ? ` data-couverture="${f1.toFixed(3)}"` : ''}${second}>
             <a href="${esc(f.slug)}/">
                 <span class="cadre">${media}${f.vignette ? '<span class="volet-couleur" aria-hidden="true"></span>' : ''}<span class="lueur" aria-hidden="true"></span>${f.synopsis ? `<span class="chuchote" aria-hidden="true"><span class="voile"></span><p>${f.synopsis.split(/\s+/).map((m, k) => `<span class="mot" style="--m:${k}">${esc(m)}</span>`).join(' ')}</p></span>` : ''}</span>
                 <span class="txt">
@@ -619,7 +773,7 @@ function pageRepertoire(fiches) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- PAGE GÉNÉRÉE — ne pas modifier à la main (build/generer-pages-spectacles.js). -->
-    <title>Répertoire — Adrien Vada</title>
+    <title>${esc(titrePage)}</title>
     <meta name="description" content="${esc(desc)}">
     <link rel="canonical" href="${url}">
     <script>
@@ -632,10 +786,10 @@ function pageRepertoire(fiches) {
             if (stored === 'light' || stored === 'dark') { t = stored; }
             else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) { t = 'light'; }
             document.documentElement.setAttribute('data-theme', t);
-            // Visiter le répertoire, c'est être entré : le retour vers
-            // l'accueil ne doit pas lever le rideau d'introduction —
-            // « entrer par une porte dérobée reste entrer » (intro.js).
-            try { localStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+            // Visiter le répertoire, c'est avoir commencé sa visite : le
+            // retour vers l'accueil ne lève pas le rideau (mémoire de la
+            // visite, pas de l'appareil — voir la fiche d'un spectacle).
+            try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
         })();
     </script>
     <meta name="theme-color" content="#0a0907">
@@ -644,16 +798,15 @@ ${MESURE}
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">
-    <meta property="og:title" content="Répertoire — Adrien Vada">
+    <meta property="og:title" content="${esc(titrePage)}">
     <meta property="og:description" content="${esc(desc)}">
     <meta property="og:image" content="${SITE}/ressources/images/og-adrien-vada.jpg">
     <meta property="og:url" content="${url}">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/svg+xml" href="../favicon_io/favicon.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap">
+    <!-- Les polices du site, servies par le site (ressources/polices/). -->
+    <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../ressources/polices/polices.css">
     <link rel="stylesheet" href="spectacle.css">
     <style>
         :root {
@@ -675,10 +828,18 @@ ${JSON.stringify(liste, null, 2)}
          le même guet que la barre d'onglets de l'accueil. -->
     <div class="barre-sentinelle" aria-hidden="true"></div>
     <header class="barre">
-        <a class="retour" href="../">← Adrien Vada</a>
-        <button type="button" class="bascule" data-bascule aria-pressed="false" aria-label="Passer au thème clair" title="Passer au thème clair">
-            <svg class="ico" data-bascule-icone aria-hidden="true"><use href="#i-solid-sun"></use></svg>
-        </button>
+        <a class="retour" href="../"><span aria-hidden="true">←</span> Adrien Vada</a>
+        <div class="outils">
+            <!-- La densité du mur : moins d'affiches par rang (+), plus (−).
+                 Cachés sans script, qui seul sait les faire agir. -->
+            <div class="densite" role="group" aria-label="Taille des affiches">
+                <button type="button" class="densite-btn" data-densite="1" hidden aria-label="Affiches plus petites" title="Affiches plus petites"><span aria-hidden="true">−</span></button>
+                <button type="button" class="densite-btn" data-densite="-1" hidden aria-label="Affiches plus grandes" title="Affiches plus grandes"><span aria-hidden="true">+</span></button>
+            </div>
+            <button type="button" class="bascule" data-bascule aria-label="Passer au thème clair" title="Passer au thème clair">
+                <svg class="ico" data-bascule-icone aria-hidden="true"><use href="#i-solid-sun"></use></svg>
+            </button>
+        </div>
     </header>
     <main>
         <header class="tete">
@@ -715,6 +876,12 @@ ${JSON.stringify(liste, null, 2)}
             if (c.dataset.pos2) i.style.setProperty('--pos', c.dataset.pos2);
             // Le fondu n'a de sens que sur une image ENTIÈRE : la classe
             // n'arrive qu'au décodage — jamais de pixels qui surgissent.
+            if (c.dataset.src2Repli) {
+                i.onerror = function () {
+                    i.onerror = null;
+                    i.src = c.dataset.src2Repli;
+                };
+            }
             i.src = c.dataset.src2;
             var prete = function () { i.classList.add('prete'); };
             if (i.decode) { i.decode().then(prete).catch(prete); } else { i.onload = prete; }
@@ -861,151 +1028,15 @@ ${JSON.stringify(liste, null, 2)}
             addEventListener('resize', replanifieScene);
             replanifieScene();
 
-            // La galerie au pincement, façon Google Photos : pas de page
-            // qui zoome — CHAQUE VIGNETTE PARCOURT SON CHEMIN vers sa
-            // place dans l'autre rang, au rythme des doigts. Au début du
-            // vol, on mesure les positions d'arrivée (un aller-retour de
-            // grille invisible) ; pendant le geste, chaque carte est
-            // interpolée — translation et échelle — vers son point de
-            // chute ; au relâcher, la bascule part en View Transition qui
-            // résorbe le dernier millimètre, ou tout revient en place.
-            var mur = document.querySelector('main');
-            var NIVEAUX = function () { return innerWidth < 640 ? [2, 3, 4] : [2, 3, 4, 5]; };
-            var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
-            var zoomCourant = function () {
-                return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
-            };
-            var niveauVoisin = function (sens) {
-                var n = NIVEAUX();
-                var i = n.indexOf(zoomCourant());
-                if (i === -1) i = n.indexOf(zoomRepos());
-                var v = n[i + sens];
-                return v === undefined ? 0 : v;
-            };
-            var mesure = function () {
-                var m = {};
-                cartes.forEach(function (c) { m[c.dataset.slug] = c.getBoundingClientRect(); });
-                return m;
-            };
-            var poseNiveau = function (v) {
-                if (v) document.documentElement.dataset.zoom = v;
-                else delete document.documentElement.dataset.zoom;
-            };
-            var pincement = 0, rapport = 1, sensVol = 0, versVol = 0,
-                departs = null, cibles = null, tVol = 0, demandeVol = 0, verrou = false;
-            var ecart = function (t) {
-                return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
-            };
-            var nettoieVol = function () {
-                if (demandeVol) { cancelAnimationFrame(demandeVol); demandeVol = 0; }
-                cartes.forEach(function (c) {
-                    c.style.transform = ''; c.style.transformOrigin = ''; c.style.transition = '';
-                });
-            };
-            var oublieVol = function () { sensVol = 0; versVol = 0; departs = cibles = null; tVol = 0; };
-            // Prépare une étape de vol : TOUJOURS sur grille propre — mesurer
-            // avec des transformations encore posées, c'est mesurer un mirage,
-            // et c'est de là que venaient les divergences.
-            var prepareVol = function (sens) {
-                nettoieVol();
-                var vers = niveauVoisin(sens);
-                if (!vers) { oublieVol(); return; }
-                var courant = document.documentElement.dataset.zoom || '';
-                departs = mesure();
-                poseNiveau(vers);
-                cibles = mesure();
-                if (courant) document.documentElement.dataset.zoom = courant;
-                else delete document.documentElement.dataset.zoom;
-                sensVol = sens; versVol = vers;
-            };
-            var vole = function () {
-                demandeVol = 0;
-                if (!departs || !cibles) return;
-                for (var k = 0; k < cartes.length; k++) {
-                    var c = cartes[k];
-                    var a = departs[c.dataset.slug], b = cibles[c.dataset.slug];
-                    if (!a || !b || !a.width) continue;
-                    var dx = (b.left - a.left) * tVol, dy = (b.top - a.top) * tVol;
-                    var s = 1 + (b.width / a.width - 1) * tVol;
-                    c.style.transformOrigin = '0 0';
-                    c.style.transform = 'translate(' + dx.toFixed(1) + 'px, ' + dy.toFixed(1) + 'px) scale(' + s.toFixed(4) + ')';
-                }
-            };
-            var replanifieVol = function () { if (!demandeVol) demandeVol = requestAnimationFrame(vole); };
-            mur.addEventListener('touchstart', function (e) {
-                if (e.touches.length !== 2 || verrou) return;
-                // Auto-guérison : un reste de vol qui traînerait est balayé
-                // avant toute mesure.
-                if (!versVol) nettoieVol();
-                pincement = ecart(e.touches); rapport = 1;
-            }, { passive: true });
-            mur.addEventListener('touchmove', function (e) {
-                if (e.touches.length !== 2 || !pincement || verrou) return;
-                e.preventDefault();
-                rapport = ecart(e.touches) / pincement;
-                // Zone morte : un tremblement autour de 1 ne choisit pas de
-                // sens — c'est lui qui faisait battre les re-mesures.
-                if (!sensVol && Math.abs(rapport - 1) < .05) return;
-                var sens = rapport > 1 ? -1 : 1;
-                if (sens !== sensVol) prepareVol(sens);
-                if (!versVol) return;
-                tVol = Math.max(0, Math.min(1, sens === -1 ? (rapport - 1) / .5 : (1 - rapport) / .34));
-                replanifieVol();
-                // Chemin parcouru en entier EN PLEIN GESTE : les cartes sont
-                // déjà à destination — bascule synchrone, sans View
-                // Transition à contresens du doigt, et le geste enchaîne.
-                if (tVol >= 1) {
-                    var vers = versVol;
-                    oublieVol(); nettoieVol();
-                    poseNiveau(vers); replanifieScene();
-                    pincement = ecart(e.touches); rapport = 1;
-                }
-            }, { passive: false });
-            mur.addEventListener('touchend', function (e) {
-                if (e.touches.length >= 2 || !pincement) return;
-                pincement = 0;
-                if (verrou) return;
-                if (versVol && tVol >= .45) {
-                    // La View Transition résorbe le chemin restant, sous verrou.
-                    var vers = versVol;
-                    oublieVol();
-                    verrou = true;
-                    var applique = function () {
-                        poseNiveau(vers); nettoieVol(); replanifieScene(); verrou = false;
-                    };
-                    if (document.startViewTransition) {
-                        cartes.forEach(function (c) { c.style.viewTransitionName = 'c-' + c.dataset.slug; });
-                        var t = document.startViewTransition(applique);
-                        t.finished.then(function () { }, function () { }).then(function () {
-                            cartes.forEach(function (c) { c.style.viewTransitionName = ''; });
-                        });
-                    } else { applique(); }
-                } else if (versVol) {
-                    // Pas de cran : chaque carte revole en arrière, en douceur.
-                    oublieVol();
-                    if (demandeVol) { cancelAnimationFrame(demandeVol); demandeVol = 0; }
-                    cartes.forEach(function (c) {
-                        c.style.transition = 'transform .22s ease';
-                        c.style.transform = '';
-                    });
-                    setTimeout(function () {
-                        cartes.forEach(function (c) {
-                            c.style.transition = ''; c.style.transformOrigin = '';
-                        });
-                    }, 240);
-                }
-            });
-            mur.addEventListener('touchcancel', function () {
-                pincement = 0;
-                if (verrou) return;
-                oublieVol(); nettoieVol();
-            });
-
             // La vitrine scintille : toutes les quelques secondes, une
             // carte posée — jamais celle qu'on regarde — reçoit un
             // nouveau passage de dorure. Une seule à la fois, rien quand
-            // l'onglet dort.
-            setInterval(function () {
+            // l'onglet dort. TROIS FOIS, puis la vitrine se tient
+            // tranquille : un éclat qui revient sans fin dans le coin de
+            // l'œil empêche de lire le reste, et rien ne permettait de
+            // l'arrêter (WCAG 2.2.2).
+            var passages = 0;
+            var scintille = setInterval(function () {
                 if (document.hidden) return;
                 var posees = cartes.filter(function (c) {
                     return c.classList.contains('en-scene') &&
@@ -1015,8 +1046,72 @@ ${JSON.stringify(liste, null, 2)}
                 var elue = posees[Math.floor(Math.random() * posees.length)];
                 elue.classList.add('reluit');
                 setTimeout(function () { elue.classList.remove('reluit'); }, 1450);
+                if (++passages >= 3) clearInterval(scintille);
             }, 4600);
         }
+
+        // ── La densité du mur, aux boutons − et + ──
+        // Elle se réglait au pincement, façon Google Photos. Mais pour
+        // cela la page confisquait le pincement au navigateur
+        // (touch-action), et plus personne ne pouvait AGRANDIR LA PAGE —
+        // le geste même dont a besoin qui voit mal (WCAG 1.4.4). Le
+        // pincement est rendu au navigateur ; la densité passe à deux
+        // boutons, que le clavier atteint aussi. Les affiches glissent
+        // toujours jusqu'à leur nouvelle place (View Transition) ; sans
+        // soutien, ou en mouvement réduit, la grille bascule d'un coup.
+        var reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // Une colonne unique au téléphone : l'affiche en grand, pour qui
+        // voit mal — le pincement ne l'offrait pas.
+        var NIVEAUX = function () { return innerWidth < 640 ? [1, 2, 3, 4] : [2, 3, 4, 5]; };
+        var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
+        var zoomCourant = function () {
+            return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
+        };
+        var boutonsDensite = Array.prototype.slice.call(document.querySelectorAll('[data-densite]'));
+        function majBoutons() {
+            var n = NIVEAUX(), c = zoomCourant();
+            boutonsDensite.forEach(function (b) {
+                // +1 : une colonne de plus, donc des affiches plus petites.
+                b.disabled = +b.dataset.densite > 0 ? c >= n[n.length - 1] : c <= n[0];
+            });
+        }
+        // Les photos annoncent leur nouvelle taille affichée : le
+        // navigateur va chercher la version plus grande si elle manque.
+        function majTailles(colonnes) {
+            cartes.forEach(function (c) {
+                var f = parseFloat(c.dataset.couverture || '1');
+                var s = '(max-width: 640px) ' + Math.ceil(f * 100 / colonnes) + 'vw, ' +
+                    Math.ceil(f * 960 / colonnes) + 'px';
+                var source = c.querySelector('source');
+                if (source) source.setAttribute('sizes', s);
+            });
+        }
+        function poseDensite(v) {
+            var applique = function () {
+                document.documentElement.dataset.zoom = v;
+                majTailles(v);
+                majBoutons();
+                if (typeof replanifieScene === 'function') replanifieScene();
+            };
+            if (document.startViewTransition && !reduit) {
+                cartes.forEach(function (c) { c.style.viewTransitionName = 'c-' + c.dataset.slug; });
+                var t = document.startViewTransition(applique);
+                t.finished.then(function () { }, function () { }).then(function () {
+                    cartes.forEach(function (c) { c.style.viewTransitionName = ''; });
+                });
+            } else { applique(); }
+        }
+        boutonsDensite.forEach(function (b) {
+            b.hidden = false;
+            b.addEventListener('click', function () {
+                var n = NIVEAUX(), i = n.indexOf(zoomCourant());
+                if (i === -1) i = n.indexOf(zoomRepos());
+                var v = n[i + (+b.dataset.densite)];
+                if (v) poseDensite(v);
+            });
+        });
+        majBoutons();
+        addEventListener('resize', majBoutons);
 
         // La barre flotte dès que sa sentinelle sort de l'écran — le même
         // guet que la barre d'onglets de l'accueil : aucun calcul au fil
@@ -1040,7 +1135,6 @@ ${JSON.stringify(liste, null, 2)}
             if (bascule) {
                 bascule.setAttribute('aria-label', action);
                 bascule.setAttribute('title', action);
-                bascule.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
                 var u = bascule.querySelector('use');
                 if (u) u.setAttribute('href', versClair ? '#i-solid-sun' : '#i-solid-moon');
             }
@@ -1182,6 +1276,22 @@ a { color: var(--accent-ink); }
 :root[data-theme="light"] .bascule { color: #6366a8; }
 .bascule:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
 .bascule .ico { font-size: .95rem; }
+.outils { display: flex; align-items: center; gap: .5rem; }
+/* La densité du mur — mêmes pastilles que la bascule, un signe dedans. */
+.densite { display: flex; gap: .3rem; }
+.densite-btn {
+    display: grid; place-items: center; width: 2.3rem; height: 2.3rem; flex: none;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: var(--surface); color: var(--text); cursor: pointer;
+    font: 500 1.15rem/1 'Inter', system-ui, sans-serif;
+    transition: border-color .3s ease, opacity .3s ease, background-color .35s ease;
+}
+.densite-btn:hover:not(:disabled) { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+/* Au bout de l'échelle, le bouton s'éteint (et le clavier le saute). */
+.densite-btn:disabled { opacity: .35; cursor: default; }
+.densite-btn:focus-visible, .bascule:focus-visible, .retour:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px;
+}
 
 /* ── La manchette ── */
 .tete { padding: 3.2rem 0 2.4rem; text-align: center; }
@@ -1322,7 +1432,7 @@ h1 {
 .annee { display: block; }
 .etat { display: inline-block; margin-top: .35rem; }
 .annee {
-    font-size: .6rem; line-height: 1.4; letter-spacing: .16em;
+    font-size: .7rem; line-height: 1.4; letter-spacing: .16em;
     text-transform: uppercase; color: var(--accent-ink);
 }
 /* LA PASTILLE PORTE LA COULEUR DE SON SPECTACLE, comme le badge du CV.
@@ -1333,8 +1443,8 @@ h1 {
 
    L'encre est l'accent ramené vers --text, jamais l'accent brut : sur
    onze spectacles, les plus foncés tombent sous 2 de contraste en thème
-   sombre, les plus vifs en font autant en clair, et ce texte-ci fait
-   .55rem. Le mélange va toujours à l'opposé du fond. La proportion suit
+   sombre, les plus vifs en font autant en clair, et ce texte-ci est
+   petit (.69rem, 11 px : il faisait 9 px, et 7,7 au téléphone). Le mélange va toujours à l'opposé du fond. La proportion suit
    le thème pour la même raison que sur le CV — voir --cv-badge-encre
    dans index.html, où le calcul est détaillé.
 
@@ -1343,7 +1453,7 @@ h1 {
    d'As You Like It sur fond clair — c'est lui qui a fait descendre le
    clair à 45 %, où 48 % le laissaient pile sur le seuil de 4,5. */
 .etat {
-    font: 600 .55rem/1 'Inter', system-ui, sans-serif; letter-spacing: .12em;
+    font: 600 .69rem/1 'Inter', system-ui, sans-serif; letter-spacing: .1em;
     text-transform: uppercase; white-space: nowrap;
     color: color-mix(in srgb, var(--ac, var(--accent)) var(--etat-encre, 65%), var(--text));
     border: 1px solid color-mix(in srgb, var(--ac, var(--accent)) 45%, transparent);
@@ -1366,8 +1476,11 @@ h1 {
 
 @media (prefers-reduced-motion: no-preference) {
     html { scroll-behavior: smooth; }
-    /* Le fleuron respire — à peine : la manchette n'est pas un aplat mort. */
-    .ornement span { animation: fleuron-respire 5.5s ease-in-out infinite alternate; }
+    /* Le fleuron respire — à peine : la manchette n'est pas un aplat mort.
+       UNE respiration (l'aller, puis le retour au repos), et non plus sans
+       fin : un mouvement perpétuel à côté du texte doit pouvoir être
+       arrêté (WCAG 2.2.2) — le plus simple est qu'il s'arrête seul. */
+    .ornement span { animation: fleuron-respire 5.5s ease-in-out 2 alternate; }
 }
 @keyframes fleuron-respire {
     from { transform: translate(-50%, -50%) rotate(45deg); box-shadow: 0 0 0 3px var(--bg); }
@@ -1396,8 +1509,13 @@ html.scrolly .carte { --p: 0; --pl: 0; }
 .carte {
     /* Le fondu suit l'horloge LINÉAIRE (--pl) : la courbe souple charge
        tant le départ que, posée sur elle, l'opacité était pleine dès le
-       bord de l'écran. Ici : zéro au bord, pleine au tiers de la montée. */
-    opacity: min(1, calc(var(--pl, 1) / .55));
+       bord de l'écran. Ici : zéro au bord, pleine au premier quart de la
+       montée. Elle l'était au tiers — mais au repos, sans défilement, les
+       cartes du bas de l'écran restaient alors à demi fondues, leur texte
+       sous le contraste minimal tant qu'on ne bougeait pas. Le fondu
+       s'achève désormais avant qu'une carte ne soit vraiment à l'écran ;
+       la montée, le resserrement et le volet gardent toute leur course. */
+    opacity: min(1, calc(var(--pl, 1) / .3));
     transform: translateY(calc((1 - var(--p, 1)) * 72px)) scale(calc(.94 + var(--p, 1) * .06));
 }
 .media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
@@ -1448,17 +1566,16 @@ footer {
 }
 footer a { text-decoration: none; }
 footer a:hover { color: var(--accent-ink); }
-.maj { margin: .4rem 0 0; font-size: .68rem; letter-spacing: .06em; opacity: .75; }
+.maj { margin: .4rem 0 0; font-size: .72rem; letter-spacing: .06em; }
 
-/* ── La galerie au pincement ──
-   Deux doigts resserrent ou élargissent le mur : le script pose
+/* ── La densité du mur ──
+   Les boutons − et + resserrent ou élargissent le mur : le script pose
    data-zoom sur <html>, la grille suit, et les kakemonos glissent
    jusqu'à leur nouveau rang (View Transitions même-document — sans
    soutien, bascule nette). Aux rangs serrés, la carte redevient une
-   image : le fil et le rôle s'effacent, le titre se fait discret. */
-main { touch-action: pan-y; }
-/* Pendant le vol du pincement, chaque carte est pilotée en transform
-   inline — l'entrée en scène reprend la main dès l'atterrissage. */
+   image : le fil et le rôle s'effacent, le titre se fait discret.
+   Le pincement, lui, appartient de nouveau au navigateur : c'est le
+   geste qui agrandit la page. */
 html[data-zoom] .repertoire { grid-template-columns: repeat(var(--colonnes, 2), 1fr); }
 html[data-zoom="1"] { --colonnes: 1; }
 html[data-zoom="2"] { --colonnes: 2; }
@@ -1482,15 +1599,15 @@ html[data-zoom="1"] .nom { font-size: 1.12rem; }
 @media (max-width: 640px) {
     body { padding: 0 .9rem 2.6rem; }
     .tete { padding: 2.3rem 0 1.8rem; }
-    .sur-titre { font-size: .58rem; letter-spacing: .22em; margin-bottom: .8rem; }
+    .sur-titre { font-size: .69rem; letter-spacing: .2em; margin-bottom: .8rem; }
     .ornement { margin-top: 1.1rem; width: 8.5rem; }
-    .groupe { margin-top: 2rem; gap: .6rem; font-size: .64rem; letter-spacing: .16em; }
+    .groupe { margin-top: 2rem; gap: .6rem; font-size: .7rem; letter-spacing: .16em; }
     .groupe-ico { width: 1.65rem; height: 1.65rem; }
     .repertoire { grid-template-columns: repeat(2, 1fr); gap: 1.3rem .75rem; padding: 1.2rem 0 .4rem; }
     .txt { padding-top: .5rem; }
     .etat { margin-top: .28rem; }
-    .annee { font-size: .52rem; letter-spacing: .12em; }
-    .etat { font-size: .48rem; padding: .18rem .4rem; }
+    .annee { font-size: .69rem; letter-spacing: .1em; }
+    .etat { font-size: .66rem; padding: .2rem .42rem; }
     .nom { font-size: .84rem; margin-top: .22rem; padding-bottom: .4rem; }
     .nom::after { height: 1.5px; }
     .role { font-size: .68rem; margin-top: .2rem; }
@@ -1499,10 +1616,48 @@ html[data-zoom="1"] .nom { font-size: 1.12rem; }
     .chuchote { padding: .8rem .7rem; }
     .chuchote p { font-size: .66rem; line-height: 1.55; }
     .barre { top: .55rem; margin-top: .5rem; }
-    .bascule { width: 2.1rem; height: 2.1rem; }
+    .bascule, .densite-btn { width: 2.1rem; height: 2.1rem; }
     footer { margin-top: 2rem; }
 }
 `;
+
+// ── Les dates de dernière modification ──────────────────────────────
+//  Le sitemap datait TOUTES les adresses du jour de la génération : pour
+//  un moteur, le site entier changeait à chaque passage du script. Une
+//  date qui ment toujours finit ignorée — y compris le jour où elle dit
+//  vrai. Chaque adresse porte désormais le jour où son contenu a
+//  réellement changé :
+//    · une page générée qui sort identique à l'octet garde la date de
+//      son dernier commit ; si elle a changé, c'est aujourd'hui ;
+//    · l'accueil et la galerie, faits ailleurs, prennent la date du
+//      dernier commit de leurs fichiers — ou aujourd'hui s'ils ont été
+//      modifiés depuis sans être encore enregistrés.
+//  Le script redevient ainsi idempotent pour de bon : relancé sans rien
+//  changer, il ne réécrit pas une date.
+const AUJOURDHUI = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+})();
+
+function lireSiExiste(rel) {
+    try { return fs.readFileSync(path.join(RACINE, rel), 'utf8'); } catch (e) { return null; }
+}
+
+function dateGit(...fichiers) {
+    const opt = { cwd: RACINE, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] };
+    try {
+        if (execFileSync('git', ['status', '--porcelain', '--', ...fichiers], opt).trim()) return AUJOURDHUI;
+        return execFileSync('git', ['log', '-1', '--format=%cs', '--', ...fichiers], opt).trim() || AUJOURDHUI;
+    } catch (e) {
+        return AUJOURDHUI;   // pas de git (copie sans historique) : on ne sait pas, on date du jour
+    }
+}
+
+// Écrit une page générée et rend la date de son dernier vrai changement.
+function ecrirePage(rel, html, anciens) {
+    fs.writeFileSync(path.join(RACINE, rel), html);
+    return anciens[rel] === html ? dateGit(rel) : AUJOURDHUI;
+}
 
 // ── Exécution ───────────────────────────────────────────────────────
 function main() {
@@ -1516,6 +1671,18 @@ function main() {
         const n = normaliserTitre(k);
         if (!(n in cvParTitre)) cvParTitre[n] = cvParTitre[k];
     });
+
+    // Ce qui existait avant de tout effacer : c'est à cet état-là que
+    // chaque page nouvelle est comparée (voir ecrirePage).
+    const anciens = {};
+    if (fs.existsSync(SORTIE)) {
+        fs.readdirSync(SORTIE, { withFileTypes: true }).forEach(e => {
+            const rel = e.isDirectory() ? `spectacles/${e.name}/index.html` : `spectacles/${e.name}`;
+            const contenu = lireSiExiste(rel);
+            if (contenu !== null) anciens[rel] = contenu;
+        });
+    }
+    const dates = {};
 
     fs.rmSync(SORTIE, { recursive: true, force: true });
     fs.mkdirSync(SORTIE, { recursive: true });
@@ -1533,7 +1700,7 @@ function main() {
         const cv = ligneCv || {};
         const dossier = path.join(SORTIE, uni.slug);
         fs.mkdirSync(dossier, { recursive: true });
-        fs.writeFileSync(path.join(dossier, 'index.html'), pageSpectacle(uni, cle, cv, SHOW_DATA));
+        dates[uni.slug] = ecrirePage(`spectacles/${uni.slug}/index.html`, pageSpectacle(uni, cle, cv, SHOW_DATA), anciens);
         const photos = photosDe(uni);
         faites.push({
             slug: uni.slug,
@@ -1596,33 +1763,27 @@ function main() {
     // Les films après les spectacles, chacun par année décroissante.
     faites.sort((a, b) => (a.film - b.film) || (b.anneeNum - a.anneeNum) || (a.rang - b.rang));
 
-    fs.writeFileSync(path.join(SORTIE, 'index.html'), pageRepertoire(faites));
+    // « Mis à jour en septembre 2026 » : le mois où une fiche a changé
+    // pour la dernière fois — et non plus celui où le script a tourné, qui
+    // réécrivait la page chaque mois sans que rien n'ait bougé.
+    const plusRecente = Object.values(dates).sort().pop() || AUJOURDHUI;
+    const [an, mois] = plusRecente.split('-').map(Number);
+    const misAJour = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' })
+        .format(new Date(an, mois - 1, 1));
+    const dateRepertoire = ecrirePage('spectacles/index.html', pageRepertoire(faites, misAJour), anciens);
 
     // ── sitemap ──
-    const jour = new Date().toISOString().slice(0, 10);
-    const urls = [`    <url>
-        <loc>${SITE}/</loc>
-        <lastmod>${jour}</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>1.0</priority>
-    </url>`,
-    `    <url>
-        <loc>${SITE}/galerie/</loc>
-        <lastmod>${jour}</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.9</priority>
-    </url>`,
-    `    <url>
-        <loc>${SITE}/spectacles/</loc>
-        <lastmod>${jour}</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.9</priority>
-    </url>`].concat(faites.map(f => `    <url>
-        <loc>${SITE}/spectacles/${f.slug}/</loc>
-        <lastmod>${jour}</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>`));
+    const url = (loc, lastmod, freq, prio) => `    <url>
+        <loc>${loc}</loc>
+        <lastmod>${lastmod}</lastmod>
+        <changefreq>${freq}</changefreq>
+        <priority>${prio}</priority>
+    </url>`;
+    const urls = [
+        url(`${SITE}/`, dateGit('index.html', 'dates.js'), 'weekly', '1.0'),
+        url(`${SITE}/galerie/`, dateGit('galerie/index.html'), 'monthly', '0.9'),
+        url(`${SITE}/spectacles/`, dateRepertoire, 'monthly', '0.9')
+    ].concat(faites.map(f => url(`${SITE}/spectacles/${f.slug}/`, dates[f.slug], 'monthly', '0.8')));
 
     fs.writeFileSync(path.join(RACINE, 'sitemap.xml'),
         `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`);

@@ -8,21 +8,84 @@ ligne une version incohérente.
 Rien ne le signale : le site se publie très bien avec un fichier généré
 périmé. Il affiche simplement l'état d'avant.
 
+## Les outils — une installation, des versions figées
+
+Le site n'a aucune dépendance : rien de ce qui suit n'est servi aux visiteurs.
+Mais pour le **fabriquer** — la feuille Tailwind, le CV en PDF, l'allègement de
+la copie publiée, les vérifications — il faut Tailwind, Playwright et trois
+minifieurs. Ils étaient installés à la volée, « la dernière version », et
+pouvaient donc changer de comportement d'un jour à l'autre sans qu'une ligne du
+dépôt ait bougé. Ils sont maintenant déclarés dans **`build/package.json`**, aux
+versions exactes, et `build/package-lock.json` fige tout le reste.
+
+Une fois, sur une machine neuve (Node 18 ou plus) :
+
+```bash
+cd build
+npm ci                 # les outils, aux versions du dépôt (build/node_modules, ignoré par git)
+npm run navigateur     # le Chromium de Playwright, pour le PDF et les vérifications
+```
+
+Ensuite, depuis la racine du dépôt :
+
+| Commande | Ce qu'elle fait |
+|---|---|
+| `npm --prefix build run css` | régénère `styles.css` |
+| `npm --prefix build run pages` | régénère la galerie **puis** les pages spectacle et le sitemap (dans cet ordre) |
+| `npm --prefix build run pdf` | refait le CV en PDF |
+| `npm --prefix build run dates` | recopie les dates de Supabase dans `dates.js` |
+| `npm --prefix build run verifier` | [vérifie le site](#vérifier-le-site) dans un vrai navigateur |
+
+Les commandes `node build/…` citées plus bas marchent toujours telles quelles ;
+`npm run` ne fait que les appeler. Le workflow de publication installe les
+outils **depuis le même fichier de verrouillage** : ce qui part en ligne est
+fabriqué avec les versions qu'on a vérifiées ici. Pour monter une version,
+changer le numéro dans `build/package.json`, relancer `npm install` dans
+`build/`, regarder le résultat (le PDF, la feuille), et committer les deux
+fichiers.
+
+## Vérifier le site
+
+`build/verifier-site.js` ouvre le site dans Chromium et vérifie, en une
+minute, ce qui a déjà cassé ou casserait sans bruit :
+
+- l'accueil se charge sans erreur de script ;
+- un lien direct entre sans rideau ; depuis un autre site, l'ouverture joue une
+  fois ;
+- « Ajouter au calendrier » ouvre sa fenêtre dans un univers ouvert depuis le
+  CV (une représentation fictive est glissée dans les dates le temps du test :
+  il ne dépend pas de la saison) ;
+- les pastilles ▶ ne s'impriment pas ;
+- sans JavaScript, le site reste lisible ;
+- chaque page spectacle a son `h1`, son `<main>` et des données structurées
+  lisibles ;
+- le sitemap annonce toutes les pages spectacle, et elles seules.
+
+Il tourne sur **chaque demande de fusion** (`.github/workflows/verifier.yml`) :
+une coche verte ou rouge sur la demande, avant que rien ne touche `main`. À la
+main : `npm --prefix build run verifier`. Un défaut corrigé mérite sa ligne
+ici : c'est ce qui l'empêche de revenir.
+
 ## Ce qu'il faut relancer, selon ce qu'on a modifié
 
 | Ce que vous modifiez | À relancer | Ce que ça réécrit |
 |---|---|---|
 | une classe Tailwind dans `index.html`, `404.html`, `dates.js`, `galerie.js`, `admin/` | [la commande Tailwind](#régénérer-stylescss-obligatoire-après-modification-des-classes) | `styles.css` |
-| **`galerie.js`** — ajout ou ordre des photos du book | `node build/generer-page-galerie.js` | `/galerie/…` |
+| **`galerie.js`** — ajout ou ordre des photos du book, texte `alt` | [`python3 build/variantes-images.py`](#ajouter-une-photo-au-book), puis `node build/generer-page-galerie.js` | les vignettes, puis `/galerie/…` |
 | **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml` |
 | une **ligne du CV** dans `index.html` — titre, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
 | une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis la commande ci-dessus | `dates.js`, puis `/spectacles/…` |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
-| le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…` |
+| le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées comprises |
 | une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
 | la **signature** — un nouvel export reMarkable | `python3 build/signature-vers-svg.py <export.pdf>` | `signature.webp` + le bloc SVG à coller |
 
 Chacune a sa section plus bas, avec ce qu'elle fait et pourquoi.
+
+**L'ordre compte entre les deux générateurs** : la galerie d'abord, les pages
+spectacle ensuite. C'est le second qui écrit `sitemap.xml`, et il date
+l'adresse `/galerie/` d'après l'état de `galerie/index.html` au moment où il
+passe (voir [Référencement](#référencement)).
 
 > **Ne modifiez jamais un fichier généré à la main** : la prochaine
 > régénération l'écrasera sans rien dire. La liste est au chapitre
@@ -52,8 +115,8 @@ npx --yes serve -l 8080 .
 ## Publier
 
 Pousser sur `main` déclenche `.github/workflows/publier.yml`, qui refait le
-[CV en PDF](#le-cv-en-pdf-ressourcescv-adrien-vadapdf) puis dépose le dépôt tel
-quel sur GitHub Pages. Une minute environ, dont l'essentiel pour installer
+[CV en PDF](#le-cv-en-pdf-ressourcescv-adrien-vadapdf), allège la copie à
+publier (ci-dessous) puis la dépose sur GitHub Pages. Une minute environ, dont l'essentiel pour installer
 Chromium — et cette étape-là ne peut pas faire échouer la publication.
 
 **Ce n'était pas le cas avant août 2026**, et le changement a une raison. Le
@@ -64,6 +127,38 @@ publication réussie par cette voie a pris **9 min 58**, contre une limite de
 dix minutes ; les suivantes ont toutes échoué sur un laconique « Page build
 failed ». `actions/checkout` ne prend que le dernier commit : le poids de
 l'historique ne compte plus.
+
+### Ce qui part en ligne perd ses commentaires — pas le dépôt
+
+Les sources sont écrites pour être relues : les commentaires pèsent plus de
+la moitié d'`index.html` (470 ko, dont 115 compressés, que chaque téléphone
+devait recevoir avant d'afficher le CV). L'étape « Alléger les fichiers
+servis » les retire de la **copie** que l'action empaquette, et de rien
+d'autre : `build/alleger-publication.js` réécrit les pages publiques, leurs
+scripts et leurs feuilles (pas `admin/`, pas `styles.css`, déjà minifié).
+`index.html` descend à 180 ko, 41 compressés.
+
+Il est prudent par construction : terser **sans compression** (commentaires,
+blancs, noms de variables locales — rien d'autre), clean-css au niveau 1 (pas
+de réordonnancement de la cascade), blancs HTML réduits à une espace et jamais
+à zéro. Chaque fichier est vérifié avant d'être écrit (le JavaScript doit se
+compiler, le JSON-LD se relire, la page garder le même nombre de balises de
+chaque sorte) ; puis les pages sont ouvertes dans le Chromium de l'étape du
+PDF, et **une seule erreur de script de plus qu'avant** remet tout à
+l'original. L'étape est en `continue-on-error`, comme celle du PDF : au pire,
+le site part tel qu'il est dans le dépôt.
+
+Pour l'essayer sur une copie (il refuse de réécrire le dépôt lui-même hors de
+l'action), les [outils](#les-outils--une-installation-des-versions-figées)
+une fois installés :
+
+```bash
+node build/alleger-publication.js --racine /chemin/vers/une/copie
+```
+
+Les versions de ces outils, et celle de Playwright, sont **figées** par
+`build/package-lock.json`, que le workflow installe hors du dossier publié :
+une nouvelle version ne doit pas changer le site sans qu'on l'ait décidé.
 
 ### ⚠️ L'historique a été réécrit — ce que ça fait aux copies de travail
 
@@ -260,10 +355,12 @@ Conséquence : si vous ajoutez, supprimez ou modifiez une classe Tailwind dans
 `index.html`, `404.html`, `dates.js` ou `galerie.js`, il faut relancer :
 
 ```bash
-npx --yes tailwindcss@3 -c tailwind.config.js -i build/tailwind-input.css -o styles.css --minify
+npm --prefix build run css
 ```
 
-Puis committer le `styles.css` mis à jour.
+Puis committer le `styles.css` mis à jour. (C'est Tailwind 3.4.19, la version
+de `build/package.json` ; l'ancienne commande, `npx --yes tailwindcss@3 …`,
+prenait la dernière version 3 du moment.)
 
 > Si une classe semble « ne rien faire » après une modification, c'est presque
 > toujours qu'on a oublié cette commande.
@@ -318,7 +415,8 @@ imprimé sur fond noir gâcherait l'encre et passerait mal en photocopie.
 
 ## Ouverture de scène (`intro.js` + `mask-points.js`)
 
-Au premier chargement : un **masque de théâtre en particules** tourne lentement
+À la première arrivée **depuis un autre site** (voir plus bas : un lien direct
+entre sans rideau) : un **masque de théâtre en particules** tourne lentement
 au centre, pendant que les rôles joués défilent de plus en plus vite. Le défilé
 est un **tambour de roulette** : le rôle en cours occupe le centre, net et de
 face ; le suivant se décode déjà au-dessus de lui, atténué et plus loin dans la
@@ -375,8 +473,11 @@ toutes deux vérifiées à la mesure, et toutes deux nécessaires :
   La mesure, elle, reste vraie quelles que soient les fontes, la largeur de
   l'écran, et même si les polices n'ont pas fini de se charger.
 
-Un **sceau** se trace enfin : il faut **cliquer dessus pour entrer** (l'intro ne
-se referme jamais toute seule).
+Un **sceau** se trace enfin : il faut **cliquer dessus pour entrer** — ou sur
+le rideau, ou appuyer sur une touche, ou « Passer ». Un garde-fou la referme
+de lui-même au bout de **20 secondes** (`MAX_INTRO_MS` dans `intro.js`) : il
+n'est pas là pour le rythme, mais pour qu'un onglet resté en arrière-plan ou
+une erreur imprévue ne laisse jamais le rideau baissé pour toujours.
 
 Le nuage de points du masque est dans `mask-points.js` : **fichier généré, à ne
 pas éditer à la main**. Il a été produit hors-ligne à partir du modèle 3D FBX
@@ -386,17 +487,16 @@ clairsemé sur les joues). Pour le régénérer il faut le FBX d'origine, le
 convertir en glTF (`fbx2gltf`) puis rééchantillonner — la procédure n'est pas
 automatisée ici.
 
-**Comment la revoir alors qu'on l'a déjà vue ?** Elle ne se joue qu'une fois par
-session de navigation, sinon elle deviendrait pénible. Pour la rejouer :
+**Comment la revoir alors qu'on l'a déjà vue ?** Elle ne se joue qu'**une fois
+par appareil** (le marqueur `avIntroSeen` est dans le `localStorage`, qui
+survit à la fermeture du navigateur), sinon elle deviendrait pénible. Et elle
+ne joue jamais pour une arrivée directe — adresse tapée comprise. Pour la
+rejouer :
 
 | Moyen | Comment |
 |---|---|
-| **Le plus simple** | ajouter `?intro=1` à l'URL → `http://localhost:8080/?intro=1` |
-| Fermer l'onglet et le rouvrir | le marqueur est en `sessionStorage`, il meurt avec l'onglet |
-| Depuis la console (F12) | `sessionStorage.removeItem('avIntroSeen')` puis recharger |
-
-Attention : un simple rechargement (F5 / Cmd+R) **ne suffit pas**, le
-`sessionStorage` survit aux rechargements dans le même onglet.
+| **Le plus simple** | ajouter `?intro=1` à l'URL → `http://localhost:8080/?intro=1` : elle joue, quoi qu'il arrive |
+| Depuis la console (F12) | `localStorage.removeItem('avIntroSeen'); sessionStorage.removeItem('avIntroSeen')`, puis revenir **depuis un autre site** (un lien tapé ne suffit pas) |
 
 ### Elle ne se joue qu'à la porte d'entrée
 
@@ -413,9 +513,54 @@ Le test se fait dans le garde en ligne d'`index.html`, **avant** que le routage
 d'`univers.js` ne remplace le fragment par `#page_cv`. `?intro=1` force
 l'ouverture même sur un lien profond, pour pouvoir la régler.
 
-La session est marquée comme « déjà entrée » dans tous les cas, y compris
-quand l'ouverture est sautée : sans cela, revenir à l'adresse nue en cours de
-visite lèverait le rideau au milieu du spectacle.
+### Elle ne joue pas pour un lien direct
+
+Qui arrive **directement** vient voir Adrien : c'est le directeur de casting à
+qui l'on a envoyé l'adresse. Il entre tout de suite au CV. Qui arrive
+**d'ailleurs** — un moteur de recherche, Instagram, le site d'un théâtre —
+découvre le site : l'ouverture joue pour lui, une fois.
+
+La différence tient à la page d'où l'on vient (`document.referrer`), lue par le
+garde d'`index.html` :
+
+| On arrive… | Ouverture |
+|---|---|
+| sans page d'origine : adresse tapée, favori, lien d'un mail ou d'un SMS ouvert dans une application, lien du CV en PDF | non |
+| d'une application Android (`android-app://…`, ce que posent Gmail ou les SMS) | non |
+| d'une messagerie en ligne (`mail.…`, `webmail.…`, Outlook) | non |
+| d'une autre page du site | non (la visite est commencée) |
+| par `adrienvada.fr/?direct` | non, jamais |
+| de tout autre site : Google, Instagram, Facebook, un théâtre… | **oui, si elle n'a jamais joué sur cet appareil** |
+
+**La limite, et son remède.** Gmail ouvert *dans un navigateur* fait passer
+ses liens par `google.com`, qu'on ne distingue pas d'une recherche Google : un
+destinataire qui lit ses mails ainsi verrait l'ouverture. Pour une
+candidature, envoyer **`adrienvada.fr/?direct`** : on entre sans rideau quel que
+soit le chemin, et le paramètre s'efface aussitôt de l'adresse.
+
+**Deux mémoires, et non plus une.** Le `localStorage` retient que l'ouverture
+a **joué** sur l'appareil — et seulement cela : une entrée directe ne compte
+plus comme vue, et le jour où ce visiteur arrive d'ailleurs, il y a droit. Le
+`sessionStorage` retient que la **visite** a commencé, par quelque porte que ce
+soit : revenir à l'accueil en cours de route ne lève jamais le rideau au milieu
+du spectacle. Les pages `/spectacles/` et `/galerie/` posent la seconde, pas la
+première.
+
+### Elle n'est téléchargée que si elle joue
+
+`intro.js` et `mask-points.js` (130 ko, 45 compressés) ne sont plus appelés
+par des balises `<script>` : c'est le garde en ligne d'`index.html` qui les
+ajoute, **seulement** si le rideau est encore baissé quand il a tranché.
+Qui a déjà vu l'ouverture ne les télécharge plus. Ils s'exécutent dans
+l'ordre (`async = false`) sans retenir la lecture de la page.
+
+Le même garde pose `modal-open` sur le `<body>` dès cet instant : la page
+ne défile pas sous le rideau, et les animations du CV (guirlande, phare du
+bandeau) attendent qu'il se lève pour jouer — elles ne jouent qu'une fois.
+
+Deux filets restent en place : sans JavaScript, un `<noscript>` escamote le
+rideau ; et si `intro.js` n'a pas démarré quand la page a fini de charger
+(fichier perdu, navigateur trop ancien), le garde lève le rideau lui-même.
 
 ### Régler l'animation
 
@@ -737,6 +882,17 @@ d'écrire sans session).
 Seule l'adresse **adrien.vada@gmail.com** peut écrire : c'est une règle de
 la base (`supabase/schema.sql`), pas de la page. Un autre compte, même
 connecté, est refusé.
+
+**Le lien de réservation doit être une adresse web** (`https://…`, ou
+`www.…` que la page complète) : la page refuse le reste, et le site ne fait
+pas un lien d'une adresse douteuse (`lienSur`, dans `dates-live.js` et
+`univers-montage.js`). La base le refuse aussi, pour le jour où une écriture
+passerait par ailleurs — mais seulement une fois ses **garde-fous** posés :
+`supabase/contraintes-2026-09.sql`, **à exécuter une fois** dans l'éditeur
+SQL de Supabase (il échoue sans rien changer si une ligne existante ne s'y
+plie pas : la corriger d'abord). Dans le tableau de bord, *Authentication →
+Sign In / Providers* : désactiver « Allow new users to sign up » (seul le
+compte d'Adrien a lieu d'exister) et laisser « Confirm email » activé.
 
 ### Sur l'ordinateur, avant un commit : `exporter-dates.js`
 
@@ -1085,16 +1241,28 @@ en place ; le renseigner pour toute série qui en demande un.
 ## Ajouter une photo au book
 
 1. Déposer l'image dans `ressources/images/galerie/`
-2. Générer sa vignette (176×176) — sans elle, la bande de miniatures aura un trou :
+2. L'ajouter dans `GALLERY_IMAGES` (`galerie.js`), **avec son `alt`** : une
+   phrase qui dit ce que montre la photo. C'est tout ce qu'en perçoit un
+   lecteur d'écran, et tout ce qu'en lit un moteur de recherche d'images.
+   Sur une photo de plateau à plusieurs, décrire la scène, pas qui est qui.
+3. Fabriquer ses vignettes, puis la page :
 
 ```bash
-python3 -c "from PIL import Image,ImageOps;import glob,os;[ImageOps.fit(Image.open(f).convert('RGB'),(176,176),Image.LANCZOS,centering=(0.5,0.35)).save('ressources/images/galerie/thumbs/'+os.path.splitext(os.path.basename(f))[0]+'.jpg',quality=78,optimize=True) for f in glob.glob('ressources/images/galerie/*.jpe*g')]"
+python3 build/variantes-images.py
+node build/generer-page-galerie.js
+node build/generer-pages-spectacles.js   # pour la date du sitemap
 ```
 
-3. Ajouter le nom du fichier dans `GALLERY_IMAGES` (`galerie.js`)
+Les vignettes sont recadrées en 3:4 (le format de la grille) en trois
+largeurs — 320, 640 et 960 px — dans `ressources/images/galerie/vignettes/`.
+La page en annonce la taille affichée (`sizes`) et le navigateur prend la
+plus petite qui suffit ; les boutons − et + de la page la réécrivent quand la
+grille change. Les anciennes vignettes de 176 px (`thumbs/`) étaient étirées
+sur 300 à 500 pixels d'écran : floues, justement là où l'on juge un visage.
 
-Les photos en pleine résolution ne sont téléchargées qu'à l'ouverture du book,
-une par une : inutile de les compresser à l'extrême, mais rester sous ~300 Ko.
+Les photos en pleine résolution ne sont téléchargées qu'à l'ouverture de la
+visionneuse, une par une : inutile de les compresser à l'extrême, mais rester
+sous ~300 Ko.
 
 ---
 
@@ -1105,11 +1273,19 @@ une par une : inutile de les compresser à l'extrême, mais rester sous ~300 Ko.
 | `ressources/images/profil-192.{jpg,webp}` / `profil-384.*` | avatar de l'en-tête |
 | `ressources/images/og-adrien-vada.jpg` | vignette de partage (réseaux sociaux, 1200×630) |
 | `ressources/images/miniatures/bande-demo-camera.{jpg,webp}` | miniature de la bande démo |
-| `ressources/images/galerie/thumbs/*.jpg` | miniatures du book |
+| `ressources/images/galerie/vignettes/<nom>-{320,640,960}.webp` | vignettes du book — `python3 build/variantes-images.py` |
+| `ressources/images/univers/<slug>/<nom>-{640,1280}.webp` (et `-1920` pour un plein cadre) | versions allégées des photos d'univers, servies aux écrans de moins de 900 px et au répertoire — même script, lancé aussi par `prepare-univers-photos.py` |
 
 Les **sources** de ces images restent dans le dépôt et ne sont plus servies aux
 visiteurs : `profil2_1080x1080.png` (avatar) et `profil_1000x1000.jpg`
 (vignette de partage + book). Les régénérer si l'on change de portrait.
+
+`build/variantes-images.py` ne refait que ce qui manque (pour ne pas laisser
+de diff sans objet) ; `--tout` refait tout, `--nettoyer` efface les versions
+dont l'original a disparu. Pourquoi 1920 px pour un plein cadre : sur un
+téléphone tenu droit, une photo en paysage y est agrandie jusqu'à couvrir
+toute la hauteur — trois à quatre fois la largeur de l'écran. Sur un écran
+large, rien ne change : c'est l'original qui est servi.
 
 ---
 
@@ -1120,9 +1296,24 @@ visiteurs : `profil2_1080x1080.png` (avatar) et `profil_1000x1000.jpg`
   `robots.txt` ou `sitemap.xml`.
 - Les données structurées « fiche artiste » (`Person`) sont dans le `<head>` ;
   les représentations (`TheaterEvent`) sont générées automatiquement depuis
-  `dates.js` au chargement — rien à maintenir à la main.
+  les dates au chargement — rien à maintenir à la main. Elles sont
+  fabriquées par **une seule fonction**, `evenementTheatre` dans
+  `univers-montage.js`, que l'accueil appelle en direct et le générateur des
+  pages spectacle à la génération : heure et fuseau de Paris, adresse
+  structurée (ville, pays, département), organisateur, billetterie, fin
+  déduite de la durée. Les **séances scolaires** n'y figurent pas : elles ne
+  sont pas ouvertes au public.
+- Le titre et la description de chaque page spectacle sont écrits pour une
+  liste de résultats : « Bérénice · Compagnie Crescite · Adrien Vada », puis
+  « Bérénice, Compagnie Crescite — avec Adrien Vada (Antiochus). Rome, an
+  79… », coupée à 155 signes sur un mot entier (voir `titreDe` et
+  `descriptionDe` dans le générateur).
 - `sitemap.xml` **n'est plus écrit à la main** : il est régénéré par le script
-  des pages spectacle (ci-dessous), `<lastmod>` compris.
+  des pages spectacle (ci-dessous). Chaque `<lastmod>` est le **jour où la page
+  a réellement changé** — la date de son dernier commit si elle ressort
+  identique, celle du jour sinon — et non plus la date du passage du script,
+  qui datait tout le site du jour à chaque fois (un moteur finit par ignorer
+  une date qui ment toujours).
 
 ---
 
@@ -1243,6 +1434,58 @@ sera invisible sans JavaScript, et seulement là.
 
 ---
 
+## Polices — servies par le site
+
+Inter, Montserrat, Cinzel et Caveat sont dans `ressources/polices/`, déclarées
+par `polices.css` ; licence SIL OFL 1.1 (voir `LISEZMOI.txt`). Elles venaient
+de Google Fonts : une feuille bloquante sur un autre domaine, deux connexions
+de plus avant le premier rendu, et l'adresse de chaque visiteur transmise à
+Google. Chaque famille tient en deux fichiers (`latin`, `latin-ext`, ce
+dernier ne se chargeant que pour un caractère qu'il est seul à avoir).
+L'accueil demande d'avance Montserrat et Inter (`preload`), les pages
+spectacle Cinzel et Inter. Pour changer de version : voir `LISEZMOI.txt`.
+
+---
+
+## Accessibilité — ce qui est tenu, et comment
+
+Contrôlé avec axe (WCAG 2.2 AA) sur les quatre onglets, les deux thèmes,
+mobile et bureau, l'univers ouvert, les pages spectacle, le répertoire, la
+galerie et l'administration. À garder en tête en modifiant le site :
+
+- **Une couche ouverte rend le reste inerte.** Univers, photo agrandie,
+  agenda, récit, visionneuse de la galerie : tout ce qui est dessous reçoit
+  `inert` (voir `isolerCouche` dans `univers.js`) — la touche Tab ne
+  s'échappe plus derrière, un lecteur d'écran ne lit plus la page cachée —
+  et le focus revient à la fermeture sur ce qui l'avait ouverte.
+- **Un panneau replié est hors d'atteinte** : `visibility: hidden` en plus de
+  la hauteur nulle (tiroirs du CV, séries de dates, filtres, archives). Sans
+  cela, le clavier parcourait des liens invisibles.
+- **Un texte animé lettre à lettre reste un mot** : lettres en
+  `aria-hidden`, mot entier en `aria-label` (titre des univers). Pas de
+  copie masquée du texte : un moteur la lirait collée aux lettres.
+- **Une page, une hiérarchie** : sur une page spectacle le titre est un h1 et
+  tous les titres du montage montent d'un cran (voir la fin de `panelHtml`).
+- **Rien ne bouge sans fin** : guirlande, phare, pouls, halo des univers,
+  fleuron et dorures du répertoire jouent une fois (ou trois) puis se
+  taisent (WCAG 2.2.2). Le réglage « réduire les animations » coupe tout.
+- **Pas de texte sous 11 px**, pas de cible sous 24 px (la piste des démos
+  voix et les icônes du pied de page ont une zone de clic agrandie sans
+  changer d'aspect).
+- **Le pincement appartient au navigateur** : il agrandit la page. La densité
+  du répertoire et de la galerie se règle aux boutons − et +.
+- **Un lien qui ouvre un onglet le dit** (« nouvel onglet », en texte masqué).
+- **Les couleurs de spectacle sont mesurées** : un accent trop pâle pour le
+  texte a son encre (`accentInk`) plus foncée — voir les palettes de
+  `univers.js`.
+
+Ce qu'axe signale encore, et qui n'est pas un défaut : les cartes du
+répertoire encore sous l'écran (transparentes jusqu'à leur entrée — elles
+restent lisibles par un lecteur d'écran) et un bouton d'agenda qui passe un
+instant sous la croix de fermeture en défilant.
+
+---
+
 ## Icônes (`sprite SVG`) — à régénérer après ajout
 
 Le site n'utilise plus FontAwesome depuis un CDN (100 ko de CSS bloquant le
@@ -1301,16 +1544,20 @@ fichiers sur place, et un ré-encodage n'est pas réversible.
 
 ---
 
-## Le château-mystère
+## Pages privées (le château-mystère)
 
-`/chateau-mystere-2026-V1/` est une page privée. Elle reste accessible par son
-adresse directe, mais porte `<meta name="robots" content="noindex, nofollow">`.
+Le château-mystère (`/chateau-mystere-2026-V1/`) vivait dans son propre dépôt,
+que GitHub servait sous ce même domaine. **Il n'est plus servi** : l'adresse
+rend une erreur 404 depuis septembre 2026. `robots.txt` ne le mentionne plus —
+ce fichier est public, et y désigner une page privée revenait à la signaler à
+qui le lit.
 
-Elle n'est **volontairement pas** interdite dans `robots.txt` : un robot doit
-pouvoir entrer pour lire la consigne de désindexation. Un `Disallow` ferait
-l'inverse de ce qu'on cherche — l'adresse resterait indexable depuis un lien
-extérieur, sans qu'aucune consigne ne puisse plus l'en déloger. **Ne pas
-ajouter de `Disallow` sur ce dossier.**
+La règle vaut pour toute page privée à venir : elle porte
+`<meta name="robots" content="noindex, nofollow">`, et elle n'est **volontairement
+pas** interdite dans `robots.txt`. Un robot doit pouvoir entrer pour lire la
+consigne de désindexation ; un `Disallow` ferait l'inverse de ce qu'on cherche
+— l'adresse resterait indexable depuis un lien extérieur, sans qu'aucune
+consigne ne puisse plus l'en déloger. **Ne pas ajouter de `Disallow`.**
 
 ---
 
@@ -1338,6 +1585,13 @@ Tout passe par **`track(nom, details)`** — aucun appel direct à `umami`
 ailleurs dans le code, pour n'avoir qu'un endroit à changer le jour où l'on
 change d'outil. Si l'outil n'a pas chargé (bloqueur, réseau), `track()` ne fait
 rien : aucune fonctionnalité du site ne dépend de la mesure.
+
+`track()` est défini par `index.html`. Les pages spectacle, qui ne chargent pas
+ce script, reçoivent le **même** `track()` et la même délégation des
+`data-track` de `univers.js` (`brancherMesure`), avec le même verrou
+« `?sansmesure` » : leurs clics « Réserver » ne comptaient nulle part
+auparavant. Les boutons « Réserver » des univers portent `date_booking`,
+comme ceux de l'onglet Dates — sur l'accueil comme sur les pages spectacle.
 
 Deux façons de relever un geste :
 

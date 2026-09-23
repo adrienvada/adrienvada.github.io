@@ -1,0 +1,51 @@
+# ============================================================
+#  VÉRIFIER LE SITE AVANT QU'IL NE SOIT PUBLIÉ
+# ============================================================
+#  À chaque demande de fusion (pull request), le site est ouvert dans
+#  un vrai navigateur et build/verifier-site.js vérifie ce qui a déjà
+#  cassé ou casserait sans bruit : l'accueil sans erreur, la règle de
+#  l'ouverture, l'agenda des univers, l'impression du CV, le site sans
+#  JavaScript, les pages spectacle, le sitemap. Une minute, et une
+#  coche verte ou rouge sur la demande de fusion.
+#
+#  CE N'EST PAS LA PUBLICATION. Rien n'est déployé ici, et ce workflow
+#  ne peut rien bloquer d'autre que la demande qu'il examine : la
+#  publication (publier.yml) reste déclenchée par `main`, et elle seule.
+#
+#  Les outils s'installent ici DANS build/ : rien de ce dossier n'est
+#  publié par ce workflow-ci, contrairement à publier.yml.
+#
+#  Pour le lancer sur sa machine : voir l'en-tête de verifier-site.js.
+# ============================================================
+name: Vérifier le site
+
+on:
+  pull_request:
+  # Aussi à la main, depuis l'onglet Actions.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Une nouvelle poussée sur la même branche remplace la vérification en
+# cours : seule compte celle du dernier commit.
+concurrency:
+  group: verifier-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Récupérer le commit à vérifier
+        uses: actions/checkout@v4
+
+      - name: Installer les outils (versions figées)
+        run: npm ci --prefix build --no-audit --no-fund
+
+      - name: Installer Chromium
+        run: build/node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Vérifier
+        run: node build/verifier-site.js

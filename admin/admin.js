@@ -94,7 +94,7 @@
     function direConnexion(texte, ton) {
         const msg = $('msg-connexion');
         msg.hidden = !texte;
-        msg.className = 'text-xs mt-3 ' + (ton === 'erreur' ? 'text-red-400' : ton === 'ok' ? 'text-luxury-goldInk' : 'text-luxury-textMuted');
+        msg.className = 'text-xs mt-3 ' + (ton === 'erreur' ? 'adm-erreur' : ton === 'ok' ? 'text-luxury-goldInk' : 'text-luxury-textMuted');
         msg.textContent = texte || '';
     }
 
@@ -217,12 +217,14 @@
     }
 
     // ── Rendu de la liste, à l'image de la page des dates ──────────
-    const amberBadge = `<span class="text-[10px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><svg class="ico text-[9px]" aria-hidden="true"><use href="#i-solid-circle-info"></use></svg> Les réservations ne sont pas encore ouvertes</span>`;
-    const schoolBadge = `<span class="text-[10px] text-stone-600 italic block"><svg class="ico text-[9px]" aria-hidden="true"><use href="#i-solid-lock"></use></svg> Séance scolaire</span>`;
-    const bookingLink = url => url
-        ? `<a href="${esc(url)}" target="_blank" rel="noopener" class="text-[10px] font-bold uppercase tracking-wider text-luxury-goldInk hover:underline inline-flex items-center gap-1 mt-0.5">Réservation ouverte <svg class="ico text-[9px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
+    const amberBadge = `<span class="text-[12px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-circle-info"></use></svg> Les réservations ne sont pas encore ouvertes</span>`;
+    const schoolBadge = `<span class="text-[12px] text-stone-600 italic block"><svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-lock"></use></svg> Séance scolaire</span>`;
+    // Même tri que sur le site (L.lienSur, dans dates-live.js) : une adresse
+    // qui ne mène pas à une page web ne devient pas un lien, ici non plus.
+    const bookingLink = url => L.lienSur(url)
+        ? `<a href="${esc(L.lienSur(url))}" target="_blank" rel="noopener" class="text-[11px] font-bold uppercase tracking-wider text-luxury-goldInk hover:underline inline-flex items-center gap-1 mt-0.5">Réservation ouverte <svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
         : '';
-    const pastille = (texte, doux) => `<span class="font-mono font-bold ${doux ? 'text-luxury-goldInk bg-stone-100 border border-stone-200' : 'text-luxury-onGold bg-luxury-goldInk border border-luxury-goldInk'} px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap shadow-sm">${esc(texte)}</span>`;
+    const pastille = (texte, doux) => `<span class="font-mono font-bold ${doux ? 'text-luxury-goldInk bg-stone-100 border border-stone-200' : 'text-luxury-onGold bg-luxury-goldInk border border-luxury-goldInk'} px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap shadow-sm">${esc(texte)}</span>`;
     const actions = id => `
         <div class="adm-actions" role="group" aria-label="Actions">
             <button type="button" class="adm-btn" data-action="modifier" data-id="${id}"><svg class="ico" aria-hidden="true"><use href="#i-adm-pen"></use></svg><span>Modifier</span></button>
@@ -234,7 +236,7 @@
         const j = `${jourSemaine(l.jour)}${NB}${L.jourCourt(l.jour)}`;
         return l.heure ? `${j} • ${l.heure}` : j;
     }
-    const horaireAConfirmer = l => l.heure ? '' : `<span class="text-[10px] text-luxury-textMuted italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>`;
+    const horaireAConfirmer = l => l.heure ? '' : `<span class="text-[11px] text-luxury-textMuted italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>`;
     const etatSoiree = l => l.scolaire ? schoolBadge : (l.reservation_url ? bookingLink(l.reservation_url) : amberBadge);
 
     function ligneSimple(l, passee) {
@@ -247,7 +249,7 @@
                     </div>
                     <div class="min-w-0 flex-1">
                         <h4 class="font-bold text-luxury-textMain text-xs leading-tight">${esc(l.spectacle)}</h4>
-                        <span class="text-[10px] text-luxury-textMuted block"><svg class="ico text-luxury-goldInk text-[8px]" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg> ${esc(l.lieu)}</span>
+                        <span class="text-[12px] text-luxury-textMuted block"><svg class="ico text-luxury-goldInk text-[8px]" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg> ${esc(l.lieu)}</span>
                         ${etatSoiree(l)}
                     </div>
                 </div>
@@ -277,16 +279,16 @@
                     <span class="flex items-center gap-3 min-w-0 flex-1">
                         <span class="flex flex-col items-start flex-shrink-0 w-[165px]">
                             ${pastille(entree.dateLabel, passee)}
-                            <span class="text-[10px] text-luxury-textMuted font-mono mt-0.5 pl-0.5">${soirees.length} soirées</span>
+                            <span class="text-[11px] text-luxury-textMuted font-mono mt-0.5 pl-0.5">${soirees.length} soirées</span>
                         </span>
                         <span class="min-w-0 flex-1">
                             <span class="font-bold text-luxury-textMain text-xs leading-tight block">${esc(entree.title)}</span>
-                            <span class="text-[10px] text-luxury-textMuted block"><svg class="ico text-luxury-goldInk text-[8px]" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg> ${esc(entree.location)}</span>
+                            <span class="text-[12px] text-luxury-textMuted block"><svg class="ico text-luxury-goldInk text-[8px]" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg> ${esc(entree.location)}</span>
                         </span>
                     </span>
-                    <span class="text-[10px] text-luxury-textMuted flex items-center gap-2 flex-shrink-0 pl-0.5 md:pl-0">
+                    <span class="text-[12px] text-luxury-textMuted flex items-center gap-2 flex-shrink-0 pl-0.5 md:pl-0">
                         <span class="uppercase font-bold tracking-wider">${ouverte ? 'Replier' : 'Voir les soirées'}</span>
-                        <svg class="ico text-[9px] text-stone-500 date-toggle-chevron ${ouverte ? 'rotated' : ''}" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>
+                        <svg class="ico text-[10px] text-stone-500 date-toggle-chevron ${ouverte ? 'rotated' : ''}" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>
                     </span>
                 </button>
                 <div class="date-expand-panel ${ouverte ? 'expanded' : ''}">
@@ -399,7 +401,7 @@
         const autre = !!valeur && !connu;
         spectacleChoisi = valeur;
         const puce = (texte, pressed, statut, data) =>
-            `<button type="button" class="filter-chip text-[11px] px-2.5 py-1.5 rounded-full border border-stone-200 bg-stone-100 text-luxury-textMuted hover:border-luxury-gold transition inline-flex items-center gap-1.5" aria-pressed="${pressed}" ${data}>${esc(texte)}${statut ? `<span class="text-[8px] uppercase tracking-widest opacity-70 font-mono">${esc(statut)}</span>` : ''}</button>`;
+            `<button type="button" class="filter-chip text-[12px] px-2.5 py-1.5 rounded-full border border-stone-200 bg-stone-100 text-luxury-textMuted hover:border-luxury-gold transition inline-flex items-center gap-1.5" aria-pressed="${pressed}" ${data}>${esc(texte)}${statut ? `<span class="text-[8px] uppercase tracking-widest opacity-70 font-mono">${esc(statut)}</span>` : ''}</button>`;
         $('puces-spectacles').innerHTML =
             liste.map(s => puce(s.titre, s.titre === valeur, s.statut, `data-spectacle="${esc(s.titre)}"`)).join('')
             + puce('Autre…', autre, '', 'data-spectacle-autre');
@@ -472,11 +474,34 @@
         const id = $('f-id').value ? Number($('f-id').value) : null;
         const spectacle = L.typographie(spectacleChoisi || $('f-spectacle-autre').value);
         const msg = $('msg-fiche');
-        const erreur = t => { msg.hidden = false; msg.textContent = t; };
+        // LE CHAMP EN FAUTE EST DÉSIGNÉ, PAS SEULEMENT NOMMÉ : aria-invalid le
+        // signale aux lecteurs d'écran, le focus y est porté, et le message
+        // (role="alert") est lu aussitôt. Le formulaire est en `novalidate` —
+        // les bulles du navigateur ne parlent pas la langue du site — c'est
+        // donc ici que tout se vérifie.
+        ['f-lieu', 'f-ville', 'f-jour', 'f-url', 'f-heure'].forEach(id => $(id).removeAttribute('aria-invalid'));
+        const erreur = (t, champ) => {
+            msg.hidden = false; msg.textContent = t;
+            if (champ) { $(champ).setAttribute('aria-invalid', 'true'); $(champ).focus(); }
+        };
         if (!spectacle) { erreur('Choisis un spectacle, ou saisis son titre.'); return; }
+        if (!$('f-jour').value) { erreur('Indique le jour de la représentation.', 'f-jour'); return; }
+        if (!$('f-lieu').value.trim()) { erreur('Indique le lieu, tel qu\'il doit s\'afficher.', 'f-lieu'); return; }
+        if (!$('f-ville').value.trim()) { erreur('Indique la ville : c\'est elle qui sert au filtre « Ville » du site.', 'f-ville'); return; }
+
+        // LE LIEN DE RÉSERVATION DOIT ÊTRE UNE PAGE WEB. Collé sans
+        // « https:// », il devenait un lien relatif : le spectateur qui
+        // cliquait « Réserver » arrivait sur la page 404 du site. Le « www. »
+        // est complété d'office ; tout le reste est refusé, avec la raison.
+        const urlSaisie = $('f-url').value.trim();
+        const urlPropre = L.lienSur(urlSaisie);
+        if (urlSaisie && !urlPropre) {
+            erreur('Le lien de réservation doit être une adresse web complète, commençant par https://', 'f-url');
+            return;
+        }
 
         const heure = $('f-heure').value.trim().replace(/^(\d{1,2})\s*[h:.]\s*(\d{2})$/i, (_, h, m) => `${h}h${m}`);
-        if (heure && !/^\d{1,2}h\d{2}$/.test(heure)) { erreur('L\'heure s\'écrit comme sur le site : 19h00, 14h15… ou reste vide.'); return; }
+        if (heure && !/^\d{1,2}h\d{2}$/.test(heure)) { erreur('L\'heure s\'écrit comme sur le site : 19h00, 14h15… ou reste vide.', 'f-heure'); return; }
 
         const ligne = {
             spectacle,
@@ -484,7 +509,7 @@
             ville: L.typographie($('f-ville').value),
             jour: $('f-jour').value,
             heure,
-            reservation_url: $('f-url').value.trim(),
+            reservation_url: urlPropre,
             scolaire: $('f-scolaire').checked
         };
         $('btn-enregistrer').disabled = true;

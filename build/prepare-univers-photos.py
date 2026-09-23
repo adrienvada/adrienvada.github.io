@@ -33,6 +33,7 @@ import os
 import sys
 import glob
 import re
+import subprocess
 from PIL import Image, ImageOps
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
@@ -160,6 +161,7 @@ def main():
         print(f"!! slug(s) d'univers.js avec des photos mais sans dossier source : {unknown}")
 
     total = 0
+    ecrites = []   # ce qui vient d'être refait, pour les versions allégées
     for slug, folder in FOLDERS.items():
         groups = sequences.get(slug, [])
         prof_of = profiles(groups)
@@ -198,6 +200,7 @@ def main():
                 q -= 4
 
             total += 1
+            ecrites.append(p)
             tag = "PLEIN CADRE" if prof is PLEIN else "vignette"
             print(f"  {n}.jpg  {im.width}x{im.height}  q{q}  "
                   f"{os.path.getsize(p) // 1024} Ko  {tag}")
@@ -219,6 +222,7 @@ def main():
                         break
                     q -= 4
                 total += 1
+                ecrites.append(p)
                 print(f"  {nom}.jpg  {im.width}x{im.height}  q{q}  "
                       f"{os.path.getsize(p) // 1024} Ko  {nom.upper()}")
 
@@ -238,6 +242,16 @@ def main():
                 print(f"  · {f} n'est plus au montage — `--nettoyer` pour l'effacer")
 
     print(f"\n{total} photos préparées depuis les originaux.")
+
+    # LES VERSIONS ALLÉGÉES SUIVENT. Les pages proposent aux téléphones une
+    # copie en 640 et 1280 px de chaque photo (voir build/variantes-images.py) :
+    # une photo refaite ici sans elles laisserait le téléphone sur l'ancienne
+    # image. On les refait donc pour les seuls fichiers qu'on vient d'écrire.
+    variantes = os.path.join(os.path.dirname(os.path.abspath(__file__)), "variantes-images.py")
+    if ecrites:
+        subprocess.run([sys.executable, variantes] + ecrites, check=True)
+    if clean:
+        subprocess.run([sys.executable, variantes, "--nettoyer"], check=True)
 
 
 if __name__ == "__main__":
