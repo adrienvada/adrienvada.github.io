@@ -622,6 +622,12 @@ html.u-locked body {
     background: none;
     cursor: zoom-in;
     position: relative;
+    /* Le relâchement s'étire, comme partout sur le site (l'enfoncement,
+       lui, est au :active). Sur l'accueil, la règle générale des boutons
+       d'index.html le donnait au panneau ; une page /spectacles/ ne la
+       charge pas, et la photo y revenait d'un coup. Posé ici, il vaut
+       pour les deux. */
+    transition: transform var(--dur-base) var(--ease-out);
 }
 
 .u-fig-loupe {

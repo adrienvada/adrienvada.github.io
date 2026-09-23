@@ -113,6 +113,35 @@ function chargerSprite() {
 
 const SPRITE = chargerSprite();
 
+// Le vocabulaire du mouvement — deux courbes, quatre durées —, relu dans
+// index.html, qui le pose sur sa racine. univers.css s'en sert partout
+// (quarante-huit transitions nomment --ease-out) sans le définir : sur
+// l'accueil, le panneau le trouve déjà là. Sur une page spectacle, il
+// manquait, et une `transition` qui nomme une variable absente est rejetée
+// en bloc par le navigateur : les lettres du titre, les mots du synopsis,
+// les photos arrivaient d'un coup, sans leur flou ni leur fondu. La page
+// avait le même moteur que l'univers, pas le même mouvement.
+//
+// On relit donc les valeurs au lieu de les recopier, et l'on vérifie que
+// tout ce qu'univers.css nomme est bien là : une durée ajoutée d'un côté
+// sans l'autre ferait échouer ce script au lieu de figer une page.
+function chargerMouvement() {
+    const src = lire('index.html');
+    const poses = new Map();
+    for (const m of src.matchAll(/(--(?:ease|dur)-[a-z]+):\s*([^;]+);/g)) {
+        if (!poses.has(m[1])) poses.set(m[1], m[2].trim());
+    }
+    const nommes = new Set([...lire('univers.css').matchAll(/var\((--(?:ease|dur)-[a-z]+)/g)].map((m) => m[1]));
+    const manquants = [...nommes].filter((n) => !poses.has(n));
+    if (!poses.size || manquants.length) {
+        throw new Error(`index.html : ${manquants.join(', ') || 'le vocabulaire du mouvement (--ease-*, --dur-*)'} ` +
+            'introuvable. univers.css en a besoin sur les pages spectacle.');
+    }
+    return [...poses].map(([n, v]) => `${n}: ${v};`).join(' ');
+}
+
+const MOUVEMENT = chargerMouvement();
+
 // ── Extraction des données ──────────────────────────────────────────
 //  On n'exécute pas univers.js (il lui faudrait un DOM) : on en découpe la
 //  seule déclaration qui nous intéresse, celle qui précède l'IIFE, et on
@@ -160,11 +189,23 @@ function lireLignesCv() {
             const t = corps.match(r);
             return t ? texteSeul(t[1]) : '';
         };
+        // L'AUTEUR, dans l'incise du titre : « Bérénice <span>(Racine)</span> ».
+        // Le panneau le sépare pour le poser sous le titre (titleParts, dans
+        // univers.js) ; la page le taisait, faute de l'avoir relu — elle
+        // s'ouvrait sur « Bérénice » seul, là où l'univers écrit « Racine »
+        // dessous. On ne prend que ce qui vit DANS le titre : sans incise, le
+        // motif s'arrête à sa balise fermante au lieu d'aller chercher plus
+        // loin le premier <span> venu (le badge).
+        // (`cv-title` exactement : un \b s'arrêterait aussi sur `cv-title-row`.)
+        const incise = corps.match(/class="(?:[^"]*\s)?cv-title(?=[\s"])[^"]*"[^>]*>[^<]*<span[^>]*>([\s\S]*?)<\/span>\s*<\/span>/);
         lignes[cle] = {
             annee: champ('cv-year', 'span'),
-            // « Rôle · Antiochus » → « Antiochus » : le libellé est déjà porté
-            // par le gabarit de la page générée.
-            role: champ('cv-role', 'p').replace(/^R[oô]les?\s*·\s*/i, ''),
+            auteur: incise ? texteSeul(incise[1]).replace(/^\(|\)$/g, '') : '',
+            // « Rôle · Antiochus », libellé compris, tel que le panneau le lit
+            // sur la ligne du CV et l'écrit sous le titre : le gabarit n'en
+            // ajoute pas. Ceux qui n'en veulent pas — le résumé de la page, la
+            // carte du répertoire — le retirent eux-mêmes.
+            role: champ('cv-role', 'p'),
             compagnie: champ('cv-subtitle', 'p'),
             badge: champ('cv-badge', 'span'),
             url: url ? decodeEntites(url[1]) : ''
@@ -416,7 +457,9 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     const info = {
         year: cv.annee || '',
         title: titre,
-        author: uni.subtitle ?? '',
+        // Même règle que rowInfo() : le sous-titre de l'univers, sinon
+        // l'incise du titre du CV.
+        author: uni.subtitle ?? cv.auteur ?? '',
         role: uni.role ?? cv.role ?? '',
         company: cv.compagnie || '',
         badge: cv.badge || '',
@@ -519,6 +562,10 @@ ${MESURE}
          #show-universe. Mêmes variables, mêmes valeurs : c'est ce qui donne
          à la page la couleur exacte de son univers. -->
     <style>
+        /* Le mouvement de l'accueil — relu dans index.html (voir
+           chargerMouvement) : sans lui, les transitions d'univers.css
+           tombaient à zéro sur cette page. */
+        :root { ${MOUVEMENT} }
         body { margin: 0; background: ${p.bg || '#0a0907'}; }
         #show-universe {
             --u-bg: ${p.bg || '#0a0907'};
