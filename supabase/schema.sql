@@ -51,6 +51,37 @@ create table if not exists public.representations (
 create unique index if not exists representations_unicite
   on public.representations (spectacle, lieu, jour, heure);
 
+-- ------------------------------------------------------------
+--  GARDE-FOUS SUR LE CONTENU
+-- ------------------------------------------------------------
+--  Ajoutés en septembre 2026 (voir contraintes-2026-09.sql, à jouer
+--  une fois sur la base existante). Le formulaire de /admin/ vérifie
+--  déjà tout cela, et le site trie encore à l'affichage : ces règles
+--  sont le dernier rempart, celui qu'aucune saisie ne contourne.
+--
+--  · Le lien de réservation est une adresse web, ou rien. Un lien
+--    « javascript: » s'exécuterait chez chaque visiteur qui clique
+--    « Réserver » ; un lien sans https:// menait à la page 404.
+--  · Pas de caractère de commande ni de séparateur de ligne Unicode
+--    (U+2028, U+2029) dans les textes : invisibles à la saisie, et le
+--    second, recopié dans un commentaire de dates.js par l'export,
+--    y ferait du reste du titre du code exécuté.
+--  · Des longueurs raisonnables : un titre de spectacle ne fait pas
+--    deux mille signes.
+alter table public.representations
+  drop constraint if exists reservation_url_web,
+  add constraint reservation_url_web
+    check (reservation_url = '' or reservation_url ~* '^https?://[^[:space:]"''<>]+$'),
+  drop constraint if exists textes_propres,
+  add constraint textes_propres
+    check (spectacle !~ '[[:cntrl:]\u2028\u2029]' and lieu !~ '[[:cntrl:]\u2028\u2029]'
+           and ville !~ '[[:cntrl:]\u2028\u2029]' and heure !~ '[[:cntrl:]\u2028\u2029]'),
+  drop constraint if exists longueurs_raisonnables,
+  add constraint longueurs_raisonnables
+    check (char_length(spectacle) <= 200 and char_length(lieu) <= 200
+           and char_length(ville) <= 100 and char_length(heure) <= 40
+           and char_length(reservation_url) <= 2000);
+
 -- Le site lit toujours « par date » : l'index évite un tri à chaque visite.
 create index if not exists representations_par_jour
   on public.representations (jour);
