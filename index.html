@@ -1379,6 +1379,10 @@
            dommage : le titre, jamais. Là-bas, dans univers.js, la mesure
            qui aligne chaque liste sur sa ligne la plus haute.
 
+           (Depuis la vignette, à l'écran, le titre et la compagnie tiennent
+           eux aussi sur une ligne : voir « La ligne à vignette ». Ce qui
+           suit reste la règle sans script, et sur papier.)
+
            Le texte coupé reste ENTIER dans le document : les lecteurs
            d'écran le lisent en entier, l'impression aussi (voir plus bas),
            et l'univers du spectacle donne la distribution complète. Seul
@@ -1517,6 +1521,7 @@
            et repart de zéro quand le voile se lève. */
         body.modal-open .cv-has-universe::after,
         body.modal-open .cv-has-universe .cv-badge::after,
+        body.modal-open .cv-vignette.a-etat::after,
         body.modal-open .next-date-dot,
         body.modal-open .next-date-shine::after {
             animation-play-state: paused;
@@ -2360,7 +2365,9 @@
         /* ══ CE QUE LA LIGNE DU CV PROMET ══
            Deux signaux seulement, posés par univers.js sur les lignes qui
            ouvrent un univers (voir markCvRows). Rien n'est ajouté au
-           balisage : ni mot, ni image, ni hauteur.
+           balisage : ni mot, ni image, ni hauteur. (La vignette, venue
+           depuis, est posée de la même façon, par le script — voir « La
+           ligne à vignette ».)
 
            1. LA FLÈCHE. Le chevron disait « ceci se déplie » ; ces lignes
               ouvrent une page plein écran. Une flèche oblique dit qu'on va
@@ -2811,7 +2818,9 @@
            d'écran ici, contrairement au repli du lavis juste en dessous :
            le halo bat sur tous les écrans, il doit se taire sur tous. */
         @media (prefers-reduced-motion: reduce) {
-            .cv-has-universe .cv-badge::after {
+
+            .cv-has-universe .cv-badge::after,
+            .cv-vignette.a-etat::after {
                 animation: none;
                 opacity: 0;
             }
@@ -2834,7 +2843,8 @@
            synopsis de l'univers : une seule source, jamais recopiée.
 
            Sur grand écran, il s'inscrit dans le vide de la ligne, entre le
-           titre et le badge. Ce vide est réel : la ligne fait 794 px de
+           texte et la colonne de droite (le badge, ou la flèche sur une ligne
+           à vignette). Ce vide est réel : la ligne fait 794 px de
            large et son texte n'en occupe qu'un tiers. Rien n'est donc
            déplacé — la liste reste parfaitement immobile et les mots
            paraissent, c'est tout. C'est la suggestion la plus douce qu'on
@@ -3032,6 +3042,350 @@
                 -webkit-touch-callout: none;
                 -webkit-user-select: none;
                 user-select: none;
+            }
+        }
+
+        /* ══ LA LIGNE À VIGNETTE ════════════════════════════════════════
+           Chaque spectacle et chaque film s'ouvre sur sa vignette : la
+           couverture de son univers, l'état du spectacle en bandeau, l'année
+           au bas de la photo. Elle est posée par univers.js (addVignette), qui
+           marque la ligne `.a-vignette` : tout ce qui suit ne vaut que pour
+           ces lignes, et qu'À L'ÉCRAN. Sans JavaScript, ou sur papier, la
+           ligne reste celle d'avant — l'année en pastille, l'état en badge,
+           le titre en capitales — et le PDF ne bouge pas d'un caractère.
+
+           TROIS LIGNES DE TEXTE, UNE SEULE CHACUNE. Le titre, le rôle, la
+           compagnie tiennent chacun sur leur ligne et s'arrêtent sur des
+           points de suspension s'ils débordent. Le titre, jusqu'ici, passait
+           à la ligne — c'était le seul texte qu'on ne coupait jamais —, et
+           c'est lui qui faisait varier les hauteurs : la ligne grandissait,
+           son contenu se centrait dans la hauteur commune, l'année remontait.
+           Désormais tout le texte tient dans la hauteur de la vignette, et
+           toutes les lignes ont la sienne. Le texte coupé reste entier dans
+           le document (lecteurs d'écran, impression) et dans l'univers, à
+           un geste.
+
+           L'AUTEUR, SUR GRAND ÉCRAN SEULEMENT. Au téléphone, l'incise n'a
+           plus la place à côté d'un titre en Cinzel : elle s'efface de
+           l'écran, et reste dans le document, sur le papier et dans
+           l'univers.
+           ══════════════════════════════════════════════════════════════ */
+        @media screen {
+
+            /* `column-gap` et non `gap` : au téléphone, le murmure passe sur
+               une seconde rangée du flex, et l'écart ENTRE les rangées doit
+               rester nul (voir « Le murmure »). */
+            #page_cv li.a-vignette .cv-row-toggle>div {
+                align-items: center;
+                column-gap: 12px;
+            }
+
+            .cv-vignette {
+                position: relative;
+                flex: none;
+                width: 48px;
+                height: 64px;
+            }
+
+            /* Le cadre rogne la photo ; la vignette, elle, ne rogne rien :
+               son ::after porte le halo de la guirlande, qui doit déborder. */
+            .cv-vignette-cadre {
+                position: absolute;
+                inset: 0;
+                display: grid;
+                place-items: center;
+                overflow: hidden;
+                border-radius: 6px;
+                background: var(--cv-accent);
+                color: var(--cv-sur-accent, #fff);
+                box-shadow: 0 1px 2px rgb(0 0 0 / .18);
+            }
+
+            .cv-vignette img {
+                position: absolute;
+                inset: 0;
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .cv-vignette-initiales {
+                font: 600 15px/1 Cinzel, serif;
+                letter-spacing: .06em;
+            }
+
+            /* L'état, en bandeau : la couleur du spectacle, et l'encre
+               calculée pour elle (--cv-sur-accent, voir encreSur dans
+               univers.js). Sur une vignette sans photo, le fond est déjà
+               cette couleur : le bandeau s'en détache en plus sombre. */
+            .cv-vignette-etat {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1;
+                height: 14px;
+                background: var(--cv-accent);
+                color: var(--cv-sur-accent, #fff);
+                font: 700 8px/14px Montserrat, sans-serif;
+                letter-spacing: .03em;
+                text-transform: uppercase;
+                text-align: center;
+                white-space: nowrap;
+                overflow: hidden;
+                box-shadow: 0 1px 0 rgb(0 0 0 / .18);
+            }
+
+            .cv-vignette.sans-photo .cv-vignette-etat {
+                background: rgb(0 0 0 / .3);
+                color: #fff;
+            }
+
+            /* L'année, au bas de la photo, en blanc sur un voile : lisible
+               sur la plus claire des photos comme sur la plus sombre. */
+            .cv-vignette-annee {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 1;
+                padding: 14px 0 4px;
+                background: linear-gradient(to top, rgb(0 0 0 / .8), rgb(0 0 0 / .55) 55%, rgb(0 0 0 / 0));
+                color: #fff;
+                font: 700 10.5px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                font-variant-numeric: tabular-nums;
+                letter-spacing: .03em;
+                text-align: center;
+            }
+
+            /* L'année et l'état ont leur place sur la vignette. Dans le
+               texte, ils ne restent que pour ceux qui ne la voient pas :
+               lecteurs d'écran — la vignette leur est cachée — et papier. */
+            #page_cv li.a-vignette .cv-year,
+            #page_cv li.a-vignette .cv-badge {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border: 0;
+            }
+
+            /* Le titre en Cinzel, comme en tête de chaque spectacle dans
+               l'onglet Dates et dans son univers. */
+            #page_cv li.a-vignette .cv-title-row,
+            #page_cv li.a-vignette .cv-subtitle,
+            #page_cv li.a-vignette .cv-genre {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* L'italique penche au-delà de sa boîte : sans ce jeu, le rognage
+               mangeait la parenthèse qui ferme « (Corneille) ». */
+            #page_cv li.a-vignette .cv-title-row,
+            #page_cv li.a-vignette .cv-genre {
+                padding-right: .2em;
+            }
+
+            #page_cv li.a-vignette .cv-title {
+                font: 600 14px/1.3 Cinzel, serif;
+                letter-spacing: .01em;
+                text-transform: none;
+                white-space: nowrap;
+            }
+
+            #page_cv li.a-vignette .cv-title>span {
+                margin-left: .2em;
+                font: italic 400 12px/1.3 Inter, sans-serif;
+                letter-spacing: 0;
+            }
+
+            /* Le genre du film (addGenre, dans univers.js), dans le ton de
+               l'incise dont il reprend la place. */
+            .cv-genre {
+                margin-top: 2px;
+                font-size: 12px;
+                font-style: italic;
+                color: rgb(var(--c-muted));
+            }
+
+            #page_cv li.a-genre .cv-title>span {
+                display: none;
+            }
+
+            /* La colonne de droite : la flèche, et la bande-annonce dessous.
+               La même largeur sur toutes les lignes — celle de la pastille —,
+               pour que le texte ait partout la même place et s'arrête au même
+               endroit.
+
+               LA PASTILLE PERD HUIT PIXELS. Elle faisait 52 px pour peser
+               autant que le badge posé au-dessus d'elle ; le badge est passé
+               sur la vignette, et chaque pixel de cette colonne est pris au
+               texte, sur toutes les lignes. À 44 px, elle garde son 16/9 et
+               ses 24 px de haut — la taille minimale d'une cible au doigt
+               (WCAG 2.5.8). */
+            #page_cv li.a-vignette .cv-trailer {
+                width: 44px;
+            }
+
+            #page_cv li.a-vignette .cv-row-toggle>div>div:last-child {
+                flex: 0 0 44px;
+                flex-direction: column;
+                align-items: flex-end;
+                align-self: stretch;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            #page_cv li.a-vignette .cv-chevron {
+                order: -1;
+            }
+
+            /* LE HALO PASSE DU BADGE À LA VIGNETTE. « En tournée », « En
+               création » ne sont plus écrits dans un badge à droite, mais en
+               bandeau sur la vignette : c'est elle qui s'allume au passage de
+               la guirlande, avec la même horloge que le badge avant elle (voir
+               « La pastille s'allume avec sa ligne »). Seulement les lignes
+               qui portent un état — les spectacles qui se jouent encore. */
+            .cv-vignette.a-etat::after {
+                content: '';
+                position: absolute;
+                inset: -1px;
+                border-radius: 7px;
+                box-shadow: 0 0 22px 2px color-mix(in srgb, var(--cv-accent) var(--cv-halo), transparent);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity var(--dur-base) var(--ease-out);
+                animation: cv-pastille-lueur 4s ease-in-out 1;
+                animation-delay: calc(var(--cv-rang, 0) * .25s);
+            }
+
+            .cv-item.is-pressed .cv-vignette.a-etat::after,
+            .cv-has-universe:has(.cv-row-toggle:active) .cv-vignette.a-etat::after {
+                animation: none;
+                opacity: 1;
+            }
+        }
+
+        @media screen and (hover: hover) and (pointer: fine) {
+            .cv-has-universe:hover .cv-vignette.a-etat::after {
+                animation: none;
+                opacity: 1;
+                transition-duration: var(--dur-quick);
+            }
+        }
+
+        @media screen and (max-width: 767px) {
+            #page_cv li.a-vignette .cv-title>span {
+                display: none;
+            }
+
+            /* Le murmure s'ouvre sous le texte, pas sous la vignette. */
+            #page_cv li.a-vignette .cv-whisper {
+                padding-left: 60px;
+            }
+        }
+
+        /* ── LA FORMATION, SANS ILLUSTRATION ──
+           Une école n'a pas de photo de plateau, et une vignette vide ne
+           dirait rien. L'année prend donc seule la colonne de la vignette, à
+           la même largeur : elle tombe au même endroit que sur les spectacles,
+           en tête de la ligne. Une période se lit sur deux lignes — 2018,
+           puis → 2021 — pour tenir dans la colonne ; le tiret du balisage
+           reste pour les lecteurs d'écran et le papier. Tout cela à l'écran
+           seulement, et sans script : ces lignes n'ont pas d'univers. */
+        @media screen {
+
+            #page_cv .cv-formation>li {
+                display: grid;
+                grid-template-columns: 48px minmax(0, 1fr);
+                grid-template-areas: "an titre" "an sous";
+                column-gap: 12px;
+                row-gap: 2px;
+                align-content: center;
+                min-height: 60px;
+            }
+
+            #page_cv .cv-formation .cv-title-row {
+                display: contents;
+            }
+
+            #page_cv .cv-formation .cv-year {
+                grid-area: an;
+                align-self: center;
+                justify-self: center;
+                margin: 0;
+                padding: 0;
+                border: 0;
+                background: none;
+                line-height: 1.25;
+                text-align: center;
+            }
+
+            /* Plus petite, mais pas plus pâle : estompée à 80 %, la fin de
+               la période tombait à 3,3 de contraste sur le fond clair. */
+            #page_cv .cv-formation .cv-year-fin {
+                display: block;
+                font-size: .86em;
+            }
+
+            #page_cv .cv-formation .cv-year-fin::before {
+                content: "→ " / "";
+            }
+
+            #page_cv .cv-formation .cv-year-tiret {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+            }
+
+            #page_cv .cv-formation .cv-title {
+                grid-area: titre;
+                align-self: end;
+                min-width: 0;
+                font: 600 14px/1.3 Cinzel, serif;
+                letter-spacing: .01em;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            #page_cv .cv-formation .cv-subtitle {
+                grid-area: sous;
+                align-self: start;
+                margin-top: 0;
+                min-width: 0;
+            }
+        }
+
+        /* Au téléphone, le nom d'une école peut prendre deux lignes — le
+           conservatoire de Rouen les prend. On ne le coupe pas : c'est tout
+           ce que dit la ligne. Les trois formations prennent donc la hauteur
+           de la plus longue, comme les lignes des spectacles prennent celle
+           de la vignette. */
+        @media screen and (max-width: 767px) {
+            #page_cv .cv-formation>li {
+                min-height: 68px;
+            }
+        }
+
+        /* Sur papier, ni vignette ni ligne de genre : le CV imprimé garde
+           exactement sa forme (voir « Le CV tient sur une page »). La règle
+           `.cv-row-toggle *` y rétablit tout ce qui vit dans la ligne ; il
+           faut donc plus fort qu'elle. */
+        @media print {
+
+            #page_cv .cv-vignette,
+            #page_cv .cv-genre {
+                display: none !important;
             }
         }
 
@@ -5994,7 +6348,7 @@
                         <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Formation
                         </h3>
                     </div>
-                    <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
+                    <ul class="cv-formation divide-y divide-stone-200/50 font-inter text-sm leading-tight">
                         <li
                             class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-luxury-stripe even:bg-transparent">
                             <div class="cv-title-row">
@@ -6021,7 +6375,7 @@
                             class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-luxury-stripe even:bg-transparent">
                             <div class="cv-title-row">
                                 <span
-                                    class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2018 - 2021</span>
+                                    class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2018<span class="cv-year-fin"><span class="cv-year-tiret"> - </span>2021</span></span>
                                 <span class="cv-title inline align-middle font-bold text-luxury-textMain text-xs">Art
                                     dramatique</span>
                             </div>
@@ -7918,12 +8272,10 @@
         function dlCouverture(s) {
             const uni = s.uni;
             // UniversMontage est une constante globale (univers-montage.js),
-            // pas une propriété de window.
+            // pas une propriété de window. La règle de la couverture y vit :
+            // les lignes du CV s'en servent aussi.
             if (!uni || uni.affiche || typeof UniversMontage === 'undefined') return null;
-            const bloc = (uni.sequence || []).find(b => b && Array.isArray(b.p) && b.p.length);
-            if (!bloc) return null;
-            const base = `ressources/images/univers/${uni.slug}/${bloc.p[0]}`;
-            return { src: `${base}-240.webp`, repli: `${base}-640.webp`, pos: UniversMontage.framePos(uni, bloc, bloc.p[0]) || '' };
+            return UniversMontage.couverture(uni);
         }
 
         // Une couverture de 240 px manque si une photo a été changée sans
