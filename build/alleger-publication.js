@@ -49,8 +49,8 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const http = require('http');
 const { execFileSync } = require('child_process');
+const { servir } = require('./serveur-local');
 
 const DEPOT = path.resolve(__dirname, '..');
 
@@ -202,27 +202,8 @@ async function allegerHtml(source, nom, minifierHtml) {
 //  exception non rattrapée — AVANT et APRÈS l'allègement : seule compte
 //  une erreur que l'original n'avait pas (une page qui trébucherait déjà
 //  sans lui, faute de réseau par exemple, ne doit pas faire tout jeter).
-//  Même serveur minimal que generer-cv-pdf.js : file:// n'est pas le site.
-const TYPES = {
-    '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
-    '.js': 'text/javascript; charset=utf-8', '.json': 'application/json',
-    '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
-    '.webp': 'image/webp', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.ico': 'image/x-icon',
-};
-function servir() {
-    const serveur = http.createServer((req, res) => {
-        let chemin = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-        if (chemin.endsWith('/')) chemin += 'index.html';
-        const fichier = path.join(RACINE, path.normalize(chemin));
-        if (!fichier.startsWith(RACINE) || !fs.existsSync(fichier) || fs.statSync(fichier).isDirectory()) {
-            res.writeHead(404); res.end(); return;
-        }
-        res.writeHead(200, { 'Content-Type': TYPES[path.extname(fichier)] || 'application/octet-stream' });
-        fs.createReadStream(fichier).pipe(res);
-    });
-    return new Promise(ok => serveur.listen(0, '127.0.0.1', () => ok(serveur)));
-}
-
+//  Même serveur que les autres scripts (serveur-local.js) : file:// n'est
+//  pas le site.
 // Renvoie, page par page, le nombre d'erreurs relevées — ou null si le
 // navigateur n'est pas disponible.
 async function epreuveNavigateur(pages) {
@@ -238,8 +219,7 @@ async function epreuveNavigateur(pages) {
         console.log(`  (Chromium ne démarre pas : épreuve sautée — ${e.message.split('\n')[0]})`);
         return null;
     }
-    const serveur = await servir();
-    const base = `http://127.0.0.1:${serveur.address().port}`;
+    const { serveur, base } = await servir(RACINE);
     const bilan = {};
     try {
         for (const page of pages) {

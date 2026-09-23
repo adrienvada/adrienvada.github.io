@@ -1,17 +1,10 @@
 User-agent: *
 Allow: /
 
-# Le château-mystère (/chateau-mystere-2026-V1/) est une page privée.
-# ELLE N'EST PLUS DANS CE DÉPÔT : elle vit désormais dans le sien,
-# github.com/adrienvada/chateau-mystere-2026-V1, que GitHub sert sous ce
-# même domaine, au même chemin. La consigne ci-dessous vaut donc toujours,
-# puisque robots.txt couvre tout le domaine — mais on ne trouvera plus le
-# dossier ici.
-# Elle n'est VOLONTAIREMENT pas interdite ici : sa désindexation passe par la
-# balise <meta name="robots" content="noindex"> posée dans la page elle-même,
-# et un robot doit pouvoir entrer pour la lire. Un « Disallow » ferait
-# l'inverse de ce qu'on cherche — l'adresse resterait indexable depuis un
-# lien extérieur, sans qu'aucune consigne ne puisse plus l'en déloger.
-# NE PAS ajouter de Disallow sur ce dossier.
+# Une page privée se retire des moteurs par sa balise
+# <meta name="robots" content="noindex"> — jamais par un Disallow ici :
+# un robot doit pouvoir entrer pour lire la consigne (voir README-build.md,
+# « Pages privées »). Et ce fichier est public : on n'y nomme pas ce qu'on
+# veut garder discret.
 
 Sitemap: https://adrienvada.fr/sitemap.xml

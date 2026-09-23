@@ -8,6 +8,64 @@ ligne une version incohérente.
 Rien ne le signale : le site se publie très bien avec un fichier généré
 périmé. Il affiche simplement l'état d'avant.
 
+## Les outils — une installation, des versions figées
+
+Le site n'a aucune dépendance : rien de ce qui suit n'est servi aux visiteurs.
+Mais pour le **fabriquer** — la feuille Tailwind, le CV en PDF, l'allègement de
+la copie publiée, les vérifications — il faut Tailwind, Playwright et trois
+minifieurs. Ils étaient installés à la volée, « la dernière version », et
+pouvaient donc changer de comportement d'un jour à l'autre sans qu'une ligne du
+dépôt ait bougé. Ils sont maintenant déclarés dans **`build/package.json`**, aux
+versions exactes, et `build/package-lock.json` fige tout le reste.
+
+Une fois, sur une machine neuve (Node 18 ou plus) :
+
+```bash
+cd build
+npm ci                 # les outils, aux versions du dépôt (build/node_modules, ignoré par git)
+npm run navigateur     # le Chromium de Playwright, pour le PDF et les vérifications
+```
+
+Ensuite, depuis la racine du dépôt :
+
+| Commande | Ce qu'elle fait |
+|---|---|
+| `npm --prefix build run css` | régénère `styles.css` |
+| `npm --prefix build run pages` | régénère la galerie **puis** les pages spectacle et le sitemap (dans cet ordre) |
+| `npm --prefix build run pdf` | refait le CV en PDF |
+| `npm --prefix build run dates` | recopie les dates de Supabase dans `dates.js` |
+| `npm --prefix build run verifier` | [vérifie le site](#vérifier-le-site) dans un vrai navigateur |
+
+Les commandes `node build/…` citées plus bas marchent toujours telles quelles ;
+`npm run` ne fait que les appeler. Le workflow de publication installe les
+outils **depuis le même fichier de verrouillage** : ce qui part en ligne est
+fabriqué avec les versions qu'on a vérifiées ici. Pour monter une version,
+changer le numéro dans `build/package.json`, relancer `npm install` dans
+`build/`, regarder le résultat (le PDF, la feuille), et committer les deux
+fichiers.
+
+## Vérifier le site
+
+`build/verifier-site.js` ouvre le site dans Chromium et vérifie, en une
+minute, ce qui a déjà cassé ou casserait sans bruit :
+
+- l'accueil se charge sans erreur de script ;
+- un lien direct entre sans rideau ; depuis un autre site, l'ouverture joue une
+  fois ;
+- « Ajouter au calendrier » ouvre sa fenêtre dans un univers ouvert depuis le
+  CV (une représentation fictive est glissée dans les dates le temps du test :
+  il ne dépend pas de la saison) ;
+- les pastilles ▶ ne s'impriment pas ;
+- sans JavaScript, le site reste lisible ;
+- chaque page spectacle a son `h1`, son `<main>` et des données structurées
+  lisibles ;
+- le sitemap annonce toutes les pages spectacle, et elles seules.
+
+Il tourne sur **chaque demande de fusion** (`.github/workflows/verifier.yml`) :
+une coche verte ou rouge sur la demande, avant que rien ne touche `main`. À la
+main : `npm --prefix build run verifier`. Un défaut corrigé mérite sa ligne
+ici : c'est ce qui l'empêche de revenir.
+
 ## Ce qu'il faut relancer, selon ce qu'on a modifié
 
 | Ce que vous modifiez | À relancer | Ce que ça réécrit |
@@ -91,16 +149,16 @@ l'original. L'étape est en `continue-on-error`, comme celle du PDF : au pire,
 le site part tel qu'il est dans le dépôt.
 
 Pour l'essayer sur une copie (il refuse de réécrire le dépôt lui-même hors de
-l'action) :
+l'action), les [outils](#les-outils--une-installation-des-versions-figées)
+une fois installés :
 
 ```bash
-npm install -g html-minifier-terser@7.2.0 terser@5.44.1 clean-css@5.3.3
 node build/alleger-publication.js --racine /chemin/vers/une/copie
 ```
 
-Les versions de ces outils, et celle de Playwright, sont **figées** dans le
-workflow : une nouvelle version ne doit pas changer le site sans qu'on l'ait
-décidé.
+Les versions de ces outils, et celle de Playwright, sont **figées** par
+`build/package-lock.json`, que le workflow installe hors du dossier publié :
+une nouvelle version ne doit pas changer le site sans qu'on l'ait décidé.
 
 ### ⚠️ L'historique a été réécrit — ce que ça fait aux copies de travail
 
@@ -297,10 +355,12 @@ Conséquence : si vous ajoutez, supprimez ou modifiez une classe Tailwind dans
 `index.html`, `404.html`, `dates.js` ou `galerie.js`, il faut relancer :
 
 ```bash
-npx --yes tailwindcss@3 -c tailwind.config.js -i build/tailwind-input.css -o styles.css --minify
+npm --prefix build run css
 ```
 
-Puis committer le `styles.css` mis à jour.
+Puis committer le `styles.css` mis à jour. (C'est Tailwind 3.4.19, la version
+de `build/package.json` ; l'ancienne commande, `npx --yes tailwindcss@3 …`,
+prenait la dernière version 3 du moment.)
 
 > Si une classe semble « ne rien faire » après une modification, c'est presque
 > toujours qu'on a oublié cette commande.
@@ -355,7 +415,8 @@ imprimé sur fond noir gâcherait l'encre et passerait mal en photocopie.
 
 ## Ouverture de scène (`intro.js` + `mask-points.js`)
 
-Au premier chargement : un **masque de théâtre en particules** tourne lentement
+À la première arrivée **depuis un autre site** (voir plus bas : un lien direct
+entre sans rideau) : un **masque de théâtre en particules** tourne lentement
 au centre, pendant que les rôles joués défilent de plus en plus vite. Le défilé
 est un **tambour de roulette** : le rôle en cours occupe le centre, net et de
 face ; le suivant se décode déjà au-dessus de lui, atténué et plus loin dans la
@@ -412,8 +473,11 @@ toutes deux vérifiées à la mesure, et toutes deux nécessaires :
   La mesure, elle, reste vraie quelles que soient les fontes, la largeur de
   l'écran, et même si les polices n'ont pas fini de se charger.
 
-Un **sceau** se trace enfin : il faut **cliquer dessus pour entrer** (l'intro ne
-se referme jamais toute seule).
+Un **sceau** se trace enfin : il faut **cliquer dessus pour entrer** — ou sur
+le rideau, ou appuyer sur une touche, ou « Passer ». Un garde-fou la referme
+de lui-même au bout de **20 secondes** (`MAX_INTRO_MS` dans `intro.js`) : il
+n'est pas là pour le rythme, mais pour qu'un onglet resté en arrière-plan ou
+une erreur imprévue ne laisse jamais le rideau baissé pour toujours.
 
 Le nuage de points du masque est dans `mask-points.js` : **fichier généré, à ne
 pas éditer à la main**. Il a été produit hors-ligne à partir du modèle 3D FBX
@@ -423,17 +487,16 @@ clairsemé sur les joues). Pour le régénérer il faut le FBX d'origine, le
 convertir en glTF (`fbx2gltf`) puis rééchantillonner — la procédure n'est pas
 automatisée ici.
 
-**Comment la revoir alors qu'on l'a déjà vue ?** Elle ne se joue qu'une fois par
-session de navigation, sinon elle deviendrait pénible. Pour la rejouer :
+**Comment la revoir alors qu'on l'a déjà vue ?** Elle ne se joue qu'**une fois
+par appareil** (le marqueur `avIntroSeen` est dans le `localStorage`, qui
+survit à la fermeture du navigateur), sinon elle deviendrait pénible. Et elle
+ne joue jamais pour une arrivée directe — adresse tapée comprise. Pour la
+rejouer :
 
 | Moyen | Comment |
 |---|---|
-| **Le plus simple** | ajouter `?intro=1` à l'URL → `http://localhost:8080/?intro=1` |
-| Fermer l'onglet et le rouvrir | le marqueur est en `sessionStorage`, il meurt avec l'onglet |
-| Depuis la console (F12) | `sessionStorage.removeItem('avIntroSeen')` puis recharger |
-
-Attention : un simple rechargement (F5 / Cmd+R) **ne suffit pas**, le
-`sessionStorage` survit aux rechargements dans le même onglet.
+| **Le plus simple** | ajouter `?intro=1` à l'URL → `http://localhost:8080/?intro=1` : elle joue, quoi qu'il arrive |
+| Depuis la console (F12) | `localStorage.removeItem('avIntroSeen'); sessionStorage.removeItem('avIntroSeen')`, puis revenir **depuis un autre site** (un lien tapé ne suffit pas) |
 
 ### Elle ne se joue qu'à la porte d'entrée
 
@@ -450,9 +513,38 @@ Le test se fait dans le garde en ligne d'`index.html`, **avant** que le routage
 d'`univers.js` ne remplace le fragment par `#page_cv`. `?intro=1` force
 l'ouverture même sur un lien profond, pour pouvoir la régler.
 
-La session est marquée comme « déjà entrée » dans tous les cas, y compris
-quand l'ouverture est sautée : sans cela, revenir à l'adresse nue en cours de
-visite lèverait le rideau au milieu du spectacle.
+### Elle ne joue pas pour un lien direct
+
+Qui arrive **directement** vient voir Adrien : c'est le directeur de casting à
+qui l'on a envoyé l'adresse. Il entre tout de suite au CV. Qui arrive
+**d'ailleurs** — un moteur de recherche, Instagram, le site d'un théâtre —
+découvre le site : l'ouverture joue pour lui, une fois.
+
+La différence tient à la page d'où l'on vient (`document.referrer`), lue par le
+garde d'`index.html` :
+
+| On arrive… | Ouverture |
+|---|---|
+| sans page d'origine : adresse tapée, favori, lien d'un mail ou d'un SMS ouvert dans une application, lien du CV en PDF | non |
+| d'une application Android (`android-app://…`, ce que posent Gmail ou les SMS) | non |
+| d'une messagerie en ligne (`mail.…`, `webmail.…`, Outlook) | non |
+| d'une autre page du site | non (la visite est commencée) |
+| par `adrienvada.fr/?direct` | non, jamais |
+| de tout autre site : Google, Instagram, Facebook, un théâtre… | **oui, si elle n'a jamais joué sur cet appareil** |
+
+**La limite, et son remède.** Gmail ouvert *dans un navigateur* fait passer
+ses liens par `google.com`, qu'on ne distingue pas d'une recherche Google : un
+destinataire qui lit ses mails ainsi verrait l'ouverture. Pour une
+candidature, envoyer **`adrienvada.fr/?direct`** : on entre sans rideau quel que
+soit le chemin, et le paramètre s'efface aussitôt de l'adresse.
+
+**Deux mémoires, et non plus une.** Le `localStorage` retient que l'ouverture
+a **joué** sur l'appareil — et seulement cela : une entrée directe ne compte
+plus comme vue, et le jour où ce visiteur arrive d'ailleurs, il y a droit. Le
+`sessionStorage` retient que la **visite** a commencé, par quelque porte que ce
+soit : revenir à l'accueil en cours de route ne lève jamais le rideau au milieu
+du spectacle. Les pages `/spectacles/` et `/galerie/` posent la seconde, pas la
+première.
 
 ### Elle n'est téléchargée que si elle joue
 
@@ -1452,16 +1544,20 @@ fichiers sur place, et un ré-encodage n'est pas réversible.
 
 ---
 
-## Le château-mystère
+## Pages privées (le château-mystère)
 
-`/chateau-mystere-2026-V1/` est une page privée. Elle reste accessible par son
-adresse directe, mais porte `<meta name="robots" content="noindex, nofollow">`.
+Le château-mystère (`/chateau-mystere-2026-V1/`) vivait dans son propre dépôt,
+que GitHub servait sous ce même domaine. **Il n'est plus servi** : l'adresse
+rend une erreur 404 depuis septembre 2026. `robots.txt` ne le mentionne plus —
+ce fichier est public, et y désigner une page privée revenait à la signaler à
+qui le lit.
 
-Elle n'est **volontairement pas** interdite dans `robots.txt` : un robot doit
-pouvoir entrer pour lire la consigne de désindexation. Un `Disallow` ferait
-l'inverse de ce qu'on cherche — l'adresse resterait indexable depuis un lien
-extérieur, sans qu'aucune consigne ne puisse plus l'en déloger. **Ne pas
-ajouter de `Disallow` sur ce dossier.**
+La règle vaut pour toute page privée à venir : elle porte
+`<meta name="robots" content="noindex, nofollow">`, et elle n'est **volontairement
+pas** interdite dans `robots.txt`. Un robot doit pouvoir entrer pour lire la
+consigne de désindexation ; un `Disallow` ferait l'inverse de ce qu'on cherche
+— l'adresse resterait indexable depuis un lien extérieur, sans qu'aucune
+consigne ne puisse plus l'en déloger. **Ne pas ajouter de `Disallow`.**
 
 ---
 
@@ -1489,6 +1585,13 @@ Tout passe par **`track(nom, details)`** — aucun appel direct à `umami`
 ailleurs dans le code, pour n'avoir qu'un endroit à changer le jour où l'on
 change d'outil. Si l'outil n'a pas chargé (bloqueur, réseau), `track()` ne fait
 rien : aucune fonctionnalité du site ne dépend de la mesure.
+
+`track()` est défini par `index.html`. Les pages spectacle, qui ne chargent pas
+ce script, reçoivent le **même** `track()` et la même délégation des
+`data-track` de `univers.js` (`brancherMesure`), avec le même verrou
+« `?sansmesure` » : leurs clics « Réserver » ne comptaient nulle part
+auparavant. Les boutons « Réserver » des univers portent `date_booking`,
+comme ceux de l'onglet Dates — sur l'accueil comme sur les pages spectacle.
 
 Deux façons de relever un geste :
 

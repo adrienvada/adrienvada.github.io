@@ -60,12 +60,42 @@ jobs:
         uses: actions/configure-pages@v5
 
       # ────────────────────────────────────────────────────────────
+      #  LES OUTILS, AUX VERSIONS DU DÉPÔT
+      # ────────────────────────────────────────────────────────────
+      #  Playwright et les minifieurs viennent de build/package.json et de
+      #  son package-lock.json : les versions exactes, les mêmes que sur la
+      #  machine où l'on vérifie. « La dernière » changeait sous nos pieds —
+      #  une nouvelle version de Playwright ou de son Chromium pouvait
+      #  déplacer une coupure de page du CV sans qu'une ligne du dépôt ait
+      #  bougé. On les monte à la main, en regardant le résultat.
+      #
+      #  INSTALLÉS HORS DU DOSSIER PUBLIÉ. Le dossier à empaqueter est la
+      #  racine du dépôt telle quelle : un node_modules installé dans
+      #  build/ y ferait un passager clandestin de plusieurs dizaines de
+      #  mégaoctets. Les outils vont donc dans le dossier temporaire de
+      #  l'action ; NODE_PATH les rend visibles aux scripts, PATH à la
+      #  commande `playwright`.
+      #
+      #  `continue-on-error` : si l'installation échoue, les deux étapes
+      #  suivantes échouent à leur tour, proprement — elles aussi le
+      #  tolèrent — et le site part tel qu'il est dans le dépôt.
+      - name: Installer les outils (versions figées)
+        continue-on-error: true
+        run: |
+          OUTILS="$RUNNER_TEMP/outils"
+          mkdir -p "$OUTILS"
+          cp build/package.json build/package-lock.json "$OUTILS/"
+          npm ci --prefix "$OUTILS" --no-audit --no-fund
+          echo "NODE_PATH=$OUTILS/node_modules" >> "$GITHUB_ENV"
+          echo "$OUTILS/node_modules/.bin" >> "$GITHUB_PATH"
+
+      # ────────────────────────────────────────────────────────────
       #  LE CV EN PDF, REFAIT À CHAQUE PUBLICATION
       # ────────────────────────────────────────────────────────────
       #  Le fichier est versionné : il part de toute façon avec le
       #  dépôt, et c'est lui que servent les aperçus Cloudflare. On le
-      #  refait ici pour qu'un oubli de `node build/generer-cv-pdf.js`
-      #  ne puisse pas laisser un CV périmé en ligne.
+      #  refait ici pour qu'un oubli de `npm --prefix build run pdf` ne
+      #  puisse pas laisser un CV périmé en ligne.
       #
       #  `continue-on-error` n'est pas une négligence : c'est le
       #  contrat. Si Playwright, Chromium ou le rendu échouent un jour,
@@ -74,24 +104,13 @@ jobs:
       #  qui ne se publie plus. Le journal, lui, gardera la trace du
       #  ratage.
       #
-      #  L'installation est GLOBALE, et non locale : le dossier à
-      #  empaqueter est la racine du dépôt telle quelle, et un
-      #  node_modules de 300 Mo y ferait un passager clandestin de plus
-      #  dans un site qui pèse déjà 67 Mo à distribuer. Le script sait
-      #  trouver une installation globale (voir chargerPlaywright).
-      #
-      #  LA VERSION EST FIGÉE. « La dernière » changeait sous nos pieds :
-      #  une nouvelle version de Playwright ou de son Chromium pouvait
-      #  déplacer une coupure de page du CV sans qu'une ligne du dépôt
-      #  ait bougé. C'est celle avec laquelle le PDF versionné a été
-      #  vérifié ; on la monte à la main, en regardant le résultat.
-      #  `playwright install` est appelé directement, et non par npx :
-      #  npx irait chercher la dernière version de l'outil, qui
-      #  installerait un Chromium qui n'est pas celui de la bibliothèque.
+      #  `playwright install` est celui de l'étape précédente, et non
+      #  celui de npx : npx irait chercher la dernière version de l'outil,
+      #  qui installerait un Chromium qui n'est pas celui de la
+      #  bibliothèque.
       - name: Refaire le CV en PDF
         continue-on-error: true
         run: |
-          npm install -g playwright@1.56.1
           playwright install --with-deps chromium
           node build/generer-cv-pdf.js
 
@@ -111,9 +130,7 @@ jobs:
       #  le dépôt. Plus lourds, mais justes.
       - name: Alléger les fichiers servis
         continue-on-error: true
-        run: |
-          npm install -g html-minifier-terser@7.2.0 terser@5.44.1 clean-css@5.3.3
-          node build/alleger-publication.js
+        run: node build/alleger-publication.js
 
       - name: Empaqueter le site
         uses: actions/upload-pages-artifact@v3
@@ -132,17 +149,19 @@ jobs:
           # passé en `deployment_in_progress`, donc bel et bien pris en
           # charge, puis annulé par le minuteur.
           #
-          # Le site pèse 67 Mo, dont 30 pour le château-mystère et 33 pour
-          # les photos et les démos voix. C'est lourd à distribuer, et les
-          # publications réussies de la journée l'ont montré en s'allongeant
-          # sans cesse : 45 s au petit matin, 245 s, 274 s, puis 598 s pour
-          # la dernière — juste avant que le plafond de dix minutes ne coupe
-          # tout. Le minuteur a été atteint par la croissance du site, pas
-          # par une panne.
+          # Le site pesait alors 67 Mo, dont 30 pour le château-mystère et 33
+          # pour les photos et les démos voix. C'était lourd à distribuer, et
+          # les publications réussies de la journée l'ont montré en
+          # s'allongeant sans cesse : 45 s au petit matin, 245 s, 274 s, puis
+          # 598 s pour la dernière — juste avant que le plafond de dix minutes
+          # ne coupe tout. Le minuteur a été atteint par la croissance du
+          # site, pas par une panne.
           #
           # Trente minutes ne masquent donc rien : elles rendent à la
-          # publication le temps qu'elle demande. Si l'on veut la raccourcir
-          # pour de bon, c'est le poids qu'il faut viser — le château-mystère
-          # est à lui seul la moitié de la charge, pour une page qui n'a rien
-          # à voir avec le CV.
+          # publication le temps qu'elle demande. Le château-mystère est parti
+          # depuis (il vivait ensuite dans son propre dépôt, et n'est plus
+          # servi) : le site pèse aujourd'hui une cinquantaine de Mo, photos
+          # et démos voix pour l'essentiel — versions allégées des photos
+          # comprises. C'est ce poids qu'il faut viser pour raccourcir la
+          # publication pour de bon.
           timeout: 1800000

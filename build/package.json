@@ -1,0 +1,22 @@
+{
+  "name": "adrienvada-outils",
+  "private": true,
+  "description": "Les outils qui fabriquent adrienvada.fr : la feuille Tailwind, les pages générées, le CV en PDF, l'allègement de la copie publiée et les vérifications. Le site lui-même n'a aucune dépendance : rien de ceci n'est servi aux visiteurs. Voir README-build.md, « Les outils ».",
+  "scripts": {
+    "css": "cd .. && tailwindcss -c tailwind.config.js -i build/tailwind-input.css -o styles.css --minify",
+    "galerie": "node generer-page-galerie.js",
+    "spectacles": "node generer-pages-spectacles.js",
+    "pages": "npm run galerie && npm run spectacles",
+    "pdf": "node generer-cv-pdf.js",
+    "dates": "node exporter-dates.js",
+    "navigateur": "playwright install chromium",
+    "verifier": "node verifier-site.js"
+  },
+  "devDependencies": {
+    "clean-css": "5.3.3",
+    "html-minifier-terser": "7.2.0",
+    "playwright": "1.56.1",
+    "tailwindcss": "3.4.19",
+    "terser": "5.44.1"
+  }
+}

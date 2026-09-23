@@ -56,7 +56,6 @@
 'use strict';
 
 const fs = require('fs');
-const http = require('http');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
@@ -66,11 +65,10 @@ const SORTIE = path.join(RACINE, 'ressources', 'cv-adrien-vada.pdf');
 // ────────────────────────────────────────────────────────────
 //  PLAYWRIGHT, D'OÙ QU'IL VIENNE
 // ────────────────────────────────────────────────────────────
-//  Le dépôt n'a pas de package.json : le site est statique, et les
-//  scripts de build n'ont jusqu'ici eu besoin que de Node lui-même. On
-//  n'en ajoute pas un pour une seule dépendance de fabrication — on
-//  accepte simplement que Playwright soit installé localement OU
-//  globalement, selon la machine.
+//  Il vient normalement de build/package.json, à la version figée par
+//  son package-lock.json (`cd build && npm ci`) — ou, dans le workflow
+//  de publication, du dossier que NODE_PATH désigne. Une installation
+//  globale reste acceptée, en dernier recours.
 function chargerPlaywright() {
     try {
         return require('playwright');
@@ -80,77 +78,23 @@ function chargerPlaywright() {
         return require(path.join(global, 'playwright'));
     } catch (e) {
         console.error(
-            'Playwright est introuvable.\n' +
-            '  npm install -g playwright && npx playwright install chromium'
+            'Playwright est introuvable. Une fois pour toutes :\n' +
+            '  cd build && npm ci && npm run navigateur'
         );
         process.exit(1);
     }
 }
 
-// ────────────────────────────────────────────────────────────
-//  UN SERVEUR, PARCE QUE file:// N'EST PAS LE SITE
-// ────────────────────────────────────────────────────────────
-//  Ouvrir index.html en file:// donnerait une page privée d'origine :
-//  ni sessionStorage, ni fetch, ni polices chargées de la même façon.
-//  Le PDF doit être fait de ce que voit un visiteur, donc servi en HTTP.
-//  Quarante lignes suffisent, et le script reste sans dépendance de plus.
-const TYPES = {
-    '.html': 'text/html; charset=utf-8',
-    '.css': 'text/css; charset=utf-8',
-    '.js': 'text/javascript; charset=utf-8',
-    '.json': 'application/json; charset=utf-8',
-    '.svg': 'image/svg+xml',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.webp': 'image/webp',
-    '.avif': 'image/avif',
-    '.gif': 'image/gif',
-    '.ico': 'image/x-icon',
-    '.woff2': 'font/woff2',
-    '.woff': 'font/woff',
-    '.ttf': 'font/ttf',
-    '.mp3': 'audio/mpeg',
-    '.m4a': 'audio/mp4',
-    '.pdf': 'application/pdf'
-};
-
-function servirLeDepot() {
-    const serveur = http.createServer((req, res) => {
-        let rel = decodeURIComponent(req.url.split('?')[0].split('#')[0]);
-        if (rel.endsWith('/')) rel += 'index.html';
-
-        // Une adresse ne sort pas du dépôt : `path.resolve` avale les
-        // « .. » avant qu'on ne vérifie où l'on a atterri.
-        const cible = path.resolve(RACINE, '.' + rel);
-        if (!cible.startsWith(RACINE + path.sep)) {
-            res.writeHead(403).end();
-            return;
-        }
-
-        fs.readFile(cible, (err, buf) => {
-            if (err) {
-                res.writeHead(404, { 'Content-Type': 'text/plain' }).end('404');
-                return;
-            }
-            res.writeHead(200, { 'Content-Type': TYPES[path.extname(cible).toLowerCase()] || 'application/octet-stream' });
-            res.end(buf);
-        });
-    });
-
-    return new Promise((resolve) => {
-        // Port 0 : le système en choisit un de libre. Deux exécutions
-        // simultanées ne peuvent donc pas se marcher dessus.
-        serveur.listen(0, '127.0.0.1', () => resolve({ serveur, port: serveur.address().port }));
-    });
-}
+// Le PDF doit être fait de ce que voit un visiteur : la page est servie
+// en HTTP, par le petit serveur commun aux scripts (serveur-local.js).
+const { servir } = require('./serveur-local');
 
 // ────────────────────────────────────────────────────────────
 //  LA FABRICATION
 // ────────────────────────────────────────────────────────────
 (async () => {
     const { chromium } = chargerPlaywright();
-    const { serveur, port } = await servirLeDepot();
+    const { serveur, port } = await servir(RACINE);
     const adresse = `http://127.0.0.1:${port}/index.html`;
 
     let navigateur;
