@@ -3840,10 +3840,15 @@
             border-radius: 6px;
             font: 700 11px/1 Inter, sans-serif;
             color: rgb(var(--c-muted));
-        }
-
-        .dl-grille-mois.dl-an {
-            color: rgb(var(--c-gold-ink));
+            /* L'initiale prend la couleur de son mois — celle de son liseré
+               (--dl-mois-*) —, mêlée d'un quart de la couleur du texte : les
+               couleurs des liserés, faites pour un trait, n'ont que 3,3:1 ;
+               ce quart suffit à ce qu'une lettre de 11 px garde 4,5:1 dans
+               les deux thèmes (5,1:1 au pire), sans changer de teinte. Le
+               passage à la nouvelle année se lit dans les couleurs, qui
+               tournent à l'hiver, et dans les intercalaires (« Janvier
+               2027 ») : janvier n'a plus besoin de l'or qui le signalait. */
+            color: color-mix(in oklab, var(--dl-m) 75%, rgb(var(--c-text)));
         }
 
         .dl-m-court {
@@ -8001,9 +8006,11 @@
             h += mois.map(({ a, m }) => {
                 const lettres = `<span class="dl-m-lettre" aria-hidden="true">${DL_MOIS[m].charAt(0).toUpperCase()}</span><span class="dl-m-court" aria-hidden="true">${DL_MOIS_COURTS[m]}</span>`;
                 const cle = `${a}-${m + 1}`;
+                // L'initiale porte la couleur du mois, celle de son liseré.
+                const couleur = ` style="--dl-m:var(--dl-mois-${m + 1})"`;
                 return ouverts.has(cle)
-                    ? `<button type="button" class="dl-grille-mois${m === 0 ? ' dl-an' : ''}" data-dl-mois="${cle}" aria-label="${esc(`Aller à ${DL_MOIS[m]} ${a}`)}">${lettres}</button>`
-                    : `<span class="dl-grille-mois${m === 0 ? ' dl-an' : ''}">${lettres}</span>`;
+                    ? `<button type="button" class="dl-grille-mois" data-dl-mois="${cle}"${couleur} aria-label="${esc(`Aller à ${DL_MOIS[m]} ${a}`)}">${lettres}</button>`
+                    : `<span class="dl-grille-mois"${couleur}>${lettres}</span>`;
             }).join('');
             dlParSpectacle(datees).forEach(g => {
                 const s = g.s;

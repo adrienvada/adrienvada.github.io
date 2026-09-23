@@ -16,7 +16,8 @@
  *      autre site : une fois) ;
  *    · la fenêtre d'agenda d'un univers ouvert depuis le CV ;
  *    · l'onglet Dates : feuilles, intercalaires de mois et leur liseré
- *      (une couleur par mois), séances en cases (une date seule aussi),
+ *      (une couleur par mois, que reprennent les initiales de la saison
+ *      d'un regard), séances en cases (une date seule aussi),
  *      nom du spectacle qui mène à sa page, rangement par spectacle,
  *      sommaire qui mène aux dates, une image pour chaque représentation
  *      annoncée aux moteurs ; le carton « Prochainement », en tête du CV
@@ -310,15 +311,22 @@ function exige(condition, message) {
                 sonde.style.color = g ? `var(--dl-mois-${g.dataset.mois})` : '';
                 page.appendChild(sonde);
                 const attendue = getComputedStyle(sonde).color;
+                // Dans la saison d'un regard, les initiales des mois portent
+                // le même code couleur : toutes différentes, aucune restée grise.
+                sonde.style.color = 'rgb(var(--c-muted))';
+                const grise = getComputedStyle(sonde).color;
                 sonde.remove();
+                const initiales = [...document.querySelectorAll('#dates-sommaire .dl-grille-mois')].map((x) => getComputedStyle(x).color);
                 return {
                     trait: !!avant && avant.width === '3px' && avant.backgroundColor === attendue,
                     entete: !!entete && /inset/.test(getComputedStyle(entete).boxShadow),
-                    douze: couleurs.every(Boolean) && new Set(couleurs).size === 12
+                    douze: couleurs.every(Boolean) && new Set(couleurs).size === 12,
+                    initiales: initiales.length > 0 && !initiales.includes(grise) && new Set(initiales).size === initiales.length
                 };
             });
             exige(lisere.trait && lisere.entete && lisere.douze,
                 `le liseré des mois manque ou n’a pas la couleur de son mois : ${JSON.stringify(lisere)}`);
+            exige(lisere.initiales, 'les initiales des mois, dans la saison d’un regard, n’ont pas leur couleur');
 
             // L'agenda d'une case de série ouvre sa fenêtre.
             await p.locator('#upcoming-dates-container .dl--serie .dl-seance .dl-agenda').first().click();

@@ -997,7 +997,10 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   Les douze sont à la même clarté perçue (OKLCH, L = 0,63) : aucune ne domine,
   et chacune garde au moins 3,3:1 de contraste sur le fond clair comme sur le
   fond sombre. Rangé par spectacle, le liseré prend la couleur de la pièce
-  (`--dl-lisere`).
+  (`--dl-lisere`). **Les initiales des mois, dans la saison d'un regard,
+  portent le même code couleur**, mêlé d'un quart de la couleur du texte : une
+  lettre de 11 px doit garder 4,5:1, là où un trait se contente de 3:1 (5,1:1
+  au pire, dans les deux thèmes).
 - **Pas de carton « Prochainement » ici.** Il n'est qu'en tête du CV
   (`renderNextDate()`) : le jour, l'heure et le lieu, le nom du spectacle qui
   mène à sa page, « Réserver » et l'agenda ; sa date mène à l'onglet Dates.
