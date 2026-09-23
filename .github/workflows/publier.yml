@@ -79,12 +79,41 @@ jobs:
       #  node_modules de 300 Mo y ferait un passager clandestin de plus
       #  dans un site qui pèse déjà 67 Mo à distribuer. Le script sait
       #  trouver une installation globale (voir chargerPlaywright).
+      #
+      #  LA VERSION EST FIGÉE. « La dernière » changeait sous nos pieds :
+      #  une nouvelle version de Playwright ou de son Chromium pouvait
+      #  déplacer une coupure de page du CV sans qu'une ligne du dépôt
+      #  ait bougé. C'est celle avec laquelle le PDF versionné a été
+      #  vérifié ; on la monte à la main, en regardant le résultat.
+      #  `playwright install` est appelé directement, et non par npx :
+      #  npx irait chercher la dernière version de l'outil, qui
+      #  installerait un Chromium qui n'est pas celui de la bibliothèque.
       - name: Refaire le CV en PDF
         continue-on-error: true
         run: |
-          npm install -g playwright
-          npx playwright install --with-deps chromium
+          npm install -g playwright@1.56.1
+          playwright install --with-deps chromium
           node build/generer-cv-pdf.js
+
+      # ────────────────────────────────────────────────────────────
+      #  LA COPIE PUBLIÉE PERD SES COMMENTAIRES — PAS LE DÉPÔT
+      # ────────────────────────────────────────────────────────────
+      #  Les sources sont écrites pour être relues, et les commentaires
+      #  pèsent plus de la moitié d'index.html. Ils sont retirés de ce
+      #  qui part en ligne, et de rien d'autre : cette copie-ci est jetée
+      #  après le dépôt. Voir build/alleger-publication.js — chaque
+      #  fichier y est vérifié, puis les pages sont ouvertes dans le
+      #  Chromium de l'étape précédente ; au moindre doute, tout revient
+      #  à l'original.
+      #
+      #  `continue-on-error`, pour la même raison que le PDF : si l'outil
+      #  manque ou plante, on publie les fichiers tels qu'ils sont dans
+      #  le dépôt. Plus lourds, mais justes.
+      - name: Alléger les fichiers servis
+        continue-on-error: true
+        run: |
+          npm install -g html-minifier-terser@7.2.0 terser@5.44.1 clean-css@5.3.3
+          node build/alleger-publication.js
 
       - name: Empaqueter le site
         uses: actions/upload-pages-artifact@v3
