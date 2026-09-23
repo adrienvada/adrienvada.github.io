@@ -16,11 +16,13 @@
  *      autre site : une fois) ;
  *    · la fenêtre d'agenda d'un univers ouvert depuis le CV ;
  *    · l'onglet Dates : feuilles, intercalaires de mois, séances en
- *      cases, nom du spectacle qui mène à sa page, rangement par
- *      spectacle, sommaire qui mène aux dates ;
+ *      cases (une date seule aussi), nom du spectacle qui mène à sa
+ *      page, rangement par spectacle, sommaire qui mène aux dates, une
+ *      image pour chaque représentation annoncée aux moteurs ;
  *    · l'impression sans les pastilles ▶ ;
  *    · le site sans JavaScript ;
- *    · les pages spectacle (h1, <main>, données structurées) ;
+ *    · les pages spectacle (h1, <main>, données structurées, une image
+ *      pour chaque représentation) ;
  *    · le sitemap, qui doit annoncer toutes les pages spectacle.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
@@ -163,7 +165,7 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('l’onglet Dates : feuilles, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire', async () => {
+        await verifie('l’onglet Dates : feuilles, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire, une image par représentation', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 } });
             const p = await c.newPage();
             const erreurs = guette(p);
@@ -222,6 +224,31 @@ function exige(condition, message) {
             exige(parDate.reserver === 2, `${parDate.reserver} bouton(s) « Réserver » au lieu de deux`);
             exige(parDate.sommaire, 'le sommaire de la saison n’est pas là');
 
+            // Une date seule a sa case, comme chaque soir d'une série : son
+            // heure et « Réserver » s'y lisent au même endroit.
+            const seule = await p.evaluate(() => {
+                const l = [...document.querySelectorAll('#upcoming-dates-container .dl--seule')]
+                    .find((x) => /Spectacle de vérification/.test(x.querySelector('.dl-titre')?.textContent || ''));
+                return l ? {
+                    cases: l.querySelectorAll('.dl-seance').length,
+                    heure: l.querySelector('.dl-seance .dl-s-heure')?.textContent || '',
+                    reserver: !!l.querySelector('.dl-seance .dl-reserver')
+                } : null;
+            });
+            exige(seule && seule.cases === 1 && seule.heure === '20h00' && seule.reserver,
+                `une date seule n’a pas sa case (heure, « Réserver ») : ${JSON.stringify(seule)}`);
+
+            // Les représentations annoncées aux moteurs ont toutes une image,
+            // même celles d'un spectacle sans photo (la Search Console le
+            // relève) : ici, le spectacle fictif.
+            const evenements = await p.evaluate(() => {
+                const el = document.getElementById('events-jsonld');
+                const liste = el ? JSON.parse(el.textContent) : [];
+                return { n: liste.length, sansImage: liste.filter((e) => !e.image).map((e) => e.name) };
+            });
+            exige(evenements.n >= 2, `${evenements.n} représentation(s) annoncée(s) aux moteurs`);
+            exige(!evenements.sansImage.length, `représentation(s) sans image : ${evenements.sansImage.join(', ')}`);
+
             // Le nom d'un spectacle mène à sa page, sur sa ligne comme dans la
             // prochaine représentation ; sans page, pas de lien, jamais un
             // lien mort : chaque adresse visée doit répondre.
@@ -246,7 +273,7 @@ function exige(condition, message) {
             exige(!liens.morts.length, `lien(s) mort(s) : ${liens.morts.join(', ')}`);
 
             // L'agenda d'une case de série ouvre sa fenêtre.
-            await p.locator('#upcoming-dates-container .dl-seance .dl-agenda').first().click();
+            await p.locator('#upcoming-dates-container .dl--serie .dl-seance .dl-agenda').first().click();
             await p.waitForTimeout(300);
             exige(await p.evaluate(() => /vérification/.test(document.getElementById('cal-modal-title')?.textContent || '')),
                 'la fenêtre d’agenda ne s’ouvre pas depuis une case de séance');
@@ -308,7 +335,7 @@ function exige(condition, message) {
         const dossiers = fs.readdirSync(path.join(RACINE, 'spectacles'), { withFileTypes: true })
             .filter((e) => e.isDirectory()).map((e) => e.name);
 
-        await verifie(`les ${dossiers.length} pages spectacle ont leur h1, leur <main> et des données structurées lisibles`, async () => {
+        await verifie(`les ${dossiers.length} pages spectacle ont leur h1, leur <main> et des données structurées lisibles, chaque représentation avec son image`, async () => {
             const c = await visiteur();
             for (const slug of dossiers) {
                 const p = await c.newPage();
@@ -316,19 +343,28 @@ function exige(condition, message) {
                 await p.goto(`${base}/spectacles/${slug}/`, { waitUntil: 'load' });
                 const etat = await p.evaluate(() => {
                     let jsonld = 0, illisibles = 0;
+                    const sansImage = [];
+                    // Tout objet du bloc, à toute profondeur (tableaux, @graph).
+                    const parcourir = (o) => {
+                        if (Array.isArray(o)) return o.forEach(parcourir);
+                        if (!o || typeof o !== 'object') return;
+                        if (o['@type'] === 'TheaterEvent' && !o.image) sansImage.push(o.startDate);
+                        Object.values(o).forEach(parcourir);
+                    };
                     document.querySelectorAll('script[type="application/ld+json"]').forEach((s) => {
                         jsonld++;
-                        try { JSON.parse(s.textContent); } catch (e) { illisibles++; }
+                        try { parcourir(JSON.parse(s.textContent)); } catch (e) { illisibles++; }
                     });
                     return {
                         h1: document.querySelectorAll('h1').length,
                         main: document.querySelectorAll('main').length,
-                        jsonld, illisibles
+                        jsonld, illisibles, sansImage
                     };
                 });
                 exige(etat.h1 === 1, `${slug} : ${etat.h1} titre(s) h1`);
                 exige(etat.main === 1, `${slug} : ${etat.main} élément(s) <main>`);
                 exige(etat.jsonld > 0 && !etat.illisibles, `${slug} : données structurées absentes ou illisibles`);
+                exige(!etat.sansImage.length, `${slug} : représentation(s) sans image (${etat.sansImage.join(', ')})`);
                 exige(!erreurs.length, `${slug} : ${erreurs.join(' | ')}`);
                 await p.close();
             }

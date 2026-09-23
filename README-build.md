@@ -56,14 +56,15 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   CV (une représentation fictive est glissée dans les dates le temps du test :
   il ne dépend pas de la saison) ;
 - l'onglet Dates : feuilles d'éphéméride, intercalaires de mois, séances en
-  cases (et pas de « Réserver » sur une séance scolaire), nom du spectacle qui
-  mène à sa page (et aucun lien pour un spectacle sans page, aucun lien mort),
-  rangement par spectacle retenu, sommaire qui mène à la bonne ligne — sur une
-  saison fictive, elle aussi ;
+  cases, une date seule comprise (et pas de « Réserver » sur une séance
+  scolaire), nom du spectacle qui mène à sa page (et aucun lien pour un
+  spectacle sans page, aucun lien mort), rangement par spectacle retenu,
+  sommaire qui mène à la bonne ligne, une image pour chaque représentation
+  annoncée aux moteurs — sur une saison fictive, elle aussi ;
 - les pastilles ▶ ne s'impriment pas ;
 - sans JavaScript, le site reste lisible ;
 - chaque page spectacle a son `h1`, son `<main>` et des données structurées
-  lisibles ;
+  lisibles, où chaque représentation a son image ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
 Il tourne sur **chaque demande de fusion** (`.github/workflows/verifier.yml`) :
@@ -971,8 +972,8 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   même lieu, soirées rapprochées) s'écrit de la même façon : une **feuille
   d'éphéméride** (le mois dans un bandeau à la couleur du spectacle, le
   quantième, le jour ; une série empile ses feuilles), la **date en toutes
-  lettres**, le titre et le lieu. Une date seule garde ses boutons dans la
-  ligne ; une série donne **une case par séance**, avec son heure,
+  lettres**, le titre et le lieu. Dessous, **une case par séance** — une date
+  seule a la sienne, comme chaque soir d'une série —, avec son heure,
   « Réserver » et l'agenda. Une séance scolaire n'a jamais de « Réserver ».
 - **Deux rangements.** « Par date » range les lignes sous un intercalaire par
   mois ; « Par spectacle », sous chaque pièce, avec sa photo. L'intercalaire
@@ -1349,6 +1350,15 @@ large, rien ne change : c'est l'original qui est servi.
   structurée (ville, pays, département), organisateur, billetterie, fin
   déduite de la durée. Les **séances scolaires** n'y figurent pas : elles ne
   sont pas ouvertes au public.
+- **L'image** d'une représentation est la photo du spectacle (son affiche, ou
+  la première photo de son montage). Un spectacle sans photo prend celle de
+  l'interprète, `og-adrien-vada.jpg`, la photo de partage du site : la Search
+  Console relevait « Champ "image" manquant ».
+- **Ni prix ni devise** dans l'offre de billetterie : la base des dates n'en a
+  pas, et les inventer serait pire que le silence. La Search Console relève
+  « Champ "price" manquant » et « "priceCurrency" manquant » : ce sont des
+  suggestions, pas des erreurs, et l'événement s'affiche quand même. Pour
+  les faire taire, il faudrait un tarif par date dans `/admin/`.
 - Le titre et la description de chaque page spectacle sont écrits pour une
   liste de résultats : « Bérénice · Compagnie Crescite · Adrien Vada », puis
   « Bérénice, Compagnie Crescite — avec Adrien Vada (Antiochus). Rome, an

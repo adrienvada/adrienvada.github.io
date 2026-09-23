@@ -3225,9 +3225,9 @@
         }
 
         /* LA LIGNE. Téléphone : la feuille, et à côté la date, le titre, le
-           lieu ; dessous, les séances d'une série sur toute la largeur, ou
-           les boutons d'une date seule sous son texte. Grand écran : les
-           séances passent à droite, sur la même ligne. */
+           lieu ; dessous, les cases des séances sur toute la largeur — une
+           date seule a la sienne, comme chaque soir d'une série. Grand
+           écran : les cases passent à droite, sur la même ligne. */
         .dl {
             display: grid;
             grid-template-columns: 54px minmax(0, 1fr);
@@ -3244,13 +3244,8 @@
             border-bottom: 0;
         }
 
-        .dl--serie .dl-droite {
+        .dl-droite {
             grid-column: 1 / -1;
-        }
-
-        .dl--seule .dl-droite {
-            grid-column: 2;
-            margin-top: -0.25rem;
         }
 
         /* La ligne visée depuis le sommaire s'éclaire un instant. */
@@ -3274,15 +3269,8 @@
                 align-items: start;
             }
 
-            .dl--serie .dl-droite,
-            .dl--seule .dl-droite {
+            .dl-droite {
                 grid-column: 3;
-                margin-top: 0;
-            }
-
-            .dl--seule .dl-droite {
-                align-self: center;
-                justify-self: end;
             }
         }
 
@@ -3358,12 +3346,6 @@
         .dl-quand {
             font: 600 13px/1.35 Inter, sans-serif;
             color: rgb(var(--c-gold-ink));
-        }
-
-        .dl-heure--flou {
-            font-style: italic;
-            font-weight: 500;
-            color: rgb(var(--c-muted));
         }
 
         .dl-proche {
@@ -3492,9 +3474,10 @@
             font-size: 14px;
         }
 
-        /* LES SÉANCES D'UNE SÉRIE : une case chacune, deux par ligne au
-           téléphone. Une séance scolaire a un bord en pointillé : elle
-           n'est pas ouverte au public. */
+        /* LES SÉANCES : une case chacune, pour une date seule comme pour
+           chaque soir d'une série ; deux par ligne au téléphone. Une séance
+           scolaire a un bord en pointillé : elle n'est pas ouverte au
+           public. */
         .dl-seances {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -7770,8 +7753,9 @@
         const dlAgenda = (p, e) => `<button type="button" class="dl-agenda" data-cal-index="${p.cal}"
             aria-label="${esc(`Ajouter au calendrier : ${e.titre}, ${dlQuandComplet(p)}`)}"><svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button>`;
 
-        // Une case de séance. Dans une série d'un seul jour (deux horaires
-        // le même soir), la case ne répète pas le jour : l'heure suffit.
+        // Une case de séance. Pour une date seule, ou une série d'un seul
+        // jour (deux horaires le même soir), la case ne répète pas le jour :
+        // l'heure suffit.
         function dlSeance(p, e) {
             const sansJour = e.jours.length === 1 && p.jour;
             const jour = p.jour
@@ -7791,21 +7775,19 @@
             const p = e.perfs[0];
             const avecAnnee = vue === 'spectacle' && e.debut && e.debut.a !== new Date().getFullYear();
             const quand = e.debut ? dlCap(dlDateEnLettres(e.jours, avecAnnee)) : (p.dateLabel || 'Date à préciser');
-            const heure = e.serie ? ''
-                : p.heure ? `<span class="dl-heure"> · ${esc(p.heure)}</span>`
-                    : '<span class="dl-heure dl-heure--flou"> · horaire à confirmer</span>';
             // « Ce soir », « Demain » : les deux jours où l'information décide
             // de quelque chose (même règle que le bandeau « Prochainement »).
             const proche = e.debut ? relativeDayLabel(e.debut.t, '') : '';
             const titre = vue === 'date'
                 ? `<h5 class="dl-titre">${dlVersPage(e.spectacle, esc(e.titre))}${e.show.subtitle ? ` <span class="dl-sous">(${esc(e.show.subtitle)})</span>` : ''}</h5>`
                 : '';
-            const droite = e.serie
-                ? `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}</ul>`
-                : `<div class="dl-actions">${dlAction(p, e, false)}${dlAgenda(p, e)}</div>`;
+            // Chaque séance a sa case, une date seule comme chaque soir d'une
+            // série : l'heure, « Réserver » et l'agenda s'y lisent toujours
+            // au même endroit.
+            const droite = `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}</ul>`;
             return `<article class="dl ${e.serie ? 'dl--serie' : 'dl--seule'}" id="dl-e${e.k}" style="${dlStyle(e.spectacle)}">`
                 + dlFeuille(e)
-                + `<div class="dl-corps"><p class="dl-quand">${proche ? `<span class="dl-proche">${esc(proche)}</span>` : ''}${esc(quand)}${heure}</p>`
+                + `<div class="dl-corps"><p class="dl-quand">${proche ? `<span class="dl-proche">${esc(proche)}</span>` : ''}${esc(quand)}</p>`
                 + titre
                 + `<p class="dl-lieu"><svg class="ico" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg>${esc(e.show.location || '')}</p></div>`
                 + `<div class="dl-droite">${droite}</div></article>`;
