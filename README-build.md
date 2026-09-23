@@ -55,6 +55,10 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - « Ajouter au calendrier » ouvre sa fenêtre dans un univers ouvert depuis le
   CV (une représentation fictive est glissée dans les dates le temps du test :
   il ne dépend pas de la saison) ;
+- l'onglet Dates : feuilles d'éphéméride, intercalaires de mois, séances en
+  cases (et pas de « Réserver » sur une séance scolaire), rangement par
+  spectacle retenu, sommaire qui mène à la bonne ligne — sur une saison
+  fictive, elle aussi ;
 - les pastilles ▶ ne s'impriment pas ;
 - sans JavaScript, le site reste lisible ;
 - chaque page spectacle a son `h1`, son `<main>` et des données structurées
@@ -957,6 +961,36 @@ passées » : une représentation reste dans « prochaines dates » toute la
 journée où elle a lieu, puis rejoint les archives le lendemain. `archives`
 ne sert qu'aux saisons antérieures, conservées à la main dans `dates.js`.
 
+### L'onglet Dates : une ligne, deux rangements, un sommaire
+
+Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
+`dl…()` juste au-dessus dessinent tout, et leur en-tête explique pourquoi.
+
+- **La ligne.** Chaque entrée (une date seule, ou une série : même spectacle,
+  même lieu, soirées rapprochées) s'écrit de la même façon : une **feuille
+  d'éphéméride** (le mois dans un bandeau à la couleur du spectacle, le
+  quantième, le jour ; une série empile ses feuilles), la **date en toutes
+  lettres**, le titre et le lieu. Une date seule garde ses boutons dans la
+  ligne ; une série donne **une case par séance**, avec son heure,
+  « Réserver » et l'agenda. Une séance scolaire n'a jamais de « Réserver ».
+- **Deux rangements.** « Par date » range les lignes sous un intercalaire par
+  mois ; « Par spectacle », sous chaque pièce, avec sa photo. L'intercalaire
+  reste accroché sous la barre d'onglets pendant qu'on parcourt son mois ou
+  sa pièce. Le choix du visiteur est retenu (`localStorage`, clé
+  `av.datesVue`).
+- **Le sommaire**, en tête : la prochaine représentation, puis la saison d'un
+  regard — les spectacles en lignes, les mois en colonnes. Il ne filtre rien :
+  un mois, un spectacle ou un rond **mènent** aux lignes qu'ils résument. Il se
+  retire pendant une recherche, où seule la liste compte.
+
+Rien de tout cela ne se saisit : **la couleur, le genre, le sous-titre et la
+photo d'un spectacle viennent de son univers** (`univers.js`), retrouvé par
+son titre comme pour le CV. Un spectacle sans univers prend l'or du site et,
+rangé par spectacle, ses initiales à la place d'une photo. La photo est la
+**couverture** de l'univers — la première de son montage — en 240 px
+(`<n>-240.webp`, fabriquée par `build/variantes-images.py`) ; si elle manque,
+la page se rabat sur la version de 640 px.
+
 ### Comment ça tient — et ce qui peut lâcher
 
 - **`dates-live.js`** interroge la table au chargement de l'accueil. Si elle
@@ -1275,6 +1309,7 @@ sous ~300 Ko.
 | `ressources/images/miniatures/bande-demo-camera.{jpg,webp}` | miniature de la bande démo |
 | `ressources/images/galerie/vignettes/<nom>-{320,640,960}.webp` | vignettes du book — `python3 build/variantes-images.py` |
 | `ressources/images/univers/<slug>/<nom>-{640,1280}.webp` (et `-1920` pour un plein cadre) | versions allégées des photos d'univers, servies aux écrans de moins de 900 px et au répertoire — même script, lancé aussi par `prepare-univers-photos.py` |
+| `ressources/images/univers/<slug>/<nom>-240.webp` | la **couverture** de chaque univers (la première photo de son montage), en vignette dans l'onglet Dates rangé par spectacle — même script |
 
 Les **sources** de ces images restent dans le dépôt et ne sont plus servies aux
 visiteurs : `profil2_1080x1080.png` (avatar) et `profil_1000x1000.jpg`

@@ -15,15 +15,18 @@
  *    · la règle de l'ouverture (lien direct : pas de rideau ; depuis un
  *      autre site : une fois) ;
  *    · la fenêtre d'agenda d'un univers ouvert depuis le CV ;
+ *    · l'onglet Dates : feuilles, intercalaires de mois, séances en
+ *      cases, rangement par spectacle, sommaire qui mène aux dates ;
  *    · l'impression sans les pastilles ▶ ;
  *    · le site sans JavaScript ;
  *    · les pages spectacle (h1, <main>, données structurées) ;
  *    · le sitemap, qui doit annoncer toutes les pages spectacle.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
- *  dates sont coupées (le site sait s'en passer). Une représentation
- *  fictive est glissée dans les dates le temps du test de l'agenda :
- *  il ne dépend donc pas de la saison en cours.
+ *  dates sont coupées (le site sait s'en passer). Des représentations
+ *  fictives sont glissées dans les dates le temps des tests de l'agenda
+ *  et de l'onglet Dates : ils ne dépendent donc pas de la saison en
+ *  cours.
  *
  *      cd build && npm ci && npm run navigateur   (une fois)
  *      npm --prefix build run verifier
@@ -155,6 +158,87 @@ function exige(condition, message) {
                 const m = document.querySelector('#show-universe #u-cal-modal');
                 return !!m && !m.hidden;
             }), 'la fenêtre d’agenda ne s’ouvre pas');
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        await verifie('l’onglet Dates : feuilles, séances en cases, rangement par spectacle, sommaire', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await p.waitForTimeout(500);
+            // Une saison fictive, à un mois d'ici : une date seule, puis une
+            // série de deux soirs dont la première séance est scolaire. Elle
+            // porte un lien de billetterie : une séance scolaire ne doit pas
+            // proposer « Réserver » pour autant.
+            await p.evaluate(() => {
+                const iso = (n) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + n);
+                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                };
+                const titre = 'Spectacle de vérification';
+                SHOW_DATA.upcoming = [
+                    {
+                        type: 'single', title: titre, location: 'Théâtre de vérification (76)', city: 'Rouen',
+                        dateLabel: iso(30), icsDate: iso(30), time: '20h00', bookingUrl: 'https://example.org/billets', isSchool: false
+                    },
+                    {
+                        type: 'series', id: 'panel-verification', title: titre, location: 'Salle de vérification (76)', city: 'Rouen',
+                        dateLabel: iso(40), shows: [
+                            { dateLabel: iso(40), icsDate: iso(40), time: '14h00', bookingUrl: 'https://example.org/billets', isSchool: true },
+                            { dateLabel: iso(41), icsDate: iso(41), time: '20h00', bookingUrl: 'https://example.org/billets', isSchool: false }
+                        ]
+                    }
+                ];
+                buildFilterChips();
+                renderDates();
+            });
+            const parDate = await p.evaluate(() => {
+                const liste = document.getElementById('upcoming-dates-container');
+                const serie = liste.querySelector('.dl--serie');
+                return {
+                    intercalaires: liste.querySelectorAll('.dl-intercalaire h4').length,
+                    feuilles: liste.querySelectorAll('.dl-feuille .dl-num').length,
+                    cases: serie ? serie.querySelectorAll('.dl-seance').length : 0,
+                    scolaireSansReserver: serie ? !serie.querySelector('.dl-seance--scolaire .dl-reserver') : false,
+                    reserver: liste.querySelectorAll('.dl-reserver').length,
+                    sommaire: !document.getElementById('dates-sommaire').hidden
+                        && !!document.querySelector('#dates-sommaire .dl-grille [data-dl-aller]')
+                };
+            });
+            exige(parDate.intercalaires >= 1, 'aucun intercalaire de mois');
+            exige(parDate.feuilles === 2, `${parDate.feuilles} feuille(s) d’éphéméride pour deux lignes`);
+            exige(parDate.cases === 2, `la série montre ${parDate.cases} case(s) au lieu de deux`);
+            exige(parDate.scolaireSansReserver, 'une séance scolaire propose « Réserver »');
+            exige(parDate.reserver === 2, `${parDate.reserver} bouton(s) « Réserver » au lieu de deux`);
+            exige(parDate.sommaire, 'le sommaire de la saison n’est pas là');
+
+            // L'agenda d'une case de série ouvre sa fenêtre.
+            await p.locator('#upcoming-dates-container .dl-seance .dl-agenda').first().click();
+            await p.waitForTimeout(300);
+            exige(await p.evaluate(() => /vérification/.test(document.getElementById('cal-modal-title')?.textContent || '')),
+                'la fenêtre d’agenda ne s’ouvre pas depuis une case de séance');
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(300);
+
+            // Par spectacle, et le choix est retenu.
+            await p.click('[data-dates-vue="spectacle"]');
+            const parSpectacle = await p.evaluate(() => ({
+                entetes: [...document.querySelectorAll('#upcoming-dates-container .dl-intercalaire--spectacle h4')].map((h) => h.textContent),
+                retenu: localStorage.getItem('av.datesVue')
+            }));
+            exige(parSpectacle.entetes.join() === 'Spectacle de vérification',
+                `rangement par spectacle : ${JSON.stringify(parSpectacle.entetes)}`);
+            exige(parSpectacle.retenu === 'spectacle', 'le rangement choisi n’est pas retenu');
+
+            // Un rond du sommaire ramène par date, jusqu'à sa ligne.
+            await p.locator('#dates-sommaire [data-dl-aller]').first().click();
+            await p.waitForTimeout(300);
+            exige(await p.evaluate(() => document.querySelector('[data-dates-vue][aria-pressed="true"]').dataset.datesVue === 'date'
+                && !!document.querySelector('#upcoming-dates-container .dl.dl-eclaire')),
+                'le sommaire ne mène pas à la ligne visée');
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
         });
