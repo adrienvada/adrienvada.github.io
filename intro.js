@@ -240,7 +240,15 @@
     //  hors-ligne à partir d'un modèle 3D fourni, à ne pas éditer à la main).
     // ════════════════════════════════════════════════════════════
     var particles = [];
-    var W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+    // LA DENSITÉ EST PLAFONNÉE À 1,5. Sur un portable « Retina » (densité 2),
+    // le canevas plein écran faisait 2 560 × 1 800 pixels, et la nappe le
+    // relit puis le recouvre en entier à chaque image : deux passes de
+    // 4,6 millions de pixels pour une poussière qui dérive, floue par
+    // nature. 28 images par seconde au lieu de 60 — 178 manquées sur 196.
+    // À 1,5, il y a moitié moins de pixels et la poussière ne se distingue
+    // pas. Et si la carte graphique peine encore, la densité descend
+    // d'elle-même (voir « La carte graphique aussi a un budget »).
+    var W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 1.5);
     var pointer = { x: -9999, y: -9999, nx: 0, active: false };
     var rafId = null;
     var running = false;
@@ -705,6 +713,34 @@
         ctx.globalCompositeOperation = 'source-over';
     }
 
+    // ── LA CARTE GRAPHIQUE AUSSI A UN BUDGET ─────────────────────────
+    //  L'auto-régulation chronomètre le DESSIN — le travail du processeur.
+    //  Elle ne voyait pas celui de la carte graphique : les deux passes
+    //  plein écran de la nappe, le canevas posé sur la page. Sur un grand
+    //  écran dense, c'est là que les images se perdaient, et le nuage
+    //  restait entier puisque le dessin, lui, tenait son budget.
+    //
+    //  On regarde donc aussi LE RYTHME RÉEL : l'écart entre deux images
+    //  dessinées. La poussière vise 30 images par seconde (33 ms) ; si l'écart
+    //  dépasse durablement 48 ms alors que le dessin tient son budget, c'est
+    //  la carte graphique qui peine — on baisse la densité du canevas d'un
+    //  cran (0,25), jusqu'à 1. Un cran à la fois, et le temps de remesurer
+    //  entre deux : on ne dégrade pas sur un hoquet.
+    var ecartLisse = 0, dernierDessin = 0, prochainJugement = 0;
+
+    function jugerLeRythme(now) {
+        if (dernierDessin) ecartLisse += ((now - dernierDessin) - ecartLisse) * 0.1;
+        dernierDessin = now;
+        if (!prochainJugement) { prochainJugement = now + 1200; return; }
+        if (now < prochainJugement || DPR <= 1) return;
+        if (ecartLisse > 48 && coutLisse <= BUDGET_MS) {
+            DPR = Math.max(1, DPR - 0.25);
+            resize();
+            ecartLisse = 34;
+            prochainJugement = now + 1500;
+        }
+    }
+
     var lastT = null;
     // Une poussière dérive lentement : 30 images par seconde lui suffisent,
     // et c'est la moitié du travail. On ne compte pas les images — on
@@ -721,6 +757,7 @@
 
         var t0 = performance.now();
         stepAndDraw(now, dt > 0.05 ? 0.05 : dt, now / 1000);
+        jugerLeRythme(now);
 
         // AUTO-RÉGULATION. On chronomètre le dessin et on ajuste le nombre
         // de grains pour tenir le budget. La mesure est lissée : une image
@@ -742,6 +779,10 @@
         if (running || !ctx) return;
         running = true;
         lastT = null;
+        // Une reprise (onglet revenu au premier plan) ne compte pas comme
+        // une image manquée.
+        dernierDessin = 0;
+        prochainJugement = 0;
         rafId = requestAnimationFrame(loop);
     }
 
@@ -1180,6 +1221,7 @@
             sealRingInner.style.strokeDashoffset = '0';
         });
         // Invite discrète au clic, une fois le tampon posé
+        // (trois respirations, voir introSealPulse : rien ne bat sans fin).
         setTimeout(function () {
             if (!isDismissed) ctaEl.classList.add('intro-cta-pulse');
         }, SEAL_DRAW_MS);
@@ -1215,9 +1257,6 @@
             });
         }
 
-        overlay.classList.add('intro-out');
-        document.body.classList.remove('modal-open');
-
         // AU CLAVIER, LE FOCUS SE POSE TOUJOURS SUR L'EN-TÊTE. La première
         // touche lève le rideau ET fait son effet ordinaire : une tabulation
         // amène le focus sur « Passer »… qui disparaît avec le rideau. Le
@@ -1226,9 +1265,10 @@
         // que ce soit : on sait donc déjà où il faudra reposer le focus.
         var focusWasInside = overlay.contains(document.activeElement) ||
             !!(e && e.type === 'keydown');
-        setTimeout(function () {
+        function lever() {
             stopParticleLoop();
             overlay.hidden = true;
+            document.body.classList.remove('modal-open');
             if (focusWasInside) {
                 var header = document.querySelector('header');
                 if (header) {
@@ -1240,7 +1280,54 @@
                     }, { once: true });
                 }
             }
-        }, FADE_MS);
+        }
+
+        if (ouvrirEnIris()) return;
+
+        overlay.classList.add('intro-out');
+        document.body.classList.remove('modal-open');
+        setTimeout(lever, FADE_MS);
+
+        // ── LE RIDEAU S'OUVRE EN IRIS, LE NOM REJOINT L'EN-TÊTE ──
+        //  C'était un fondu sur une page déjà installée : le nom disparaissait
+        //  avec le noir, et on le retrouvait en haut de la page sans avoir
+        //  vu qu'il s'agissait du même. Désormais la page s'ouvre en cercle
+        //  depuis le sceau — l'iris d'un projecteur qu'on ouvre — et
+        //  « Adrien Vada » quitte le centre de la scène pour aller se poser
+        //  à sa place dans l'en-tête. Par une View Transition : deux images,
+        //  le rideau et la page, et le nom qui voyage de l'une à l'autre.
+        //  Le nom ne voyage que s'il est à l'écran (« Passer » au milieu du
+        //  tambour : l'iris seul). Navigateur sans View Transitions : le
+        //  fondu d'avant.
+        function ouvrirEnIris() {
+            if (typeof document.startViewTransition !== 'function' || reduceMotion || document.hidden) return false;
+            var racine = document.documentElement;
+            var titre = document.querySelector('#en-tete h1');
+            var sceau = document.getElementById('intro-seal');
+            var r = (sceauMontre && sceau ? sceau : overlay).getBoundingClientRect();
+            var x = r.left + r.width / 2, y = r.top + r.height / 2;
+            var rayon = Math.sqrt(Math.pow(Math.max(x, innerWidth - x), 2) + Math.pow(Math.max(y, innerHeight - y), 2));
+            var nomVu = !!(titre && nameFadeEl && parseFloat(getComputedStyle(nameFadeEl).opacity) > 0.5);
+            if (nomVu) nameFadeEl.style.viewTransitionName = 'nom-adrien';
+            racine.classList.add('vt-rideau');
+            var passage = document.startViewTransition(function () {
+                if (nomVu) {
+                    nameFadeEl.style.viewTransitionName = '';
+                    titre.style.viewTransitionName = 'nom-adrien';
+                }
+                lever();
+            });
+            passage.ready.then(function () {
+                racine.animate({
+                    clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + rayon + 'px at ' + x + 'px ' + y + 'px)']
+                }, { duration: 1000, easing: 'cubic-bezier(.65, 0, .35, 1)', pseudoElement: '::view-transition-new(root)' });
+            }).catch(function () { });
+            passage.finished.catch(function () { }).then(function () {
+                if (titre) titre.style.viewTransitionName = '';
+                racine.classList.remove('vt-rideau');
+            });
+            return true;
+        }
     }
 
     skipBtn.addEventListener('click', dismiss);
@@ -1248,11 +1335,19 @@
     // sceau une fois qu'il est apparu — fait disparaître l'intro. Avant que
     // le sceau soit là, rien n'ouvre automatiquement le site : il faut agir.
     overlay.addEventListener('click', dismiss);
-    // Toute interaction clavier saute directement l'intro (Tab, Entrée, Échap…)
-    // pour ne jamais laisser un utilisateur au clavier bloqué derrière le voile.
+    // AU CLAVIER, LES TOUCHES QUI VEULENT DIRE « ALLER AU SITE » lèvent le
+    // rideau : Échap, Entrée, Espace, Tab, et celles qui font défiler. Pas
+    // n'importe laquelle : Maj ou Ctrl enfoncés seuls — le début d'un
+    // raccourci, un lecteur d'écran qui prend la parole — le fermaient
+    // aussi, et l'ouverture disparaissait sans qu'on l'ait demandé.
+    // Personne n'est bloqué pour autant : Tab reste dans la liste.
     // dismiss() est idempotent (protégé par isDismissed), donc pas besoin de
     // retirer l'écouteur explicitement.
-    document.addEventListener('keydown', dismiss);
+    var TOUCHES_SORTIE = /^(Escape|Esc|Enter| |Spacebar|Tab|ArrowDown|ArrowUp|PageDown|PageUp|Home|End)$/;
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey || e.metaKey || e.altKey || !TOUCHES_SORTIE.test(e.key)) return;
+        dismiss(e);
+    });
 
     // Le décor (particules) est facultatif : s'il ne peut pas démarrer tout de
     // suite — onglet en arrière-plan, mise en page pas encore faite, dimensions
@@ -1273,6 +1368,13 @@
     }
 
     function start() {
+        // « Passer » a déjà été pressé — le rideau est levé, par dismiss() si
+        // ce fichier était déjà là, par index.html sinon (voir __introPassee).
+        // Démarrer quand même, c'était relancer la séquence derrière un
+        // rideau fermé, et reposer le verrou `modal-open` que personne ne
+        // retirerait plus : la page ne défilait plus, et les animations du
+        // CV ne partaient jamais.
+        if (isDismissed || window.__introPassee) return;
         if (reduceMotion) {
             // Filet de sécurité si le CSS n'a pas pu masquer l'overlay à temps
             dismiss();

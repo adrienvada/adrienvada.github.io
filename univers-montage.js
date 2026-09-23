@@ -174,11 +174,21 @@ const UniversMontage = (function () {
         };
     }
 
+    //  LA CÉSURE. Un alexandrin se lit en deux souffles : la sixième
+    //  syllabe marque une pause. Elle s'écrit dans les données par une barre
+    //  entourée d'espaces — 'Que le jour recommence | et que le jour
+    //  finisse' — et devient ici une marque discrète entre les deux
+    //  hémistiches. C'est elle que la lumière respecte en écrivant le vers
+    //  (voir ecrireALaLumiere dans univers.js) : elle s'y arrête, puis
+    //  reprend. La barre ne s'affiche jamais telle quelle.
+    const CESURE = /\s+\|\s+/;
+
     function revealWords(value) {
         const lines = toLines(value);
         return lines.map(line => {
-            const words = line.split(/[^\S\u00A0]+/).filter(Boolean)
-                .map(w => `<span class="u-rw">${escape(w)}</span>`).join(' ');
+            const moities = line.split(CESURE).map(moitie => moitie.split(/[^\S\u00A0]+/).filter(Boolean)
+                .map(w => `<span class="u-rw">${escape(w)}</span>`).join(' '));
+            const words = moities.filter(Boolean).join(' <span class="u-cesure" aria-hidden="true"></span> ');
             return `<span class="u-line">${words || '&nbsp;'}</span>`;
         }).join('');
     }
@@ -189,7 +199,7 @@ const UniversMontage = (function () {
     // page déjà calculée, ce qui n'est pas garanti au moment où le panneau
     // s'ouvre, et une mesure qui échoue rend zéro sans le dire.
     function longestLine(value) {
-        return toLines(value).reduce((m, l) => Math.max(m, l.length), 0) || 1;
+        return toLines(value).reduce((m, l) => Math.max(m, l.replace(CESURE, ' ').length), 0) || 1;
     }
 
     function photoSrc(uni, n) {
@@ -254,32 +264,50 @@ const UniversMontage = (function () {
         return '';
     }
 
-    function figureHtml(ph, layout, index, title, eager, over) {
+    //  LA COPIE FLOUE. Chaque photo du montage a une jumelle floutée une
+    //  fois pour toutes par build/variantes-images.py (…-flou.webp, 1 à 3 ko).
+    //  La mise au point est un fondu de l'une à l'autre (voir .u-flou dans
+    //  univers.css) : le navigateur ne calcule plus de flou à chaque image,
+    //  il mélange deux photos. Et comme la copie pèse cent fois moins que
+    //  l'original, c'est elle qu'on voit d'abord pendant qu'il arrive.
+    function flouSrc(src) {
+        return String(src).replace(/\.jpg$/, '-flou.webp');
+    }
+
+    function figureHtml(ph, layout, index, title, eager, over, rang) {
         const cap = ph.caption || '';
         // UNE PHOTO SANS LÉGENDE GARDE UN NOM À ELLE. Elle prenait le titre
-        // du spectacle : neuf boutons « Agrandir : Fulguré.e.s » à la suite,
+        // du spectacle : neuf boutons « Agrandir : Fulguré.e.s » à la suite,
         // qu'un lecteur d'écran ne distinguait pas. Son rang les départage.
         const nom = cap || `${title}, photo ${index + 1}`;
-        return `<figure class="u-fig u-fig--${layout}" style="--i:${index}">
-            <button type="button" class="u-fig-media" data-u-zoom="${index}"
-                    aria-label="Agrandir : ${escape(nom)}">
-                ${pictureHtml(ph.src, layout === 'plein' ? 'plein' : 'groupe',
-                    `alt="${escape(nom)}" ${ph.pos ? `style="object-position:${ph.pos}"` : ''}
-                     loading="${eager ? 'eager' : 'lazy'}" decoding="async"`)}
+        // La profondeur d'une vignette dans son groupe : 1, 1,9, 2,8. C'est
+        // ce décalage — quelques pour cent de glissement de plus ou de moins
+        // dans son cadre — qui donne du relief à une composition plate.
+        const prof = layout === 'plein' ? '' : `;--prof:${(1 + ((rang || 0) % 3) * 0.9).toFixed(1)}`;
+        return `<figure class="u-fig u-fig--${layout} rg-vue" style="--i:${index}${prof}">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="${index}"
+                    aria-label="Agrandir : ${escape(nom)}">
+                <span class="u-fig-point rg-k">
+                    ${pictureHtml(ph.src, layout === 'plein' ? 'plein' : 'groupe',
+                        `class="u-fig-img rg-k" alt="${escape(nom)}" ${ph.pos ? `style="object-position:${ph.pos}"` : ''}
+                         loading="${eager ? 'eager' : 'lazy'}" decoding="async"`)}
+                    <img class="u-flou rg-k" src="${escape(flouSrc(ph.src))}" alt="" aria-hidden="true" decoding="async"${ph.pos ? ` style="object-position:${ph.pos}"` : ''}>
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             ${over || ''}
-            ${cap ? `<figcaption class="u-cap"><span>${escape(cap)}</span></figcaption>` : ''}
+            ${cap ? `<figcaption class="u-cap rg-vue"><span class="rg-k">${escape(cap)}</span></figcaption>` : ''}
         </figure>`;
     }
 
-    // Incrustation : du texte POSÉ SUR la photo. Réservé au plein cadre —
-    // sur une vignette de groupe il couvrirait l'image entière.
+    // Incrustation : du texte POSÉ SUR la photo — ou sur tout un groupe,
+    // qu'elle traverse alors d'un bord à l'autre (voir .u-group > .u-over).
+    // Elle s'écrit à la lumière, comme les citations.
     function overHtml(beat) {
         if (!beat.over) return '';
-        return `<div class="u-over u-reveal u-over--${escape(beat.overAt || 'centre')}">
+        return `<div class="u-over u-ecrit rg-vue u-over--${escape(beat.overAt || 'centre')}">
             <p class="u-fit" style="--chars:${longestLine(beat.over)}">${revealWords(beat.over)}</p>
-            ${beat.overBy ? `<cite>${escape(beat.overBy)}</cite>` : ''}
+            ${beat.overBy ? `<cite class="rg-k">${escape(beat.overBy)}</cite>` : ''}
         </div>`;
     }
 
@@ -349,7 +377,7 @@ const UniversMontage = (function () {
                 ${repli ? `<img src="${escape(poster)}"${repli} ${imgAttrs}>` : pictureHtml(poster, 'video', imgAttrs)}
                 <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
             </button>
-            ${cap ? `<figcaption class="u-cap"><span>${escape(cap)}</span></figcaption>` : ''}
+            ${cap ? `<figcaption class="u-cap rg-vue"><span class="rg-k">${escape(cap)}</span></figcaption>` : ''}
         </figure>`;
     }
 
@@ -373,28 +401,177 @@ const UniversMontage = (function () {
         </figure>`;
     }
 
+    // ── L'OUVERTURE : DU LOINTAIN À LA FACE ───────────────────────────
+    //  Entre le titre et la première photo, une scène tenue. Des photos du
+    //  spectacle arrivent du fond du plateau, passent de part et d'autre du
+    //  spectateur, et le carton du chapitre — la durée, une phrase — vient
+    //  se poser à la face. Puis le noir, et la lumière remonte sur la
+    //  première photo (voir .u-allumage).
+    //
+    //  LES PHOTOS : quatre, prises dans le reste du montage — la première
+    //  est réservée, c'est celle qui s'allumera juste après, et la vignette
+    //  du CV. Un univers peut les choisir lui-même (`ouverture: [5, 21]`).
+    //  Moins de deux photos disponibles : pas d'ouverture, le carton garde
+    //  sa place dans le montage.
+    //
+    //  ELLE INVITE À DESCENDRE. Une scène qui commence dans le noir, avec
+    //  une photo minuscule au fond, peut passer pour une page vide : on y
+    //  voit d'emblée une photo nettement posée au loin, et « Avancer » au
+    //  bas de l'écran, qui s'efface dès le premier geste.
+    function photosOuverture(uni) {
+        if (Array.isArray(uni.ouverture) && uni.ouverture.length) return uni.ouverture.slice(0, 4);
+        const toutes = [];
+        (uni.sequence || []).forEach(b => (b && Array.isArray(b.p) ? b.p : []).forEach(n => {
+            if (!toutes.includes(n)) toutes.push(n);
+        }));
+        const reste = toutes.slice(1);
+        if (reste.length <= 4) return reste;
+        // Quatre photos réparties dans tout le montage : une bande-annonce,
+        // pas les quatre premières.
+        return [0, 1, 2, 3].map(k => reste[Math.round(k * (reste.length - 1) / 3)]);
+    }
+
+    //  Chaque photo a sa place dans la profondeur (--x, --y, à gauche puis
+    //  à droite) et sa plage de passage dans la scène (--s, --e). La
+    //  première commence AVANT la scène (--s négatif) : au premier écran,
+    //  elle est déjà là, posée au loin.
+    const OUVERTURE_PLACES = [[-22, -9], [21, 9], [-19, 11], [23, -8]];
+    const OUVERTURE_PLAGES = [[-0.18, 0.4], [0.06, 0.52], [0.18, 0.64], [0.3, 0.74]];
+
+    function ouvertureHtml(uni, chapitre) {
+        const photos = photosOuverture(uni);
+        if (photos.length < 2) return '';
+        const base = `ressources/images/univers/${uni.slug}`;
+        const plans = photos.map((n, i) => {
+            const [x, y] = OUVERTURE_PLACES[i];
+            const [de, a] = OUVERTURE_PLAGES[i];
+            return `<span class="u-of-photo rg-k" style="--x:${x}cqw;--y:${y}cqh;--s:${de};--e:${a}">
+                    <img src="${base}/${n}-640.webp" srcset="${base}/${n}-640.webp 640w, ${base}/${n}-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span>`;
+        }).join('');
+        // Le carton du chapitre, tel que le montage l'aurait posé — c'est le
+        // même, simplement arrivé du fond. Son titre s'écrit à la lumière
+        // sur la progression de la scène (data-ecrire="scene").
+        const carton = (chapitre && (chapitre.chapter || chapitre.chapterTitle)) ? `<div class="u-of-carton rg-k">
+                ${chapitre.chapter ? `<span class="u-chapter-num">${escape(chapitre.chapter)}</span>` : ''}
+                ${chapitre.chapterTitle ? `<h3 class="u-ecrit" data-ecrire="scene" data-de="0.6" data-a="0.8">${revealWords(chapitre.chapterTitle)}</h3>` : ''}
+            </div>` : '';
+        return `<section class="u-ouverture rg-scene" aria-label="Ouverture">
+            <div class="u-of-scene">
+                <span class="u-of-fond" aria-hidden="true"></span>
+                <span class="u-of-plans" aria-hidden="true">${plans}</span>
+                ${carton}
+                <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
+                <span class="u-of-noir rg-k" aria-hidden="true"></span>
+            </div>
+        </section>`;
+    }
+
+    // ── LA LUMIÈRE QUI MONTE, ET SA SIGNATURE ───────────────────────────
+    //  Après le noir de l'ouverture, la première photo plein cadre s'allume
+    //  — pas en fondu anonyme : chaque univers a sa façon d'allumer le
+    //  plateau (`lumiere` dans ses données). La foudre de Fulguré.e.s, les
+    //  néons du tribunal d'À la barre, la guirlande d'As You Like It, la
+    //  torche de Cléophène, la lumière crue de Bérénice, le projecteur des
+    //  films. Le voile est posé ici ; le top est donné par univers.js quand
+    //  la photo arrive au milieu de l'écran, et le CSS joue la suite.
+    const LUMIERES = ['foudre', 'neon', 'guirlande', 'torche', 'crue', 'projecteur'];
+
+    function voileHtml(uni) {
+        const l = LUMIERES.includes(uni.lumiere) ? uni.lumiere : (uni.kind === 'film' ? 'projecteur' : 'crue');
+        const ampoules = l === 'guirlande' ? '<i></i><i></i><i></i><i></i><i></i><i></i>' : '';
+        return { lumiere: l, html: `<span class="u-voile" aria-hidden="true">${ampoules}</span><span class="u-eclat" aria-hidden="true"></span>` };
+    }
+
+    // ── LA POURSUITE ─────────────────────────────────────────────────
+    //  Sur une photo de groupe choisie, le plateau reste dans la pénombre
+    //  et une poursuite — deux au plus — va d'un comédien à l'autre au fil
+    //  du défilement, avant les plein feux. Les positions sont écrites dans
+    //  les données, en pourcentage de la photo, par étapes :
+    //
+    //      poursuite: { etapes: [ [[20, 48], [83, 48]], [[51, 60]] ] }
+    //
+    //  Chaque étape éclaire un ou deux points ; la première poursuite suit
+    //  le premier point de chaque étape, la seconde n'apparaît qu'aux étapes
+    //  qui en demandent deux. `ratio` : largeur sur hauteur de la photo
+    //  (1,5 par défaut) — le cadre la montre ENTIÈRE, sans recadrage, pour
+    //  que les pourcentages visent juste.
+    function poursuiteHtml(uni, beat, n, index, title) {
+        const pr = beat.poursuite || {};
+        const etapes = (pr.etapes || []).filter(e => Array.isArray(e) && e.length).slice(0, 3);
+        if (!etapes.length) return '';
+        while (etapes.length < 3) etapes.push(etapes[etapes.length - 1]);
+        // La seconde poursuite, éteinte à une étape, s'y tient déjà à la
+        // place où elle va s'allumer — ou reste là où elle s'est éteinte :
+        // elle ne traverse jamais la scène dans le noir pour rien.
+        const vars = [];
+        const seconds = etapes.map(e => e[1] || null);
+        etapes.forEach((e, i) => {
+            const a = e[0];
+            const bp = seconds[i] || seconds.slice(0, i).reverse().find(Boolean) ||
+                seconds.slice(i + 1).find(Boolean) || a;
+            vars.push(`--a${i}x:${+a[0]}`, `--a${i}y:${+a[1]}`,
+                `--b${i}x:${+bp[0]}`, `--b${i}y:${+bp[1]}`, `--b${i}on:${seconds[i] ? 1 : 0}`);
+        });
+        const ratio = +pr.ratio > 0 ? +pr.ratio : 1.5;
+        const src = photoSrc(uni, n);
+        const cap = (beat.c && beat.c[0]) || '';
+        const nom = cap || `${title}, photo ${index + 1}`;
+        // La légende s'écrit en deux temps quand elle a deux parties — « La
+        // figure des jumeaux : une incarnation à deux têtes… » : la première
+        // quand les deux poursuites sont allumées, la seconde ensuite.
+        // L'espace avant les deux-points est l'insécable fine de la
+        // typographie française : \s la reconnaît, une espace tapée non.
+        const deux = /\s:\s/.exec(cap);
+        const i2 = deux ? deux.index : -1;
+        const leg = !cap ? '' : i2 > 0
+            ? `<span class="u-pa-leg1 rg-k">${escape(cap.slice(0, i2))} :</span> <span class="u-pa-leg2 rg-k">${escape(cap.slice(i2 + deux[0].length))}</span>`
+            : `<span class="u-pa-leg2 rg-k">${escape(cap)}</span>`;
+        const lum = `<img src="${escape(src.replace(/\.jpg$/, '-1280.webp'))}" alt="" decoding="async" loading="lazy">`;
+        return `<section class="u-poursuite rg-scene" style="--ratio:${ratio};${vars.join(';')}">
+            <div class="u-pa-scene">
+                <div class="u-pa-cadre">
+                    <span class="u-pa-base" aria-hidden="true">${lum}</span>
+                    <span class="u-pa-faisceau u-pa-a rg-k" aria-hidden="true"><span class="u-pa-lum rg-k">${lum}</span></span>
+                    <span class="u-pa-faisceau u-pa-b rg-k" aria-hidden="true"><span class="u-pa-lum rg-k">${lum}</span></span>
+                    <button type="button" class="u-pa-plein rg-k" data-u-zoom="${index}" aria-label="Agrandir : ${escape(nom)}">
+                        ${pictureHtml(src, 'plein', `alt="${escape(nom)}" loading="lazy" decoding="async"`)}
+                    </button>
+                </div>
+                ${leg ? `<p class="u-pa-legende">${leg}</p>` : ''}
+            </div>
+        </section>`;
+    }
+
     function beatsHtml(uni, title) {
         let index = 0;
+        // Le premier temps est le carton du chapitre : avec une ouverture, il
+        // y part (il arrive du fond de la scène) et n'est pas répété ici.
+        const seq = uni.sequence || [];
+        const chapitre = seq.find(b => b && (b.chapter || b.chapterTitle)) || null;
+        const ouverture = ouvertureHtml(uni, chapitre);
+        let allumage = !!ouverture;
 
-        return afficheHtml(uni, title) + (uni.sequence || []).map(beat => {
+        return afficheHtml(uni, title) + ouverture + seq.map(beat => {
 
             if (beat.video) return videoHtml(uni, beat, title);
 
             // ── Cartons de texte, sans photo ──
             if (beat.chapter || beat.chapterTitle) {
-                return `<div class="u-chapter u-reveal">
+                if (ouverture && beat === chapitre) return '';
+                return `<div class="u-chapter u-ecrit rg-vue">
                     ${beat.chapter ? `<span class="u-chapter-num">${escape(beat.chapter)}</span>` : ''}
                     ${beat.chapterTitle ? `<h3>${revealWords(beat.chapterTitle)}</h3>` : ''}
                 </div>`;
             }
             if (beat.q) {
-                return `<blockquote class="u-quote u-reveal">
+                return `<blockquote class="u-quote u-ecrit rg-vue">
                     <p class="u-fit" style="--chars:${longestLine(beat.q)}">${revealWords(beat.q)}</p>
-                    ${beat.by ? `<cite>${escape(beat.by)}</cite>` : ''}
+                    ${beat.by ? `<cite class="rg-k">${escape(beat.by)}</cite>` : ''}
                 </blockquote>`;
             }
             if (beat.text) {
-                return `<div class="u-text u-reveal">
+                return `<div class="u-text u-ecrit rg-vue">
                     <p>${revealWords(beat.text)}</p>
                 </div>`;
             }
@@ -403,6 +580,14 @@ const UniversMontage = (function () {
 
             // ── Photos ──
             const layout = LAYOUT_BY_COUNT[beat.p.length] || 'plein';
+
+            // Une poursuite remplace la figure : c'est la même photo, montrée
+            // entière et éclairée par morceaux.
+            if (layout === 'plein' && beat.poursuite) {
+                const html = poursuiteHtml(uni, beat, beat.p[0], index, title);
+                if (html) { index++; return html; }
+            }
+
             const inner = beat.p.map((n, i) => figureHtml(
                 {
                     src: photoSrc(uni, n), caption: (beat.c && beat.c[i]) || '',
@@ -414,16 +599,26 @@ const UniversMontage = (function () {
                 // elles ne concurrencent plus les scripts ni la police du
                 // titre. Un film ouvre sur son affiche, déjà partie, elle.
                 layout, index, title, index++ === 0 && !uni.affiche,
-                (layout === 'plein' && i === 0) ? overHtml(beat) : ''
+                (layout === 'plein' && i === 0) ? overHtml(beat) : '', i
             )).join('');
 
-            if (layout === 'plein') return inner;
+            if (layout === 'plein') {
+                // La première photo plein cadre après l'ouverture s'allume.
+                if (!allumage) return inner;
+                allumage = false;
+                const v = voileHtml(uni);
+                return inner.replace('<figure class="u-fig u-fig--plein rg-vue"',
+                    `<figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="${v.lumiere}"`)
+                    .replace(/(<\/button>)/, `$1\n            ${v.html}`);
+            }
 
-            // Note en marge : la place du texte à côté d'un groupe, là où
-            // l'incrustation n'a pas de sens.
+            // Note en marge : la place du texte à côté d'un groupe. Une
+            // incrustation (`over`) traverse le groupe entier — elle était
+            // ignorée ici, en silence : « Jusqu'où serez-vous semblables ? »
+            // n'était jamais affichée dans Cléophène.
             const aside = beat.aside
-                ? `<p class="u-aside u-reveal">${revealWords(beat.aside)}</p>` : '';
-            return `<div class="u-group u-${layout}">${inner}${aside}</div>`;
+                ? `<p class="u-aside u-ecrit rg-vue">${revealWords(beat.aside)}</p>` : '';
+            return `<div class="u-group u-${layout}">${inner}${overHtml(beat)}${aside}</div>`;
         }).join('');
     }
 
@@ -551,6 +746,21 @@ const UniversMontage = (function () {
     //             « refermer » n'a pas de sens sur une page à part entière.
     //             Elle redevient donc un LIEN vers le répertoire, pas un
     //             bouton qui rejoue close() — rien à rejouer ici.
+    // ── LE FOND DU TITRE : LA PHOTO DE LA VIGNETTE ───────────────────
+    //  La couverture — la photo même de la vignette du CV et du répertoire
+    //  (voir couverture, plus bas) — tendue derrière le titre, dans le noir
+    //  de la salle. C'est elle que la vignette devient en s'ouvrant (voir
+    //  « La vignette devient l'univers » dans univers.js) : on touche une
+    //  petite photo, elle grandit jusqu'à faire le fond de la scène.
+    //  Sans photo — un spectacle pas encore créé —, pas de fond : le halo
+    //  de la couleur du spectacle suffit, comme avant.
+    function heroFondHtml(uni) {
+        const c = couverture(uni);
+        if (!c) return '';
+        const base = c.src.replace(/-240\.webp$/, '');
+        return `<div class="u-hero-fond rg-k" aria-hidden="true"><img src="${escape(base)}-1280.webp" srcset="${escape(base)}-640.webp 640w, ${escape(base)}-1280.webp 1280w" sizes="100vw" alt="" decoding="async"${c.pos ? ` style="object-position:${escape(c.pos)}"` : ''}></div>`;
+    }
+
     function panelHtml(info, uni, opts) {
         const { dates = '', enCreation = false, statique = false } = opts || {};
         const figures = beatsHtml(uni, info.title);
@@ -577,14 +787,21 @@ const UniversMontage = (function () {
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
-        <div class="u-hero-wrap">
+        <!-- LE HÉROS SE DÉFAIT PAR COUCHES, chacune sur sa propre course au
+             défilement (voir « Le héros s'en va » dans univers.css) : le
+             surtitre part d'abord, le titre en dernier. L'auteur, la ligne
+             du rôle, le bouton et la flèche sont enveloppés d'une couche : ils
+             ont déjà leur propre fondu d'arrivée, et deux animations ne se
+             partagent pas une même opacité. -->
+        <div class="u-hero-wrap rg-vue">
+        ${heroFondHtml(uni)}
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
                  que la date et l'état de la tournée : c'est la ligne d'une
                  feuille de salle, et elle dit en trois mots ce qu'on va voir
                  avant même le titre. Il est pris sur l'univers et non sur la
                  ligne du CV, qui ne le porte pas. -->
-            <p class="u-eyebrow">${escape(info.year)}${uni.genre ? ' · ' + escape(uni.genre) : ''}${info.badge ? ' · ' + escape(info.badge) : ''}</p>
+            <p class="u-eyebrow rg-k">${escape(info.year)}${uni.genre ? ' · ' + escape(uni.genre) : ''}${info.badge ? ' · ' + escape(info.badge) : ''}</p>
             <!-- LE TITRE, D'UN SEUL TENANT POUR QUI NE LE VOIT PAS. Les lettres
                  tombent une à une et sont donc cachées aux lecteurs d'écran
                  (voir splitChars) ; aria-label leur donne le mot entier.
@@ -594,25 +811,20 @@ const UniversMontage = (function () {
                  Sur une page autonome c'est le titre de la page, de premier
                  niveau ; dans le panneau de l'accueil, qui a déjà le sien, de
                  second niveau. -->
-            <${niveau} class="u-title" id="u-titre" aria-label="${escape(info.title)}" style="--u-title-chars:${tm.chars};--u-title-len:${tm.len}">${splitChars(info.title)}</${niveau}>
-            ${info.author ? `<p class="u-author">${escape(info.author)}</p>` : ''}
-            ${uni.synopsis ? `<p class="u-synopsis">${splitWords(uni.synopsis)}</p>` : ''}
-            <p class="u-meta">${escape(info.role)}${info.company ? '<br>' + escape(info.company) : ''}</p>
+            <${niveau} class="u-title rg-k" id="u-titre" aria-label="${escape(info.title)}" style="--u-title-chars:${tm.chars};--u-title-len:${tm.len}">${splitChars(info.title)}</${niveau}>
+            ${info.author ? `<div class="u-couche u-couche-auteur rg-k"><p class="u-author">${escape(info.author)}</p></div>` : ''}
+            ${uni.synopsis ? `<p class="u-synopsis rg-k">${splitWords(uni.synopsis)}</p>` : ''}
+            <div class="u-couche u-couche-meta rg-k"><p class="u-meta">${escape(info.role)}${info.company ? '<br>' + escape(info.company) : ''}</p></div>
 
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
                  traverser tout le défilé de photos pour savoir quand voir le
                  spectacle — or c'est souvent la seule raison de la visite.
                  Ce que les dates y changent est dans heroActionsHtml. -->
-            <div class="u-hero-actions">
+            <div class="u-couche u-couche-actions rg-k"><div class="u-hero-actions">
                 ${heroActionsHtml(etat, uni)}
-            </div>
+            </div></div>
 
-            <span class="u-scroll" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span>
-            <!-- Le masque neutre : l'objet du plateau, pas le rouage du
-                 navigateur. Un ovoïde lisse, deux yeux, l'arête du nez, pas
-                 de bouche — rien qui exprime, tout qui attend. Tracé ici
-                 plutôt qu'en CSS : une forme se dessine, elle ne se bricole
-                 pas en bordures et rayons. -->
+            <span class="u-couche u-couche-fleche rg-k" aria-hidden="true"><span class="u-scroll"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span></span>
             <span class="u-loader" role="status" aria-label="Chargement des visuels">
                 <svg viewBox="0 0 100 128" aria-hidden="true" focusable="false">
                     <path fill-rule="evenodd" d="M50 8C71 8 85 25 85 49c0 33-15 71-35 71S15 82 15 49C15 25 29 8 50 8z
@@ -902,7 +1114,8 @@ const UniversMontage = (function () {
         panelHtml, datesHtml, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, photoPrincipale, couverture, organisateurs,
         toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
-        longestLine, photoSrc, pictureHtml, framePos, figureHtml, overHtml, videoRef,
+        longestLine, photoSrc, pictureHtml, framePos, figureHtml, overHtml, videoRef, flouSrc,
+        photosOuverture, ouvertureHtml, poursuiteHtml, LUMIERES,
         videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock,
         FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT
     };

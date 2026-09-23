@@ -58,6 +58,26 @@
         // reviendra un autre jour depuis un autre site y aura droit — voir
         // « Le lien direct entre sans rideau » dans index.html.
         try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+
+        // Le titre qui attend de s'écrire, la première photo qui attend son
+        // allumage dans le noir : cachés seulement si le moteur est là pour
+        // les montrer (u-anime). Et le drapeau de la régie, posé avant le
+        // premier rendu — le même en-tête que sur l'accueil (index.html),
+        // où tout cela est expliqué ; build/verifier-site.js compare les
+        // deux.
+        (function () {
+            var racine = document.documentElement;
+            racine.classList.add('u-anime');
+            if (/[?&]repli(?:[=&]|$)/.test(location.search) || !(window.CSS && CSS.supports &&
+                CSS.supports('animation-timeline: view()') && CSS.supports('view-timeline: --rg block')))
+                racine.classList.add('regie-repli');
+            addEventListener('DOMContentLoaded', function () {
+                setTimeout(function () {
+                    if (!window.__universPret) racine.classList.remove('u-anime');
+                    if (!window.Regie) racine.classList.remove('regie-repli');
+                }, 0);
+            });
+        })();
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -67,7 +87,7 @@
         /* Le mouvement de l'accueil — relu dans index.html (voir
            chargerMouvement) : sans lui, les transitions d'univers.css
            tombaient à zéro sur cette page. */
-        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; }
+        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --ease-ressort: linear(0, 0.005 1%, 0.039 3%, 0.098 5%, 0.215 8%, 0.566 16%, 0.715 20%, 0.807 23%, 0.901 27%, 0.966 31%, 1.013 36%, 1.036 42%, 1.032 52%, 1.002 75%, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; --dur-scene: 460ms; --dur-morph: 620ms; }
         body { margin: 0; background: #edeff1; }
         #show-universe {
             --u-bg: #edeff1;
@@ -88,14 +108,26 @@
             color: var(--u-muted); text-decoration: none;
         }
         .u-retour:hover { color: var(--u-accent-ink); }
-        /* Le morphing depuis le répertoire : les deux documents y
-           consentent, et le panneau porte le nom que la carte cliquée
-           prend au départ — sa vignette glisse jusqu'à devenir cette
-           page. Navigateurs plus anciens : navigation ordinaire. */
+        /* Le morphing depuis le répertoire — et depuis l'onglet Dates de
+           l'accueil : les documents y consentent, et cette page porte le
+           nom que la vignette touchée prend au départ. La photo de la
+           vignette grandit jusqu'à devenir le fond du titre, comme dans le
+           panneau de l'accueil (voir « La vignette devient l'univers »
+           dans univers.js). Sans photo, c'est la page entière qui sort de
+           la vignette. Navigateurs plus anciens : navigation ordinaire.
+
+           La petite image ne se montre jamais en grand : elle s'efface tôt,
+           tant qu'elle est encore petite, et le fond arrive en même temps. */
         @view-transition { navigation: auto; }
-        #show-universe { view-transition-name: fiche-audiences; }
+        #show-universe .u-hero-fond { view-transition-name: fiche-audiences; view-transition-class: fiche; }
         ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
         ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+        ::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
+        ::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
+        ::view-transition-old(*.fiche) { animation: vt-fiche-sort calc(var(--dur-morph) * .35) ease-out both; }
+        ::view-transition-new(*.fiche) { animation: vt-fiche-entre calc(var(--dur-morph) * .4) ease-out both; }
+        @keyframes vt-fiche-sort { to { opacity: 0; } }
+        @keyframes vt-fiche-entre { from { opacity: 0; } }
         @media (prefers-reduced-motion: reduce) {
             ::view-transition-group(*), ::view-transition-image-pair(*),
             ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
@@ -193,14 +225,21 @@
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
-        <div class="u-hero-wrap">
+        <!-- LE HÉROS SE DÉFAIT PAR COUCHES, chacune sur sa propre course au
+             défilement (voir « Le héros s'en va » dans univers.css) : le
+             surtitre part d'abord, le titre en dernier. L'auteur, la ligne
+             du rôle, le bouton et la flèche sont enveloppés d'une couche : ils
+             ont déjà leur propre fondu d'arrivée, et deux animations ne se
+             partagent pas une même opacité. -->
+        <div class="u-hero-wrap rg-vue">
+        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/audiences/8-1280.webp" srcset="../../ressources/images/univers/audiences/8-640.webp 640w, ../../ressources/images/univers/audiences/8-1280.webp 1280w" sizes="100vw" alt="" decoding="async" style="object-position:45% 55%"></div>
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
                  que la date et l'état de la tournée : c'est la ligne d'une
                  feuille de salle, et elle dit en trois mots ce qu'on va voir
                  avant même le titre. Il est pris sur l'univers et non sur la
                  ligne du CV, qui ne le porte pas. -->
-            <p class="u-eyebrow">2025 · Spectacle de prévention</p>
+            <p class="u-eyebrow rg-k">2025 · Spectacle de prévention</p>
             <!-- LE TITRE, D'UN SEUL TENANT POUR QUI NE LE VOIT PAS. Les lettres
                  tombent une à une et sont donc cachées aux lecteurs d'écran
                  (voir splitChars) ; aria-label leur donne le mot entier.
@@ -210,25 +249,20 @@
                  Sur une page autonome c'est le titre de la page, de premier
                  niveau ; dans le panneau de l'accueil, qui a déjà le sien, de
                  second niveau. -->
-            <h1 class="u-title" id="u-titre" aria-label="Audiences" style="--u-title-chars:9;--u-title-len:9"><span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:0">A</span><span class="u-ch" style="--i:1">u</span><span class="u-ch" style="--i:2">d</span><span class="u-ch" style="--i:3">i</span><span class="u-ch" style="--i:4">e</span><span class="u-ch" style="--i:5">n</span><span class="u-ch" style="--i:6">c</span><span class="u-ch" style="--i:7">e</span><span class="u-ch" style="--i:8">s</span></span></h1>
-            <p class="u-author">Écriture collective</p>
-            <p class="u-synopsis"><span class="u-line"><span class="u-wd" style="--i:0">Un</span> <span class="u-wd" style="--i:1">spectacle</span> <span class="u-wd" style="--i:2">de</span> <span class="u-wd" style="--i:3">prévention,</span> <span class="u-wd" style="--i:4">joué</span> <span class="u-wd" style="--i:5">au</span> <span class="u-wd" style="--i:6">collège.</span></span><span class="u-line"><span class="u-wd" style="--i:7">Violences</span> <span class="u-wd" style="--i:8">sexistes</span> <span class="u-wd" style="--i:9">et</span> <span class="u-wd" style="--i:10">sexuelles,</span> <span class="u-wd" style="--i:11">stéréotypes,</span> <span class="u-wd" style="--i:12">consentement,</span> <span class="u-wd" style="--i:13">à</span> <span class="u-wd" style="--i:14">travers</span> <span class="u-wd" style="--i:15">le</span> <span class="u-wd" style="--i:16">prisme</span> <span class="u-wd" style="--i:17">de</span> <span class="u-wd" style="--i:18">la</span> <span class="u-wd" style="--i:19">justice.</span></span></p>
-            <p class="u-meta">Rôle · Procureur général, juge, accusé, narrateur<br>CDN de Normandie-Rouen / Compagnie du P’tit Ballon</p>
+            <h1 class="u-title rg-k" id="u-titre" aria-label="Audiences" style="--u-title-chars:9;--u-title-len:9"><span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:0">A</span><span class="u-ch" style="--i:1">u</span><span class="u-ch" style="--i:2">d</span><span class="u-ch" style="--i:3">i</span><span class="u-ch" style="--i:4">e</span><span class="u-ch" style="--i:5">n</span><span class="u-ch" style="--i:6">c</span><span class="u-ch" style="--i:7">e</span><span class="u-ch" style="--i:8">s</span></span></h1>
+            <div class="u-couche u-couche-auteur rg-k"><p class="u-author">Écriture collective</p></div>
+            <p class="u-synopsis rg-k"><span class="u-line"><span class="u-wd" style="--i:0">Un</span> <span class="u-wd" style="--i:1">spectacle</span> <span class="u-wd" style="--i:2">de</span> <span class="u-wd" style="--i:3">prévention,</span> <span class="u-wd" style="--i:4">joué</span> <span class="u-wd" style="--i:5">au</span> <span class="u-wd" style="--i:6">collège.</span></span><span class="u-line"><span class="u-wd" style="--i:7">Violences</span> <span class="u-wd" style="--i:8">sexistes</span> <span class="u-wd" style="--i:9">et</span> <span class="u-wd" style="--i:10">sexuelles,</span> <span class="u-wd" style="--i:11">stéréotypes,</span> <span class="u-wd" style="--i:12">consentement,</span> <span class="u-wd" style="--i:13">à</span> <span class="u-wd" style="--i:14">travers</span> <span class="u-wd" style="--i:15">le</span> <span class="u-wd" style="--i:16">prisme</span> <span class="u-wd" style="--i:17">de</span> <span class="u-wd" style="--i:18">la</span> <span class="u-wd" style="--i:19">justice.</span></span></p>
+            <div class="u-couche u-couche-meta rg-k"><p class="u-meta">Rôle · Procureur général, juge, accusé, narrateur<br>CDN de Normandie-Rouen / Compagnie du P’tit Ballon</p></div>
 
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
                  traverser tout le défilé de photos pour savoir quand voir le
                  spectacle — or c'est souvent la seule raison de la visite.
                  Ce que les dates y changent est dans heroActionsHtml. -->
-            <div class="u-hero-actions">
+            <div class="u-couche u-couche-actions rg-k"><div class="u-hero-actions">
                 <p class="u-hero-note">Ce spectacle n’est plus à l’affiche</p>
-            </div>
+            </div></div>
 
-            <span class="u-scroll" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span>
-            <!-- Le masque neutre : l'objet du plateau, pas le rouage du
-                 navigateur. Un ovoïde lisse, deux yeux, l'arête du nez, pas
-                 de bouche — rien qui exprime, tout qui attend. Tracé ici
-                 plutôt qu'en CSS : une forme se dessine, elle ne se bricole
-                 pas en bordures et rayons. -->
+            <span class="u-couche u-couche-fleche rg-k" aria-hidden="true"><span class="u-scroll"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span></span>
             <span class="u-loader" role="status" aria-label="Chargement des visuels">
                 <svg viewBox="0 0 100 128" aria-hidden="true" focusable="false">
                     <path fill-rule="evenodd" d="M50 8C71 8 85 25 85 49c0 33-15 71-35 71S15 82 15 49C15 25 29 8 50 8z
@@ -240,100 +274,138 @@
         </header>
         </div>
 
-        <div class="u-figs"><div class="u-chapter u-reveal">
-                    <span class="u-chapter-num">40 min</span>
-                    <h2><span class="u-line"><span class="u-rw">Puis</span> <span class="u-rw">30</span> <span class="u-rw">minutes</span> <span class="u-rw">de</span> <span class="u-rw">débat,</span> <span class="u-rw">niveaux</span> <span class="u-rw">4ᵉ</span> <span class="u-rw">et</span> <span class="u-rw">3ᵉ</span></span></h2>
-                </div><figure class="u-fig u-fig--plein" style="--i:0">
-            <button type="button" class="u-fig-media" data-u-zoom="0"
-                    aria-label="Agrandir : Créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ.">
-                <picture>
+        <div class="u-figs"><section class="u-ouverture rg-scene" aria-label="Ouverture">
+            <div class="u-of-scene">
+                <span class="u-of-fond" aria-hidden="true"></span>
+                <span class="u-of-plans" aria-hidden="true"><span class="u-of-photo rg-k" style="--x:-22cqw;--y:-9cqh;--s:-0.18;--e:0.4">
+                    <img src="../../ressources/images/univers/audiences/6-640.webp" srcset="../../ressources/images/univers/audiences/6-640.webp 640w, ../../ressources/images/univers/audiences/6-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:21cqw;--y:9cqh;--s:0.06;--e:0.52">
+                    <img src="../../ressources/images/univers/audiences/4-640.webp" srcset="../../ressources/images/univers/audiences/4-640.webp 640w, ../../ressources/images/univers/audiences/4-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:-19cqw;--y:11cqh;--s:0.18;--e:0.64">
+                    <img src="../../ressources/images/univers/audiences/1-640.webp" srcset="../../ressources/images/univers/audiences/1-640.webp 640w, ../../ressources/images/univers/audiences/1-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:23cqw;--y:-8cqh;--s:0.3;--e:0.74">
+                    <img src="../../ressources/images/univers/audiences/3-640.webp" srcset="../../ressources/images/univers/audiences/3-640.webp 640w, ../../ressources/images/univers/audiences/3-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span></span>
+                <div class="u-of-carton rg-k">
+                <span class="u-chapter-num">40 min</span>
+                <h2 class="u-ecrit" data-ecrire="scene" data-de="0.6" data-a="0.8"><span class="u-line"><span class="u-rw">Puis</span> <span class="u-rw">30</span> <span class="u-rw">minutes</span> <span class="u-rw">de</span> <span class="u-rw">débat,</span> <span class="u-rw">niveaux</span> <span class="u-rw">4ᵉ</span> <span class="u-rw">et</span> <span class="u-rw">3ᵉ</span></span></h2>
+            </div>
+                <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
+                <span class="u-of-noir rg-k" aria-hidden="true"></span>
+            </div>
+        </section><figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="neon" style="--i:0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="0"
+                    aria-label="Agrandir : Créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ.">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/audiences/8-640.webp 640w, ../../ressources/images/univers/audiences/8-1280.webp 1280w, ../../ressources/images/univers/audiences/8-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/audiences/8.jpg" alt="Créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ." style="object-position:45% 55%"
-                     loading="eager" decoding="async">
+                    <img src="../../ressources/images/univers/audiences/8.jpg" class="u-fig-img rg-k" alt="Créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ." style="object-position:45% 55%"
+                         loading="eager" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/8-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:45% 55%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
+            <span class="u-voile" aria-hidden="true"></span><span class="u-eclat" aria-hidden="true"></span>
             
-            <figcaption class="u-cap"><span>Créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ.</span></figcaption>
-        </figure><blockquote class="u-quote u-reveal">
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ.</span></figcaption>
+        </figure><blockquote class="u-quote u-ecrit rg-vue">
                     <p class="u-fit" style="--chars:39"><span class="u-line"><span class="u-rw">« Victime.</span> <span class="u-rw">Irréparable.</span> <span class="u-rw">Accusé.</span> <span class="u-rw">Avocat.</span></span><span class="u-line"><span class="u-rw">Émotion.</span> <span class="u-rw">Juge.</span> <span class="u-rw">Défendre.</span> <span class="u-rw">Sursis.</span></span><span class="u-line"><span class="u-rw">Acquitté.</span> <span class="u-rw">Procédure.</span> <span class="u-rw">Peine.</span> <span class="u-rw">Vérité. »</span></span></p>
-                    <cite>Les mots de la justice, par les élèves du collège Boieldieu</cite>
-                </blockquote><div class="u-group u-duo"><figure class="u-fig u-fig--duo" style="--i:1">
-            <button type="button" class="u-fig-media" data-u-zoom="1"
-                    aria-label="Agrandir : Audiences, photo 2">
-                <picture>
+                    <cite class="rg-k">Les mots de la justice, par les élèves du collège Boieldieu</cite>
+                </blockquote><div class="u-group u-duo"><figure class="u-fig u-fig--duo rg-vue" style="--i:1;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="1"
+                    aria-label="Agrandir : Audiences, photo 2">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/audiences/6-640.webp 640w, ../../ressources/images/univers/audiences/6-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/audiences/6.jpg" alt="Audiences, photo 2" style="object-position:42% 20%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/audiences/6.jpg" class="u-fig-img rg-k" alt="Audiences, photo 2" style="object-position:42% 20%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/6-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:42% 20%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--duo" style="--i:2">
-            <button type="button" class="u-fig-media" data-u-zoom="2"
-                    aria-label="Agrandir : Audiences, photo 3">
-                <picture>
+        </figure><figure class="u-fig u-fig--duo rg-vue" style="--i:2;--prof:1.9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="2"
+                    aria-label="Agrandir : Audiences, photo 3">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/audiences/5-640.webp 640w, ../../ressources/images/univers/audiences/5-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/audiences/5.jpg" alt="Audiences, photo 3" style="object-position:48% 18%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/audiences/5.jpg" class="u-fig-img rg-k" alt="Audiences, photo 3" style="object-position:48% 18%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/5-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:48% 18%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><p class="u-aside u-reveal"><span class="u-line"><span class="u-rw">Le</span> <span class="u-rw">fonctionnement</span> <span class="u-rw">des</span> <span class="u-rw">tribunaux</span> <span class="u-rw">à</span> <span class="u-rw">travers</span> <span class="u-rw">des</span> <span class="u-rw">affaires</span> <span class="u-rw">de</span> <span class="u-rw">violences</span> <span class="u-rw">en</span> <span class="u-rw">ligne,</span> <span class="u-rw">de</span> <span class="u-rw">harcèlement</span> <span class="u-rw">scolaire,</span> <span class="u-rw">et</span> <span class="u-rw">de</span> <span class="u-rw">rapport</span> <span class="u-rw">général</span> <span class="u-rw">au</span> <span class="u-rw">consentement.</span></span></p></div><figure class="u-fig u-fig--plein" style="--i:3">
-            <button type="button" class="u-fig-media" data-u-zoom="3"
-                    aria-label="Agrandir : Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres.">
-                <picture>
+        </figure><p class="u-aside u-ecrit rg-vue"><span class="u-line"><span class="u-rw">Le</span> <span class="u-rw">fonctionnement</span> <span class="u-rw">des</span> <span class="u-rw">tribunaux</span> <span class="u-rw">à</span> <span class="u-rw">travers</span> <span class="u-rw">des</span> <span class="u-rw">affaires</span> <span class="u-rw">de</span> <span class="u-rw">violences</span> <span class="u-rw">en</span> <span class="u-rw">ligne,</span> <span class="u-rw">de</span> <span class="u-rw">harcèlement</span> <span class="u-rw">scolaire,</span> <span class="u-rw">et</span> <span class="u-rw">de</span> <span class="u-rw">rapport</span> <span class="u-rw">général</span> <span class="u-rw">au</span> <span class="u-rw">consentement.</span></span></p></div><figure class="u-fig u-fig--plein rg-vue" style="--i:3">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="3"
+                    aria-label="Agrandir : Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres.">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/audiences/4-640.webp 640w, ../../ressources/images/univers/audiences/4-1280.webp 1280w, ../../ressources/images/univers/audiences/4-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/audiences/4.jpg" alt="Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres." style="object-position:62% 20%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/audiences/4.jpg" class="u-fig-img rg-k" alt="Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres." style="object-position:62% 20%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/4-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:62% 20%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
-            <figcaption class="u-cap"><span>Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres.</span></figcaption>
-        </figure><div class="u-group u-trio"><figure class="u-fig u-fig--trio" style="--i:4">
-            <button type="button" class="u-fig-media" data-u-zoom="4"
-                    aria-label="Agrandir : Audiences, photo 5">
-                <picture>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres.</span></figcaption>
+        </figure><div class="u-group u-trio"><figure class="u-fig u-fig--trio rg-vue" style="--i:4;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="4"
+                    aria-label="Agrandir : Audiences, photo 5">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/audiences/1-640.webp 640w, ../../ressources/images/univers/audiences/1-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/audiences/1.jpg" alt="Audiences, photo 5" style="object-position:48% 30%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/audiences/1.jpg" class="u-fig-img rg-k" alt="Audiences, photo 5" style="object-position:48% 30%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/1-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:48% 30%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--trio" style="--i:5">
-            <button type="button" class="u-fig-media" data-u-zoom="5"
-                    aria-label="Agrandir : Audiences, photo 6">
-                <picture>
+        </figure><figure class="u-fig u-fig--trio rg-vue" style="--i:5;--prof:1.9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="5"
+                    aria-label="Agrandir : Audiences, photo 6">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/audiences/2-640.webp 640w, ../../ressources/images/univers/audiences/2-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/audiences/2.jpg" alt="Audiences, photo 6" style="object-position:35% 40%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/audiences/2.jpg" class="u-fig-img rg-k" alt="Audiences, photo 6" style="object-position:35% 40%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/2-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:35% 40%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--trio" style="--i:6">
-            <button type="button" class="u-fig-media" data-u-zoom="6"
-                    aria-label="Agrandir : Audiences, photo 7">
-                <picture>
+        </figure><figure class="u-fig u-fig--trio rg-vue" style="--i:6;--prof:2.8">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="6"
+                    aria-label="Agrandir : Audiences, photo 7">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/audiences/3-640.webp 640w, ../../ressources/images/univers/audiences/3-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/audiences/3.jpg" alt="Audiences, photo 7" style="object-position:60% 40%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/audiences/3.jpg" class="u-fig-img rg-k" alt="Audiences, photo 7" style="object-position:60% 40%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/3-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:60% 40%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><p class="u-aside u-reveal"><span class="u-line"><span class="u-rw">Après</span> <span class="u-rw">la</span> <span class="u-rw">représentation,</span> <span class="u-rw">un</span> <span class="u-rw">échange</span> <span class="u-rw">permet</span> <span class="u-rw">d’effectuer</span> <span class="u-rw">un</span> <span class="u-rw">travail</span> <span class="u-rw">de</span> <span class="u-rw">sensibilisation.</span></span></p></div><blockquote class="u-quote u-reveal">
+        </figure><p class="u-aside u-ecrit rg-vue"><span class="u-line"><span class="u-rw">Après</span> <span class="u-rw">la</span> <span class="u-rw">représentation,</span> <span class="u-rw">un</span> <span class="u-rw">échange</span> <span class="u-rw">permet</span> <span class="u-rw">d’effectuer</span> <span class="u-rw">un</span> <span class="u-rw">travail</span> <span class="u-rw">de</span> <span class="u-rw">sensibilisation.</span></span></p></div><blockquote class="u-quote u-ecrit rg-vue">
                     <p class="u-fit" style="--chars:30"><span class="u-line"><span class="u-rw">« Pourquoi</span> <span class="u-rw">suis-je</span> <span class="u-rw">violent ? »</span></span></p>
-                    <cite>La question posée au débat</cite>
-                </blockquote><div class="u-text u-reveal">
+                    <cite class="rg-k">La question posée au débat</cite>
+                </blockquote><div class="u-text u-ecrit rg-vue">
                     <p><span class="u-line"><span class="u-rw">C’est</span> <span class="u-rw">un</span> <span class="u-rw">outil</span> <span class="u-rw">de</span> <span class="u-rw">prévention</span> <span class="u-rw">autant</span> <span class="u-rw">qu’un</span> <span class="u-rw">spectacle :</span> <span class="u-rw">ce</span> <span class="u-rw">qui</span> <span class="u-rw">se</span> <span class="u-rw">joue</span> <span class="u-rw">devant</span> <span class="u-rw">les</span> <span class="u-rw">élèves</span> <span class="u-rw">prépare</span> <span class="u-rw">ce</span> <span class="u-rw">qui</span> <span class="u-rw">se</span> <span class="u-rw">dira</span> <span class="u-rw">après.</span></span></p>
                 </div></div>
 
@@ -389,9 +461,12 @@
     <script src="../../dates.js"></script>
     <script src="../../dates-live.js"></script>
 
-    <!-- Le moteur, dans l'ordre : le montage d'abord (univers.js s'en sert),
-         puis univers.js, qui reconnaît la classe du <body> et anime le
-         panneau déjà en place. Aucun des deux n'est propre à cette page. -->
+    <!-- Le moteur, dans l'ordre : la régie (le défilement qui mène les
+         scènes, là où le navigateur ne le fait pas lui-même), le montage
+         (univers.js s'en sert), puis univers.js, qui reconnaît la classe du
+         <body> et anime le panneau déjà en place. Aucun n'est propre à
+         cette page. -->
+    <script src="../../regie.js"></script>
     <script src="../../univers-montage.js"></script>
     <script src="../../univers.js"></script>
 </body>

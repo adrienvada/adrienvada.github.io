@@ -5,6 +5,12 @@
    salle qui prend les couleurs du spectacle survolé (--ambiance). */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Le thème bascule en cercle (voir la bascule, dans le script) : pendant
+   le passage, rien ne transitionne. */
+html.vt-theme *, html.vt-theme *::before, html.vt-theme *::after { transition: none !important; }
+html.vt-theme::view-transition-old(root), html.vt-theme::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-theme::view-transition-new(root) { z-index: 2; }
+
 /* L'ambiance est une COULEUR ENREGISTRÉE : déclarée en <color>, elle
    s'interpole — le passage d'un or à un carmin est un glissement, pas un
    claquement. Les règles qui la changent sont écrites dans la page, une
@@ -386,6 +392,17 @@ html.retour-vt .carte .cadre::after { animation: none !important; }
 @view-transition { navigation: auto; }
 ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+/* AU RETOUR, la fiche revient se ranger dans sa carte : le fond du titre
+   garde sa place le temps de rapetisser, puis la vignette le remplace —
+   une photo de carte agrandie à la taille de l'écran ne serait qu'un
+   flou. Même tempo que le panneau de l'accueil qui se referme. */
+.carte .cadre { view-transition-class: fiche; }
+::view-transition-group(*.fiche) { animation-duration: .62s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
+::view-transition-old(*.fiche) { animation: vt-fiche-sort .19s ease-in .12s both; }
+::view-transition-new(*.fiche) { animation: vt-fiche-entre .19s ease-out .22s both; }
+@keyframes vt-fiche-sort { to { opacity: 0; } }
+@keyframes vt-fiche-entre { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
     ::view-transition-group(*), ::view-transition-image-pair(*),
     ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }

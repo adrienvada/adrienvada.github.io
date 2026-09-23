@@ -30,6 +30,14 @@
  *      pour chaque représentation) ;
  *    · les mêmes pages, qui doivent s'animer et s'ouvrir comme leur
  *      univers ouvert depuis le CV ;
+ *    · la régie (regie.js) : la même détection partout, et le repli qui
+ *      rejoue les mêmes images que le navigateur, scène par scène ;
+ *    · un état fixe qui a du sens pour chaque scène, en mouvement réduit ;
+ *    · les défauts réparés de l'audit du mouvement : verrou de
+ *      défilement, changement d'onglet, « Passer » et les touches de
+ *      l'ouverture, zoom de l'avatar, course du book, phrase posée sur un
+ *      groupe de photos ;
+ *    · la frise du CV, liée au défilement, et la page 404 ;
  *    · le sitemap, qui doit annoncer toutes les pages spectacle.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
@@ -544,16 +552,17 @@ function exige(condition, message) {
                 const o = document.getElementById('show-universe');
                 const ELEMENTS = ['.u-ch', '.u-wd', '.u-rw', '.u-reveal', '.u-fig', '.u-fig img', '.u-fig-media',
                     '.u-group .u-fig-media', '.u-cap span', '.u-quote', '.u-chapter', '.u-text', '.u-foot', '.u-meta',
-                    '.u-hero-actions', '.u-scroll', '.u-author', '.u-synopsis', '.u-progress span'];
+                    '.u-hero-actions', '.u-scroll', '.u-author', '.u-synopsis', '.u-progress span',
+                    '.u-hero-fond', '.u-fig-point', '.u-flou', '.u-of-photo', '.u-of-carton', '.u-of-invite',
+                    '.u-pa-faisceau', '.u-pa-plein', '.u-lum', '.u-voile'];
                 const out = {};
                 for (const s of ELEMENTS) {
                     const e = o && o.querySelector(s);
                     if (!e) continue;
                     const cs = getComputedStyle(e);
                     const props = cs.transitionProperty.split(/,\s*/), durees = cs.transitionDuration.split(/,\s*/);
-                    // La couleur, elle, suit le changement de thème sur
-                    // l'accueil (une règle générale d'index.html) : ce n'est
-                    // pas l'effet d'apparition qu'on vérifie.
+                    // La couleur, elle, n'est pas l'effet d'apparition qu'on
+                    // vérifie.
                     const effet = props.map((pr, i) => [pr, durees[i % durees.length]])
                         .filter(([pr, d]) => /^(all|opacity|transform|filter|clip-path|translate|scale)$/.test(pr) && d !== '0s')
                         .map((x) => x.join(' ')).join(', ');
@@ -579,6 +588,252 @@ function exige(condition, message) {
                 }
             }
             exige(!ecarts.length, `${ecarts.length} écart(s), dont ${ecarts.slice(0, 2).join(' ; ')}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        // ── LA RÉGIE : UN SEUL MOUVEMENT, DEUX PILOTES ──
+        // Le navigateur récent fait avancer les scènes lui-même ; ailleurs,
+        // regie.js écrit la progression et la même animation avance en
+        // pause. Les deux doivent donner les mêmes images : on relève, aux
+        // mêmes endroits du défilement, l'opacité et la transformation des
+        // éléments qui bougent — natif, puis avec ?repli, qui force le
+        // second pilote. Et le drapeau du repli, posé avant le premier rendu
+        // dans l'en-tête des pages, doit suivre le même test que regie.js.
+        await verifie('la régie : même détection partout, et le repli rejoue les images du navigateur', async () => {
+            const tests = (texte) => [...texte.matchAll(/CSS\.supports\('([^']+)'\)/g)].map((m) => m[1]).sort().join(' & ');
+            const regie = fs.readFileSync(path.join(RACINE, 'regie.js'), 'utf8');
+            const accueil = fs.readFileSync(path.join(RACINE, 'index.html'), 'utf8');
+            const fiche = fs.readFileSync(path.join(RACINE, 'spectacles', 'cleophene', 'index.html'), 'utf8');
+            const attendu = tests(regie);
+            exige(attendu.includes('animation-timeline: view()'), 'regie.js ne teste plus animation-timeline');
+            const tete = (html) => html.slice(0, html.indexOf('</head>'));
+            exige(tests(tete(accueil)) === attendu, `l’en-tête de l’accueil ne teste pas comme regie.js (${tests(tete(accueil))})`);
+            exige(tests(tete(fiche)) === attendu, `l’en-tête des pages spectacle ne teste pas comme regie.js (${tests(tete(fiche))})`);
+            exige(/<script src="regie\.js"><\/script>\s*<script src="univers-montage\.js">/.test(accueil), 'l’accueil ne charge pas regie.js avant le montage');
+
+            const releve = async (repli) => {
+                const c = await visiteur({ viewport: { width: 1280, height: 860 } });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.goto(`${base}/spectacles/cleophene/${repli ? '?repli' : ''}`, { waitUntil: 'load' });
+                await p.waitForTimeout(1200);
+                const mesures = await p.evaluate(async () => {
+                    const S = document.getElementById('show-universe');
+                    const dort = (ms) => new Promise((r) => setTimeout(r, ms));
+                    const lire = (sel) => [...S.querySelectorAll(sel)].slice(0, 4).map((e) => {
+                        const cs = getComputedStyle(e);
+                        return [+cs.opacity, cs.transform];
+                    });
+                    const out = { classe: document.documentElement.className, points: [] };
+                    for (const [scene, fractions, sels] of [
+                        ['.u-ouverture', [0.2, 0.5, 0.8, 0.95], ['.u-of-photo', '.u-of-carton', '.u-of-noir', '.u-of-invite']],
+                        ['.u-poursuite', [0.1, 0.4, 0.62, 0.85], ['.u-pa-a', '.u-pa-b', '.u-pa-plein', '.u-pa-leg2']],
+                    ]) {
+                        const el = S.querySelector(scene);
+                        if (!el) { out.points.push([scene, 'absente']); continue; }
+                        for (const f of fractions) {
+                            S.scrollTop = el.offsetTop + f * (el.offsetHeight - S.clientHeight);
+                            await dort(250);
+                            out.points.push([scene, f, sels.map((s) => [s, lire(s)])]);
+                        }
+                    }
+                    return out;
+                });
+                await c.close();
+                exige(!erreurs.length, erreurs.join(' | '));
+                return mesures;
+            };
+            const natif = await releve(false);
+            const repli = await releve(true);
+            exige(!/regie-repli/.test(natif.classe), 'le navigateur de vérification n’a pas le pilote natif');
+            exige(/regie-repli/.test(repli.classe), '?repli ne force pas le second pilote');
+            const nombres = (t) => (t.match(/-?[\d.]+(e-?\d+)?/g) || []).map(Number);
+            const ecarts = [];
+            natif.points.forEach((pt, i) => {
+                const autre = repli.points[i];
+                if (pt[1] === 'absente') { ecarts.push(`${pt[0]} absente`); return; }
+                pt[2].forEach(([sel, valeurs], j) => valeurs.forEach(([op, tf], k) => {
+                    const [op2, tf2] = autre[2][j][1][k] || [];
+                    if (Math.abs(op - op2) > 0.06) ecarts.push(`${pt[0]} à ${pt[1]} : ${sel} opacité ${op} / ${op2}`);
+                    const a = nombres(tf), b = nombres(tf2 || '');
+                    if (a.length !== b.length || a.some((v, n) => Math.abs(v - b[n]) > Math.max(2, Math.abs(v) * 0.06))) {
+                        ecarts.push(`${pt[0]} à ${pt[1]} : ${sel} ${tf} / ${tf2}`);
+                    }
+                }));
+            });
+            exige(!ecarts.length, `${ecarts.length} écart(s) entre les deux pilotes, dont ${ecarts.slice(0, 2).join(' ; ')}`);
+        });
+
+        await verifie('en mouvement réduit, chaque scène a un état fixe qui a du sens', async () => {
+            const c = await visiteur({ viewport: { width: 1280, height: 860 }, reducedMotion: 'reduce' });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(`${base}/spectacles/cleophene/`, { waitUntil: 'load' });
+            await p.waitForTimeout(1000);
+            const etat = await p.evaluate(() => {
+                const S = document.getElementById('show-universe');
+                const h = S.clientHeight;
+                const cs = (sel) => { const e = S.querySelector(sel); return e ? getComputedStyle(e) : null; };
+                return {
+                    ouverture: S.querySelector('.u-ouverture')?.offsetHeight / h,
+                    plans: cs('.u-of-plans')?.display,
+                    carton: cs('.u-of-carton') && +cs('.u-of-carton').opacity,
+                    faisceaux: cs('.u-pa-faisceau')?.display,
+                    plein: cs('.u-pa-plein') && +cs('.u-pa-plein').opacity,
+                    poursuite: S.querySelector('.u-poursuite')?.offsetHeight / h,
+                    lumieres: S.querySelectorAll('.u-lum').length,
+                    voile: cs('.u-voile')?.display,
+                    animees: [...S.querySelectorAll('.rg-k')].filter((e) => getComputedStyle(e).animationName !== 'none').length,
+                    mots: [...S.querySelectorAll('.u-quote .u-rw')].filter((e) => getComputedStyle(e).opacity !== '1').length
+                };
+            });
+            exige(etat.ouverture < 1.2, `l’ouverture reste une scène tenue (${etat.ouverture?.toFixed(2)} écran)`);
+            exige(etat.plans === 'none' && etat.carton === 1, 'l’ouverture ne se réduit pas à son carton');
+            exige(etat.poursuite < 1.2 && etat.faisceaux === 'none' && etat.plein === 1, 'la poursuite ne montre pas sa photo en plein feux');
+            exige(etat.voile === 'none', 'la première photo attend un allumage qui ne viendra pas');
+            exige(!etat.lumieres && !etat.mots, 'le texte attend une lumière qui ne viendra pas');
+            exige(!etat.animees, `${etat.animees} élément(s) encore animé(s) au défilement`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        await verifie('les défauts réparés tiennent : verrou, onglets, « Passer », touches, zoom de l’avatar, phrase sur un groupe', async () => {
+            // Le verrou est posé sur <html>, la boîte qui défile, et la place
+            // de la barre de défilement reste réservée.
+            const c = await visiteur({ viewport: { width: 1280, height: 860 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForTimeout(600);
+            const verrou = await p.evaluate(() => {
+                const avant = getComputedStyle(document.documentElement);
+                document.body.classList.add('modal-open');
+                const pendant = getComputedStyle(document.documentElement).overflowY;
+                document.body.classList.remove('modal-open');
+                return { gouttiere: avant.scrollbarGutter, pendant };
+            });
+            exige(verrou.gouttiere === 'stable', 'la place de la barre de défilement n’est plus réservée');
+            exige(verrou.pendant === 'hidden', 'une fenêtre ouverte ne bloque pas le défilement de la page');
+            // L'onglet change, la pastille rejoint l'onglet choisi.
+            await p.click('#tab-page_dates');
+            await p.waitForTimeout(900);
+            const onglet = await p.evaluate(() => {
+                const t = document.getElementById('tab-page_dates').getBoundingClientRect();
+                const pa = document.querySelector('.onglet-pastille').getBoundingClientRect();
+                return { page: document.querySelector('.page.active')?.id, ecart: Math.abs(t.left - pa.left) + Math.abs(t.width - pa.width) };
+            });
+            exige(onglet.page === 'page_dates', 'le changement d’onglet ne pose pas la page');
+            exige(onglet.ecart < 2, `la pastille n’a pas rejoint l’onglet (${onglet.ecart.toFixed(1)} px d’écart)`);
+            exige(fs.readFileSync(path.join(RACINE, 'styles.css'), 'utf8').includes('group-hover\\:scale-103'),
+                'le zoom de l’avatar (scale-103) n’existe pas dans styles.css');
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+
+            // « Passer » répond avant l'arrivée d'intro.js — retardé ici de
+            // trois secondes, comme sur une connexion qui traîne. (Perdu en
+            // route, il serait remplacé par le garde de fin de chargement.)
+            const c2 = await visiteur();
+            await c2.route(/\/(intro|mask-points)\.js$/, async (r) => {
+                await new Promise((ok) => setTimeout(ok, 3000));
+                await r.continue().catch(() => { });
+            });
+            const p2 = await c2.newPage();
+            await p2.goto(base + '/?intro=1', { waitUntil: 'domcontentloaded' });
+            exige(await rideauBaisse(p2), 'le rideau n’est pas baissé en attendant intro.js');
+            await p2.click('#intro-skip', { timeout: 2000 });
+            const passe = await p2.evaluate(() => ({ rideau: document.getElementById('intro-overlay').hidden, verrou: document.body.classList.contains('modal-open') }));
+            exige(passe.rideau && !passe.verrou, '« Passer » ne répond pas tant qu’intro.js n’est pas là');
+            await c2.close();
+
+            // Maj seule ne lève pas le rideau ; Échap, si.
+            const c3 = await visiteur();
+            const p3 = await c3.newPage();
+            await p3.goto(base + '/?intro=1', { waitUntil: 'load' });
+            await p3.waitForFunction(() => window.__introPret === true, null, { timeout: 8000 });
+            await p3.keyboard.press('Shift');
+            await p3.waitForTimeout(300);
+            exige(await rideauBaisse(p3), 'la touche Maj lève le rideau');
+            await p3.keyboard.press('Escape');
+            await p3.waitForFunction(() => document.getElementById('intro-overlay').hidden, null, { timeout: 4000 })
+                .catch(() => { throw new Error('Échap ne lève pas le rideau'); });
+            exige(!(await p3.evaluate(() => document.body.classList.contains('modal-open'))), 'le verrou reste posé après l’ouverture');
+            await c3.close();
+
+            // « Jusqu'où serez-vous semblables ? » : la phrase posée sur un
+            // groupe de photos est rendue.
+            const cleo = fs.readFileSync(path.join(RACINE, 'spectacles', 'cleophene', 'index.html'), 'utf8');
+            exige(/class="u-group[^"]*"[\s\S]*?class="u-over[\s\S]*?semblables/.test(cleo), 'la phrase posée sur un groupe de photos n’est pas rendue');
+        });
+
+        await verifie('le book : fermer puis rouvrir aussitôt ne laisse pas une page morte', async () => {
+            const c = await visiteur({ viewport: { width: 1100, height: 760 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/galerie/', { waitUntil: 'load' });
+            await p.waitForTimeout(600);
+            await p.click('[data-zoom-photo="2"]');
+            await p.waitForTimeout(900);
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(200);
+            await p.keyboard.press('Enter');
+            await p.waitForTimeout(1200);
+            const etat = await p.evaluate(() => ({
+                cachee: document.getElementById('galerie-zoom').hidden,
+                inertes: [...document.body.children].filter((e) => e.inert).length
+            }));
+            exige(!etat.cachee, 'la visionneuse rouverte a été cachée par la fermeture d’avant');
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(1000);
+            const apres = await p.evaluate(() => [...document.body.children].filter((e) => e.inert).length);
+            exige(!apres, `${apres} élément(s) restent inertes après la fermeture`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        await verifie('la frise du CV suit la ligne de lecture, sans horloge — avec les deux pilotes', async () => {
+            for (const repli of [false, true]) {
+                const c = await visiteur({ viewport: { width: 1280, height: 860 } });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.goto(base + '/' + (repli ? '?repli' : ''), { waitUntil: 'load' });
+                await p.waitForTimeout(600);
+                const etat = await p.evaluate(async () => {
+                    const liste = document.getElementById('cv-theatre-list');
+                    const lignes = [...liste.querySelectorAll('li.cv-has-universe')];
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    // La quatrième ligne sur la ligne de lecture.
+                    const y = lignes[3].getBoundingClientRect().top + scrollY - innerHeight * 0.5 + 4;
+                    window.scrollTo(0, y);
+                    await new Promise((r) => setTimeout(r, 400));
+                    const filet = (li) => +getComputedStyle(li, '::before').opacity;
+                    return {
+                        frise: liste.classList.contains('cv-frise'),
+                        haut: filet(lignes[0]), bas: filet(lignes[lignes.length - 1]),
+                        horloge: [...document.styleSheets].some((f) => { try { return [...f.cssRules].some((r) => /cv-guirlande|cv-pastille-lueur\b/.test(r.cssText)); } catch (e) { return false; } })
+                    };
+                });
+                const nom = repli ? 'avec le repli' : 'en natif';
+                exige(etat.frise, 'la liste du CV ne porte pas la frise');
+                exige(etat.haut > 0.9, `${nom}, le filet d’une ligne déjà lue n’est pas allumé (${etat.haut})`);
+                exige(etat.bas < 0.6, `${nom}, le filet d’une ligne pas encore lue est allumé (${etat.bas})`);
+                exige(!etat.horloge, 'la guirlande à horloge est revenue');
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+        });
+
+        await verifie('la page 404 : la servante, lisible, sans erreur', async () => {
+            const c = await visiteur();
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/404.html', { waitUntil: 'load' });
+            const etat = await p.evaluate(() => ({
+                titre: document.querySelector('h1')?.textContent || '',
+                retour: document.querySelector('a.retour')?.getAttribute('href'),
+                lampe: !!document.querySelector('.ampoule')
+            }));
+            exige(/affiche/.test(etat.titre) && etat.retour === '/' && etat.lampe, 'la page 404 a perdu son titre, son retour ou sa lampe');
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
         });

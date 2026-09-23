@@ -55,13 +55,17 @@ figcaption,
     height: auto !important;
     max-height: none !important;
     overflow: visible !important;
+    /* Le halo du titre déborde d'un cinquième de chaque côté : sans cette
+       coupe, la page défilait aussi de côté. */
+    overflow-x: clip !important;
 }
 
-/* Le hero de l'accueil reste collé pendant que le texte s'écrit — c'est le
-   premier geste qui écrit la page avant de la quitter. Sans écriture, ce
-   collage n'a plus d'objet et laisserait un écran vide sous le titre. */
+/* Le hero n'est plus collé à l'écran (il l'a été, le temps que le texte
+   s'écrive) : il garde sa hauteur naturelle. Il reste le repère de son
+   halo (.u-hero::before) : rendu au document, le halo échappait à la
+   coupe du panneau, plus haut. */
 .u-hero-wrap {
-    position: static !important;
+    position: relative !important;
     height: auto !important;
 }
 
@@ -70,4 +74,49 @@ figcaption,
 .u-fig-loupe,
 .u-progress {
     display: none !important;
+}
+
+/* Le mouvement mené par le défilement (la régie, voir regie.js) : sans
+   script, la page est immobile et lisible. Ni lumière qui écrit, ni mise
+   au point, ni scène tenue — l'ouverture se réduit à son carton, la
+   poursuite à sa photo en plein feux, comme en mouvement réduit. */
+.rg-k {
+    animation: none !important;
+}
+
+.u-ouverture,
+.u-poursuite {
+    height: auto !important;
+}
+
+.u-of-scene,
+.u-pa-scene {
+    position: relative !important;
+    height: auto !important;
+}
+
+.u-of-scene {
+    min-height: 60svh;
+    display: grid;
+    place-items: center;
+}
+
+.u-pa-scene {
+    padding: 10svh 0;
+}
+
+.u-of-plans,
+.u-of-invite,
+.u-of-noir,
+.u-pa-faisceau,
+.u-voile,
+.u-eclat,
+.u-flou,
+.u-lum {
+    display: none !important;
+}
+
+.u-of-carton {
+    position: relative !important;
+    inset: auto !important;
 }

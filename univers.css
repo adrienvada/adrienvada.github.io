@@ -25,6 +25,87 @@
    ══════════════════════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════════════════
+   LA RÉGIE — le défilement mène les scènes (voir regie.js)
+   ──────────────────────────────────────────────────────────────
+   Un élément animé porte .rg-k, le nom de son animation dans
+   --rg-anim, et sa plage dans la progression de sa scène : --s et
+   --e, entre 0 et 1. Il suit la scène la plus proche qui le contient
+   (.rg-scene, tenue à l'écran ; .rg-vue, qui traverse l'écran) — ou
+   lui-même s'il porte aussi .rg-vue.
+
+   Le navigateur récent fait tout, sans script (@supports). Ailleurs,
+   regie.js écrit la progression dans --p, et la même animation, en
+   pause, avance par un délai négatif. Sans aucun des deux — ancien
+   navigateur ET pas de script —, --rg-anim n'est jamais posé en
+   animation : rien ne bouge, l'état lisible s'affiche.
+
+   Le CV de l'accueil suit le même principe (voir « La frise » dans
+   index.html), avec ses propres règles : ses éléments animés sont des
+   pseudo-éléments, qui ne peuvent pas porter .rg-k, et il se règle sur
+   la ligne de lecture plutôt que sur une fraction de course.
+   ══════════════════════════════════════════════════════════════ */
+/* régie:début */
+@property --rg-anim {
+    syntax: '*';
+    inherits: false;
+}
+
+/* La plage N'EST PAS HÉRITÉE. Une vignette de groupe entre entre 2 et
+   26 % de sa course ; héritée, cette plage devenait celle de la photo
+   qu'elle contient, dont la mise au point se jouait alors en entier
+   avant que la vignette atteigne le milieu de l'écran — et la photo
+   repartait dans le flou sous les yeux. Chaque élément animé a donc sa
+   plage à lui, toute la course (0 → 1) s'il n'en dit rien. */
+@property --s {
+    syntax: '<number>';
+    inherits: false;
+    initial-value: 0;
+}
+
+@property --e {
+    syntax: '<number>';
+    inherits: false;
+    initial-value: 1;
+}
+
+.rg-scene {
+    view-timeline: --rg-scene block;
+}
+
+.rg-vue {
+    view-timeline: --rg-vue block;
+}
+
+@supports (animation-timeline: view()) {
+    .rg-k {
+        animation: var(--rg-anim) 1s linear both;
+    }
+
+    .rg-scene .rg-k {
+        animation-timeline: --rg-scene;
+        animation-range: contain calc(var(--s, 0) * 100%) contain calc(var(--e, 1) * 100%);
+    }
+
+    .rg-vue .rg-k,
+    .rg-k.rg-vue {
+        animation-timeline: --rg-vue;
+        animation-range: cover calc(var(--s, 0) * 100%) cover calc(var(--e, 1) * 100%);
+    }
+}
+
+.regie-repli .rg-k {
+    animation: var(--rg-anim) 1s linear both paused;
+    animation-delay: calc((var(--p, 0) - var(--s, 0)) / (var(--e, 1) - var(--s, 0)) * -1s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rg-k {
+        animation: none !important;
+    }
+}
+/* régie:fin */
+
+/* ══════════════════════════════════════════════════════════════
    UNIVERS DES SPECTACLES (voir univers.js)
 
    Panneau plein écran ouvert depuis une ligne du CV. Il ne réutilise
@@ -52,17 +133,110 @@ html.u-locked body {
     background: var(--u-bg, #0a0907);
     color: var(--u-text, #f2ece0);
     font-family: 'Inter', system-ui, sans-serif;
-    opacity: 0;
+    /* La barre de progression lit ce défilement-là (voir .u-progress). */
+    scroll-timeline: --u-defile block;
     transition: clip-path 620ms var(--ease-out), opacity var(--dur-base) var(--ease-out);
-    will-change: clip-path;
 }
 
-#show-universe.is-open {
-    opacity: 1;
+/* CACHÉ SEULEMENT SI LE SCRIPT EST LÀ POUR LE MONTRER. Le panneau partait
+   d'une opacité nulle que seul univers.js levait : sur une page spectacle,
+   un script bloqué ou perdu en route laissait un écran noir, et le repli
+   <noscript> ne couvre que le JavaScript désactivé. .u-anime est posé
+   dans l'en-tête du document et retiré si le moteur n'a pas démarré (voir
+   build/generer-pages-spectacles.js) — même principe que js-revele sur
+   l'accueil, où il est posé d'office : le panneau n'y existe que par le
+   script. */
+.u-anime #show-universe:not(.is-open) {
+    opacity: 0;
 }
 
 #show-universe[hidden] {
     display: none;
+}
+
+/* ── LA VIGNETTE DEVIENT L'UNIVERS ──
+   Le passage d'une ligne du CV au panneau, et retour (voir « La vignette
+   devient l'univers » dans univers.js). Trois choses voyagent : la boîte,
+   la photo, le titre. Le reste de la page ne bouge pas — à l'aller on
+   garde la page telle qu'on l'a quittée sous le panneau qui grandit, au
+   retour on la montre déjà revenue, et le panneau vient s'y ranger.
+
+   La photo remplit le cadre qui voyage, recadrée au même point que la
+   vignette : pas de double image pendant le fondu. Le ressort du site
+   (--ease-ressort) porte les trois : un objet qui se déplace a du poids.
+   Le fondu entre l'avant et l'après, lui, est bref et sans ressort. */
+html.vt-univers::view-transition-old(root),
+html.vt-univers-retour::view-transition-new(root) {
+    animation: none;
+}
+
+html.vt-univers::view-transition-new(root),
+html.vt-univers-retour::view-transition-old(root) {
+    animation: none;
+    opacity: 0;
+}
+
+/* Le fondu d'ouverture du panneau se tait : c'est le passage qui l'amène. */
+html:is(.vt-univers, .vt-univers-retour) #show-universe {
+    transition: none;
+}
+
+::view-transition-group(u-boite),
+::view-transition-group(u-photo),
+::view-transition-group(u-titre) {
+    animation-duration: var(--dur-morph, 620ms);
+    animation-timing-function: var(--ease-ressort, cubic-bezier(.2, .8, .2, 1));
+}
+
+::view-transition-old(u-boite),
+::view-transition-new(u-boite) {
+    animation-duration: calc(var(--dur-morph, 620ms) * .6);
+}
+
+::view-transition-old(u-photo),
+::view-transition-new(u-photo) {
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+}
+
+/* LA PETITE IMAGE NE SE MONTRE JAMAIS EN GRAND. La vignette fait 48 px :
+   agrandie à la taille de l'écran, elle n'est qu'un flou vif. À l'aller
+   elle s'efface donc tôt, tant qu'elle est encore petite ; au retour, le
+   fond du titre garde sa place le temps de rapetisser — le ressort l'y
+   amène dans le premier tiers du passage —, puis la vignette le
+   remplace. Même règle pour les deux titres, qui n'ont ni la même
+   police ni la même taille. */
+html.vt-univers::view-transition-old(u-photo),
+html.vt-univers::view-transition-old(u-titre) {
+    animation: vt-u-sort calc(var(--dur-morph, 620ms) * .35) ease-out both;
+}
+
+html.vt-univers::view-transition-new(u-photo),
+html.vt-univers::view-transition-new(u-titre) {
+    animation: vt-u-entre calc(var(--dur-morph, 620ms) * .4) ease-out both;
+}
+
+html.vt-univers-retour::view-transition-old(u-photo),
+html.vt-univers-retour::view-transition-old(u-titre) {
+    animation: vt-u-sort calc(var(--dur-morph, 620ms) * .3) ease-in calc(var(--dur-morph, 620ms) * .2) both;
+}
+
+html.vt-univers-retour::view-transition-new(u-photo),
+html.vt-univers-retour::view-transition-new(u-titre) {
+    animation: vt-u-entre calc(var(--dur-morph, 620ms) * .3) ease-out calc(var(--dur-morph, 620ms) * .35) both;
+}
+
+@keyframes vt-u-sort {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes vt-u-entre {
+    from {
+        opacity: 0;
+    }
 }
 
 /* ── Chrome du panneau ── */
@@ -116,14 +290,33 @@ html.u-locked body {
     transform: scaleX(0);
 }
 
+/* Menée par le navigateur lui-même quand il sait le faire ; sinon
+   univers.js l'écrit à chaque image, comme avant. */
+@supports (animation-timeline: scroll()) {
+    .u-progress span {
+        animation: u-progres linear both;
+        animation-timeline: --u-defile;
+    }
+}
+
+@keyframes u-progres {
+    from {
+        transform: scaleX(0);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
 /* ── Hero ──
    EXACTEMENT un écran, et la première image suit. Le hero a d'abord
    été collé sur près de deux écrans pour laisser au défilement le
    temps d'accélérer l'écriture ; mais on défilait alors longtemps
    sans rien voir venir. Le hero s'en va maintenant comme n'importe
    quelle section, et c'est en s'en allant qu'il se défait couche par
-   couche (fadeHero) : le geste fait avancer la page ET retire le
-   texte, au lieu de buter sur une retenue. */
+   couche (voir « Le héros s'en va » plus bas) : le geste fait avancer
+   la page ET retire le texte, au lieu de buter sur une retenue. */
 .u-hero-wrap {
     position: relative;
     height: 100svh;
@@ -151,31 +344,72 @@ html.u-locked body {
     /* UNE respiration, à l'entrée dans l'univers, puis le halo se pose.
        En boucle, c'était un mouvement sans fin à côté du texte, que rien
        ne permettait d'arrêter (WCAG 2.2.2). L'opacité de repos est celle
-       des bornes de l'animation : quand elle s'achève, rien ne saute, et
-       le fondu au défilement (--u-hero-glow) garde la main. */
-    opacity: calc(.55 * var(--u-hero-glow, 1));
+       des bornes de l'animation : quand elle s'achève, rien ne saute.
+       Le halo part ensuite avec le hero, qui défile comme une section :
+       il n'a plus besoin d'être éteint à la main à chaque image. */
+    opacity: .55;
     animation: u-breathe 9s ease-in-out 1;
 }
 
-/* --u-hero-glow est piloté au défilement (fadeHero) : le halo
-   s'éteint avec le titre, en dernier. C'est lui qui tient l'écran
-   pendant que le texte se retire couche par couche. */
 @keyframes u-breathe {
 
     0%,
     100% {
-        opacity: calc(.55 * var(--u-hero-glow, 1));
+        opacity: .55;
         transform: scale(1);
     }
 
     50% {
-        opacity: calc(.9 * var(--u-hero-glow, 1));
+        opacity: .9;
         transform: scale(1.06);
     }
 }
 
 .u-hero>* {
     position: relative;
+}
+
+/* ── LE FOND DU TITRE ──
+   La photo de la vignette, tendue derrière le titre et plongée dans le
+   noir de la salle (voir heroFondHtml). Elle est là pour situer, pas pour
+   être regardée : un tiers de sa lumière, et un fondu dans la couleur du
+   fond qui la retire avant le synopsis — le texte se lit sur la couleur
+   de l'univers, pas sur une photo. Elle part avec le titre, en reculant
+   un peu dans l'ombre. */
+.u-hero-fond {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    --rg-anim: u-fond-sortie;
+    --s: .5;
+    --e: .8;
+}
+
+.u-hero-fond img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+    opacity: .34;
+}
+
+.u-hero-fond::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+            color-mix(in srgb, var(--u-bg) 30%, transparent) 0%,
+            color-mix(in srgb, var(--u-bg) 70%, transparent) 42%,
+            var(--u-bg) 78%);
+}
+
+@keyframes u-fond-sortie {
+    to {
+        opacity: 0;
+        transform: scale(1.06);
+    }
 }
 
 .u-eyebrow {
@@ -246,12 +480,11 @@ html.u-locked body {
     color: var(--u-muted);
     /* L'auteur se pose avec la dernière lettre du titre, pas avant :
        il appartient au titre, pas au décor. */
-    opacity: 0;
     transition: opacity 700ms var(--ease-out);
 }
 
-.u-hero.is-titled .u-author {
-    opacity: 1;
+.u-anime .u-hero:not(.is-titled) .u-author {
+    opacity: 0;
 }
 
 /* ── Le récit s'écrit ──
@@ -268,16 +501,17 @@ html.u-locked body {
     white-space: nowrap;
 }
 
+/* Les lettres et les mots n'attendent que si le moteur est là pour les
+   écrire (.u-anime, voir #show-universe) : sans lui, le titre et le
+   synopsis sont lisibles d'emblée. */
 .u-ch {
     display: inline-block;
-    opacity: 0;
-    transform: translateY(-0.32em) scale(1.04);
     transition: opacity 260ms var(--ease-out), transform 420ms var(--ease-out);
 }
 
-.u-ch.is-lit {
-    opacity: 1;
-    transform: none;
+.u-anime .u-ch:not(.is-lit) {
+    opacity: 0;
+    transform: translateY(-0.32em) scale(1.04);
 }
 
 .u-synopsis {
@@ -289,32 +523,31 @@ html.u-locked body {
     color: var(--u-text);
 }
 
+/* SANS FLOU. Chaque mot sortait d'un flou de 7 px : jusqu'à cinquante-
+   trois mots flous en vol en même temps, chacun sur son propre calque,
+   que le téléphone devait recalculer à chaque image — la raison même
+   pour laquelle le murmure du CV avait déjà renoncé au flou. Le mot
+   monte et s'éclaire ; la voix reste douce, le calcul devient nul. */
 .u-wd {
     display: inline-block;
-    opacity: 0;
-    filter: blur(7px);
-    transform: translateY(9px);
+    opacity: .88;
     transition: opacity 900ms var(--ease-out),
-        filter 900ms var(--ease-out),
         transform 900ms var(--ease-out);
 }
 
-.u-wd.is-lit {
-    opacity: .88;
-    filter: none;
-    transform: none;
+.u-anime .u-wd:not(.is-lit) {
+    opacity: 0;
+    transform: translateY(9px);
 }
 
 /* Le reste du hero attend que le titre soit posé. */
 .u-meta,
 .u-hero-actions {
-    opacity: 0;
     transition: opacity 900ms var(--ease-out);
 }
 
-.u-hero.is-titled .u-meta,
-.u-hero.is-titled .u-hero-actions {
-    opacity: 1;
+.u-anime .u-hero:not(.is-titled) :is(.u-meta, .u-hero-actions) {
+    opacity: 0;
 }
 
 .u-meta {
@@ -325,28 +558,42 @@ html.u-locked body {
 }
 
 /* La flèche n'invite à descendre qu'une fois le récit écrit.
-   L'animation de balancement est coupée tant qu'elle est cachée :
-   ses keyframes portent l'opacité et écraseraient le fondu. */
-.u-hero .u-scroll {
-    opacity: 0;
-    animation: none;
-    transition: opacity 700ms var(--ease-out);
-}
-
-.u-hero.is-written .u-scroll {
-    opacity: 1;
-    /* Deux balancements (4,8 s), puis la flèche se tient immobile : elle
-       a dit ce qu'elle avait à dire. */
-    animation: u-bob 2.4s ease-in-out 2;
+   TROIS ÉTAGES, UN MOUVEMENT CHACUN. Elle sautait de 6 px vers la droite
+   au premier pixel de défilement : son centrage (translateX(-50%)) et sa
+   sortie au défilement écrivaient la même propriété, et la seconde
+   effaçait le premier. Et elle passait d'un coup de 0,5 à 1 d'opacité à
+   la fin de son balancement, dont les images clés finissaient ailleurs
+   que le repos. Désormais la couche la centre et l'emporte au
+   défilement, la flèche fait son fondu d'arrivée, et l'icône seule se
+   balance — sans toucher à l'opacité de personne. */
+.u-couche-fleche {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 34px;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
 }
 
 .u-scroll {
-    position: absolute;
-    bottom: 34px;
-    left: 50%;
-    transform: translateX(-50%);
+    display: block;
     font-size: .8rem;
     color: var(--u-accent-ink);
+    transition: opacity 700ms var(--ease-out);
+}
+
+.u-anime .u-hero:not(.is-written) .u-scroll {
+    opacity: 0;
+}
+
+.u-scroll .ico {
+    display: block;
+}
+
+/* Deux balancements (4,8 s), puis la flèche se tient immobile : elle a
+   dit ce qu'elle avait à dire. */
+.u-hero.is-written .u-scroll .ico {
     animation: u-bob 2.4s ease-in-out 2;
 }
 
@@ -354,13 +601,114 @@ html.u-locked body {
 
     0%,
     100% {
-        transform: translate(-50%, 0);
-        opacity: .5;
+        transform: none;
     }
 
     50% {
-        transform: translate(-50%, 9px);
+        transform: translateY(9px);
+    }
+}
+
+/* ── Le héros s'en va ──
+   PAR COUCHES, CHACUNE SUR SA COURSE. Le hero fait un écran et défile
+   comme une section : au premier pixel il occupe la moitié de sa course
+   à l'écran (0,5), il la quitte à 1. Les plages ci-dessous se lisent
+   donc entre 0,5 et 1.
+
+   Elles étaient pensées pour l'ancien hero COLLÉ : le titre commençait à
+   s'effacer quand il avait déjà quitté l'écran, 89 px au-dessus du bord.
+   Chaque couche part maintenant pendant qu'on la voit : le surtitre et
+   la flèche d'abord, puis la ligne du rôle, le synopsis, le bouton. Le
+   titre et l'auteur partent en dernier — ils glissent un peu moins vite
+   que la page (u-sortie-lente), ce qui les retient à l'écran le temps de
+   s'effacer, pendant que le reste s'envole (u-sortie).
+
+   LES COUCHES NE SE CROISENT JAMAIS. L'auteur descend pendant que le
+   synopsis, juste en dessous, monte : partis ensemble, « d'après
+   Rodogune » passait à travers « Royaume de Pyrie » encore à demi
+   visible. Le synopsis est donc parti quand l'auteur se met en route
+   (0,58).
+
+   Aucun flou : il était recalculé à chaque image, sur de grands blocs de
+   texte. Opacité et déplacement suffisent, et ne coûtent rien. */
+.u-eyebrow {
+    --rg-anim: u-sortie;
+    --s: .5;
+    --e: .58;
+}
+
+.u-couche-fleche {
+    --rg-anim: u-sortie;
+    --s: .5;
+    --e: .54;
+}
+
+.u-couche-meta {
+    --rg-anim: u-sortie;
+    --s: .5;
+    --e: .58;
+}
+
+.u-synopsis {
+    --rg-anim: u-sortie;
+    --s: .51;
+    --e: .58;
+}
+
+.u-couche-actions {
+    --rg-anim: u-sortie;
+    --s: .53;
+    --e: .64;
+}
+
+.u-couche-auteur,
+.u-title {
+    --rg-anim: u-sortie-lente;
+    --s: .58;
+    --e: .86;
+}
+
+@keyframes u-sortie {
+    from {
         opacity: 1;
+        transform: none;
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-3svh);
+    }
+}
+
+@keyframes u-sortie-lente {
+    from {
+        opacity: 1;
+        transform: none;
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(12svh);
+    }
+}
+
+/* Une fois vidé, le hero ne doit plus intercepter le moindre clic : le
+   bouton effacé resterait cliquable, invisible, par-dessus l'ouverture. */
+@supports (animation-timeline: view()) {
+    .u-couche-actions {
+        animation-name: var(--rg-anim), u-sortie-clic;
+    }
+}
+
+@keyframes u-sortie-clic {
+
+    0%,
+    90% {
+        visibility: visible;
+    }
+
+    100% {
+        visibility: hidden;
     }
 }
 
@@ -443,17 +791,26 @@ html.u-locked body {
     opacity: 1;
 }
 
-#show-universe.is-loading .u-loader::before {
-    animation: u-halo 2.4s var(--ease-out) infinite;
+/* LA RESPIRATION SE FIGE, ELLE NE S'ARRÊTE PAS. Retirer l'animation à
+   la fin du chargement ramenait d'un coup le masque à son état de repos
+   — pleine opacité — pendant que son conteneur s'effaçait : on le voyait
+   s'allumer au moment même où il partait. Mise en pause, elle reste où
+   elle en était, et s'efface avec lui. */
+.u-loader::before {
+    animation: u-halo 2.4s var(--ease-out) infinite paused;
 }
 
+.u-loader svg {
+    animation: u-coeur 2.4s ease-in-out infinite paused;
+}
+
+#show-universe.is-loading .u-loader::before,
 #show-universe.is-loading .u-loader svg {
-    animation: u-coeur 2.4s ease-in-out infinite;
+    animation-play-state: running;
 }
 
 #show-universe.is-loading .u-scroll {
     opacity: 0;
-    animation: none;
 }
 
 #show-universe.is-loading .u-figs,
@@ -643,13 +1000,12 @@ html.u-locked body {
     color: var(--u-text);
     background: color-mix(in srgb, var(--u-bg) 65%, transparent);
     border: 1px solid var(--u-line);
-    opacity: 0;
+    /* Au-dessus du voile de couleur du plein cadre (::after), qui la
+       recouvrait : on la devinait à peine. */
+    z-index: 2;
+    opacity: .75;
     transform: scale(.9);
     transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
-}
-
-.u-fig.is-in .u-fig-loupe {
-    opacity: .75;
 }
 
 .u-fig-media:hover .u-fig-loupe {
@@ -689,12 +1045,92 @@ html.u-locked body {
     overflow: hidden;
 }
 
-.u-fig--plein img {
+/* ── LA MISE AU POINT ──
+   Chaque photo arrive floue, fait le point en approchant du milieu de
+   l'écran, avec la légère respiration d'un objectif (1,05 → 1), puis se
+   refloute en sortant. Le flou n'est jamais calculé : c'est une copie
+   floutée d'avance (…-flou.webp, voir flouSrc dans univers-montage.js),
+   posée sur la photo nette, qu'on fond. Le navigateur ne fait que
+   mélanger deux images — rien à repeindre.
+
+   Tant que la photo nette n'est pas arrivée, la copie reste : on ne
+   fond jamais vers un cadre vide (.est-nette, posé par univers.js). Et
+   sans le moteur (.u-anime), pas de copie du tout : personne ne serait
+   là pour la retirer, et la photo resterait floue pour de bon.
+
+   .u-fig-point porte à la fois la respiration et la parallaxe, pour que
+   la photo et sa copie bougent d'un seul bloc et restent superposées au
+   pixel près. */
+.u-fig-point {
+    position: absolute;
+    inset: 0;
+    display: block;
+    overflow: hidden;
+}
+
+.u-fig-point img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.u-flou {
+    pointer-events: none;
+    opacity: 0;
+}
+
+.u-anime .u-fig:not(.est-nette) .u-flou {
+    opacity: 1;
+}
+
+.u-anime .u-fig.est-nette .u-flou {
+    --rg-anim: u-point;
+}
+
+@keyframes u-point {
+    0%,
+    18% {
+        opacity: 1;
+    }
+
+    40%,
+    76% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: .85;
+    }
+}
+
+/* Plein cadre : la parallaxe (la photo glisse dans son cadre, de -9 % à
+   +9 %) et la respiration de la mise au point, sur une même course.
+   Les étapes intermédiaires restent SUR la droite de la parallaxe
+   (-5,76 % à 18 %, -1,08 % à 44 %) : le glissement ne marque aucun
+   à-coup. L'agrandissement (1,22) laisse de la marge au glissement. */
+.u-fig--plein .u-fig-point {
     transform: scale(1.22);
-    will-change: transform;
+    --rg-anim: u-plein;
+}
+
+@keyframes u-plein {
+    0% {
+        transform: translateY(-9%) scale(1.281);
+    }
+
+    18% {
+        transform: translateY(-5.76%) scale(1.281);
+    }
+
+    44% {
+        transform: translateY(-1.08%) scale(1.22);
+    }
+
+    100% {
+        transform: translateY(9%) scale(1.22);
+    }
 }
 
 /* Voile de la couleur du spectacle : lie les photos entre elles et
@@ -718,49 +1154,377 @@ html.u-locked body {
     padding: 0 24px;
 }
 
+/* ── LA LUMIÈRE QUI MONTE ──
+   Après le noir de l'ouverture, la première photo plein cadre attend dans
+   le noir (le voile). Quand elle arrive à mi-écran, univers.js donne le
+   top (.est-allume) et la lumière monte — avec la signature de l'univers
+   (data-lumiere, voir voileHtml dans univers-montage.js). Joué une fois,
+   dans le temps et non au défilement : un top lumière ne se rembobine pas.
+
+   Le voile n'existe que si le moteur est là pour le lever (.u-anime) ; en
+   mouvement réduit, il n'existe pas du tout.
+
+   LES ÉCLAIRS RESTENT SOUS LE SEUIL : deux au plus, à un quart de seconde
+   d'écart — moins de trois flashs par seconde, la limite du WCAG (2.3.1). */
+.u-voile,
+.u-eclat {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.u-anime .u-allumage .u-voile {
+    background: #000;
+    opacity: 1;
+}
+
+.u-allumage.est-allume .u-voile {
+    animation: u-lum-crue .2s ease-out both;
+}
+
+@keyframes u-lum-crue {
+    to {
+        opacity: 0;
+    }
+}
+
+/* La foudre (Fulguré.e.s) : deux éclairs bleutés ; la photo change de
+   jour sous le second. */
+.u-allumage[data-lumiere="foudre"] .u-eclat {
+    background: radial-gradient(ellipse 85% 75% at 62% 16%, #fff 0%, #e2e8ff 28%, rgba(143, 168, 255, .55) 60%, rgba(143, 168, 255, .16) 100%);
+}
+
+.u-allumage.est-allume[data-lumiere="foudre"] .u-eclat {
+    animation: u-lum-eclairs 1.1s linear both;
+}
+
+.u-allumage.est-allume[data-lumiere="foudre"] .u-voile {
+    animation: u-lum-foudre 1.1s linear both;
+}
+
+@keyframes u-lum-eclairs {
+    0% {
+        opacity: 0;
+    }
+
+    7% {
+        opacity: .85;
+    }
+
+    15% {
+        opacity: .04;
+    }
+
+    27% {
+        opacity: .62;
+    }
+
+    46%,
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes u-lum-foudre {
+
+    0%,
+    25% {
+        opacity: 1;
+    }
+
+    30%,
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Les néons (À la barre, Audiences) : le tube hésite, claque, se tient —
+   une lumière froide de salle d'audience. */
+.u-allumage[data-lumiere="neon"] .u-eclat {
+    background: rgba(214, 232, 255, .16);
+    mix-blend-mode: screen;
+}
+
+.u-allumage.est-allume[data-lumiere="neon"] .u-voile {
+    animation: u-lum-neon 1.1s steps(1, end) both;
+}
+
+.u-allumage.est-allume[data-lumiere="neon"] .u-eclat {
+    animation: u-lum-froid 2.2s ease-out both;
+}
+
+@keyframes u-lum-neon {
+    0% {
+        opacity: 1;
+    }
+
+    14% {
+        opacity: .3;
+    }
+
+    22% {
+        opacity: .92;
+    }
+
+    40% {
+        opacity: .12;
+    }
+
+    48% {
+        opacity: .6;
+    }
+
+    62%,
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes u-lum-froid {
+    0% {
+        opacity: 0;
+    }
+
+    40% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* La torche (Cléophène) : une lumière basse et chaude, qui vacille en
+   montant avant de se poser. */
+.u-allumage[data-lumiere="torche"] .u-eclat {
+    background: #ff9a45;
+    mix-blend-mode: multiply;
+}
+
+.u-allumage.est-allume[data-lumiere="torche"] .u-voile {
+    animation: u-lum-torche 1.9s ease-out both;
+}
+
+.u-allumage.est-allume[data-lumiere="torche"] .u-eclat {
+    animation: u-lum-ambre 2.6s ease-in-out both;
+}
+
+@keyframes u-lum-torche {
+    0% {
+        opacity: 1;
+    }
+
+    18% {
+        opacity: .64;
+    }
+
+    26% {
+        opacity: .8;
+    }
+
+    44% {
+        opacity: .36;
+    }
+
+    52% {
+        opacity: .5;
+    }
+
+    72% {
+        opacity: .12;
+    }
+
+    82% {
+        opacity: .2;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes u-lum-ambre {
+    0% {
+        opacity: 0;
+    }
+
+    35% {
+        opacity: .6;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* La guirlande (As You Like It) : six ampoules qui s'allument l'une après
+   l'autre, de gauche à droite, dans un halo chaud. */
+.u-anime .u-allumage[data-lumiere="guirlande"] .u-voile {
+    background: none;
+    display: flex;
+}
+
+.u-allumage[data-lumiere="guirlande"] .u-voile i {
+    flex: 1;
+    background: #000;
+}
+
+.u-allumage.est-allume[data-lumiere="guirlande"] .u-voile {
+    animation: none;
+}
+
+.u-allumage.est-allume[data-lumiere="guirlande"] .u-voile i {
+    animation: u-lum-crue .5s ease-out both;
+}
+
+.u-allumage.est-allume[data-lumiere="guirlande"] .u-voile i:nth-child(2) {
+    animation-delay: .14s;
+}
+
+.u-allumage.est-allume[data-lumiere="guirlande"] .u-voile i:nth-child(3) {
+    animation-delay: .28s;
+}
+
+.u-allumage.est-allume[data-lumiere="guirlande"] .u-voile i:nth-child(4) {
+    animation-delay: .42s;
+}
+
+.u-allumage.est-allume[data-lumiere="guirlande"] .u-voile i:nth-child(5) {
+    animation-delay: .56s;
+}
+
+.u-allumage.est-allume[data-lumiere="guirlande"] .u-voile i:nth-child(6) {
+    animation-delay: .7s;
+}
+
+.u-allumage[data-lumiere="guirlande"] .u-eclat {
+    background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(255, 214, 140, .5), transparent 70%);
+    mix-blend-mode: screen;
+}
+
+.u-allumage.est-allume[data-lumiere="guirlande"] .u-eclat {
+    animation: u-lum-froid 2.4s ease-out both;
+}
+
+/* Le projecteur (les films) : l'amorce d'une bobine — quelques battements
+   d'image, puis la projection se tient. */
+.u-allumage[data-lumiere="projecteur"] .u-eclat {
+    background: radial-gradient(ellipse 60% 55% at 50% 45%, rgba(255, 246, 225, .42), transparent 72%);
+    mix-blend-mode: screen;
+}
+
+.u-allumage.est-allume[data-lumiere="projecteur"] .u-voile {
+    animation: u-lum-projecteur 1s steps(1, end) both;
+}
+
+.u-allumage.est-allume[data-lumiere="projecteur"] .u-eclat {
+    animation: u-lum-froid 1.8s ease-out both;
+}
+
+@keyframes u-lum-projecteur {
+    0% {
+        opacity: 1;
+    }
+
+    12% {
+        opacity: .35;
+    }
+
+    18% {
+        opacity: .8;
+    }
+
+    30% {
+        opacity: .22;
+    }
+
+    36% {
+        opacity: .5;
+    }
+
+    48%,
+    100% {
+        opacity: 0;
+    }
+}
+
 /* ══ GROUPES : duo, trio, quatuor ══
    Un temps du défilé qui rassemble plusieurs photos. Elles n'entrent
-   jamais d'un bloc : chacune monte avec son propre retard, et le
-   défilement les fait avancer à des vitesses légèrement différentes
-   (voir onScroll). C'est ce décalage — quelques pour cent — qui
-   transforme une planche plate en composition. */
+   jamais d'un bloc : chacune monte quand ELLE arrive à l'écran — et
+   non quand le groupe franchit un seuil, qui faisait finir l'entrée
+   des vignettes du bas hors champ, sur téléphone surtout. Dans son
+   cadre, chaque photo glisse à sa propre vitesse (--prof, posée par le
+   montage) : c'est ce décalage — quelques pour cent — qui transforme
+   une planche plate en composition. */
 .u-group {
+    position: relative;
     padding: 11svh 7vw;
     margin-inline: auto;
     display: grid;
+}
+
+/* Une incrustation posée sur un groupe le traverse d'un bord à l'autre. */
+.u-group>.u-over {
+    padding: 0 9vw;
 }
 
 .u-group .u-fig {
     margin: 0;
 }
 
+/* L'entrée passe par `translate` et non par `transform` : l'enfoncement
+   au clic (.u-fig-media:active, scale) garde ainsi sa propriété à lui.
+   Il était mort sur les vignettes de groupe, écrasé par l'état d'arrivée. */
 .u-group .u-fig-media {
     overflow: hidden;
     border-radius: 3px;
     border: 1px solid var(--u-line);
     box-shadow: 0 30px 70px -30px rgba(0, 0, 0, .7);
-    opacity: 0;
-    transform: translateY(38px);
-    transition: opacity 900ms var(--ease-out), transform 900ms var(--ease-out);
+    --rg-anim: u-tuile;
+    --s: .02;
+    --e: .26;
 }
 
-.u-group.is-in .u-fig-media {
-    opacity: 1;
-    transform: none;
+@keyframes u-tuile {
+    from {
+        opacity: 0;
+        translate: 0 38px;
+    }
+
+    to {
+        opacity: 1;
+        translate: none;
+    }
 }
 
-/* Entrée en cascade : chaque volet suit le précédent d'un temps.
-   --i est l'index de la photo dans le défilé, posé par le JS. */
-.u-group .u-fig:nth-child(2) .u-fig-media {
-    transition-delay: 130ms;
+/* Dans son cadre, la photo glisse de ±1,6 % × --prof (1 à 2,8), soit
+   4,5 % au plus : l'agrandissement de 1,10 laisse 5 % de marge de chaque
+   côté — le bord du cadre ne se découvre jamais (il le pouvait, à 6,7 %
+   de glissement pour 5 % de marge). La respiration de la mise au point
+   s'y ajoute, comme au plein cadre. */
+.u-group .u-fig-point {
+    transform: scale(1.1);
+    --rg-anim: u-tuile-point;
 }
 
-.u-group .u-fig:nth-child(3) .u-fig-media {
-    transition-delay: 260ms;
-}
+@keyframes u-tuile-point {
+    0% {
+        transform: translateY(calc(var(--prof, 1) * -1.6%)) scale(1.155);
+    }
 
-.u-group .u-fig:nth-child(4) .u-fig-media {
-    transition-delay: 390ms;
+    18% {
+        transform: translateY(calc(var(--prof, 1) * -1.024%)) scale(1.155);
+    }
+
+    44% {
+        transform: translateY(calc(var(--prof, 1) * -.192%)) scale(1.1);
+    }
+
+    100% {
+        transform: translateY(calc(var(--prof, 1) * 1.6%)) scale(1.1);
+    }
 }
 
 /* Cadres à HAUTEUR FIXE, exprimée en hauteur d'écran. Les photos du
@@ -774,7 +1538,7 @@ html.u-locked body {
     height: var(--tile-h, 46svh);
 }
 
-.u-group img {
+.u-group .u-fig-point img {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -795,13 +1559,6 @@ html.u-locked body {
     color: var(--u-muted);
     letter-spacing: .12em;
     font-size: .72rem;
-    opacity: 0;
-    transform: none;
-}
-
-.u-group.is-in .u-cap span {
-    opacity: 1;
-    transition-delay: 300ms;
 }
 
 /* ── Duo : deux photos, la seconde plus bas ── */
@@ -891,27 +1648,140 @@ html.u-locked body {
     }
 }
 
-/* ══ LE TEXTE ══
-   Chaque mot est un <span class="u-rw"> qui s'allume à mesure que le
-   bloc traverse l'écran — la révélation est PILOTÉE PAR LE
-   DÉFILEMENT (updateReveals), pas déclenchée une fois pour toutes à
-   l'entrée dans le cadre. La phrase s'écrit donc à la vitesse de la
-   main, et le lien entre le geste et le texte est ce qui fait
-   l'effet. */
+/* ══ L'ÉCRITURE À LA LUMIÈRE ══
+   Le texte d'un univers s'écrit pendant qu'on le lit. Chaque ligne, telle
+   qu'elle tombe à l'écran, reçoit un faisceau qui la parcourt de gauche à
+   droite — et marque la césure des alexandrins : la lumière s'y arrête un
+   instant, puis reprend (voir revealWords dans univers-montage.js).
+
+   MESURÉ SUR LA LIGNE, PLUS SUR LE BLOC. La progression se lisait sur le
+   haut du bloc : une citation de 78 % d'écran, texte au centre, était
+   entièrement écrite AVANT que son premier mot entre à l'écran (16 mots
+   sur 16, 19 sur 19, 14 sur 14 dans Bérénice). Chaque ligne s'écrit
+   maintenant quand ELLE passe aux deux tiers de l'écran, là où l'on lit.
+
+   LE TEXTE RÉEL NE BOUGE PAS. Les mots restent dans la page, lus par les
+   lecteurs d'écran et par qui l'indexe ; ils passent seulement en retrait
+   (.a-lumiere). La lumière est une copie décorative de chaque ligne,
+   posée dessus par univers.js (ecrireALaLumiere) : une fenêtre qui glisse
+   pendant que son texte glisse en sens inverse — il reste immobile à
+   l'écran, seule la fenêtre avance. Deux déplacements, rien à repeindre :
+   plus aucun des 72 à 142 flous qu'un univers animait mot à mot.
+
+   Sans script, sans lumière, ou en mouvement réduit : le texte est là,
+   entier, d'emblée. */
 .u-rw {
     display: inline-block;
-    opacity: 0;
-    filter: blur(8px);
-    transform: translateY(11px);
-    transition: opacity 620ms var(--ease-out),
-        filter 620ms var(--ease-out),
-        transform 620ms var(--ease-out);
 }
 
-.u-rw.is-lit {
-    opacity: 1;
-    filter: none;
-    transform: none;
+.u-ecrit.a-lumiere .u-rw,
+.u-ecrit.a-lumiere .u-cesure {
+    opacity: .16;
+}
+
+/* La césure : un filet fin, de la couleur du spectacle, entre les deux
+   hémistiches. */
+.u-cesure {
+    display: inline-block;
+    width: 1px;
+    height: .66em;
+    margin: 0 .34em;
+    vertical-align: -.02em;
+    background: var(--u-accent-ink);
+    opacity: .55;
+}
+
+.u-lum {
+    position: absolute;
+    display: block;
+    overflow: hidden;
+    pointer-events: none;
+    /* Le bord de la lumière : un fondu sur le dernier em de la fenêtre,
+       qui dépasse d'autant la fin de la ligne. */
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 1em), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 1em), transparent);
+    --rg-anim: u-lum-fenetre;
+}
+
+/* Le texte et le bord de la lumière suivent la plage de leur fenêtre. */
+.u-lum-t {
+    position: absolute;
+    left: 0;
+    top: 0;
+    white-space: pre;
+    --rg-anim: u-lum-texte;
+    --s: inherit;
+    --e: inherit;
+}
+
+.u-lum-bord {
+    position: absolute;
+    top: 6%;
+    bottom: 6%;
+    right: .3em;
+    width: .9em;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--u-accent) 70%, transparent), transparent);
+    opacity: 0;
+    --rg-anim: u-lum-bord;
+    --s: inherit;
+    --e: inherit;
+}
+
+@keyframes u-lum-fenetre {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: none;
+    }
+}
+
+@keyframes u-lum-texte {
+    from {
+        transform: translateX(calc(100% + 1em));
+    }
+
+    to {
+        transform: none;
+    }
+}
+
+@keyframes u-lum-bord {
+    0% {
+        opacity: 0;
+    }
+
+    8%,
+    84% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* La marque de césure s'avive quand la lumière s'y arrête. */
+.u-cesure.rg-k {
+    --rg-anim: u-cesure;
+}
+
+@keyframes u-cesure {
+    0% {
+        opacity: .16;
+        transform: scaleY(.5);
+    }
+
+    45% {
+        opacity: 1;
+        transform: scaleY(1.3);
+    }
+
+    100% {
+        opacity: .55;
+        transform: none;
+    }
 }
 
 /* Une ligne écrite = une ligne affichée. */
@@ -1021,7 +1891,8 @@ html.u-locked body {
     opacity: .82;
 }
 
-.u-chapter :is(h2, h3) {
+.u-chapter :is(h2, h3),
+.u-of-carton :is(h2, h3) {
     margin: 0;
     max-width: 40ch;
     font-family: 'Montserrat', sans-serif;
@@ -1042,6 +1913,14 @@ html.u-locked body {
     max-width: 640px;
     margin-inline: auto;
     padding: 12svh 8vw;
+}
+
+/* Le repère des fenêtres de lumière (voir poserLaLumiere) : le texte
+   écrit — ou le bloc lui-même quand c'est un titre, comme le carton de
+   l'ouverture. */
+.u-ecrit :is(p, h2, h3),
+:is(p, h2, h3).u-ecrit {
+    position: relative;
 }
 
 .u-text p {
@@ -1111,13 +1990,19 @@ html.u-locked body {
     letter-spacing: .26em;
     text-transform: uppercase;
     color: #fff;
-    opacity: 0;
+    opacity: .8;
     text-shadow: 0 1px 10px rgba(0, 0, 0, .8);
-    transition: opacity 800ms var(--ease-out);
+    /* Après la dernière ligne : univers.js recale --s et --e sur elle. */
+    --rg-anim: u-signe;
+    --s: .42;
+    --e: .5;
 }
 
-.u-over.is-lit cite {
-    opacity: .8;
+@keyframes u-signe {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
 }
 
 /* ── Note en marge d'un groupe ──
@@ -1194,13 +2079,11 @@ html.u-locked body {
     letter-spacing: .26em;
     text-transform: uppercase;
     color: var(--u-accent-ink);
-    opacity: 0;
-    transition: opacity 900ms var(--ease-out);
-}
-
-/* La signature n'arrive qu'une fois la phrase entièrement écrite. */
-.u-quote.is-lit cite {
-    opacity: 1;
+    /* La signature n'arrive qu'une fois la phrase entièrement écrite —
+       univers.js recale --s et --e sur la dernière ligne. */
+    --rg-anim: u-signe;
+    --s: .42;
+    --e: .5;
 }
 
 /* Pas de backdrop-filter ici, contrairement à la croix : la légende
@@ -1219,30 +2102,56 @@ html.u-locked body {
     border: 1px solid var(--u-line);
     padding: 8px 16px;
     border-radius: 999px;
-    opacity: 0;
-    transform: translateY(14px);
-    transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+    /* Elle entre quand ELLE arrive à l'écran. Déclenchée par sa figure
+       — un seuil de 25 % sur 86 % d'écran —, elle se jouait environ
+       440 px sous le bas de l'écran : on ne la voyait jamais arriver.
+       Celle des vidéos, qui n'avait pas de déclencheur du tout, ne
+       s'affichait jamais. */
+    --rg-anim: u-legende;
+    --s: .03;
+    --e: .2;
 }
 
-.u-fig.is-in .u-cap span {
-    opacity: 1;
-    transform: none;
+@keyframes u-legende {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
-/* ── Pied : les dates ── */
+/* ── Pied : les dates ──
+   Il entrait d'un bloc : les dates, les boutons, le palmarès, la
+   distribution et le crédit arrivaient ensemble. Chaque élément entre
+   maintenant quand IL arrive à l'écran — les représentations l'une après
+   l'autre, puis le générique. Là où le navigateur ne sait pas mener une
+   animation au défilement, le pied est simplement là. */
 .u-foot {
     padding: 12svh 24px 16svh;
     max-width: 720px;
     margin: 0 auto;
     text-align: center;
-    opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 800ms var(--ease-out), transform 800ms var(--ease-out);
 }
 
-.u-foot.is-in {
-    opacity: 1;
-    transform: none;
+@supports (animation-timeline: view()) {
+
+    .u-foot>*,
+    .u-dates>li {
+        animation: u-generique linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 90%;
+    }
+}
+
+@keyframes u-generique {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
 }
 
 .u-foot-title {
@@ -1643,6 +2552,470 @@ html.u-locked body {
     transition-duration: var(--dur-press);
 }
 
+/* ══ L'OUVERTURE : DU LOINTAIN À LA FACE ══
+   Une scène TENUE entre le titre et la première photo (voir ouvertureHtml
+   dans univers-montage.js). Le décor reste à l'écran pendant trois
+   écrans de défilement ; des photos du spectacle arrivent du fond du
+   plateau, passent de part et d'autre, et le carton du chapitre vient se
+   poser à la face. Puis le noir.
+
+   LE MOUVEMENT EST CELUI D'UNE CAMÉRA : chaque photo avance en profondeur
+   (translateZ) à vitesse constante — et, par la perspective, semble
+   accélérer en approchant, comme en vrai. Rien que des déplacements et des
+   opacités : la carte graphique s'en charge seule. */
+.u-ouverture {
+    position: relative;
+    height: 330svh;
+}
+
+.u-of-scene {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    perspective: 900px;
+    perspective-origin: 50% 50%;
+    container-type: size;
+}
+
+/* La lumière basse du plateau, dans la couleur du spectacle. */
+.u-of-fond {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 62% 58% at 50% 54%,
+            color-mix(in srgb, var(--u-accent) 20%, var(--u-bg)) 0%, var(--u-bg) 72%);
+}
+
+.u-of-plans {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+}
+
+/* Sur un écran haut (téléphone), la largeur seule donnerait des photos
+   d'un quart d'écran, perdues dans le noir : la hauteur compte aussi. */
+.u-of-photo {
+    --w: clamp(210px, max(38cqw, 32cqh), 620px);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--w);
+    aspect-ratio: 3 / 2;
+    margin: calc(var(--w) / -3) 0 0 calc(var(--w) / -2);
+    overflow: hidden;
+    border-radius: 2px;
+    box-shadow: 0 30px 60px -22px rgba(0, 0, 0, .75);
+    opacity: 0;
+    transform: translate3d(var(--x), var(--y), 0);
+    --rg-anim: u-of-passe;
+}
+
+.u-of-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@keyframes u-of-passe {
+    0% {
+        transform: translate3d(var(--x), var(--y), -2800px);
+        opacity: 0;
+    }
+
+    20%,
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate3d(var(--x), var(--y), 620px);
+        opacity: 0;
+    }
+}
+
+/* Le carton arrive du fond, se pose à la face, puis part dans le noir. */
+.u-of-carton {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 22px;
+    padding: 8svh 8vw;
+    --rg-anim: u-of-carton;
+    --s: .44;
+    --e: 1;
+}
+
+@keyframes u-of-carton {
+    0% {
+        transform: translateZ(-2800px);
+        opacity: 0;
+    }
+
+    12% {
+        opacity: 1;
+    }
+
+    64% {
+        transform: none;
+    }
+
+    84% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: none;
+        opacity: 0;
+    }
+}
+
+/* L'INVITATION À AVANCER. Au premier écran de la scène, une photo déjà
+   posée au loin, et au bas de l'écran « Avancer », qui s'efface dès le
+   premier geste : le noir du plateau ne passe jamais pour une page vide.
+   Sous le mot, un rail où une lumière descend — le geste à faire, montré
+   plutôt que dit. Trois passages, puis elle se pose au bas du rail : rien
+   ne bouge sans fin. */
+.u-of-invite {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: max(28px, 7svh);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .32em;
+    text-transform: uppercase;
+    color: var(--u-accent-ink);
+    --rg-anim: u-of-invite;
+    --s: 0;
+    --e: .06;
+}
+
+.u-of-rail {
+    position: relative;
+    width: 1px;
+    height: 46px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--u-accent-ink) 28%, transparent);
+}
+
+.u-of-rail::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1px;
+    height: 16px;
+    background: var(--u-accent-ink);
+    transform: translateY(30px);
+    animation: u-of-rail 2.1s cubic-bezier(.55, 0, .35, 1) .6s 3 backwards;
+}
+
+@keyframes u-of-rail {
+    0% {
+        transform: translateY(-16px);
+    }
+
+    75%,
+    100% {
+        transform: translateY(46px);
+    }
+}
+
+@keyframes u-of-invite {
+    to {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+}
+
+.u-of-noir {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    --rg-anim: u-of-noir;
+    --s: .9;
+    --e: 1;
+}
+
+@keyframes u-of-noir {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ══ LA POURSUITE ══
+   Une photo de groupe choisie, montrée ENTIÈRE (le cadre prend ses
+   proportions, --ratio) pour que les positions visent juste. Le plateau
+   reste dans la pénombre ; une ou deux poursuites vont d'un comédien à
+   l'autre au fil du défilement, puis plein feux. Voir poursuiteHtml dans
+   univers-montage.js pour les données.
+
+   UNE POURSUITE EST UNE FENÊTRE, PAS UN MASQUE QU'ON REPEINT : un cercle
+   à bord doux qui glisse en transform, avec la photo éclairée dedans qui
+   glisse en sens inverse — elle reste immobile à l'écran. Les positions
+   sont en unités du cadre (cqw, cqh). */
+.u-poursuite {
+    position: relative;
+    height: 280svh;
+}
+
+.u-pa-scene {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 22px;
+    padding: 44px 0 30px;
+}
+
+.u-pa-cadre {
+    position: relative;
+    container-type: size;
+    width: min(100vw - 32px, (100svh - 190px) * var(--ratio, 1.5));
+    aspect-ratio: var(--ratio, 1.5);
+    overflow: hidden;
+    border-radius: 2px;
+    background: #000;
+}
+
+.u-pa-base,
+.u-pa-plein {
+    position: absolute;
+    inset: 0;
+}
+
+.u-pa-base img,
+.u-pa-lum img,
+.u-pa-plein img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.u-pa-base {
+    filter: brightness(.15) saturate(.5);
+}
+
+.u-pa-faisceau {
+    --d: 52cqh;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--d);
+    height: var(--d);
+    opacity: 0;
+    -webkit-mask-image: radial-gradient(closest-side, #000 56%, rgba(0, 0, 0, .55) 79%, transparent 100%);
+    mask-image: radial-gradient(closest-side, #000 56%, rgba(0, 0, 0, .55) 79%, transparent 100%);
+}
+
+/* Un soupçon de chaleur dans le faisceau : une poursuite n'est pas
+   neutre, elle est tungstène. */
+.u-pa-faisceau::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(closest-side, rgba(255, 226, 184, .15), transparent 78%);
+}
+
+.u-pa-lum {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100cqw;
+    height: 100cqh;
+}
+
+.u-pa-plein {
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+    /* Comme .u-fig-media : sans elle, le panneau de l'accueil lui donnait
+       la transition générale de ses boutons, et la page non. */
+    transition: transform var(--dur-base) var(--ease-out);
+    --rg-anim: u-pa-plein;
+    --s: .74;
+    --e: .88;
+}
+
+@keyframes u-pa-plein {
+    from {
+        opacity: 0;
+    }
+}
+
+/* Trois étapes au plus, aux mêmes moments pour toutes les photos : les
+   poursuites s'allument (4-12 %), se déplacent vers la deuxième étape
+   (36-46 %), puis la troisième (58-66 %), et s'éteignent sous les plein
+   feux (74-88 %). Une photo à une ou deux étapes répète la dernière : le
+   mouvement correspondant est nul. */
+.u-pa-a {
+    --rg-anim: u-pa-a;
+}
+
+.u-pa-a .u-pa-lum {
+    --rg-anim: u-pa-a-lum;
+}
+
+.u-pa-b {
+    --rg-anim: u-pa-b;
+}
+
+.u-pa-b .u-pa-lum {
+    --rg-anim: u-pa-b-lum;
+}
+
+@keyframes u-pa-a {
+
+    0%,
+    4% {
+        opacity: 0;
+        transform: translate(calc(var(--a0x) * 1cqw - var(--d) / 2), calc(var(--a0y) * 1cqh - var(--d) / 2));
+    }
+
+    12%,
+    36% {
+        opacity: 1;
+        transform: translate(calc(var(--a0x) * 1cqw - var(--d) / 2), calc(var(--a0y) * 1cqh - var(--d) / 2));
+    }
+
+    46%,
+    58% {
+        transform: translate(calc(var(--a1x) * 1cqw - var(--d) / 2), calc(var(--a1y) * 1cqh - var(--d) / 2));
+    }
+
+    66%,
+    74% {
+        opacity: 1;
+        transform: translate(calc(var(--a2x) * 1cqw - var(--d) / 2), calc(var(--a2y) * 1cqh - var(--d) / 2));
+    }
+
+    88%,
+    100% {
+        opacity: 0;
+        transform: translate(calc(var(--a2x) * 1cqw - var(--d) / 2), calc(var(--a2y) * 1cqh - var(--d) / 2));
+    }
+}
+
+@keyframes u-pa-a-lum {
+
+    0%,
+    36% {
+        transform: translate(calc(var(--d) / 2 - var(--a0x) * 1cqw), calc(var(--d) / 2 - var(--a0y) * 1cqh));
+    }
+
+    46%,
+    58% {
+        transform: translate(calc(var(--d) / 2 - var(--a1x) * 1cqw), calc(var(--d) / 2 - var(--a1y) * 1cqh));
+    }
+
+    66%,
+    100% {
+        transform: translate(calc(var(--d) / 2 - var(--a2x) * 1cqw), calc(var(--d) / 2 - var(--a2y) * 1cqh));
+    }
+}
+
+@keyframes u-pa-b {
+
+    0%,
+    8% {
+        opacity: 0;
+        transform: translate(calc(var(--b0x) * 1cqw - var(--d) / 2), calc(var(--b0y) * 1cqh - var(--d) / 2));
+    }
+
+    16%,
+    36% {
+        opacity: var(--b0on);
+        transform: translate(calc(var(--b0x) * 1cqw - var(--d) / 2), calc(var(--b0y) * 1cqh - var(--d) / 2));
+    }
+
+    46%,
+    58% {
+        opacity: var(--b1on);
+        transform: translate(calc(var(--b1x) * 1cqw - var(--d) / 2), calc(var(--b1y) * 1cqh - var(--d) / 2));
+    }
+
+    66%,
+    74% {
+        opacity: var(--b2on);
+        transform: translate(calc(var(--b2x) * 1cqw - var(--d) / 2), calc(var(--b2y) * 1cqh - var(--d) / 2));
+    }
+
+    88%,
+    100% {
+        opacity: 0;
+        transform: translate(calc(var(--b2x) * 1cqw - var(--d) / 2), calc(var(--b2y) * 1cqh - var(--d) / 2));
+    }
+}
+
+@keyframes u-pa-b-lum {
+
+    0%,
+    36% {
+        transform: translate(calc(var(--d) / 2 - var(--b0x) * 1cqw), calc(var(--d) / 2 - var(--b0y) * 1cqh));
+    }
+
+    46%,
+    58% {
+        transform: translate(calc(var(--d) / 2 - var(--b1x) * 1cqw), calc(var(--d) / 2 - var(--b1y) * 1cqh));
+    }
+
+    66%,
+    100% {
+        transform: translate(calc(var(--d) / 2 - var(--b2x) * 1cqw), calc(var(--d) / 2 - var(--b2y) * 1cqh));
+    }
+}
+
+.u-pa-legende {
+    margin: 0;
+    width: min(100vw - 32px, 760px);
+    min-height: 3.2em;
+    text-align: center;
+    font-size: clamp(.95rem, 2vw, 1.12rem);
+    line-height: 1.55;
+    color: var(--u-text);
+}
+
+.u-pa-legende span {
+    display: inline-block;
+}
+
+.u-pa-leg1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    letter-spacing: .03em;
+    color: var(--u-accent-ink);
+    --rg-anim: u-legende;
+    --s: .14;
+    --e: .24;
+}
+
+.u-pa-leg2 {
+    --rg-anim: u-legende;
+    --s: .28;
+    --e: .4;
+}
+
 /* ── Agrandissement d'une photo ──
    Le seul endroit où l'image est montrée ENTIÈRE : le défilé la
    recadre partout ailleurs, et on ne comprend pas toujours ce
@@ -1789,24 +3162,29 @@ html.u-locked body {
     #show-universe,
     .u-zoom,
     .u-zoom figure,
-    .u-quote cite,
-    .u-over cite,
-    .u-rw,
     .u-ch,
     .u-wd,
+    .u-author,
+    .u-meta,
+    .u-hero-actions,
+    .u-scroll,
     .u-fig-media,
     .u-fig img,
-    .u-cap span,
-    .u-foot {
+    .u-cap span {
         transition: none !important;
         animation: none !important;
-        transform: none !important;
         filter: none !important;
-        opacity: 1;
+    }
+
+    .u-fig-media,
+    .u-fig img,
+    .u-fig-point,
+    .u-cap span {
+        transform: none !important;
     }
 
     .u-hero::before,
-    .u-scroll {
+    .u-scroll .ico {
         animation: none !important;
     }
 
@@ -1821,6 +3199,44 @@ html.u-locked body {
         animation: none !important;
         opacity: 1 !important;
         transform: none !important;
+    }
+
+    /* LES SCÈNES TENUES NE SE TIENNENT PLUS : chacune montre un état fixe
+       qui a du sens. L'ouverture se réduit à son carton, la poursuite à
+       sa photo en plein feux, la première photo est allumée d'emblée. */
+    .u-ouverture,
+    .u-poursuite {
+        height: auto;
+    }
+
+    .u-of-scene,
+    .u-pa-scene {
+        position: relative;
+        height: auto;
+    }
+
+    .u-of-scene {
+        min-height: 60svh;
+        display: grid;
+        place-items: center;
+    }
+
+    .u-of-plans,
+    .u-of-invite,
+    .u-of-noir,
+    .u-pa-faisceau,
+    .u-voile,
+    .u-eclat {
+        display: none;
+    }
+
+    .u-of-carton {
+        position: relative;
+        inset: auto;
+    }
+
+    .u-pa-scene {
+        padding: 10svh 0;
     }
 }
 

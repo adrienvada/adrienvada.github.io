@@ -26,6 +26,15 @@ module.exports = {
             spacing: {
                 6.5: '1.625rem',
             },
+            // Le zoom au survol de l'avatar (1,03) et des vignettes vidéo
+            // (1,02) : des agrandissements à peine perceptibles, que l'échelle
+            // de Tailwind n'a pas (elle saute de 1 à 1,05). Écrites dans le
+            // balisage sans exister ici, les classes ne produisaient rien —
+            // le zoom n'avait jamais existé.
+            scale: {
+                102: '1.02',
+                103: '1.03',
+            },
             fontFamily: {
                 cinzel: ['Cinzel', 'serif'],
                 inter: ['Inter', 'sans-serif'],

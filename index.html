@@ -51,6 +51,35 @@
         })();
 
         // ════════════════════════════════════════════════════════════════
+        //  LE MONTAGE DES UNIVERS : MÊME PRUDENCE, ET LA RÉGIE
+        //  ----------------------------------------------------------------
+        //  Dans un univers, le titre attend de s'écrire et la première photo
+        //  attend son allumage dans le noir : des états cachés que seul
+        //  univers.js sait défaire. Ils attendent ce drapeau-ci, u-anime,
+        //  levé de la même façon si le moteur n'a pas démarré.
+        //
+        //  Et la régie (regie.js) : là où le navigateur ne sait pas faire
+        //  avancer une animation au défilement, c'est elle qui mène. Son
+        //  drapeau est posé ici, avant le premier rendu : posé en fin de
+        //  page, il ferait passer ce qui est déjà à l'écran de son état
+        //  lisible à son premier temps, puis au bon. MÊME TEST que dans
+        //  regie.js — build/verifier-site.js y veille. Et si regie.js n'est
+        //  pas arrivé, le drapeau part : sans pilote, rien ne doit bouger.
+        (function () {
+            var racine = document.documentElement;
+            racine.classList.add('u-anime');
+            if (/[?&]repli(?:[=&]|$)/.test(location.search) || !(window.CSS && CSS.supports &&
+                CSS.supports('animation-timeline: view()') && CSS.supports('view-timeline: --rg block')))
+                racine.classList.add('regie-repli');
+            addEventListener('DOMContentLoaded', function () {
+                setTimeout(function () {
+                    if (!window.__universPret) racine.classList.remove('u-anime');
+                    if (!window.Regie) racine.classList.remove('regie-repli');
+                }, 0);
+            });
+        })();
+
+        // ════════════════════════════════════════════════════════════════
         //  L'INTERRUPTEUR DE MESURE — ne pas se compter soi-même
         //  ----------------------------------------------------------------
         //  Adrien est de loin le visiteur le plus assidu de son site : il
@@ -333,17 +362,28 @@
             --c-warn: 240 191 118;
 
             /* ── Mouvement ────────────────────────────────────────────
-               Un seul vocabulaire pour tout le site : deux courbes et
-               quatre durées. La sensation « tactile » vient surtout du
+               Un seul vocabulaire pour tout le site : trois courbes et
+               six durées. La sensation « tactile » vient surtout du
                contraste entre --dur-press (l'enfoncement, quasi immédiat)
                et --dur-base (le relâchement, qui s'étire). Un aller-retour
-               à durée égale donne au contraire une impression de mollesse. */
+               à durée égale donne au contraire une impression de mollesse.
+
+               LE RESSORT (--ease-ressort) est réservé à ce qui SE DÉPLACE
+               d'un point à un autre : la pastille des onglets, une vignette
+               qui devient page. Il dépasse sa cible de 4 % et s'y pose —
+               c'est ce qui donne du poids à l'objet. Une apparition, un
+               fondu n'en ont pas : ils gardent --ease-out. Les deux durées
+               de scène servent aux passages d'un lieu à l'autre : un onglet
+               (--dur-scene), une vignette qui s'ouvre (--dur-morph). */
             --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
             --ease-panel: cubic-bezier(0.4, 0, 0.2, 1);
+            --ease-ressort: linear(0, 0.005 1%, 0.039 3%, 0.098 5%, 0.215 8%, 0.566 16%, 0.715 20%, 0.807 23%, 0.901 27%, 0.966 31%, 1.013 36%, 1.036 42%, 1.032 52%, 1.002 75%, 1);
             --dur-press: 90ms;
             --dur-quick: 180ms;
             --dur-base: 320ms;
             --dur-panel: 400ms;
+            --dur-scene: 460ms;
+            --dur-morph: 620ms;
 
             --glass-bg: rgba(255, 255, 255, 0.035);
             --glass-border: rgba(255, 255, 255, 0.07);
@@ -419,26 +459,42 @@
             --glass-border: rgba(255, 255, 255, 0.08);
         }
 
-        /* Fondu doux lors du changement de thème : toutes les couleurs
-           passant par des variables CSS, il suffit de faire transitionner
-           les propriétés qui les consomment. Volontairement générique (le
-           sélecteur universel) mais peu coûteux : seules quelques propriétés
-           colorimétriques sont concernées, jamais transform/opacity/layout.
-           Les règles plus spécifiques plus bas (.glass-card, a, button…)
-           l'emportent naturellement par spécificité CSS et gardent leurs
-           propres transitions (hover, etc.) intactes. */
-        *,
-        *::before,
-        *::after {
-            transition: background-color 0.45s ease, color 0.45s ease, border-color 0.45s ease,
-                fill 0.45s ease, stroke 0.45s ease, box-shadow 0.45s ease, outline-color 0.45s ease;
+        /* ── LE THÈME BASCULE EN CERCLE ──
+           Chaque élément de la page portait une transition de couleur
+           permanente (le sélecteur universel), pour le seul changement de
+           thème : une image figée de 0,13 à 0,22 s au moment de basculer —
+           près d'une seconde sur un téléphone modeste —, et des éléments qui
+           ne changeaient pas ensemble (150 ms les liens, 300 les onglets,
+           450 le reste, les icônes en retard sur leur libellé).
+
+           Le nouveau thème s'ouvre désormais en cercle depuis le bouton
+           qu'on a pressé, par une View Transition (voir basculerTheme) :
+           deux images de la page, l'ancienne et la nouvelle, et un cercle
+           qui grandit. Aucune couleur ne transitionne — la page change
+           d'un coup, sous le cercle. Le temps du passage, rien ne doit
+           transitionner du tout, sans quoi la nouvelle image montrerait
+           ses couleurs encore en route (vt-theme). Navigateurs plus
+           anciens, ou mouvement réduit : la bascule est nette. */
+        html.vt-theme *,
+        html.vt-theme *::before,
+        html.vt-theme *::after {
+            transition: none !important;
+        }
+
+        html.vt-theme::view-transition-old(root),
+        html.vt-theme::view-transition-new(root) {
+            animation: none;
+            mix-blend-mode: normal;
+        }
+
+        html.vt-theme::view-transition-new(root) {
+            z-index: 2;
         }
 
         body {
             background-color: rgb(var(--c-bg));
             background-image: var(--page-glow);
             background-attachment: fixed;
-            transition: background-color 0.45s ease;
         }
 
         /* ══════════════════════════════════════════════════════════════
@@ -456,11 +512,20 @@
            saute. C'est toute la différence entre une lumière de salle et
            un interrupteur.
 
-           C'est univers.js qui la pose sur <html>, en relayant le
-           `--cv-accent` de la ligne regardée. Le répertoire, lui, doit
-           écrire une règle par spectacle : le CSS ne sait pas lire la
-           couleur d'un élément survolé. Ici la couleur est déjà connue du
-           script, il n'y a qu'à la faire remonter.
+           C'est univers.js qui en pose la CIBLE sur <html>
+           (--ambiance-cible), en relayant le `--cv-accent` de la ligne
+           regardée. Le répertoire, lui, doit écrire une règle par
+           spectacle : le CSS ne sait pas lire la couleur d'un élément
+           survolé. Ici la couleur est déjà connue du script, il n'y a qu'à
+           la faire remonter.
+
+           ELLE N'EST ANIMÉE QUE LÀ OÙ ELLE SE VOIT. Enregistrée héritée et
+           transitionnée sur la racine, elle passait à chacun des 2 276
+           éléments du document, recalculés à chaque image pendant le
+           glissement : survoler une ligne coûtait 0,46 s de calcul de style
+           en 0,8 s. Elle n'hérite donc plus : la cible change une fois par
+           geste, et seuls ses deux consommateurs — la lueur de salle et la
+           barre collée — font glisser leur propre --ambiance jusqu'à elle.
 
            RESTER DISCRET EST LA CONSIGNE. Un CV se lit ; ce n'est pas une
            devanture. La teinte n'entre que dans la lueur de fond, dans le
@@ -469,7 +534,7 @@
            ══════════════════════════════════════════════════════════════ */
         @property --ambiance {
             syntax: '<color>';
-            inherits: true;
+            inherits: false;
             initial-value: #bfa98a;
         }
 
@@ -495,7 +560,15 @@
         }
 
         :root {
-            --ambiance: rgb(var(--c-gold));
+            --ambiance-cible: rgb(var(--c-gold));
+        }
+
+        body::before,
+        #nav-barre {
+            --ambiance: var(--ambiance-cible);
+        }
+
+        body::before {
             transition: --ambiance 0.55s ease;
         }
 
@@ -592,9 +665,16 @@
             border: 1px solid var(--panel-border);
         }
 
-        /* Fix: force vertical scrollbar to always show to prevent layout shift on tab switch */
+        /* LA PLACE DE LA BARRE DE DÉFILEMENT EST TOUJOURS RÉSERVÉE : un onglet
+           court (Contact) ne fait pas sauter la page de sa largeur. C'était
+           `overflow-y: scroll`, qui forçait la barre — et rendait le verrou
+           des fenêtres inopérant : posé sur <body>, il ne s'applique pas
+           quand <html> défile pour son compte, et la page défilait derrière
+           le lecteur vidéo, l'agenda ou le rideau d'ouverture. La place
+           réservée tient aussi quand le verrou coupe le défilement (voir
+           plus bas) : rien ne bouge en ouvrant une fenêtre. */
         html {
-            overflow-y: scroll;
+            scrollbar-gutter: stable;
             background: rgb(var(--c-bg));
             color-scheme: dark;
         }
@@ -714,18 +794,135 @@
                 transform var(--dur-base) var(--ease-out);
         }
 
-        /* Page active states */
+        /* ── LE CHANGEMENT D'ONGLET ──
+           La page passait de masquée à visible dans le même calcul de style
+           que son opacité : sa transition ne se jouait jamais, et l'ancienne
+           page disparaissait sans sortie.
+
+           Il est désormais DIRECTIONNEL : la nouvelle page arrive du côté de
+           l'onglet qu'on a choisi — de la droite si l'on va vers « Démos
+           voix », de la gauche si l'on revient au CV. L'en-tête et la barre
+           d'onglets ne bougent pas ; seule la pastille de l'onglet actif
+           glisse, sur un ressort (voir .onglet-pastille).
+
+           Par une View Transition (vt-onglet, posée par showPage le temps du
+           passage) : l'ancienne page s'efface vers un côté pendant que la
+           nouvelle arrive de l'autre. Ailleurs, une animation d'entrée fait
+           au moins arriver la nouvelle (onglet-glisse). --onglet-dx porte le
+           sens. En mouvement réduit : le changement est net. */
         .page {
             display: none;
-            opacity: 0;
-            transform: translateY(12px) scale(0.99);
-            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .page.active {
             display: block;
-            opacity: 1;
-            transform: translateY(0) scale(1);
+            /* Un contexte d'empilement à elle, comme quand elle portait une
+               transformation : ce qui s'y superpose reste sous la barre
+               d'onglets collée. */
+            isolation: isolate;
+        }
+
+        /* Une animation d'entrée, et non @starting-style : elle se rejoue
+           d'elle-même chaque fois que la page repasse de masquée à
+           affichée, et l'outil qui allège la copie publiée la laisse
+           intacte — il réduisait un bloc @starting-style à une ligne sans
+           sélecteur. */
+        html.onglet-glisse .page.active {
+            animation: onglet-entre var(--dur-scene) var(--ease-out) both;
+        }
+
+        @keyframes onglet-entre {
+            from {
+                opacity: 0;
+                translate: var(--onglet-dx, 0px) 0;
+            }
+        }
+
+        html.vt-onglet .page.active {
+            animation: none;
+        }
+
+        /* VERS LA PAGE D'UN SPECTACLE, LA VIGNETTE D'ABORD. Depuis l'onglet
+           Dates rangé par spectacle, la vignette touchée grandit jusqu'à
+           devenir le fond du titre de la page (voir pageswap plus bas, et
+           le <style> des pages générées) : les deux documents consentent au
+           passage. Ailleurs, un simple fondu ; navigateurs plus anciens,
+           une navigation ordinaire. */
+        @view-transition {
+            navigation: auto;
+        }
+
+        .dl-vignette img {
+            view-transition-class: fiche;
+        }
+
+        html.vt-onglet #en-tete {
+            view-transition-name: en-tete;
+        }
+
+        html.vt-onglet #nav-barre {
+            view-transition-name: nav-barre;
+        }
+
+        /* L'en-tête et la barre restent vivants, sans double image : c'est
+           leur propre repli (la bio) et leur propre pastille qui bougent. */
+        html.vt-onglet::view-transition-old(en-tete),
+        html.vt-onglet::view-transition-old(nav-barre) {
+            display: none;
+        }
+
+        html.vt-onglet::view-transition-group(en-tete),
+        html.vt-onglet::view-transition-group(nav-barre),
+        html.vt-onglet::view-transition-new(en-tete),
+        html.vt-onglet::view-transition-new(nav-barre) {
+            animation: none;
+        }
+
+        html.vt-onglet::view-transition-old(root) {
+            animation: vt-onglet-sort var(--dur-quick) var(--ease-panel) both;
+        }
+
+        html.vt-onglet::view-transition-new(root) {
+            animation: vt-onglet-entre var(--dur-scene) var(--ease-out) both;
+        }
+
+        @keyframes vt-onglet-sort {
+            to {
+                opacity: 0;
+                translate: calc(var(--onglet-dx, 0px) * -1.4) 0;
+            }
+        }
+
+        @keyframes vt-onglet-entre {
+            from {
+                opacity: 0;
+                translate: var(--onglet-dx, 0px) 0;
+            }
+        }
+
+        /* La pastille de l'onglet actif : UN objet qui se déplace d'un
+           onglet à l'autre, au lieu d'un fond qui s'éteint ici pendant qu'un
+           autre s'allume là. Placée par placerPastille (plus bas). */
+        .onglet-pastille {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: var(--w, 0px);
+            height: var(--h, 0px);
+            translate: var(--x, 0px) var(--y, 0px);
+            border: 1px solid rgb(var(--c-s200) / .8);
+            background: rgb(var(--c-s200) / .4);
+            border-radius: .25rem;
+            pointer-events: none;
+            transition: translate var(--dur-scene) var(--ease-ressort), width var(--dur-scene) var(--ease-ressort);
+        }
+
+        .onglet-pastille.sans-transition {
+            transition: none;
+        }
+
+        #nav-tabs-container>a {
+            position: relative;
         }
 
         /* HIDDEN VEUT DIRE CACHÉ. Les fenêtres fermées portaient l'attribut
@@ -1557,8 +1754,9 @@
             }
         }
 
-        /* Verrouillage du défilement de l'arrière-plan quand une modale est ouverte */
-        body.modal-open {
+        /* Verrouillage du défilement de l'arrière-plan quand une fenêtre est
+           ouverte : sur <html>, qui est la boîte qui défile. */
+        html:has(> body.modal-open) {
             overflow: hidden;
         }
 
@@ -2441,6 +2639,7 @@
 
         .cv-has-universe:hover::before,
         .cv-has-universe:focus-within::before {
+            animation: none;
             opacity: 1;
             transform: scaleY(1);
         }
@@ -2451,6 +2650,7 @@
                immédiat, relâchement qui s'étire — pour que la ligne réponde
                comme une matière. */
         .cv-has-universe:has(.cv-row-toggle:active)::before {
+            animation: none;
             opacity: 1;
             transform: scaleY(1);
             transition-duration: var(--dur-press);
@@ -2658,42 +2858,217 @@
 
         }
 
-        /* ── LA GUIRLANDE, PARTOUT ──
-           Elle était réservée au petit écran, du temps où le lavis partait
-           du bord gauche : sur une liste large, une couleur qui traversait
-           le début des lignes gênait la lecture. Depuis, le lavis vient de
-           la DROITE — il ne tombe plus que sur la marge, le badge et la
-           flèche. Rien ne s'oppose plus à ce que la vague descende aussi
-           l'écran d'ordinateur, et le CV y gagne le même appel du regard. */
-        /* ── LA GUIRLANDE ──
-           Le lavis de couleur se retire : à .13 partout et en même
-           temps, huit aplats posés les uns sous les autres finissaient
-           par faire un décor, et le CV se lisait à travers une nappe.
-           Il tombe donc à ZÉRO — la ligne est nue, la couleur n'existe
-           que le temps de son passage — et ne monte à .16 qu'à son
-           tour. Rien ne reste allumé derrière la vague.
+        /* ── LA FRISE ──
+           La guirlande jouait au chargement : une vague de couleur
+           descendait le CV, ligne après ligne — sous le rideau de
+           l'ouverture, ou hors de l'écran sur téléphone, où presque
+           personne ne la voyait. Et elle REJOUAIT après chaque survol :
+           couper son animation pour allumer une ligne, puis la rendre,
+           la relançait.
 
-           La vague part du haut et descend, une ligne après l'autre :
-           --cv-rang est le rang de la ligne dans le CV, posé par
-           univers.js en ordre de lecture, et c'est lui qui retarde le
-           départ. Chaque pulsation dure plus longtemps que l'intervalle
-           qui sépare deux lignes : plusieurs restent donc allumées
-           ensemble, et l'on voit passer une onde plutôt qu'un point
-           qui saute de ligne en ligne. Les deux tiers du cycle sont du
-           repos — une guirlande respire, elle ne clignote pas.
+           La frise suit le regard. Une LIGNE DE LECTURE court au milieu
+           de l'écran ; en descendant le CV :
+             · un fil d'or se trace le long du bord droit de la liste, jusqu'à
+               elle (.cv-frise::after) ;
+             · le filet de chaque spectacle s'allume quand la ligne la passe,
+               et reste allumé — ce qu'on a lu est éclairé (::before) ;
+             · le lavis de couleur passe sur la ligne pendant qu'elle la
+               traverse, puis s'éteint (::after) ; la pastille et le bandeau
+               de la vignette s'allument avec lui ;
+             · l'année monte sur la vignette en arrivant à l'écran.
+           Tout est lié au défilement : il n'y a plus d'horloge, donc rien
+           à rejouer — un survol coupe l'animation, la rend, et elle
+           reprend exactement où en est le défilement.
 
-           Seule l'opacité est animée : le compositeur la traite sans
-           repeindre quoi que ce soit, et le CV en porte une dizaine. */
+           DEUX RÉGIMES, comme dans les univers (voir regie.js). Le
+           navigateur récent lit le défilement lui-même (view()) ; ailleurs
+           regie.js écrit sur chaque ligne où est son haut (--ph, en
+           hauteurs d'écran) et sa hauteur (--pt), et la même animation, en
+           pause, avance d'un délai négatif. Sans l'un ni l'autre, et en
+           mouvement réduit : tout est allumé, d'emblée.
+
+           Sélecteurs sous :where() : les états désignés (survol, appui),
+           plus bas, doivent l'emporter sans surenchère. */
         .cv-has-universe::after {
             opacity: 0;
-            /* UNE VAGUE, PAS UNE BOUCLE — voir « Ce qui bouge s'arrête ». */
-            animation: cv-guirlande 4s ease-in-out 1;
-            animation-delay: calc(var(--cv-rang, 0) * .25s);
         }
 
-        /* Au doigt, la ligne touchée s'allume à la CRÊTE DE LA
-           GUIRLANDE — la même couleur que la vague, ni plus ni moins :
-           on touche ce qu'on voyait passer.
+        .cv-frise {
+            position: relative;
+        }
+
+        .cv-frise::before,
+        .cv-frise::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 10px;
+            bottom: 10px;
+            width: 1px;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .cv-frise::before {
+            background: rgb(var(--c-s200) / .9);
+        }
+
+        .cv-frise::after {
+            background: linear-gradient(rgb(var(--c-gold)), rgb(var(--c-gold) / .5));
+            transform-origin: 50% 0;
+        }
+
+        @keyframes cv-fil {
+            from {
+                transform: scaleY(0);
+            }
+        }
+
+        @keyframes cv-filet {
+            from {
+                opacity: .4;
+                transform: scaleY(.72);
+            }
+        }
+
+        @keyframes cv-lavis-passe {
+
+            0%,
+            100% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: var(--cv-crete);
+            }
+        }
+
+        @keyframes cv-lueur-passe {
+
+            0%,
+            100% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes cv-annee {
+            from {
+                translate: 0 100%;
+            }
+        }
+
+        /* Le filet et le fil sont allumés au repos : ce sont les animations
+           qui les éteignent en dessous de la ligne de lecture. */
+        .cv-has-universe::before {
+            opacity: 1;
+            transform: none;
+        }
+
+        @supports (animation-timeline: view()) {
+            :where(html:not(.regie-repli)) .cv-frise::after,
+            :where(html:not(.regie-repli)) .cv-has-universe::before,
+            :where(html:not(.regie-repli)) .cv-has-universe::after,
+            :where(html:not(.regie-repli)) .cv-has-universe .cv-badge::after,
+            :where(html:not(.regie-repli)) .cv-vignette.a-etat::after,
+            :where(html:not(.regie-repli)) .cv-vignette-annee {
+                animation-timeline: view();
+                animation-duration: auto;
+                animation-timing-function: linear;
+                animation-fill-mode: both;
+            }
+
+            :where(html:not(.regie-repli)) .cv-frise::after {
+                animation-name: cv-fil;
+                animation-range: cover 50vh cover calc(100% - 50vh);
+            }
+
+            :where(html:not(.regie-repli)) .cv-has-universe::before {
+                animation-name: cv-filet;
+                animation-range: cover 45vh cover 55vh;
+            }
+
+            :where(html:not(.regie-repli)) .cv-has-universe::after {
+                animation-name: cv-lavis-passe;
+                animation-range: cover 38vh cover 62vh;
+            }
+
+            :where(html:not(.regie-repli)) .cv-has-universe .cv-badge::after,
+            :where(html:not(.regie-repli)) .cv-vignette.a-etat::after {
+                animation-name: cv-lueur-passe;
+                animation-range: cover 38vh cover 62vh;
+            }
+
+            :where(html:not(.regie-repli)) .cv-vignette-annee {
+                animation-name: cv-annee;
+                animation-range: cover 15vh cover 30vh;
+            }
+        }
+
+        :where(.regie-repli) .cv-frise::after,
+        :where(.regie-repli) .cv-has-universe::before,
+        :where(.regie-repli) .cv-has-universe::after,
+        :where(.regie-repli) .cv-has-universe .cv-badge::after,
+        :where(.regie-repli) .cv-vignette.a-etat::after,
+        :where(.regie-repli) .cv-vignette-annee {
+            animation-duration: 1s;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
+            animation-play-state: paused;
+        }
+
+        :where(.regie-repli) .cv-frise::after {
+            animation-name: cv-fil;
+            animation-delay: calc((.5 - var(--ph, 0)) / var(--pt, 1) * -1s);
+        }
+
+        :where(.regie-repli) .cv-has-universe::before {
+            animation-name: cv-filet;
+            animation-delay: calc((.55 - var(--ph, 0)) / .1 * -1s);
+        }
+
+        :where(.regie-repli) .cv-has-universe::after {
+            animation-name: cv-lavis-passe;
+            animation-delay: calc((.62 - var(--ph, 0)) / .24 * -1s);
+        }
+
+        :where(.regie-repli) .cv-has-universe .cv-badge::after,
+        :where(.regie-repli) .cv-vignette.a-etat::after {
+            animation-name: cv-lueur-passe;
+            animation-delay: calc((.62 - var(--ph, 0)) / .24 * -1s);
+        }
+
+        :where(.regie-repli) .cv-vignette-annee {
+            animation-name: cv-annee;
+            animation-delay: calc((.85 - var(--ph, 0)) / .15 * -1s);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .cv-frise::after,
+            .cv-has-universe::before,
+            .cv-has-universe::after,
+            .cv-has-universe .cv-badge::after,
+            .cv-vignette.a-etat::after,
+            .cv-vignette-annee {
+                animation: none !important;
+            }
+        }
+
+        @media print {
+
+            .cv-frise::before,
+            .cv-frise::after {
+                display: none !important;
+            }
+        }
+
+        /* Au doigt, la ligne touchée s'allume à la CRÊTE DU LAVIS — la
+           même couleur que celle qui passe au défilement, ni plus ni
+           moins : on touche ce qu'on voyait passer.
 
            Une animation l'emporte sur une opacité déclarée : il faut
            la couper pour reprendre la main, pas seulement la
@@ -2718,8 +3093,8 @@
         }
 
         /* À la souris, le même geste : la ligne visée s'arrête à la crête
-           de la vague. Elle ne s'allume ni plus ni moins qu'au passage de
-           la guirlande — on désigne ce qu'on voyait déjà. */
+           du lavis. Elle ne s'allume ni plus ni moins qu'à son passage —
+           on désigne ce qu'on voyait déjà. */
         @media (hover: hover) and (pointer: fine) {
             .cv-has-universe:hover::after {
                 animation: none;
@@ -2735,38 +3110,19 @@
             }
         }
 
-        @keyframes cv-guirlande {
-
-            0%,
-            100% {
-                opacity: 0;
-            }
-
-            14% {
-                opacity: var(--cv-crete);
-            }
-
-            34% {
-                opacity: 0;
-            }
-        }
-
         /* ── LA PASTILLE S'ALLUME AVEC SA LIGNE ──
            « En tournée », « En création » : cinq lignes du CV portent une
            pastille, et elle prend déjà la couleur de son spectacle. Au
-           passage de la vague, elle reçoit en plus un halo de cette même
+           passage du lavis, elle reçoit en plus un halo de cette même
            couleur — la ligne ne fait pas que se teinter, quelque chose s'y
            allume. C'est le seul endroit du CV où une information se
            distingue d'elle-même : les spectacles qui se jouent encore.
 
-           DEUX ÉLÉMENTS, UNE SEULE HORLOGE. Le lavis vit sur le ::after de
+           DEUX ÉLÉMENTS, UN SEUL DÉFILEMENT. Le lavis vit sur le ::after de
            la ligne, le halo sur celui de la pastille — deux animations
-           distinctes, donc, mais de même durée et de même retard, toutes
-           deux déclarées en CSS sur des éléments présents dès le premier
-           rendu. Elles démarrent à la même image et ne peuvent pas dériver
-           l'une par rapport à l'autre. Rien à synchroniser en script, et
-           rien à rejouer quand --cv-rang change : le retard des deux se
-           recale ensemble.
+           distinctes, mais sur la même plage du défilement (voir « La
+           frise ») : elles ne peuvent pas dériver l'une par rapport à
+           l'autre. Rien à synchroniser en script.
 
            SEULE L'OPACITÉ EST ANIMÉE, comme pour le lavis. Le halo est un
            box-shadow FIGÉ que porte un pseudo-élément, et l'on ne fait
@@ -2776,9 +3132,7 @@
            SES PROPRES BORNES, mais les mêmes instants. La crête du lavis
            vaut .16 : un halo à .16 ne se verrait pas. Le halo monte donc à
            1, sa force étant portée par l'alpha de son ombre, et non par
-           l'opacité. Les pourcentages, eux, sont ceux de cv-guirlande —
-           c'est ce qui les fait battre ensemble, et ils sont à garder
-           ensemble. */
+           l'opacité. La plage, elle, est celle du lavis. */
         .cv-has-universe .cv-badge::after {
             content: '';
             position: absolute;
@@ -2792,24 +3146,6 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity var(--dur-base) var(--ease-out);
-            animation: cv-pastille-lueur 4s ease-in-out 1;
-            animation-delay: calc(var(--cv-rang, 0) * .25s);
-        }
-
-        @keyframes cv-pastille-lueur {
-
-            0%,
-            100% {
-                opacity: 0;
-            }
-
-            14% {
-                opacity: 1;
-            }
-
-            34% {
-                opacity: 0;
-            }
         }
 
         /* « Moins d'animations » : le halo ne s'immobilise pas allumé, il
@@ -3248,9 +3584,9 @@
 
             /* LE HALO PASSE DU BADGE À LA VIGNETTE. « En tournée », « En
                création » ne sont plus écrits dans un badge à droite, mais en
-               bandeau sur la vignette : c'est elle qui s'allume au passage de
-               la guirlande, avec la même horloge que le badge avant elle (voir
-               « La pastille s'allume avec sa ligne »). Seulement les lignes
+               bandeau sur la vignette : c'est elle qui s'allume au passage du
+               lavis, sur la même plage que le badge avant elle (voir « La
+               frise »). Seulement les lignes
                qui portent un état — les spectacles qui se jouent encore. */
             .cv-vignette.a-etat::after {
                 content: '';
@@ -3261,8 +3597,6 @@
                 opacity: 0;
                 pointer-events: none;
                 transition: opacity var(--dur-base) var(--ease-out);
-                animation: cv-pastille-lueur 4s ease-in-out 1;
-                animation-delay: calc(var(--cv-rang, 0) * .25s);
             }
 
             .cv-item.is-pressed .cv-vignette.a-etat::after,
@@ -4305,6 +4639,24 @@
             pointer-events: none;
         }
 
+        /* Le rideau s'ouvre en iris depuis le sceau, et le nom rejoint
+           l'en-tête (voir ouvrirEnIris dans intro.js). L'iris est porté
+           par le script, le nom par le passage : même durée, même courbe. */
+        html.vt-rideau::view-transition-old(root),
+        html.vt-rideau::view-transition-new(root) {
+            animation: none;
+            mix-blend-mode: normal;
+        }
+
+        html.vt-rideau::view-transition-new(root) {
+            z-index: 2;
+        }
+
+        html.vt-rideau::view-transition-group(nom-adrien) {
+            animation-duration: 1s;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
+        }
+
         #intro-overlay[hidden] {
             display: none;
         }
@@ -4500,8 +4852,10 @@
             }
         }
 
+        /* Trois respirations, puis le sceau se tient : une invitation, pas
+           un clignotant. Elle battait sans fin tant qu'on n'avait pas cliqué. */
         .intro-cta.intro-cta-pulse .intro-seal {
-            animation: introSealPulse 2.4s ease-in-out infinite;
+            animation: introSealPulse 2.4s ease-in-out 3;
         }
 
         .intro-cta-hint {
@@ -4653,7 +5007,7 @@
         @media (prefers-reduced-motion: no-preference) {
             #nav-barre {
                 transition: background 240ms ease, box-shadow 240ms ease,
-                    border-color 240ms ease;
+                    border-color 240ms ease, --ambiance 0.55s ease;
             }
         }
 
@@ -4807,6 +5161,31 @@
 
            `linear` est délibéré : la moindre courbe de vitesse ramènerait
            l'accélération qu'on vient de corriger. */
+        /* ── LE TABLEAU DES DÉPARTS ──
+           Le carton « Prochainement » s'affiche une fois comme un tableau
+           de gare : chaque lettre bat jusqu'à la bonne, colonne après
+           colonne — la tournée qui part (voir tableauDesDeparts). Chaque
+           lettre est un volet à la largeur de la lettre finale : les
+           lettres de passage ne font pas bouger la ligne. Seul le volet
+           bat (transform) ; rien d'autre ne se recalcule. */
+        .volet {
+            display: inline-block;
+            overflow: hidden;
+            text-align: center;
+            vertical-align: bottom;
+            transform-origin: 50% 55%;
+        }
+
+        .volet.bat {
+            animation: volet-bat 70ms linear infinite;
+        }
+
+        @keyframes volet-bat {
+            50% {
+                transform: scaleY(.15);
+            }
+        }
+
         .next-date-shine {
             position: relative;
         }
@@ -5275,6 +5654,21 @@
                 if (rideau) rideau.hidden = true;
                 document.body.classList.remove('modal-open');
             });
+
+            // « PASSER » RÉPOND DÈS QU'IL EST À L'ÉCRAN. intro.js n'arrive
+            // qu'après la page (voir plus haut) : jusque-là, le bouton était
+            // affiché sur un écran noir et ne répondait pas. On lève donc le
+            // rideau soi-même, sans animation ; intro.js, s'il arrive ensuite,
+            // trouve la scène passée (__introPassee) et ne démarre pas. Une fois
+            // intro.js là, c'est lui qui répond, avec son fondu.
+            var passer = document.getElementById('intro-skip');
+            if (passer) passer.addEventListener('click', function () {
+                if (window.__introPret) return;
+                window.__introPassee = true;
+                var rideau = document.getElementById('intro-overlay');
+                if (rideau) rideau.hidden = true;
+                document.body.classList.remove('modal-open');
+            });
         })();
     </script>
 
@@ -5282,7 +5676,7 @@
     <div class="max-w-4xl mx-auto px-4 md:px-6 py-6 relative z-10 flex flex-col min-h-screen justify-between">
 
         <!-- HEADER (Light Luxury Style) -->
-        <header
+        <header id="en-tete"
             class="glass-card rounded-xl p-4 md:p-5 mb-5 shadow-sm border border-stone-200/50 hover:border-luxury-gold/30 transition duration-500">
             <div class="flex flex-col-reverse md:flex-row items-center md:items-start justify-between gap-4">
                 <!-- Info column -->
@@ -5480,6 +5874,7 @@
         <nav aria-label="Sections du site" id="nav-barre"
             class="glass-card rounded-lg p-1 mb-5 flex flex-row items-center justify-between border border-stone-200/50 shadow-sm relative no-print">
             <div class="flex items-center gap-0.5 flex-1 min-w-0 md:flex-none md:w-auto relative" id="nav-tabs-container">
+                <span class="onglet-pastille sans-transition" aria-hidden="true"></span>
                 <a href="#page_cv" id="tab-page_cv"
                     class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase transition-all duration-300 flex items-center justify-center gap-1.5 border border-transparent">
                     <svg class="ico text-[10px]" aria-hidden="true">
@@ -5756,6 +6151,117 @@
             bandeau.__rendu = html;
             bandeau.innerHTML = html;
             bandeau.hidden = false;
+            tableauDesDeparts(bandeau);
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  LE TABLEAU DES DÉPARTS
+        //  ----------------------------------------------------------------
+        //  UNE FOIS, quand le carton arrive à l'écran — et pas sous le rideau
+        //  de l'ouverture : on attend qu'il soit levé. Le nom du spectacle et
+        //  la ligne de la date battent comme les palettes d'un tableau de
+        //  gare, chaque lettre passant par quelques caractères avant de
+        //  tomber sur la bonne, de gauche à droite. Puis le texte d'origine
+        //  est rendu tel quel. Le temps du battement, le carton est marqué
+        //  occupé (aria-busy) : un lecteur d'écran attend la fin plutôt que
+        //  de lire des lettres de passage. Mouvement réduit : rien ne bat.
+        //  Les données en direct qui réécrivent le carton en cours de route
+        //  l'arrêtent proprement — le nouveau texte est déjà le bon.
+        let departsJoue = false;
+        function tableauDesDeparts(bandeau) {
+            if (departsJoue || !('IntersectionObserver' in window)) return;
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const io = new IntersectionObserver((entrees) => {
+                if (!entrees.some(e => e.isIntersecting) || departsJoue) return;
+                if (document.body.classList.contains('modal-open')) return; // le rideau : on repassera
+                departsJoue = true;
+                io.disconnect();
+                clearInterval(guet);
+                // Les polices d'abord : les volets prennent la largeur des
+                // lettres finales, mesurée dans la police qui restera. Et un
+                // temps pour que le regard se pose — au chargement, le carton
+                // est déjà là.
+                const pret = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+                pret.then(() => setTimeout(() => {
+                    const b = document.getElementById('next-date-banner');
+                    if (b && !b.hidden) battre(b);
+                }, 450));
+            }, { threshold: 0.6 });
+            io.observe(bandeau);
+            // Le rideau levé ne fait pas défiler la page : l'observateur ne
+            // se redéclencherait pas. On lui redemande, le temps qu'il tombe.
+            const guet = setInterval(() => {
+                if (departsJoue) { clearInterval(guet); return; }
+                if (!document.body.classList.contains('modal-open')) { io.unobserve(bandeau); io.observe(bandeau); }
+            }, 400);
+            setTimeout(() => clearInterval(guet), 30000);
+        }
+
+        function battre(bandeau) {
+            const cibles = [bandeau.querySelector('.next-date-quoi > :first-child'),
+                bandeau.querySelector('.next-date-quoi a[href="#page_dates"]')].filter(Boolean);
+            if (!cibles.length) return;
+            const originaux = cibles.map(c => c.innerHTML);
+            const volets = [];
+            cibles.forEach((cible) => {
+                const textes = [];
+                const marche = document.createTreeWalker(cible, NodeFilter.SHOW_TEXT);
+                while (marche.nextNode()) textes.push(marche.currentNode);
+                textes.forEach(t => {
+                    const frag = document.createDocumentFragment();
+                    for (const ch of t.data) {
+                        if (!/[\p{L}\p{N}]/u.test(ch)) { frag.appendChild(document.createTextNode(ch)); continue; }
+                        const v = document.createElement('span');
+                        v.className = 'volet';
+                        v.textContent = ch;
+                        v.dataset.c = ch;
+                        frag.appendChild(v);
+                        volets.push(v);
+                    }
+                    t.replaceWith(frag);
+                });
+            });
+            if (!volets.length) return;
+            // La largeur de chaque lettre finale, relevée en une fois.
+            const largeurs = volets.map(v => v.getBoundingClientRect().width);
+            volets.forEach((v, i) => { v.style.width = largeurs[i].toFixed(2) + 'px'; });
+            bandeau.setAttribute('aria-busy', 'true');
+
+            // Chaque palette bat dans son jeu : un chiffre parmi les chiffres,
+            // une minuscule parmi les minuscules. La ponctuation ne bat pas.
+            const CHIFFRES = '0123456789', CAPITALES = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const MINUSCULES = CAPITALES.toLowerCase();
+            const au = (c) => /\d/.test(c) ? CHIFFRES : (c !== c.toUpperCase() ? MINUSCULES : CAPITALES);
+            const PAS = 70, ECART = 22;   // une palette toutes les 70 ms ; 22 ms d'une colonne à l'autre
+            const t0 = performance.now();
+            const plan = volets.map((v, i) => ({ v, debut: i * ECART, fin: i * ECART + PAS * (4 + (i % 4)), c: v.dataset.c, dernier: -1 }));
+            const rendre = () => {
+                bandeau.removeAttribute('aria-busy');
+                cibles.forEach((c, i) => { if (c.isConnected) c.innerHTML = originaux[i]; });
+            };
+            const image = (now) => {
+                if (!volets[0].isConnected) { bandeau.removeAttribute('aria-busy'); return; }
+                const t = now - t0;
+                let restants = 0;
+                for (const p of plan) {
+                    if (t < p.debut) { restants++; continue; }
+                    if (t >= p.fin) {
+                        if (p.dernier !== -2) { p.v.textContent = p.c; p.v.classList.remove('bat'); p.dernier = -2; }
+                        continue;
+                    }
+                    restants++;
+                    const k = Math.floor((t - p.debut) / PAS);
+                    if (k !== p.dernier) {
+                        p.dernier = k;
+                        const jeu = au(p.c);
+                        p.v.textContent = jeu[(Math.random() * jeu.length) | 0];
+                        p.v.classList.add('bat');
+                    }
+                }
+                if (restants) requestAnimationFrame(image);
+                else rendre();
+            };
+            requestAnimationFrame(image);
         }
 
         renderNextDate();
@@ -7294,12 +7800,32 @@
             if (meta) meta.setAttribute('content', theme === 'light' ? '#FAF9F5' : '#0a0907');
         }
 
+        // Le cercle part du bouton pressé et grandit jusqu'au coin le plus
+        // éloigné de l'écran (voir « Le thème bascule en cercle »).
+        function basculerTheme(theme, bouton) {
+            const html = document.documentElement;
+            const calme = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!document.startViewTransition || calme || !bouton) { applyTheme(theme, true); return; }
+            const r = bouton.getBoundingClientRect();
+            const x = r.left + r.width / 2, y = r.top + r.height / 2;
+            const rayon = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+            html.classList.add('vt-theme');
+            const passage = document.startViewTransition(() => applyTheme(theme, true));
+            passage.ready.then(() => {
+                html.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${rayon}px at ${x}px ${y}px)`] }, {
+                    duration: 620, easing: 'cubic-bezier(.65, 0, .35, 1)',
+                    pseudoElement: '::view-transition-new(root)'
+                });
+            }).catch(() => { });
+            passage.finished.catch(() => { }).finally(() => html.classList.remove('vt-theme'));
+        }
+
         function initThemeToggle() {
             applyTheme(document.documentElement.getAttribute('data-theme') || 'dark', false);
             document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const now = document.documentElement.getAttribute('data-theme');
-                    applyTheme(now === 'light' ? 'dark' : 'light', true);
+                    basculerTheme(now === 'light' ? 'dark' : 'light', btn);
                 });
             });
 
@@ -7731,15 +8257,18 @@
             // ligne en enchaînait trois : showPage, puis `location.hash` (qui
             // relançait showPage par hashchange), puis un scrollIntoView vers
             // une troisième cible.
-            allerAOnglet('page_dates');
             // LE FOCUS ARRIVE AVEC LA PAGE. Venu d'un univers refermé, il
             // restait sur <body> : la touche Tab suivante repartait du haut
-            // du site au lieu des dates qu'on venait demander.
-            const titre = document.querySelector('#page_dates h3');
-            if (titre) {
-                titre.setAttribute('tabindex', '-1');
-                titre.focus({ preventScroll: true });
-            }
+            // du site au lieu des dates qu'on venait demander. On attend que
+            // la page soit posée : pendant le passage animé, elle est encore
+            // masquée une image, et un élément masqué ne prend pas le focus.
+            allerAOnglet('page_dates').then(() => {
+                const titre = document.querySelector('#page_dates h3');
+                if (titre) {
+                    titre.setAttribute('tabindex', '-1');
+                    titre.focus({ preventScroll: true });
+                }
+            });
         }
 
         document.addEventListener('click', (e) => {
@@ -9246,7 +9775,10 @@
         // ════════════════════════════════════════════════════════════════
         //  ROUTEUR D'ONGLETS
         // ════════════════════════════════════════════════════════════════
-        const TAB_ACTIVE = ['text-luxury-goldInk', 'border-stone-200/80', 'bg-stone-200/40'];
+        // Le fond et le filet de l'onglet actif sont ceux de la pastille, qui
+        // glisse de l'un à l'autre (voir .onglet-pastille) : l'onglet ne
+        // garde que sa couleur.
+        const TAB_ACTIVE = ['text-luxury-goldInk'];
         const TAB_IDLE = ['text-stone-500', 'border-transparent'];
         // LE TITRE DE LA FENÊTRE SUIT L'ONGLET. C'est lui qu'un lecteur
         // d'écran annonce au changement, et lui que montrent l'historique et
@@ -9297,13 +9829,91 @@
         // Changer d'onglet pour de bon : l'URL suit (lien partageable, bouton
         // « précédent »), et c'est nous — nous seuls — qui décidons du
         // défilement (voir le gestionnaire de clic des onglets).
+        //
+        // Rend une promesse tenue quand la nouvelle page est EN PLACE : le
+        // passage animé la pose une image plus tard (voir showPage), et qui
+        // veut y mettre le focus doit l'attendre.
         function allerAOnglet(pageId) {
-            if (!document.getElementById(pageId)) return;
+            if (!document.getElementById(pageId)) return Promise.resolve();
             if ('#' + pageId !== window.location.hash) history.pushState(null, '', '#' + pageId);
-            showPage(pageId, true);
+            return showPage(pageId, true);
         }
 
+        // ── LE PASSAGE D'UN ONGLET À L'AUTRE ──
+        //  Dans l'ordre de la barre : c'est lui qui donne le sens. On va vers
+        //  la droite, la page arrive de la droite ; on revient, elle revient
+        //  de la gauche (voir « Le changement d'onglet » dans le <style>).
+        const ORDRE_ONGLETS = ['page_cv', 'page_dates', 'demos_camera', 'demos_voix'];
+        const ONGLETS_IMMOBILES = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+        let passageOnglet = 0;
+
         function showPage(pageId, animate = true) {
+            const avant = document.querySelector('.page.active');
+            const html = document.documentElement;
+            if (!animate || !avant || avant.id === pageId || (ONGLETS_IMMOBILES && ONGLETS_IMMOBILES.matches)) {
+                poserPage(pageId, animate);
+                return Promise.resolve();
+            }
+            const sens = ORDRE_ONGLETS.indexOf(pageId) >= ORDRE_ONGLETS.indexOf(avant.id) ? 1 : -1;
+            html.style.setProperty('--onglet-dx', (sens * 28) + 'px');
+            if (!document.startViewTransition) {
+                html.classList.add('onglet-glisse');
+                poserPage(pageId, animate);
+                return Promise.resolve();
+            }
+            // Un second clic pendant le passage : la première transition est
+            // abandonnée, et sa fin ne doit pas retirer la classe de la seconde.
+            const jeton = ++passageOnglet;
+            html.classList.add('vt-onglet');
+            const passage = document.startViewTransition(() => poserPage(pageId, animate));
+            passage.finished.finally(() => {
+                if (jeton === passageOnglet) html.classList.remove('vt-onglet');
+            });
+            return passage.updateCallbackDone.catch(() => { });
+        }
+
+        // La vignette du spectacle qu'on va voir prend le nom que porte le
+        // fond du titre de sa page : c'est elle qui voyage. Seulement si elle
+        // est à l'écran, et le nom est retiré au retour sur cette page.
+        addEventListener('pageswap', (e) => {
+            if (!e.viewTransition || !e.activation || !e.activation.entry) return;
+            const chemin = new URL(e.activation.entry.url).pathname;
+            const m = chemin.match(/\/spectacles\/([^/]+)\/$/);
+            if (!m) return;
+            const groupe = [...document.querySelectorAll('#page_dates .dl-groupe--spectacle')]
+                .find(g => [...g.querySelectorAll('a[href]')].some(a => new URL(a.href).pathname === chemin));
+            const img = groupe && groupe.querySelector('.dl-vignette img');
+            if (!img) return;
+            const r = img.getBoundingClientRect();
+            if (r.width && r.bottom > 0 && r.top < innerHeight) img.style.viewTransitionName = 'fiche-' + m[1];
+        });
+        addEventListener('pageshow', () => {
+            document.querySelectorAll('.dl-vignette img').forEach(img => { img.style.viewTransitionName = ''; });
+        });
+
+        // La pastille sous l'onglet actif. Sans transition au premier
+        // placement et quand la barre change de taille : elle ne glisse que
+        // pour aller d'un onglet à un autre.
+        function placerPastille(onglet, glisser) {
+            const pastille = document.querySelector('#nav-tabs-container .onglet-pastille');
+            if (!pastille || !onglet) return;
+            pastille.classList.toggle('sans-transition', !glisser);
+            pastille.style.setProperty('--x', onglet.offsetLeft + 'px');
+            pastille.style.setProperty('--y', onglet.offsetTop + 'px');
+            pastille.style.setProperty('--w', onglet.offsetWidth + 'px');
+            pastille.style.setProperty('--h', onglet.offsetHeight + 'px');
+        }
+
+        // Les onglets changent de largeur avec la barre, et quand la police
+        // arrive : la pastille les suit, sans glisser.
+        addEventListener('DOMContentLoaded', () => {
+            const replacer = () => placerPastille(document.querySelector('#nav-tabs-container a[aria-current="page"]'), false);
+            const barre = document.getElementById('nav-tabs-container');
+            if (barre && 'ResizeObserver' in window) new ResizeObserver(replacer).observe(barre);
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(replacer);
+        });
+
+        function poserPage(pageId, animate) {
             if (activeAudioId) {
                 const audio = document.getElementById(activeAudioId);
                 if (audio) { audio.pause(); audio.currentTime = 0; resetAudioPlayer(activeAudioId); }
@@ -9312,10 +9922,7 @@
 
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             const activePage = document.getElementById(pageId);
-            if (activePage) {
-                activePage.classList.add('active');
-                if (animate) activePage.offsetHeight; // reflow pour relancer la transition
-            }
+            if (activePage) activePage.classList.add('active');
 
             document.querySelectorAll('#nav-tabs-container a').forEach(btn => {
                 btn.classList.remove(...TAB_ACTIVE);
@@ -9328,6 +9935,7 @@
                 activeTabButton.classList.add(...TAB_ACTIVE);
                 activeTabButton.setAttribute('aria-current', 'page');
             }
+            placerPastille(activeTabButton, animate);
 
             if (TITRES_ONGLETS[pageId]) document.title = TITRES_ONGLETS[pageId];
 
@@ -9716,9 +10324,12 @@
         </div>
     </div>
 
-    <!-- Le moteur de montage, avant univers.js qui s'en sert.
-         Même fichier que celui dont se sert build/generer-pages-spectacles.js :
+    <!-- La régie d'abord : le défilement qui mène les scènes, là où le
+         navigateur ne le fait pas lui-même (voir regie.js).
+         Puis le moteur de montage, avant univers.js qui s'en sert.
+         Mêmes fichiers que ceux dont se sert build/generer-pages-spectacles.js :
          c'est ce qui garantit qu'une page spectacle a le visage de son univers. -->
+    <script src="regie.js"></script>
     <script src="univers-montage.js"></script>
     <script src="univers.js"></script>
 </body>

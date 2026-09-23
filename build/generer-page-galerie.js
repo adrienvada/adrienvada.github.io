@@ -75,6 +75,12 @@ function genererCss() {
    or sur noir, grain de pellicule, grille dont la densité se règle aux boutons − et +. */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Le thème bascule en cercle (voir la bascule, dans le script) : pendant
+   le passage, rien ne transitionne. */
+html.vt-theme *, html.vt-theme *::before, html.vt-theme *::after { transition: none !important; }
+html.vt-theme::view-transition-old(root), html.vt-theme::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-theme::view-transition-new(root) { z-index: 2; }
+
 @property --ambiance {
     syntax: '<color>';
     inherits: true;
@@ -504,6 +510,38 @@ html.galerie-verrou {
     transform: none;
 }
 
+/* LA VIGNETTE DEVIENT LA PHOTO — et au retour, la photo se range dans sa
+   case. Par une View Transition (voir openZoom) : la vignette touchée et
+   la photo agrandie portent le même nom le temps du passage, et le
+   navigateur fait glisser l'une vers l'autre. Chacune remplit le cadre
+   qui voyage, recadrée comme il faut (cover) : la vignette est un 3:4
+   découpé dans la photo, la photo est entière — le recadrage se défait
+   en chemin. Le temps du passage, les fondus propres de la visionneuse
+   se taisent : c'est le passage qui fait le mouvement. */
+html.vt-book .galerie-zoom,
+html.vt-book .zoom-fig,
+html.vt-book .zoom-img {
+    transition: none !important;
+}
+
+::view-transition-group(book-photo) {
+    z-index: 3;
+    animation-duration: .5s;
+    animation-timing-function: cubic-bezier(.2, .8, .2, 1);
+}
+
+/* Le point visé est celui du recadrage des vignettes (35 % depuis le
+   haut, voir build/variantes-images.py) : au départ, la photo entière
+   recadrée dans la case de la vignette EST la vignette — pas de double
+   image pendant le fondu. */
+::view-transition-old(book-photo),
+::view-transition-new(book-photo) {
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 35%;
+    animation-duration: .5s;
+}
+
 .zoom-img {
     max-width: 88vw;
     max-height: 80svh;
@@ -850,7 +888,7 @@ ${JSON.stringify(schemaJson, null, 2)}
         // ════════════════════════════════════════════════════════════════
         //  VISIONNEUSE PLEIN ÉCRAN
         // ════════════════════════════════════════════════════════════════
-        function updateZoomDisplay() {
+        function updateZoomDisplay(direct) {
             var item = PHOTOS[currentIndex];
             if (!item) return;
             // L'ENTRÉE NE SE FAIT PLUS QU'EN OPACITÉ. Elle ajoutait un
@@ -862,10 +900,20 @@ ${JSON.stringify(schemaJson, null, 2)}
             // son propre scale(.96) à l'ouverture de la visionneuse (voir
             // .zoom-fig) : le mouvement d'entrée n'est pas perdu, il est
             // seulement porté par le cadre plutôt que par l'image.
-            zoomImg.style.opacity = '0';
             remetAPlat(false);
             zoomCaption.textContent = (currentIndex + 1) + ' / ' + PHOTOS.length;
             zoomAnnonce.textContent = 'Photo ' + (currentIndex + 1) + ' sur ' + PHOTOS.length + ' : ' + item.alt;
+            // Ouverte par le passage depuis la vignette, la photo est déjà
+            // décodée : elle se pose tout de suite, sans fondu — c'est elle
+            // que le passage fait arriver.
+            if (direct) {
+                zoomImg.onload = null;
+                zoomImg.src = item.full;
+                zoomImg.alt = item.alt;
+                zoomImg.style.opacity = '1';
+                return;
+            }
+            zoomImg.style.opacity = '0';
 
             setTimeout(function () {
                 zoomImg.src = item.full;
@@ -907,30 +955,106 @@ ${JSON.stringify(schemaJson, null, 2)}
             inertes = [];
         }
 
-        function openZoom(index) {
-            currentIndex = (index + PHOTOS.length) % PHOTOS.length;
+        // UN JETON CONTRE LES COURSES. La fermeture cache la visionneuse
+        // 280 ms plus tard, le temps de son fondu. Fermer puis rouvrir dans
+        // l'intervalle (Échap, puis Entrée sur la vignette) laissait ce
+        // minuteur cacher la visionneuse qu'on venait de rouvrir — alors que
+        // la page, elle, était de nouveau inerte : plus rien ne répondait.
+        // Chaque ouverture et chaque fermeture prend un numéro ; un minuteur
+        // qui n'a plus le dernier ne fait rien.
+        var jetonZoom = 0;
+
+        function vignetteDe(i) {
+            return document.querySelector('[data-zoom-photo="' + i + '"] img');
+        }
+
+        // La vignette est-elle à l'écran ? Sinon, pas de voyage : la photo
+        // partirait vers une case qu'on ne voit pas.
+        function aLEcran(el) {
+            var r = el.getBoundingClientRect();
+            return r.bottom > 0 && r.top < innerHeight && r.width > 0;
+        }
+
+        function ouvrirVisionneuse(direct) {
             defilementAvant = window.scrollY || document.documentElement.scrollTop || 0;
             zoomModal.hidden = false;
             void zoomModal.offsetHeight;
             zoomModal.classList.add('is-open');
             document.documentElement.classList.add('galerie-verrou');
             isoleVisionneuse();
-            updateZoomDisplay();
-            document.getElementById('zoom-close')?.focus();
+            updateZoomDisplay(direct);
+            document.getElementById('zoom-close')?.focus({ preventScroll: true });
         }
 
-        function closeZoom() {
-            if (zoomModal.hidden) return;
+        function openZoom(index) {
+            var jeton = ++jetonZoom;
+            currentIndex = (index + PHOTOS.length) % PHOTOS.length;
+            var vignette = vignetteDe(currentIndex);
+            if (!document.startViewTransition || reduit || !vignette || !aLEcran(vignette)) {
+                ouvrirVisionneuse(false);
+                return;
+            }
+            // La photo est décodée AVANT le passage — un tiers de seconde au
+            // plus : au-delà, on part quand même, et elle finira en fondu.
+            var photo = new Image();
+            photo.src = PHOTOS[currentIndex].full;
+            var decodee = photo.decode ? photo.decode().catch(function () { }) : Promise.resolve();
+            Promise.race([decodee, new Promise(function (ok) { setTimeout(ok, 350); })]).then(function () {
+                if (jeton !== jetonZoom) return;
+                var racine = document.documentElement;
+                vignette.style.viewTransitionName = 'book-photo';
+                racine.classList.add('vt-book');
+                var passage = document.startViewTransition(function () {
+                    vignette.style.viewTransitionName = '';
+                    ouvrirVisionneuse(true);
+                    zoomImg.style.viewTransitionName = 'book-photo';
+                });
+                passage.finished.catch(function () { }).then(function () {
+                    zoomImg.style.viewTransitionName = '';
+                    if (jeton === jetonZoom) racine.classList.remove('vt-book');
+                });
+            });
+        }
+
+        function fermerVisionneuse(jeton, direct) {
             zoomModal.classList.remove('is-open');
             document.documentElement.classList.remove('galerie-verrou');
             window.scrollTo(0, defilementAvant);
             libereVisionneuse();
             var retour = document.querySelector('[data-zoom-photo="' + currentIndex + '"]');
-            if (retour) retour.focus();
-            setTimeout(function () {
+            if (retour) retour.focus({ preventScroll: true });
+            var cacher = function () {
+                if (jeton !== jetonZoom) return;
                 zoomModal.hidden = true;
                 zoomImg.src = '';
-            }, 280);
+            };
+            if (direct) cacher();
+            else setTimeout(cacher, 280);
+        }
+
+        function closeZoom() {
+            if (zoomModal.hidden || !zoomModal.classList.contains('is-open')) return;
+            var jeton = ++jetonZoom;
+            var racine = document.documentElement;
+            // Agrandie au pincement, la photo n'a plus la forme de sa case :
+            // elle se referme en fondu, comme avant.
+            if (!document.startViewTransition || reduit || zoomImg.classList.contains('est-agrandie')) {
+                fermerVisionneuse(jeton, false);
+                return;
+            }
+            zoomImg.style.viewTransitionName = 'book-photo';
+            racine.classList.add('vt-book');
+            var vignette = null;
+            var passage = document.startViewTransition(function () {
+                zoomImg.style.viewTransitionName = '';
+                fermerVisionneuse(jeton, true);
+                vignette = vignetteDe(currentIndex);
+                if (vignette && aLEcran(vignette)) vignette.style.viewTransitionName = 'book-photo';
+            });
+            passage.finished.catch(function () { }).then(function () {
+                if (vignette) vignette.style.viewTransitionName = '';
+                if (jeton === jetonZoom) racine.classList.remove('vt-book');
+            });
         }
 
         function nextPhoto(e) {
@@ -1311,9 +1435,33 @@ ${JSON.stringify(schemaJson, null, 2)}
             if (meta) meta.setAttribute('content', theme === 'light' ? '#FAF9F5' : '#0a0907');
         }
         appliqueTheme(document.documentElement.getAttribute('data-theme') || 'dark', false);
+        // LE THÈME BASCULE EN CERCLE depuis la bascule, comme sur l'accueil
+        // (voir basculerTheme dans index.html) : une View Transition, un
+        // cercle qui grandit jusqu'au coin le plus éloigné, et aucune couleur
+        // qui transitionne pendant ce temps (vt-theme).
         if (bascule) bascule.addEventListener('click', function () {
             var t = document.documentElement.getAttribute('data-theme');
-            appliqueTheme(t === 'light' ? 'dark' : 'light', true);
+            var vers = t === 'light' ? 'dark' : 'light';
+            var racine = document.documentElement;
+            if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                appliqueTheme(vers, true);
+                return;
+            }
+            // Un nom de passage resté sur une carte (le retour depuis une
+            // fiche) ferait sauter l'ancienne image : on les retire d'abord.
+            document.querySelectorAll('[style*="view-transition-name"]').forEach(function (el) {
+                el.style.viewTransitionName = '';
+            });
+            var r = bascule.getBoundingClientRect();
+            var x = r.left + r.width / 2, y = r.top + r.height / 2;
+            var rayon = Math.sqrt(Math.pow(Math.max(x, innerWidth - x), 2) + Math.pow(Math.max(y, innerHeight - y), 2));
+            racine.classList.add('vt-theme');
+            var passage = document.startViewTransition(function () { appliqueTheme(vers, true); });
+            passage.ready.then(function () {
+                racine.animate({ clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + rayon + 'px at ' + x + 'px ' + y + 'px)'] },
+                    { duration: 620, easing: 'cubic-bezier(.65, 0, .35, 1)', pseudoElement: '::view-transition-new(root)' });
+            }).catch(function () { });
+            passage.finished.catch(function () { }).then(function () { racine.classList.remove('vt-theme'); });
         });
 
     })();

@@ -3,6 +3,12 @@
    or sur noir, grain de pellicule, grille dont la densité se règle aux boutons − et +. */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Le thème bascule en cercle (voir la bascule, dans le script) : pendant
+   le passage, rien ne transitionne. */
+html.vt-theme *, html.vt-theme *::before, html.vt-theme *::after { transition: none !important; }
+html.vt-theme::view-transition-old(root), html.vt-theme::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-theme::view-transition-new(root) { z-index: 2; }
+
 @property --ambiance {
     syntax: '<color>';
     inherits: true;
@@ -430,6 +436,38 @@ html.galerie-verrou {
 
 .galerie-zoom.is-open .zoom-fig {
     transform: none;
+}
+
+/* LA VIGNETTE DEVIENT LA PHOTO — et au retour, la photo se range dans sa
+   case. Par une View Transition (voir openZoom) : la vignette touchée et
+   la photo agrandie portent le même nom le temps du passage, et le
+   navigateur fait glisser l'une vers l'autre. Chacune remplit le cadre
+   qui voyage, recadrée comme il faut (cover) : la vignette est un 3:4
+   découpé dans la photo, la photo est entière — le recadrage se défait
+   en chemin. Le temps du passage, les fondus propres de la visionneuse
+   se taisent : c'est le passage qui fait le mouvement. */
+html.vt-book .galerie-zoom,
+html.vt-book .zoom-fig,
+html.vt-book .zoom-img {
+    transition: none !important;
+}
+
+::view-transition-group(book-photo) {
+    z-index: 3;
+    animation-duration: .5s;
+    animation-timing-function: cubic-bezier(.2, .8, .2, 1);
+}
+
+/* Le point visé est celui du recadrage des vignettes (35 % depuis le
+   haut, voir build/variantes-images.py) : au départ, la photo entière
+   recadrée dans la case de la vignette EST la vignette — pas de double
+   image pendant le fondu. */
+::view-transition-old(book-photo),
+::view-transition-new(book-photo) {
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 35%;
+    animation-duration: .5s;
 }
 
 .zoom-img {

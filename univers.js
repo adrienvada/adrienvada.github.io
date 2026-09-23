@@ -65,13 +65,16 @@
  *        intertitre : un chiffre et deux mots, qui donnent au défilé une
  *        structure d'actes.
  *    { q: 'une phrase', by: 'qui la dit' }
- *        carton plein écran, en Cinzel. `\n` = fin de vers.
+ *        carton plein écran, en Cinzel. `\n` = fin de vers. Dans un
+ *        alexandrin, ` | ` marque la CÉSURE — 'Que le jour recommence |
+ *        et que le jour finisse' : la lumière qui écrit le vers s'y arrête
+ *        un instant. La barre ne s'affiche jamais telle quelle.
  *    { text: 'un paragraphe…' }
  *        prose posée, plus longue : note d'intention, mot de mise en scène.
  *    { p: [12], over: 'texte', overBy: '…', overAt: 'gauche' }
  *        INCRUSTATION sur la photo. `overAt` : gauche | centre | droite |
- *        bas. Réservé au plein cadre — sur une vignette de groupe le texte
- *        couvrirait toute l'image.
+ *        bas. Sur un groupe (p: [23, 16]), elle traverse la composition
+ *        entière d'un bord à l'autre.
  *    { p: [12, 7], aside: 'texte' }
  *        note en marge d'un groupe, sous les vignettes.
  *    { p: [12], c: ['légende'] }
@@ -107,7 +110,28 @@
  *        dans la console et la photo reste centrée.
  *        L'agrandissement au clic montre toujours la photo entière.
  *
- *  Tous s'écrivent MOT À MOT au rythme du défilement (voir updateReveals).
+ *  Tous s'écrivent À LA LUMIÈRE, ligne par ligne, pendant qu'on les lit
+ *  (voir ecrireALaLumiere dans le moteur, plus bas).
+ *
+ *  LA MISE EN SCÈNE DU DÉFILEMENT
+ *  ------------------------------
+ *    lumiere: 'foudre'
+ *        LA SIGNATURE LUMINEUSE de l'univers : la façon dont la première
+ *        photo s'allume, après le noir de l'ouverture. foudre | neon |
+ *        guirlande | torche | crue | projecteur. Sans mention : crue pour
+ *        un spectacle, projecteur pour un film.
+ *    ouverture: [5, 21, 20, 7]
+ *        Les photos qui arrivent du fond du plateau entre le titre et le
+ *        montage (« du lointain à la face »). Sans mention, quatre photos
+ *        réparties dans le montage — jamais la première, qui s'allume
+ *        juste après.
+ *    { p: [9], poursuite: { etapes: [ [[20, 48], [83, 48]], [[51, 60]] ] } }
+ *        LA POURSUITE, sur une photo de groupe : le plateau reste dans la
+ *        pénombre, une poursuite (deux au plus) va d'un point à l'autre au
+ *        fil du défilement, puis plein feux. Chaque étape éclaire un ou
+ *        deux points, en pourcentage de la photo (horizontal, vertical).
+ *        `ratio` si la photo n'est pas en 3:2. La photo est alors montrée
+ *        entière — les pourcentages visent juste.
  *
  *  LES PHOTOS
  *  ----------
@@ -212,6 +236,8 @@ const SHOW_UNIVERSES = {
         castNote: 'Jeu et mise en scène collective.',
         credit: 'Arnaud Bertereau',
         genre: 'Théâtre documentaire',
+        // Les tubes d'une salle d'audience, qui s'allument en hésitant.
+        lumiere: 'neon',
         synopsis: ['Inspirés d’affaires réelles, des extraits de procès révèlent la complexité d’une justice en souffrance face à l’ampleur des violences conjugales.'],
         sequence: [
             {
@@ -278,6 +304,8 @@ const SHOW_UNIVERSES = {
         cvAccent: '#8fbfe8',
         cast: ['Steeve Brunet', 'Marine Chambrier', 'Adrien Vada'],
         genre: 'Spectacle de prévention',
+        // Les néons d'une salle de classe.
+        lumiere: 'neon',
         synopsis: ['Un spectacle de prévention, joué au collège.',
             'Violences sexistes et sexuelles, stéréotypes, consentement, à travers le prisme de la justice.'],
         sequence: [
@@ -334,6 +362,8 @@ const SHOW_UNIVERSES = {
             'Adrien Vada'],
         credit: 'Arnaud Bertereau',
         genre: 'Tragédie',
+        // Une flamme qu'on approche : l'ambre d'abord, puis le plateau.
+        lumiere: 'torche',
         synopsis: ['Royaume de Pyrie, 124 av. J-C.',
             'Lorsqu’un roi meurt et qu’il est père de jumeaux, lequel des deux est l’aîné et doit prendre sa place ? La reine veuve Cléophène, dépositaire du pouvoir, doit céder sa couronne, et elle seule connaît le secret de son successeur…'],
         sequence: [
@@ -350,19 +380,20 @@ const SHOW_UNIVERSES = {
                 c: ['Les Crescite poursuivent le travail de l’alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir.'],
             },
             {
-                q: ['« Je vois dans le hasard tout les biens que j’espère,', 'Mais ne puis être heureux sans le malheur d’un frère. »'],
+                q: ['« Je vois dans le hasard | tous les biens que j’espère,', 'Mais ne puis être heureux | sans le malheur d’un frère. »'],
                 by: 'Antiochus, Acte I'
             },
             {
                 p: [9], cadre: { 9: '50% 35%' },
-                c: ['La figure des jumeaux : une incarnation à deux têtes du dilemme cornéliens.'],
+                poursuite: { etapes: [[[20, 48], [83, 48]], [[51, 60]]] },
+                c: ['La figure des jumeaux : une incarnation à deux têtes du dilemme cornélien.'],
             },
             {
                 p: [20, 15, 17], cadre: { 20: '42% 30%', 15: '48% 15%', 17: '46% 22%' }, c: ['', ''],
-                aside: ['La princesse Rodogune, fille du roi ennemi, est tenue captives. Les deux princes héritiers l’aiment, contre la loi de leur mère.']
+                aside: ['La princesse Rodogune, fille du roi ennemi, est tenue captive. Les deux princes héritiers l’aiment, contre la loi de leur mère.']
             },
             {
-                q: ['« Je puis, comme je veux, tourner le droit d’aînesse,', 'Et donne à ton rival ton sceptre et ta maîtresse. »'],
+                q: ['« Je puis, comme je veux, | tourner le droit d’aînesse,', 'Et donne à ton rival | ton sceptre et ta maîtresse. »'],
                 by: 'Cléophène, Acte IV'
             },
             {
@@ -379,7 +410,7 @@ const SHOW_UNIVERSES = {
 
             },
             {
-                q: ['« Il vaut mieux mériter le sort le plus étrange.', 'Tombe sur moi le ciel, pourvu que je me venge ! »'],
+                q: ['« Il vaut mieux mériter | le sort le plus étrange.', 'Tombe sur moi le ciel, | pourvu que je me venge ! »'],
                 by: 'Cléophène, Acte V'
             },
             {
@@ -411,6 +442,7 @@ const SHOW_UNIVERSES = {
         cast: ['Lia Alamichel', 'Amélie Chalmey', 'Adrien Vada'],
         credit: 'Thypa Photographie',
         genre: 'Fable contemporaine',
+        lumiere: 'foudre',
         synopsis: ['Une fratrie. Un village. Perdu.',
             'La foudre y a frappé il y a quelques années et y a laissé des survivant.e.s : les fulguré.e.s. À l’occasion d’un nouvel an, la fratrie s’y perd et rencontre ses habitants. Alors que « tout est chaos », la foudre frappe à nouveau.'],
         sequence: [
@@ -465,12 +497,13 @@ const SHOW_UNIVERSES = {
         cast: ['Angelo Jossec', 'Manon Rivier', 'Lauren Toulin', 'Adrien Vada'],
         credit: 'Olivier Héron',
         genre: 'Tragédie',
+        lumiere: 'crue',
         synopsis: 'Rome, an 79.\nHuit jours après la mort soudaine de l’empereur Vespasien, le destin de Bérénice, Titus et Antiochus bascule.',
         sequence: [
             { chapter: '1h25', chapterTitle: 'Une mise en scène resserrée, accessible et exigeante, au service d’un des plus beaux poèmes en alexandrin' },
             { p: [2], cadre: { 2: '55% 55%' }, c: ['Un triangle amoureux élevé au rang de la tragédie.'] },
             {
-                q: ['« Que le jour recommence et que le jour finisse', 'Sans que jamais Titus puisse voir Bérénice. »'], by: 'Bérénice, acte V'
+                q: ['« Que le jour recommence | et que le jour finisse', 'Sans que jamais Titus | puisse voir Bérénice. »'], by: 'Bérénice, acte V'
             },
             { p: [18], cadre: { 18: '52% 45%' }, c: ['La scène est une arène en hyper proximité avec le public, baignée dans une ambiance sonore et musicale live.'] },
             {
@@ -479,8 +512,8 @@ const SHOW_UNIVERSES = {
                 aside: 'Une des plus belles partitions classique pour un personnage féminin qui sert « d’exemple à l’univers ».'
             },
             {
-                q: '« Depuis huit jours je règne ; et jusques à ce jour,\n' +
-                    'Qu’ai-je fait pour l’honneur ? J’ai tout fait pour l’amour. »', by: 'Titus, acte IV'
+                q: '« Depuis huit jours je règne ; | et jusques à ce jour,\n' +
+                    'Qu’ai-je fait pour l’honneur ? | J’ai tout fait pour l’amour. »', by: 'Titus, acte IV'
             },
             {
                 p: [1, 9, 11], cadre: { 1: '48% 15%', 9: '68% 20%', 11: '48% 18%' }, c: ['Bérénice, Titus, Acte II', 'Antiochus, Acte V', 'Paulin, Antiochus, Acte I'],
@@ -491,7 +524,7 @@ const SHOW_UNIVERSES = {
                 p: [3], cadre: { 3: '62% 45%' }, c: ['Un travail au plus proche de l’alexandrin racinien pour en éprouver la virtuosité.'],
             },
             {
-                q: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, et vous me l’ordonnez ! »'],
+                q: ['« Vous m’aimez, vous me le soutenez,', 'Et cependant je pars, | et vous me l’ordonnez ! »'],
                 by: 'Bérénice, acte IV'
             },
             { p: [7, 13, 16], cadre: { 7: '55% 25%', 13: '60% 40%', 16: '55% 25%' }, c: ['Bérénice, Antiochus, Acte I', 'Antiochus, Paulin, Titus, Acte IV', 'Bérénice, Antiochus, Titus, Acte V'] },
@@ -522,7 +555,9 @@ const SHOW_UNIVERSES = {
         castNote: '* en alternance',
         credit: 'Clara Delmas',
         genre: 'Comédie',
-        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes. Déguisée en berger sous le nom de Ganymède, elle est accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d’autre membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
+        // Une fête en plein air : les ampoules s'allument une à une.
+        lumiere: 'guirlande',
+        synopsis: ['Bannie de la cour, Rosalind s’enfuit dans la forêt des Ardennes. Déguisée en berger sous le nom de Ganymède, elle est accompagnée de son bouffon Touchstone et de sa cousine Celia. Elle y retrouvera d’autres membres de la cour exilés, les bergers du pays et le jeune homme dont elle est tombée amoureuse.'],
         sequence: [
             {
                 chapter: '2h',
@@ -549,7 +584,7 @@ const SHOW_UNIVERSES = {
                 by: 'Jaques, ACTE II'
             },
             {
-                p: [11, 1, 4], cadre: { 11: '48% 32%', 1: '47% 30%', 4: '42% 35%' }, c: ['Adurey, Touchstone, ACTE V', 'Rosalind, Duke Frederick, Celia, ACTE I', 'Celia, Rosalind, ACTE II'],
+                p: [11, 1, 4], cadre: { 11: '48% 32%', 1: '47% 30%', 4: '42% 35%' }, c: ['Audrey, Touchstone, ACTE V', 'Rosalind, Duke Frederick, Celia, ACTE I', 'Celia, Rosalind, ACTE II'],
             },
             {
                 text: 'Des comédiens et des musiciens forment un joyeux orchestre. C’est comme une fête ! Et dans toute bonne fête, le rythme, la musique et le paysage sonore priment.'
@@ -1018,7 +1053,7 @@ const SHOW_UNIVERSES = {
         writeRaf = writeGuard = 0;
     }
 
-    function playWriting() {
+    function playWriting(opts) {
         stopWriting();
         const chars = [...overlay.querySelectorAll('.u-ch')];
         const words = [...overlay.querySelectorAll('.u-wd')];
@@ -1043,6 +1078,14 @@ const SHOW_UNIVERSES = {
         let clock = 0, last = performance.now();
         writeRate = 1;
         let litChars = 0, litWords = 0;
+        // Le titre est arrivé par le passage : il est déjà écrit, le
+        // synopsis enchaîne.
+        if (opts && opts.titrePose) {
+            chars.forEach(el => el.classList.add('is-lit'));
+            litChars = chars.length;
+            clock = chars.length * CH_STEP;
+            hero.classList.add('is-titled');
+        }
 
         const frame = (now) => {
             writeRaf = 0;
@@ -1171,129 +1214,20 @@ const SHOW_UNIVERSES = {
         });
     }
 
-    // ── Parallaxe + révélation ───────────────────────────────────────
-    let lastScrollTop = 0;
-    const clamp01 = (v) => v < 0 ? 0 : v > 1 ? 1 : v;
-
-    // Le titre et le synopsis accompagnent le début du défilement, puis
-    // cèdent la place : ils s'effacent et s'éloignent sur le dernier tiers
-    // du hero, de sorte qu'à l'arrivée de la première photo il ne reste
-    // plus rien d'eux. Un texte encore lisible par-dessus la photo
-    // brouillerait l'entrée dans l'univers.
-    // Portion parcourue d'un segment [a, b] de la course du hero.
-    const stage = (p, a, b) => clamp01((p - a) / (b - a));
-
-    // Le hero se DÉFAIT PAR COUCHES au lieu d'être retenu en bloc.
+    // ── LE DÉFILEMENT NE CALCULE PLUS RIEN À CHAQUE IMAGE ─────────────
+    //  Il menait tout, image par image : la sortie du hero par couches, les
+    //  mots des citations, la parallaxe des photos et des groupes. Trois
+    //  querySelectorAll par image, des mesures et des écritures alternées —
+    //  quatre à cinq recalculs de style par image, jusqu'à 1,7 s par
+    //  défilement complet sur un téléphone modeste.
     //
-    //   Retenir tout le hero puis l'effacer d'un coup à la fin donnait
-    //   l'impression de défiler pour rien : l'écran ne changeait pas, le
-    //   geste semblait buter contre une résistance. Ici chaque élément part
-    //   à son tour, du moins essentiel au plus essentiel — la date, puis le
-    //   rôle, puis le synopsis, puis le bouton, puis le titre. Il se passe
-    //   donc quelque chose dès le premier pixel, et l'on comprend qu'on
-    //   avance avant même de voir la première photo.
-    const HERO_EXITS = [
-        ['.u-eyebrow', 0.00, 0.20, 3],
-        ['.u-scroll', 0.00, 0.14, 0],
-        ['.u-meta', 0.06, 0.28, 3],
-        ['.u-synopsis', 0.18, 0.54, 5],
-        ['.u-hero-actions', 0.34, 0.60, 4],   // le bouton part tard : il sert
-        ['.u-author', 0.52, 0.86, 6],
-        ['.u-title', 0.58, 1.00, 8]
-    ];
-
-    function fadeHero(h) {
-        const wrap = overlay.querySelector('.u-hero-wrap');
-        const hero = overlay.querySelector('.u-hero');
-        if (!wrap || !hero) return;
-        // Avancement de la SORTIE du hero, mesuré sur sa position à l'écran :
-        // 0 quand il l'occupe entièrement, 1 quand il vient d'en sortir.
-        // On ne se fonde plus sur une course de collage — il n'y en a plus,
-        // le hero fait exactement un écran et la première image suit.
-        const p = clamp01(-wrap.getBoundingClientRect().top / h);
-        if (p <= 0) {
-            // Remonté tout en haut : on rend la main au CSS d'un seul coup,
-            // sinon les éléments resteraient figés sur leur dernier état.
-            for (const [sel] of HERO_EXITS) {
-                const el = hero.querySelector(sel);
-                if (!el) continue;
-                el.style.opacity = el.style.transform = el.style.filter = el.style.animation = '';
-            }
-            hero.style.removeProperty('--u-hero-glow');
-            hero.style.pointerEvents = '';
-            return;
-        }
-
-        for (const [sel, a, b, drift] of HERO_EXITS) {
-            const el = hero.querySelector(sel);
-            if (!el) continue;
-            const out = stage(p, a, b);
-            if (!out) {
-                // Tant que rien ne sort, on laisse la main au CSS : c'est lui
-                // qui gère l'ARRIVÉE de ces éléments pendant que le titre
-                // s'écrit. Deux règles sur la même propriété, et l'inline
-                // gagnerait toujours.
-                el.style.opacity = '';
-                el.style.transform = '';
-                el.style.filter = '';
-                el.style.animation = '';
-                continue;
-            }
-            // La flèche se balance en boucle, et une animation l'emporte sur
-            // une opacité en ligne : il faut l'arrêter pour pouvoir l'effacer.
-            el.style.animation = 'none';
-            el.style.opacity = String(1 - out);
-            el.style.transform = `translate3d(0, ${(-out * drift).toFixed(2)}svh, 0)`;
-            el.style.filter = out > 0.05 ? `blur(${(out * 5).toFixed(2)}px)` : '';
-        }
-
-        // Le halo de couleur s'éteint avec le titre, pas avant : c'est lui
-        // qui tient l'écran pendant que le texte se retire.
-        const glow = stage(p, 0.55, 1);
-        hero.style.setProperty('--u-hero-glow', String(1 - glow));
-        // Une fois vidé, le hero ne doit plus intercepter le moindre clic.
-        hero.style.pointerEvents = p > 0.9 ? 'none' : '';
-    }
-
-    // ── Les vers tiennent sur une ligne ──────────────────────────────
-    //  Dans une citation ou une incrustation, la coupe est une décision
-    //  d'écriture : un alexandrin ne se termine pas là où l'écran manque de
-    //  place. Ces blocs sont donc en `nowrap`, et leur taille de texte est
-    //  calculée EN CSS à partir de --chars, la longueur du vers le plus
-    //  long (voir .u-fit). Aucune mesure de mise en page n'est faite : une
-    //  mesure suppose un rendu déjà calculé, ce qui n'est pas garanti au
-    //  moment où le panneau s'ouvre, et elle rend zéro sans le dire quand
-    //  elle échoue.
-
-    // Révélation mot à mot PILOTÉE PAR LE DÉFILEMENT — et non déclenchée
-    // une fois pour toutes à l'entrée dans l'écran. La phrase s'écrit à la
-    // vitesse de la main : c'est ce lien direct entre le geste et le texte
-    // qui fait l'effet, et il se perd dès qu'on se contente d'un
-    // IntersectionObserver.
-    // LE TEXTE EST ENTIER AVANT D'ATTEINDRE LE HAUT DE L'ÉCRAN, ET LE RESTE.
-    // La phrase finissait de s'écrire aux deux tiers de la montée, et
-    // s'effaçait de nouveau quand on remontait : au repos, le bas de l'écran
-    // n'était jamais lisible en entier — gênant pour qui lit lentement ou de
-    // près, agrandissement du système compris. Elle est désormais complète
-    // quand son bloc passe le milieu de l'écran, et ne se défait plus : le
-    // geste écrit toujours la phrase, il ne la reprend pas.
-    function updateReveals(h) {
-        const start = h * 0.94, end = h * 0.6;
-        overlay.querySelectorAll('.u-reveal').forEach(block => {
-            const r = block.getBoundingClientRect();
-            if (r.bottom < -100 || r.top > h + 100) return;
-            const p = clamp01((start - r.top) / (start - end));
-            const words = block._uWords || (block._uWords = [...block.querySelectorAll('.u-rw')]);
-            if (!words.length) return;
-            // Le dernier mot doit s'allumer un peu avant la fin de la
-            // course, sinon la phrase n'est jamais complète à l'écran.
-            const n = Math.round(clamp01(p * 1.12) * words.length);
-            if (n <= (block._uLit || 0)) return;
-            for (let i = block._uLit || 0; i < n; i++) words[i].classList.add('is-lit');
-            block._uLit = n;
-            block.classList.toggle('is-lit', n >= words.length);
-        });
-    }
+    //  Tout cela est désormais écrit en CSS et mené par le navigateur (voir
+    //  regie.js et « La régie » dans univers.css). Il ne reste ici que ce que
+    //  le CSS ne sait pas faire : pousser l'écriture du titre sous le geste,
+    //  et, là où le navigateur ne sait pas mener une animation au défilement,
+    //  la barre de progression.
+    let lastScrollTop = 0;
+    const BARRE_NATIVE = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
 
     function onScroll() {
         // Le geste pousse l'écriture avant même d'avoir bougé la page :
@@ -1302,61 +1236,225 @@ const SHOW_UNIVERSES = {
         lastScrollTop = overlay.scrollTop;
         if (moved) nudgeWriting(moved / 90);
 
-        if (rafId) return;
+        if (BARRE_NATIVE || rafId) return;
         rafId = requestAnimationFrame(() => {
             rafId = 0;
-            const h = overlay.clientHeight;
-            const total = scroller.scrollHeight - h;
+            const total = scroller.scrollHeight - overlay.clientHeight;
             const bar = overlay.querySelector('.u-progress span');
             if (bar) bar.style.transform = `scaleX(${total > 0 ? scroller.scrollTop / total : 0})`;
-            if (REDUCED) return;
-
-            fadeHero(h);
-            updateReveals(h);
-
-            // Plein cadre : l'image glisse dans son cadre.
-            overlay.querySelectorAll('.u-fig--plein').forEach(fig => {
-                const r = fig.getBoundingClientRect();
-                if (r.bottom < -200 || r.top > h + 200) return;
-                // -1 (figure sous l'écran) → +1 (figure au-dessus)
-                const t = (h / 2 - (r.top + r.height / 2)) / (h / 2 + r.height / 2);
-                const img = fig.querySelector('img');
-                if (img) img.style.transform = `translate3d(0, ${(t * 9).toFixed(2)}%, 0) scale(1.22)`;
-            });
-
-            // Trios et quatuors : chaque vignette avance à sa propre
-            // vitesse. C'est ce décalage — quelques pour cent — qui donne
-            // de la profondeur à une composition plate, plutôt qu'un bloc
-            // d'images qui monte d'un seul tenant.
-            overlay.querySelectorAll('.u-group').forEach(group => {
-                const gr = group.getBoundingClientRect();
-                if (gr.bottom < -200 || gr.top > h + 200) return;
-                const t = (h / 2 - (gr.top + gr.height / 2)) / (h / 2 + gr.height / 2);
-                group.querySelectorAll('.u-fig').forEach((fig, i) => {
-                    const depth = 1 + (i % 3) * 0.9;   // 1, 1.9, 2.8
-                    const img = fig.querySelector('img');
-                    if (img) img.style.transform =
-                        `translate3d(0, ${(t * depth * 2.4).toFixed(2)}%, 0) scale(1.10)`;
-                });
-            });
         });
     }
 
-    const REVEALED = '.u-fig, .u-group, .u-quote, .u-chapter, .u-text, .u-foot';
+    // ── L'ÉCRITURE À LA LUMIÈRE ──────────────────────────────────────
+    //  Chaque ligne du texte, TELLE QU'ELLE TOMBE À L'ÉCRAN, reçoit une
+    //  copie éclairée d'elle-même, posée pile dessus : une fenêtre qui
+    //  glisse de gauche à droite pendant que son texte glisse en sens
+    //  inverse. Le texte reste immobile, seule la lumière avance (voir
+    //  « L'écriture à la lumière » dans univers.css).
+    //
+    //  POURQUOI LES LIGNES SONT MESURÉES ICI. On ne sait pas d'avance où
+    //  une phrase se replie : cela dépend de la largeur de l'écran et de la
+    //  police. On relève donc la position de chaque mot, on regroupe ceux
+    //  d'une même ligne — et on coupe à la césure, qui fait deux segments
+    //  d'une même ligne avec une pause entre eux.
+    //
+    //  QUAND LE TEXTE S'ÉCRIT. Là où l'on lit : la lumière part quand la
+    //  première ligne passe aux trois quarts de l'écran (LECTURE_DEBUT), et
+    //  la dernière est écrite quand elle arrive un peu au-dessus du milieu
+    //  (LECTURE_FIN). C'est calculé sur les lignes elles-mêmes, dans la
+    //  course de leur bloc (.rg-vue) — et non plus sur le haut du bloc, qui
+    //  écrivait les citations avant qu'elles n'entrent à l'écran.
+    //
+    //  LES LIGNES S'ÉCRIVENT L'UNE APRÈS L'AUTRE, dans l'ordre du texte,
+    //  chacune au prorata de sa longueur. Chaque ligne sur sa propre course,
+    //  elles partaient presque ensemble : le second vers s'écrivait avant
+    //  que le premier ait fini son second hémistiche. La lumière marque un
+    //  temps à la césure (PAUSE_CESURE, en caractères), un plus bref au bout
+    //  de chaque ligne (PAUSE_LIGNE).
+    //
+    //  Une seule mesure par ouverture (et par redimensionnement), jamais à
+    //  chaque image : c'est le navigateur qui fait ensuite avancer la lumière.
+    const LECTURE_DEBUT = 0.74, LECTURE_FIN = 0.5;
+    const PAUSE_CESURE = 7, PAUSE_LIGNE = 2;
 
-    function observeCaptions() {
-        if (!('IntersectionObserver' in window)) {
-            overlay.querySelectorAll(REVEALED).forEach(el => el.classList.add('is-in'));
+    function ecrireALaLumiere(zone) {
+        if (REDUCED) return;
+        zone.querySelectorAll('.u-ecrit').forEach(poserLaLumiere);
+    }
+
+    //  MESURER LA MISE EN PAGE, PAS L'IMAGE À L'ÉCRAN. Le carton de
+    //  l'ouverture est mesuré quand il est encore au fond de la scène,
+    //  réduit par la perspective : getBoundingClientRect() rendrait ses
+    //  lignes vingt fois trop petites, et les fenêtres de lumière ne
+    //  couvriraient qu'un coin du titre une fois arrivé. Les décalages de
+    //  mise en page (offsetLeft, offsetTop) ignorent les transformations —
+    //  comme la chronologie de défilement elle-même.
+    function position(el) {
+        let x = 0, y = 0;
+        for (let n = el; n; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
+        return [x, y];
+    }
+
+    function poserLaLumiere(bloc) {
+        const texte = bloc.matches('p, h2, h3') ? bloc : bloc.querySelector('p, h2, h3');
+        if (!texte) return;
+        texte.querySelectorAll('.u-lum').forEach(n => n.remove());
+        const elements = [...texte.querySelectorAll('.u-rw, .u-cesure')];
+        if (!elements.some(el => el.classList.contains('u-rw'))) return;
+        if (!texte.offsetWidth) return;   // pas encore mis en page : on reviendra
+        const [tx, ty] = position(texte);
+
+        // 1. Les segments : une ligne visuelle, ou la moitié d'un vers.
+        const segments = [];
+        let seg = null;
+        for (const el of elements) {
+            if (el.classList.contains('u-cesure')) {
+                if (seg) seg.cesure = el;
+                seg = null;
+                continue;
+            }
+            const [x, y] = position(el);
+            const haut = y - ty, gauche = x - tx, hauteur = el.offsetHeight;
+            if (!seg || Math.abs(haut - seg.haut) > hauteur * 0.5) {
+                seg = { haut, gauche, droite: gauche + el.offsetWidth, hauteur, mots: [el] };
+                segments.push(seg);
+            } else {
+                seg.droite = gauche + el.offsetWidth;
+                seg.hauteur = Math.max(seg.hauteur, hauteur);
+                seg.mots.push(el);
+            }
+        }
+        if (!segments.length) return;
+
+        // 2. Les plages de chaque segment : la plage du texte entier, puis
+        //    sa part à chacun, l'un après l'autre.
+        const enScene = texte.dataset.ecrire === 'scene';
+        let de, a;
+        if (enScene) {
+            // Dans une scène tenue : la plage que la scène accorde au texte.
+            de = +texte.dataset.de || 0;
+            a = +texte.dataset.a || 1;
+        } else {
+            // Au fil de la lecture, dans la course (« cover ») du bloc qui
+            // porte la chronologie.
+            const hote = bloc.closest('.rg-vue') || bloc;
+            const decal = ty - position(hote)[1];
+            const H = (overlay && overlay.contains(hote)) ? overlay.clientHeight : window.innerHeight;
+            const course = H + hote.offsetHeight;
+            de = ((1 - LECTURE_DEBUT) * H + decal + segments[0].haut) / course;
+            a = ((1 - LECTURE_FIN) * H + decal + segments[segments.length - 1].haut) / course;
+        }
+        let total = 0;
+        segments.forEach((sg, i) => {
+            sg.poids = sg.mots.reduce((n, m) => n + m.textContent.length + 1, 0);
+            sg.pause = i === segments.length - 1 ? 0 : sg.cesure ? PAUSE_CESURE : PAUSE_LIGNE;
+            total += sg.poids + sg.pause;
+        });
+        const pas = (a - de) / (total || 1);
+        let t = de;
+        segments.forEach(sg => {
+            sg.s = t;
+            t += sg.poids * pas;
+            sg.e = t;
+            t += sg.pause * pas;
+            sg.reprise = t;
+        });
+
+        // 3. Les fenêtres de lumière.
+        const em = parseFloat(getComputedStyle(texte).fontSize) || 16;
+        const frag = document.createDocumentFragment();
+        segments.forEach(sg => {
+            const lum = document.createElement('span');
+            lum.className = 'u-lum rg-k';
+            lum.setAttribute('aria-hidden', 'true');
+            lum.style.cssText = `left:${sg.gauche.toFixed(1)}px;top:${sg.haut.toFixed(1)}px;` +
+                `width:${(sg.droite - sg.gauche + em).toFixed(1)}px;height:${sg.hauteur.toFixed(1)}px;` +
+                `--s:${sg.s.toFixed(4)};--e:${sg.e.toFixed(4)}`;
+            const t = document.createElement('span');
+            t.className = 'u-lum-t rg-k';
+            t.textContent = sg.mots.map(m => m.textContent).join(' ');
+            const bord = document.createElement('span');
+            bord.className = 'u-lum-bord rg-k';
+            lum.append(t, bord);
+            frag.appendChild(lum);
+            // La marque de césure s'avive pendant la pause, le temps que la
+            // lumière reprenne.
+            if (sg.cesure) {
+                sg.cesure.classList.add('rg-k');
+                sg.cesure.style.setProperty('--s', sg.e.toFixed(4));
+                sg.cesure.style.setProperty('--e', sg.reprise.toFixed(4));
+            }
+        });
+        texte.appendChild(frag);
+        bloc.classList.add('a-lumiere');
+
+        // 4. La signature (auteur d'une citation, personnage d'une
+        //    incrustation) arrive juste après la dernière ligne.
+        const signe = bloc.querySelector(':scope > cite');
+        const dernier = segments[segments.length - 1];
+        if (signe && !enScene) {
+            signe.style.setProperty('--s', dernier.e.toFixed(4));
+            signe.style.setProperty('--e', (dernier.e + 0.06).toFixed(4));
+        }
+    }
+
+    // Les lignes dépendent de la largeur : on les refait quand elle change.
+    let reecriture = 0;
+    function reecrireALaLumiere() {
+        clearTimeout(reecriture);
+        reecriture = setTimeout(() => { if (isOpen && overlay) ecrireALaLumiere(overlay); }, 180);
+    }
+
+    // ── LE TOP LUMIÈRE ─────────────────────────────────────────────────
+    //  La première photo après l'ouverture attend dans le noir (.u-voile) ;
+    //  quand elle a gagné la moitié de l'écran, on donne le top, et sa
+    //  signature se joue (voir « La lumière qui monte » dans univers.css).
+    //  Une fois, dans le temps : un top lumière ne se rembobine pas.
+    let guets = [];
+
+    function guetterAllumage(zone) {
+        const figures = [...zone.querySelectorAll('.u-allumage')];
+        if (!figures.length) return;
+        if (REDUCED || !('IntersectionObserver' in window)) {
+            figures.forEach(f => f.classList.add('est-allume'));
             return;
         }
-        if (REDUCED) {
-            overlay.querySelectorAll('.u-rw').forEach(w => w.classList.add('is-lit'));
-            overlay.querySelectorAll('.u-reveal').forEach(b => b.classList.add('is-lit'));
-        }
-        const io = new IntersectionObserver((entries) => {
-            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
-        }, { threshold: 0.25, root: overlay });
-        overlay.querySelectorAll(REVEALED).forEach(el => io.observe(el));
+        const io = new IntersectionObserver((entrees) => entrees.forEach(e => {
+            if (!e.isIntersecting) return;
+            e.target.classList.add('est-allume');
+            io.unobserve(e.target);
+        }), { rootMargin: '0px 0px -45% 0px' });
+        figures.forEach(f => io.observe(f));
+        guets.push(io);
+    }
+
+    // La mise au point n'a lieu qu'une fois la photo nette arrivée : sans
+    // cela on fondrait vers un cadre vide (voir .est-nette dans univers.css).
+    function guetterNettete(zone) {
+        zone.querySelectorAll('.u-fig').forEach(fig => {
+            const img = fig.querySelector('.u-fig-img');
+            if (!img) return;
+            const nette = () => fig.classList.add('est-nette');
+            if (img.complete && img.naturalWidth) nette();
+            else img.addEventListener('load', nette, { once: true });
+        });
+    }
+
+    function lacherLesGuets() {
+        guets.forEach(io => io.disconnect());
+        guets = [];
+    }
+
+    // Tout ce qui donne vie au montage, une fois qu'il est dans la page.
+    function animerLeMontage() {
+        window.Regie?.observer(overlay);
+        guetterNettete(overlay);
+        guetterAllumage(overlay);
+        // Les lignes se mesurent sur la mise en page finale : polices
+        // arrivées, et une image plus tard, le temps que tout se pose.
+        const mesurer = () => requestAnimationFrame(() => { if (isOpen) ecrireALaLumiere(overlay); });
+        mesurer();
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(mesurer);
     }
 
     // ── Agrandissement d'une photo ───────────────────────────────────
@@ -1375,7 +1473,10 @@ const SHOW_UNIVERSES = {
     function zoomList() {
         return [...overlay.querySelectorAll('.u-figs [data-u-zoom]')].map(btn => ({
             src: btn.querySelector('img')?.getAttribute('src') || '',
-            caption: btn.closest('.u-fig')?.querySelector('.u-cap span')?.textContent.trim() || ''
+            // Une poursuite porte sa légende sous le cadre, pas dans une
+            // figure : on la cherche là aussi.
+            caption: btn.closest('.u-fig, .u-poursuite')?.querySelector('.u-cap span, .u-pa-legende')
+                ?.textContent.replace(/\s+/g, ' ').trim() || ''
         }));
     }
 
@@ -1455,7 +1556,9 @@ const SHOW_UNIVERSES = {
         // `src` aurait téléchargé l'original de 2400 px EN PLUS de la version
         // affichée : le double du poids, pour attendre la mauvaise image.
         // Un film s'ouvre sur son affiche : c'est elle, la première image.
-        const first = overlay.querySelector('.u-figs img');
+        // La première photo DU MONTAGE (ou l'affiche d'un film) : celles de
+        // l'ouverture sont de petites copies, qui arrivent d'elles-mêmes.
+        const first = overlay.querySelector('.u-figs .u-affiche img, .u-figs .u-fig-img');
         if (!first) return Promise.resolve();
         return Promise.race([
             new Promise(resolve => {
@@ -1506,6 +1609,66 @@ const SHOW_UNIVERSES = {
         lienFeuille.addEventListener('error', une, { once: true });
     }
 
+    // ── LA VIGNETTE DEVIENT L'UNIVERS ────────────────────────────────
+    //  On touche une ligne du CV : sa vignette grandit jusqu'à devenir le
+    //  fond du titre (voir heroFondHtml), le titre de la ligne vient se
+    //  poser en grand, et la ligne entière s'ouvre aux dimensions de
+    //  l'écran, dans la couleur du spectacle. À la fermeture, tout revient
+    //  se ranger dans la ligne.
+    //
+    //  PAR UNE VIEW TRANSITION : trois noms — la boîte (u-boite), la photo
+    //  (u-photo), le titre (u-titre) —, posés sur la ligne juste avant le
+    //  passage, repris par le panneau juste après. Le navigateur capture
+    //  l'avant et l'après, et fait voyager chacun de l'un à l'autre sur la
+    //  carte graphique. Le clip-path d'avant repeignait tout le panneau à
+    //  chaque image, sur un contenu injecté à l'instant.
+    //
+    //  LA PHOTO EST DÉCODÉE AVANT LE PASSAGE — un tiers de seconde au plus :
+    //  sans elle, la vignette grandirait vers un cadre vide. Et le titre est
+    //  posé d'emblée (playWriting, titrePose) : c'est lui qui voyage, il
+    //  ne peut pas s'écrire lettre à lettre en même temps. Le synopsis,
+    //  lui, s'écrit ensuite comme avant.
+    //
+    //  AILLEURS — navigateur sans View Transitions, mouvement réduit, ligne
+    //  hors de l'écran (une adresse d'univers ouverte directement), retour
+    //  par l'historique —, le panneau se déplie comme avant depuis la ligne.
+    const PASSAGE = typeof document.startViewTransition === 'function' && !REDUCED;
+    let ligneOuverte = null;   // la ligne d'où l'on est parti : on y revient
+    let passageEnCours = false;
+
+    function nommer(el, nom) {
+        if (el) el.style.viewTransitionName = nom;
+    }
+
+    function aLEcran(el) {
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.bottom > 0 && r.top < window.innerHeight;
+    }
+
+    function decoderCouverture(uni) {
+        const c = couverture(uni);
+        if (!c) return Promise.resolve();
+        const base = c.src.replace(/-240\.webp$/, '');
+        const img = new Image();
+        img.sizes = '100vw';
+        img.srcset = `${base}-640.webp 640w, ${base}-1280.webp 1280w`;
+        img.src = `${base}-1280.webp`;
+        const decodee = img.decode ? img.decode().catch(() => { }) : Promise.resolve();
+        return Promise.race([decodee, new Promise(ok => setTimeout(ok, 350))]);
+    }
+
+    function nomsDuPanneau(nom) {
+        nommer(overlay, nom ? 'u-boite' : '');
+        nommer(overlay.querySelector('.u-hero-fond'), nom ? 'u-photo' : '');
+        nommer(overlay.querySelector('.u-title'), nom ? 'u-titre' : '');
+    }
+
+    function nomsDeLaLigne(li, nom) {
+        nommer(li, nom ? 'u-boite' : '');
+        nommer(li.querySelector('.cv-vignette img'), nom ? 'u-photo' : '');
+        nommer(li.querySelector('.cv-title'), nom ? 'u-titre' : '');
+    }
+
     function open(li, fromHistory) {
         const uni = universeFor(li);
         if (!uni) return false;
@@ -1513,7 +1676,31 @@ const SHOW_UNIVERSES = {
             attendreFeuilleUnivers(() => open(li, fromHistory));
             return true;
         }
+        if (passageEnCours) return true;
+        if (PASSAGE && !fromHistory && !isOpen && aLEcran(li)) {
+            passageEnCours = true;
+            decoderCouverture(uni).then(() => {
+                const racine = document.documentElement;
+                nomsDeLaLigne(li, true);
+                racine.classList.add('vt-univers');
+                const passage = document.startViewTransition(() => {
+                    nomsDeLaLigne(li, false);
+                    montrer(li, uni, false, true);
+                    nomsDuPanneau(true);
+                });
+                passage.finished.catch(() => { }).finally(() => {
+                    passageEnCours = false;
+                    nomsDuPanneau(false);
+                    racine.classList.remove('vt-univers');
+                });
+            });
+            return true;
+        }
+        return montrer(li, uni, fromHistory, false);
+    }
 
+    function montrer(li, uni, fromHistory, parPassage) {
+        ligneOuverte = li;
         const token = ++openToken;
         lastFocus = document.activeElement;
         render(li, uni);
@@ -1530,13 +1717,15 @@ const SHOW_UNIVERSES = {
         const r = li.getBoundingClientRect();
         const vw = window.innerWidth, vh = window.innerHeight;
         overlay.hidden = false;
+        // Pas de retard de chargement dans un passage : la photo du fond est
+        // déjà là, et c'est elle qu'on regarde.
         // APRÈS avoir rendu le panneau visible : tant qu'il est `hidden`, il
         // n'a pas de boîte de défilement et l'affectation est ignorée. Sans
         // cela, ouvrir un second spectacle après avoir lu le premier jusqu'aux
         // dates faisait arriver directement en bas de page.
         overlay.scrollTop = 0;
-        overlay.classList.add('is-loading');
-        if (!REDUCED) {
+        if (!parPassage) overlay.classList.add('is-loading');
+        if (!REDUCED && !parPassage) {
             overlay.style.willChange = 'clip-path';
             overlay.style.clipPath = `inset(${r.top}px ${vw - r.right}px ${vh - r.bottom}px ${r.left}px round 10px)`;
             // Reflow imposé : sans lui, le navigateur fusionne l'état de
@@ -1545,6 +1734,14 @@ const SHOW_UNIVERSES = {
         }
         overlay.classList.add('is-open');
         overlay.style.clipPath = 'inset(0px 0px 0px 0px round 0px)';
+        // Le cadre final ne sert à rien une fois ouvert, et il gardait au
+        // panneau un détourage et un contexte d'empilement pour toute sa vie.
+        const lacherLeCadre = (e) => {
+            if (e.target !== overlay || e.propertyName !== 'clip-path') return;
+            overlay.removeEventListener('transitionend', lacherLeCadre);
+            if (token === openToken) { overlay.style.clipPath = ''; overlay.style.willChange = ''; }
+        };
+        overlay.addEventListener('transitionend', lacherLeCadre);
 
         awaitFirstPhoto().then(() => {
             // Panneau refermé, ou déjà rouvert sur un autre spectacle,
@@ -1580,10 +1777,11 @@ const SHOW_UNIVERSES = {
         ouvertDepuis = Date.now();
         window.track?.('univers_ouvert', { spectacle: uni.slug, par: fromHistory ? 'historique' : 'cv' });
         overlay.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', reecrireALaLumiere);
         onScroll();
-        observeCaptions();
+        animerLeMontage();
         lastScrollTop = 0;
-        playWriting();
+        playWriting({ titrePose: parPassage });
         // LA PAGE DERRIÈRE DEVIENT INERTE. Le panneau couvre l'écran, mais le
         // CV restait atteignable au clavier : après la dernière photo, la
         // touche Tab repartait dans l'en-tête caché dessous, et un lecteur
@@ -1597,7 +1795,42 @@ const SHOW_UNIVERSES = {
         return true;
     }
 
-    function close() {
+    //  LE RETOUR DANS LA LIGNE. Le panneau se referme sur la ligne d'où l'on
+    //  était parti, la photo et le titre compris — s'ils sont encore à
+    //  l'écran : descendu dans le montage, on ne voit plus le titre, et
+    //  seule la boîte revient. Mêmes exceptions qu'à l'aller.
+    function close(opts) {
+        if (!isOpen) return;
+        const li = ligneOuverte;
+        const avecPassage = PASSAGE && !(opts && opts.sansPassage) && !passageEnCours && li && li.isConnected;
+        if (!avecPassage) { fermer(false); return; }
+        passageEnCours = true;
+        const racine = document.documentElement;
+        const heroVu = overlay.scrollTop < window.innerHeight * 0.5;
+        nommer(overlay, 'u-boite');
+        if (heroVu) {
+            nommer(overlay.querySelector('.u-hero-fond'), 'u-photo');
+            nommer(overlay.querySelector('.u-title'), 'u-titre');
+        }
+        racine.classList.add('vt-univers-retour');
+        const passage = document.startViewTransition(() => {
+            nomsDuPanneau(false);
+            fermer(true);
+            if (!aLEcran(li)) return;
+            nommer(li, 'u-boite');
+            if (heroVu) {
+                nommer(li.querySelector('.cv-vignette img'), 'u-photo');
+                nommer(li.querySelector('.cv-title'), 'u-titre');
+            }
+        });
+        passage.finished.catch(() => { }).finally(() => {
+            passageEnCours = false;
+            nomsDeLaLigne(li, false);
+            racine.classList.remove('vt-univers-retour');
+        });
+    }
+
+    function fermer(direct) {
         if (!isOpen) return;
         // L'agrandissement est empilé PAR-DESSUS l'univers : le dépiler
         // d'abord, sinon l'historique garderait une entrée orpheline.
@@ -1617,6 +1850,9 @@ const SHOW_UNIVERSES = {
         overlay.classList.remove('is-open', 'is-loading');
         overlay.style.willChange = '';
         overlay.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', reecrireALaLumiere);
+        window.Regie?.oublier(overlay);
+        lacherLesGuets();
         document.documentElement.classList.remove('u-locked');
         restoreThemeColor();
         window.dropOverlayState?.('univers');
@@ -1662,7 +1898,9 @@ const SHOW_UNIVERSES = {
             insister();
         }
         const done = () => { overlay.hidden = true; overlay.innerHTML = ''; };
-        if (REDUCED) done(); else setTimeout(done, 420);
+        // Dans le passage, le panneau doit avoir disparu de la capture
+        // d'arrivée : c'est la ligne qui l'y remplace.
+        if (REDUCED || direct) done(); else setTimeout(done, 420);
         // La page redevient vivante AVANT de lui rendre le focus : un élément
         // inerte ne peut pas le recevoir.
         if (libererPage) { libererPage(); libererPage = null; }
@@ -1952,6 +2190,9 @@ const SHOW_UNIVERSES = {
     function init() {
         overlay = document.getElementById('show-universe');
         if (!overlay) return;
+        // Le moteur a démarré : la page spectacle peut garder ses mots en
+        // attente (voir .u-anime dans univers.css et le garde de l'en-tête).
+        window.__universPret = true;
 
         // Une seule fenêtre pour tout le panneau : le CV comme les pages
         // /spectacles/ passent par ce même #show-universe (voir demarrerStatique).
@@ -2017,9 +2258,8 @@ const SHOW_UNIVERSES = {
             if (e.target.closest('[data-u-jump]')) {
                 const foot = overlay.querySelector('.u-foot');
                 if (!foot) return;
-                foot.classList.add('is-in');
-                overlay.querySelectorAll(REVEALED).forEach(f => f.classList.add('is-in'));
-                overlay.querySelectorAll('.u-rw').forEach(w => w.classList.add('is-lit'));
+                // Rien à préparer : ce qui se trouve en chemin s'anime au
+                // défilement, et se trouve dans son état final à l'arrivée.
                 foot.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
                 // LE FOCUS SUIT LE SAUT. La page défilait jusqu'aux dates, mais
                 // le focus restait sur le bouton, là-haut : la touche Tab
@@ -2036,7 +2276,8 @@ const SHOW_UNIVERSES = {
             const toDates = e.target.closest('[data-u-dates]');
             if (toDates) {
                 const key = toDates.dataset.uDates;
-                close();
+                // Sans passage : le changement d'onglet qui suit a le sien.
+                close({ sansPassage: true });
                 if (typeof goToDatesForShow === 'function') setTimeout(() => goToDatesForShow(key), 60);
             }
         });
@@ -2125,7 +2366,8 @@ const SHOW_UNIVERSES = {
         isOpen = true;
         overlay.classList.add('is-open');
         overlay.addEventListener('scroll', onScroll, { passive: true });
-        observeCaptions();
+        window.addEventListener('resize', reecrireALaLumiere);
+        animerLeMontage();
         lastScrollTop = 0;
         // AVANT l'écriture : le pied se refait en silence, la page n'a pas
         // encore bougé. Si rien n'a changé depuis la génération, l'opération
@@ -2297,7 +2539,6 @@ const SHOW_UNIVERSES = {
     }
 
     function markCvRows() {
-        let rang = 0;
         document.querySelectorAll('.cv-item').forEach(li => {
             const uni = universeFor(li);
             if (!uni) return;
@@ -2316,14 +2557,12 @@ const SHOW_UNIVERSES = {
             // peuvent pas être la même couleur — voir Audiences et
             // Fulguré.e.s. Sinon l'accent suffit.
             li.style.setProperty('--cv-accent', uni.cvAccent || uni.palette.accent);
-            // Le rang dans la guirlande (voir .cv-has-universe::after sur
-            // petit écran) : c'est lui qui retarde l'allumage, de sorte que
-            // la couleur descende le CV ligne après ligne. On compte les
-            // lignes À UNIVERS, pas toutes les lignes du CV — ce sont les
-            // seules qui s'allument, et un trou dans la numérotation ferait
-            // sauter la vague. querySelectorAll rend l'ordre du document,
-            // qui est ici l'ordre de lecture : théâtre, puis courts métrages.
-            li.style.setProperty('--cv-rang', rang++);
+            // LA FRISE (voir « La frise » dans index.html) : la ligne et sa
+            // liste s'allument au défilement. Là où le navigateur ne le lit
+            // pas lui-même, regie.js leur écrit leur place à l'écran — elles
+            // portent donc son repère, rg-ligne.
+            li.classList.add('rg-ligne');
+            li.parentElement?.classList.add('cv-frise', 'rg-ligne');
 
             const icon = li.querySelector('.cv-chevron');
             if (icon) {
@@ -2340,6 +2579,7 @@ const SHOW_UNIVERSES = {
         });
         calerLesCretes();
         suivreLeTheme();
+        window.Regie?.observer(document.getElementById('page_cv'));
     }
 
     // ── LA VIGNETTE, ET L'ANNÉE DESSUS ───────────────────────────────
@@ -2669,7 +2909,9 @@ const SHOW_UNIVERSES = {
         const c = li && li.style.getPropertyValue('--cv-accent').trim();
         if (!c || c === ambianceEnCours) return;
         ambianceEnCours = c;
-        racine.style.setProperty('--ambiance', c);
+        // LA CIBLE, pas la couleur animée : la lueur et la barre collée
+        // glissent chacune vers elle (voir @property --ambiance).
+        racine.style.setProperty('--ambiance-cible', c);
         // La classe pilote le grain de pellicule (voir body::after dans
         // index.html) : il n'apparaît qu'avec la salle, et repart avec
         // elle. Une couleur seule reste une couleur ; c'est le bruit qui
@@ -2683,7 +2925,7 @@ const SHOW_UNIVERSES = {
         // On retire la déclaration plutôt que de reposer l'or : la valeur
         // par défaut vit dans la feuille de style, et c'est elle qui doit
         // décider — y compris quand le thème change.
-        racine.style.removeProperty('--ambiance');
+        racine.style.removeProperty('--ambiance-cible');
         racine.classList.remove('salle-allumee');
     }
 

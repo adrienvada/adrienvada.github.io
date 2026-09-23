@@ -58,6 +58,26 @@
         // reviendra un autre jour depuis un autre site y aura droit — voir
         // « Le lien direct entre sans rideau » dans index.html.
         try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+
+        // Le titre qui attend de s'écrire, la première photo qui attend son
+        // allumage dans le noir : cachés seulement si le moteur est là pour
+        // les montrer (u-anime). Et le drapeau de la régie, posé avant le
+        // premier rendu — le même en-tête que sur l'accueil (index.html),
+        // où tout cela est expliqué ; build/verifier-site.js compare les
+        // deux.
+        (function () {
+            var racine = document.documentElement;
+            racine.classList.add('u-anime');
+            if (/[?&]repli(?:[=&]|$)/.test(location.search) || !(window.CSS && CSS.supports &&
+                CSS.supports('animation-timeline: view()') && CSS.supports('view-timeline: --rg block')))
+                racine.classList.add('regie-repli');
+            addEventListener('DOMContentLoaded', function () {
+                setTimeout(function () {
+                    if (!window.__universPret) racine.classList.remove('u-anime');
+                    if (!window.Regie) racine.classList.remove('regie-repli');
+                }, 0);
+            });
+        })();
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -67,7 +87,7 @@
         /* Le mouvement de l'accueil — relu dans index.html (voir
            chargerMouvement) : sans lui, les transitions d'univers.css
            tombaient à zéro sur cette page. */
-        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; }
+        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --ease-ressort: linear(0, 0.005 1%, 0.039 3%, 0.098 5%, 0.215 8%, 0.566 16%, 0.715 20%, 0.807 23%, 0.901 27%, 0.966 31%, 1.013 36%, 1.036 42%, 1.032 52%, 1.002 75%, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; --dur-scene: 460ms; --dur-morph: 620ms; }
         body { margin: 0; background: #08080b; }
         #show-universe {
             --u-bg: #08080b;
@@ -88,14 +108,26 @@
             color: var(--u-muted); text-decoration: none;
         }
         .u-retour:hover { color: var(--u-accent-ink); }
-        /* Le morphing depuis le répertoire : les deux documents y
-           consentent, et le panneau porte le nom que la carte cliquée
-           prend au départ — sa vignette glisse jusqu'à devenir cette
-           page. Navigateurs plus anciens : navigation ordinaire. */
+        /* Le morphing depuis le répertoire — et depuis l'onglet Dates de
+           l'accueil : les documents y consentent, et cette page porte le
+           nom que la vignette touchée prend au départ. La photo de la
+           vignette grandit jusqu'à devenir le fond du titre, comme dans le
+           panneau de l'accueil (voir « La vignette devient l'univers »
+           dans univers.js). Sans photo, c'est la page entière qui sort de
+           la vignette. Navigateurs plus anciens : navigation ordinaire.
+
+           La petite image ne se montre jamais en grand : elle s'efface tôt,
+           tant qu'elle est encore petite, et le fond arrive en même temps. */
         @view-transition { navigation: auto; }
-        #show-universe { view-transition-name: fiche-alabarre; }
+        #show-universe .u-hero-fond { view-transition-name: fiche-alabarre; view-transition-class: fiche; }
         ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
         ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+        ::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
+        ::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
+        ::view-transition-old(*.fiche) { animation: vt-fiche-sort calc(var(--dur-morph) * .35) ease-out both; }
+        ::view-transition-new(*.fiche) { animation: vt-fiche-entre calc(var(--dur-morph) * .4) ease-out both; }
+        @keyframes vt-fiche-sort { to { opacity: 0; } }
+        @keyframes vt-fiche-entre { from { opacity: 0; } }
         @media (prefers-reduced-motion: reduce) {
             ::view-transition-group(*), ::view-transition-image-pair(*),
             ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
@@ -381,14 +413,21 @@
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
-        <div class="u-hero-wrap">
+        <!-- LE HÉROS SE DÉFAIT PAR COUCHES, chacune sur sa propre course au
+             défilement (voir « Le héros s'en va » dans univers.css) : le
+             surtitre part d'abord, le titre en dernier. L'auteur, la ligne
+             du rôle, le bouton et la flèche sont enveloppés d'une couche : ils
+             ont déjà leur propre fondu d'arrivée, et deux animations ne se
+             partagent pas une même opacité. -->
+        <div class="u-hero-wrap rg-vue">
+        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/alabarre/19-1280.webp" srcset="../../ressources/images/univers/alabarre/19-640.webp 640w, ../../ressources/images/univers/alabarre/19-1280.webp 1280w" sizes="100vw" alt="" decoding="async" style="object-position:45% 25%"></div>
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
                  que la date et l'état de la tournée : c'est la ligne d'une
                  feuille de salle, et elle dit en trois mots ce qu'on va voir
                  avant même le titre. Il est pris sur l'univers et non sur la
                  ligne du CV, qui ne le porte pas. -->
-            <p class="u-eyebrow">2026 · Théâtre documentaire · En tournée</p>
+            <p class="u-eyebrow rg-k">2026 · Théâtre documentaire · En tournée</p>
             <!-- LE TITRE, D'UN SEUL TENANT POUR QUI NE LE VOIT PAS. Les lettres
                  tombent une à une et sont donc cachées aux lecteurs d'écran
                  (voir splitChars) ; aria-label leur donne le mot entier.
@@ -398,28 +437,23 @@
                  Sur une page autonome c'est le titre de la page, de premier
                  niveau ; dans le panneau de l'accueil, qui a déjà le sien, de
                  second niveau. -->
-            <h1 class="u-title" id="u-titre" aria-label="À la barre, peine perdue ?" style="--u-title-chars:6;--u-title-len:26"><span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:0">À</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:1">l</span><span class="u-ch" style="--i:2">a</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:3">b</span><span class="u-ch" style="--i:4">a</span><span class="u-ch" style="--i:5">r</span><span class="u-ch" style="--i:6">r</span><span class="u-ch" style="--i:7">e</span><span class="u-ch" style="--i:8">,</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:9">p</span><span class="u-ch" style="--i:10">e</span><span class="u-ch" style="--i:11">i</span><span class="u-ch" style="--i:12">n</span><span class="u-ch" style="--i:13">e</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:14">p</span><span class="u-ch" style="--i:15">e</span><span class="u-ch" style="--i:16">r</span><span class="u-ch" style="--i:17">d</span><span class="u-ch" style="--i:18">u</span><span class="u-ch" style="--i:19">e</span><span class="u-ch" style="--i:20"> </span><span class="u-ch" style="--i:21">?</span></span></h1>
-            <p class="u-author">Ronan Chéneau</p>
-            <p class="u-synopsis"><span class="u-line"><span class="u-wd" style="--i:0">Inspirés</span> <span class="u-wd" style="--i:1">d’affaires</span> <span class="u-wd" style="--i:2">réelles,</span> <span class="u-wd" style="--i:3">des</span> <span class="u-wd" style="--i:4">extraits</span> <span class="u-wd" style="--i:5">de</span> <span class="u-wd" style="--i:6">procès</span> <span class="u-wd" style="--i:7">révèlent</span> <span class="u-wd" style="--i:8">la</span> <span class="u-wd" style="--i:9">complexité</span> <span class="u-wd" style="--i:10">d’une</span> <span class="u-wd" style="--i:11">justice</span> <span class="u-wd" style="--i:12">en</span> <span class="u-wd" style="--i:13">souffrance</span> <span class="u-wd" style="--i:14">face</span> <span class="u-wd" style="--i:15">à</span> <span class="u-wd" style="--i:16">l’ampleur</span> <span class="u-wd" style="--i:17">des</span> <span class="u-wd" style="--i:18">violences</span> <span class="u-wd" style="--i:19">conjugales.</span></span></p>
-            <p class="u-meta">Rôle · Juge, accusé, greffier, avocat, narrateur<br>CDN de Normandie-Rouen</p>
+            <h1 class="u-title rg-k" id="u-titre" aria-label="À la barre, peine perdue ?" style="--u-title-chars:6;--u-title-len:26"><span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:0">À</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:1">l</span><span class="u-ch" style="--i:2">a</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:3">b</span><span class="u-ch" style="--i:4">a</span><span class="u-ch" style="--i:5">r</span><span class="u-ch" style="--i:6">r</span><span class="u-ch" style="--i:7">e</span><span class="u-ch" style="--i:8">,</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:9">p</span><span class="u-ch" style="--i:10">e</span><span class="u-ch" style="--i:11">i</span><span class="u-ch" style="--i:12">n</span><span class="u-ch" style="--i:13">e</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:14">p</span><span class="u-ch" style="--i:15">e</span><span class="u-ch" style="--i:16">r</span><span class="u-ch" style="--i:17">d</span><span class="u-ch" style="--i:18">u</span><span class="u-ch" style="--i:19">e</span><span class="u-ch" style="--i:20"> </span><span class="u-ch" style="--i:21">?</span></span></h1>
+            <div class="u-couche u-couche-auteur rg-k"><p class="u-author">Ronan Chéneau</p></div>
+            <p class="u-synopsis rg-k"><span class="u-line"><span class="u-wd" style="--i:0">Inspirés</span> <span class="u-wd" style="--i:1">d’affaires</span> <span class="u-wd" style="--i:2">réelles,</span> <span class="u-wd" style="--i:3">des</span> <span class="u-wd" style="--i:4">extraits</span> <span class="u-wd" style="--i:5">de</span> <span class="u-wd" style="--i:6">procès</span> <span class="u-wd" style="--i:7">révèlent</span> <span class="u-wd" style="--i:8">la</span> <span class="u-wd" style="--i:9">complexité</span> <span class="u-wd" style="--i:10">d’une</span> <span class="u-wd" style="--i:11">justice</span> <span class="u-wd" style="--i:12">en</span> <span class="u-wd" style="--i:13">souffrance</span> <span class="u-wd" style="--i:14">face</span> <span class="u-wd" style="--i:15">à</span> <span class="u-wd" style="--i:16">l’ampleur</span> <span class="u-wd" style="--i:17">des</span> <span class="u-wd" style="--i:18">violences</span> <span class="u-wd" style="--i:19">conjugales.</span></span></p>
+            <div class="u-couche u-couche-meta rg-k"><p class="u-meta">Rôle · Juge, accusé, greffier, avocat, narrateur<br>CDN de Normandie-Rouen</p></div>
 
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
                  traverser tout le défilé de photos pour savoir quand voir le
                  spectacle — or c'est souvent la seule raison de la visite.
                  Ce que les dates y changent est dans heroActionsHtml. -->
-            <div class="u-hero-actions">
+            <div class="u-couche u-couche-actions rg-k"><div class="u-hero-actions">
                 <button type="button" class="u-btn" data-u-jump>
                         Accéder aux dates
                         <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
                     </button>
-            </div>
+            </div></div>
 
-            <span class="u-scroll" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span>
-            <!-- Le masque neutre : l'objet du plateau, pas le rouage du
-                 navigateur. Un ovoïde lisse, deux yeux, l'arête du nez, pas
-                 de bouche — rien qui exprime, tout qui attend. Tracé ici
-                 plutôt qu'en CSS : une forme se dessine, elle ne se bricole
-                 pas en bordures et rayons. -->
+            <span class="u-couche u-couche-fleche rg-k" aria-hidden="true"><span class="u-scroll"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span></span>
             <span class="u-loader" role="status" aria-label="Chargement des visuels">
                 <svg viewBox="0 0 100 128" aria-hidden="true" focusable="false">
                     <path fill-rule="evenodd" d="M50 8C71 8 85 25 85 49c0 33-15 71-35 71S15 82 15 49C15 25 29 8 50 8z
@@ -431,167 +465,220 @@
         </header>
         </div>
 
-        <div class="u-figs"><div class="u-chapter u-reveal">
-                    <span class="u-chapter-num">1h05</span>
-                    <h2><span class="u-line"><span class="u-rw">Puis</span> <span class="u-rw">45</span> <span class="u-rw">minutes</span> <span class="u-rw">de</span> <span class="u-rw">débat</span> <span class="u-rw">—</span> <span class="u-rw">tout</span> <span class="u-rw">public</span> <span class="u-rw">dès</span> <span class="u-rw">15</span> <span class="u-rw">ans</span></span></h2>
-                </div><figure class="u-fig u-fig--plein" style="--i:0">
-            <button type="button" class="u-fig-media" data-u-zoom="0"
-                    aria-label="Agrandir : Créé en 2024 au palais de justice de Rouen.">
-                <picture>
+        <div class="u-figs"><section class="u-ouverture rg-scene" aria-label="Ouverture">
+            <div class="u-of-scene">
+                <span class="u-of-fond" aria-hidden="true"></span>
+                <span class="u-of-plans" aria-hidden="true"><span class="u-of-photo rg-k" style="--x:-22cqw;--y:-9cqh;--s:-0.18;--e:0.4">
+                    <img src="../../ressources/images/univers/alabarre/20-640.webp" srcset="../../ressources/images/univers/alabarre/20-640.webp 640w, ../../ressources/images/univers/alabarre/20-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:21cqw;--y:9cqh;--s:0.06;--e:0.52">
+                    <img src="../../ressources/images/univers/alabarre/9-640.webp" srcset="../../ressources/images/univers/alabarre/9-640.webp 640w, ../../ressources/images/univers/alabarre/9-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:-19cqw;--y:11cqh;--s:0.18;--e:0.64">
+                    <img src="../../ressources/images/univers/alabarre/12-640.webp" srcset="../../ressources/images/univers/alabarre/12-640.webp 640w, ../../ressources/images/univers/alabarre/12-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:23cqw;--y:-8cqh;--s:0.3;--e:0.74">
+                    <img src="../../ressources/images/univers/alabarre/26-640.webp" srcset="../../ressources/images/univers/alabarre/26-640.webp 640w, ../../ressources/images/univers/alabarre/26-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span></span>
+                <div class="u-of-carton rg-k">
+                <span class="u-chapter-num">1h05</span>
+                <h2 class="u-ecrit" data-ecrire="scene" data-de="0.6" data-a="0.8"><span class="u-line"><span class="u-rw">Puis</span> <span class="u-rw">45</span> <span class="u-rw">minutes</span> <span class="u-rw">de</span> <span class="u-rw">débat</span> <span class="u-rw">—</span> <span class="u-rw">tout</span> <span class="u-rw">public</span> <span class="u-rw">dès</span> <span class="u-rw">15</span> <span class="u-rw">ans</span></span></h2>
+            </div>
+                <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
+                <span class="u-of-noir rg-k" aria-hidden="true"></span>
+            </div>
+        </section><figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="neon" style="--i:0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="0"
+                    aria-label="Agrandir : Créé en 2024 au palais de justice de Rouen.">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/19-640.webp 640w, ../../ressources/images/univers/alabarre/19-1280.webp 1280w, ../../ressources/images/univers/alabarre/19-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/alabarre/19.jpg" alt="Créé en 2024 au palais de justice de Rouen." style="object-position:45% 25%"
-                     loading="eager" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/19.jpg" class="u-fig-img rg-k" alt="Créé en 2024 au palais de justice de Rouen." style="object-position:45% 25%"
+                         loading="eager" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/19-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:45% 25%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
+            <span class="u-voile" aria-hidden="true"></span><span class="u-eclat" aria-hidden="true"></span>
             
-            <figcaption class="u-cap"><span>Créé en 2024 au palais de justice de Rouen.</span></figcaption>
-        </figure><blockquote class="u-quote u-reveal">
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Créé en 2024 au palais de justice de Rouen.</span></figcaption>
+        </figure><blockquote class="u-quote u-ecrit rg-vue">
                     <p class="u-fit" style="--chars:68"><span class="u-line"><span class="u-rw">« La</span> <span class="u-rw">violence</span> <span class="u-rw">est</span> <span class="u-rw">au</span> <span class="u-rw">plus</span> <span class="u-rw">proche</span> <span class="u-rw">des</span> <span class="u-rw">personnes</span> <span class="u-rw">de</span> <span class="u-rw">leurs</span> <span class="u-rw">relations,</span></span><span class="u-line"><span class="u-rw">au</span> <span class="u-rw">quotidien,</span> <span class="u-rw">au</span> <span class="u-rw">travail,</span> <span class="u-rw">dans</span> <span class="u-rw">la</span> <span class="u-rw">sphère</span> <span class="u-rw">familiale,</span> <span class="u-rw">la</span> <span class="u-rw">plus</span> <span class="u-rw">intime »</span></span></p>
-                    <cite>Marion, III - L’institution judiciaire au défi du réel</cite>
-                </blockquote><div class="u-group u-quatuor"><figure class="u-fig u-fig--quatuor" style="--i:1">
-            <button type="button" class="u-fig-media" data-u-zoom="1"
-                    aria-label="Agrandir : Avocate de la partie civile, IV - Le quotidien du sexisme">
-                <picture>
+                    <cite class="rg-k">Marion, III - L’institution judiciaire au défi du réel</cite>
+                </blockquote><div class="u-group u-quatuor"><figure class="u-fig u-fig--quatuor rg-vue" style="--i:1;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="1"
+                    aria-label="Agrandir : Avocate de la partie civile, IV - Le quotidien du sexisme">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/20-640.webp 640w, ../../ressources/images/univers/alabarre/20-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/alabarre/20.jpg" alt="Avocate de la partie civile, IV - Le quotidien du sexisme" style="object-position:35% 35%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/20.jpg" class="u-fig-img rg-k" alt="Avocate de la partie civile, IV - Le quotidien du sexisme" style="object-position:35% 35%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/20-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:35% 35%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
-            <figcaption class="u-cap"><span>Avocate de la partie civile, IV - Le quotidien du sexisme</span></figcaption>
-        </figure><figure class="u-fig u-fig--quatuor" style="--i:2">
-            <button type="button" class="u-fig-media" data-u-zoom="2"
-                    aria-label="Agrandir : Prévenu, IV - Le quotidien du sexisme">
-                <picture>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Avocate de la partie civile, IV - Le quotidien du sexisme</span></figcaption>
+        </figure><figure class="u-fig u-fig--quatuor rg-vue" style="--i:2;--prof:1.9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="2"
+                    aria-label="Agrandir : Prévenu, IV - Le quotidien du sexisme">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/8-640.webp 640w, ../../ressources/images/univers/alabarre/8-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/alabarre/8.jpg" alt="Prévenu, IV - Le quotidien du sexisme" style="object-position:15% 18%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/8.jpg" class="u-fig-img rg-k" alt="Prévenu, IV - Le quotidien du sexisme" style="object-position:15% 18%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/8-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:15% 18%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
-            <figcaption class="u-cap"><span>Prévenu, IV - Le quotidien du sexisme</span></figcaption>
-        </figure><figure class="u-fig u-fig--quatuor" style="--i:3">
-            <button type="button" class="u-fig-media" data-u-zoom="3"
-                    aria-label="Agrandir : Greffier, II - Face aux violences">
-                <picture>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Prévenu, IV - Le quotidien du sexisme</span></figcaption>
+        </figure><figure class="u-fig u-fig--quatuor rg-vue" style="--i:3;--prof:2.8">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="3"
+                    aria-label="Agrandir : Greffier, II - Face aux violences">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/5-640.webp 640w, ../../ressources/images/univers/alabarre/5-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/alabarre/5.jpg" alt="Greffier, II - Face aux violences" style="object-position:47% 18%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/5.jpg" class="u-fig-img rg-k" alt="Greffier, II - Face aux violences" style="object-position:47% 18%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/5-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:47% 18%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
-            <figcaption class="u-cap"><span>Greffier, II - Face aux violences</span></figcaption>
-        </figure><figure class="u-fig u-fig--quatuor" style="--i:4">
-            <button type="button" class="u-fig-media" data-u-zoom="4"
-                    aria-label="Agrandir : Avocat de la défense, V - La défense des hommes">
-                <picture>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Greffier, II - Face aux violences</span></figcaption>
+        </figure><figure class="u-fig u-fig--quatuor rg-vue" style="--i:4;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="4"
+                    aria-label="Agrandir : Avocat de la défense, V - La défense des hommes">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/9-640.webp 640w, ../../ressources/images/univers/alabarre/9-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/alabarre/9.jpg" alt="Avocat de la défense, V - La défense des hommes" style="object-position:50% 15%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/9.jpg" class="u-fig-img rg-k" alt="Avocat de la défense, V - La défense des hommes" style="object-position:50% 15%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/9-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:50% 15%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
-            <figcaption class="u-cap"><span>Avocat de la défense, V - La défense des hommes</span></figcaption>
-        </figure><p class="u-aside u-reveal"><span class="u-line"><span class="u-rw">Comment,</span> <span class="u-rw">dans</span> <span class="u-rw">ces</span> <span class="u-rw">conditions,</span></span><span class="u-line"><span class="u-rw">réussir</span> <span class="u-rw">à</span> <span class="u-rw">“rendre</span> <span class="u-rw">justice” ?</span></span></p></div><blockquote class="u-quote u-reveal">
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Avocat de la défense, V - La défense des hommes</span></figcaption>
+        </figure><p class="u-aside u-ecrit rg-vue"><span class="u-line"><span class="u-rw">Comment,</span> <span class="u-rw">dans</span> <span class="u-rw">ces</span> <span class="u-rw">conditions,</span></span><span class="u-line"><span class="u-rw">réussir</span> <span class="u-rw">à</span> <span class="u-rw">“rendre</span> <span class="u-rw">justice” ?</span></span></p></div><blockquote class="u-quote u-ecrit rg-vue">
                     <p class="u-fit" style="--chars:49"><span class="u-line"><span class="u-rw">« Monsieur,</span> <span class="u-rw">avez-vous</span> <span class="u-rw">quelque</span> <span class="u-rw">chose</span> <span class="u-rw">à</span> <span class="u-rw">ajouter ? »</span></span></p>
-                    <cite>Présidente, VI - Dans le couple </cite>
-                </blockquote><div class="u-group u-quatuor"><figure class="u-fig u-fig--quatuor" style="--i:5">
-            <button type="button" class="u-fig-media" data-u-zoom="5"
-                    aria-label="Agrandir : À la barre, peine perdue ?, photo 6">
-                <picture>
+                    <cite class="rg-k">Présidente, VI - Dans le couple </cite>
+                </blockquote><div class="u-group u-quatuor"><figure class="u-fig u-fig--quatuor rg-vue" style="--i:5;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="5"
+                    aria-label="Agrandir : À la barre, peine perdue ?, photo 6">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/4-640.webp 640w, ../../ressources/images/univers/alabarre/4-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/alabarre/4.jpg" alt="À la barre, peine perdue ?, photo 6" style="object-position:18% 25%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/4.jpg" class="u-fig-img rg-k" alt="À la barre, peine perdue ?, photo 6" style="object-position:18% 25%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/4-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:18% 25%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--quatuor" style="--i:6">
-            <button type="button" class="u-fig-media" data-u-zoom="6"
-                    aria-label="Agrandir : À la barre, peine perdue ?, photo 7">
-                <picture>
+        </figure><figure class="u-fig u-fig--quatuor rg-vue" style="--i:6;--prof:1.9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="6"
+                    aria-label="Agrandir : À la barre, peine perdue ?, photo 7">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/13-640.webp 640w, ../../ressources/images/univers/alabarre/13-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/alabarre/13.jpg" alt="À la barre, peine perdue ?, photo 7" style="object-position:30% 15%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/13.jpg" class="u-fig-img rg-k" alt="À la barre, peine perdue ?, photo 7" style="object-position:30% 15%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/13-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:30% 15%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--quatuor" style="--i:7">
-            <button type="button" class="u-fig-media" data-u-zoom="7"
-                    aria-label="Agrandir : À la barre, peine perdue ?, photo 8">
-                <picture>
+        </figure><figure class="u-fig u-fig--quatuor rg-vue" style="--i:7;--prof:2.8">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="7"
+                    aria-label="Agrandir : À la barre, peine perdue ?, photo 8">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/14-640.webp 640w, ../../ressources/images/univers/alabarre/14-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/alabarre/14.jpg" alt="À la barre, peine perdue ?, photo 8" style="object-position:36% 28%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/14.jpg" class="u-fig-img rg-k" alt="À la barre, peine perdue ?, photo 8" style="object-position:36% 28%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/14-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:36% 28%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--quatuor" style="--i:8">
-            <button type="button" class="u-fig-media" data-u-zoom="8"
-                    aria-label="Agrandir : À la barre, peine perdue ?, photo 9">
-                <picture>
+        </figure><figure class="u-fig u-fig--quatuor rg-vue" style="--i:8;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="8"
+                    aria-label="Agrandir : À la barre, peine perdue ?, photo 9">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/12-640.webp 640w, ../../ressources/images/univers/alabarre/12-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/alabarre/12.jpg" alt="À la barre, peine perdue ?, photo 9" style="object-position:52% 25%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/12.jpg" class="u-fig-img rg-k" alt="À la barre, peine perdue ?, photo 9" style="object-position:52% 25%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/12-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:52% 25%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><p class="u-aside u-reveal"><span class="u-line"><span class="u-rw">Le</span> <span class="u-rw">spectacle,</span> <span class="u-rw">sobre,</span> <span class="u-rw">peut</span> <span class="u-rw">se</span> <span class="u-rw">jouer</span> <span class="u-rw">en</span> <span class="u-rw">tribunal</span> <span class="u-rw">comme</span> <span class="u-rw">en</span> <span class="u-rw">salle</span> <span class="u-rw">municipale</span> <span class="u-rw">ou</span> <span class="u-rw">établissement</span> <span class="u-rw">scolaire :</span> <span class="u-rw">la</span> <span class="u-rw">salle</span> <span class="u-rw">d’audience</span> <span class="u-rw">est</span> <span class="u-rw">recrée.</span></span></p></div><blockquote class="u-quote u-reveal">
+        </figure><p class="u-aside u-ecrit rg-vue"><span class="u-line"><span class="u-rw">Le</span> <span class="u-rw">spectacle,</span> <span class="u-rw">sobre,</span> <span class="u-rw">peut</span> <span class="u-rw">se</span> <span class="u-rw">jouer</span> <span class="u-rw">en</span> <span class="u-rw">tribunal</span> <span class="u-rw">comme</span> <span class="u-rw">en</span> <span class="u-rw">salle</span> <span class="u-rw">municipale</span> <span class="u-rw">ou</span> <span class="u-rw">établissement</span> <span class="u-rw">scolaire :</span> <span class="u-rw">la</span> <span class="u-rw">salle</span> <span class="u-rw">d’audience</span> <span class="u-rw">est</span> <span class="u-rw">recrée.</span></span></p></div><blockquote class="u-quote u-ecrit rg-vue">
                     <p class="u-fit" style="--chars:78"><span class="u-line"><span class="u-rw">« Peine</span> <span class="u-rw">perdue,</span> <span class="u-rw">alors ? »</span> <span class="u-rw">—</span> <span class="u-rw">« Non,</span> <span class="u-rw">au</span> <span class="u-rw">contraire :</span> <span class="u-rw">on</span> <span class="u-rw">travaille,</span> <span class="u-rw">on</span> <span class="u-rw">continue. »</span></span></p>
-                    <cite>Rémi, Anne, X - Conclusion</cite>
-                </blockquote><figure class="u-fig u-fig--plein" style="--i:9">
-            <button type="button" class="u-fig-media" data-u-zoom="9"
-                    aria-label="Agrandir : À la barre, peine perdue ?, photo 10">
-                <picture>
+                    <cite class="rg-k">Rémi, Anne, X - Conclusion</cite>
+                </blockquote><figure class="u-fig u-fig--plein rg-vue" style="--i:9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="9"
+                    aria-label="Agrandir : À la barre, peine perdue ?, photo 10">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/6-640.webp 640w, ../../ressources/images/univers/alabarre/6-1280.webp 1280w, ../../ressources/images/univers/alabarre/6-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/alabarre/6.jpg" alt="À la barre, peine perdue ?, photo 10" style="object-position:57% 28%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/6.jpg" class="u-fig-img rg-k" alt="À la barre, peine perdue ?, photo 10" style="object-position:57% 28%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/6-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:57% 28%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
-            <div class="u-over u-reveal u-over--bas">
+            <div class="u-over u-ecrit rg-vue u-over--bas">
             <p class="u-fit" style="--chars:56"><span class="u-line"><span class="u-rw">« La</span> <span class="u-rw">justice</span> <span class="u-rw">est</span> <span class="u-rw">imparfaite</span> <span class="u-rw">parce</span> <span class="u-rw">qu’elle</span> <span class="u-rw">est</span> <span class="u-rw">humaine… »</span></span></p>
             
         </div>
             
-        </figure><div class="u-text u-reveal">
+        </figure><div class="u-text u-ecrit rg-vue">
                     <p><span class="u-line"><span class="u-rw">« …</span> <span class="u-rw">Elle</span> <span class="u-rw">répond</span> <span class="u-rw">pourtant</span> <span class="u-rw">à</span> <span class="u-rw">l’une</span> <span class="u-rw">des</span> <span class="u-rw">vocations</span> <span class="u-rw">les</span> <span class="u-rw">plus</span> <span class="u-rw">hautes</span> <span class="u-rw">de</span> <span class="u-rw">notre</span> <span class="u-rw">humanité :</span> <span class="u-rw">briser</span> <span class="u-rw">la</span> <span class="u-rw">loi</span> <span class="u-rw">du</span> <span class="u-rw">plus</span> <span class="u-rw">fort.</span> <span class="u-rw">Pour</span> <span class="u-rw">cela,</span> <span class="u-rw">elle</span> <span class="u-rw">doit</span> <span class="u-rw">savoir</span> <span class="u-rw">écouter</span> <span class="u-rw">—</span> <span class="u-rw">et</span> <span class="u-rw">il</span> <span class="u-rw">faut</span> <span class="u-rw">lui</span> <span class="u-rw">en</span> <span class="u-rw">donner</span> <span class="u-rw">le</span> <span class="u-rw">temps. »</span></span></p>
-                </div><div class="u-group u-duo"><figure class="u-fig u-fig--duo" style="--i:10">
-            <button type="button" class="u-fig-media" data-u-zoom="10"
-                    aria-label="Agrandir : Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen">
-                <picture>
+                </div><div class="u-group u-duo"><figure class="u-fig u-fig--duo rg-vue" style="--i:10;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="10"
+                    aria-label="Agrandir : Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/25-640.webp 640w, ../../ressources/images/univers/alabarre/25-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/alabarre/25.jpg" alt="Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen" style="object-position:55% 50%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/25.jpg" class="u-fig-img rg-k" alt="Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen" style="object-position:55% 50%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/25-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:55% 50%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
-            <figcaption class="u-cap"><span>Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen</span></figcaption>
-        </figure><figure class="u-fig u-fig--duo" style="--i:11">
-            <button type="button" class="u-fig-media" data-u-zoom="11"
-                    aria-label="Agrandir : Débat suivant une représentation au tribunal d’Avignon">
-                <picture>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen</span></figcaption>
+        </figure><figure class="u-fig u-fig--duo rg-vue" style="--i:11;--prof:1.9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="11"
+                    aria-label="Agrandir : Débat suivant une représentation au tribunal d’Avignon">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/alabarre/26-640.webp 640w, ../../ressources/images/univers/alabarre/26-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/alabarre/26.jpg" alt="Débat suivant une représentation au tribunal d’Avignon" style="object-position:33% 45%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/alabarre/26.jpg" class="u-fig-img rg-k" alt="Débat suivant une représentation au tribunal d’Avignon" style="object-position:33% 45%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/alabarre/26-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:33% 45%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
-            <figcaption class="u-cap"><span>Débat suivant une représentation au tribunal d’Avignon</span></figcaption>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Débat suivant une représentation au tribunal d’Avignon</span></figcaption>
         </figure></div></div>
 
         <footer class="u-foot" id="u-foot">
@@ -704,9 +791,12 @@
     <script src="../../dates.js"></script>
     <script src="../../dates-live.js"></script>
 
-    <!-- Le moteur, dans l'ordre : le montage d'abord (univers.js s'en sert),
-         puis univers.js, qui reconnaît la classe du <body> et anime le
-         panneau déjà en place. Aucun des deux n'est propre à cette page. -->
+    <!-- Le moteur, dans l'ordre : la régie (le défilement qui mène les
+         scènes, là où le navigateur ne le fait pas lui-même), le montage
+         (univers.js s'en sert), puis univers.js, qui reconnaît la classe du
+         <body> et anime le panneau déjà en place. Aucun n'est propre à
+         cette page. -->
+    <script src="../../regie.js"></script>
     <script src="../../univers-montage.js"></script>
     <script src="../../univers.js"></script>
 </body>
