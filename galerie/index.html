@@ -29,8 +29,8 @@
         //  Un directeur de casting veut EMBRASSER la série d'un coup d'œil,
         //  juger la variété des visages avant d'en regarder un ; c'est le
         //  geste de la planche contact, où l'on entoure ensuite la bonne.
-        //  Le pincement reste là pour se rapprocher, et il n'a plus qu'un
-        //  sens à offrir en arrivant : écarter.
+        //  Le bouton + reste là pour se rapprocher, et il n'a plus qu'un
+        //  sens à offrir en arrivant : agrandir.
         //
         //  ON LE POSE ICI, ET NON AU CHARGEMENT DU SCRIPT PRINCIPAL, parce
         //  qu'un attribut posé après le premier rendu se verrait : la grille
@@ -39,8 +39,8 @@
         //  soit peint, comme celui du thème juste au-dessus.
         //
         //  LE CHIFFRE EST CELUI DU HAUT DE L'ÉCHELLE, et il est écrit à un
-        //  seul endroit : la même expression sert de borne au pincement
-        //  (voir NIVEAUX plus bas). Le seuil de 640 px est celui de la
+        //  seul endroit : la même expression sert de borne aux boutons de
+        //  densité (voir NIVEAUX plus bas). Le seuil de 640 px est celui de la
         //  feuille de style, pas un choix indépendant.
         // ════════════════════════════════════════════════════════════════
         (function () {
@@ -62,10 +62,9 @@
     <meta property="og:url" content="https://adrienvada.fr/galerie/">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/svg+xml" href="../favicon_io/favicon.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap">
+    <!-- Les polices du site, servies par le site (ressources/polices/). -->
+    <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../ressources/polices/polices.css">
     <link rel="stylesheet" href="galerie.css">
     <script type="application/ld+json">
 {
@@ -85,134 +84,134 @@
       "@type": "ImageObject",
       "position": 1,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/vignette_principale.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/vignette_principale.jpg",
-      "name": "Photo 1 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/vignette_principale-640.webp",
+      "name": "Portrait serré en pull gris, regard étonné vers l’objectif, sur fond gris clair"
     },
     {
       "@type": "ImageObject",
       "position": 2,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo1.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo1.jpg",
-      "name": "Photo 2 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo1-640.webp",
+      "name": "Portrait en pied, chemise bleue ouverte et jean, devant un mur de pierre"
     },
     {
       "@type": "ImageObject",
       "position": 3,
       "contentUrl": "https://adrienvada.fr/ressources/images/profil_1000x1000.jpg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/profil_1000x1000.jpg",
-      "name": "Photo 3 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/profil_1000x1000-640.webp",
+      "name": "Portrait de face, regard grave, sur fond bleu nuit"
     },
     {
       "@type": "ImageObject",
       "position": 4,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo2.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo2.jpg",
-      "name": "Photo 4 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo2-640.webp",
+      "name": "Dans une salle d’audience tapissée de fleurs de lys, un comédien en robe d’avocat plaide devant le public"
     },
     {
       "@type": "ImageObject",
       "position": 5,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo4.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo4.jpg",
-      "name": "Photo 5 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo4-640.webp",
+      "name": "Même salle d’audience : un comédien en tee-shirt noir, bras ouverts, s’adresse au public"
     },
     {
       "@type": "ImageObject",
       "position": 6,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo8.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo8.jpg",
-      "name": "Photo 6 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo8-640.webp",
+      "name": "Seul en scène dans un halo de lumière, casquette rouge et pull bordeaux"
     },
     {
       "@type": "ImageObject",
       "position": 7,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo10.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo10.jpg",
-      "name": "Photo 7 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo10-640.webp",
+      "name": "Plateau couvert de sable sous des voilages violets : un roi couronné à genoux, entre deux comédiens"
     },
     {
       "@type": "ImageObject",
       "position": 8,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo11.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo11.jpg",
-      "name": "Photo 8 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo11-640.webp",
+      "name": "Étreinte sur un sol de sable : un comédien en manteau et une comédienne en robe claire"
     },
     {
       "@type": "ImageObject",
       "position": 9,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo12.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo12.jpg",
-      "name": "Photo 9 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo12-640.webp",
+      "name": "Deux comédiens devant un décor de bois, l’un en bleu de travail et bonnet, l’autre en casquette et veste de survêtement"
     },
     {
       "@type": "ImageObject",
       "position": 10,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo13.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo13.jpg",
-      "name": "Photo 10 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo13-640.webp",
+      "name": "Deux comédiens vêtus de blanc, face à face, l’un tenant l’autre par le bras"
     },
     {
       "@type": "ImageObject",
       "position": 11,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo14.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo14.jpg",
-      "name": "Photo 11 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo14-640.webp",
+      "name": "Image de film : sur une plage, un homme en costume rit au téléphone près d’une jeune femme aux cheveux au vent"
     },
     {
       "@type": "ImageObject",
       "position": 12,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo15.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo15.jpg",
-      "name": "Photo 12 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo15-640.webp",
+      "name": "Portrait à lunettes, col roulé noir, sur fond clair"
     },
     {
       "@type": "ImageObject",
       "position": 13,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo16.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo16.jpg",
-      "name": "Photo 13 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo16-640.webp",
+      "name": "Portrait en blouson de cuir marron, sur fond sombre"
     },
     {
       "@type": "ImageObject",
       "position": 14,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo17.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo17.jpg",
-      "name": "Photo 14 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo17-640.webp",
+      "name": "Portrait en chemise verte, la main contre la tempe, sur fond bleu"
     },
     {
       "@type": "ImageObject",
       "position": 15,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo18.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo18.jpg",
-      "name": "Photo 15 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo18-640.webp",
+      "name": "Crâne rasé et barbe, en extérieur devant un canyon rocheux"
     },
     {
       "@type": "ImageObject",
       "position": 16,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo19.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo19.jpg",
-      "name": "Photo 16 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo19-640.webp",
+      "name": "Portrait éclatant de rire, chemisette beige, sur fond gris"
     },
     {
       "@type": "ImageObject",
       "position": 17,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo20.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo20.jpg",
-      "name": "Photo 17 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo20-640.webp",
+      "name": "Image de film : gros plan en tee-shirt marron, regard inquiet vers un interlocuteur"
     },
     {
       "@type": "ImageObject",
       "position": 18,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo21.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo21.jpg",
-      "name": "Photo 18 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo21-640.webp",
+      "name": "Salle d’audience lambrissée : en robe d’avocat, mains jointes devant un micro, l’air pensif"
     },
     {
       "@type": "ImageObject",
       "position": 19,
       "contentUrl": "https://adrienvada.fr/ressources/images/galerie/photo22.jpeg",
-      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/thumbs/photo22.jpg",
-      "name": "Photo 19 du book d’Adrien Vada"
+      "thumbnailUrl": "https://adrienvada.fr/ressources/images/galerie/vignettes/photo22-640.webp",
+      "name": "Salle d’audience lambrissée : en tee-shirt noir, debout devant un micro, la main tendue"
     }
   ]
 }
@@ -397,10 +396,18 @@
     <!-- Sentinelle de barre collante -->
     <div class="barre-sentinelle" aria-hidden="true"></div>
     <header class="barre">
-        <a class="retour" href="../">← Adrien Vada</a>
-        <button type="button" class="bascule" data-bascule aria-pressed="false" aria-label="Passer au thème clair" title="Passer au thème clair">
-            <svg class="ico" data-bascule-icone aria-hidden="true"><use href="#i-solid-sun"></use></svg>
-        </button>
+        <a class="retour" href="../"><span aria-hidden="true">←</span> Adrien Vada</a>
+        <div class="outils">
+            <!-- La densité de la planche : moins de photos par rang (+), plus
+                 (−). Cachés sans script, qui seul sait les faire agir. -->
+            <div class="densite" role="group" aria-label="Taille des photos">
+                <button type="button" class="densite-btn" data-densite="1" hidden aria-label="Photos plus petites" title="Photos plus petites"><span aria-hidden="true">−</span></button>
+                <button type="button" class="densite-btn" data-densite="-1" hidden aria-label="Photos plus grandes" title="Photos plus grandes"><span aria-hidden="true">+</span></button>
+            </div>
+            <button type="button" class="bascule" data-bascule aria-label="Passer au thème clair" title="Passer au thème clair">
+                <svg class="ico" data-bascule-icone aria-hidden="true"><use href="#i-solid-sun"></use></svg>
+            </button>
+        </div>
     </header>
 
     <main>
@@ -414,10 +421,10 @@
         <section>
             <ul class="repertoire" id="galerie-grille">
         <li class="carte" style="--ac:#bfa98a;--i:0" data-index="0">
-            <button type="button" class="carte-btn" data-zoom-photo="0" aria-label="Agrandir la photo 1">
+            <button type="button" class="carte-btn" data-zoom-photo="0" aria-label="Agrandir : Portrait serré en pull gris, regard étonné vers l’objectif, sur fond gris clair">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/vignette_principale.jpg" alt="Photo 1 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/vignette_principale-320.webp 320w, ../ressources/images/galerie/vignettes/vignette_principale-640.webp 640w, ../ressources/images/galerie/vignettes/vignette_principale-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/vignette_principale.jpeg" alt="Portrait serré en pull gris, regard étonné vers l’objectif, sur fond gris clair" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -427,10 +434,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:1" data-index="1">
-            <button type="button" class="carte-btn" data-zoom-photo="1" aria-label="Agrandir la photo 2">
+            <button type="button" class="carte-btn" data-zoom-photo="1" aria-label="Agrandir : Portrait en pied, chemise bleue ouverte et jean, devant un mur de pierre">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo1.jpg" alt="Photo 2 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo1-320.webp 320w, ../ressources/images/galerie/vignettes/photo1-640.webp 640w, ../ressources/images/galerie/vignettes/photo1-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo1.jpeg" alt="Portrait en pied, chemise bleue ouverte et jean, devant un mur de pierre" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -440,10 +447,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:2" data-index="2">
-            <button type="button" class="carte-btn" data-zoom-photo="2" aria-label="Agrandir la photo 3">
+            <button type="button" class="carte-btn" data-zoom-photo="2" aria-label="Agrandir : Portrait de face, regard grave, sur fond bleu nuit">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/profil_1000x1000.jpg" alt="Photo 3 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/profil_1000x1000-320.webp 320w, ../ressources/images/galerie/vignettes/profil_1000x1000-640.webp 640w, ../ressources/images/galerie/vignettes/profil_1000x1000-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/profil_1000x1000.jpg" alt="Portrait de face, regard grave, sur fond bleu nuit" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -453,10 +460,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:3" data-index="3">
-            <button type="button" class="carte-btn" data-zoom-photo="3" aria-label="Agrandir la photo 4">
+            <button type="button" class="carte-btn" data-zoom-photo="3" aria-label="Agrandir : Dans une salle d’audience tapissée de fleurs de lys, un comédien en robe d’avocat plaide devant le public">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo2.jpg" alt="Photo 4 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo2-320.webp 320w, ../ressources/images/galerie/vignettes/photo2-640.webp 640w, ../ressources/images/galerie/vignettes/photo2-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo2.jpeg" alt="Dans une salle d’audience tapissée de fleurs de lys, un comédien en robe d’avocat plaide devant le public" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -466,10 +473,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:4" data-index="4">
-            <button type="button" class="carte-btn" data-zoom-photo="4" aria-label="Agrandir la photo 5">
+            <button type="button" class="carte-btn" data-zoom-photo="4" aria-label="Agrandir : Même salle d’audience : un comédien en tee-shirt noir, bras ouverts, s’adresse au public">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo4.jpg" alt="Photo 5 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo4-320.webp 320w, ../ressources/images/galerie/vignettes/photo4-640.webp 640w, ../ressources/images/galerie/vignettes/photo4-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo4.jpeg" alt="Même salle d’audience : un comédien en tee-shirt noir, bras ouverts, s’adresse au public" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -479,10 +486,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:5" data-index="5">
-            <button type="button" class="carte-btn" data-zoom-photo="5" aria-label="Agrandir la photo 6">
+            <button type="button" class="carte-btn" data-zoom-photo="5" aria-label="Agrandir : Seul en scène dans un halo de lumière, casquette rouge et pull bordeaux">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo8.jpg" alt="Photo 6 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo8-320.webp 320w, ../ressources/images/galerie/vignettes/photo8-640.webp 640w, ../ressources/images/galerie/vignettes/photo8-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo8.jpeg" alt="Seul en scène dans un halo de lumière, casquette rouge et pull bordeaux" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -492,10 +499,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:6" data-index="6">
-            <button type="button" class="carte-btn" data-zoom-photo="6" aria-label="Agrandir la photo 7">
+            <button type="button" class="carte-btn" data-zoom-photo="6" aria-label="Agrandir : Plateau couvert de sable sous des voilages violets : un roi couronné à genoux, entre deux comédiens">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo10.jpg" alt="Photo 7 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo10-320.webp 320w, ../ressources/images/galerie/vignettes/photo10-640.webp 640w, ../ressources/images/galerie/vignettes/photo10-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo10.jpeg" alt="Plateau couvert de sable sous des voilages violets : un roi couronné à genoux, entre deux comédiens" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -505,10 +512,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:7" data-index="7">
-            <button type="button" class="carte-btn" data-zoom-photo="7" aria-label="Agrandir la photo 8">
+            <button type="button" class="carte-btn" data-zoom-photo="7" aria-label="Agrandir : Étreinte sur un sol de sable : un comédien en manteau et une comédienne en robe claire">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo11.jpg" alt="Photo 8 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo11-320.webp 320w, ../ressources/images/galerie/vignettes/photo11-640.webp 640w, ../ressources/images/galerie/vignettes/photo11-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo11.jpeg" alt="Étreinte sur un sol de sable : un comédien en manteau et une comédienne en robe claire" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -518,10 +525,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:8" data-index="8">
-            <button type="button" class="carte-btn" data-zoom-photo="8" aria-label="Agrandir la photo 9">
+            <button type="button" class="carte-btn" data-zoom-photo="8" aria-label="Agrandir : Deux comédiens devant un décor de bois, l’un en bleu de travail et bonnet, l’autre en casquette et veste de survêtement">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo12.jpg" alt="Photo 9 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo12-320.webp 320w, ../ressources/images/galerie/vignettes/photo12-640.webp 640w, ../ressources/images/galerie/vignettes/photo12-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo12.jpeg" alt="Deux comédiens devant un décor de bois, l’un en bleu de travail et bonnet, l’autre en casquette et veste de survêtement" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -531,10 +538,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:9" data-index="9">
-            <button type="button" class="carte-btn" data-zoom-photo="9" aria-label="Agrandir la photo 10">
+            <button type="button" class="carte-btn" data-zoom-photo="9" aria-label="Agrandir : Deux comédiens vêtus de blanc, face à face, l’un tenant l’autre par le bras">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo13.jpg" alt="Photo 10 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo13-320.webp 320w, ../ressources/images/galerie/vignettes/photo13-640.webp 640w, ../ressources/images/galerie/vignettes/photo13-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo13.jpeg" alt="Deux comédiens vêtus de blanc, face à face, l’un tenant l’autre par le bras" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -544,10 +551,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:10" data-index="10">
-            <button type="button" class="carte-btn" data-zoom-photo="10" aria-label="Agrandir la photo 11">
+            <button type="button" class="carte-btn" data-zoom-photo="10" aria-label="Agrandir : Image de film : sur une plage, un homme en costume rit au téléphone près d’une jeune femme aux cheveux au vent">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo14.jpg" alt="Photo 11 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo14-320.webp 320w, ../ressources/images/galerie/vignettes/photo14-640.webp 640w, ../ressources/images/galerie/vignettes/photo14-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo14.jpeg" alt="Image de film : sur une plage, un homme en costume rit au téléphone près d’une jeune femme aux cheveux au vent" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -557,10 +564,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:11" data-index="11">
-            <button type="button" class="carte-btn" data-zoom-photo="11" aria-label="Agrandir la photo 12">
+            <button type="button" class="carte-btn" data-zoom-photo="11" aria-label="Agrandir : Portrait à lunettes, col roulé noir, sur fond clair">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo15.jpg" alt="Photo 12 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo15-320.webp 320w, ../ressources/images/galerie/vignettes/photo15-640.webp 640w, ../ressources/images/galerie/vignettes/photo15-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo15.jpeg" alt="Portrait à lunettes, col roulé noir, sur fond clair" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -570,10 +577,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:12" data-index="12">
-            <button type="button" class="carte-btn" data-zoom-photo="12" aria-label="Agrandir la photo 13">
+            <button type="button" class="carte-btn" data-zoom-photo="12" aria-label="Agrandir : Portrait en blouson de cuir marron, sur fond sombre">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo16.jpg" alt="Photo 13 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo16-320.webp 320w, ../ressources/images/galerie/vignettes/photo16-640.webp 640w, ../ressources/images/galerie/vignettes/photo16-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo16.jpeg" alt="Portrait en blouson de cuir marron, sur fond sombre" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -583,10 +590,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:13" data-index="13">
-            <button type="button" class="carte-btn" data-zoom-photo="13" aria-label="Agrandir la photo 14">
+            <button type="button" class="carte-btn" data-zoom-photo="13" aria-label="Agrandir : Portrait en chemise verte, la main contre la tempe, sur fond bleu">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo17.jpg" alt="Photo 14 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo17-320.webp 320w, ../ressources/images/galerie/vignettes/photo17-640.webp 640w, ../ressources/images/galerie/vignettes/photo17-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo17.jpeg" alt="Portrait en chemise verte, la main contre la tempe, sur fond bleu" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -596,10 +603,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:14" data-index="14">
-            <button type="button" class="carte-btn" data-zoom-photo="14" aria-label="Agrandir la photo 15">
+            <button type="button" class="carte-btn" data-zoom-photo="14" aria-label="Agrandir : Crâne rasé et barbe, en extérieur devant un canyon rocheux">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo18.jpg" alt="Photo 15 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo18-320.webp 320w, ../ressources/images/galerie/vignettes/photo18-640.webp 640w, ../ressources/images/galerie/vignettes/photo18-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo18.jpeg" alt="Crâne rasé et barbe, en extérieur devant un canyon rocheux" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -609,10 +616,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:15" data-index="15">
-            <button type="button" class="carte-btn" data-zoom-photo="15" aria-label="Agrandir la photo 16">
+            <button type="button" class="carte-btn" data-zoom-photo="15" aria-label="Agrandir : Portrait éclatant de rire, chemisette beige, sur fond gris">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo19.jpg" alt="Photo 16 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo19-320.webp 320w, ../ressources/images/galerie/vignettes/photo19-640.webp 640w, ../ressources/images/galerie/vignettes/photo19-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo19.jpeg" alt="Portrait éclatant de rire, chemisette beige, sur fond gris" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -622,10 +629,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:16" data-index="16">
-            <button type="button" class="carte-btn" data-zoom-photo="16" aria-label="Agrandir la photo 17">
+            <button type="button" class="carte-btn" data-zoom-photo="16" aria-label="Agrandir : Image de film : gros plan en tee-shirt marron, regard inquiet vers un interlocuteur">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo20.jpg" alt="Photo 17 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo20-320.webp 320w, ../ressources/images/galerie/vignettes/photo20-640.webp 640w, ../ressources/images/galerie/vignettes/photo20-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo20.jpeg" alt="Image de film : gros plan en tee-shirt marron, regard inquiet vers un interlocuteur" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -635,10 +642,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:17" data-index="17">
-            <button type="button" class="carte-btn" data-zoom-photo="17" aria-label="Agrandir la photo 18">
+            <button type="button" class="carte-btn" data-zoom-photo="17" aria-label="Agrandir : Salle d’audience lambrissée : en robe d’avocat, mains jointes devant un micro, l’air pensif">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo21.jpg" alt="Photo 18 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo21-320.webp 320w, ../ressources/images/galerie/vignettes/photo21-640.webp 640w, ../ressources/images/galerie/vignettes/photo21-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo21.jpeg" alt="Salle d’audience lambrissée : en robe d’avocat, mains jointes devant un micro, l’air pensif" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -648,10 +655,10 @@
             </button>
         </li>
         <li class="carte" style="--ac:#bfa98a;--i:18" data-index="18">
-            <button type="button" class="carte-btn" data-zoom-photo="18" aria-label="Agrandir la photo 19">
+            <button type="button" class="carte-btn" data-zoom-photo="18" aria-label="Agrandir : Salle d’audience lambrissée : en tee-shirt noir, debout devant un micro, la main tendue">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <img src="../ressources/images/galerie/thumbs/photo22.jpg" alt="Photo 19 du book d’Adrien Vada" loading="lazy" decoding="async">
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo22-320.webp 320w, ../ressources/images/galerie/vignettes/photo22-640.webp 640w, ../ressources/images/galerie/vignettes/photo22-960.webp 960w" sizes="(max-width: 640px) 25vw, 218px"><img src="../ressources/images/galerie/photo22.jpeg" alt="Salle d’audience lambrissée : en tee-shirt noir, debout devant un micro, la main tendue" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -688,20 +695,25 @@
                  que la photo. Sur téléphone, il rendait la visionneuse
                  inutilisable. -->
             <img class="zoom-img" id="zoom-img" alt="" decoding="async">
-            <figcaption class="zoom-caption" id="zoom-caption"></figcaption>
+            <figcaption class="zoom-caption" id="zoom-caption" aria-hidden="true"></figcaption>
         </figure>
+        <!-- Ce que la légende « 3 / 19 » montre, dit en entier à qui ne la
+             voit pas : le rang ET ce que montre la photo, à chaque
+             changement. -->
+        <p class="sr" id="zoom-annonce" aria-live="polite"></p>
     </div>
 
     <script>
     (function () {
         'use strict';
 
-        var PHOTOS = [{"full":"../ressources/images/galerie/vignette_principale.jpeg","thumb":"../ressources/images/galerie/thumbs/vignette_principale.jpg","alt":"Photo 1 du book d’Adrien Vada","index":0},{"full":"../ressources/images/galerie/photo1.jpeg","thumb":"../ressources/images/galerie/thumbs/photo1.jpg","alt":"Photo 2 du book d’Adrien Vada","index":1},{"full":"../ressources/images/profil_1000x1000.jpg","thumb":"../ressources/images/galerie/thumbs/profil_1000x1000.jpg","alt":"Photo 3 du book d’Adrien Vada","index":2},{"full":"../ressources/images/galerie/photo2.jpeg","thumb":"../ressources/images/galerie/thumbs/photo2.jpg","alt":"Photo 4 du book d’Adrien Vada","index":3},{"full":"../ressources/images/galerie/photo4.jpeg","thumb":"../ressources/images/galerie/thumbs/photo4.jpg","alt":"Photo 5 du book d’Adrien Vada","index":4},{"full":"../ressources/images/galerie/photo8.jpeg","thumb":"../ressources/images/galerie/thumbs/photo8.jpg","alt":"Photo 6 du book d’Adrien Vada","index":5},{"full":"../ressources/images/galerie/photo10.jpeg","thumb":"../ressources/images/galerie/thumbs/photo10.jpg","alt":"Photo 7 du book d’Adrien Vada","index":6},{"full":"../ressources/images/galerie/photo11.jpeg","thumb":"../ressources/images/galerie/thumbs/photo11.jpg","alt":"Photo 8 du book d’Adrien Vada","index":7},{"full":"../ressources/images/galerie/photo12.jpeg","thumb":"../ressources/images/galerie/thumbs/photo12.jpg","alt":"Photo 9 du book d’Adrien Vada","index":8},{"full":"../ressources/images/galerie/photo13.jpeg","thumb":"../ressources/images/galerie/thumbs/photo13.jpg","alt":"Photo 10 du book d’Adrien Vada","index":9},{"full":"../ressources/images/galerie/photo14.jpeg","thumb":"../ressources/images/galerie/thumbs/photo14.jpg","alt":"Photo 11 du book d’Adrien Vada","index":10},{"full":"../ressources/images/galerie/photo15.jpeg","thumb":"../ressources/images/galerie/thumbs/photo15.jpg","alt":"Photo 12 du book d’Adrien Vada","index":11},{"full":"../ressources/images/galerie/photo16.jpeg","thumb":"../ressources/images/galerie/thumbs/photo16.jpg","alt":"Photo 13 du book d’Adrien Vada","index":12},{"full":"../ressources/images/galerie/photo17.jpeg","thumb":"../ressources/images/galerie/thumbs/photo17.jpg","alt":"Photo 14 du book d’Adrien Vada","index":13},{"full":"../ressources/images/galerie/photo18.jpeg","thumb":"../ressources/images/galerie/thumbs/photo18.jpg","alt":"Photo 15 du book d’Adrien Vada","index":14},{"full":"../ressources/images/galerie/photo19.jpeg","thumb":"../ressources/images/galerie/thumbs/photo19.jpg","alt":"Photo 16 du book d’Adrien Vada","index":15},{"full":"../ressources/images/galerie/photo20.jpeg","thumb":"../ressources/images/galerie/thumbs/photo20.jpg","alt":"Photo 17 du book d’Adrien Vada","index":16},{"full":"../ressources/images/galerie/photo21.jpeg","thumb":"../ressources/images/galerie/thumbs/photo21.jpg","alt":"Photo 18 du book d’Adrien Vada","index":17},{"full":"../ressources/images/galerie/photo22.jpeg","thumb":"../ressources/images/galerie/thumbs/photo22.jpg","alt":"Photo 19 du book d’Adrien Vada","index":18}];
+        var PHOTOS = [{"full":"../ressources/images/galerie/vignette_principale.jpeg","srcset":"../ressources/images/galerie/vignettes/vignette_principale-320.webp 320w, ../ressources/images/galerie/vignettes/vignette_principale-640.webp 640w, ../ressources/images/galerie/vignettes/vignette_principale-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/vignette_principale-640.webp","alt":"Portrait serré en pull gris, regard étonné vers l’objectif, sur fond gris clair","index":0},{"full":"../ressources/images/galerie/photo1.jpeg","srcset":"../ressources/images/galerie/vignettes/photo1-320.webp 320w, ../ressources/images/galerie/vignettes/photo1-640.webp 640w, ../ressources/images/galerie/vignettes/photo1-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo1-640.webp","alt":"Portrait en pied, chemise bleue ouverte et jean, devant un mur de pierre","index":1},{"full":"../ressources/images/profil_1000x1000.jpg","srcset":"../ressources/images/galerie/vignettes/profil_1000x1000-320.webp 320w, ../ressources/images/galerie/vignettes/profil_1000x1000-640.webp 640w, ../ressources/images/galerie/vignettes/profil_1000x1000-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/profil_1000x1000-640.webp","alt":"Portrait de face, regard grave, sur fond bleu nuit","index":2},{"full":"../ressources/images/galerie/photo2.jpeg","srcset":"../ressources/images/galerie/vignettes/photo2-320.webp 320w, ../ressources/images/galerie/vignettes/photo2-640.webp 640w, ../ressources/images/galerie/vignettes/photo2-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo2-640.webp","alt":"Dans une salle d’audience tapissée de fleurs de lys, un comédien en robe d’avocat plaide devant le public","index":3},{"full":"../ressources/images/galerie/photo4.jpeg","srcset":"../ressources/images/galerie/vignettes/photo4-320.webp 320w, ../ressources/images/galerie/vignettes/photo4-640.webp 640w, ../ressources/images/galerie/vignettes/photo4-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo4-640.webp","alt":"Même salle d’audience : un comédien en tee-shirt noir, bras ouverts, s’adresse au public","index":4},{"full":"../ressources/images/galerie/photo8.jpeg","srcset":"../ressources/images/galerie/vignettes/photo8-320.webp 320w, ../ressources/images/galerie/vignettes/photo8-640.webp 640w, ../ressources/images/galerie/vignettes/photo8-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo8-640.webp","alt":"Seul en scène dans un halo de lumière, casquette rouge et pull bordeaux","index":5},{"full":"../ressources/images/galerie/photo10.jpeg","srcset":"../ressources/images/galerie/vignettes/photo10-320.webp 320w, ../ressources/images/galerie/vignettes/photo10-640.webp 640w, ../ressources/images/galerie/vignettes/photo10-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo10-640.webp","alt":"Plateau couvert de sable sous des voilages violets : un roi couronné à genoux, entre deux comédiens","index":6},{"full":"../ressources/images/galerie/photo11.jpeg","srcset":"../ressources/images/galerie/vignettes/photo11-320.webp 320w, ../ressources/images/galerie/vignettes/photo11-640.webp 640w, ../ressources/images/galerie/vignettes/photo11-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo11-640.webp","alt":"Étreinte sur un sol de sable : un comédien en manteau et une comédienne en robe claire","index":7},{"full":"../ressources/images/galerie/photo12.jpeg","srcset":"../ressources/images/galerie/vignettes/photo12-320.webp 320w, ../ressources/images/galerie/vignettes/photo12-640.webp 640w, ../ressources/images/galerie/vignettes/photo12-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo12-640.webp","alt":"Deux comédiens devant un décor de bois, l’un en bleu de travail et bonnet, l’autre en casquette et veste de survêtement","index":8},{"full":"../ressources/images/galerie/photo13.jpeg","srcset":"../ressources/images/galerie/vignettes/photo13-320.webp 320w, ../ressources/images/galerie/vignettes/photo13-640.webp 640w, ../ressources/images/galerie/vignettes/photo13-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo13-640.webp","alt":"Deux comédiens vêtus de blanc, face à face, l’un tenant l’autre par le bras","index":9},{"full":"../ressources/images/galerie/photo14.jpeg","srcset":"../ressources/images/galerie/vignettes/photo14-320.webp 320w, ../ressources/images/galerie/vignettes/photo14-640.webp 640w, ../ressources/images/galerie/vignettes/photo14-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo14-640.webp","alt":"Image de film : sur une plage, un homme en costume rit au téléphone près d’une jeune femme aux cheveux au vent","index":10},{"full":"../ressources/images/galerie/photo15.jpeg","srcset":"../ressources/images/galerie/vignettes/photo15-320.webp 320w, ../ressources/images/galerie/vignettes/photo15-640.webp 640w, ../ressources/images/galerie/vignettes/photo15-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo15-640.webp","alt":"Portrait à lunettes, col roulé noir, sur fond clair","index":11},{"full":"../ressources/images/galerie/photo16.jpeg","srcset":"../ressources/images/galerie/vignettes/photo16-320.webp 320w, ../ressources/images/galerie/vignettes/photo16-640.webp 640w, ../ressources/images/galerie/vignettes/photo16-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo16-640.webp","alt":"Portrait en blouson de cuir marron, sur fond sombre","index":12},{"full":"../ressources/images/galerie/photo17.jpeg","srcset":"../ressources/images/galerie/vignettes/photo17-320.webp 320w, ../ressources/images/galerie/vignettes/photo17-640.webp 640w, ../ressources/images/galerie/vignettes/photo17-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo17-640.webp","alt":"Portrait en chemise verte, la main contre la tempe, sur fond bleu","index":13},{"full":"../ressources/images/galerie/photo18.jpeg","srcset":"../ressources/images/galerie/vignettes/photo18-320.webp 320w, ../ressources/images/galerie/vignettes/photo18-640.webp 640w, ../ressources/images/galerie/vignettes/photo18-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo18-640.webp","alt":"Crâne rasé et barbe, en extérieur devant un canyon rocheux","index":14},{"full":"../ressources/images/galerie/photo19.jpeg","srcset":"../ressources/images/galerie/vignettes/photo19-320.webp 320w, ../ressources/images/galerie/vignettes/photo19-640.webp 640w, ../ressources/images/galerie/vignettes/photo19-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo19-640.webp","alt":"Portrait éclatant de rire, chemisette beige, sur fond gris","index":15},{"full":"../ressources/images/galerie/photo20.jpeg","srcset":"../ressources/images/galerie/vignettes/photo20-320.webp 320w, ../ressources/images/galerie/vignettes/photo20-640.webp 640w, ../ressources/images/galerie/vignettes/photo20-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo20-640.webp","alt":"Image de film : gros plan en tee-shirt marron, regard inquiet vers un interlocuteur","index":16},{"full":"../ressources/images/galerie/photo21.jpeg","srcset":"../ressources/images/galerie/vignettes/photo21-320.webp 320w, ../ressources/images/galerie/vignettes/photo21-640.webp 640w, ../ressources/images/galerie/vignettes/photo21-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo21-640.webp","alt":"Salle d’audience lambrissée : en robe d’avocat, mains jointes devant un micro, l’air pensif","index":17},{"full":"../ressources/images/galerie/photo22.jpeg","srcset":"../ressources/images/galerie/vignettes/photo22-320.webp 320w, ../ressources/images/galerie/vignettes/photo22-640.webp 640w, ../ressources/images/galerie/vignettes/photo22-960.webp 960w","thumb":"../ressources/images/galerie/vignettes/photo22-640.webp","alt":"Salle d’audience lambrissée : en tee-shirt noir, debout devant un micro, la main tendue","index":18}];
         var currentIndex = 0;
         var zoomModal = document.getElementById('galerie-zoom');
         var zoomImg = document.getElementById('zoom-img');
         var zoomCaption = document.getElementById('zoom-caption');
         var zoomFig = document.getElementById('zoom-fig');
+        var zoomAnnonce = document.getElementById('zoom-annonce');
         var cartes = Array.from(document.querySelectorAll('.carte'));
 
         // ════════════════════════════════════════════════════════════════
@@ -722,6 +734,7 @@
             zoomImg.style.opacity = '0';
             remetAPlat(false);
             zoomCaption.textContent = (currentIndex + 1) + ' / ' + PHOTOS.length;
+            zoomAnnonce.textContent = 'Photo ' + (currentIndex + 1) + ' sur ' + PHOTOS.length + ' : ' + item.alt;
 
             setTimeout(function () {
                 zoomImg.src = item.full;
@@ -742,6 +755,27 @@
         // overflow:hidden, et ne le rend pas au déverrouillage.
         var defilementAvant = 0;
 
+        // LA VISIONNEUSE EST UNE PIÈCE FERMÉE. Pendant qu'elle est ouverte,
+        // tout le reste de la page devient inerte : la touche Tab ne
+        // s'échappe plus vers la grille cachée dessous, et un lecteur
+        // d'écran ne la lit plus. À la fermeture, le focus revient sur la
+        // vignette de la photo qu'on regardait — celle d'où l'on est parti,
+        // ou celle où l'on est arrivé en feuilletant. Il retombait tout en
+        // haut du document, et il fallait retraverser la planche.
+        var inertes = [];
+
+        function isoleVisionneuse() {
+            inertes = Array.prototype.filter.call(document.body.children, function (el) {
+                return el !== zoomModal && !el.inert && ['SCRIPT', 'STYLE', 'LINK'].indexOf(el.tagName) === -1;
+            });
+            inertes.forEach(function (el) { el.inert = true; });
+        }
+
+        function libereVisionneuse() {
+            inertes.forEach(function (el) { el.inert = false; });
+            inertes = [];
+        }
+
         function openZoom(index) {
             currentIndex = (index + PHOTOS.length) % PHOTOS.length;
             defilementAvant = window.scrollY || document.documentElement.scrollTop || 0;
@@ -749,14 +783,19 @@
             void zoomModal.offsetHeight;
             zoomModal.classList.add('is-open');
             document.documentElement.classList.add('galerie-verrou');
+            isoleVisionneuse();
             updateZoomDisplay();
             document.getElementById('zoom-close')?.focus();
         }
 
         function closeZoom() {
+            if (zoomModal.hidden) return;
             zoomModal.classList.remove('is-open');
             document.documentElement.classList.remove('galerie-verrou');
             window.scrollTo(0, defilementAvant);
+            libereVisionneuse();
+            var retour = document.querySelector('[data-zoom-photo="' + currentIndex + '"]');
+            if (retour) retour.focus();
             setTimeout(function () {
                 zoomModal.hidden = true;
                 zoomImg.src = '';
@@ -1019,161 +1058,99 @@
         });
 
         // ════════════════════════════════════════════════════════════════
-        //  PINCH-TO-ZOOM SUR LA GRILLE (façon Répertoire spectacles)
+        //  LA DENSITÉ DE LA PLANCHE, AUX BOUTONS − ET +
+        //  ----------------------------------------------------------------
+        //  Elle se réglait au pincement, façon Google Photos. Mais pour cela
+        //  la page confisquait le pincement au navigateur (touch-action) :
+        //  plus personne ne pouvait AGRANDIR LA PAGE, le geste même dont a
+        //  besoin qui voit mal (WCAG 1.4.4). Le pincement est rendu au
+        //  navigateur — dans la visionneuse, il grossit toujours la photo —
+        //  et la densité passe à deux boutons, que le clavier atteint aussi.
+        //  Les photos glissent jusqu'à leur nouvelle place (View
+        //  Transition) ; sans soutien, ou en mouvement réduit, la grille
+        //  bascule d'un coup.
         // ════════════════════════════════════════════════════════════════
-        var mur = document.querySelector('main');
-        var NIVEAUX = function () { return innerWidth < 640 ? [2, 3, 4] : [2, 3, 4, 5]; };
+        var reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // Une colonne unique au téléphone : la photo en grand, pour qui
+        // voit mal — le pincement ne l'offrait pas.
+        var NIVEAUX = function () { return innerWidth < 640 ? [1, 2, 3, 4] : [2, 3, 4, 5]; };
         // LE REPOS EST LE HAUT DE L'ÉCHELLE, comme à l'arrivée : c'est la
-        // planche contact qui fait le repos de cette page, et le pincement
-        // n'en écarte que pour se rapprocher (voir le script du <head>).
-        // Cette valeur ne sert plus qu'à deux choses — retrouver son rang
-        // dans l'échelle si l'attribut a disparu, et servir de secours à
-        // zoomCourant() — mais elle doit dire la même chose que lui, sans
-        // quoi le premier pincement partirait d'un cran qu'on ne voit pas.
+        // planche contact qui fait le repos de cette page (voir le script
+        // du <head>).
         var zoomRepos = function () { var n = NIVEAUX(); return n[n.length - 1]; };
         var zoomCourant = function () {
             return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
         };
-        var niveauVoisin = function (sens) {
-            var n = NIVEAUX();
-            var i = n.indexOf(zoomCourant());
-            if (i === -1) i = n.indexOf(zoomRepos());
-            var v = n[i + sens];
-            return v === undefined ? 0 : v;
-        };
-        var mesure = function () {
-            var m = {};
-            cartes.forEach(function (c, idx) { m[idx] = c.getBoundingClientRect(); });
-            return m;
-        };
-        var poseNiveau = function (v) {
-            if (v) document.documentElement.dataset.zoom = v;
-            else delete document.documentElement.dataset.zoom;
-        };
+        var boutonsDensite = Array.prototype.slice.call(document.querySelectorAll('[data-densite]'));
+
+        function majBoutons() {
+            var n = NIVEAUX(), c = zoomCourant();
+            boutonsDensite.forEach(function (b) {
+                // +1 : une colonne de plus, donc des photos plus petites.
+                b.disabled = +b.dataset.densite > 0 ? c >= n[n.length - 1] : c <= n[0];
+            });
+        }
+
+        // Chaque vignette annonce la largeur de sa case : le navigateur va
+        // chercher la version plus grande quand elle grandit.
+        function majTailles(colonnes) {
+            var s = '(max-width: 640px) ' + Math.ceil(100 / colonnes) + 'vw, ' + Math.ceil(1088 / colonnes) + 'px';
+            document.querySelectorAll('.carte source').forEach(function (el) { el.setAttribute('sizes', s); });
+        }
+
+        function poseNiveau(v) {
+            var applique = function () {
+                document.documentElement.dataset.zoom = v;
+                majTailles(v);
+                majBoutons();
+            };
+            if (document.startViewTransition && !reduit) {
+                cartes.forEach(function (c, idx) { c.style.viewTransitionName = 'photo-' + idx; });
+                var vt = document.startViewTransition(applique);
+                vt.finished.then(function () { }, function () { }).then(function () {
+                    cartes.forEach(function (c) { c.style.viewTransitionName = ''; });
+                });
+            } else { applique(); }
+        }
+
+        boutonsDensite.forEach(function (b) {
+            b.hidden = false;
+            b.addEventListener('click', function () {
+                var n = NIVEAUX(), i = n.indexOf(zoomCourant());
+                if (i === -1) i = n.indexOf(zoomRepos());
+                var v = n[i + (+b.dataset.densite)];
+                if (v) poseNiveau(v);
+            });
+        });
 
         // UN QUART DE TOUR PEUT RENDRE LE NIVEAU IMPOSSIBLE. L'échelle n'a
         // pas les mêmes barreaux des deux côtés du seuil de 640 px : cinq
         // colonnes existent à l'écran, pas au téléphone. Ouvrir la page en
         // paysage la pose donc à cinq, et la remettre en portrait garderait
-        // ces cinq colonnes sur 390 px de large — des vignettes de 78 px, et
-        // un pincement qui repartirait d'un cran introuvable. On ramène le
-        // niveau dans l'échelle du moment dès qu'il en sort. Le sens inverse
-        // n'a rien à corriger : quatre colonnes existent des deux côtés.
+        // ces cinq colonnes sur 390 px de large — des vignettes de 78 px.
+        // On ramène le niveau dans l'échelle du moment dès qu'il en sort.
         addEventListener('resize', function () {
-            if (NIVEAUX().indexOf(zoomCourant()) === -1) poseNiveau(zoomRepos());
-        });
-        var pincement = 0, rapport = 1, sensVol = 0, versVol = 0,
-            departs = null, cibles = null, tVol = 0, demandeVol = 0, verrou = false;
-        var ecart = function (t) {
-            return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
-        };
-        var nettoieVol = function () {
-            if (demandeVol) { cancelAnimationFrame(demandeVol); demandeVol = 0; }
-            cartes.forEach(function (c) {
-                c.style.transform = ''; c.style.transformOrigin = ''; c.style.transition = '';
-            });
-        };
-        var oublieVol = function () { sensVol = 0; versVol = 0; departs = cibles = null; tVol = 0; };
-        var prepareVol = function (sens) {
-            nettoieVol();
-            var vers = niveauVoisin(sens);
-            if (!vers) { oublieVol(); return; }
-            var courant = document.documentElement.dataset.zoom || '';
-            departs = mesure();
-            poseNiveau(vers);
-            cibles = mesure();
-            if (courant) document.documentElement.dataset.zoom = courant;
-            else delete document.documentElement.dataset.zoom;
-            sensVol = sens; versVol = vers;
-        };
-        var animeVol = function () {
-            demandeVol = 0;
-            if (!departs || !cibles) return;
-            var t = Math.max(0, Math.min(1, tVol));
-            cartes.forEach(function (c, idx) {
-                var d = departs[idx], f = cibles[idx];
-                if (!d || !f) return;
-                var sx = (d.width + (f.width - d.width) * t) / d.width;
-                var sy = (d.height + (f.height - d.height) * t) / d.height;
-                var dx = (f.left - d.left) * t;
-                var dy = (f.top - d.top) * t;
-                c.style.transformOrigin = 'top left';
-                c.style.transform = 'translate(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px) scale(' + sx.toFixed(4) + ',' + sy.toFixed(4) + ')';
-            });
-        };
-
-        mur.addEventListener('touchstart', function (e) {
-            if (e.touches.length === 2 && !verrou && !zoomModal.classList.contains('is-open')) {
-                pincement = ecart(e.touches);
-                rapport = 1;
-                oublieVol();
+            if (NIVEAUX().indexOf(zoomCourant()) === -1) {
+                document.documentElement.dataset.zoom = zoomRepos();
+                majTailles(zoomRepos());
             }
-        }, { passive: true });
-
-        mur.addEventListener('touchmove', function (e) {
-            if (e.touches.length !== 2 || !pincement || verrou) return;
-            var nouveau = ecart(e.touches);
-            rapport = nouveau / pincement;
-            var sens = 0;
-            if (rapport > 1.05) sens = -1; // Écarter = zoomer (moins de colonnes)
-            else if (rapport < 0.95) sens = 1; // Pincer = dézoomer (plus de colonnes)
-            if (!sens) {
-                if (sensVol) { oublieVol(); nettoieVol(); }
-                return;
-            }
-            if (sens !== sensVol) prepareVol(sens);
-            if (!versVol) return;
-            tVol = sens > 0 ? (1 - rapport) / 0.38 : (rapport - 1) / 0.38;
-            if (!demandeVol) demandeVol = requestAnimationFrame(animeVol);
-        }, { passive: true });
-
-        mur.addEventListener('touchend', function (e) {
-            if (e.touches.length > 0) return;
-            pincement = 0;
-            if (verrou) return;
-            if (versVol && tVol >= 0.32) {
-                var vers = versVol;
-                oublieVol(); nettoieVol();
-                verrou = true;
-                var applique = function () {
-                    poseNiveau(vers);
-                    setTimeout(function () { verrou = false; }, 80);
-                };
-                if (document.startViewTransition) {
-                    cartes.forEach(function (c, idx) { c.style.viewTransitionName = 'photo-' + idx; });
-                    var vt = document.startViewTransition(applique);
-                    vt.finished.then(function () { }, function () { }).then(function () {
-                        cartes.forEach(function (c) { c.style.viewTransitionName = ''; });
-                    });
-                } else { applique(); }
-            } else if (versVol) {
-                oublieVol();
-                if (demandeVol) { cancelAnimationFrame(demandeVol); demandeVol = 0; }
-                cartes.forEach(function (c) {
-                    c.style.transition = 'transform .22s ease';
-                    c.style.transform = '';
-                });
-                setTimeout(function () {
-                    cartes.forEach(function (c) {
-                        c.style.transition = ''; c.style.transformOrigin = '';
-                    });
-                }, 240);
-            }
+            majBoutons();
         });
+        majTailles(zoomCourant());
+        majBoutons();
 
-        mur.addEventListener('touchcancel', function () {
-            pincement = 0;
-            if (verrou) return;
-            oublieVol(); nettoieVol();
-        });
-
-        // Scintillement régulier
-        setInterval(function () {
+        // Un scintillement de loin en loin — TROIS fois, puis la planche se
+        // tient tranquille : un éclat qui revient sans fin dans le coin de
+        // l'œil empêche de regarder le reste, et rien ne permettait de
+        // l'arrêter (WCAG 2.2.2). Rien en mouvement réduit.
+        var passages = 0;
+        var scintille = reduit ? 0 : setInterval(function () {
             if (document.hidden || zoomModal.classList.contains('is-open')) return;
             var elue = cartes[Math.floor(Math.random() * cartes.length)];
             if (!elue) return;
             elue.classList.add('reluit');
             setTimeout(function () { elue.classList.remove('reluit'); }, 1450);
+            if (++passages >= 3) clearInterval(scintille);
         }, 4500);
 
         // ════════════════════════════════════════════════════════════════
@@ -1196,7 +1173,6 @@
             if (bascule) {
                 bascule.setAttribute('aria-label', action);
                 bascule.setAttribute('title', action);
-                bascule.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
                 var u = bascule.querySelector('use');
                 if (u) u.setAttribute('href', versClair ? '#i-solid-sun' : '#i-solid-moon');
             }

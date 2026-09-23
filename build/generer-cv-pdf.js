@@ -203,9 +203,12 @@ function servirLeDepot() {
         // l'écran.
         await page.emulateMedia({ media: 'print' });
 
-        // Cinzel et Montserrat arrivent du réseau. Imprimer avant leur
-        // chargement donnerait un CV en police de repli, aux césures
-        // différentes — et donc à la pagination différente.
+        // Cinzel et Montserrat sont servies par le site lui-même
+        // (ressources/polices/), mais elles arrivent quand même APRÈS la
+        // page : le navigateur ne les demande qu'en rencontrant un texte qui
+        // les emploie. Imprimer avant leur chargement donnerait un CV en
+        // police de repli, aux césures différentes — et donc à la pagination
+        // différente.
         await page.evaluate(() => document.fonts.ready);
 
         // Le portrait est la seule image du CV imprimé. On attend qu'elle

@@ -108,6 +108,22 @@ a { color: var(--accent-ink); }
 :root[data-theme="light"] .bascule { color: #6366a8; }
 .bascule:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
 .bascule .ico { font-size: .95rem; }
+.outils { display: flex; align-items: center; gap: .5rem; }
+/* La densité du mur — mêmes pastilles que la bascule, un signe dedans. */
+.densite { display: flex; gap: .3rem; }
+.densite-btn {
+    display: grid; place-items: center; width: 2.3rem; height: 2.3rem; flex: none;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: var(--surface); color: var(--text); cursor: pointer;
+    font: 500 1.15rem/1 'Inter', system-ui, sans-serif;
+    transition: border-color .3s ease, opacity .3s ease, background-color .35s ease;
+}
+.densite-btn:hover:not(:disabled) { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+/* Au bout de l'échelle, le bouton s'éteint (et le clavier le saute). */
+.densite-btn:disabled { opacity: .35; cursor: default; }
+.densite-btn:focus-visible, .bascule:focus-visible, .retour:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px;
+}
 
 /* ── La manchette ── */
 .tete { padding: 3.2rem 0 2.4rem; text-align: center; }
@@ -248,7 +264,7 @@ h1 {
 .annee { display: block; }
 .etat { display: inline-block; margin-top: .35rem; }
 .annee {
-    font-size: .6rem; line-height: 1.4; letter-spacing: .16em;
+    font-size: .7rem; line-height: 1.4; letter-spacing: .16em;
     text-transform: uppercase; color: var(--accent-ink);
 }
 /* LA PASTILLE PORTE LA COULEUR DE SON SPECTACLE, comme le badge du CV.
@@ -259,8 +275,8 @@ h1 {
 
    L'encre est l'accent ramené vers --text, jamais l'accent brut : sur
    onze spectacles, les plus foncés tombent sous 2 de contraste en thème
-   sombre, les plus vifs en font autant en clair, et ce texte-ci fait
-   .55rem. Le mélange va toujours à l'opposé du fond. La proportion suit
+   sombre, les plus vifs en font autant en clair, et ce texte-ci est
+   petit (.69rem, 11 px : il faisait 9 px, et 7,7 au téléphone). Le mélange va toujours à l'opposé du fond. La proportion suit
    le thème pour la même raison que sur le CV — voir --cv-badge-encre
    dans index.html, où le calcul est détaillé.
 
@@ -269,7 +285,7 @@ h1 {
    d'As You Like It sur fond clair — c'est lui qui a fait descendre le
    clair à 45 %, où 48 % le laissaient pile sur le seuil de 4,5. */
 .etat {
-    font: 600 .55rem/1 'Inter', system-ui, sans-serif; letter-spacing: .12em;
+    font: 600 .69rem/1 'Inter', system-ui, sans-serif; letter-spacing: .1em;
     text-transform: uppercase; white-space: nowrap;
     color: color-mix(in srgb, var(--ac, var(--accent)) var(--etat-encre, 65%), var(--text));
     border: 1px solid color-mix(in srgb, var(--ac, var(--accent)) 45%, transparent);
@@ -292,8 +308,11 @@ h1 {
 
 @media (prefers-reduced-motion: no-preference) {
     html { scroll-behavior: smooth; }
-    /* Le fleuron respire — à peine : la manchette n'est pas un aplat mort. */
-    .ornement span { animation: fleuron-respire 5.5s ease-in-out infinite alternate; }
+    /* Le fleuron respire — à peine : la manchette n'est pas un aplat mort.
+       UNE respiration (l'aller, puis le retour au repos), et non plus sans
+       fin : un mouvement perpétuel à côté du texte doit pouvoir être
+       arrêté (WCAG 2.2.2) — le plus simple est qu'il s'arrête seul. */
+    .ornement span { animation: fleuron-respire 5.5s ease-in-out 2 alternate; }
 }
 @keyframes fleuron-respire {
     from { transform: translate(-50%, -50%) rotate(45deg); box-shadow: 0 0 0 3px var(--bg); }
@@ -322,8 +341,13 @@ html.scrolly .carte { --p: 0; --pl: 0; }
 .carte {
     /* Le fondu suit l'horloge LINÉAIRE (--pl) : la courbe souple charge
        tant le départ que, posée sur elle, l'opacité était pleine dès le
-       bord de l'écran. Ici : zéro au bord, pleine au tiers de la montée. */
-    opacity: min(1, calc(var(--pl, 1) / .55));
+       bord de l'écran. Ici : zéro au bord, pleine au premier quart de la
+       montée. Elle l'était au tiers — mais au repos, sans défilement, les
+       cartes du bas de l'écran restaient alors à demi fondues, leur texte
+       sous le contraste minimal tant qu'on ne bougeait pas. Le fondu
+       s'achève désormais avant qu'une carte ne soit vraiment à l'écran ;
+       la montée, le resserrement et le volet gardent toute leur course. */
+    opacity: min(1, calc(var(--pl, 1) / .3));
     transform: translateY(calc((1 - var(--p, 1)) * 72px)) scale(calc(.94 + var(--p, 1) * .06));
 }
 .media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
@@ -374,17 +398,16 @@ footer {
 }
 footer a { text-decoration: none; }
 footer a:hover { color: var(--accent-ink); }
-.maj { margin: .4rem 0 0; font-size: .68rem; letter-spacing: .06em; opacity: .75; }
+.maj { margin: .4rem 0 0; font-size: .72rem; letter-spacing: .06em; }
 
-/* ── La galerie au pincement ──
-   Deux doigts resserrent ou élargissent le mur : le script pose
+/* ── La densité du mur ──
+   Les boutons − et + resserrent ou élargissent le mur : le script pose
    data-zoom sur <html>, la grille suit, et les kakemonos glissent
    jusqu'à leur nouveau rang (View Transitions même-document — sans
    soutien, bascule nette). Aux rangs serrés, la carte redevient une
-   image : le fil et le rôle s'effacent, le titre se fait discret. */
-main { touch-action: pan-y; }
-/* Pendant le vol du pincement, chaque carte est pilotée en transform
-   inline — l'entrée en scène reprend la main dès l'atterrissage. */
+   image : le fil et le rôle s'effacent, le titre se fait discret.
+   Le pincement, lui, appartient de nouveau au navigateur : c'est le
+   geste qui agrandit la page. */
 html[data-zoom] .repertoire { grid-template-columns: repeat(var(--colonnes, 2), 1fr); }
 html[data-zoom="1"] { --colonnes: 1; }
 html[data-zoom="2"] { --colonnes: 2; }
@@ -408,15 +431,15 @@ html[data-zoom="1"] .nom { font-size: 1.12rem; }
 @media (max-width: 640px) {
     body { padding: 0 .9rem 2.6rem; }
     .tete { padding: 2.3rem 0 1.8rem; }
-    .sur-titre { font-size: .58rem; letter-spacing: .22em; margin-bottom: .8rem; }
+    .sur-titre { font-size: .69rem; letter-spacing: .2em; margin-bottom: .8rem; }
     .ornement { margin-top: 1.1rem; width: 8.5rem; }
-    .groupe { margin-top: 2rem; gap: .6rem; font-size: .64rem; letter-spacing: .16em; }
+    .groupe { margin-top: 2rem; gap: .6rem; font-size: .7rem; letter-spacing: .16em; }
     .groupe-ico { width: 1.65rem; height: 1.65rem; }
     .repertoire { grid-template-columns: repeat(2, 1fr); gap: 1.3rem .75rem; padding: 1.2rem 0 .4rem; }
     .txt { padding-top: .5rem; }
     .etat { margin-top: .28rem; }
-    .annee { font-size: .52rem; letter-spacing: .12em; }
-    .etat { font-size: .48rem; padding: .18rem .4rem; }
+    .annee { font-size: .69rem; letter-spacing: .1em; }
+    .etat { font-size: .66rem; padding: .2rem .42rem; }
     .nom { font-size: .84rem; margin-top: .22rem; padding-bottom: .4rem; }
     .nom::after { height: 1.5px; }
     .role { font-size: .68rem; margin-top: .2rem; }
@@ -425,6 +448,6 @@ html[data-zoom="1"] .nom { font-size: 1.12rem; }
     .chuchote { padding: .8rem .7rem; }
     .chuchote p { font-size: .66rem; line-height: 1.55; }
     .barre { top: .55rem; margin-top: .5rem; }
-    .bascule { width: 2.1rem; height: 2.1rem; }
+    .bascule, .densite-btn { width: 2.1rem; height: 2.1rem; }
     footer { margin-top: 2rem; }
 }

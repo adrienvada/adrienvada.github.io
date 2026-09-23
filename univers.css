@@ -148,7 +148,13 @@ html.u-locked body {
     inset: -10% -20% 20%;
     background: radial-gradient(ellipse 55% 45% at 50% 45%, var(--u-glow), transparent 70%);
     pointer-events: none;
-    animation: u-breathe 9s ease-in-out infinite;
+    /* UNE respiration, à l'entrée dans l'univers, puis le halo se pose.
+       En boucle, c'était un mouvement sans fin à côté du texte, que rien
+       ne permettait d'arrêter (WCAG 2.2.2). L'opacité de repos est celle
+       des bornes de l'animation : quand elle s'achève, rien ne saute, et
+       le fondu au défilement (--u-hero-glow) garde la main. */
+    opacity: calc(.55 * var(--u-hero-glow, 1));
+    animation: u-breathe 9s ease-in-out 1;
 }
 
 /* --u-hero-glow est piloté au défilement (fadeHero) : le halo
@@ -174,7 +180,7 @@ html.u-locked body {
 
 .u-eyebrow {
     font-family: 'Montserrat', sans-serif;
-    font-size: .62rem;
+    font-size: .7rem;
     font-weight: 700;
     letter-spacing: .28em;
     text-transform: uppercase;
@@ -329,7 +335,9 @@ html.u-locked body {
 
 .u-hero.is-written .u-scroll {
     opacity: 1;
-    animation: u-bob 2.4s ease-in-out infinite;
+    /* Deux balancements (4,8 s), puis la flèche se tient immobile : elle
+       a dit ce qu'elle avait à dire. */
+    animation: u-bob 2.4s ease-in-out 2;
 }
 
 .u-scroll {
@@ -339,7 +347,7 @@ html.u-locked body {
     transform: translateX(-50%);
     font-size: .8rem;
     color: var(--u-accent-ink);
-    animation: u-bob 2.4s ease-in-out infinite;
+    animation: u-bob 2.4s ease-in-out 2;
 }
 
 @keyframes u-bob {
@@ -369,7 +377,7 @@ html.u-locked body {
 .u-hero-note {
     margin: 0;
     font-family: 'Montserrat', sans-serif;
-    font-size: .68rem;
+    font-size: .74rem;
     font-weight: 700;
     letter-spacing: .12em;
     text-transform: uppercase;
@@ -780,7 +788,7 @@ html.u-locked body {
     padding: 0;
     color: var(--u-muted);
     letter-spacing: .12em;
-    font-size: .62rem;
+    font-size: .72rem;
     opacity: 0;
     transform: none;
 }
@@ -941,7 +949,7 @@ html.u-locked body {
    d'espace au-dessus, un repli forcé garde l'interligne courant.
    On sent la structure plutôt qu'on ne la voit. */
 .u-synopsis .u-line+.u-line,
-.u-chapter h3 .u-line+.u-line {
+.u-chapter :is(h2, h3) .u-line+.u-line {
     margin-top: .4em;
 }
 
@@ -1001,11 +1009,13 @@ html.u-locked body {
     font-family: 'Cinzel', serif;
     font-size: clamp(2.6rem, 7.5vw, 5rem);
     line-height: 1;
-    color: var(--u-accent);
-    opacity: .62;
+    /* L'encre et non l'accent, et moins voilée : à .62 d'opacité l'accent
+       des palettes claires passait sous le 3:1 exigé même d'un grand texte. */
+    color: var(--u-accent-ink);
+    opacity: .82;
 }
 
-.u-chapter h3 {
+.u-chapter :is(h2, h3) {
     margin: 0;
     max-width: 40ch;
     font-family: 'Montserrat', sans-serif;
@@ -1090,7 +1100,7 @@ html.u-locked body {
     margin-top: 18px;
     font-family: 'Montserrat', sans-serif;
     font-style: normal;
-    font-size: .6rem;
+    font-size: .7rem;
     font-weight: 700;
     letter-spacing: .26em;
     text-transform: uppercase;
@@ -1173,7 +1183,7 @@ html.u-locked body {
     margin-top: 26px;
     font-family: 'Montserrat', sans-serif;
     font-style: normal;
-    font-size: .62rem;
+    font-size: .7rem;
     font-weight: 700;
     letter-spacing: .26em;
     text-transform: uppercase;
@@ -1194,7 +1204,7 @@ html.u-locked body {
 .u-cap span {
     display: inline-block;
     font-family: 'Montserrat', sans-serif;
-    font-size: .68rem;
+    font-size: .74rem;
     font-weight: 500;
     letter-spacing: .16em;
     text-transform: uppercase;
@@ -1305,8 +1315,12 @@ html.u-locked body {
     color: var(--u-muted);
 }
 
+/* L'ENCRE, PAS L'ACCENT. L'accent est une couleur de surface — celle des
+   boutons — et en texte fin sur les fonds clairs il tombait sous 3,6:1
+   (Bérénice, L'Homme moderne). --u-accent-ink est justement la version
+   écrite de la même teinte. */
 .u-warn {
-    color: var(--u-accent);
+    color: var(--u-accent-ink);
 }
 
 .u-empty {
@@ -1348,7 +1362,7 @@ html.u-locked body {
     gap: 4px;
     padding: 5px 10px;
     border-radius: 999px;
-    font-size: .68rem;
+    font-size: .72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .04em;
@@ -1486,10 +1500,10 @@ html.u-locked body {
     border-top: 1px solid var(--u-line);
 }
 
-.u-prix h4 {
+.u-prix :is(h3, h4) {
     margin: 0 0 14px;
     font-family: 'Montserrat', sans-serif;
-    font-size: .62rem;
+    font-size: .7rem;
     font-weight: 700;
     letter-spacing: .18em;
     text-transform: uppercase;
@@ -1537,10 +1551,10 @@ html.u-locked body {
     border-top: 1px solid var(--u-line);
 }
 
-.u-cast h4 {
+.u-cast :is(h3, h4) {
     margin: 0 0 14px;
     font-family: 'Montserrat', sans-serif;
-    font-size: .62rem;
+    font-size: .7rem;
     font-weight: 700;
     letter-spacing: .18em;
     text-transform: uppercase;
@@ -1569,7 +1583,7 @@ html.u-locked body {
 /* Crédit photo — discret, mais jamais absent quand il est dû. */
 .u-credit {
     margin: 28px 0 0;
-    font-size: .68rem;
+    font-size: .74rem;
     letter-spacing: .06em;
     color: var(--u-muted);
 }
@@ -1588,7 +1602,7 @@ html.u-locked body {
     padding: 12px 22px;
     border-radius: 8px;
     font-family: 'Montserrat', sans-serif;
-    font-size: .68rem;
+    font-size: .72rem;
     font-weight: 700;
     letter-spacing: .12em;
     text-transform: uppercase;
@@ -1677,7 +1691,7 @@ html.u-locked body {
 
 .u-zoom figcaption {
     font-family: 'Montserrat', sans-serif;
-    font-size: .66rem;
+    font-size: .74rem;
     letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--u-muted);
@@ -1736,6 +1750,34 @@ html.u-locked body {
     }
 }
 
+/* ── Ce qui ne s'adresse qu'aux lecteurs d'écran ──
+   Le titre entier derrière ses lettres qui tombent une à une (voir
+   splitChars), la date derrière chaque « Réserver ». Retiré du rendu,
+   gardé dans le texte. */
+.u-sr {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ── Le focus prend l'encre du spectacle ──
+   L'anneau doré du site se perdait sur les palettes claires (1,7 à 2:1
+   sur Bérénice, Audiences, les films) : on le voyait à peine se poser.
+   Dans un univers, il prend donc la couleur écrite de la palette, et un
+   liseré de fond le détache des photos. */
+#show-universe :focus-visible {
+    outline: 2px solid var(--u-accent-ink);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 5px var(--u-bg);
+}
+
 @media (prefers-reduced-motion: reduce) {
 
     #show-universe,
@@ -1787,7 +1829,9 @@ html.u-locked body {
    ══════════════════════════════════════════════════════════════════════
    Cette règle est ici, et pas dans le <style> d'index.html, parce que le
    montage d'un univers pose des icônes partout : les pages /spectacles/
-   en ont autant besoin que le panneau. Une seule définition pour les deux.
+   en ont autant besoin que le panneau. index.html en garde une COPIE
+   (cette feuille y arrive après le premier rendu) : les deux sont à
+   tenir identiques.
 
    `1em` et `currentColor` reproduisent le comportement d'une icône-police :
    elle prend la taille et la couleur du texte qui l'entoure, ce qui permet

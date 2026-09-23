@@ -208,10 +208,24 @@ body {
 .adm-champ:focus { outline: none; border-color: rgb(var(--c-gold)); box-shadow: 0 0 0 3px rgb(var(--c-gold) / 0.15); }
 input[type="date"].adm-champ { min-height: 42px; }
 .adm-etiquette {
-    display: block; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    display: block; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
     font-family: 'Montserrat', sans-serif; color: rgb(var(--c-muted)); margin-bottom: 6px;
 }
-.adm-etiquette em { font-style: normal; font-weight: 400; letter-spacing: 0; text-transform: none; opacity: .8; }
+/* La précision sous l'intitulé : plus de voile (elle tombait à 4,3:1),
+   et le corps du texte courant, puisqu'elle en est. */
+.adm-etiquette em { font-style: normal; font-weight: 400; letter-spacing: 0; text-transform: none; font-size: 12px; }
+
+/* LES ERREURS SE LISENT DANS LES DEUX THÈMES. Elles étaient en rouge 400,
+   lisible sur fond sombre mais à 2,7:1 sur fond clair — le message qui
+   explique pourquoi l'enregistrement a échoué était le moins lisible de la
+   page. Un rouge par thème, chacun au-dessus de 4,5:1. */
+:root { --c-erreur: 248 113 113; }
+:root[data-theme="light"] { --c-erreur: 185 28 28; }
+.adm-erreur { color: rgb(var(--c-erreur)); }
+
+/* Le champ en faute se voit, sans compter sur la seule couleur : liseré
+   plus épais. aria-invalid le dit aux lecteurs d'écran. */
+.adm-champ[aria-invalid="true"] { border-color: rgb(var(--c-erreur)); box-shadow: 0 0 0 1px rgb(var(--c-erreur)); }
 
 /* Interrupteur « séance scolaire » */
 .adm-interrupteur { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; font-size: 13px; }

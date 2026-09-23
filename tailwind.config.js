@@ -17,6 +17,15 @@ module.exports = {
     content: ['./index.html', './404.html', './dates.js', './galerie.js', './intro.js', './mask-points.js', './univers.js', './admin/index.html', './admin/admin.js'],
     theme: {
         extend: {
+            // Les pastilles d'icône des titres de rubrique et le bouton
+            // YouTube de la bande démo sont écrits w-6.5 h-6.5 (26 px) :
+            // une valeur que l'échelle de Tailwind n'a pas. Sans cette ligne,
+            // la classe ne produisait rien et la pastille se réduisait à son
+            // icône — 14 px, bordure comprise, bien sous les 24 px d'une
+            // cible tactile pour le bouton YouTube.
+            spacing: {
+                6.5: '1.625rem',
+            },
             fontFamily: {
                 cinzel: ['Cinzel', 'serif'],
                 inter: ['Inter', 'sans-serif'],
