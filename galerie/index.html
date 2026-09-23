@@ -875,6 +875,13 @@
                 fermerVisionneuse(jeton, false);
                 return;
             }
+            // LA PAGE EST RENDUE TOUT DE SUITE, le focus avec : le passage ne
+            // pose son état d'arrivée qu'à l'image suivante — plus tard encore
+            // sur une machine lente —, et Entrée pressée entre-temps retombait
+            // sur la croix, qui refermait au lieu de rouvrir.
+            libereVisionneuse();
+            var retourVite = document.querySelector('[data-zoom-photo="' + currentIndex + '"]');
+            if (retourVite) retourVite.focus({ preventScroll: true });
             zoomImg.style.viewTransitionName = 'book-photo';
             racine.classList.add('vt-book');
             var vignette = null;
