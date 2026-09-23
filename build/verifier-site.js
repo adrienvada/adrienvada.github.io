@@ -15,10 +15,11 @@
  *    · la règle de l'ouverture (lien direct : pas de rideau ; depuis un
  *      autre site : une fois) ;
  *    · la fenêtre d'agenda d'un univers ouvert depuis le CV ;
- *    · l'onglet Dates : feuilles, intercalaires de mois, séances en
- *      cases (une date seule aussi), nom du spectacle qui mène à sa
- *      page, rangement par spectacle, sommaire qui mène aux dates, une
- *      image pour chaque représentation annoncée aux moteurs ;
+ *    · l'onglet Dates : feuilles, intercalaires de mois et leur liseré,
+ *      séances en cases (une date seule aussi), nom du spectacle qui
+ *      mène à sa page, rangement par spectacle, sommaire qui mène aux
+ *      dates, une image pour chaque représentation annoncée aux moteurs,
+ *      et le carton « Prochainement », le même qu'en tête du CV ;
  *    · l'impression sans les pastilles ▶ ;
  *    · le site sans JavaScript ;
  *    · les pages spectacle (h1, <main>, données structurées, une image
@@ -165,7 +166,7 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('l’onglet Dates : feuilles, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire, une image par représentation', async () => {
+        await verifie('l’onglet Dates : feuilles, liserés, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire, carton « Prochainement », une image par représentation', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 } });
             const p = await c.newPage();
             const erreurs = guette(p);
@@ -203,6 +204,7 @@ function exige(condition, message) {
                 ];
                 buildFilterChips();
                 renderDates();
+                renderNextDate();
             });
             const parDate = await p.evaluate(() => {
                 const liste = document.getElementById('upcoming-dates-container');
@@ -263,7 +265,7 @@ function exige(condition, message) {
                 return {
                     ligne: titres.filter((t) => /Bérénice/.test(t.textContent)).map((t) => t.querySelector('a.dl-vers-page')?.getAttribute('href') || null),
                     sansPage: titres.filter((t) => /vérification/.test(t.textContent)).some((t) => t.querySelector('a')),
-                    prochaine: document.querySelector('#dates-sommaire .dl-prochaine a.dl-vers-page')?.getAttribute('href') || null,
+                    prochaine: document.querySelector('#dates-prochaine a.dl-vers-page')?.getAttribute('href') || null,
                     morts
                 };
             });
@@ -271,6 +273,43 @@ function exige(condition, message) {
             exige(!liens.sansPage, 'le nom d’un spectacle sans page porte un lien');
             exige(liens.prochaine === 'spectacles/berenice/', 'la prochaine représentation ne mène pas à la page du spectacle');
             exige(!liens.morts.length, `lien(s) mort(s) : ${liens.morts.join(', ')}`);
+
+            // Le carton « Prochainement » : le même qu'en tête du CV, à la même
+            // place — avant la première carte de l'onglet —, et son agenda
+            // ouvre la fenêtre de la prochaine date.
+            const carton = await p.evaluate(() => {
+                const cv = document.getElementById('next-date-banner');
+                const dates = document.getElementById('dates-prochaine');
+                const texte = (el) => (el ? el.textContent.replace(/\s+/g, ' ').trim() : '');
+                const saison = document.querySelector('#page_dates > section');
+                return {
+                    visibles: !!cv && !cv.hidden && !!dates && !dates.hidden,
+                    memeTexte: texte(cv) === texte(dates) && /Bérénice/.test(texte(dates)),
+                    enTete: !!dates && !!saison && dates.offsetHeight > 0
+                        && dates.getBoundingClientRect().bottom <= saison.getBoundingClientRect().top
+                };
+            });
+            exige(carton.visibles, 'le carton « Prochainement » manque au CV ou à l’onglet Dates');
+            exige(carton.memeTexte, 'le carton « Prochainement » de l’onglet Dates diffère de celui du CV');
+            exige(carton.enTete, 'le carton « Prochainement » n’est pas en tête de l’onglet Dates');
+            await p.locator('#dates-prochaine [data-cal-prochaine]').click();
+            await p.waitForTimeout(300);
+            exige(await p.evaluate(() => /Bérénice/.test(document.getElementById('cal-modal-title')?.textContent || '')),
+                'l’agenda du carton « Prochainement » n’ouvre pas sa fenêtre');
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(300);
+
+            // Chaque mois porte son liseré, que son intercalaire prolonge.
+            const lisere = await p.evaluate(() => {
+                const g = document.querySelector('#upcoming-dates-container .dl-groupe');
+                const avant = g && getComputedStyle(g, '::before');
+                const entete = g && g.querySelector('.dl-intercalaire');
+                return {
+                    trait: !!avant && avant.width === '3px' && avant.backgroundColor !== 'rgba(0, 0, 0, 0)',
+                    entete: !!entete && /inset/.test(getComputedStyle(entete).boxShadow)
+                };
+            });
+            exige(lisere.trait && lisere.entete, `le liseré des mois manque : ${JSON.stringify(lisere)}`);
 
             // L'agenda d'une case de série ouvre sa fenêtre.
             await p.locator('#upcoming-dates-container .dl--serie .dl-seance .dl-agenda').first().click();

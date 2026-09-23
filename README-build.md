@@ -55,12 +55,14 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - « Ajouter au calendrier » ouvre sa fenêtre dans un univers ouvert depuis le
   CV (une représentation fictive est glissée dans les dates le temps du test :
   il ne dépend pas de la saison) ;
-- l'onglet Dates : feuilles d'éphéméride, intercalaires de mois, séances en
-  cases, une date seule comprise (et pas de « Réserver » sur une séance
-  scolaire), nom du spectacle qui mène à sa page (et aucun lien pour un
-  spectacle sans page, aucun lien mort), rangement par spectacle retenu,
-  sommaire qui mène à la bonne ligne, une image pour chaque représentation
-  annoncée aux moteurs — sur une saison fictive, elle aussi ;
+- l'onglet Dates : feuilles d'éphéméride, intercalaires de mois et leur
+  liseré, séances en cases, une date seule comprise (et pas de « Réserver »
+  sur une séance scolaire), nom du spectacle qui mène à sa page (et aucun lien
+  pour un spectacle sans page, aucun lien mort), rangement par spectacle
+  retenu, sommaire qui mène à la bonne ligne, carton « Prochainement »
+  identique à celui du CV et placé au-dessus de la carte de la saison, avec
+  son agenda, une image pour chaque représentation annoncée aux moteurs — sur
+  une saison fictive, elle aussi ;
 - les pastilles ▶ ne s'impriment pas ;
 - sans JavaScript, le site reste lisible ;
 - chaque page spectacle a son `h1`, son `<main>` et des données structurées
@@ -980,13 +982,24 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   reste accroché sous la barre d'onglets pendant qu'on parcourt son mois ou
   sa pièce. Le choix du visiteur est retenu (`localStorage`, clé
   `av.datesVue`).
-- **Le sommaire**, en tête : la prochaine représentation, puis la saison d'un
-  regard — les spectacles en lignes, les mois en colonnes. Il ne filtre rien :
-  un mois, un spectacle ou un rond **mènent** aux lignes qu'ils résument. Il se
-  retire pendant une recherche, où seule la liste compte.
+- **Le liseré.** Chaque groupe porte un trait au bord gauche de la carte, du
+  haut de son intercalaire à sa dernière ligne, interrompu entre deux groupes :
+  on voit où finit un mois et où commence le suivant. L'or du site pour un
+  mois, la couleur de la pièce pour un spectacle (`--dl-lisere`).
+- **Le carton « Prochainement »**, au-dessus de la carte de la saison, est le
+  **même** qu'en tête du CV : même fonction (`renderNextDate()`), même
+  balisage, même place — juste avant la première carte de l'onglet. Le jour,
+  l'heure et le lieu ; le nom du spectacle mène à sa page ; « Réserver » et
+  l'agenda. Une seule différence, de conduite : au CV, la date mène à l'onglet
+  Dates ; dans l'onglet Dates, elle reste du texte. Les deux sont écrits
+  pendant la lecture de la page, pour que rien ne saute à leur arrivée.
+- **Le sommaire**, en tête de la carte : la saison d'un regard — les
+  spectacles en lignes, les mois en colonnes. Il ne filtre rien : un mois, un
+  spectacle ou un rond **mènent** aux lignes qu'ils résument. Il se retire
+  pendant une recherche, où seule la liste compte.
 - **Le nom d'un spectacle mène à sa page** (`spectacles/<slug>/`), partout où
-  l'onglet l'écrit : la ligne, l'en-tête du rangement par spectacle, la
-  prochaine représentation, les archives (`dlVersPage()`). Chaque univers a sa
+  l'onglet l'écrit : la ligne, l'en-tête du rangement par spectacle, le
+  carton « Prochainement », les archives (`dlVersPage()`). Chaque univers a sa
   page ; un spectacle sans univers garde son nom en simple texte, jamais un
   lien mort. Le retour du navigateur ramène à l'onglet Dates : changer
   d'onglet inscrit `#page_dates` dans l'historique.
