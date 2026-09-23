@@ -56,9 +56,10 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   CV (une représentation fictive est glissée dans les dates le temps du test :
   il ne dépend pas de la saison) ;
 - l'onglet Dates : feuilles d'éphéméride, intercalaires de mois, séances en
-  cases (et pas de « Réserver » sur une séance scolaire), rangement par
-  spectacle retenu, sommaire qui mène à la bonne ligne — sur une saison
-  fictive, elle aussi ;
+  cases (et pas de « Réserver » sur une séance scolaire), nom du spectacle qui
+  mène à sa page (et aucun lien pour un spectacle sans page, aucun lien mort),
+  rangement par spectacle retenu, sommaire qui mène à la bonne ligne — sur une
+  saison fictive, elle aussi ;
 - les pastilles ▶ ne s'impriment pas ;
 - sans JavaScript, le site reste lisible ;
 - chaque page spectacle a son `h1`, son `<main>` et des données structurées
@@ -982,11 +983,21 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   regard — les spectacles en lignes, les mois en colonnes. Il ne filtre rien :
   un mois, un spectacle ou un rond **mènent** aux lignes qu'ils résument. Il se
   retire pendant une recherche, où seule la liste compte.
+- **Le nom d'un spectacle mène à sa page** (`spectacles/<slug>/`), partout où
+  l'onglet l'écrit : la ligne, l'en-tête du rangement par spectacle, la
+  prochaine représentation, les archives (`dlVersPage()`). Chaque univers a sa
+  page ; un spectacle sans univers garde son nom en simple texte, jamais un
+  lien mort. Le retour du navigateur ramène à l'onglet Dates : changer
+  d'onglet inscrit `#page_dates` dans l'historique.
 
 Rien de tout cela ne se saisit : **la couleur, le genre, le sous-titre et la
 photo d'un spectacle viennent de son univers** (`univers.js`), retrouvé par
 son titre comme pour le CV. Un spectacle sans univers prend l'or du site et,
-rangé par spectacle, ses initiales à la place d'une photo. La photo est la
+rangé par spectacle, ses initiales à la place d'une photo. Un titre écrit
+autrement que la clé de l'univers ne le retrouve pas : pas de rapprochement
+approximatif. Pour un spectacle annoncé sous un autre nom, l'univers déclare
+ses **`autresTitres`** : `['À la barre']` relie ainsi les archives 2024 - 2025
+à « À la barre, peine perdue ? ». La photo est la
 **couverture** de l'univers — la première de son montage — en 240 px
 (`<n>-240.webp`, fabriquée par `build/variantes-images.py`) ; si elle manque,
 la page se rabat sur la version de 640 px.
@@ -1639,7 +1650,10 @@ Deux façons de relever un geste :
 
 `entree` (onglet d'arrivée), `intro` (coupée ou menée au sceau, et durée),
 `univers_ouvert` / `univers_ferme` (spectacle, durée de lecture), `demo_ecoute`
-(jalons 25 / 50 / 75 / 100 %, une seule fois par démo et par visite).
+(jalons 25 / 50 / 75 / 100 %, une seule fois par démo et par visite),
+`dates_vue` (rangement choisi dans l'onglet Dates : `date` ou `spectacle`),
+`date_spectacle` (la page d'un spectacle ouverte depuis l'onglet Dates : son
+nom).
 
 Ce qu'on a **fait** — les gestes qui sortent du site, et les seuls qui disent
 qu'un directeur de casting a fini de regarder :

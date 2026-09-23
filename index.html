@@ -3384,6 +3384,20 @@
             color: rgb(var(--c-text));
         }
 
+        /* Le nom d'un spectacle mène à sa page (dlVersPage) : un souligné
+           fin, qui prend la couleur du spectacle au survol. */
+        .dl-vers-page {
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 0.2em;
+            text-decoration-color: rgb(var(--c-text) / 0.35);
+        }
+
+        .dl-vers-page:hover {
+            text-decoration-color: var(--dl-a);
+            text-decoration-thickness: 2px;
+        }
+
         .dl-sous {
             font-weight: 400;
             font-style: italic;
@@ -7677,6 +7691,16 @@
         }
         const dlStyle = (s) => (s.accent ? `--dl-a:${esc(s.accent)};--dl-sa:${esc(s.surAccent || '#ffffff')}` : '');
 
+        // Le nom d'un spectacle mène à sa page, partout où l'onglet l'écrit :
+        // la ligne, l'en-tête du rangement par spectacle, la prochaine
+        // représentation, les archives. Chaque univers a sa page
+        // (build/generer-pages-spectacles.js en fait une par slug) ; sans
+        // univers, le nom reste du texte, jamais un lien mort. `texte` est
+        // déjà échappé.
+        const dlVersPage = (s, texte) => (s.slug
+            ? `<a class="dl-vers-page" href="spectacles/${esc(s.slug)}/" data-track="date_spectacle" data-track-detail="${esc(s.titre)}">${texte}</a>`
+            : texte);
+
         // Les entrées du rendu : l'entrée d'origine, ses séances, ses jours
         // distincts, et la couleur de son spectacle. Chaque séance réserve au
         // passage sa place dans renderedEventsData — c'est par cet indice
@@ -7774,7 +7798,7 @@
             // de quelque chose (même règle que le bandeau « Prochainement »).
             const proche = e.debut ? relativeDayLabel(e.debut.t, '') : '';
             const titre = vue === 'date'
-                ? `<h5 class="dl-titre">${esc(e.titre)}${e.show.subtitle ? ` <span class="dl-sous">(${esc(e.show.subtitle)})</span>` : ''}</h5>`
+                ? `<h5 class="dl-titre">${dlVersPage(e.spectacle, esc(e.titre))}${e.show.subtitle ? ` <span class="dl-sous">(${esc(e.show.subtitle)})</span>` : ''}</h5>`
                 : '';
             const droite = e.serie
                 ? `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}</ul>`
@@ -7812,7 +7836,9 @@
         function dlParSpectacle(entrees) {
             const groupes = [];
             entrees.forEach(e => {
-                let g = groupes.find(x => x.s === e.spectacle);
+                // Par identifiant : deux écritures d'un même spectacle (son
+                // titre, un de ses autresTitres) font un seul groupe.
+                let g = groupes.find(x => x.s.id === e.spectacle.id);
                 if (!g) { g = { s: e.spectacle, entrees: [], n: 0 }; groupes.push(g); }
                 g.entrees.push(e);
                 g.n += e.perfs.length;
@@ -7854,15 +7880,18 @@
                     const vignette = c
                         ? `<img src="${esc(c.src)}" data-repli="${esc(c.repli)}" alt="" width="40" height="50" loading="lazy" decoding="async"${c.pos ? ` style="object-position:${esc(c.pos)}"` : ''}>`
                         : esc(dlInitiales(s.titre));
-                    const lien = s.slug
-                        ? `<a class="dl-spec-lien" href="spectacles/${esc(s.slug)}/" aria-label="${esc(`La page du spectacle ${s.titre}`)}"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
+                    // Le lien, c'est le nom. La flèche le double pour le doigt,
+                    // sans second arrêt au clavier ni seconde annonce au
+                    // lecteur d'écran.
+                    const fleche = s.slug
+                        ? `<a class="dl-spec-lien" href="spectacles/${esc(s.slug)}/" tabindex="-1" aria-hidden="true" data-track="date_spectacle" data-track-detail="${esc(s.titre)}"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
                         : '';
                     const info = [s.genre, dlPluriel(g.n, 'représentation')].filter(Boolean).join(' · ');
                     return `<section class="dl-groupe" id="${id}" aria-labelledby="${id}-t" style="${dlStyle(s)}">`
                         + `<div class="dl-intercalaire dl-intercalaire--spectacle"><span class="dl-vignette" aria-hidden="true">${vignette}</span>`
-                        + `<span class="dl-spec-texte"><h4 id="${id}-t" tabindex="-1">${esc(s.titre)}</h4>`
+                        + `<span class="dl-spec-texte"><h4 id="${id}-t" tabindex="-1">${dlVersPage(s, esc(s.titre))}</h4>`
                         + (s.sousTitre ? `<span class="dl-spec-sous">${esc(s.sousTitre)}</span>` : '')
-                        + `<span class="dl-spec-info">${esc(info)}</span></span>${lien}</div>`
+                        + `<span class="dl-spec-info">${esc(info)}</span></span>${fleche}</div>`
                         + g.entrees.map(e => dlLigne(e, 'spectacle')).join('')
                         + '</section>';
                 }).join('');
@@ -7903,7 +7932,7 @@
                 + '<span class="dl-p-sur">Prochaine représentation</span>'
                 + `<span class="dl-p-dans">${esc(dlDans(Math.round((e0.debut.t - todayStamp()) / 86400000)))}</span>`
                 + `<span class="dl-p-quand">${esc(dlCap(`${DL_JOURS[p0.jour.js]} ${dlQuantieme(p0.jour)} ${DL_MOIS[p0.jour.m]}`))}${p0.heure ? ` · ${esc(p0.heure)}` : ''}</span>`
-                + `<span class="dl-p-quoi"><b>${esc(e0.titre)}</b>${ville ? ` · ${esc(ville)}` : ''}</span>`
+                + `<span class="dl-p-quoi"><b>${dlVersPage(e0.spectacle, esc(e0.titre))}</b>${ville ? ` · ${esc(ville)}` : ''}</span>`
                 + `<div class="dl-actions">${dlAction(p0, e0, false)}${dlAgenda(p0, e0)}</div></div>`;
 
             // Les mois, du premier au dernier joué : douze au plus.
@@ -8088,7 +8117,7 @@
                     if (!rows.length) return;   // saison entièrement filtrée : on la masque
                     const showsHtml = rows.map(show => `
                         <div class="py-1 odd:bg-luxury-stripe px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
-                            <span><strong>${esc(show.date)}</strong> : ${esc(show.title)}</span>
+                            <span><strong>${esc(show.date)}</strong> : ${dlVersPage(dlSpectacle(show.title || ''), esc(show.title))}</span>
                             <span class="text-stone-600 text-[12px] md:text-right">${esc(show.location)}</span>
                         </div>`).join('');
 

@@ -16,7 +16,8 @@
  *      autre site : une fois) ;
  *    · la fenêtre d'agenda d'un univers ouvert depuis le CV ;
  *    · l'onglet Dates : feuilles, intercalaires de mois, séances en
- *      cases, rangement par spectacle, sommaire qui mène aux dates ;
+ *      cases, nom du spectacle qui mène à sa page, rangement par
+ *      spectacle, sommaire qui mène aux dates ;
  *    · l'impression sans les pastilles ▶ ;
  *    · le site sans JavaScript ;
  *    · les pages spectacle (h1, <main>, données structurées) ;
@@ -162,7 +163,7 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('l’onglet Dates : feuilles, séances en cases, rangement par spectacle, sommaire', async () => {
+        await verifie('l’onglet Dates : feuilles, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 } });
             const p = await c.newPage();
             const erreurs = guette(p);
@@ -171,7 +172,9 @@ function exige(condition, message) {
             // Une saison fictive, à un mois d'ici : une date seule, puis une
             // série de deux soirs dont la première séance est scolaire. Elle
             // porte un lien de billetterie : une séance scolaire ne doit pas
-            // proposer « Réserver » pour autant.
+            // proposer « Réserver » pour autant. Avant elles, une date de
+            // Bérénice, spectacle qui a sa page : son nom doit y mener. Le
+            // spectacle fictif n'en a pas : son nom ne mène nulle part.
             await p.evaluate(() => {
                 const iso = (n) => {
                     const d = new Date();
@@ -180,6 +183,10 @@ function exige(condition, message) {
                 };
                 const titre = 'Spectacle de vérification';
                 SHOW_DATA.upcoming = [
+                    {
+                        type: 'single', title: 'Bérénice', location: 'Scène de vérification (76)', city: 'Rouen',
+                        dateLabel: iso(20), icsDate: iso(20), time: '20h00', bookingUrl: '', isSchool: false
+                    },
                     {
                         type: 'single', title: titre, location: 'Théâtre de vérification (76)', city: 'Rouen',
                         dateLabel: iso(30), icsDate: iso(30), time: '20h00', bookingUrl: 'https://example.org/billets', isSchool: false
@@ -209,11 +216,34 @@ function exige(condition, message) {
                 };
             });
             exige(parDate.intercalaires >= 1, 'aucun intercalaire de mois');
-            exige(parDate.feuilles === 2, `${parDate.feuilles} feuille(s) d’éphéméride pour deux lignes`);
+            exige(parDate.feuilles === 3, `${parDate.feuilles} feuille(s) d’éphéméride pour trois lignes`);
             exige(parDate.cases === 2, `la série montre ${parDate.cases} case(s) au lieu de deux`);
             exige(parDate.scolaireSansReserver, 'une séance scolaire propose « Réserver »');
             exige(parDate.reserver === 2, `${parDate.reserver} bouton(s) « Réserver » au lieu de deux`);
             exige(parDate.sommaire, 'le sommaire de la saison n’est pas là');
+
+            // Le nom d'un spectacle mène à sa page, sur sa ligne comme dans la
+            // prochaine représentation ; sans page, pas de lien, jamais un
+            // lien mort : chaque adresse visée doit répondre.
+            const liens = await p.evaluate(async () => {
+                const titres = [...document.querySelectorAll('#upcoming-dates-container .dl-titre')];
+                const tous = [...document.querySelectorAll('#page_dates a.dl-vers-page')].map((a) => a.getAttribute('href'));
+                const morts = [];
+                for (const href of new Set(tous)) {
+                    const r = await fetch(href).catch(() => null);
+                    if (!r || !r.ok) morts.push(href);
+                }
+                return {
+                    ligne: titres.filter((t) => /Bérénice/.test(t.textContent)).map((t) => t.querySelector('a.dl-vers-page')?.getAttribute('href') || null),
+                    sansPage: titres.filter((t) => /vérification/.test(t.textContent)).some((t) => t.querySelector('a')),
+                    prochaine: document.querySelector('#dates-sommaire .dl-prochaine a.dl-vers-page')?.getAttribute('href') || null,
+                    morts
+                };
+            });
+            exige(liens.ligne.join() === 'spectacles/berenice/', `la ligne de Bérénice ne mène pas à sa page : ${JSON.stringify(liens.ligne)}`);
+            exige(!liens.sansPage, 'le nom d’un spectacle sans page porte un lien');
+            exige(liens.prochaine === 'spectacles/berenice/', 'la prochaine représentation ne mène pas à la page du spectacle');
+            exige(!liens.morts.length, `lien(s) mort(s) : ${liens.morts.join(', ')}`);
 
             // L'agenda d'une case de série ouvre sa fenêtre.
             await p.locator('#upcoming-dates-container .dl-seance .dl-agenda').first().click();
@@ -225,12 +255,18 @@ function exige(condition, message) {
 
             // Par spectacle, et le choix est retenu.
             await p.click('[data-dates-vue="spectacle"]');
-            const parSpectacle = await p.evaluate(() => ({
-                entetes: [...document.querySelectorAll('#upcoming-dates-container .dl-intercalaire--spectacle h4')].map((h) => h.textContent),
-                retenu: localStorage.getItem('av.datesVue')
-            }));
-            exige(parSpectacle.entetes.join() === 'Spectacle de vérification',
+            const parSpectacle = await p.evaluate(() => {
+                const entetes = [...document.querySelectorAll('#upcoming-dates-container .dl-intercalaire--spectacle h4')];
+                return {
+                    entetes: entetes.map((h) => h.textContent),
+                    liens: entetes.map((h) => h.querySelector('a.dl-vers-page')?.getAttribute('href') || '-'),
+                    retenu: localStorage.getItem('av.datesVue')
+                };
+            });
+            exige(parSpectacle.entetes.join() === 'Bérénice,Spectacle de vérification',
                 `rangement par spectacle : ${JSON.stringify(parSpectacle.entetes)}`);
+            exige(parSpectacle.liens.join() === 'spectacles/berenice/,-',
+                `en-têtes par spectacle et leurs pages : ${JSON.stringify(parSpectacle.liens)}`);
             exige(parSpectacle.retenu === 'spectacle', 'le rangement choisi n’est pas retenu');
 
             // Un rond du sommaire ramène par date, jusqu'à sa ligne.

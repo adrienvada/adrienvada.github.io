@@ -50,6 +50,11 @@
  *            À poser quand le film n'est pas accessible en entier sur cette
  *            page — seulement en bande-annonce, par exemple — pour ne pas
  *            promettre plus que ce qu'on peut montrer.
+ *  autresTitres  les autres écritures exactes du titre, quand le spectacle
+ *            a été annoncé sous un autre nom : ['À la barre']. Les
+ *            archives de dates.js qui l'écrivent ainsi mènent alors à sa
+ *            page. Une écriture exacte, pas un rapprochement : « À la
+ *            barre » ne vaut pas « À la barre ! ».
  *  sequence  LE MONTAGE. Un élément = un temps du défilé, dans l'ordre.
  *            `sequence: []` est un état légitime : un spectacle qui n'est
  *            pas encore créé n'a pas d'images à montrer.
@@ -195,6 +200,8 @@ const SHOW_UNIVERSES = {
 
     'À la barre, peine perdue ?': {
         slug: 'alabarre',
+        // Le titre court des archives de dates.js (saison 2024 - 2025).
+        autresTitres: ['À la barre'],
         palette: {
             bg: '#08080b', surface: '#131620', text: '#ececef', muted: '#9899a4',
             accent: '#c8102e', accentInk: '#e2455c', onAccent: '#ffffff',
@@ -883,6 +890,14 @@ const SHOW_UNIVERSES = {
             indexUnivers = new Map();
             Object.keys(SHOW_UNIVERSES).forEach(k =>
                 indexUnivers.set(normaliserTitre(k), SHOW_UNIVERSES[k]));
+            // Les autres titres qu'un univers déclare (autresTitres) : des
+            // écritures exactes de plus, jamais un rapprochement. Une clé
+            // l'emporte toujours sur l'autre titre d'un autre univers.
+            Object.keys(SHOW_UNIVERSES).forEach(k =>
+                (SHOW_UNIVERSES[k].autresTitres || []).forEach(t => {
+                    const n = normaliserTitre(t);
+                    if (!indexUnivers.has(n)) indexUnivers.set(n, SHOW_UNIVERSES[k]);
+                }));
         }
         return indexUnivers.get(normaliserTitre(brut)) || null;
     }
