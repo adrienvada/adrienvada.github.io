@@ -64,6 +64,12 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   du CV, avec son lien et son agenda, et nulle part dans l'onglet Dates — sur
   une saison fictive, elle aussi ;
 - les pastilles ▶ ne s'impriment pas ;
+- la ligne à vignette du CV : chaque spectacle et chaque film ont leur
+  vignette, qui dit l'année et l'état de la ligne (cachée aux lecteurs
+  d'écran, qui les lisent dans le texte) ; les lignes d'une liste ont la même
+  hauteur, l'année y tombe au même endroit, et le texte tient dans la hauteur
+  de la vignette — au téléphone comme sur ordinateur ; les formations n'ont
+  pas d'image ; rien de tout cela sur papier ;
 - sans JavaScript, le site reste lisible ;
 - chaque page spectacle a son `h1`, son `<main>` et des données structurées
   lisibles, où chaque représentation a son image ;
@@ -1091,7 +1097,7 @@ Chaque entrée porte :
 |---|---|
 | `palette` | les couleurs du spectacle, injectées en variables `--u-*` sur le panneau. Le reste du site n'est **pas** repeint : le panneau le recouvre. |
 | `title` / `subtitle` | *(facultatif)* quand le titre du CV est trop long pour du Cinzel 5rem — « Cléophène », et « d'après Rodogune » en dessous |
-| `cvAccent` | *(facultatif)* couleur du filet sur la ligne du CV, quand l'accent de l'univers y dirait autre chose que le spectacle |
+| `cvAccent` | *(facultatif)* couleur du filet et de la vignette sur la ligne du CV, quand l'accent de l'univers y dirait autre chose que le spectacle |
 | `synopsis` | s'inscrit mot à mot sous le titre. Une chaîne, ou un tableau de lignes. Sert aussi de **murmure** sur la ligne du CV — voir ci-dessous |
 | `cast` | **la distribution**, en générique de fin. Y mettre le nom d'Adrien comme les autres, en dernier — rien ne l'en distingue : c'est un générique, pas une affiche |
 | `castNote` | *(facultatif)* précision sous la distribution — « * en alternance », « Jeu et mise en scène collective. » |
@@ -1112,13 +1118,60 @@ pas l'univers. Un doigt qui glisse annule : le défilement passe avant.
 Le texte n'est pas recopié — c'est le `synopsis` de l'univers, relu par
 `addWhisper()`. Le corriger à un seul endroit le corrige partout.
 
-- **Sur grand écran**, il s'inscrit dans le vide de la ligne, entre le titre
-  et le badge. Rien n'est déplacé : la liste reste immobile. Trois lignes
+- **Sur grand écran**, il s'inscrit dans le vide de la ligne, entre le texte
+  et la flèche. Rien n'est déplacé : la liste reste immobile. Trois lignes
   tiennent ; au-delà, le texte se dissout par le bas.
 - **Sur petit écran**, ce vide n'existe pas : la ligne s'ouvre par le bas,
-  le temps de l'appui. Au repos elle ne coûte pas un pixel.
+  sous le texte, le temps de l'appui. Au repos elle ne coûte pas un pixel.
 
 Un spectacle sans `synopsis` n'a pas de murmure — rien à corriger.
+
+### La vignette — l'année et l'état sur la ligne du CV
+
+Chaque ligne de spectacle ou de film s'ouvre sur une **vignette** : la
+couverture de son univers (la première photo du montage, en 240 px — la même
+que dans l'onglet Dates), ou ses initiales sur sa couleur tant qu'il n'a pas
+de photos. L'**année** s'imprime au bas de la photo, en blanc sur un voile ;
+l'**état** (« création », « tournée ») en bandeau, en haut, comme sur la
+feuille des Dates. Au passage de la guirlande, c'est la vignette d'un
+spectacle qui se joue encore qui s'allume, là où s'allumait le badge.
+
+Pourquoi : collée au titre, l'année en suivait les retours à la ligne, et le
+contenu se centrait dans la hauteur commune de la liste — l'année tombait
+plus haut ou plus bas d'une ligne à l'autre. La vignette a la même taille
+partout : l'année y tombe au même endroit, toujours.
+
+**Rien n'est recopié dans le balisage.** `addVignette()` lit l'année et l'état
+dans la ligne (`.cv-year`, `.cv-badge`), qui les garde : c'est là que les
+lisent les lecteurs d'écran (la vignette leur est cachée), l'impression, et
+le CV sans JavaScript, qui reste tel qu'il était. Changer une année ou un
+badge, c'est donc toujours changer la ligne du CV dans `index.html`. La
+couverture vient de `UniversMontage.couverture()` (univers-montage.js),
+partagée avec l'onglet Dates : changer la première photo d'un montage change
+les deux, après `python3 build/variantes-images.py`.
+
+La mise en page, à l'écran (`LA LIGNE À VIGNETTE`, dans `index.html`) :
+
+- **trois lignes de texte, une seule chacune** — le titre (en Cinzel), le rôle,
+  la compagnie. Ce qui déborde s'arrête sur des points de suspension ; le
+  texte reste entier dans le document et dans l'univers. C'est ce qui donne à
+  toutes les lignes la hauteur de la vignette, et le contrôle automatique le
+  vérifie ;
+- **l'auteur**, entre parenthèses, sur grand écran seulement ;
+- **un film** porte en plus son genre sous le titre, lu dans l'univers
+  (`genre`), avec l'incise du titre quand il en a une : « Mini-série ·
+  Comédie » (`addGenre()`) ;
+- **la colonne de droite** — la flèche, la pastille ▶ dessous — a la même
+  largeur sur toutes les lignes (44 px, celle de la pastille), pour que le
+  texte s'arrête partout au même endroit.
+
+Les **formations** n'ont pas d'illustration : leur année prend seule la
+colonne de la vignette, par le CSS seul (`.cv-formation`, pas de script). Une
+période s'y lit sur deux lignes, « 2018 » puis « → 2021 ».
+
+Sur **papier**, rien de tout cela : ni vignette, ni ligne de genre, l'année en
+pastille et l'état en badge comme avant. Le PDF est identique à celui d'avant
+la vignette, au pixel près.
 
 ### Le montage
 
@@ -1346,7 +1399,7 @@ sous ~300 Ko.
 | `ressources/images/miniatures/bande-demo-camera.{jpg,webp}` | miniature de la bande démo |
 | `ressources/images/galerie/vignettes/<nom>-{320,640,960}.webp` | vignettes du book — `python3 build/variantes-images.py` |
 | `ressources/images/univers/<slug>/<nom>-{640,1280}.webp` (et `-1920` pour un plein cadre) | versions allégées des photos d'univers, servies aux écrans de moins de 900 px et au répertoire — même script, lancé aussi par `prepare-univers-photos.py` |
-| `ressources/images/univers/<slug>/<nom>-240.webp` | la **couverture** de chaque univers (la première photo de son montage), en vignette dans l'onglet Dates rangé par spectacle — même script |
+| `ressources/images/univers/<slug>/<nom>-240.webp` | la **couverture** de chaque univers (la première photo de son montage), en vignette dans l'onglet Dates rangé par spectacle et sur chaque ligne du CV — même script |
 
 Les **sources** de ces images restent dans le dépôt et ne sont plus servies aux
 visiteurs : `profil2_1080x1080.png` (avatar) et `profil_1000x1000.jpg`

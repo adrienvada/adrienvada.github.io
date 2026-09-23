@@ -767,6 +767,25 @@ const UniversMontage = (function () {
         return bloc ? photoSrc(uni, bloc.p[0]) : '';
     }
 
+    //  LA COUVERTURE DES VIGNETTES : la première photo du montage, dans sa
+    //  version de 240 px — la seule que build/variantes-images.py fabrique
+    //  à cette taille (voir couvertures() là-bas). L'affiche n'y a pas de
+    //  place : elle n'existe pas en 240 px. Deux vignettes s'en servent,
+    //  celle de l'onglet Dates (rangement par spectacle) et celle des lignes
+    //  du CV ; la règle est donc écrite ici, une fois.
+    //
+    //  `repli` est la version de 640 px, qui existe toujours : une
+    //  couverture manque si la photo a été changée sans relancer le script,
+    //  et l'accueil se rabat alors sur elle (écouteur `data-repli`, dans
+    //  index.html). Sans photo — un spectacle pas encore créé —, rien :
+    //  l'appelant pose les initiales.
+    function couverture(uni) {
+        const bloc = (uni?.sequence || []).find(b => b && Array.isArray(b.p) && b.p.length);
+        if (!bloc) return null;
+        const base = `ressources/images/univers/${uni.slug}/${bloc.p[0]}`;
+        return { src: `${base}-240.webp`, repli: `${base}-640.webp`, pos: framePos(uni, bloc, bloc.p[0]) || '' };
+    }
+
     //  La compagnie est écrite sous le titre, dans le CV, avec deux
     //  conventions constantes : la BARRE OBLIQUE sépare deux coproducteurs,
     //  le TIRET CADRATIN sépare la compagnie de son metteur en scène
@@ -880,7 +899,7 @@ const UniversMontage = (function () {
     }
 
     return {
-        panelHtml, datesHtml, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, photoPrincipale, organisateurs,
+        panelHtml, datesHtml, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, photoPrincipale, couverture, organisateurs,
         toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
         longestLine, photoSrc, pictureHtml, framePos, figureHtml, overHtml, videoRef,

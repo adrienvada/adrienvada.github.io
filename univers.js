@@ -806,7 +806,7 @@ const SHOW_UNIVERSES = {
         panelHtml, datesHtml, escape, toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
         longestLine, photoSrc, framePos, figureHtml, overHtml, videoRef,
-        videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock,
+        videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock, couverture,
         FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT
     } = UniversMontage;
 
@@ -2333,6 +2333,8 @@ const SHOW_UNIVERSES = {
                 window.setIcon?.(icon, 'solid-arrow-right');
             }
 
+            addVignette(li, uni);
+            addGenre(li, uni);
             addWhisper(li, uni);
             addTrailerPill(li, uni);
         });
@@ -2340,11 +2342,104 @@ const SHOW_UNIVERSES = {
         suivreLeTheme();
     }
 
+    // ── LA VIGNETTE, ET L'ANNÉE DESSUS ───────────────────────────────
+    //  Chaque ligne de spectacle ou de film s'ouvre sur la couverture de
+    //  son univers — la photo que l'onglet Dates montre en tête de chaque
+    //  spectacle — ou, tant qu'il n'a pas de photos, sur ses initiales dans
+    //  sa couleur. L'année s'imprime au bas de la photo ; l'état du
+    //  spectacle (« création », « tournée ») en bandeau, en haut, comme sur
+    //  la feuille des Dates.
+    //
+    //  POURQUOI L'ANNÉE QUITTE LE TITRE. Collée au titre, elle en suivait
+    //  les retours à la ligne, et le contenu se centrait dans une hauteur
+    //  commune à toute la liste : l'année tombait plus haut ou plus bas
+    //  d'une ligne à l'autre. La vignette a la même taille partout — l'année
+    //  y tombe au même endroit, toujours.
+    //
+    //  RIEN N'EST RECOPIÉ DANS LE BALISAGE. L'année et l'état sont LUS dans
+    //  la ligne (.cv-year, .cv-badge), qui les garde : les lecteurs d'écran
+    //  les y trouvent — la vignette leur est cachée, elle ne ferait que les
+    //  répéter —, l'impression aussi, et sans JavaScript le CV reste tel
+    //  qu'il était. Le CSS ne fait disparaître les originaux qu'à l'écran,
+    //  et seulement sur les lignes qui portent la vignette (.a-vignette).
+    function addVignette(li, uni) {
+        const row = li.querySelector('.cv-row-toggle > div');
+        if (!row || li.querySelector('.cv-vignette')) return;
+        const lire = (sel) => (li.querySelector(sel)?.textContent || '').replace(/\s+/g, ' ').trim();
+        const annee = lire('.cv-year');
+        // « En tournée » → « tournée » : le bandeau n'a que 48 px de large,
+        // et c'est le mot qui compte. Le CSS le met en capitales.
+        const etat = lire('.cv-badge').replace(/^en\s+/i, '');
+        const c = couverture(uni);
+
+        const el = document.createElement('span');
+        el.className = 'cv-vignette' + (etat ? ' a-etat' : '') + (c ? '' : ' sans-photo');
+        el.setAttribute('aria-hidden', 'true');
+        el.innerHTML = '<span class="cv-vignette-cadre">'
+            + (c
+                ? `<img src="${escape(c.src)}" data-repli="${escape(c.repli)}" alt="" width="48" height="64" loading="lazy" decoding="async"${c.pos ? ` style="object-position:${escape(c.pos)}"` : ''}>`
+                : `<span class="cv-vignette-initiales">${escape(initiales(uni.title || li.dataset.cvShow || ''))}</span>`)
+            + (etat ? `<span class="cv-vignette-etat">${escape(etat)}</span>` : '')
+            + (annee ? `<span class="cv-vignette-annee">${escape(annee)}</span>` : '')
+            + '</span>';
+        // L'encre du bandeau et des initiales, calculée sur la couleur même
+        // de la ligne (voir encreSur).
+        li.style.setProperty('--cv-sur-accent', encreSur(uni.cvAccent || uni.palette.accent));
+        row.insertBefore(el, row.firstChild);
+        li.classList.add('a-vignette');
+    }
+
+    //  Les initiales d'un spectacle sans photo : les deux premiers mots
+    //  qui comptent, articles écartés — « L'Imaginaire forcé » donne IF.
+    //  La même règle que la vignette de l'onglet Dates (dlInitiales).
+    function initiales(titre) {
+        return String(titre).replace(/^(l['’]|la |le |les |à la |au |aux )/i, '')
+            .split(/[\s,]+/).filter(m => m.length > 2).slice(0, 2)
+            .map(m => m.charAt(0).toUpperCase()).join('');
+    }
+
+    //  L'ENCRE SUR LA COULEUR DU SPECTACLE : du blanc ou un quasi-noir,
+    //  celui des deux qui tranche le mieux (rapport de contraste WCAG).
+    //  La palette a son `onAccent`, mais il est calé sur `accent`, pas sur
+    //  `cvAccent` quand la ligne en porte un : on calcule donc, la même
+    //  chose dans les deux cas. Relevé sur les cinq spectacles qui ont un
+    //  bandeau aujourd'hui, le choix est celui des palettes.
+    function encreSur(couleur) {
+        const rgb = versRgb(couleur);
+        if (!rgb) return '#ffffff';
+        const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+        const L = 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+        const L_NOIR = 0.0062; // #141210
+        return (1.05 / (L + 0.05)) >= ((L + 0.05) / (L_NOIR + 0.05)) ? '#ffffff' : '#141210';
+    }
+
+    //  LE GENRE DU FILM, SOUS SON TITRE. Un court métrage n'a ni rôle ni
+    //  compagnie : sa ligne ne portait qu'un titre et un réalisateur, et
+    //  flottait à côté de la vignette. Le genre vient de l'univers — le
+    //  même mot qu'en tête de sa page — et reprend l'incise du titre quand
+    //  il y en a une : « (mini-série) » devient « Mini-série · Comédie »,
+    //  et l'incise s'efface alors à l'écran pour ne pas se lire deux fois.
+    //  À l'impression, rien de tout cela : le papier garde sa ligne unique.
+    function addGenre(li, uni) {
+        if (uni.kind !== 'film' || !uni.genre || li.querySelector('.cv-genre')) return;
+        const sous = li.querySelector('.cv-subtitle');
+        if (!sous) return;
+        const incise = (li.querySelector('.cv-title > span')?.textContent || '')
+            .replace(/\s+/g, ' ').replace(/^\s*\(|\)\s*$/g, '').trim();
+        const texte = [incise, uni.genre].filter(Boolean).join(' · ');
+        const p = document.createElement('p');
+        p.className = 'cv-genre';
+        p.textContent = texte.charAt(0).toUpperCase() + texte.slice(1);
+        sous.parentNode.insertBefore(p, sous);
+        li.classList.add('a-genre');
+    }
+
     //  3. LE MURMURE. Au survol, la ligne laisse entrevoir de quoi parle
     //     le spectacle. Le texte est le synopsis de l'univers — relu ici,
     //     jamais recopié : il n'y a qu'un endroit où le corriger.
     //
-    //     L'élément se glisse entre la colonne de texte et le badge. Sur
+    //     L'élément se glisse entre la colonne de texte et celle de droite
+    //     (le badge, ou la flèche quand la ligne a sa vignette). Sur
     //     grand écran il occupe le vide de la ligne ; sur petit il passe
     //     à la ligne suivante. Une seule place dans le balisage, deux
     //     mises en page (voir .cv-whisper dans index.html).

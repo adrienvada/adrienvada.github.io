@@ -23,6 +23,8 @@
  *      annoncée aux moteurs ; le carton « Prochainement », en tête du CV
  *      et nulle part ailleurs ;
  *    · l'impression sans les pastilles ▶ ;
+ *    · la ligne à vignette du CV : l'année et l'état sur chaque vignette,
+ *      des lignes de même hauteur, rien de tout cela sur papier ;
  *    · le site sans JavaScript ;
  *    · les pages spectacle (h1, <main>, données structurées, une image
  *      pour chaque représentation) ;
@@ -372,6 +374,102 @@ function exige(condition, message) {
                 .filter((e) => getComputedStyle(e).display !== 'none').length);
             exige(visibles === 0, `${visibles} pastille(s) resteraient sur le CV imprimé`);
             await c.close();
+        });
+
+        // LA LIGNE À VIGNETTE (index.html, univers.js : addVignette). Sa
+        // promesse tient en trois points, vérifiés aux deux largeurs où elle
+        // se dessine différemment : chaque spectacle et chaque film ont leur
+        // vignette, qui dit la même année et le même état que la ligne ;
+        // toutes les lignes d'une liste ont la même hauteur, et l'année y
+        // tombe au même endroit ; le papier n'en voit rien.
+        await verifie('le CV : une vignette par spectacle et par film, l’année et l’état dessus, les lignes à la même hauteur et l’année au même endroit — au téléphone comme sur ordinateur ; ni image pour les formations, ni vignette sur papier', async () => {
+            for (const largeur of [390, 1280]) {
+                const c = await visiteur({ viewport: { width: largeur, height: 900 } });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.goto(base + '/', { waitUntil: 'load' });
+                await p.evaluate(() => document.fonts.ready);
+                await p.waitForTimeout(600);
+                const cv = await p.evaluate(() => {
+                    const lire = (e) => (e?.textContent || '').replace(/\s+/g, ' ').trim();
+                    const lignes = [...document.querySelectorAll('#page_cv li.cv-item')];
+                    const listes = [...document.querySelectorAll('#page_cv ul')]
+                        .map((ul) => [...ul.querySelectorAll(':scope > li.cv-item')]).filter((l) => l.length);
+                    return {
+                        lignes: lignes.length,
+                        vignettes: lignes.filter((li) => li.querySelector('.cv-vignette')).length,
+                        // L'année de la vignette est celle de la ligne ; son
+                        // bandeau, le badge sans son « en ».
+                        faux: lignes.filter((li) => {
+                            const v = li.querySelector('.cv-vignette');
+                            if (!v) return false;
+                            const etat = lire(v.querySelector('.cv-vignette-etat')).toLowerCase();
+                            const badge = lire(li.querySelector('.cv-badge')).toLowerCase().replace(/^en /, '');
+                            return lire(v.querySelector('.cv-vignette-annee')) !== lire(li.querySelector('.cv-year'))
+                                || etat !== badge;
+                        }).map((li) => li.dataset.cvShow),
+                        // Une photo chargée, ou des initiales : jamais un cadre vide.
+                        vides: lignes.filter((li) => {
+                            const img = li.querySelector('.cv-vignette img');
+                            return img ? !(img.complete && img.naturalWidth)
+                                : !lire(li.querySelector('.cv-vignette-initiales'));
+                        }).map((li) => li.dataset.cvShow),
+                        // L'année et le badge ne se voient plus dans le texte…
+                        visibles: lignes.filter((li) => ['.cv-year', '.cv-badge'].some((s) => {
+                            const e = li.querySelector(s);
+                            return e && e.getBoundingClientRect().width > 1;
+                        })).map((li) => li.dataset.cvShow),
+                        // … mais la vignette qui les montre est cachée aux
+                        // lecteurs d'écran : c'est dans le texte qu'ils les lisent.
+                        parlantes: lignes.filter((li) => li.querySelector('.cv-vignette')
+                            && li.querySelector('.cv-vignette').getAttribute('aria-hidden') !== 'true').length,
+                        // La règle de la mise en page : tout le texte tient dans
+                        // la hauteur de la vignette. Un titre qui repasserait à
+                        // la ligne la dépasserait — et c'est ce qui faisait
+                        // varier les hauteurs.
+                        debordent: lignes.filter((li) => {
+                            const v = li.querySelector('.cv-vignette'), t = li.querySelector('.cv-row-toggle .min-w-0');
+                            return v && t && t.getBoundingClientRect().height > v.getBoundingClientRect().height + 0.5;
+                        }).map((li) => li.dataset.cvShow),
+                        ecarts: listes.map((l) => {
+                            const haut = (li) => li.getBoundingClientRect().top;
+                            const h = l.map((li) => li.getBoundingClientRect().height);
+                            const y = l.map((li) => li.querySelector('.cv-vignette-annee').getBoundingClientRect().top - haut(li));
+                            return { hauteur: Math.max(...h) - Math.min(...h), annee: Math.max(...y) - Math.min(...y) };
+                        }),
+                        formation: document.querySelectorAll('#page_cv .cv-formation > li').length,
+                        imagesFormation: document.querySelectorAll('#page_cv .cv-formation img, #page_cv .cv-formation .cv-vignette').length
+                    };
+                });
+                const ici = `à ${largeur} px`;
+                exige(cv.lignes >= 2 && cv.vignettes === cv.lignes, `${ici} : ${cv.vignettes} vignette(s) pour ${cv.lignes} lignes`);
+                exige(!cv.faux.length, `${ici} : la vignette ne dit pas l’année ou l’état de sa ligne — ${cv.faux.join(', ')}`);
+                exige(!cv.vides.length, `${ici} : vignette sans photo ni initiales — ${cv.vides.join(', ')}`);
+                exige(!cv.visibles.length, `${ici} : l’année ou le badge se voient encore dans le texte — ${cv.visibles.join(', ')}`);
+                exige(!cv.parlantes, `${ici} : ${cv.parlantes} vignette(s) lue(s) par les lecteurs d’écran, en double du texte`);
+                exige(!cv.debordent.length, `${ici} : le texte dépasse la hauteur de la vignette — ${cv.debordent.join(', ')}`);
+                // Un pixel de jeu : la première ligne d'une liste n'a pas le
+                // filet de séparation des suivantes.
+                cv.ecarts.forEach((e, i) => {
+                    exige(e.hauteur <= 1.5, `${ici} : les lignes de la liste ${i + 1} n’ont pas la même hauteur (écart ${e.hauteur.toFixed(1)} px)`);
+                    exige(e.annee <= 1.5, `${ici} : l’année ne tombe pas au même endroit dans la liste ${i + 1} (écart ${e.annee.toFixed(1)} px)`);
+                });
+                exige(cv.formation >= 1, `${ici} : la liste des formations n’est plus marquée .cv-formation`);
+                exige(!cv.imagesFormation, `${ici} : une formation porte une image`);
+                exige(!erreurs.length, erreurs.join(' | '));
+
+                // Sur papier : ni vignette ni genre, et l'année revient.
+                await p.emulateMedia({ media: 'print' });
+                const papier = await p.evaluate(() => ({
+                    vues: [...document.querySelectorAll('#page_cv .cv-vignette, #page_cv .cv-genre')]
+                        .filter((e) => getComputedStyle(e).display !== 'none').length,
+                    annees: [...document.querySelectorAll('#page_cv li.cv-item .cv-year')]
+                        .filter((e) => e.getBoundingClientRect().width > 1).length
+                }));
+                exige(!papier.vues, `${papier.vues} vignette(s) ou ligne(s) de genre sur le CV imprimé`);
+                exige(papier.annees === cv.lignes, `sur papier, ${papier.annees} année(s) visibles pour ${cv.lignes} lignes`);
+                await c.close();
+            }
         });
 
         await verifie('sans JavaScript, le site reste lisible', async () => {
