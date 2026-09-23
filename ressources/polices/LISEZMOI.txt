@@ -1,0 +1,28 @@
+POLICES DU SITE — provenance et licence
+=======================================
+
+Ces fichiers sont ceux que servait Google Fonts, rapatriés sur le site
+(voir polices.css). Les quatre familles sont publiées sous la licence
+SIL Open Font License 1.1, qui autorise leur utilisation et leur
+redistribution, y compris sur un site web :
+https://openfontlicense.org
+
+  Inter       Copyright 2016 The Inter Project Authors
+              (https://github.com/rsms/inter)
+  Montserrat  Copyright 2011 The Montserrat Project Authors
+              (https://github.com/JulietaUla/Montserrat)
+  Cinzel      Copyright 2020 The Cinzel Project Authors
+              (https://github.com/NDISCOVER/Cinzel)
+  Caveat      Copyright 2014 The Caveat Project Authors
+              (https://github.com/googlefonts/caveat)
+
+Inter, Montserrat et Cinzel sont les fichiers d'origine, tels que Google
+Fonts les distribue (sous-ensembles latin et latin-ext). Caveat a été
+figée à la graisse 400 (fontTools, varLib.instancer) : le site n'en
+écrit pas d'autre.
+
+POUR LES REMPLACER — par exemple à une nouvelle version d'une famille :
+télécharger la feuille Google Fonts avec l'en-tête d'un navigateur
+récent (sans quoi elle ne propose pas le WOFF2), puis récupérer les
+deux fichiers « latin » et « latin-ext » de chaque famille sous les
+mêmes noms. polices.css n'a pas à changer.
