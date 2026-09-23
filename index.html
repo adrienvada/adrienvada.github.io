@@ -3160,6 +3160,30 @@
         #page_dates {
             --dl-a: rgb(var(--c-gold-ink));
             --dl-sa: rgb(var(--c-on-gold));
+
+            /* LES COULEURS DES MOIS, pour leur liseré. Une teinte par mois, qui
+               suit les saisons : l'automne roux (septembre ambre, octobre
+               orange, novembre corail), l'hiver froid (décembre prune, janvier
+               pervenche, février bleu ciel), le printemps vert (mars sarcelle,
+               avril vert, mai olive), l'été doré (juin, juillet, août). D'un
+               mois à l'autre la teinte glisse ; d'une saison à l'autre elle
+               change de famille.
+               Toutes à la même clarté perçue (OKLCH, L = 0,63) : aucune ne
+               crie plus fort que sa voisine, et chacune garde au moins 3,3:1
+               de contraste sur le fond clair comme sur le fond sombre — un
+               seul jeu de couleurs pour les deux thèmes. */
+            --dl-mois-1: #6684db;
+            --dl-mois-2: #1593d1;
+            --dl-mois-3: #169d97;
+            --dl-mois-4: #469f58;
+            --dl-mois-5: #759731;
+            --dl-mois-6: #978c0d;
+            --dl-mois-7: #a48610;
+            --dl-mois-8: #b27f02;
+            --dl-mois-9: #bc7806;
+            --dl-mois-10: #c86e31;
+            --dl-mois-11: #ce6653;
+            --dl-mois-12: #b668b0;
         }
 
         /* Viser un mois, un spectacle ou une ligne depuis le sommaire. Le
@@ -3167,11 +3191,39 @@
            haut) : on retranche cette marge pour que l'intercalaire arrive
            exactement à sa place d'accroche, et la ligne juste dessous. */
         .dl-groupe {
+            position: relative;
             scroll-margin-top: calc(var(--dl-colle, 72px) - 84px);
+            --dl-lisere: rgb(var(--c-gold-ink));
         }
 
         .dl-groupe+.dl-groupe {
             margin-top: 0.75rem;
+        }
+
+        /* LE LISERÉ. Chaque groupe — un mois, ou un spectacle — porte un
+           trait au bord gauche de la carte, du haut de son intercalaire à sa
+           dernière ligne. Il s'interrompt entre deux groupes : on voit d'un
+           coup d'œil où finit un mois et où commence le suivant. Chaque mois
+           a sa couleur, qui suit les saisons (--dl-mois-*, plus haut) ; un
+           spectacle, la sienne. L'or du site reste pour « Date à préciser ».
+           L'intercalaire, qui reste accroché et couvre ce qui défile, porte
+           le même trait (voir plus bas) : il ne s'interrompt pas sous lui. */
+        .dl-groupe--spectacle {
+            --dl-lisere: var(--dl-a);
+        }
+
+        .dl-groupe::before {
+            content: "";
+            position: absolute;
+            /* le bord de la carte : l'intercalaire, qui déborde de la marge
+               intérieure (p-4), va jusque-là */
+            left: -1rem;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            border-radius: 0 3px 3px 0;
+            background: var(--dl-lisere);
+            pointer-events: none;
         }
 
         /* L'intercalaire reste accroché sous la barre d'onglets pendant
@@ -3190,7 +3242,11 @@
             margin: 0 -1rem 0.15rem;
             padding: 0.6rem 1rem 0.5rem;
             background: rgb(var(--c-surface));
-            border-bottom: 1px solid rgb(var(--c-s200) / 0.7);
+            /* Le liseré de son groupe, à la même place, puis le filet du bas.
+               Deux ombres plutôt qu'une bordure : la première passe par-dessus
+               la seconde, et le filet file SOUS le liseré au lieu de le
+               couper d'un trait clair. */
+            box-shadow: inset 3px 0 0 var(--dl-lisere, transparent), inset 0 -1px 0 rgb(var(--c-s200) / 0.7);
         }
 
         /* Les six pixels entre la barre et l'intercalaire accroché : sans ce
@@ -3376,7 +3432,9 @@
         }
 
         .dl-vers-page:hover {
-            text-decoration-color: var(--dl-a);
+            /* Hors de l'onglet Dates (le carton « Prochainement » du CV),
+               pas de couleur de spectacle : l'or du site. */
+            text-decoration-color: var(--dl-a, rgb(var(--c-gold-ink)));
             text-decoration-thickness: 2px;
         }
 
@@ -3675,16 +3733,6 @@
             padding: 0.5rem 1rem 0.5rem 1.2rem;
         }
 
-        .dl-intercalaire--spectacle::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: var(--dl-a);
-        }
-
         .dl-intercalaire--spectacle h4 {
             font: 600 15px/1.2 Cinzel, serif;
             letter-spacing: 0.02em;
@@ -3748,68 +3796,19 @@
             background: rgb(var(--c-gold) / 0.1);
         }
 
-        /* ── Le sommaire : la prochaine date, la saison d'un regard ── */
+        /* ── Le sommaire : la saison d'un regard ──
+           La prochaine représentation n'y est plus : elle a son carton en
+           tête du CV (voir renderNextDate), et la liste ci-dessous commence
+           par elle. */
         .dates-sommaire {
-            display: grid;
-            gap: 1rem;
             margin-bottom: 1.1rem;
         }
 
-        @media (min-width: 900px) {
-            .dates-sommaire {
-                grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-                align-items: start;
-                gap: 1.5rem;
-            }
-        }
-
-        .dl-prochaine {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            padding: 0.85rem 0.95rem;
-            border-radius: 0.8rem;
-            border: 1px solid rgb(var(--c-s200));
-            border-color: color-mix(in srgb, var(--dl-a) 45%, transparent);
-            background: rgb(var(--c-surface));
-            background: linear-gradient(145deg, color-mix(in srgb, var(--dl-a) 16%, rgb(var(--c-surface))), rgb(var(--c-surface)) 70%);
-        }
-
-        .dl-p-sur,
         .dl-saison-titre {
             font: 700 11px/1.2 Montserrat, sans-serif;
             letter-spacing: 0.14em;
             text-transform: uppercase;
             color: rgb(var(--c-gold-ink));
-        }
-
-        .dl-p-dans {
-            margin-top: 2px;
-            font: 600 20px/1.15 Cinzel, serif;
-            color: rgb(var(--c-text));
-        }
-
-        .dl-p-quand {
-            font: 600 13px/1.35 Inter, sans-serif;
-            color: rgb(var(--c-text));
-        }
-
-        .dl-p-quoi {
-            font-size: 12.5px;
-            line-height: 1.35;
-            color: rgb(var(--c-muted));
-        }
-
-        .dl-p-quoi b {
-            font-weight: 600;
-            color: rgb(var(--c-text));
-        }
-
-        .dl-prochaine .dl-actions {
-            margin-top: 0.5rem;
-        }
-
-        .dl-saison-titre {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
@@ -3841,10 +3840,15 @@
             border-radius: 6px;
             font: 700 11px/1 Inter, sans-serif;
             color: rgb(var(--c-muted));
-        }
-
-        .dl-grille-mois.dl-an {
-            color: rgb(var(--c-gold-ink));
+            /* L'initiale prend la couleur de son mois — celle de son liseré
+               (--dl-mois-*) —, mêlée d'un quart de la couleur du texte : les
+               couleurs des liserés, faites pour un trait, n'ont que 3,3:1 ;
+               ce quart suffit à ce qu'une lettre de 11 px garde 4,5:1 dans
+               les deux thèmes (5,1:1 au pire), sans changer de teinte. Le
+               passage à la nouvelle année se lit dans les couleurs, qui
+               tournent à l'hiver, et dans les intercalaires (« Janvier
+               2027 ») : janvier n'a plus besoin de l'or qui le signalait. */
+            color: color-mix(in oklab, var(--dl-m) 75%, rgb(var(--c-text)));
         }
 
         .dl-m-court {
@@ -4373,18 +4377,45 @@
            perdue ? » se casse en TROIS lignes. On lit alors trois fragments
            empilés au lieu d'un titre.
 
-           Le conteneur enroule déjà (flex-wrap) : il suffit de donner au
-           bouton une base de 100 % pour qu'il descende d'office. Le titre
+           Le conteneur enroule déjà (flex-wrap) : il suffit de donner aux
+           boutons une base de 100 % pour qu'ils descendent d'office. Le titre
            retrouve toute la largeur, et la réservation devient une cible
-           pleine largeur — ce qu'on veut d'une action principale au pouce.
+           pleine largeur — ce qu'on veut d'une action principale au pouce —,
+           l'agenda à côté.
 
            Invisible tant qu'aucune date n'a de `bookingUrl` : sans lien de
            billetterie, le bouton n'est pas rendu du tout. */
+        .next-date-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        /* L'agenda à la hauteur de « Réserver », qui est plus menu ici que
+           dans les cases de l'onglet Dates. */
+        .next-date-actions .dl-agenda {
+            width: 28px;
+            height: 28px;
+        }
+
         @media (max-width: 767px) {
-            #next-date-banner a[data-track="date_booking"] {
+
+            /* Le nom et la date passent sous « Prochainement », sur toute la
+               largeur : à côté de la mention, il ne leur restait qu'une
+               colonne étroite, où la date se coupait en trois. */
+            .next-date-quoi {
                 flex-basis: 100%;
-                justify-content: center;
+            }
+
+            .next-date-actions:has(.next-date-reserver) {
+                flex-basis: 100%;
                 margin-top: 2px;
+            }
+
+            .next-date-reserver {
+                flex: 1;
+                justify-content: center;
             }
         }
 
@@ -5191,7 +5222,8 @@
 
                      Le bandeau lit la MÊME source que la page Dates (dates.js,
                      via splitUpcoming) : rien n'est saisi deux fois, et il ne
-                     peut donc pas la contredire.
+                     peut donc pas la contredire. L'onglet Dates, lui, n'a pas
+                     de carton : sa liste commence déjà par la prochaine date.
 
                      Posé `hidden` : c'est renderNextDate() qui l'ouvre, et
                      seulement s'il reste une représentation à venir. Une saison
@@ -5258,8 +5290,15 @@
                     : [entry];
                 reps.forEach(r => out.push({
                     time: icsToTime(r.icsDate),
+                    icsDate: r.icsDate,
+                    // L'heure telle qu'on l'écrit (« 19h00 », « 14h00 & 20h00 ») ;
+                    // `time`, lui, est l'instant qui sert à classer.
+                    heure: Array.isArray(r.times) && r.times.length ? r.times.join(' & ') : (r.time || ''),
+                    heureBrute: r.time,
+                    heures: r.times,
                     dateLabel: r.dateLabel || entry.dateLabel || '',
                     title: entry.title || '',
+                    subtitle: entry.subtitle || '',
                     location: entry.location || '',
                     bookingUrl: r.bookingUrl || entry.bookingUrl || '',
                     isSchool: Boolean(r.isSchool || entry.isSchool)
@@ -5279,21 +5318,49 @@
             return repli;
         }
 
+        // ── LA PROCHAINE REPRÉSENTATION, EN TÊTE DU CV ──
+        //  Le carton n'est qu'au CV : l'onglet Dates n'en a pas, sa liste
+        //  commence déjà par la prochaine date. Le jour, l'heure et le lieu ;
+        //  la date mène à l'onglet Dates ; « Réserver » et l'agenda.
+        //
+        //  Le nom du spectacle mène à sa page, comme partout dans les dates.
+        //  univers.js, qui sait quelle page, n'arrive qu'en fin de document :
+        //  au rendu fait pendant la lecture, le nom est encore du texte ; celui
+        //  du chargement (DOMContentLoaded) en fait un lien, sans rien déplacer.
+        const JOUR_COURT = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+        // Ce qu'ouvre le bouton agenda du carton (voir la délégation des
+        // boutons agenda, [data-cal-prochaine]).
+        window.calProchaine = null;
+
         function renderNextDate() {
             const bandeau = document.getElementById('next-date-banner');
             if (!bandeau) return;
-            if (typeof SHOW_DATA === 'undefined') { bandeau.hidden = true; return; }
+            const cacher = () => { bandeau.hidden = true; bandeau.innerHTML = ''; bandeau.__rendu = ''; };
+            if (typeof SHOW_DATA === 'undefined') return cacher();
 
             const toutes = flattenUpcoming(splitUpcoming(SHOW_DATA.upcoming).upcoming);
             // Une entrée sans icsDate exploitable ne peut pas être classée :
             // elle ne sert de secours que si aucune autre n'est datée.
             const datees = toutes.filter(r => !isNaN(r.time)).sort((a, b) => a.time - b.time);
             const p = datees[0] || toutes[0];
+            if (!p) return cacher();
 
-            if (!p) { bandeau.hidden = true; return; }
+            // « Ce soir », « Demain » ; sinon le jour, écrit court : « Jeu. 22 oct. ».
+            const datee = !isNaN(p.time);
+            const jour = datee ? JOUR_COURT.format(new Date(p.time)).replace(/^./, c => c.toUpperCase()) : p.dateLabel;
+            const point = '<span class="text-stone-300 mx-1" aria-hidden="true">·</span>';
+            // Le jour et l'heure ne se coupent pas en deux (« Jeu. 22 » puis
+            // « oct. ») ; le lieu, long, passe à la ligne où il peut.
+            const insecable = (t) => t ? `<span class="whitespace-nowrap">${esc(t)}</span>` : '';
+            const quand = [insecable(relativeDayLabel(p.time, jour)), insecable(p.heure), esc(p.location || '')]
+                .filter(Boolean).join(point);
 
-            const quand = relativeDayLabel(p.time, p.dateLabel);
-            const lieu = p.location ? `<span class="text-stone-300 mx-1" aria-hidden="true">·</span>${esc(p.location)}` : '';
+            const trouve = typeof window.spectacleParTitre === 'function' ? window.spectacleParTitre(p.title) : null;
+            const uni = trouve && trouve.uni;
+            const nomClasses = 'text-xs font-bold font-montserrat uppercase tracking-wide text-luxury-textMain';
+            const nom = uni && uni.slug
+                ? `<a class="dl-vers-page ${nomClasses}" href="spectacles/${esc(uni.slug)}/" data-track="date_spectacle" data-track-detail="${esc(uni.title || p.title)}">${esc(p.title)}</a>`
+                : `<span class="${nomClasses}">${esc(p.title)}</span>`;
 
             // Pas de bouton pour une séance scolaire : l'accès y est restreint,
             // et proposer « Réserver » ferait une promesse que la page Dates
@@ -5302,22 +5369,38 @@
             const reserver = (billetterie && !p.isSchool)
                 ? `<a href="${esc(billetterie)}" target="_blank" rel="noopener" data-track="date_booking"
                        data-track-detail="${esc(p.title)}"
-                       class="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-luxury-goldInk text-luxury-onGold text-[11px] font-bold font-montserrat tracking-wider uppercase hover:bg-luxury-goldDeep transition">
-                       Réserver <svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
+                       class="next-date-reserver flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-luxury-goldInk text-luxury-onGold text-[11px] font-bold font-montserrat tracking-wider uppercase hover:bg-luxury-goldDeep transition">
+                       Réserver<span class="sr-only"> (nouvel onglet)</span> <svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
                 : '';
+            // L'agenda, comme sur chaque ligne de l'onglet Dates — seulement
+            // pour une date lisible, sans quoi il n'y a rien à y inscrire.
+            window.calProchaine = datee ? {
+                title: p.title, subtitle: p.subtitle, location: p.location,
+                icsDate: p.icsDate, time: p.heureBrute, times: p.heures, dateLabel: p.dateLabel
+            } : null;
+            const agenda = datee
+                ? `<button type="button" class="dl-agenda" data-cal-prochaine
+                       aria-label="${esc(`Ajouter au calendrier : ${p.title}, ${[jour, p.heure].filter(Boolean).join(' ')}`)}"><svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button>`
+                : '';
+            const actions = reserver || agenda ? `<span class="next-date-actions">${reserver}${agenda}</span>` : '';
 
-            bandeau.innerHTML = `
+            const date = `<a href="#page_dates" data-track="banner_next_date" class="text-[11px] text-luxury-textMuted font-mono break-words min-w-0 hover:text-luxury-goldInk transition">${quand}</a>`;
+            // gap-y-2 : le nom et la date sont deux liens l'un sous l'autre ;
+            // 8 px les tiennent à 24 px de centre à centre, la distance
+            // minimale entre deux cibles tactiles (WCAG 2.5.8).
+            const html = `
                 <div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     <span class="flex items-center gap-1.5 flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
                         <span class="next-date-dot" aria-hidden="true"></span> Prochainement
                     </span>
-                    <a href="#page_dates" data-track="banner_next_date"
-                       class="group flex-[1_1_10rem] min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                        <span class="text-xs font-bold font-montserrat uppercase tracking-wide text-luxury-textMain group-hover:text-luxury-goldInk transition">${esc(p.title)}</span>
-                        <span class="text-[11px] text-luxury-textMuted font-mono break-words min-w-0">${esc(quand)}${lieu}</span>
-                    </a>
-                    ${reserver}
+                    <span class="next-date-quoi flex-[1_1_10rem] min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-2">${nom}${date}</span>
+                    ${actions}
                 </div>`;
+            // Rien n'a changé ? Rien ne bouge : réécrire le carton relancerait
+            // le phare et la pastille, qui ne passent qu'une fois.
+            if (bandeau.__rendu === html) return;
+            bandeau.__rendu = html;
+            bandeau.innerHTML = html;
             bandeau.hidden = false;
         }
 
@@ -6040,9 +6123,9 @@
                          de puces ferait passer une simple liste de dates pour un
                          formulaire. On n'affiche donc que ce dont l'utilisateur
                          a besoin à l'étape où il se trouve. -->
-                    <!-- La prochaine représentation et la saison d'un regard,
-                         écrites par renderDates() (voir dlSommaire). Masquées
-                         pendant une recherche : c'est alors la liste qui compte. -->
+                    <!-- La saison d'un regard, écrite par renderDates() (voir
+                         dlSommaire). Masquée pendant une recherche : c'est
+                         alors la liste qui compte. -->
                     <div id="dates-sommaire" class="dates-sommaire no-print" hidden></div>
 
                     <div class="no-print" id="dates-filters">
@@ -7869,7 +7952,7 @@
                         ? `<a class="dl-spec-lien" href="spectacles/${esc(s.slug)}/" tabindex="-1" aria-hidden="true" data-track="date_spectacle" data-track-detail="${esc(s.titre)}"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
                         : '';
                     const info = [s.genre, dlPluriel(g.n, 'représentation')].filter(Boolean).join(' · ');
-                    return `<section class="dl-groupe" id="${id}" aria-labelledby="${id}-t" style="${dlStyle(s)}">`
+                    return `<section class="dl-groupe dl-groupe--spectacle" id="${id}" aria-labelledby="${id}-t" style="${dlStyle(s)}">`
                         + `<div class="dl-intercalaire dl-intercalaire--spectacle"><span class="dl-vignette" aria-hidden="true">${vignette}</span>`
                         + `<span class="dl-spec-texte"><h4 id="${id}-t" tabindex="-1">${dlVersPage(s, esc(s.titre))}</h4>`
                         + (s.sousTitre ? `<span class="dl-spec-sous">${esc(s.sousTitre)}</span>` : '')
@@ -7881,7 +7964,9 @@
             return dlParMois(entrees).map(g => {
                 const id = `dl-mois-${g.cle}`;
                 const nom = g.a === null ? 'Date à préciser' : `${dlCap(DL_MOIS[g.m])} <span>${g.a}</span>`;
-                return `<section class="dl-groupe" id="${id}" aria-labelledby="${id}-t">`
+                // Le liseré prend la couleur du mois (voir --dl-mois-*).
+                const lisere = g.m === null ? '' : ` data-mois="${g.m + 1}" style="--dl-lisere:var(--dl-mois-${g.m + 1})"`;
+                return `<section class="dl-groupe" id="${id}" aria-labelledby="${id}-t"${lisere}>`
                     + `<div class="dl-intercalaire"><h4 id="${id}-t" tabindex="-1">${nom}</h4><span class="dl-compte">${dlPluriel(g.n, 'représentation')}</span></div>`
                     + g.entrees.map(e => dlLigne(e, vue)).join('')
                     + '</section>';
@@ -7889,33 +7974,18 @@
         }
 
         // ── LE SOMMAIRE ─────────────────────────────────────────────────
-        //  En tête de l'onglet : la prochaine représentation, puis la saison
-        //  d'un regard — les spectacles en lignes, les mois en colonnes, un
-        //  rond par mois joué. Ce tableau ne filtre rien, il MÈNE : un mois,
-        //  un spectacle ou un rond conduisent aux lignes qu'ils résument
-        //  (voir dlAller). Filtrer aurait fait disparaître le reste de la
-        //  page sous les doigts ; y conduire ne retire rien.
-        function dlDans(ecart) {
-            if (ecart <= 0) return 'Aujourd’hui';
-            if (ecart === 1) return 'Demain';
-            if (ecart < 14) return `Dans ${ecart} jours`;
-            if (ecart < 60) return `Dans ${Math.round(ecart / 7)} semaines`;
-            return `Dans ${Math.round(ecart / 30.44)} mois`;
-        }
-
+        //  En tête de la carte de la saison : la saison d'un regard — les
+        //  spectacles en lignes, les mois en colonnes, un rond par mois joué.
+        //  Ce tableau ne filtre rien, il MÈNE : un mois, un spectacle ou un
+        //  rond conduisent aux lignes qu'ils résument (voir dlAller).
+        //  Filtrer aurait fait disparaître le reste de la page sous les
+        //  doigts ; y conduire ne retire rien. (La prochaine représentation
+        //  n'est pas répétée ici : elle a son carton en tête du CV — voir
+        //  renderNextDate —, et la liste commence par elle.)
         function dlSommaire(entrees) {
             const datees = entrees.filter(e => e.debut);
             if (!datees.length) return '';
-
             const e0 = datees[0];
-            const p0 = e0.perfs.find(p => p.jour && p.jour.iso === e0.debut.iso) || e0.perfs[0];
-            const ville = e0.show.city || placeOf(e0.show);
-            const prochaine = `<div class="dl-prochaine" style="${dlStyle(e0.spectacle)}">`
-                + '<span class="dl-p-sur">Prochaine représentation</span>'
-                + `<span class="dl-p-dans">${esc(dlDans(Math.round((e0.debut.t - todayStamp()) / 86400000)))}</span>`
-                + `<span class="dl-p-quand">${esc(dlCap(`${DL_JOURS[p0.jour.js]} ${dlQuantieme(p0.jour)} ${DL_MOIS[p0.jour.m]}`))}${p0.heure ? ` · ${esc(p0.heure)}` : ''}</span>`
-                + `<span class="dl-p-quoi"><b>${dlVersPage(e0.spectacle, esc(e0.titre))}</b>${ville ? ` · ${esc(ville)}` : ''}</span>`
-                + `<div class="dl-actions">${dlAction(p0, e0, false)}${dlAgenda(p0, e0)}</div></div>`;
 
             // Les mois, du premier au dernier joué : douze au plus.
             let dernier = e0.debut;
@@ -7936,9 +8006,11 @@
             h += mois.map(({ a, m }) => {
                 const lettres = `<span class="dl-m-lettre" aria-hidden="true">${DL_MOIS[m].charAt(0).toUpperCase()}</span><span class="dl-m-court" aria-hidden="true">${DL_MOIS_COURTS[m]}</span>`;
                 const cle = `${a}-${m + 1}`;
+                // L'initiale porte la couleur du mois, celle de son liseré.
+                const couleur = ` style="--dl-m:var(--dl-mois-${m + 1})"`;
                 return ouverts.has(cle)
-                    ? `<button type="button" class="dl-grille-mois${m === 0 ? ' dl-an' : ''}" data-dl-mois="${cle}" aria-label="${esc(`Aller à ${DL_MOIS[m]} ${a}`)}">${lettres}</button>`
-                    : `<span class="dl-grille-mois${m === 0 ? ' dl-an' : ''}">${lettres}</span>`;
+                    ? `<button type="button" class="dl-grille-mois" data-dl-mois="${cle}"${couleur} aria-label="${esc(`Aller à ${DL_MOIS[m]} ${a}`)}">${lettres}</button>`
+                    : `<span class="dl-grille-mois"${couleur}>${lettres}</span>`;
             }).join('');
             dlParSpectacle(datees).forEach(g => {
                 const s = g.s;
@@ -7951,7 +8023,7 @@
                     h += `<button type="button" class="dl-grille-case" data-dl-aller="${cible.k}" style="${dlStyle(s)}" aria-label="${esc(`${s.titre}, ${DL_MOIS[m]} ${a} : ${dlPluriel(n, 'représentation')}`)}"><span class="dl-rond" style="--d:${10 + 3 * Math.min(n, 5)}px">${n > 1 ? n : ''}</span></button>`;
                 });
             });
-            return prochaine + h + '</div></nav>';
+            return h + '</div></nav>';
         }
 
         // Le rangement choisi est retenu d'une visite à l'autre.
@@ -8128,13 +8200,17 @@
         }
 
         // Délégation : les boutons agenda des dates (le rendu les refait à
-        // chaque filtre, d'où l'écoute au niveau du document).
+        // chaque filtre, d'où l'écoute au niveau du document), et celui du
+        // carton « Prochainement », qui porte sa date à part : il vit dans le
+        // CV, hors des rendus de l'onglet Dates.
         document.addEventListener('click', (e) => {
-            const cal = e.target.closest('[data-cal-index]');
+            const cal = e.target.closest('[data-cal-index], [data-cal-prochaine]');
             if (!cal) return;
             e.preventDefault();
             e.stopPropagation();
-            const data = window.renderedEventsData[+cal.dataset.calIndex];
+            const data = cal.hasAttribute('data-cal-prochaine')
+                ? window.calProchaine
+                : window.renderedEventsData[+cal.dataset.calIndex];
             if (data) openCalendarModal(data);
         });
 

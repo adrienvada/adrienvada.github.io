@@ -15,10 +15,13 @@
  *    · la règle de l'ouverture (lien direct : pas de rideau ; depuis un
  *      autre site : une fois) ;
  *    · la fenêtre d'agenda d'un univers ouvert depuis le CV ;
- *    · l'onglet Dates : feuilles, intercalaires de mois, séances en
- *      cases (une date seule aussi), nom du spectacle qui mène à sa
- *      page, rangement par spectacle, sommaire qui mène aux dates, une
- *      image pour chaque représentation annoncée aux moteurs ;
+ *    · l'onglet Dates : feuilles, intercalaires de mois et leur liseré
+ *      (une couleur par mois, que reprennent les initiales de la saison
+ *      d'un regard), séances en cases (une date seule aussi),
+ *      nom du spectacle qui mène à sa page, rangement par spectacle,
+ *      sommaire qui mène aux dates, une image pour chaque représentation
+ *      annoncée aux moteurs ; le carton « Prochainement », en tête du CV
+ *      et nulle part ailleurs ;
  *    · l'impression sans les pastilles ▶ ;
  *    · le site sans JavaScript ;
  *    · les pages spectacle (h1, <main>, données structurées, une image
@@ -165,7 +168,7 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('l’onglet Dates : feuilles, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire, une image par représentation', async () => {
+        await verifie('l’onglet Dates : feuilles, liserés, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire, une image par représentation — et le carton « Prochainement », au CV seulement', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 } });
             const p = await c.newPage();
             const erreurs = guette(p);
@@ -203,6 +206,7 @@ function exige(condition, message) {
                 ];
                 buildFilterChips();
                 renderDates();
+                renderNextDate();
             });
             const parDate = await p.evaluate(() => {
                 const liste = document.getElementById('upcoming-dates-container');
@@ -263,7 +267,7 @@ function exige(condition, message) {
                 return {
                     ligne: titres.filter((t) => /Bérénice/.test(t.textContent)).map((t) => t.querySelector('a.dl-vers-page')?.getAttribute('href') || null),
                     sansPage: titres.filter((t) => /vérification/.test(t.textContent)).some((t) => t.querySelector('a')),
-                    prochaine: document.querySelector('#dates-sommaire .dl-prochaine a.dl-vers-page')?.getAttribute('href') || null,
+                    prochaine: document.querySelector('#next-date-banner a.dl-vers-page')?.getAttribute('href') || null,
                     morts
                 };
             });
@@ -271,6 +275,58 @@ function exige(condition, message) {
             exige(!liens.sansPage, 'le nom d’un spectacle sans page porte un lien');
             exige(liens.prochaine === 'spectacles/berenice/', 'la prochaine représentation ne mène pas à la page du spectacle');
             exige(!liens.morts.length, `lien(s) mort(s) : ${liens.morts.join(', ')}`);
+
+            // Le carton « Prochainement » est en tête du CV, et seulement là :
+            // l'onglet Dates n'en a pas, sa liste commence par la prochaine
+            // date. Son agenda ouvre la fenêtre de la prochaine date (le CV
+            // est masqué pendant ce test, d'où le clic donné par le script).
+            const carton = await p.evaluate(() => {
+                const cv = document.getElementById('next-date-banner');
+                return {
+                    cv: !!cv && !cv.hidden && /Bérénice/.test(cv.textContent),
+                    dates: !document.querySelector('#page_dates .next-date-shine')
+                };
+            });
+            exige(carton.cv, 'le carton « Prochainement » manque en tête du CV');
+            exige(carton.dates, 'l’onglet Dates a un carton « Prochainement » : il ne doit être qu’au CV');
+            await p.evaluate(() => document.querySelector('#next-date-banner [data-cal-prochaine]').click());
+            await p.waitForTimeout(300);
+            exige(await p.evaluate(() => /Bérénice/.test(document.getElementById('cal-modal-title')?.textContent || '')),
+                'l’agenda du carton « Prochainement » n’ouvre pas sa fenêtre');
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(300);
+
+            // Chaque mois porte son liseré, à sa couleur — douze couleurs, qui
+            // suivent les saisons, toutes différentes —, et son intercalaire
+            // le prolonge.
+            const lisere = await p.evaluate(() => {
+                const page = document.getElementById('page_dates');
+                const g = document.querySelector('#upcoming-dates-container .dl-groupe[data-mois]');
+                const avant = g && getComputedStyle(g, '::before');
+                const entete = g && g.querySelector('.dl-intercalaire');
+                const style = getComputedStyle(page);
+                const couleurs = Array.from({ length: 12 }, (_, i) => style.getPropertyValue(`--dl-mois-${i + 1}`).trim());
+                // La couleur attendue, telle que le navigateur la rend.
+                const sonde = document.createElement('span');
+                sonde.style.color = g ? `var(--dl-mois-${g.dataset.mois})` : '';
+                page.appendChild(sonde);
+                const attendue = getComputedStyle(sonde).color;
+                // Dans la saison d'un regard, les initiales des mois portent
+                // le même code couleur : toutes différentes, aucune restée grise.
+                sonde.style.color = 'rgb(var(--c-muted))';
+                const grise = getComputedStyle(sonde).color;
+                sonde.remove();
+                const initiales = [...document.querySelectorAll('#dates-sommaire .dl-grille-mois')].map((x) => getComputedStyle(x).color);
+                return {
+                    trait: !!avant && avant.width === '3px' && avant.backgroundColor === attendue,
+                    entete: !!entete && /inset/.test(getComputedStyle(entete).boxShadow),
+                    douze: couleurs.every(Boolean) && new Set(couleurs).size === 12,
+                    initiales: initiales.length > 0 && !initiales.includes(grise) && new Set(initiales).size === initiales.length
+                };
+            });
+            exige(lisere.trait && lisere.entete && lisere.douze,
+                `le liseré des mois manque ou n’a pas la couleur de son mois : ${JSON.stringify(lisere)}`);
+            exige(lisere.initiales, 'les initiales des mois, dans la saison d’un regard, n’ont pas leur couleur');
 
             // L'agenda d'une case de série ouvre sa fenêtre.
             await p.locator('#upcoming-dates-container .dl--serie .dl-seance .dl-agenda').first().click();
