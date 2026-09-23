@@ -26,6 +26,14 @@ CE QUE LE SCRIPT PRODUIT, à côté des originaux servis :
       plein cadre sont lus dans univers.js, comme le fait
       prepare-univers-photos.py.
 
+  ressources/images/univers/<slug>/<nom>-240.webp     la COUVERTURE seule
+      La première photo du montage de chaque univers — celle que montrent
+      le répertoire et l'onglet Dates — reçoit en plus une version de
+      240 px. L'onglet Dates l'affiche sur 40 px de large, en tête de
+      chaque spectacle quand on range les dates par spectacle : la plus
+      petite des autres versions, 640 px, pesait jusqu'à 86 Ko pour cette
+      vignette.
+
   ressources/images/galerie/vignettes/<nom>-{320,640,960}.webp
       Les vignettes du book, recadrées en 3:4 (le format de la grille),
       en visant le haut du cadre — là où sont les visages.
@@ -59,6 +67,7 @@ VIGNETTES = os.path.join(GALERIE, "vignettes")
 # l'original qui sert. Le plein cadre y ajoute 1920 (voir plus haut).
 LARGEURS_UNIVERS = (640, 1280)
 LARGEUR_PLEIN = 1920
+LARGEUR_COUVERTURE = 240
 # Trois pour la galerie : sa grille passe de quatre colonnes à une seule
 # (boutons − / +), et la vignette doit rester nette à chaque cran.
 LARGEURS_GALERIE = (320, 640, 960)
@@ -110,22 +119,46 @@ def photos_plein_cadre():
     return out
 
 
+def couvertures():
+    """{(slug, numéro)} : la première photo du montage de chaque univers.
+
+    C'est la règle de photoPrincipale() dans univers-montage.js : le
+    premier temps qui montre des photos, sa première photo.
+    """
+    src = open(os.path.join(ROOT, "univers.js"), encoding="utf-8").read()
+    cut = src.find("MOTEUR —")
+    if cut > 0:
+        src = src[:cut]
+    marks = [(m.start(), m.group(1)) for m in re.finditer(r"slug:\s*'([a-z]+)'", src)]
+    out = set()
+    for i, (pos, slug) in enumerate(marks):
+        end = marks[i + 1][0] if i + 1 < len(marks) else len(src)
+        m = re.search(r"\bp:\s*\[\s*(\d+)", src[pos:end])
+        if m:
+            out.add((slug, int(m.group(1))))
+    return out
+
+
 PLEIN_CADRE = None
+COUVERTURES = None
 
 
 def largeurs_pour(source):
     """Les largeurs à fabriquer pour cette photo d'univers."""
-    global PLEIN_CADRE
+    global PLEIN_CADRE, COUVERTURES
     if PLEIN_CADRE is None:
         PLEIN_CADRE = photos_plein_cadre()
+        COUVERTURES = couvertures()
     slug = os.path.basename(os.path.dirname(source))
     nom = os.path.basename(source)[:-len(".jpg")]
     plein = nom.isdigit() and (slug, int(nom)) in PLEIN_CADRE
-    return LARGEURS_UNIVERS + ((LARGEUR_PLEIN,) if plein else ())
+    couverture = nom.isdigit() and (slug, int(nom)) in COUVERTURES
+    return (((LARGEUR_COUVERTURE,) if couverture else ())
+            + LARGEURS_UNIVERS + ((LARGEUR_PLEIN,) if plein else ()))
 
 
 def variantes_univers(source, forcer):
-    """<nom>.jpg → <nom>-640.webp, <nom>-1280.webp[, <nom>-1920.webp]."""
+    """<nom>.jpg → [<nom>-240.webp, ]<nom>-640.webp, <nom>-1280.webp[, <nom>-1920.webp]."""
     base = source[:-len(".jpg")]
     faites = []
     im = None
