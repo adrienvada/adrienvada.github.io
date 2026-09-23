@@ -353,6 +353,9 @@
             --panel-border: rgba(255, 255, 255, 0.05);
             --row-hover: rgba(255, 255, 255, 0.045);
             --page-glow: radial-gradient(ellipse 90% 60% at 50% 0%, #17140f 0%, #0b0906 55%, #060504 100%);
+            /* Le papier des feuilles d'éphéméride (onglet Dates) : un ton
+               au-dessus de la carte, pour que la feuille s'en détache. */
+            --dl-papier: rgb(33 29 23);
         }
 
         :root[data-theme="light"] {
@@ -388,6 +391,7 @@
             --panel-border: rgba(0, 0, 0, 0.03);
             --row-hover: rgba(0, 0, 0, 0.02);
             --page-glow: none;
+            --dl-papier: #ffffff;
         }
 
         /* Surfaces toujours sombres (lecteur vidéo, ouverture de scène) :
@@ -641,7 +645,6 @@
         .glass-card,
         .filter-chip,
         .cv-item,
-        .date-row-clickable,
         [data-cal-index] {
             transition:
                 background-color var(--dur-base) var(--ease-out),
@@ -678,7 +681,6 @@
 
         .cv-row-toggle:active,
         summary:active,
-        .date-row-clickable:active,
         #nav-tabs-container a:active {
             transform: scale(0.988);
         }
@@ -3110,13 +3112,6 @@
             color: rgb(var(--c-on-gold)) !important;
         }
 
-        /* Disparition des lignes filtrées : on anime, mais on retire bien
-           l'élément du flux à la fin (display:none via .is-filtered-out
-           appliqué après la transition) pour ne pas laisser de trous. */
-        .date-result {
-            transition: opacity 0.25s ease;
-        }
-
         /* ── Archives : même tiroir que les spectacles du CV ──
            On n'utilise pas <details> : son contenu vit dans une boîte gérée
            par le navigateur, dont l'animation reste inégale d'un moteur à
@@ -3154,51 +3149,440 @@
             transform: rotate(180deg);
         }
 
-        /* ── Smooth expand panels for multi-date series ── */
-        .date-expand-panel {
+        /* ══════════════════════════════════════════════════════════════
+           DATES À VENIR — la ligne et ses intercalaires
+           Le dessin est expliqué avec le code, au-dessus de renderDates().
+           Une seule ligne sert aux deux rangements (par date, par
+           spectacle) ; les variables --dl-a / --dl-sa portent la couleur
+           du spectacle et la couleur lisible sur elle, posées ligne par
+           ligne depuis la palette de son univers (univers.js).
+           ══════════════════════════════════════════════════════════════ */
+        .dates-liste {
+            --dl-a: rgb(var(--c-gold-ink));
+            --dl-sa: rgb(var(--c-on-gold));
+        }
+
+        .dl-groupe+.dl-groupe {
+            margin-top: 0.75rem;
+        }
+
+        /* L'intercalaire reste accroché sous la barre d'onglets pendant
+           qu'on parcourt son mois : --dl-colle est mesurée par le script
+           (hauteur de la barre + son retrait de 8 px). Il déborde de la
+           marge intérieure de la carte (p-4) pour en prendre toute la
+           largeur, et son fond est plein : du texte défile dessous. */
+        .dl-intercalaire {
+            position: sticky;
+            top: var(--dl-colle, 72px);
+            z-index: 5;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin: 0 -1rem 0.15rem;
+            padding: 0.6rem 1rem 0.5rem;
+            background: rgb(var(--c-surface));
+            border-bottom: 1px solid rgb(var(--c-s200) / 0.7);
+        }
+
+        /* Les six pixels entre la barre et l'intercalaire accroché : sans ce
+           cache, le texte qui défile y passait en tranche. */
+        .dl-intercalaire::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 100%;
+            height: 8px;
+            background: inherit;
+        }
+
+        .dl-intercalaire h4 {
+            font: 700 12px/1.25 Montserrat, sans-serif;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: rgb(var(--c-gold-ink));
+        }
+
+        .dl-intercalaire h4 span {
+            color: rgb(var(--c-muted));
+            font-weight: 600;
+            letter-spacing: 0.1em;
+        }
+
+        .dl-compte {
+            flex-shrink: 0;
+            font-size: 12px;
+            color: rgb(var(--c-muted));
+        }
+
+        /* LA LIGNE. Téléphone : la feuille, et à côté la date, le titre, le
+           lieu ; dessous, les séances d'une série sur toute la largeur, ou
+           les boutons d'une date seule sous son texte. Grand écran : les
+           séances passent à droite, sur la même ligne. */
+        .dl {
             display: grid;
-            grid-template-rows: 0fr;
-            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
-                visibility 0s linear var(--dur-panel);
-            opacity: 0;
-            /* Replié, hors du parcours au clavier — voir .bio-collapse. */
-            visibility: hidden;
+            grid-template-columns: 54px minmax(0, 1fr);
+            column-gap: 0.85rem;
+            row-gap: 0.65rem;
+            padding: 0.85rem 0.2rem;
+            border-bottom: 1px solid rgb(var(--c-s200) / 0.55);
+            border-radius: 0.6rem;
+            scroll-margin-top: calc(var(--dl-colle, 72px) + 48px);
+            transition: background-color 0.5s ease, box-shadow 0.5s ease;
         }
 
-        .date-expand-panel.expanded {
-            grid-template-rows: 1fr;
-            opacity: 1;
-            visibility: visible;
-            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
-                visibility 0s;
+        .dl-groupe>.dl:last-child {
+            border-bottom: 0;
         }
 
-        .date-expand-panel>.date-expand-inner {
+        .dl--serie .dl-droite {
+            grid-column: 1 / -1;
+        }
+
+        .dl--seule .dl-droite {
+            grid-column: 2;
+            margin-top: -0.25rem;
+        }
+
+        /* La ligne visée depuis le sommaire s'éclaire un instant. */
+        .dl.dl-eclaire {
+            background: rgb(var(--c-gold) / 0.12);
+            box-shadow: 0 0 0 1.5px rgb(var(--c-gold-ink));
+        }
+
+        .dl:focus {
+            outline: none;
+        }
+
+        .dl:focus-visible {
+            box-shadow: 0 0 0 2px rgb(var(--c-gold-ink));
+        }
+
+        @media (min-width: 768px) {
+            .dl {
+                grid-template-columns: 58px minmax(0, 1fr) minmax(0, 1.2fr);
+                column-gap: 1.1rem;
+                align-items: start;
+            }
+
+            .dl--serie .dl-droite,
+            .dl--seule .dl-droite {
+                grid-column: 3;
+                margin-top: 0;
+            }
+
+            .dl--seule .dl-droite {
+                align-self: center;
+                justify-self: end;
+            }
+        }
+
+        /* LA FEUILLE D'ÉPHÉMÉRIDE. Le mois dans le bandeau, à la couleur du
+           spectacle ; le quantième ; le jour. Une série de plusieurs jours
+           empile ses feuilles (trois au plus). Décorative : la date entière
+           est écrite à côté, c'est elle que lisent les lecteurs d'écran. */
+        .dl-pile {
+            position: relative;
+            width: 54px;
+            height: 66px;
+            margin-top: 8px;
+        }
+
+        .dl-feuille {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             overflow: hidden;
+            border-radius: 7px;
+            background: var(--dl-papier);
+            border: 1px solid rgb(var(--c-s200));
+            box-shadow: 0 1px 3px rgb(0 0 0 / 0.18);
         }
 
-        /* Clickable date row hover effect */
-        .date-row-clickable {
-            cursor: pointer;
+        .dl-derriere {
+            background: linear-gradient(var(--dl-a) 0 18px, var(--dl-papier) 18px);
+            transform: translate(4px, -4px);
+            opacity: 0.75;
         }
 
-        .date-row-clickable:hover {
-            border-color: rgb(var(--c-gold) / 0.45) !important;
-            box-shadow: 0 0 0 1px rgb(var(--c-gold) / 0.14);
-            background: var(--row-hover);
+        .dl-derriere--2 {
+            transform: translate(8px, -8px);
+            opacity: 0.5;
         }
 
-        .date-row-clickable:active {
-            transform: scale(0.995);
+        .dl-bande {
+            align-self: stretch;
+            height: 18px;
+            background: var(--dl-a);
+            color: var(--dl-sa);
+            font: 700 11px/18px Montserrat, sans-serif;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-align: center;
         }
 
-        /* Chevron rotation for multi-date toggles */
-        .date-toggle-chevron {
-            transition: transform var(--dur-panel) var(--ease-panel);
+        .dl-num {
+            margin-top: 6px;
+            font: 600 23px/1 Inter, sans-serif;
+            font-variant-numeric: tabular-nums;
+            color: rgb(var(--c-text));
         }
 
-        .date-toggle-chevron.rotated {
-            transform: rotate(180deg);
+        .dl-jour {
+            margin-top: 4px;
+            font: 600 11px/1 Inter, sans-serif;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: rgb(var(--c-muted));
+        }
+
+        .dl-corps {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-top: 4px;
+        }
+
+        .dl-quand {
+            font: 600 13px/1.35 Inter, sans-serif;
+            color: rgb(var(--c-gold-ink));
+        }
+
+        .dl-heure--flou {
+            font-style: italic;
+            font-weight: 500;
+            color: rgb(var(--c-muted));
+        }
+
+        .dl-proche {
+            display: inline-block;
+            margin-right: 0.4rem;
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: rgb(var(--c-gold-ink));
+            color: rgb(var(--c-on-gold));
+            font: 700 11px/1.5 Montserrat, sans-serif;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            vertical-align: 1px;
+        }
+
+        .dl-titre {
+            font: 700 14px/1.25 Inter, sans-serif;
+            color: rgb(var(--c-text));
+        }
+
+        .dl-sous {
+            font-weight: 400;
+            font-style: italic;
+            font-size: 12px;
+            color: rgb(var(--c-muted));
+        }
+
+        .dl-lieu {
+            font-size: 12.5px;
+            line-height: 1.35;
+            color: rgb(var(--c-muted));
+        }
+
+        .dl-lieu .ico {
+            margin-right: 3px;
+            font-size: 10px;
+            color: rgb(var(--c-gold-ink));
+        }
+
+        /* LES BOUTONS. « Réserver » est l'action qui compte le plus : un
+           aplat, comme partout sur le site. L'agenda, à côté, en pictogramme. */
+        .dl-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dl-reserver {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 11px;
+            border-radius: 8px;
+            background: rgb(var(--c-gold-ink));
+            color: rgb(var(--c-on-gold));
+            font: 700 11px/1 Inter, sans-serif;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+            transition: background-color var(--dur-quick) ease;
+        }
+
+        .dl-reserver:hover {
+            background: rgb(var(--c-gold-deep));
+        }
+
+        .dl-reserver .ico {
+            font-size: 10px;
+        }
+
+        .dl-etat {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            border: 1px solid rgb(var(--c-s200));
+            color: rgb(var(--c-muted));
+            font: 500 12px/1.25 Inter, sans-serif;
+        }
+
+        .dl-etat .ico {
+            flex-shrink: 0;
+            font-size: 11px;
+        }
+
+        .dl-etat--attente {
+            color: rgb(var(--c-warn));
+            border-color: rgb(var(--c-warn) / 0.45);
+        }
+
+        .dl-agenda {
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid rgb(var(--c-s200));
+            color: rgb(var(--c-gold-ink));
+            transition: border-color var(--dur-quick) ease, background-color var(--dur-quick) ease;
+        }
+
+        .dl-agenda:hover {
+            border-color: rgb(var(--c-gold));
+            background: rgb(var(--c-gold) / 0.1);
+        }
+
+        .dl-agenda .ico {
+            font-size: 14px;
+        }
+
+        /* LES SÉANCES D'UNE SÉRIE : une case chacune, deux par ligne au
+           téléphone. Une séance scolaire a un bord en pointillé : elle
+           n'est pas ouverte au public. */
+        .dl-seances {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        @media (min-width: 768px) {
+            .dl-seances {
+                grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
+            }
+
+            /* Sur une case large, l'agenda reste à côté de « Réserver »
+               plutôt que de partir à l'autre bout. */
+            .dl-s-bas {
+                justify-content: flex-start;
+            }
+        }
+
+        .dl-seance {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 7px;
+            min-width: 0;
+            padding: 8px 8px 8px 10px;
+            border-radius: 9px;
+            border: 1px solid rgb(var(--c-s200));
+            background: var(--panel-bg);
+        }
+
+        .dl-seance--scolaire {
+            border-style: dashed;
+        }
+
+        .dl-s-quand {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 1px 7px;
+            min-width: 0;
+        }
+
+        .dl-s-jour {
+            font: 500 12.5px/1.2 Inter, sans-serif;
+            color: rgb(var(--c-muted));
+            white-space: nowrap;
+        }
+
+        .dl-s-jour b {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: rgb(var(--c-text));
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dl-s-heure {
+            font: 500 13px/1.25 Inter, sans-serif;
+            color: rgb(var(--c-text));
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dl-s-heure--fort {
+            font-size: 14.5px;
+            font-weight: 700;
+        }
+
+        .dl-s-heure--flou {
+            font-size: 12px;
+            font-style: italic;
+            color: rgb(var(--c-muted));
+        }
+
+        .dl-s-bas {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .dl-seance .dl-etat {
+            min-width: 0;
+            padding: 0;
+            border: 0;
+            font-size: 11.5px;
+        }
+
+        .dl-seance .dl-reserver {
+            padding: 7px 9px;
+        }
+
+        .dl-seance .dl-agenda {
+            width: 32px;
+            height: 32px;
+        }
+
+        .dl-vide {
+            padding: 0.5rem;
+            font-size: 12px;
+            font-style: italic;
+            color: rgb(var(--c-muted));
+        }
+
+        @media print {
+            .dl-intercalaire {
+                position: static;
+            }
+
+            .dl-agenda {
+                display: none !important;
+            }
         }
 
         /* ══════════════════════════════════════════════════════════════
@@ -5389,7 +5773,7 @@
                     </div>
 
                     <!-- Dates container rendu dynamiquement par renderDates() depuis dates.js -->
-                    <div class="space-y-1.5 text-sm md:text-[15px] leading-tight" id="upcoming-dates-container">
+                    <div class="dates-liste" id="upcoming-dates-container">
                     </div>
                 </section>
 
@@ -6323,6 +6707,11 @@
             suivreBarreCollante();
             setupDateFilters();   // avant renderDates : construit les puces
             renderDates();
+            dlMesurerBarre();
+            window.addEventListener('resize', dlMesurerBarre);
+            if ('ResizeObserver' in window && document.getElementById('nav-barre')) {
+                new ResizeObserver(dlMesurerBarre).observe(document.getElementById('nav-barre'));
+            }
             renderNextDate();     // lit la même source, sans dépendre des filtres
             setupCvDrawers();
             initAudioPlayers();
@@ -6467,14 +6856,6 @@
         //  chemin que la page Dates. Le bandeau ne peut donc pas la
         //  contredire, et une date ajoutée là-bas apparaît ici sans rien faire.
         // ════════════════════════════════════════════════════════════════
-
-        function toggleDatePanel(panelId, btn) {
-            const panel = document.getElementById(panelId);
-            const chevron = document.getElementById('chevron-' + panelId.replace('panel-', ''));
-            if (panel) panel.classList.toggle('expanded');
-            if (chevron) chevron.classList.toggle('rotated');
-            if (btn) btn.setAttribute('aria-expanded', panel && panel.classList.contains('expanded') ? 'true' : 'false');
-        }
 
         // ════════════════════════════════════════════════════════════════
         //  TIROIRS DU CV — prochaines représentations d'un spectacle
@@ -6860,6 +7241,246 @@
             });
         }
 
+        // ════════════════════════════════════════════════════════════════
+        //  LES DATES À VENIR — une feuille, une date écrite, des séances
+        // ════════════════════════════════════════════════════════════════
+        //  Chaque entrée de dates.js (une date seule, ou une série : même
+        //  spectacle, même lieu, soirées rapprochées) devient UNE ligne :
+        //
+        //    · une FEUILLE D'ÉPHÉMÉRIDE — le mois dans un bandeau à la
+        //      couleur du spectacle, le quantième, le jour. Une série de
+        //      plusieurs jours empile ses feuilles. Elle est décorative
+        //      (aria-hidden) : la date entière est écrite juste à côté ;
+        //    · la DATE EN TOUTES LETTRES — « Jeudi 22 et vendredi 23
+        //      octobre » —, puis le titre et le lieu. L'ancienne étiquette
+        //      en police machine, abrégée, avec l'année sur chaque ligne, se
+        //      déchiffrait plus qu'elle ne se lisait, et le jour de la
+        //      semaine y manquait ;
+        //    · les SÉANCES. Une date seule garde ses boutons dans la ligne.
+        //      Une série donne une case à chaque séance — jour, heure,
+        //      « Réserver », agenda — au lieu de les cacher derrière un
+        //      chevron : c'était un toucher de plus pour réserver, et
+        //      « à quelle heure, le 23 ? » demandait d'ouvrir quoi que ce
+        //      soit.
+        //
+        //  Les lignes se rangent sous un INTERCALAIRE par mois, qui reste
+        //  accroché sous la barre d'onglets pendant qu'on parcourt ce mois.
+        // ════════════════════════════════════════════════════════════════
+        const DL_JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+        const DL_JOURS_COURTS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+        const DL_MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
+            'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+        const DL_MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.',
+            'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
+        function dlJour(icsDate) {
+            const t = icsToTime(icsDate);
+            if (isNaN(t)) return null;
+            const d = new Date(t);
+            return { t, iso: icsDate, a: d.getFullYear(), m: d.getMonth(), j: d.getDate(), js: d.getDay() };
+        }
+        // « 1er décembre » : le premier du mois s'écrit en ordinal.
+        const dlQuantieme = (d) => (d.j === 1 ? '1er' : String(d.j));
+        const dlCap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+        const dlPluriel = (n, mot) => `${n}\u00a0${mot}${n > 1 ? 's' : ''}`;
+
+        // « jeudi 22 octobre » · « jeudi 22 et vendredi 23 octobre » ·
+        // « du mardi 18 au vendredi 21 mai » · « samedi 31 octobre et
+        // dimanche 1er novembre ».
+        function dlDateEnLettres(jours, avecAnnee) {
+            const f = (d) => `${DL_JOURS[d.js]} ${dlQuantieme(d)}`;
+            const a = jours[0], b = jours[jours.length - 1];
+            const annee = avecAnnee ? ` ${b.a}` : '';
+            if (jours.length === 1) return `${f(a)} ${DL_MOIS[a.m]}${annee}`;
+            const lien = jours.length === 2 ? ' et ' : ' au ';
+            const du = jours.length === 2 ? '' : 'du ';
+            const premier = a.m === b.m && a.a === b.a ? f(a) : `${f(a)} ${DL_MOIS[a.m]}`;
+            return `${du}${premier}${lien}${f(b)} ${DL_MOIS[b.m]}${annee}`;
+        }
+
+        // « jeudi 22 octobre 2026 à 19h00 » — pour les libellés lus à voix
+        // haute, qui ne voient ni la feuille ni l'intercalaire du mois.
+        function dlQuandComplet(p) {
+            if (!p.jour) return p.dateLabel;
+            return `${DL_JOURS[p.jour.js]} ${dlQuantieme(p.jour)} ${DL_MOIS[p.jour.m]} ${p.jour.a}`
+                + (p.heure ? ` à ${p.heure}` : '');
+        }
+
+        // LA COULEUR DU SPECTACLE vient de son univers (univers.js), relu par
+        // le même rapprochement de titres que le CV et le calendrier : jamais
+        // une couleur inventée ici. Sans univers, l'or du site.
+        const dlSpectacles = new Map();
+        function dlSpectacle(titre) {
+            const cle = norm(titre).replace(/[\s\u00a0\u202f]+/g, ' ').trim();
+            if (dlSpectacles.has(cle)) return dlSpectacles.get(cle);
+            const trouve = typeof window.spectacleParTitre === 'function' ? window.spectacleParTitre(titre) : null;
+            const uni = trouve && trouve.uni;
+            const palette = (uni && uni.palette) || {};
+            const nom = (uni && uni.title) || titre;
+            const info = {
+                cle,
+                titre: nom,
+                sousTitre: (uni && uni.subtitle) || '',
+                genre: (uni && uni.genre) || '',
+                // Le nom court, pour le tableau de la saison : « À la barre »
+                court: nom.split(',')[0].replace(/\s*[?!]$/, '').trim(),
+                slug: (uni && uni.slug) || '',
+                id: (uni && uni.slug) || 'titre-' + cle.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+                accent: palette.accent || '',
+                surAccent: palette.onAccent || '',
+                uni
+            };
+            dlSpectacles.set(cle, info);
+            return info;
+        }
+        const dlStyle = (s) => (s.accent ? `--dl-a:${esc(s.accent)};--dl-sa:${esc(s.surAccent || '#ffffff')}` : '');
+
+        // Les entrées du rendu : l'entrée d'origine, ses séances, ses jours
+        // distincts, et la couleur de son spectacle. Chaque séance réserve au
+        // passage sa place dans renderedEventsData — c'est par cet indice
+        // que le bouton agenda retrouve sa représentation.
+        function dlEntrees(upcoming) {
+            const out = [];
+            upcoming.forEach(show => {
+                const reps = (show.type === 'series' && Array.isArray(show.shows)) ? show.shows : [show];
+                const perfs = reps.map(r => {
+                    const p = {
+                        jour: dlJour(r.icsDate),
+                        heure: performanceTimeStr(r),
+                        dateLabel: r.dateLabel || show.dateLabel || show.date || '',
+                        ecole: Boolean(r.isSchool || show.isSchool),
+                        billetterie: lienSur(r.bookingUrl || show.bookingUrl)
+                    };
+                    p.cal = window.renderedEventsData.push({
+                        title: show.title, subtitle: show.subtitle || '', location: show.location,
+                        icsDate: r.icsDate, time: r.time, times: r.times, dateLabel: p.dateLabel
+                    }) - 1;
+                    return p;
+                });
+                const jours = [];
+                perfs.forEach(p => { if (p.jour && !jours.some(d => d.iso === p.jour.iso)) jours.push(p.jour); });
+                jours.sort((x, y) => x.t - y.t);
+                out.push({
+                    show, titre: show.title || '', perfs, jours, debut: jours[0] || null,
+                    serie: perfs.length > 1, spectacle: dlSpectacle(show.title || '')
+                });
+            });
+            // L'ordre du calendrier, pas celui de la saisie. Une entrée sans
+            // date lisible se range à la fin plutôt que de disparaître.
+            out.sort((x, y) => (x.debut ? x.debut.t : 8.64e15) - (y.debut ? y.debut.t : 8.64e15));
+            out.forEach((e, k) => { e.k = k; });
+            return out;
+        }
+
+        function dlFeuille(e) {
+            const d = e.debut;
+            if (!d) {
+                return '<span class="dl-pile" aria-hidden="true"><span class="dl-feuille"><span class="dl-bande">·</span><span class="dl-num">?</span></span></span>';
+            }
+            const n = Math.min(e.jours.length, 3);
+            return `<span class="dl-pile" aria-hidden="true">`
+                + (n > 2 ? '<span class="dl-feuille dl-derriere dl-derriere--2"></span>' : '')
+                + (n > 1 ? '<span class="dl-feuille dl-derriere"></span>' : '')
+                + `<span class="dl-feuille"><span class="dl-bande">${DL_MOIS_COURTS[d.m]}</span>`
+                + `<span class="dl-num">${d.j}</span><span class="dl-jour">${DL_JOURS_COURTS[d.js]}</span></span></span>`;
+        }
+
+        // Ce qu'on peut faire d'une séance. Pas de « Réserver » pour une
+        // séance scolaire : l'accès y est restreint (même règle que le bandeau
+        // « Prochainement »).
+        function dlAction(p, e, court) {
+            // Dans une case, pas de pictogramme : la place manque, et le bord
+            // en pointillé dit déjà la séance scolaire.
+            if (p.ecole) {
+                return `<span class="dl-etat">${court ? '' : '<svg class="ico" aria-hidden="true"><use href="#i-solid-graduation-cap"></use></svg>'}Séance scolaire</span>`;
+            }
+            if (p.billetterie) {
+                return `<a class="dl-reserver" href="${esc(p.billetterie)}" target="_blank" rel="noopener"
+                    data-track="date_booking" data-track-detail="${esc(e.titre)}">Réserver<span class="sr-only"> : ${esc(e.titre)}, ${esc(dlQuandComplet(p))} (nouvel onglet)</span><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`;
+            }
+            return `<span class="dl-etat dl-etat--attente">${court ? '' : '<svg class="ico" aria-hidden="true"><use href="#i-solid-circle-info"></use></svg>'}Billetterie à venir</span>`;
+        }
+
+        const dlAgenda = (p, e) => `<button type="button" class="dl-agenda" data-cal-index="${p.cal}"
+            aria-label="${esc(`Ajouter au calendrier : ${e.titre}, ${dlQuandComplet(p)}`)}"><svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button>`;
+
+        // Une case de séance. Dans une série d'un seul jour (deux horaires
+        // le même soir), la case ne répète pas le jour : l'heure suffit.
+        function dlSeance(p, e) {
+            const sansJour = e.jours.length === 1 && p.jour;
+            const jour = p.jour
+                ? `<span class="dl-s-jour">${DL_JOURS_COURTS[p.jour.js]} <b>${dlQuantieme(p.jour)}</b></span>`
+                : `<span class="dl-s-jour">${esc(p.dateLabel)}</span>`;
+            const heure = p.heure
+                ? `<span class="dl-s-heure${sansJour ? ' dl-s-heure--fort' : ''}">${esc(p.heure)}</span>`
+                : '<span class="dl-s-heure dl-s-heure--flou">horaire à confirmer</span>';
+            return `<li class="dl-seance${p.ecole ? ' dl-seance--scolaire' : ''}"><span class="dl-s-quand">${sansJour ? '' : jour}${heure}</span>`
+                + `<span class="dl-s-bas">${dlAction(p, e, true)}${dlAgenda(p, e)}</span></li>`;
+        }
+
+        // La ligne. `vue` : 'date' (sous un intercalaire de mois, le titre
+        // est écrit) ou 'spectacle' (sous le nom de la pièce, il serait
+        // répété ; l'année est alors écrite, faute d'intercalaire de mois).
+        function dlLigne(e, vue) {
+            const p = e.perfs[0];
+            const avecAnnee = vue === 'spectacle' && e.debut && e.debut.a !== new Date().getFullYear();
+            const quand = e.debut ? dlCap(dlDateEnLettres(e.jours, avecAnnee)) : (p.dateLabel || 'Date à préciser');
+            const heure = e.serie ? ''
+                : p.heure ? `<span class="dl-heure"> · ${esc(p.heure)}</span>`
+                    : '<span class="dl-heure dl-heure--flou"> · horaire à confirmer</span>';
+            // « Ce soir », « Demain » : les deux jours où l'information décide
+            // de quelque chose (même règle que le bandeau « Prochainement »).
+            const proche = e.debut ? relativeDayLabel(e.debut.t, '') : '';
+            const titre = vue === 'date'
+                ? `<h5 class="dl-titre">${esc(e.titre)}${e.show.subtitle ? ` <span class="dl-sous">(${esc(e.show.subtitle)})</span>` : ''}</h5>`
+                : '';
+            const droite = e.serie
+                ? `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}</ul>`
+                : `<div class="dl-actions">${dlAction(p, e, false)}${dlAgenda(p, e)}</div>`;
+            return `<article class="dl ${e.serie ? 'dl--serie' : 'dl--seule'}" id="dl-e${e.k}" style="${dlStyle(e.spectacle)}">`
+                + dlFeuille(e)
+                + `<div class="dl-corps"><p class="dl-quand">${proche ? `<span class="dl-proche">${esc(proche)}</span>` : ''}${esc(quand)}${heure}</p>`
+                + titre
+                + `<p class="dl-lieu"><svg class="ico" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg>${esc(e.show.location || '')}</p></div>`
+                + `<div class="dl-droite">${droite}</div></article>`;
+        }
+
+        function dlParMois(entrees) {
+            const groupes = [];
+            entrees.forEach(e => {
+                const cle = e.debut ? `${e.debut.a}-${e.debut.m + 1}` : 'sans-date';
+                let g = groupes.find(x => x.cle === cle);
+                if (!g) {
+                    g = { cle, a: e.debut ? e.debut.a : null, m: e.debut ? e.debut.m : null, entrees: [], n: 0 };
+                    groupes.push(g);
+                }
+                g.entrees.push(e);
+                g.n += e.perfs.length;
+            });
+            return groupes;
+        }
+
+        function dlGroupesHtml(entrees, vue) {
+            return dlParMois(entrees).map(g => {
+                const id = `dl-mois-${g.cle}`;
+                const nom = g.a === null ? 'Date à préciser' : `${dlCap(DL_MOIS[g.m])} <span>${g.a}</span>`;
+                return `<section class="dl-groupe" id="${id}" aria-labelledby="${id}-t">`
+                    + `<div class="dl-intercalaire"><h4 id="${id}-t" tabindex="-1">${nom}</h4><span class="dl-compte">${dlPluriel(g.n, 'représentation')}</span></div>`
+                    + g.entrees.map(e => dlLigne(e, vue)).join('')
+                    + '</section>';
+            }).join('');
+        }
+
+        // Les intercalaires s'accrochent juste sous la barre d'onglets, qui
+        // flotte à 8 px du haut (voir #nav-barre) et change de hauteur avec
+        // la largeur de l'écran : on la mesure plutôt que de la deviner.
+        function dlMesurerBarre() {
+            const barre = document.getElementById('nav-barre');
+            const page = document.getElementById('page_dates');
+            if (!barre || !page) return;
+            page.style.setProperty('--dl-colle', `${Math.round(barre.getBoundingClientRect().height) + 8 + 6}px`);
+        }
+
         window.renderedEventsData = [];
 
         function renderDates() {
@@ -6897,135 +7518,16 @@
             }
             if (resetEl) resetEl.classList.toggle('hidden', !filtersActive());
 
-            const amberBadge = `<span class="text-[12px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-circle-info"></use></svg> Les réservations ne sont pas encore ouvertes</span>`;
-
-            const getTimeStr = (item) => {
-                if (Array.isArray(item.times) && item.times.length > 0) return item.times.join(' & ');
-                return item.time || '';
-            };
-
-            // UN VRAI BOUTON, PAS UN LIEN SOULIGNÉ. À côté de la pastille
-            // « ajouter à l'agenda » (calBadge, un aplat doré plein), un texte
-            // en 10 px sans fond se lisait comme une mention secondaire —
-            // alors que réserver est l'action qui compte le plus sur cette
-            // page. Même traitement que le bouton du bandeau « Prochainement »
-            // (bg-luxury-goldInk / text-luxury-onGold) : un aplat, pas un lien.
-            const bookingLink = (url) => lienSur(url)
-                ? `<a href="${esc(lienSur(url))}" target="_blank" rel="noopener"
-                       class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-luxury-goldInk text-luxury-onGold text-[11px] font-bold uppercase tracking-wider shadow-sm hover:bg-luxury-goldDeep transition-colors">
-                       Réserver <svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
-                : '';
-
-            // Badge cliquable « ajouter à l'agenda »
-            const calBadge = (idx, label, cls) =>
-                `<button type="button" data-cal-index="${idx}"
-                    class="${cls} font-mono font-bold text-luxury-onGold px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap hover:bg-luxury-goldDeep transition-colors inline-flex items-center gap-1 shadow-sm"
-                    aria-label="Ajouter au calendrier : ${esc(label)}">${label} <svg class="ico text-[10px] text-luxury-onGold ml-0.5" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button>`;
-
-            let upcomingHtml = '';
-            if (upcoming.length > 0) {
-                upcoming.forEach((show, idx) => {
-                    const panelId = show.id || `panel-series-${idx}`;
-                    const subtitleHtml = show.subtitle
-                        ? ` <span class="font-normal italic text-[12px] text-luxury-textMuted">(${esc(show.subtitle)})</span>` : '';
-
-                    if (show.type === 'series' && show.shows) {
-                        let showsHtml = '';
-                        show.shows.forEach((rep) => {
-                            const eventIdx = window.renderedEventsData.length;
-                            window.renderedEventsData.push({
-                                title: show.title, subtitle: show.subtitle || '', location: show.location,
-                                icsDate: rep.icsDate, time: rep.time, times: rep.times, dateLabel: rep.dateLabel
-                            });
-                            const repTimeStr = getTimeStr(rep);
-                            const label = esc(repTimeStr ? `${rep.dateLabel} • ${repTimeStr}` : rep.dateLabel);
-                            const repTimeBelow = !repTimeStr
-                                ? `<span class="text-[11px] text-luxury-textMuted italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>` : '';
-
-                            showsHtml += `
-                                <div class="glass-panel rounded px-2.5 py-2 border border-stone-200/20 flex items-center justify-between gap-2">
-                                    <div class="flex items-center gap-3 min-w-0 flex-1">
-                                        <div class="flex flex-col items-start flex-shrink-0 w-[165px]">
-                                            ${calBadge(eventIdx, label, 'bg-luxury-goldInk border border-luxury-goldInk')}
-                                            ${repTimeBelow}
-                                        </div>
-                                        <div class="flex flex-col min-w-0 flex-1">
-                                            ${rep.isSchool
-                                    ? `<span class="text-[12px] text-luxury-warn italic block">Séance scolaire</span>`
-                                    : (!rep.bookingUrl ? amberBadge : '')}
-                                        </div>
-                                    </div>
-                                    ${bookingLink(rep.bookingUrl)}
-                                </div>`;
-                        });
-
-                        upcomingHtml += `
-                            <div class="date-multi-wrapper">
-                                <button type="button" data-toggle-panel="${esc(panelId)}" aria-expanded="false"
-                                    aria-controls="${esc(panelId)}"
-                                    class="w-full text-left glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 date-row-clickable">
-                                    <span class="flex items-center gap-3 min-w-0 flex-1">
-                                        <span class="flex flex-col items-start flex-shrink-0 w-[165px]">
-                                            <span class="font-mono font-bold text-luxury-onGold bg-luxury-goldInk border border-luxury-goldInk px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap shadow-sm">${esc(show.dateLabel || show.date)}</span>
-                                        </span>
-                                        <span class="min-w-0 flex-1">
-                                            <span class="font-bold text-luxury-textMain text-xs leading-tight block">${esc(show.title)}${subtitleHtml}</span>
-                                        </span>
-                                    </span>
-                                    <span class="text-[12px] text-luxury-textMuted flex items-center gap-2 md:text-right flex-shrink-0 pl-0.5 md:pl-0">
-                                        <span><svg class="ico text-luxury-goldInk text-[8px]" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg> ${esc(show.location)}</span>
-                                        <svg class="ico text-[10px] text-stone-500 date-toggle-chevron" id="chevron-${esc(panelId.replace('panel-', ''))}" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>
-                                    </span>
-                                </button>
-                                <div class="date-expand-panel" id="${esc(panelId)}">
-                                    <div class="date-expand-inner">
-                                        <div class="mt-1 ml-3 border-l-2 border-luxury-gold/20 pl-3 space-y-1.5 pb-1">
-                                            ${showsHtml}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>`;
-                    } else {
-                        const eventIdx = window.renderedEventsData.length;
-                        window.renderedEventsData.push({
-                            title: show.title, subtitle: show.subtitle || '', location: show.location,
-                            icsDate: show.icsDate, time: show.time, times: show.times,
-                            dateLabel: show.dateLabel || show.date
-                        });
-                        const showTimeStr = getTimeStr(show);
-                        const label = esc(showTimeStr
-                            ? `${show.dateLabel || show.date} • ${showTimeStr}`
-                            : (show.dateLabel || show.date));
-                        const singleTimeBelow = !showTimeStr
-                            ? `<span class="text-[11px] text-luxury-textMuted italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>` : '';
-
-                        upcomingHtml += `
-                            <div class="glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5">
-                                <div class="flex items-center gap-3 min-w-0 flex-1">
-                                    <div class="flex flex-col items-start flex-shrink-0 w-[165px]">
-                                        ${calBadge(eventIdx, label, 'bg-luxury-goldInk border border-luxury-goldInk')}
-                                        ${singleTimeBelow}
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <h4 class="font-bold text-luxury-textMain text-xs leading-tight">${esc(show.title)}${subtitleHtml}</h4>
-                                        ${show.isSchool
-                                ? `<span class="text-[12px] text-luxury-warn italic mt-0.5 block">Séance scolaire</span>`
-                                : (!show.bookingUrl ? amberBadge : '')}
-                                    </div>
-                                </div>
-                                <div class="text-[12px] text-luxury-textMuted flex items-center justify-between gap-2 flex-shrink-0 pl-0.5 md:pl-0">
-                                    <span><svg class="ico text-luxury-goldInk text-[8px]" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg> ${esc(show.location)}</span>
-                                    ${bookingLink(show.bookingUrl)}
-                                </div>
-                            </div>`;
-                    }
-                });
-            } else {
-                upcomingHtml = filtersActive()
-                    ? `<p class="text-xs text-luxury-textMuted italic p-2">Aucune représentation à venir ne correspond à cette recherche.</p>`
-                    : `<p class="text-xs text-luxury-textMuted italic p-2">Aucune date à venir pour le moment.</p>`;
+            // Une représentation, une ligne ; le détail est plus haut, avec
+            // les fonctions dl…() qui la dessinent.
+            const entrees = dlEntrees(upcoming);
+            if (upcomingContainer) {
+                upcomingContainer.innerHTML = entrees.length
+                    ? dlGroupesHtml(entrees, 'date')
+                    : `<p class="dl-vide">${filtersActive()
+                        ? 'Aucune représentation à venir ne correspond à cette recherche.'
+                        : 'Aucune date à venir pour le moment.'}</p>`;
             }
-            if (upcomingContainer) upcomingContainer.innerHTML = upcomingHtml;
 
             // ── Archives : archives statiques + dates fraîchement passées ──
             const archivesContainer = document.getElementById('archived-seasons-container');
@@ -7095,18 +7597,15 @@
             injectEventStructuredData(upcoming);
         }
 
-        // Délégation : badges agenda + dépliage des séries
+        // Délégation : les boutons agenda des dates (le rendu les refait à
+        // chaque filtre, d'où l'écoute au niveau du document).
         document.addEventListener('click', (e) => {
             const cal = e.target.closest('[data-cal-index]');
-            if (cal) {
-                e.preventDefault();
-                e.stopPropagation();
-                const data = window.renderedEventsData[+cal.dataset.calIndex];
-                if (data) openCalendarModal(data);
-                return;
-            }
-            const toggle = e.target.closest('[data-toggle-panel]');
-            if (toggle) toggleDatePanel(toggle.dataset.togglePanel, toggle);
+            if (!cal) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const data = window.renderedEventsData[+cal.dataset.calIndex];
+            if (data) openCalendarModal(data);
         });
 
         // ════════════════════════════════════════════════════════════════
