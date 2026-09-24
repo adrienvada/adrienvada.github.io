@@ -46,7 +46,11 @@
  *      défilement, changement d'onglet, « Passer » et les touches de
  *      l'ouverture, zoom de l'avatar, course du book, phrase posée sur un
  *      groupe de photos ;
- *    · la frise du CV, liée au défilement, et la page 404 ;
+ *    · la frise du CV, comme le prototype de l'audit : le fil d'or à
+ *      gauche, un point par spectacle posé dessus, les lignes voilées tant
+ *      que le fil ne les a pas atteintes, rien de coloré à droite — avec
+ *      les deux pilotes, et tout posé en mouvement réduit ;
+ *    · la page 404 ;
  *    · le sitemap, qui doit annoncer toutes les pages spectacle.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
@@ -695,10 +699,14 @@ function exige(condition, message) {
                 const papier = await p.evaluate(() => ({
                     vues: [...document.querySelectorAll('#page_cv .cv-vignette, #page_cv .cv-genre')]
                         .filter((e) => getComputedStyle(e).display !== 'none').length,
+                    // La frise voile les lignes à l'écran ; le papier ne défile pas.
+                    voilees: [...document.querySelectorAll('#page_cv .cv-row-toggle')]
+                        .filter((e) => +getComputedStyle(e).opacity < 0.99).length,
                     annees: [...document.querySelectorAll('#page_cv li.cv-item .cv-year')]
                         .filter((e) => e.getBoundingClientRect().width > 1).length
                 }));
                 exige(!papier.vues, `${papier.vues} vignette(s) ou ligne(s) de genre sur le CV imprimé`);
+                exige(!papier.voilees, `${papier.voilees} ligne(s) voilée(s) sur le CV imprimé`);
                 exige(papier.annees === cv.lignes, `sur papier, ${papier.annees} année(s) visibles pour ${cv.lignes} lignes`);
                 await c.close();
             }
@@ -1056,9 +1064,15 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('la frise du CV suit la ligne de lecture, sans horloge — avec les deux pilotes', async () => {
-            for (const repli of [false, true]) {
-                const c = await visiteur({ viewport: { width: 1280, height: 860 } });
+        // ── LA FRISE, COMME LE PROTOTYPE DE L'AUDIT ──
+        // Le fil d'or court à GAUCHE de la liste ; sur lui, au milieu de
+        // chaque ligne, un point dans la couleur du spectacle, qui éclôt
+        // quand la ligne de lecture l'atteint ; les lignes que le fil n'a
+        // pas encore atteintes sont voilées (transparence). Plus rien de
+        // coloré ne court à droite : ni filet, ni lavis au passage.
+        await verifie('la frise du CV comme le prototype : le fil d’or à gauche, un point par spectacle posé dessus, les lignes voilées tant que le fil ne les a pas atteintes, rien de coloré à droite — avec les deux pilotes, sans horloge, tout posé en mouvement réduit', async () => {
+            for (const [repli, reduit] of [[false, false], [true, false], [false, true]]) {
+                const c = await visiteur({ viewport: { width: 1280, height: 860 }, reducedMotion: reduit ? 'reduce' : 'no-preference' });
                 const p = await c.newPage();
                 const erreurs = guette(p);
                 await p.goto(base + '/' + (repli ? '?repli' : ''), { waitUntil: 'load' });
@@ -1071,17 +1085,38 @@ function exige(condition, message) {
                     const y = lignes[3].getBoundingClientRect().top + scrollY - innerHeight * 0.5 + 4;
                     window.scrollTo(0, y);
                     await new Promise((r) => setTimeout(r, 400));
-                    const filet = (li) => +getComputedStyle(li, '::before').opacity;
+                    const px = (v) => parseFloat(v) || 0;
+                    const fil = getComputedStyle(liste, '::after');
+                    const point = (li) => getComputedStyle(li, '::before');
+                    const echelle = (li) => { const t = point(li).transform; return t === 'none' ? 1 : +(t.match(/matrix\(([-\d.e]+)/) || [0, NaN])[1]; };
+                    const voile = (li) => +getComputedStyle(li.querySelector('.cv-row-toggle')).opacity;
+                    const p0 = point(lignes[0]);
                     return {
                         frise: liste.classList.contains('cv-frise'),
-                        haut: filet(lignes[0]), bas: filet(lignes[lignes.length - 1]),
-                        horloge: [...document.styleSheets].some((f) => { try { return [...f.cssRules].some((r) => /cv-guirlande|cv-pastille-lueur\b/.test(r.cssText)); } catch (e) { return false; } })
+                        filGauche: px(fil.left),
+                        // Le centre du point et celui du fil, depuis le bord gauche de la liste.
+                        ecartPointFil: Math.abs((px(p0.left) + px(p0.width) / 2) - (px(fil.left) + px(fil.width) / 2)),
+                        rond: px(p0.width) === px(p0.height) && px(p0.width) > 0,
+                        pointsHaut: echelle(lignes[0]), pointsBas: echelle(lignes[lignes.length - 1]),
+                        pleineHaut: voile(lignes[0]), voileBas: voile(lignes[lignes.length - 1]),
+                        lavis: lignes.filter((li) => +getComputedStyle(li, '::after').opacity > 0.01).length,
+                        horloge: [...document.styleSheets].some((f) => { try { return [...f.cssRules].some((r) => /cv-guirlande|cv-pastille-lueur\b/.test(r.cssText)); } catch (e) { return false; } }),
+                        tout: lignes.every((li) => voile(li) > 0.99 && echelle(li) === 1)
                     };
                 });
-                const nom = repli ? 'avec le repli' : 'en natif';
+                const nom = reduit ? 'en mouvement réduit' : repli ? 'avec le repli' : 'en natif';
                 exige(etat.frise, 'la liste du CV ne porte pas la frise');
-                exige(etat.haut > 0.9, `${nom}, le filet d’une ligne déjà lue n’est pas allumé (${etat.haut})`);
-                exige(etat.bas < 0.6, `${nom}, le filet d’une ligne pas encore lue est allumé (${etat.bas})`);
+                exige(etat.filGauche < 0, `${nom}, le fil d’or n’est plus à gauche de la liste (left ${etat.filGauche} px)`);
+                exige(etat.rond, `${nom}, le repère de la ligne n’est plus un point (filet revenu ?)`);
+                exige(etat.ecartPointFil < 0.6, `${nom}, le point n’est pas centré sur le fil (écart ${etat.ecartPointFil.toFixed(2)} px)`);
+                exige(!etat.lavis, `${nom}, le lavis passe encore au défilement sur ${etat.lavis} ligne(s)`);
+                if (reduit) {
+                    exige(etat.tout, 'en mouvement réduit, une ligne reste voilée ou sans son point');
+                } else {
+                    exige(etat.pointsHaut === 1 && etat.pleineHaut > 0.99, `${nom}, une ligne déjà lue n’est pas pleine avec son point (${etat.pleineHaut}, point × ${etat.pointsHaut})`);
+                    exige(etat.pointsBas === 0, `${nom}, le point d’une ligne pas encore atteinte est déjà là (× ${etat.pointsBas})`);
+                    exige(etat.voileBas < 0.5, `${nom}, une ligne pas encore atteinte n’est pas voilée (${etat.voileBas})`);
+                }
                 exige(!etat.horloge, 'la guirlande à horloge est revenue');
                 exige(!erreurs.length, erreurs.join(' | '));
                 await c.close();

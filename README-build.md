@@ -87,7 +87,7 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   à l'écran, même posée tout en bas ; les lignes d'une liste ont la même
   hauteur, l'année y tombe au même endroit, et le texte tient dans la hauteur
   de la vignette — au téléphone comme sur ordinateur ; les formations n'ont
-  pas d'image ; rien de tout cela sur papier ;
+  pas d'image ; rien de tout cela sur papier, où aucune ligne n'est voilée ;
 - sans JavaScript, le site reste lisible ;
 - chaque page spectacle a son `h1`, son `<main>` et des données structurées
   lisibles, où chaque représentation a son image ;
@@ -113,9 +113,11 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   ne lève pas le rideau (Échap, si), le zoom de l'avatar dans `styles.css`, la
   phrase posée sur un groupe de photos (« Jusqu'où serez-vous semblables ? ») ;
 - le book : fermer puis rouvrir aussitôt ne laisse pas une page morte ;
-- la frise du CV, avec les deux pilotes : le filet d'une ligne déjà lue est
-  allumé, celui d'une ligne à venir ne l'est pas, et la guirlande à horloge
-  n'est pas revenue ;
+- la frise du CV, comme le prototype de l'audit, avec les deux pilotes : le
+  fil d'or à gauche de la liste, un point rond par spectacle centré dessus ;
+  une ligne déjà lue est pleine avec son point, une ligne à venir voilée et
+  sans point ; aucun lavis ne passe plus à droite ; tout est posé en mouvement
+  réduit, et la guirlande à horloge n'est pas revenue ;
 - la page 404 : son titre, son retour, sa lampe, sans erreur ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
@@ -1639,12 +1641,19 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
 
 ### Le CV, le bandeau, la page 404
 
-- **La frise.** Une ligne de lecture court au milieu de l'écran : un fil d'or
-  se trace le long du bord droit de la liste jusqu'à elle, le filet de chaque
-  spectacle s'allume quand elle le passe et le reste, le lavis de couleur
-  passe sur la ligne qui la traverse. Tout est lié au défilement — plus
-  d'horloge, donc rien qui rejoue après un survol, comme le faisait la
-  guirlande. Pilotes : `view()` en natif ; `--ph` et `--pt` (la place de la
+- **La frise**, telle que le prototype de l'audit la proposait (« La frise
+  qui s'allume »). Une ligne de lecture court au milieu de l'écran : un fil
+  d'or se trace le long du bord **gauche** de la liste, dans la marge de la
+  carte, jusqu'à elle ; sur le fil, au milieu de chaque ligne, un **point**
+  dans la couleur du spectacle éclôt quand elle l'atteint (× 1,3, puis il se
+  pose) ; et le fil **découvre** les lignes : chacune reste voilée (opacité
+  .38) tant qu'il ne l'a pas atteinte, et elle est pleine quand la pointe du
+  fil touche son haut. Voilée, jamais effacée : tout s'y lit, et le survol, le
+  doigt ou le clavier la rendent pleine à l'instant. Rien de coloré ne court
+  plus à droite — ni filet, ni lavis au passage (le lavis ne répond plus qu'à
+  la souris et au doigt) ; le halo des vignettes « tournée » et « création »
+  s'allume avec le point. Tout est lié au défilement — plus d'horloge, donc
+  rien qui rejoue après un survol, comme le faisait la guirlande. Pilotes : `view()` en natif ; `--ph` et `--pt` (la place de la
   ligne, en hauteurs d'écran) écrits par `regie.js` ailleurs (`.rg-ligne`).
   Voir « La frise » dans `index.html`. **L'année, elle, ne bouge pas** : elle
   montait sur la vignette depuis le bas du cadre, et toutes les années ont un
