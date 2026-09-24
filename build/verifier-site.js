@@ -20,8 +20,14 @@
  *      d'un regard), séances en cases (une date seule aussi),
  *      nom du spectacle qui mène à sa page, rangement par spectacle,
  *      sommaire qui mène aux dates, une image pour chaque représentation
- *      annoncée aux moteurs ; le carton « Prochainement », en tête du CV
- *      et nulle part ailleurs ;
+ *      annoncée aux moteurs ; la prochaine date, en tête du CV et nulle
+ *      part ailleurs ;
+ *    · la prochaine date du CV, une ligne de tableau de gare : ses
+ *      palettes battent une fois, image par image sans faute, puis se
+ *      posent ; elle mène à sa ligne dans l'onglet Dates ;
+ *    · « Télécharger le CV », un seul lien, sous la prochaine date ;
+ *    · la barre de lecture des démos voix, qui va au point touché même
+ *      sans en-têtes Range ;
  *    · l'impression sans les pastilles ▶ ;
  *    · la ligne à vignette du CV : l'année et l'état sur chaque vignette,
  *      des lignes de même hauteur, rien de tout cela sur papier ;
@@ -180,7 +186,7 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('l’onglet Dates : feuilles, liserés, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire, une image par représentation — et le carton « Prochainement », au CV seulement', async () => {
+        await verifie('l’onglet Dates : feuilles, liserés, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire, une image par représentation — et la prochaine date, au CV seulement', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 } });
             const p = await c.newPage();
             const erreurs = guette(p);
@@ -265,9 +271,8 @@ function exige(condition, message) {
             exige(evenements.n >= 2, `${evenements.n} représentation(s) annoncée(s) aux moteurs`);
             exige(!evenements.sansImage.length, `représentation(s) sans image : ${evenements.sansImage.join(', ')}`);
 
-            // Le nom d'un spectacle mène à sa page, sur sa ligne comme dans la
-            // prochaine représentation ; sans page, pas de lien, jamais un
-            // lien mort : chaque adresse visée doit répondre.
+            // Le nom d'un spectacle mène à sa page ; sans page, pas de lien,
+            // jamais un lien mort : chaque adresse visée doit répondre.
             const liens = await p.evaluate(async () => {
                 const titres = [...document.querySelectorAll('#upcoming-dates-container .dl-titre')];
                 const tous = [...document.querySelectorAll('#page_dates a.dl-vers-page')].map((a) => a.getAttribute('href'));
@@ -279,34 +284,32 @@ function exige(condition, message) {
                 return {
                     ligne: titres.filter((t) => /Bérénice/.test(t.textContent)).map((t) => t.querySelector('a.dl-vers-page')?.getAttribute('href') || null),
                     sansPage: titres.filter((t) => /vérification/.test(t.textContent)).some((t) => t.querySelector('a')),
-                    prochaine: document.querySelector('#next-date-banner a.dl-vers-page')?.getAttribute('href') || null,
                     morts
                 };
             });
             exige(liens.ligne.join() === 'spectacles/berenice/', `la ligne de Bérénice ne mène pas à sa page : ${JSON.stringify(liens.ligne)}`);
             exige(!liens.sansPage, 'le nom d’un spectacle sans page porte un lien');
-            exige(liens.prochaine === 'spectacles/berenice/', 'la prochaine représentation ne mène pas à la page du spectacle');
             exige(!liens.morts.length, `lien(s) mort(s) : ${liens.morts.join(', ')}`);
 
-            // Le carton « Prochainement » est en tête du CV, et seulement là :
-            // l'onglet Dates n'en a pas, sa liste commence par la prochaine
-            // date. Son agenda ouvre la fenêtre de la prochaine date (le CV
-            // est masqué pendant ce test, d'où le clic donné par le script).
+            // La prochaine date est en tête du CV, et seulement là : l'onglet
+            // Dates n'en affiche pas, sa liste commence par elle. Sa ligne
+            // mène à sa date dans cet onglet (le CV est masqué pendant ce
+            // test, d'où le clic donné par le script).
             const carton = await p.evaluate(() => {
                 const cv = document.getElementById('next-date-banner');
                 return {
-                    cv: !!cv && !cv.hidden && /Bérénice/.test(cv.textContent),
-                    dates: !document.querySelector('#page_dates .next-date-shine')
+                    cv: !!cv && !cv.hidden && /Bérénice/.test(cv.textContent) && cv.querySelectorAll('.td-dep').length === 1,
+                    dates: !document.querySelector('#page_dates .td, #page_dates .fl, #page_dates [data-depart]')
                 };
             });
-            exige(carton.cv, 'le carton « Prochainement » manque en tête du CV');
-            exige(carton.dates, 'l’onglet Dates a un carton « Prochainement » : il ne doit être qu’au CV');
-            await p.evaluate(() => document.querySelector('#next-date-banner [data-cal-prochaine]').click());
-            await p.waitForTimeout(300);
-            exige(await p.evaluate(() => /Bérénice/.test(document.getElementById('cal-modal-title')?.textContent || '')),
-                'l’agenda du carton « Prochainement » n’ouvre pas sa fenêtre');
-            await p.keyboard.press('Escape');
-            await p.waitForTimeout(300);
+            exige(carton.cv, 'la prochaine date manque en tête du CV');
+            exige(carton.dates, 'l’onglet Dates affiche une prochaine date : elle ne doit être qu’au CV');
+            await p.evaluate(() => document.querySelector('#next-date-banner [data-depart]').click());
+            await p.waitForTimeout(900);
+            exige(await p.evaluate(() => {
+                const a = document.activeElement;
+                return !!a && a.classList.contains('dl') && a.classList.contains('dl-eclaire') && /Bérénice/.test(a.textContent);
+            }), 'la prochaine date du CV ne mène pas à sa ligne dans l’onglet Dates');
 
             // Chaque mois porte son liseré, à sa couleur — douze couleurs, qui
             // suivent les saisons, toutes différentes —, et son intercalaire
@@ -374,7 +377,7 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('le tableau des départs : la prochaine date seule, en palettes qui battent une fois puis se posent, et qui mènent à sa ligne — posé d’emblée en mouvement réduit', async () => {
+        await verifie('la prochaine date du CV : une ligne de tableau de gare, « Prochaine date » et jamais « Départs », des palettes qui battent une fois puis se posent, qui mènent à sa date — posée d’emblée en mouvement réduit', async () => {
             // Une date fictive, choisie pour éprouver les règles du tableau :
             // une ville trop longue (abrégée, coupée entre deux mots, sans
             // trait d'union), et deux séances le même soir, dont la première
@@ -394,62 +397,66 @@ function exige(condition, message) {
                     dateLabel: 'plus tard', icsDate: '2099-01-01', time: '20h00', bookingUrl: '', isSchool: false
                 }];
                 renderDates();
+                renderNextDate();
                 return String(d.getDate()).padStart(2, '0');
             };
             const lire = (p) => p.evaluate(() => {
-                const t = document.getElementById('dates-departs');
+                const t = document.getElementById('next-date-banner');
                 const col = (c) => [...t.querySelectorAll(`.td-col.${c} .fl`)];
                 const vu = (c) => col(c).map((f) => f.querySelector('.fl-h i').textContent).join('');
                 const bas = (c) => col(c).map((f) => f.querySelector('.fl-b i').textContent).join('');
                 const cible = (c) => col(c).map((f) => f.dataset.c).join('');
-                const cols = ['date', 'titre', 'ville', 'heure'];
+                const cols = ['date', 'heure', 'titre', 'ville'];
                 return {
                     cache: t.hidden,
+                    titre: t.querySelector('.td-sur')?.textContent.trim() || '',
+                    departs: /départs/i.test(t.textContent),
                     lignes: t.querySelectorAll('.td-dep').length,
                     cibles: cols.map(cible),
                     vus: cols.map(vu),
                     bas: cols.map(bas),
                     roule: t.classList.contains('td-roule'),
                     volets: t.querySelectorAll('.fl-v1').length,
-                    enVol: document.getAnimations().filter((a) => a.effect && a.effect.target && t.contains(a.effect.target)).length,
+                    // Les volets seulement : le voyant de l'en-tête bat sept secondes.
+                    enVol: document.getAnimations().filter((a) => a.effect && a.effect.target
+                        && a.effect.target.closest && a.effect.target.closest('#next-date-banner .fl')).length,
                     clair: t.querySelector('.td-dep .sr-only')?.textContent || '',
                     muet: t.querySelector('.td-ligne')?.getAttribute('aria-hidden'),
-                    carton: !!t.querySelector('.next-date-shine, [data-cal-prochaine], .next-date-reserver')
+                    sous: (() => { const x = t.querySelector('.td-sous'); return x && x.offsetHeight ? x.innerText.replace(/\s+/g, ' ').trim() : ''; })()
                 };
             });
 
+            // On part de l'onglet Dates : le CV, et sa prochaine date, sont
+            // masqués — rien ne doit battre avant d'être vu.
             const c = await visiteur({ viewport: { width: 390, height: 844 } });
             const p = await c.newPage();
             const erreurs = guette(p);
-            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.goto(base + '/#page_dates', { waitUntil: 'load' });
             await p.waitForTimeout(300);
             const jour = await p.evaluate(donnees);
-            // Tant que l'onglet Dates n'est pas ouvert, rien ne bat : les
-            // palettes attendent, blanches, d'être vues.
             const avant = await lire(p);
-            exige(!avant.cache && avant.lignes === 1, `le tableau n’a pas une ligne et une seule : ${avant.lignes}`);
+            exige(!avant.cache && avant.lignes === 1, `la prochaine date n’a pas une ligne et une seule : ${avant.lignes}`);
+            exige(avant.titre === 'Prochaine date' && !avant.departs, `le titre du tableau : « ${avant.titre} » (« Départs » affiché : ${avant.departs})`);
             exige(avant.vus.join('').trim() === '' && !avant.roule, 'le tableau a battu avant d’être vu');
             exige(avant.cibles[0].startsWith(jour + ' ') && /^\d\d [A-ZÉÛ]{3,4} ?$/.test(avant.cibles[0]),
                 `la date du tableau : « ${avant.cibles[0]} »`);
-            exige(avant.cibles.slice(1).join('|') === 'BÉRÉNICE    |ST PIERRE   |20H30',
-                `le spectacle, la ville abrégée ou l’heure du public : ${avant.cibles.slice(1).join('|')}`);
+            exige(avant.cibles.slice(1).join('|') === '20H30|BÉRÉNICE    |ST PIERRE   ',
+                `l’heure du public, le spectacle ou la ville abrégée : ${avant.cibles.slice(1).join('|')}`);
             exige(/Bérénice/.test(avant.clair) && /14h00 et 20h30/.test(avant.clair) && /Saint-Pierre-lès-Elbeuf/.test(avant.clair)
                 && avant.muet === 'true', `le texte lu par un lecteur d’écran : « ${avant.clair} » (palettes aria-hidden : ${avant.muet})`);
-            exige(!avant.carton, 'le tableau porte le carton « Prochainement » (Réserver, agenda) : il ne doit être qu’au CV');
 
-            // L'onglet s'ouvre : les palettes passent par d'autres lettres,
-            // puis se posent toutes sur la bonne, et les volets s'arrêtent.
-            // À chaque image, tant que le volet du haut tombe, la moitié
-            // basse doit encore montrer l'ancienne lettre : la nouvelle n'y
-            // paraît qu'avec le volet du bas (ce qui voit se relire le volet
-            // resté à plat, écrit trop tôt, lettre nouvelle sous lettre
-            // ancienne).
+            // Le CV s'ouvre : les palettes passent par d'autres lettres, puis
+            // se posent toutes sur la bonne, et les volets s'arrêtent. À
+            // chaque image, tant que le volet du haut tombe, la moitié basse
+            // doit encore montrer l'ancienne lettre : la nouvelle n'y paraît
+            // qu'avec le volet du bas (ce qui voit se relire le volet resté à
+            // plat, écrit trop tôt, lettre nouvelle sous lettre ancienne).
             await p.evaluate(() => {
                 const o = window.__tdImages = { images: 0, vues: 0, fautes: 0 };
                 const face = (el) => getComputedStyle(el).visibility === 'visible' && new DOMMatrix(getComputedStyle(el).transform).m22 > 0.02;
                 const image = () => {
                     o.images++;
-                    document.querySelectorAll('#dates-departs .fl').forEach((f) => {
+                    document.querySelectorAll('#next-date-banner .fl').forEach((f) => {
                         if (f.children.length !== 4) return;
                         const [, b, v1, v2] = f.children;
                         if (!face(v1)) return;
@@ -460,7 +467,7 @@ function exige(condition, message) {
                 };
                 requestAnimationFrame(image);
             });
-            await p.click('#tab-page_dates');
+            await p.click('#tab-page_cv');
             let passage = false, roule = false, fin = null;
             for (let i = 0; i < 160 && !fin; i++) {
                 await p.waitForTimeout(50);
@@ -476,32 +483,44 @@ function exige(condition, message) {
                 `la moitié basse change de lettre avant que le haut ne soit tombé : ${images.fautes} fois sur ${images.vues}`);
             exige(fin.bas.join('|') === fin.cibles.join('|') && !fin.enVol,
                 `une palette reste à moitié tournée : ${fin.bas.join('|')} (${fin.enVol} animation(s) en cours)`);
+            // Sur téléphone, l'heure et la ville s'écrivent en clair dessous.
+            exige(fin.sous === '20h30 · Saint-Pierre-lès-Elbeuf', `sous les palettes, sur téléphone : « ${fin.sous} »`);
 
-            // Il ne rejoue pas : une recherche le masque, l'effacer le rend tel quel.
-            await p.evaluate(() => { dateFilters.q = 'falaise'; renderDates(); dateFilters.q = ''; renderDates(); });
+            // Il ne rejoue pas : le même rendu ne redessine rien.
+            await p.evaluate(() => renderNextDate());
             const rendu = await lire(p);
-            exige(!rendu.cache && !rendu.roule && rendu.vus.join('|') === rendu.cibles.join('|'), 'le tableau rejoue ou disparaît après une recherche');
+            exige(!rendu.roule && rendu.vus.join('|') === rendu.cibles.join('|'), 'la prochaine date rejoue sur un rendu identique');
 
-            // La ligne mène à sa date, plus bas.
-            await p.click('#dates-departs .td-dep');
-            await p.waitForTimeout(400);
-            exige(await p.evaluate(() => document.activeElement?.id === 'dl-e0' && document.getElementById('dl-e0').classList.contains('dl-eclaire')),
-                'la ligne du tableau ne mène pas à sa date');
+            // La ligne mène à sa date dans l'onglet Dates, sous l'intercalaire
+            // de son mois — ni dessous, ni caché par lui.
+            await p.click('#next-date-banner .td-dep');
+            await p.waitForTimeout(1400);
+            const arrivee = await p.evaluate(() => {
+                const a = document.activeElement;
+                const inter = a && a.closest('.dl-groupe')?.querySelector('.dl-intercalaire');
+                return {
+                    ok: !!a && a.classList.contains('dl') && a.classList.contains('dl-eclaire') && /Bérénice/.test(a.textContent),
+                    ecart: a && inter ? Math.round(a.getBoundingClientRect().top - inter.getBoundingClientRect().bottom) : null
+                };
+            });
+            exige(arrivee.ok, 'la prochaine date ne mène pas à sa ligne dans l’onglet Dates');
+            exige(arrivee.ecart !== null && arrivee.ecart >= 0 && arrivee.ecart <= 24,
+                `la ligne visée n’arrive pas juste sous l’intercalaire de son mois (écart : ${arrivee.ecart} px)`);
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
 
             // Mouvement réduit : les palettes sont posées d'emblée, sans volets.
             const r = await visiteur({ viewport: { width: 1280, height: 860 }, reducedMotion: 'reduce' });
             const q = await r.newPage();
-            await q.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await q.goto(base + '/', { waitUntil: 'load' });
             await q.waitForTimeout(300);
             const calme = await lire(q);
             exige(calme.lignes === 1 && calme.volets === 0 && !calme.roule && calme.vus.join('|') === calme.cibles.join('|')
-                && calme.cibles.join('').trim() !== '', 'en mouvement réduit, le tableau n’est pas posé d’emblée');
+                && calme.cibles.join('').trim() !== '', 'en mouvement réduit, la prochaine date n’est pas posée d’emblée');
             await r.close();
         });
 
-        await verifie('« Télécharger le CV » : un seul lien, après le carton « Prochainement »', async () => {
+        await verifie('« Télécharger le CV » : un seul lien, après la prochaine date', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 } });
             const p = await c.newPage();
             await p.goto(base + '/', { waitUntil: 'load' });
@@ -519,13 +538,39 @@ function exige(condition, message) {
             });
             const tel = await avant();
             exige(tel.n === 1, `${tel.n} lien(s) « Télécharger le CV » au lieu d’un`);
-            exige(tel.apres && tel.visible, 'sur téléphone, « Télécharger le CV » ne vient pas après le carton « Prochainement »');
+            exige(tel.apres && tel.visible, 'sur téléphone, « Télécharger le CV » ne vient pas après la prochaine date');
             exige(tel.detail === 'mobile', `la mesure ne dit pas « mobile » sur téléphone : ${tel.detail}`);
             await p.setViewportSize({ width: 1280, height: 860 });
             await p.waitForTimeout(200);
             const bureau = await avant();
-            exige(bureau.apres && bureau.visible, 'sur ordinateur, « Télécharger le CV » ne vient pas après le carton « Prochainement »');
+            exige(bureau.apres && bureau.visible, 'sur ordinateur, « Télécharger le CV » ne vient pas après la prochaine date');
             exige(bureau.detail === 'bureau', `la mesure ne dit pas « bureau » sur ordinateur : ${bureau.detail}`);
+            await c.close();
+        });
+
+        await verifie('les démos voix : toucher la barre de lecture mène au point touché, même quand le serveur ne sert pas de morceaux de fichier', async () => {
+            // Le serveur local, comme l'aperçu de branche sur Cloudflare, ne
+            // répond pas aux requêtes Range : sans le repli en mémoire (voir
+            // allerDansLaDemo), le navigateur ne saute nulle part et l'extrait
+            // repart du début — le défaut constaté sur téléphone.
+            const c = await visiteur({ viewport: { width: 412, height: 915 }, hasTouch: true, isMobile: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#demos_voix', { waitUntil: 'load' });
+            await p.waitForFunction(() => document.getElementById('audio-nexity').duration > 0, null, { timeout: 10000 });
+            // L'onglet arrive en glissant, ses cartes en montant (0,6 s) : on
+            // touche la barre une fois la page posée, comme un visiteur.
+            await p.waitForTimeout(1200);
+            const barre = await p.locator('[data-audio-seek="audio-nexity"]').boundingBox();
+            await p.touchscreen.tap(barre.x + barre.width * 0.5, barre.y + barre.height / 2);
+            await p.waitForTimeout(1000);
+            const r = await p.evaluate(() => {
+                const a = document.getElementById('audio-nexity');
+                return { t: a.currentTime, d: a.duration, largeur: parseFloat(document.getElementById('progress-audio-nexity').style.width) };
+            });
+            exige(Math.abs(r.t - r.d / 2) < r.d * 0.08 && Math.abs(r.largeur - 50) < 8,
+                `toucher le milieu de la barre mène à ${r.t.toFixed(1)} s sur ${r.d.toFixed(1)} (barre à ${r.largeur} %)`);
+            exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
         });
 

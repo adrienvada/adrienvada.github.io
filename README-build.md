@@ -60,22 +60,26 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   sur une séance scolaire), nom du spectacle qui mène à sa page (et aucun lien
   pour un spectacle sans page, aucun lien mort), rangement par spectacle
   retenu, sommaire qui mène à la bonne ligne, une image pour chaque
-  représentation annoncée aux moteurs ; le carton « Prochainement » en tête
-  du CV, avec son lien et son agenda, et nulle part dans l'onglet Dates — sur
-  une saison fictive, elle aussi ;
-- le tableau des départs, en tête de l'onglet Dates : la prochaine date et
-  elle seule (la ville abrégée sans trait d'union, l'heure du public plutôt
-  que celle d'une séance scolaire), des palettes muettes pour les lecteurs
-  d'écran et le texte en clair dans le bouton ; rien ne bat avant que
-  l'onglet soit ouvert, puis les palettes passent par d'autres lettres et se
-  posent toutes sur la bonne, sans volet resté à mi-course — et, observé
-  image par image, la moitié basse ne prend jamais la nouvelle lettre avant
-  que le haut soit tombé ; une recherche ne
-  le fait pas rejouer ; la ligne mène à sa date ; en mouvement réduit, il est
-  posé d'emblée ;
-- « Télécharger le CV » : un seul lien, sous le carton « Prochainement », sur
+  représentation annoncée aux moteurs ; la prochaine date en tête du CV, et
+  nulle part dans l'onglet Dates — sur une saison fictive, elle aussi ;
+- la prochaine date du CV, une ligne de tableau de gare : titrée « Prochaine
+  date », jamais « Départs » ; la date et elle seule (la ville abrégée sans
+  trait d'union, l'heure du public plutôt que celle d'une séance scolaire,
+  l'heure et la ville en clair dessous sur téléphone) ; des palettes muettes
+  pour les lecteurs d'écran et le texte en clair dans le bouton ; rien ne
+  bat avant que le CV soit à l'écran, puis les palettes passent par d'autres
+  lettres et se posent toutes sur la bonne, sans volet resté à mi-course —
+  et, observé image par image, la moitié basse ne prend jamais la nouvelle
+  lettre avant que le haut soit tombé ; un rendu identique ne la fait pas
+  rejouer ; elle mène à sa ligne dans l'onglet Dates, juste sous
+  l'intercalaire de son mois ; en mouvement réduit, elle est posée
+  d'emblée ;
+- « Télécharger le CV » : un seul lien, sous la prochaine date, sur
   téléphone comme sur ordinateur, et la mesure qui dit toujours `mobile` ou
   `bureau` ;
+- les démos voix : toucher la barre de lecture mène au point touché, même
+  servi par un hôte qui ne découpe pas les fichiers (en-têtes Range : c'est
+  le cas du serveur de vérification comme de l'aperçu Cloudflare) ;
 - les pastilles ▶ ne s'impriment pas ;
 - la ligne à vignette du CV : chaque spectacle et chaque film ont leur
   vignette, qui dit l'année et l'état de la ligne (cachée aux lecteurs
@@ -615,7 +619,7 @@ l'ordre (`async = false`) sans retenir la lecture de la page.
 
 Le même garde pose `modal-open` sur le `<body>` dès cet instant : la page
 ne défile pas sous le rideau (le verrou tient sur `<html>`, la boîte qui
-défile), et les animations du CV (phare et volets du carton « Prochainement »)
+défile), et les animations du CV (le voyant et les palettes de la prochaine date)
 attendent qu'il se lève pour jouer — elles ne jouent qu'une fois.
 
 Trois filets restent en place : sans JavaScript, un `<noscript>` escamote le
@@ -764,7 +768,7 @@ manipulations.
 Or le métier fait circuler des CV en pièce jointe. Ce que reçoit un directeur
 de casting doit s'appeler `cv-adrien-vada.pdf`, et s'obtenir d'un seul geste.
 Le bouton est donc devenu un `<a download>` qui pointe sur un vrai fichier.
-Il n'y en a qu'un, **sous le carton « Prochainement »**, sur téléphone comme
+Il n'y en a qu'un, **sous la prochaine date**, sur téléphone comme
 sur ordinateur : on lit d'abord où Adrien joue, puis on emporte le CV (il
 était auparavant dans la barre d'onglets sur ordinateur, et au-dessus du
 carton sur téléphone).
@@ -1082,37 +1086,55 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   portent le même code couleur**, mêlé d'un quart de la couleur du texte : une
   lettre de 11 px doit garder 4,5:1, là où un trait se contente de 3:1 (5,1:1
   au pire, dans les deux thèmes).
-- **Le tableau des départs**, tout en haut (`tableauDesDeparts()`) : la
-  prochaine date comme sur un tableau de gare — la date, le spectacle, la
-  ville, l'heure, en palettes noires. **Une seule ligne**, la première entrée
-  de la liste ; elle mène à sa date plus bas. Sur ordinateur, une ligne de
-  trente-six palettes ; sur téléphone, un panneau de trois rangs (la date et
-  l'heure, le spectacle, la ville), pour des lettres deux fois plus grandes.
-  Ce qui ne tient pas est abrégé sans rien inventer : « Saint- » devient
-  « ST », un nom trop long est coupé entre deux mots (« ST PIERRE » pour
-  Saint-Pierre-lès-Elbeuf), le trait d'union devient un blanc — la charnière
-  d'une palette le coupait en deux. L'heure est celle du public quand une
-  séance scolaire la précède. Le texte complet (la date en lettres, toutes
-  les heures, le lieu exact) est dans le bouton, pour les lecteurs d'écran ;
-  les palettes leur sont cachées. Les lettres battent **une fois**, quand le
-  tableau arrive à l'écran (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) ;
-  en mouvement réduit, il est posé d'emblée. Il se retire pendant une
-  recherche, comme le sommaire.
-- **Pas de carton « Prochainement » ici.** Il n'est qu'en tête du CV
-  (`renderNextDate()`) : le jour, l'heure et le lieu, le nom du spectacle qui
-  mène à sa page, « Réserver » et l'agenda ; sa date mène à l'onglet Dates.
-  Dans l'onglet Dates, la prochaine représentation est sur le tableau des
-  départs, et la liste commence par elle.
+- **Pas de prochaine date ici.** Elle n'est qu'en tête du CV
+  (`renderNextDate()`, voir [La prochaine date](#la-prochaine-date-en-tête-du-cv)) :
+  la liste de l'onglet Dates commence déjà par elle, et c'est là que mène sa
+  ligne — chaque ligne de la liste porte une clé (`data-dl-cle` : le premier
+  jour et le titre) qui la retrouve quels que soient les filtres.
 - **Le sommaire**, en tête de la carte : la saison d'un regard — les
   spectacles en lignes, les mois en colonnes. Il ne filtre rien : un mois, un
   spectacle ou un rond **mènent** aux lignes qu'ils résument. Il se retire
   pendant une recherche, où seule la liste compte.
 - **Le nom d'un spectacle mène à sa page** (`spectacles/<slug>/`), partout où
   l'onglet l'écrit : la ligne, l'en-tête du rangement par spectacle, les
-  archives (`dlVersPage()`) — et, au CV, le carton « Prochainement ». Chaque univers a sa
+  archives (`dlVersPage()`). Chaque univers a sa
   page ; un spectacle sans univers garde son nom en simple texte, jamais un
   lien mort. Le retour du navigateur ramène à l'onglet Dates : changer
   d'onglet inscrit `#page_dates` dans l'historique.
+
+### La prochaine date, en tête du CV
+
+`renderNextDate()`, dans le script écrit juste après son emplacement : la
+prochaine date comme **une ligne de tableau de gare**, sous le titre
+« Prochaine date » — la date, l'heure, le spectacle, la ville, en palettes
+noires ; la date et l'heure en jaune, le spectacle et la ville en blanc,
+l'intitulé de chaque colonne au-dessus, le trait à la couleur du spectacle.
+Noire dans les deux thèmes : c'est un tableau, pas une carte du site.
+
+- **Une seule date**, la prochaine entrée de la liste (un soir, ou une série
+  au même endroit). Sur ordinateur, les quatre colonnes ; sur tablette, la
+  ville passe dessous ; sur téléphone, la date et le spectacle en palettes,
+  l'heure et la ville en clair dessous.
+- **Ce qui ne tient pas est abrégé sans rien inventer** : « Saint- » devient
+  « ST », un nom trop long est coupé entre deux mots (« ST PIERRE » pour
+  Saint-Pierre-lès-Elbeuf), le trait d'union devient un blanc — la charnière
+  d'une palette le coupait en deux. L'heure est celle du public quand une
+  séance scolaire la précède ; « CE SOIR » et « DEMAIN » remplacent la date
+  les deux jours où ils disent plus qu'elle.
+- **Elle mène à sa date** dans l'onglet Dates, juste sous l'intercalaire de
+  son mois — c'est là qu'on réserve et qu'on garde la date dans son agenda.
+  Une recherche en cours est levée d'abord. Le texte complet (la date en
+  lettres, toutes les heures, le lieu exact) est dans le bouton, pour les
+  lecteurs d'écran ; les palettes leur sont cachées.
+- **Rendue pendant la lecture de la page**, pas au chargement : la taille des
+  palettes ne dépend que de la largeur du tableau, et le CV qui suit ne bouge
+  pas. Les jours, les mois et la date en lettres (`dlJour`,
+  `dlDateEnLettres`…) sont donc écrits dans ce premier script ; l'onglet
+  Dates les y trouve. La couleur du spectacle vient d'univers.js, qui arrive
+  en fin de document : le rendu du chargement la pose sans rien redessiner.
+- **Les lettres battent une fois** (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)),
+  quand le tableau est à l'écran — pas sous le rideau, ni pour une adresse
+  qui vise un autre onglet. En mouvement réduit, il est posé d'emblée.
 
 Rien de tout cela ne se saisit : **la couleur, le genre, le sous-titre et la
 photo d'un spectacle viennent de son univers** (`univers.js`), retrouvé par
@@ -1598,26 +1620,23 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
   la cible (`--ambiance-cible`) change une fois par geste, et seuls ses deux
   consommateurs — la lueur et la barre collée — glissent vers elle. Survoler
   une ligne recalculait les 2 276 éléments du document à chaque image.
-- **Le tableau des départs** (onglet Dates, `tableauDesDeparts`). La
-  prochaine date, en palettes de gare : chaque palette est faite de quatre
+- **La prochaine date du CV** (`renderNextDate`). Une ligne de tableau de
+  gare, en palettes : chaque palette est faite de quatre
   moitiés — le haut et le bas fixes, et deux volets qui battent en `rotateX`
   (Web Animations API) : le haut de l'ancienne lettre tombe, le bas de la
   nouvelle se pose. Chaque palette passe par trois à sept lettres de son jeu
   (un chiffre parmi les chiffres, une lettre parmi les lettres ; une lettre
   accentuée se pose sur son accent en dernier), dans l'ordre de lecture,
   22 ms d'une palette à l'autre : moins de deux secondes. Une seule fois, quand
-  le tableau arrive à l'écran, après le rideau et les polices. Pendant le
+  le tableau est à l'écran, après le rideau et les polices — et s'il ne l'est
+  plus au moment de battre (une adresse qui vise l'onglet Dates montre le CV
+  un instant), il attend qu'on revienne. Pendant le
   battement (classe `td-roule`), les volets restent sur leur calque, repliés
   hors de vue entre deux battements, et chaque palette est isolée
   (`contain: strict`) : mesuré sur un téléphone lent simulé (processeur
   ralenti six fois), l'image médiane reste à 60 par seconde pendant le
-  battement. Des données
-  qui changent en cours de route (la base en direct) posent aussitôt les
-  bonnes lettres.
-- **Les volets du carton** (CV, `voletsDuCarton`). Le carton « Prochainement »
-  en fait l'écho, plus léger : une fois, quand il arrive à l'écran, le nom du
-  spectacle et la ligne de la date battent lettre à lettre, puis le texte
-  d'origine est rendu tel quel.
+  battement. Des données qui changent pendant le battement (la base en
+  direct) posent aussitôt les bonnes lettres ; avant, elles le relancent.
 - **La servante** (`404.html`). La page perdue est un plateau vide où la
   servante reste allumée ; l'ampoule hésite deux fois puis se tient, le
   pointeur éclaire la scène comme une lampe de poche. Thème clair compris.
@@ -1882,7 +1901,7 @@ galerie et l'administration. À garder en tête en modifiant le site :
   copie masquée du texte : un moteur la lirait collée aux lettres.
 - **Une page, une hiérarchie** : sur une page spectacle le titre est un h1 et
   tous les titres du montage montent d'un cran (voir la fin de `panelHtml`).
-- **Rien ne bouge sans fin** : phare, pouls, halo des univers, sceau de
+- **Rien ne bouge sans fin** : voyant de la prochaine date, halo des univers, sceau de
   l'ouverture, fleuron et dorures du répertoire jouent une fois (ou trois)
   puis se taisent (WCAG 2.2.2) ; la frise du CV et les scènes des univers ne
   bougent qu'avec le défilement. Le réglage « réduire les animations » coupe
@@ -1960,6 +1979,14 @@ VBR stéréo pour les publicités et documentaires, qui ont une nappe musicale.
 **Garder les masters ailleurs que dans ce dépôt** : le script écrase les
 fichiers sur place, et un ré-encodage n'est pas réversible.
 
+**La barre de lecture** (`allerDansLaDemo`, dans `index.html`). Un navigateur
+ne saute au milieu d'un fichier que si le serveur lui en sert des morceaux
+(en-têtes Range). GitHub Pages le fait ; l'aperçu de branche sur Cloudflare,
+non — toucher la barre y ramenait au début de l'extrait. Quand le point visé
+n'est pas atteignable, le fichier est lu en mémoire (il vient d'ordinaire du
+cache, puisque la démo joue) et l'on saute dedans ; la lecture reprend si elle
+jouait. Clic, toucher et clavier passent par le même chemin.
+
 ---
 
 ## Pages privées (le château-mystère)
@@ -2034,7 +2061,8 @@ qu'un directeur de casting a fini de regarder :
 savoir lequel travaille), `cv_pdf` (`bureau` ou `mobile` : un seul lien,
 dont le détail suit la largeur de l'écran, 768 px), `fiche_pro`
 (`agences-artistiques`, `filmmakers`), `reseau` (`instagram`, `linkedin`,
-`spotify`), `demo_youtube`, `date_agenda`, `date_booking`, `banner_next_date`.
+`spotify`), `demo_youtube`, `date_agenda`, `date_booking`, `banner_next_date`
+(la prochaine date du CV, ouverte dans l'onglet Dates : le nom du spectacle).
 
 **Ne jamais transmettre autre chose que ce que la page affiche déjà** : noms de
 spectacle, noms de démo. Rien qui identifie qui que ce soit.
