@@ -2620,29 +2620,120 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     pointer-events: none;
 }
 
-/* LE TITRE AU BOUT DU TRAVELLING. Invisible au premier écran — le
+/* LE TITRE, SEUL, AU BOUT DU TRAVELLING. Invisible au premier écran — le
    travelling est la première chose qu'on voit —, il paraît au fond de la
-   scène dès le premier geste, avance avec les photos et se pose à la face
-   aux neuf dixièmes de la scène, plein écran : le haut de la page tel
-   qu'on l'avait sans ouverture. Il ne répond au doigt qu'une fois posé —
-   minuscule au fond, son bouton aurait été une cible invisible. */
+   scène dès le premier geste et avance avec les photos jusqu'à sa place,
+   qu'il atteint aux neuf dixièmes de la scène. Seul le titre voyage : la
+   page entière arrivait d'abord avec lui, sa photo et ses textes en un
+   grand rectangle qui avançait — peu élégant.
+
+   LA PERSPECTIVE EST CELLE DE LA SCÈNE. Le titre est quelques niveaux
+   plus bas que la scène ; chaque niveau entre les deux garde la
+   profondeur (preserve-3d) pour que le point de fuite reste celui des
+   photos, au milieu de l'écran : le titre en part, petit, et gagne sa
+   place en grandissant. Aucun de ces niveaux ne doit rien grouper
+   (opacité, rognage, filtre) : cela aplatirait la profondeur. */
 .u-of-titre {
     position: absolute;
     inset: 0;
+    transform-style: preserve-3d;
+}
+
+.u-of-titre .u-hero-wrap,
+.u-of-titre .u-hero {
+    transform-style: preserve-3d;
+}
+
+.u-of-titre .u-title {
     --rg-anim: u-of-titre;
     --s: 0;
-    --e: .92;
+    --e: .88;
 }
 
 @keyframes u-of-titre {
     0% {
         transform: translateZ(-2800px);
         opacity: 0;
-        pointer-events: none;
     }
 
-    30% {
+    25% {
         opacity: 1;
+    }
+
+    100% {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+/* LE RESTE DU HAUT DE LA PAGE PARAÎT UNE FOIS LE TITRE POSÉ : la photo du
+   fond d'abord, puis le surtitre, l'auteur, le synopsis, le rôle, le
+   bouton et la flèche, chacun à son tour. Ce sont les couches qui, en tête
+   de page, partent une à une (voir « Le héros s'en va ») : dans le
+   travelling elles arrivent, et repartent ensuite d'un bloc avec la scène.
+   Le bouton ne répond au doigt qu'une fois là — invisible, il aurait été
+   une cible piège. Le halo du titre laisse la place à la lumière de la
+   scène (.u-of-fond). */
+.u-of-titre .u-hero-fond {
+    --rg-anim: u-of-apres;
+    --s: .88;
+    --e: .94;
+}
+
+.u-of-titre .u-eyebrow {
+    --rg-anim: u-of-apres;
+    --s: .89;
+    --e: .94;
+}
+
+.u-of-titre .u-couche-auteur {
+    --rg-anim: u-of-apres;
+    --s: .9;
+    --e: .95;
+}
+
+.u-of-titre .u-synopsis {
+    --rg-anim: u-of-apres;
+    --s: .91;
+    --e: .96;
+}
+
+.u-of-titre .u-couche-meta {
+    --rg-anim: u-of-apres;
+    --s: .92;
+    --e: .97;
+}
+
+.u-of-titre .u-couche-actions {
+    --rg-anim: u-of-apres-clic;
+    --s: .93;
+    --e: .98;
+}
+
+.u-of-titre .u-couche-fleche {
+    --rg-anim: u-of-apres;
+    --s: .94;
+    --e: .99;
+}
+
+.u-of-titre .u-hero::before {
+    display: none;
+}
+
+@keyframes u-of-apres {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes u-of-apres-clic {
+    0% {
+        opacity: 0;
+        pointer-events: none;
     }
 
     99% {
@@ -2650,18 +2741,17 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     }
 
     100% {
-        transform: none;
         opacity: 1;
         pointer-events: auto;
     }
 }
 
-/* Posé, le titre ne se défait pas par couches comme en tête de page (voir
-   « Le héros s'en va ») : il repart d'un bloc avec la scène. Ses
-   animations de sortie suivraient ici la course de la scène entière, et
-   l'effaceraient en plein travelling. */
-.u-of-titre .rg-k {
-    animation: none;
+/* En tête de page, le bouton effacé devient invisible au clic (voir
+   u-sortie-clic) ; dans le travelling, il arrive : rien à cacher. */
+@supports (animation-timeline: view()) {
+    .u-of-titre .u-couche-actions {
+        animation-name: var(--rg-anim);
+    }
 }
 
 /* Sur un écran haut (téléphone), la largeur seule donnerait des photos

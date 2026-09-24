@@ -115,12 +115,14 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   en `overflow: hidden`, qui ne défile pas (voir [Ce que suit une animation au
   défilement](#ce-que-suit-une-animation-au-défilement)) ;
 - les pages spectacle s'ouvrent sur le travelling : le titre (`h1`) au bout de
-  la scène, invisible au premier écran où une photo est déjà là, posé à la face
-  au bout de la scène et cliquable ; ni carton ni noir dans la scène, le carton
-  du chapitre en tête du montage ; la première photo encore éteinte au bas de
-  l'écran, allumée à l'entrée de son quart inférieur ;
+  la scène, invisible au premier écran où une photo est déjà là ; en plein
+  travelling il avance SEUL — sa photo et ses textes pas encore là — ; au bout,
+  il est posé, et la photo, les textes et le bouton (cliquable) ont paru ; ni
+  carton ni noir dans la scène, le carton du chapitre en tête du montage ; la
+  première photo encore éteinte au bas de l'écran, allumée à l'entrée de son
+  quart inférieur ;
 - en mouvement réduit, chaque scène a un état fixe : l'ouverture réduite au
-  titre posé à la face, la poursuite à sa photo en plein feux, la première photo allumée, le
+  haut de la page posé — titre, photo, textes —, la poursuite à sa photo en plein feux, la première photo allumée, le
   texte écrit, plus rien d'animé au défilement ;
 - les défauts réparés de l'audit du mouvement : le verrou de défilement posé
   sur `<html>` et la place de la barre réservée, le changement d'onglet et sa
@@ -1621,7 +1623,7 @@ panneau de l'univers.
 |---|---|---|
 | **L'écriture à la lumière** | chaque ligne d'une citation, d'un texte ou d'une incrustation s'écrit pendant qu'on la lit : une fenêtre de lumière la parcourt, avec un temps à la césure | `ecrireALaLumiere` (univers.js) |
 | **La mise au point** | chaque photo arrive floue, fait le point au milieu de l'écran, se refloute un peu en partant | `.u-flou`, `-flou.webp` |
-| **Le travelling, jusqu'au titre** | la première chose qu'on voit : des photos arrivent du fond du plateau et passent de part et d'autre ; au fond de la scène, le haut de la page — titre, photo, auteur, rôle, bouton — avance avec elles et se pose à la face, plein écran, aux neuf dixièmes de la scène. Il n'y répond au doigt qu'une fois posé ; au clavier, Tab y mène d'un coup. « Avancer », et une lumière qui descend un rail, invitent à défiler. Plus de noir à la fin : le carton du chapitre suit le titre, dans le montage | `ouvertureHtml`, `panelHtml` (univers-montage.js), `.u-ouverture`, `.u-of-titre` |
+| **Le travelling, jusqu'au titre** | la première chose qu'on voit : des photos arrivent du fond du plateau et passent de part et d'autre ; au fond de la scène, le titre, **seul**, avance avec elles jusqu'à sa place, qu'il atteint aux neuf dixièmes de la scène. Alors seulement paraissent la photo du fond, puis le surtitre, l'auteur, le synopsis, le rôle, le bouton, la flèche, chacun à son tour — la page entière qui avançait faisait un grand rectangle. Le bouton ne répond au doigt qu'une fois paru ; au clavier, Tab mène d'un coup au bout de la scène. « Avancer », et une lumière qui descend un rail, invitent à défiler. Plus de noir à la fin : le carton du chapitre suit le titre, dans le montage | `ouvertureHtml`, `panelHtml` (univers-montage.js), `.u-ouverture`, `.u-of-titre` |
 | **La signature lumineuse** | après le titre, la première photo attend dans la pénombre — un cinquième de sa lumière, plus un rectangle noir — et s'allume à la façon du spectacle — foudre, néon, guirlande, torche, lumière crue, projecteur — dès qu'elle entre dans le quart inférieur de l'écran (elle attendait la moitié : un demi-écran de noir) | `voileHtml`, `.u-allumage`, `guetterAllumage` |
 | **La poursuite** | sur une photo de groupe choisie, la pénombre, une ou deux poursuites qui vont d'un comédien à l'autre, puis plein feux | `poursuiteHtml`, `.u-poursuite` |
 
@@ -1648,13 +1650,16 @@ les pages, et regarder la scène — la photo y est montrée entière.
 poursuite à sa photo en plein feux, la première photo est allumée d'emblée, le
 texte est écrit. **Sans JavaScript** (`univers-statique.css`), même chose.
 
-**Le titre, dans le travelling, ne se défait pas par couches** comme en tête
-de page : il repart d'un bloc avec la scène. Ses animations de sortie
-suivraient ici la course de la scène entière et l'effaceraient en plein
-travelling — vérifié dans Chromium : un élément dans une scène collée
-(`sticky`) a une course étalée sur toute la scène. Et la scène rogne en
-`overflow: clip`, pas `hidden`, qui en ferait une boîte de défilement : tout
-ce qu'elle contient suivrait ce cadre immobile.
+**Le haut de la page, dans le travelling, ne se défait pas par couches** comme
+en tête de page : ses couches y ARRIVENT, sur la course de la scène, et
+repartent d'un bloc avec elle. Leurs animations de sortie suivraient ici la
+course de la scène entière et les effaceraient en plein travelling — vérifié
+dans Chromium : un élément dans une scène collée (`sticky`) a une course
+étalée sur toute la scène. La scène rogne en `overflow: clip`, pas `hidden`,
+qui en ferait une boîte de défilement : tout ce qu'elle contient suivrait ce
+cadre immobile. Le titre garde la perspective de la scène — chaque niveau
+entre les deux est en `preserve-3d`, sans rien qui groupe (opacité, rognage,
+filtre) : il part du point de fuite des photos, au milieu de l'écran.
 
 ### L'écriture à la lumière
 

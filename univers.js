@@ -2212,17 +2212,16 @@ const SHOW_UNIVERSES = {
         poserFenetreAgenda();
 
         // AU CLAVIER, LE TITRE VIENT À SOI. Au bout du travelling (voir
-        // ouvertureHtml), le titre et son bouton sont encore au fond de la
-        // scène — minuscules, ou pas encore là — quand la touche Tab les
-        // atteint. On avance alors jusqu'à eux : le travelling se déroule
-        // jusqu'à les poser à la face, et le focus se voit.
+        // ouvertureHtml), le bouton « Accéder aux dates » n'est pas encore
+        // là quand la touche Tab l'atteint : il paraît après le titre, à la
+        // toute fin de la scène. On avance alors jusqu'au bout : le
+        // travelling se déroule, le titre se pose, le reste paraît, et le
+        // focus se voit.
         overlay.addEventListener('focusin', (e) => {
             const scene = e.target.closest?.('.u-ouverture');
             if (!scene || !e.target.closest('.u-of-titre')) return;
-            const tenue = scene.offsetHeight - overlay.clientHeight;
-            // Posé aux neuf dixièmes de la scène (--e de .u-of-titre).
-            const pose = scene.offsetTop + tenue * 0.92;
-            if (overlay.scrollTop < pose - 1) overlay.scrollTo({ top: pose + 1, behavior: 'auto' });
+            const fin = scene.offsetTop + scene.offsetHeight - overlay.clientHeight;
+            if (overlay.scrollTop < fin - 1) overlay.scrollTo({ top: fin, behavior: 'auto' });
         });
 
         overlay.addEventListener('click', (e) => {
