@@ -123,7 +123,9 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   ne lève pas le rideau (Échap, si), le zoom de l'avatar dans `styles.css`, la
   phrase posée sur un groupe de photos (« Jusqu'où serez-vous semblables ? ») ;
 - le book : fermer puis rouvrir aussitôt ne laisse pas une page morte ;
-- la frise du CV, comme le prototype de l'audit, avec les deux pilotes : le
+- la frise du CV, comme le prototype de l'audit, avec les deux pilotes : la
+  ligne de lecture aux trois quarts de l'écran, la pointe du fil dessus
+  (à 12 px près, aux deux tiers de la liste) ; le
   fil d'or à gauche de la liste, un point rond par spectacle centré dessus ;
   une ligne déjà lue est pleine avec son point, une ligne à venir voilée et
   sans point ; aucun lavis ne passe plus à droite ; tout est posé en mouvement
@@ -1109,8 +1111,8 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   dernière ligne ; **un espace le sépare du suivant** : on voit où finit un
   mois et où commence le suivant. Il **se trace à mesure qu'on lit** : sa
   trace pâle est là d'emblée, le trait plein descend avec la ligne de
-  lecture (le milieu de l'écran), et le point du mois éclôt quand elle
-  atteint l'intercalaire — accroché avec lui en haut de l'écran, il dit quel
+  lecture (aux trois quarts de l'écran, comme au CV), et le point du mois
+  éclôt quand elle atteint l'intercalaire — accroché avec lui en haut de l'écran, il dit quel
   mois on lit. Les mêmes images que la frise du CV (`cv-fil`, `cv-point`),
   les deux mêmes pilotes : `view()` dans les navigateurs récents, `regie.js`
   ailleurs (le groupe et son intercalaire portent `.rg-ligne`, et
@@ -1681,7 +1683,12 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
 ### Le CV, le bandeau, la page 404
 
 - **La frise**, telle que le prototype de l'audit la proposait (« La frise
-  qui s'allume »). Une ligne de lecture court au milieu de l'écran : un fil
+  qui s'allume »). Une **ligne de lecture** court aux trois quarts de
+  l'écran, à l'entrée de son quart inférieur (`--ligne-lecture: .75`, une
+  seule valeur pour la frise du CV, celle des mois de l'onglet Dates, les
+  deux pilotes et les vérifications) : ce qu'on va lire arrive par le bas
+  et se découvre dès qu'il monte dans l'écran — au milieu, où elle était, le
+  bas de l'écran restait voilé. Un fil
   d'or se trace le long du bord **gauche** de la liste, dans la marge de la
   carte, jusqu'à elle ; sur le fil, au milieu de chaque ligne, un **point**
   dans la couleur du spectacle éclôt quand elle l'atteint (× 1,3, puis il se
@@ -1695,8 +1702,12 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
   plus à droite — ni filet, ni lavis au passage (le lavis ne répond plus qu'à
   la souris et au doigt) ; le halo des vignettes « tournée » et « création »
   s'allume avec le point. Tout est lié au défilement — plus d'horloge, donc
-  rien qui rejoue après un survol, comme le faisait la guirlande. Pilotes : `view()` en natif ; `--ph` et `--pt` (la place de la
-  ligne, en hauteurs d'écran) écrits par `regie.js` ailleurs (`.rg-ligne`).
+  rien qui rejoue après un survol, comme le faisait la guirlande. Pilotes : `view(0px)` en natif — sans cet encart nul, `view()`
+  retranche de l'écran le `scroll-padding-top` du html (84 px), et le fil
+  courait jusqu'à 84 px devant la ligne de lecture ; `--ph` et `--pt` (la
+  place de la ligne, en hauteurs d'écran) écrits par `regie.js` ailleurs
+  (`.rg-ligne`) — tant qu'ils manquent, le fil et les points supposent la
+  ligne sous l'écran, le voile la suppose lue.
   Voir « La frise » dans `index.html`. **L'année, elle, ne bouge pas** : elle
   montait sur la vignette depuis le bas du cadre, et toutes les années ont un
   jour disparu (voir ci-dessous) ; même réparée, la montée laissait sans année

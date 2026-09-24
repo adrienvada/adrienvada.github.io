@@ -1158,8 +1158,11 @@ function exige(condition, message) {
                     const liste = document.getElementById('cv-theatre-list');
                     const lignes = [...liste.querySelectorAll('li.cv-has-universe')];
                     document.documentElement.style.scrollBehavior = 'auto';
+                    // La ligne de lecture, telle que la page la déclare
+                    // (une fraction de l'écran, depuis son haut).
+                    const L = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ligne-lecture'));
                     // La quatrième ligne sur la ligne de lecture.
-                    const y = lignes[3].getBoundingClientRect().top + scrollY - innerHeight * 0.5 + 4;
+                    const y = lignes[3].getBoundingClientRect().top + scrollY - innerHeight * L + 4;
                     window.scrollTo(0, y);
                     await new Promise((r) => setTimeout(r, 400));
                     const px = (v) => parseFloat(v) || 0;
@@ -1170,6 +1173,7 @@ function exige(condition, message) {
                     const p0 = point(lignes[0]);
                     const etat = {
                         frise: liste.classList.contains('cv-frise'),
+                        lecture: L,
                         filGauche: px(fil.left),
                         // Le centre du point et celui du fil, depuis le bord gauche de la liste.
                         ecartPointFil: Math.abs((px(p0.left) + px(p0.width) / 2) - (px(fil.left) + px(fil.width) / 2)),
@@ -1186,15 +1190,18 @@ function exige(condition, message) {
                     // 84 px de scroll-padding-top, et le fil prenait de
                     // l'avance à mesure qu'il descendait — jusqu'à 84 px.
                     const r = liste.getBoundingClientRect();
-                    window.scrollTo(0, r.top + scrollY + r.height * 0.67 - innerHeight * 0.5);
+                    window.scrollTo(0, r.top + scrollY + r.height * 0.67 - innerHeight * L);
                     await new Promise((f) => setTimeout(f, 400));
                     const f2 = getComputedStyle(liste, '::after');
                     const trace = f2.transform === 'none' ? 1 : +(f2.transform.match(/matrix\(([^)]+)\)/) || [0, 'NaN'])[1].split(',')[3];
-                    etat.ecartPointe = Math.abs(liste.getBoundingClientRect().top + px(f2.top) + trace * px(f2.height) - innerHeight * 0.5);
+                    etat.ecartPointe = Math.abs(liste.getBoundingClientRect().top + px(f2.top) + trace * px(f2.height) - innerHeight * L);
                     return etat;
                 });
                 const nom = reduit ? 'en mouvement réduit' : repli ? 'avec le repli' : 'en natif';
                 exige(etat.frise, 'la liste du CV ne porte pas la frise');
+                // Aux trois quarts de l'écran : ce qui monte par le bas se
+                // découvre sans attendre d'en avoir atteint le milieu.
+                exige(etat.lecture === 0.75, `la ligne de lecture n’est plus aux trois quarts de l’écran (--ligne-lecture : ${etat.lecture})`);
                 exige(etat.filGauche < 0, `${nom}, le fil d’or n’est plus à gauche de la liste (left ${etat.filGauche} px)`);
                 exige(etat.rond, `${nom}, le repère de la ligne n’est plus un point (filet revenu ?)`);
                 exige(etat.ecartPointFil < 0.6, `${nom}, le point n’est pas centré sur le fil (écart ${etat.ecartPointFil.toFixed(2)} px)`);
@@ -1226,11 +1233,14 @@ function exige(condition, message) {
                 const p = await c.newPage();
                 await p.goto(base + '/', { waitUntil: 'load' });
                 await p.waitForTimeout(600);
-                // Le fil au milieu de la 2e ligne : la 6e est voilée, sans point.
+                // La 6e ligne juste sous la ligne de lecture, où son voile
+                // commence à peine à se lever : voilée, sans point, et
+                // entière à l'écran — la survoler ne fait rien défiler.
                 await p.evaluate(() => {
                     document.documentElement.style.scrollBehavior = 'auto';
-                    const r = document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[1].getBoundingClientRect();
-                    window.scrollTo(0, r.top + r.height / 2 + scrollY - innerHeight * 0.5);
+                    const L = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ligne-lecture'));
+                    const r = document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[5].getBoundingClientRect();
+                    window.scrollTo(0, r.top + scrollY - innerHeight * (L + 0.14));
                 });
                 await p.waitForTimeout(300);
                 const lire = () => p.evaluate(() => {
@@ -1288,9 +1298,11 @@ function exige(condition, message) {
                 const etat = await p.evaluate(async () => {
                     document.documentElement.style.scrollBehavior = 'auto';
                     const groupes = [...document.querySelectorAll('#upcoming-dates-container .dl-groupe')];
-                    // La ligne de lecture au milieu du deuxième mois.
+                    // La ligne de lecture (déclarée par la page) au milieu du
+                    // deuxième mois.
+                    const L = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ligne-lecture'));
                     const r = groupes[1].getBoundingClientRect();
-                    window.scrollTo(0, r.top + scrollY + r.height / 2 - innerHeight / 2);
+                    window.scrollTo(0, r.top + scrollY + r.height / 2 - innerHeight * L);
                     await new Promise((f) => setTimeout(f, 500));
                     // matrix(a, b, c, d, e, f) : a, l'échelle du point ; d, la hauteur tracée du liseré.
                     const echelle = (t, n) => (t === 'none' ? 1 : +((t.match(/matrix\(([^)]+)\)/) || [0, 'NaN'])[1].split(',')[n]));
