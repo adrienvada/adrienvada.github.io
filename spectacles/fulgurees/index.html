@@ -219,14 +219,12 @@
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
-        <!-- LE HÉROS SE DÉFAIT PAR COUCHES, chacune sur sa propre course au
-             défilement (voir « Le héros s'en va » dans univers.css) : le
-             surtitre part d'abord, le titre en dernier. L'auteur, la ligne
-             du rôle, le bouton et la flèche sont enveloppés d'une couche : ils
-             ont déjà leur propre fondu d'arrivée, et deux animations ne se
-             partagent pas une même opacité. -->
-        <div class="u-hero-wrap rg-vue">
+        <section class="u-ouverture rg-scene" style="--of-hauteur:540.5svh;--of-invite:0.0318;--of-titre:0.454;--of-fond-s:0.454;--of-fond-e:0.5562;--of-sur-s:0.4722;--of-sur-e:0.5448;--of-auteur-s:0.504;--of-auteur-e:0.5721;--of-synopsis-s:0.5358;--of-synopsis-e:0.5721;--of-meta-s:0.8547;--of-meta-e:0.9228;--of-actions-s:0.882;--of-actions-e:0.9455;--of-fleche-s:0.9183;--of-fleche-e:0.9637">
+            <div class="u-of-scene">
+                <span class="u-of-fond" aria-hidden="true"></span>
+                <div class="u-of-titre rg-k"><div class="u-hero-wrap">
         <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/fulgurees/10-1280.webp" srcset="../../ressources/images/univers/fulgurees/10-640.webp 640w, ../../ressources/images/univers/fulgurees/10-1280.webp 1280w" sizes="100vw" alt="" decoding="async" style="object-position:47% 35%"></div>
+
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
                  que la date et l'état de la tournée : c'est la ligne d'une
@@ -245,7 +243,7 @@
                  second niveau. -->
             <h1 class="u-title rg-k" id="u-titre" aria-label="Fulguré.e.s" style="--u-title-chars:11;--u-title-len:11"><span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:0">F</span><span class="u-ch" style="--i:1">u</span><span class="u-ch" style="--i:2">l</span><span class="u-ch" style="--i:3">g</span><span class="u-ch" style="--i:4">u</span><span class="u-ch" style="--i:5">r</span><span class="u-ch" style="--i:6">é</span><span class="u-ch" style="--i:7">.</span><span class="u-ch" style="--i:8">e</span><span class="u-ch" style="--i:9">.</span><span class="u-ch" style="--i:10">s</span></span></h1>
             <div class="u-couche u-couche-auteur rg-k"><p class="u-author">Jérémie Fabre</p></div>
-            <p class="u-synopsis rg-k"><span class="u-line"><span class="u-wd" style="--i:0">Une</span> <span class="u-wd" style="--i:1">fratrie.</span> <span class="u-wd" style="--i:2">Un</span> <span class="u-wd" style="--i:3">village.</span> <span class="u-wd" style="--i:4">Perdu.</span></span><span class="u-line"><span class="u-wd" style="--i:5">La</span> <span class="u-wd" style="--i:6">foudre</span> <span class="u-wd" style="--i:7">y</span> <span class="u-wd" style="--i:8">a</span> <span class="u-wd" style="--i:9">frappé</span> <span class="u-wd" style="--i:10">il</span> <span class="u-wd" style="--i:11">y</span> <span class="u-wd" style="--i:12">a</span> <span class="u-wd" style="--i:13">quelques</span> <span class="u-wd" style="--i:14">années</span> <span class="u-wd" style="--i:15">et</span> <span class="u-wd" style="--i:16">y</span> <span class="u-wd" style="--i:17">a</span> <span class="u-wd" style="--i:18">laissé</span> <span class="u-wd" style="--i:19">des</span> <span class="u-wd" style="--i:20">survivant.e.s :</span> <span class="u-wd" style="--i:21">les</span> <span class="u-wd" style="--i:22">fulguré.e.s.</span> <span class="u-wd" style="--i:23">À</span> <span class="u-wd" style="--i:24">l’occasion</span> <span class="u-wd" style="--i:25">d’un</span> <span class="u-wd" style="--i:26">nouvel</span> <span class="u-wd" style="--i:27">an,</span> <span class="u-wd" style="--i:28">la</span> <span class="u-wd" style="--i:29">fratrie</span> <span class="u-wd" style="--i:30">s’y</span> <span class="u-wd" style="--i:31">perd</span> <span class="u-wd" style="--i:32">et</span> <span class="u-wd" style="--i:33">rencontre</span> <span class="u-wd" style="--i:34">ses</span> <span class="u-wd" style="--i:35">habitants.</span> <span class="u-wd" style="--i:36">Alors</span> <span class="u-wd" style="--i:37">que</span> <span class="u-wd" style="--i:38">« tout</span> <span class="u-wd" style="--i:39">est</span> <span class="u-wd" style="--i:40">chaos »,</span> <span class="u-wd" style="--i:41">la</span> <span class="u-wd" style="--i:42">foudre</span> <span class="u-wd" style="--i:43">frappe</span> <span class="u-wd" style="--i:44">à</span> <span class="u-wd" style="--i:45">nouveau.</span></span></p>
+            <p class="u-synopsis u-ecrit rg-k" data-ecrire="scene" data-de="0.5675" data-a="0.8638"><span class="u-line"><span class="u-rw">Une</span> <span class="u-rw">fratrie.</span> <span class="u-rw">Un</span> <span class="u-rw">village.</span> <span class="u-rw">Perdu.</span></span><span class="u-line"><span class="u-rw">La</span> <span class="u-rw">foudre</span> <span class="u-rw">y</span> <span class="u-rw">a</span> <span class="u-rw">frappé</span> <span class="u-rw">il</span> <span class="u-rw">y</span> <span class="u-rw">a</span> <span class="u-rw">quelques</span> <span class="u-rw">années</span> <span class="u-rw">et</span> <span class="u-rw">y</span> <span class="u-rw">a</span> <span class="u-rw">laissé</span> <span class="u-rw">des</span> <span class="u-rw">survivant.e.s :</span> <span class="u-rw">les</span> <span class="u-rw">fulguré.e.s.</span> <span class="u-rw">À</span> <span class="u-rw">l’occasion</span> <span class="u-rw">d’un</span> <span class="u-rw">nouvel</span> <span class="u-rw">an,</span> <span class="u-rw">la</span> <span class="u-rw">fratrie</span> <span class="u-rw">s’y</span> <span class="u-rw">perd</span> <span class="u-rw">et</span> <span class="u-rw">rencontre</span> <span class="u-rw">ses</span> <span class="u-rw">habitants.</span> <span class="u-rw">Alors</span> <span class="u-rw">que</span> <span class="u-rw">« tout</span> <span class="u-rw">est</span> <span class="u-rw">chaos »,</span> <span class="u-rw">la</span> <span class="u-rw">foudre</span> <span class="u-rw">frappe</span> <span class="u-rw">à</span> <span class="u-rw">nouveau.</span></span></p>
             <div class="u-couche u-couche-meta rg-k"><p class="u-meta">Rôle · Adrien / Le jeune mec / Jerem<br>Compagnie Alchimie — Amélie Chalmey</p></div>
 
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
@@ -266,28 +264,30 @@
                 </svg>
             </span>
         </header>
-        </div>
-
-        <div class="u-figs"><section class="u-ouverture rg-scene" aria-label="Ouverture">
-            <div class="u-of-scene">
-                <span class="u-of-fond" aria-hidden="true"></span>
-                <span class="u-of-plans" aria-hidden="true"><span class="u-of-photo rg-k" style="--x:-22cqw;--y:-9cqh;--s:-0.18;--e:0.4">
+        </div></div>
+                <span class="u-of-plans" aria-hidden="true"><span class="u-of-photo rg-k" style="--x:-22cqw;--y:-9cqh;--s:-0.0931;--e:0.2089">
                     <img src="../../ressources/images/univers/fulgurees/3-640.webp" srcset="../../ressources/images/univers/fulgurees/3-640.webp 640w, ../../ressources/images/univers/fulgurees/3-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
-                </span><span class="u-of-photo rg-k" style="--x:21cqw;--y:9cqh;--s:0.06;--e:0.52">
+                </span><span class="u-of-photo rg-k" style="--x:21cqw;--y:9cqh;--s:0.0318;--e:0.2724">
                     <img src="../../ressources/images/univers/fulgurees/23-640.webp" srcset="../../ressources/images/univers/fulgurees/23-640.webp 640w, ../../ressources/images/univers/fulgurees/23-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
-                </span><span class="u-of-photo rg-k" style="--x:-19cqw;--y:11cqh;--s:0.18;--e:0.64">
+                </span><span class="u-of-photo rg-k" style="--x:-19cqw;--y:11cqh;--s:0.0931;--e:0.3337">
                     <img src="../../ressources/images/univers/fulgurees/7-640.webp" srcset="../../ressources/images/univers/fulgurees/7-640.webp 640w, ../../ressources/images/univers/fulgurees/7-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
-                </span><span class="u-of-photo rg-k" style="--x:23cqw;--y:-8cqh;--s:0.3;--e:0.74">
+                </span><span class="u-of-photo rg-k" style="--x:23cqw;--y:-8cqh;--s:0.1566;--e:0.3859">
                     <img src="../../ressources/images/univers/fulgurees/2-640.webp" srcset="../../ressources/images/univers/fulgurees/2-640.webp 640w, ../../ressources/images/univers/fulgurees/2-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
                 </span></span>
-                <div class="u-of-carton rg-k">
-                <span class="u-chapter-num">1h15</span>
-                <h2 class="u-ecrit" data-ecrire="scene" data-de="0.6" data-a="0.8"><span class="u-line"><span class="u-rw">Spectacle</span> <span class="u-rw">tout</span> <span class="u-rw">public</span> <span class="u-rw">à</span> <span class="u-rw">partir</span> <span class="u-rw">de</span> <span class="u-rw">14</span> <span class="u-rw">ans.</span></span></h2>
-            </div>
                 <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
-                <span class="u-of-noir rg-k" aria-hidden="true"></span>
             </div>
-        </section><figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="foudre" style="--i:0">
+        </section>
+
+        <div class="u-figs"><section class="u-carton rg-scene" data-salle="sombre">
+            <div class="u-carton-scene">
+                <span class="u-carton-fond" aria-hidden="true"></span>
+                <div class="u-chapter u-carton-texte rg-k">
+                    <span class="u-chapter-num">1h15</span>
+                    <h2 class="u-ecrit" data-ecrire="scene" data-de="0.04" data-a="0.46"><span class="u-line"><span class="u-rw">Spectacle</span> <span class="u-rw">tout</span> <span class="u-rw">public</span> <span class="u-rw">à</span> <span class="u-rw">partir</span> <span class="u-rw">de</span> <span class="u-rw">14</span> <span class="u-rw">ans.</span></span></h2>
+                </div>
+                <span class="u-carton-noir rg-k" aria-hidden="true"></span>
+            </div>
+        </section><figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="foudre" data-salle="sombre" style="--i:0">
             <button type="button" class="u-fig-media rg-k" data-u-zoom="0"
                     aria-label="Agrandir : Cette pièce réjouira les amateurs de musique électro, de relations familiales compliquées, et de phénomènes naturels extrêmes.">
                 <span class="u-fig-point rg-k">

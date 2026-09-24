@@ -55,13 +55,22 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - « Ajouter au calendrier » ouvre sa fenêtre dans un univers ouvert depuis le
   CV (une représentation fictive est glissée dans les dates le temps du test :
   il ne dépend pas de la saison) ;
-- l'onglet Dates : feuilles d'éphéméride, intercalaires de mois et leur
-  liseré (à la couleur de son mois), séances en cases, une date seule comprise (et pas de « Réserver »
-  sur une séance scolaire), nom du spectacle qui mène à sa page (et aucun lien
-  pour un spectacle sans page, aucun lien mort), rangement par spectacle
-  retenu, sommaire qui mène à la bonne ligne, une image pour chaque
-  représentation annoncée aux moteurs ; la prochaine date en tête du CV, et
-  nulle part dans l'onglet Dates — sur une saison fictive, elle aussi ;
+- l'onglet Dates, à la densité du CV : une série de deux soirs tient en
+  80 px au plus au téléphone ; la feuille d'éphéméride posée sur la photo du
+  spectacle, les jours d'une série écrits avec un tiret ; la ville et la
+  salle ; une puce par séance, une date seule comprise (et pas de lien de
+  réservation sur une séance scolaire) ; un seul bouton d'agenda par ligne,
+  dont la fenêtre propose d'abord la séance publique d'une série, change de
+  date quand on en choisit une autre, et ne demande rien pour une date
+  seule ; pas de total dans les intercalaires ; la frise des mois (un liseré
+  à la couleur de son mois dans la marge de la carte, sa trace pâle, son
+  point posé dessus devant le nom du mois) ; nom du spectacle qui mène à sa
+  page (et aucun lien pour un spectacle sans page, aucun lien mort) ;
+  rangement par spectacle retenu, la feuille y redevient papier, la ligne ne
+  répète pas le titre et la frise prend la couleur du spectacle ; sommaire qui
+  mène à la bonne ligne ; une image pour chaque représentation annoncée aux
+  moteurs ; la prochaine date en tête du CV, et nulle part dans l'onglet
+  Dates — sur une saison fictive, elle aussi ;
 - la prochaine date du CV, une ligne de tableau de gare : titrée « Prochaine
   date », jamais « Départs » ; la date et elle seule (la ville abrégée sans
   trait d'union, l'heure du public plutôt que celle d'une séance scolaire,
@@ -98,28 +107,51 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - la régie (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) :
   l'en-tête de l'accueil et des pages spectacle teste la même chose que
   `regie.js`, et le second pilote (`?repli`) rejoue les images du navigateur —
-  opacité et transformation des éléments de l'ouverture et de la poursuite,
-  relevées aux mêmes endroits du défilement ;
-- chaque animation menée par le défilement, sur l'accueil et sur chaque page
-  spectacle, suit la page ou le panneau de l'univers — jamais un cadre rogné
+  opacité et transformation des éléments de l'ouverture (photos, titre,
+  surtitre, auteur, synopsis et sa lumière, bouton), du carton du chapitre et
+  de la poursuite, relevées aux mêmes endroits du défilement ;
+- chaque animation menée par le défilement, sur l'accueil, dans l'onglet
+  Dates et sur chaque page spectacle, suit la page ou le panneau de
+  l'univers — jamais un cadre rogné
   en `overflow: hidden`, qui ne défile pas (voir [Ce que suit une animation au
   défilement](#ce-que-suit-une-animation-au-défilement)) ;
-- en mouvement réduit, chaque scène a un état fixe : l'ouverture réduite à son
-  carton, la poursuite à sa photo en plein feux, la première photo allumée, le
-  texte écrit, plus rien d'animé au défilement ;
+- les pages spectacle s'ouvrent sur le travelling, puis le récit s'écrit :
+  le titre (`h1`) au bout de la scène, invisible au premier écran où une
+  photo est déjà là ; en plein travelling il avance SEUL ; posé, rien d'autre
+  encore ; en pleine écriture, des lignes du synopsis écrites et d'autres
+  non, le bouton ni visible ni cliquable ; au bout de la scène, tout a paru,
+  le synopsis est écrit et le bouton répond. Puis le carton du chapitre, en
+  tête du montage, tient l'écran (deux écrans de défilement au moins), sa
+  phrase écrite ; il finit dans le noir si la salle est sombre (À la barre,
+  Cléophène), s'efface sans noir si elle est claire (Bérénice, L'Homme
+  moderne), et la première photo attend dans la pénombre ou dans le papier
+  selon la salle, éteinte au bas de l'écran, allumée à l'entrée de son quart
+  inférieur ;
+- en mouvement réduit, chaque scène a un état fixe : l'ouverture réduite au
+  haut de la page posé — titre, photo, textes, bouton, sans coupe ni
+  déplacement —, le carton du chapitre à un carton, sans noir, la poursuite à
+  sa photo en plein feux, la première photo allumée, le texte écrit, plus
+  rien d'animé au défilement ;
 - les défauts réparés de l'audit du mouvement : le verrou de défilement posé
   sur `<html>` et la place de la barre réservée, le changement d'onglet et sa
   pastille, « Passer » qui répond avant l'arrivée d'`intro.js`, Maj seule qui
   ne lève pas le rideau (Échap, si), le zoom de l'avatar dans `styles.css`, la
   phrase posée sur un groupe de photos (« Jusqu'où serez-vous semblables ? ») ;
 - le book : fermer puis rouvrir aussitôt ne laisse pas une page morte ;
-- la frise du CV, comme le prototype de l'audit, avec les deux pilotes : le
+- la frise du CV, comme le prototype de l'audit, avec les deux pilotes : la
+  ligne de lecture aux trois quarts de l'écran, la pointe du fil dessus
+  (à 12 px près, aux deux tiers de la liste) ; le
   fil d'or à gauche de la liste, un point rond par spectacle centré dessus ;
   une ligne déjà lue est pleine avec son point, une ligne à venir voilée et
   sans point ; aucun lavis ne passe plus à droite ; tout est posé en mouvement
   réduit, et la guirlande à horloge n'est pas revenue ; au téléphone, une
   ligne touchée avant le fil (le survol que garde le navigateur) reste voilée,
   sans point ; à la souris et au clavier, elle est pleine ;
+- la frise des mois de l'onglet Dates, avec les deux pilotes, sur une saison
+  fictive de cinq mois : un espace entre deux mois ; le mois déjà lu est
+  tracé, son point posé ; celui qu'on lit est tracé jusqu'à la ligne de
+  lecture, pas plus ; celui qu'elle n'a pas atteint n'est pas tracé, sans
+  point ; tout est tracé en mouvement réduit ;
 - la page 404 : son titre, son retour, sa lampe, sans erreur ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
@@ -1064,22 +1096,44 @@ ne sert qu'aux saisons antérieures, conservées à la main dans `dates.js`.
 Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
 `dl…()` juste au-dessus dessinent tout, et leur en-tête explique pourquoi.
 
-- **La ligne.** Chaque entrée (une date seule, ou une série : même spectacle,
-  même lieu, soirées rapprochées) s'écrit de la même façon : une **feuille
-  d'éphéméride** (le mois dans un bandeau à la couleur du spectacle, le
-  quantième, le jour ; une série empile ses feuilles), la **date en toutes
-  lettres**, le titre et le lieu. Dessous, **une case par séance** — une date
-  seule a la sienne, comme chaque soir d'une série —, avec son heure,
-  « Réserver » et l'agenda. Une séance scolaire n'a jamais de « Réserver ».
+- **La ligne, à la densité du CV.** Chaque entrée (une date seule, ou une
+  série : même spectacle, même lieu, soirées rapprochées) tient en une ligne
+  de la hauteur d'une ligne du CV — 69 px au téléphone, contre près de 200
+  quand chaque séance avait sa case. À la place de la vignette du CV, une
+  **feuille d'éphéméride posée sur la photo du spectacle** (48 × 56) : le mois
+  dans le bandeau du haut, à la couleur du spectacle ; au centre le jour, ou
+  les jours d'une série avec un tiret (« 22–23 ») ; en bas le jour de la
+  semaine, là où le CV écrit l'année. Sans photo, la feuille prend la couleur
+  du spectacle. À côté, trois lignes : le titre, **la ville et la salle**
+  (`dlLieu()` retire la ville du libellé du lieu), puis **une puce par
+  séance** — son heure, et le jour de la semaine pour une série de plusieurs
+  jours. Une puce publique mène à la billetterie (↗) ; une séance scolaire,
+  ou dont la billetterie n'est pas ouverte, a sa puce en pointillé, sans lien.
+  **Un seul bouton d'agenda**, au bout de la rangée : pour une série, la
+  fenêtre « Ajouter à l'agenda » demande quelle séance ajouter
+  (`data-cal-serie`, voir `openCalendarModal()`), et propose d'abord la
+  première séance publique. La feuille est décorative : la date en toutes
+  lettres reste écrite pour les lecteurs d'écran.
 - **Deux rangements.** « Par date » range les lignes sous un intercalaire par
-  mois ; « Par spectacle », sous chaque pièce, avec sa photo. L'intercalaire
-  reste accroché sous la barre d'onglets pendant qu'on parcourt son mois ou
-  sa pièce. Le choix du visiteur est retenu (`localStorage`, clé
-  `av.datesVue`).
-- **Le liseré.** Chaque groupe porte un trait au bord gauche de la carte, du
-  haut de son intercalaire à sa dernière ligne, interrompu entre deux groupes :
-  on voit où finit un mois et où commence le suivant. **Chaque mois a sa
-  couleur, qui suit les saisons** (`--dl-mois-1` à `--dl-mois-12`) :
+  mois, sans total : la frise suffit à borner le mois, et le sommaire compte
+  déjà les représentations. « Par spectacle », sous chaque pièce, avec sa
+  photo : la feuille des lignes redevient alors papier, et la ligne ne répète
+  pas le titre. L'intercalaire reste accroché sous la barre d'onglets pendant
+  qu'on parcourt son mois ou sa pièce. Le choix du visiteur est retenu
+  (`localStorage`, clé `av.datesVue`).
+- **La frise des mois.** Comme le fil du CV, chaque groupe porte son liseré
+  dans la marge de la carte, du point posé devant le nom du mois jusqu'à sa
+  dernière ligne ; **un espace le sépare du suivant** : on voit où finit un
+  mois et où commence le suivant. Il **se trace à mesure qu'on lit** : sa
+  trace pâle est là d'emblée, le trait plein descend avec la ligne de
+  lecture (aux trois quarts de l'écran, comme au CV), et le point du mois
+  éclôt quand elle atteint l'intercalaire — accroché avec lui en haut de l'écran, il dit quel
+  mois on lit. Les mêmes images que la frise du CV (`cv-fil`, `cv-point`),
+  les deux mêmes pilotes : `view()` dans les navigateurs récents, `regie.js`
+  ailleurs (le groupe et son intercalaire portent `.rg-ligne`, et
+  `renderDates()` les confie à la régie à chaque rendu). En mouvement réduit
+  et sur papier, tout est tracé d'emblée. **Chaque mois a sa couleur, qui
+  suit les saisons** (`--dl-mois-1` à `--dl-mois-12`) :
 
   | Saison | Mois |
   |---|---|
@@ -1090,8 +1144,8 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
 
   Les douze sont à la même clarté perçue (OKLCH, L = 0,63) : aucune ne domine,
   et chacune garde au moins 3,3:1 de contraste sur le fond clair comme sur le
-  fond sombre. Rangé par spectacle, le liseré prend la couleur de la pièce
-  (`--dl-lisere`). **Les initiales des mois, dans la saison d'un regard,
+  fond sombre. Rangé par spectacle, le liseré et son point prennent la
+  couleur de la pièce (`--dl-lisere`). **Les initiales des mois, dans la saison d'un regard,
   portent le même code couleur**, mêlé d'un quart de la couleur du texte : une
   lettre de 11 px doit garder 4,5:1, là où un trait se contente de 3:1 (5,1:1
   au pire, dans les deux thèmes).
@@ -1426,7 +1480,14 @@ l'accord de l'autrice ou de l'auteur.
 Le hero fait **exactement un écran**. Le titre s'y pose lettre à lettre, vite
 (34 ms), puis le synopsis s'inscrit mot à mot, doucement (108 ms). **Défiler
 accélère l'écriture** : le premier geste écrit la page en même temps qu'il la
-quitte. Ouvert depuis le CV par le passage de la vignette (voir
+quitte.
+
+**Avec une ouverture** (voir [Les scènes d'un univers](#les-scènes-dun-univers)),
+le synopsis ne s'écrit plus au chronomètre : il s'écrivait dès l'ouverture de
+la page, caché au fond de la scène, et paraissait déjà écrit. Il est rendu
+en mots de lumière (`revealWords`, `data-ecrire="scene"`), et la lumière
+l'écrit ligne à ligne sur la course de la scène, le titre posé — sous le
+geste, comme les citations. Ouvert depuis le CV par le passage de la vignette (voir
 [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)), le titre
 arrive déjà écrit — c'est lui qui voyage depuis la ligne — et seul le synopsis
 s'inscrit.
@@ -1577,8 +1638,9 @@ panneau de l'univers.
 |---|---|---|
 | **L'écriture à la lumière** | chaque ligne d'une citation, d'un texte ou d'une incrustation s'écrit pendant qu'on la lit : une fenêtre de lumière la parcourt, avec un temps à la césure | `ecrireALaLumiere` (univers.js) |
 | **La mise au point** | chaque photo arrive floue, fait le point au milieu de l'écran, se refloute un peu en partant | `.u-flou`, `-flou.webp` |
-| **Du lointain à la face** | entre le titre et la première photo, des photos arrivent du fond du plateau et passent de part et d'autre ; le carton du chapitre vient se poser à la face ; puis le noir. « Avancer », et une lumière qui descend un rail, invitent à défiler | `ouvertureHtml` (univers-montage.js), `.u-ouverture` |
-| **Les noirs et la signature lumineuse** | après le noir, la première photo s'allume à la façon du spectacle : foudre, néon, guirlande, torche, lumière crue, projecteur | `voileHtml`, `.u-allumage` |
+| **Le travelling, puis le récit** | la première chose qu'on voit : des photos arrivent du fond du plateau et passent de part et d'autre ; le titre, **seul**, avance avec elles jusqu'à sa place — la page entière qui avançait faisait un grand rectangle. La scène se tient ensuite, le titre posé, et le reste paraît **sous le geste**, un temps après l'autre : la photo du fond se lève de l'ombre, le surtitre s'ouvre du milieu comme un rideau, l'auteur monte d'une trappe, le synopsis paraît en réserve et la lumière l'écrit ligne à ligne ; le rôle monte à son tour, puis le bouton et la flèche, une fois le récit écrit — tout arrivait d'un bloc, déjà écrit. Le bouton ne répond au doigt qu'une fois paru ; au clavier, Tab mène d'un coup au bout de la scène. « Avancer », et une lumière qui descend un rail, invitent à défiler. **La scène a la longueur de son synopsis** : deux écrans de travelling, puis un demi-écran pour cent signes (entre 60 et 140 svh), calculés par `tempoOuverture` et posés en ligne (`--of-hauteur`, `--of-*`) | `tempoOuverture`, `ouvertureHtml`, `panelHtml` (univers-montage.js), `.u-ouverture`, `.u-of-titre` |
+| **Le carton du chapitre** | le premier carton — la durée, une phrase — tient **l'écran entier**, dans sa propre scène tenue, entre le haut de la page et la première photo ; sa phrase s'écrit à la lumière pendant qu'on s'y arrête, et la caméra s'en approche imperceptiblement. Puis **le noir, dans une salle sombre** ; dans une salle claire, le carton s'efface dans le papier — un écran noir sur le parchemin de L'Homme moderne passait pour une page cassée. La salle est lue sur le fond de la palette (luminance relative sous 0,18 : sombre) | `cartonHtml`, `salleDe` (univers-montage.js), `.u-carton` |
+| **La signature lumineuse** | après le carton, la première photo attend dans la pénombre — un cinquième de sa lumière, plus un rectangle noir —, ou, dans une salle claire, dans le papier, comme une épreuve dans le révélateur ; elle s'allume — ou se révèle — à la façon du spectacle — foudre, néon, guirlande, torche, lumière crue, projecteur — dès qu'elle entre dans le quart inférieur de l'écran | `voileHtml`, `.u-allumage` (`--u-voile-teinte`), `guetterAllumage` |
 | **La poursuite** | sur une photo de groupe choisie, la pénombre, une ou deux poursuites qui vont d'un comédien à l'autre, puis plein feux | `poursuiteHtml`, `.u-poursuite` |
 
 Ce que les données en disent (voir aussi l'en-tête de `univers.js`) :
@@ -1586,8 +1648,10 @@ Ce que les données en disent (voir aussi l'en-tête de `univers.js`) :
 ```js
 lumiere: 'foudre',            // foudre | neon | guirlande | torche | crue | projecteur
                               // sans mention : crue (spectacle), projecteur (film)
-ouverture: [5, 21, 20, 7],    // les photos du lointain — sans mention, quatre
-                              // photos réparties dans le montage, jamais la première
+ouverture: [5, 21, 20, 7],    // les photos du travelling — sans mention, quatre
+                              // photos réparties dans le montage, jamais la première ;
+                              // moins de deux photos : pas de travelling, le titre
+                              // ouvre la page
 { p: [9], poursuite: { etapes: [ [[20, 48], [83, 48]], [[51, 60]] ] } }
                               // chaque étape éclaire un ou deux points, en %
                               // de la photo (horizontal, vertical) ; `ratio`
@@ -1598,9 +1662,25 @@ Pour placer une poursuite : ouvrir la photo (`ressources/images/univers/<slug>/<
 relever la position des visages en pourcentage, écrire les étapes, régénérer
 les pages, et regarder la scène — la photo y est montrée entière.
 
-**En mouvement réduit** : l'ouverture se réduit à son carton, la poursuite à
-sa photo en plein feux, la première photo est allumée d'emblée, le texte est
-écrit. **Sans JavaScript** (`univers-statique.css`), même chose.
+**En mouvement réduit** : l'ouverture se réduit au haut de la page, posé, le
+carton du chapitre à un carton, sans noir, la poursuite à sa photo en plein
+feux, la première photo est allumée d'emblée, le texte est écrit. **Sans
+JavaScript** (`univers-statique.css`), même chose.
+
+**Le haut de la page, dans le travelling, ne se défait pas par couches** comme
+en tête de page : ses couches y ARRIVENT, sur la course de la scène, et
+repartent d'un bloc avec elle. Leurs animations de sortie suivraient ici la
+course de la scène entière et les effaceraient en plein travelling — vérifié
+dans Chromium : un élément dans une scène collée (`sticky`) a une course
+étalée sur toute la scène. La scène rogne en `overflow: clip`, pas `hidden`,
+qui en ferait une boîte de défilement : tout ce qu'elle contient suivrait ce
+cadre immobile. Le titre garde la perspective de la scène — chaque niveau
+entre les deux est en `preserve-3d`, sans rien qui groupe (opacité, rognage,
+filtre) : il part du point de fuite des photos, au milieu de l'écran. Ce
+`preserve-3d` fait aussi du hero le repère de ce qu'il place en absolu : la
+flèche suivait sa boîte, un écran plus ses marges, et tombait sous l'écran ;
+marges comprises (`box-sizing: border-box`), il fait un écran. Sur un écran
+bas (moins de 700 px), la flèche tombait sur le bouton : elle n'y est pas.
 
 ### L'écriture à la lumière
 
@@ -1610,15 +1690,18 @@ retrait ; la lumière est une copie décorative de chaque ligne, posée dessus
 texte glisse en sens inverse. Deux déplacements, rien à repeindre.
 
 Les lignes sont **mesurées dans la mise en page** (`offsetLeft`, `offsetTop`),
-pas à l'écran : le carton de l'ouverture est mesuré quand il est encore au fond
-de la scène, réduit par la perspective, et ses fenêtres ne couvraient qu'un coin
-du titre. Elles sont refaites quand la largeur change.
+pas à l'écran : un texte posé dans une scène en profondeur (le synopsis, dans
+l'ouverture) serait mesuré réduit par la perspective, et ses fenêtres ne
+couvriraient qu'un coin du texte. Elles sont refaites quand la largeur change.
+Dans une scène tenue (`data-ecrire="scene"`), le texte s'écrit sur la course
+de la scène, entre les deux fractions qu'il porte (`data-de`, `data-a`) :
+c'est le cas du synopsis dans l'ouverture et de la phrase du carton.
 
 ### Les passages (View Transitions)
 
 | Passage | Ce qui voyage |
 |---|---|
-| une ligne du CV → son univers, et retour | la boîte de la ligne, sa vignette (qui devient le **fond du titre**, `heroFondHtml`), son titre — `open`/`close` dans univers.js |
+| une ligne du CV → son univers, et retour | la boîte de la ligne, sa vignette (qui devient le **fond du titre**, `heroFondHtml`), son titre — `open`/`close` dans univers.js. Quand l'univers s'ouvre sur son travelling, le titre est au fond de la scène, pas encore là : seule la boîte voyage, et le titre s'écrit lettre à lettre au fond (`titreAuFond`) |
 | le répertoire, l'onglet Dates → une page spectacle | la vignette → le fond du titre de la page (`fiche-<slug>`, entre documents) |
 | une vignette du book → la photo, et retour | la photo (`book-photo`) |
 | un onglet → un autre | la page, dans le sens de l'onglet ; la pastille glisse |
@@ -1644,7 +1727,12 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
 ### Le CV, le bandeau, la page 404
 
 - **La frise**, telle que le prototype de l'audit la proposait (« La frise
-  qui s'allume »). Une ligne de lecture court au milieu de l'écran : un fil
+  qui s'allume »). Une **ligne de lecture** court aux trois quarts de
+  l'écran, à l'entrée de son quart inférieur (`--ligne-lecture: .75`, une
+  seule valeur pour la frise du CV, celle des mois de l'onglet Dates, les
+  deux pilotes et les vérifications) : ce qu'on va lire arrive par le bas
+  et se découvre dès qu'il monte dans l'écran — au milieu, où elle était, le
+  bas de l'écran restait voilé. Un fil
   d'or se trace le long du bord **gauche** de la liste, dans la marge de la
   carte, jusqu'à elle ; sur le fil, au milieu de chaque ligne, un **point**
   dans la couleur du spectacle éclôt quand elle l'atteint (× 1,3, puis il se
@@ -1658,8 +1746,12 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
   plus à droite — ni filet, ni lavis au passage (le lavis ne répond plus qu'à
   la souris et au doigt) ; le halo des vignettes « tournée » et « création »
   s'allume avec le point. Tout est lié au défilement — plus d'horloge, donc
-  rien qui rejoue après un survol, comme le faisait la guirlande. Pilotes : `view()` en natif ; `--ph` et `--pt` (la place de la
-  ligne, en hauteurs d'écran) écrits par `regie.js` ailleurs (`.rg-ligne`).
+  rien qui rejoue après un survol, comme le faisait la guirlande. Pilotes : `view(0px)` en natif — sans cet encart nul, `view()`
+  retranche de l'écran le `scroll-padding-top` du html (84 px), et le fil
+  courait jusqu'à 84 px devant la ligne de lecture ; `--ph` et `--pt` (la
+  place de la ligne, en hauteurs d'écran) écrits par `regie.js` ailleurs
+  (`.rg-ligne`) — tant qu'ils manquent, le fil et les points supposent la
+  ligne sous l'écran, le voile la suppose lue.
   Voir « La frise » dans `index.html`. **L'année, elle, ne bouge pas** : elle
   montait sur la vignette depuis le bas du cadre, et toutes les années ont un
   jour disparu (voir ci-dessous) ; même réparée, la montée laissait sans année

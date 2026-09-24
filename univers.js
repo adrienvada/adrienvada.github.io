@@ -117,14 +117,19 @@
  *  ------------------------------
  *    lumiere: 'foudre'
  *        LA SIGNATURE LUMINEUSE de l'univers : la façon dont la première
- *        photo s'allume, après le noir de l'ouverture. foudre | neon |
- *        guirlande | torche | crue | projecteur. Sans mention : crue pour
- *        un spectacle, projecteur pour un film.
+ *        photo s'allume, après l'ouverture, le titre et le premier carton.
+ *        foudre | neon | guirlande | torche | crue | projecteur. Sans
+ *        mention : crue pour un spectacle, projecteur pour un film. Dans
+ *        une salle claire — un fond de palette clair —, la photo se révèle
+ *        dans le papier au lieu de sortir de la pénombre, et le premier
+ *        carton s'efface au lieu de finir dans le noir.
  *    ouverture: [5, 21, 20, 7]
- *        Les photos qui arrivent du fond du plateau entre le titre et le
- *        montage (« du lointain à la face »). Sans mention, quatre photos
- *        réparties dans le montage — jamais la première, qui s'allume
- *        juste après.
+ *        Les photos du travelling qui ouvre la page : elles arrivent du
+ *        fond du plateau, et le titre avec elles, jusqu'à la face ; le
+ *        reste du haut de la page s'écrit ensuite sur la scène. Sans
+ *        mention, quatre photos réparties dans le montage — jamais la
+ *        première, qui s'allume après le titre. Avec une ouverture, le
+ *        premier carton de chapitre tient l'écran entier.
  *    { p: [9], poursuite: { etapes: [ [[20, 48], [83, 48]], [[51, 60]] ] } }
  *        LA POURSUITE, sur une photo de groupe : le plateau reste dans la
  *        pénombre, une poursuite (deux au plus) va d'un point à l'autre au
@@ -1282,13 +1287,14 @@ const SHOW_UNIVERSES = {
         zone.querySelectorAll('.u-ecrit').forEach(poserLaLumiere);
     }
 
-    //  MESURER LA MISE EN PAGE, PAS L'IMAGE À L'ÉCRAN. Le carton de
-    //  l'ouverture est mesuré quand il est encore au fond de la scène,
-    //  réduit par la perspective : getBoundingClientRect() rendrait ses
-    //  lignes vingt fois trop petites, et les fenêtres de lumière ne
-    //  couvriraient qu'un coin du titre une fois arrivé. Les décalages de
-    //  mise en page (offsetLeft, offsetTop) ignorent les transformations —
-    //  comme la chronologie de défilement elle-même.
+    //  MESURER LA MISE EN PAGE, PAS L'IMAGE À L'ÉCRAN. Un texte posé dans
+    //  une scène en profondeur (le carton de l'ancienne ouverture, arrivé
+    //  du fond) serait mesuré réduit par la perspective :
+    //  getBoundingClientRect() rendrait ses lignes vingt fois trop petites,
+    //  et les fenêtres de lumière ne couvriraient qu'un coin du texte une
+    //  fois arrivé. Les décalages de mise en page (offsetLeft, offsetTop)
+    //  ignorent les transformations — comme la chronologie de défilement
+    //  elle-même.
     function position(el) {
         let x = 0, y = 0;
         for (let n = el; n; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
@@ -1407,9 +1413,13 @@ const SHOW_UNIVERSES = {
 
     // ── LE TOP LUMIÈRE ─────────────────────────────────────────────────
     //  La première photo après l'ouverture attend dans le noir (.u-voile) ;
-    //  quand elle a gagné la moitié de l'écran, on donne le top, et sa
-    //  signature se joue (voir « La lumière qui monte » dans univers.css).
-    //  Une fois, dans le temps : un top lumière ne se rembobine pas.
+    //  quand elle entre dans le quart inférieur de l'écran — la ligne de
+    //  lecture du site, aux trois quarts de sa hauteur (voir
+    //  --ligne-lecture dans index.html) —, on donne le top, et sa signature
+    //  se joue (voir « La lumière qui monte » dans univers.css). Le top
+    //  attendait qu'elle ait gagné la MOITIÉ de l'écran : un demi-écran de
+    //  noir, qu'on prenait pour une page cassée. Une fois, dans le temps :
+    //  un top lumière ne se rembobine pas.
     let guets = [];
 
     function guetterAllumage(zone) {
@@ -1423,7 +1433,7 @@ const SHOW_UNIVERSES = {
             if (!e.isIntersecting) return;
             e.target.classList.add('est-allume');
             io.unobserve(e.target);
-        }), { rootMargin: '0px 0px -45% 0px' });
+        }), { rootMargin: '0px 0px -25% 0px' });
         figures.forEach(f => io.observe(f));
         guets.push(io);
     }
@@ -1657,10 +1667,18 @@ const SHOW_UNIVERSES = {
         return Promise.race([decodee, new Promise(ok => setTimeout(ok, 350))]);
     }
 
+    // LE TITRE AU FOND DU TRAVELLING (voir ouvertureHtml) : au premier
+    // écran il n'est pas encore là. La vignette et le titre de la ligne n'y
+    // voyagent donc pas — ils fileraient vers un point invisible au fond
+    // de la scène ; seule la ligne s'ouvre en page, et le titre s'écrit
+    // lettre à lettre au fond, pendant qu'il avance.
+    const titreAuFond = () => !!overlay.querySelector('.u-of-titre');
+
     function nomsDuPanneau(nom) {
+        const aussiLeTitre = nom && !titreAuFond();
         nommer(overlay, nom ? 'u-boite' : '');
-        nommer(overlay.querySelector('.u-hero-fond'), nom ? 'u-photo' : '');
-        nommer(overlay.querySelector('.u-title'), nom ? 'u-titre' : '');
+        nommer(overlay.querySelector('.u-hero-fond'), aussiLeTitre ? 'u-photo' : '');
+        nommer(overlay.querySelector('.u-title'), aussiLeTitre ? 'u-titre' : '');
     }
 
     function nomsDeLaLigne(li, nom) {
@@ -1781,7 +1799,7 @@ const SHOW_UNIVERSES = {
         onScroll();
         animerLeMontage();
         lastScrollTop = 0;
-        playWriting({ titrePose: parPassage });
+        playWriting({ titrePose: parPassage && !titreAuFond() });
         // LA PAGE DERRIÈRE DEVIENT INERTE. Le panneau couvre l'écran, mais le
         // CV restait atteignable au clavier : après la dernière photo, la
         // touche Tab repartait dans l'en-tête caché dessous, et un lecteur
@@ -1806,7 +1824,7 @@ const SHOW_UNIVERSES = {
         if (!avecPassage) { fermer(false); return; }
         passageEnCours = true;
         const racine = document.documentElement;
-        const heroVu = overlay.scrollTop < window.innerHeight * 0.5;
+        const heroVu = overlay.scrollTop < window.innerHeight * 0.5 && !titreAuFond();
         nommer(overlay, 'u-boite');
         if (heroVu) {
             nommer(overlay.querySelector('.u-hero-fond'), 'u-photo');
@@ -2197,6 +2215,19 @@ const SHOW_UNIVERSES = {
         // Une seule fenêtre pour tout le panneau : le CV comme les pages
         // /spectacles/ passent par ce même #show-universe (voir demarrerStatique).
         poserFenetreAgenda();
+
+        // AU CLAVIER, LE TITRE VIENT À SOI. Au bout du travelling (voir
+        // ouvertureHtml), le bouton « Accéder aux dates » n'est pas encore
+        // là quand la touche Tab l'atteint : il paraît après le titre, à la
+        // toute fin de la scène. On avance alors jusqu'au bout : le
+        // travelling se déroule, le titre se pose, le reste paraît, et le
+        // focus se voit.
+        overlay.addEventListener('focusin', (e) => {
+            const scene = e.target.closest?.('.u-ouverture');
+            if (!scene || !e.target.closest('.u-of-titre')) return;
+            const fin = scene.offsetTop + scene.offsetHeight - overlay.clientHeight;
+            if (overlay.scrollTop < fin - 1) overlay.scrollTo({ top: fin, behavior: 'auto' });
+        });
 
         overlay.addEventListener('click', (e) => {
             // La fenêtre « ajouter à l'agenda » d'abord : elle vit dans ce même

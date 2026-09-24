@@ -194,7 +194,7 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('l’onglet Dates : feuilles, liserés, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire, une image par représentation — et la prochaine date, au CV seulement', async () => {
+        await verifie('l’onglet Dates à la densité du CV : la feuille sur la photo, le spectacle, la ville et la salle, une puce par séance, un agenda qui demande la séance ; la frise des mois, liens vers les pages spectacle, rangement par spectacle, sommaire, une image par représentation — et la prochaine date, au CV seulement', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 } });
             const p = await c.newPage();
             const erreurs = guette(p);
@@ -237,25 +237,41 @@ function exige(condition, message) {
             const parDate = await p.evaluate(() => {
                 const liste = document.getElementById('upcoming-dates-container');
                 const serie = liste.querySelector('.dl--serie');
+                const berenice = [...liste.querySelectorAll('.dl')].find((l) => /Bérénice/.test(l.querySelector('.dl-titre')?.textContent || ''));
                 return {
                     intercalaires: liste.querySelectorAll('.dl-intercalaire h4').length,
                     feuilles: liste.querySelectorAll('.dl-feuille .dl-num').length,
+                    // Les jours d'une série, au centre de la feuille, avec un tiret.
+                    jours: serie ? serie.querySelector('.dl-feuille .dl-num').textContent : '',
+                    photo: !!berenice && !!berenice.querySelector('.dl-feuille img'),
                     cases: serie ? serie.querySelectorAll('.dl-seance').length : 0,
                     scolaireSansReserver: serie ? !serie.querySelector('.dl-seance--scolaire .dl-reserver') : false,
                     reserver: liste.querySelectorAll('.dl-reserver').length,
+                    agendas: serie ? serie.querySelectorAll('.dl-agenda').length : 0,
+                    lieu: serie ? serie.querySelector('.dl-lieu').textContent : '',
+                    hauteur: serie ? serie.getBoundingClientRect().height : 0,
+                    totaux: [...liste.querySelectorAll('.dl-intercalaire')].filter((x) => /représentation/.test(x.textContent)).length,
                     sommaire: !document.getElementById('dates-sommaire').hidden
                         && !!document.querySelector('#dates-sommaire .dl-grille [data-dl-aller]')
                 };
             });
             exige(parDate.intercalaires >= 1, 'aucun intercalaire de mois');
             exige(parDate.feuilles === 3, `${parDate.feuilles} feuille(s) d’éphéméride pour trois lignes`);
-            exige(parDate.cases === 2, `la série montre ${parDate.cases} case(s) au lieu de deux`);
+            exige(/^\d{1,2}–\d{1,2}$/.test(parDate.jours), `la feuille d’une série n’écrit pas ses jours avec un tiret : « ${parDate.jours} »`);
+            exige(parDate.photo, 'la feuille de Bérénice n’est pas posée sur la photo du spectacle');
+            exige(parDate.cases === 2, `la série montre ${parDate.cases} puce(s) de séance au lieu de deux`);
             exige(parDate.scolaireSansReserver, 'une séance scolaire propose « Réserver »');
-            exige(parDate.reserver === 2, `${parDate.reserver} bouton(s) « Réserver » au lieu de deux`);
+            exige(parDate.reserver === 2, `${parDate.reserver} lien(s) de réservation au lieu de deux`);
+            exige(parDate.agendas === 1, `la série a ${parDate.agendas} bouton(s) d’agenda au lieu d’un`);
+            exige(parDate.lieu === 'Rouen · Salle de vérification (76)', `la ville et la salle : « ${parDate.lieu} »`);
+            // La densité du CV : une série de deux soirs tient dans la
+            // hauteur d'une ligne du CV, au téléphone (près de 200 px avant).
+            exige(parDate.hauteur > 0 && parDate.hauteur <= 80, `une série occupe ${Math.round(parDate.hauteur)} px au téléphone (80 au plus)`);
+            exige(!parDate.totaux, 'un intercalaire écrit encore un total de représentations');
             exige(parDate.sommaire, 'le sommaire de la saison n’est pas là');
 
-            // Une date seule a sa case, comme chaque soir d'une série : son
-            // heure et « Réserver » s'y lisent au même endroit.
+            // Une date seule a sa puce, comme chaque soir d'une série : son
+            // heure y mène à la billetterie.
             const seule = await p.evaluate(() => {
                 const l = [...document.querySelectorAll('#upcoming-dates-container .dl--seule')]
                     .find((x) => /Spectacle de vérification/.test(x.querySelector('.dl-titre')?.textContent || ''));
@@ -266,7 +282,7 @@ function exige(condition, message) {
                 } : null;
             });
             exige(seule && seule.cases === 1 && seule.heure === '20h00' && seule.reserver,
-                `une date seule n’a pas sa case (heure, « Réserver ») : ${JSON.stringify(seule)}`);
+                `une date seule n’a pas sa puce (heure, réservation) : ${JSON.stringify(seule)}`);
 
             // Les représentations annoncées aux moteurs ont toutes une image,
             // même celles d'un spectacle sans photo (la Search Console le
@@ -319,14 +335,18 @@ function exige(condition, message) {
                 return !!a && a.classList.contains('dl') && a.classList.contains('dl-eclaire') && /Bérénice/.test(a.textContent);
             }), 'la prochaine date du CV ne mène pas à sa ligne dans l’onglet Dates');
 
-            // Chaque mois porte son liseré, à sa couleur — douze couleurs, qui
-            // suivent les saisons, toutes différentes —, et son intercalaire
-            // le prolonge.
-            const lisere = await p.evaluate(() => {
+            // LA FRISE DES MOIS. Chaque mois a son liseré dans la marge de la
+            // carte, à sa couleur — douze couleurs, qui suivent les saisons,
+            // toutes différentes : une trace pâle, et le trait qui s'y trace
+            // au défilement (voir la vérification de la frise, plus bas). Son
+            // point est posé devant le nom du mois, centré sur le liseré.
+            const frise = await p.evaluate(() => {
                 const page = document.getElementById('page_dates');
                 const g = document.querySelector('#upcoming-dates-container .dl-groupe[data-mois]');
-                const avant = g && getComputedStyle(g, '::before');
-                const entete = g && g.querySelector('.dl-intercalaire');
+                const inter = g && g.querySelector('.dl-intercalaire');
+                const trace = g && getComputedStyle(g, '::before');
+                const trait = g && getComputedStyle(g, '::after');
+                const point = inter && getComputedStyle(inter, '::after');
                 const style = getComputedStyle(page);
                 const couleurs = Array.from({ length: 12 }, (_, i) => style.getPropertyValue(`--dl-mois-${i + 1}`).trim());
                 // La couleur attendue, telle que le navigateur la rend.
@@ -340,22 +360,56 @@ function exige(condition, message) {
                 const grise = getComputedStyle(sonde).color;
                 sonde.remove();
                 const initiales = [...document.querySelectorAll('#dates-sommaire .dl-grille-mois')].map((x) => getComputedStyle(x).color);
+                const px = (v) => parseFloat(v) || 0;
+                const bord = g ? g.getBoundingClientRect().left : 0;
                 return {
-                    trait: !!avant && avant.width === '3px' && avant.backgroundColor === attendue,
-                    entete: !!entete && /inset/.test(getComputedStyle(entete).boxShadow),
+                    trait: !!trait && trait.width === '3px' && trait.backgroundColor === attendue && px(trait.left) < 0,
+                    trace: !!trace && trace.width === '3px' && trace.left === trait.left
+                        && !['rgba(0, 0, 0, 0)', attendue].includes(trace.backgroundColor),
+                    point: !!point && point.backgroundColor === attendue && px(point.width) === 8 && px(point.height) === 8,
+                    // Le centre du point et celui du liseré, depuis le bord de la liste.
+                    ecart: point ? Math.abs((inter.getBoundingClientRect().left - bord + px(point.left) + px(point.width) / 2)
+                        - (px(trait.left) + px(trait.width) / 2)) : 99,
                     douze: couleurs.every(Boolean) && new Set(couleurs).size === 12,
                     initiales: initiales.length > 0 && !initiales.includes(grise) && new Set(initiales).size === initiales.length
                 };
             });
-            exige(lisere.trait && lisere.entete && lisere.douze,
-                `le liseré des mois manque ou n’a pas la couleur de son mois : ${JSON.stringify(lisere)}`);
-            exige(lisere.initiales, 'les initiales des mois, dans la saison d’un regard, n’ont pas leur couleur');
+            exige(frise.trait && frise.trace && frise.douze,
+                `le liseré des mois manque, n’est pas dans la marge ou n’a pas la couleur de son mois : ${JSON.stringify(frise)}`);
+            exige(frise.point && frise.ecart < 0.6, `le point du mois manque, ou n’est pas posé sur le liseré : ${JSON.stringify(frise)}`);
+            exige(frise.initiales, 'les initiales des mois, dans la saison d’un regard, n’ont pas leur couleur');
 
-            // L'agenda d'une case de série ouvre sa fenêtre.
-            await p.locator('#upcoming-dates-container .dl--serie .dl-seance .dl-agenda').first().click();
+            // L'agenda d'une série : un seul bouton ; la fenêtre demande
+            // quelle séance ajouter, et propose d'abord la séance publique.
+            await p.locator('#upcoming-dates-container .dl--serie .dl-agenda').first().click();
             await p.waitForTimeout(300);
-            exige(await p.evaluate(() => /vérification/.test(document.getElementById('cal-modal-title')?.textContent || '')),
-                'la fenêtre d’agenda ne s’ouvre pas depuis une case de séance');
+            const lireAgenda = () => p.evaluate(() => {
+                const choix = document.getElementById('cal-modal-seances');
+                const boutons = [...choix.querySelectorAll('button')];
+                return {
+                    titre: document.getElementById('cal-modal-title')?.textContent || '',
+                    visible: !choix.hidden,
+                    seances: boutons.map((b) => b.textContent),
+                    choisie: boutons.findIndex((b) => b.getAttribute('aria-pressed') === 'true'),
+                    sous: document.getElementById('cal-modal-subtitle')?.textContent || ''
+                };
+            });
+            const agenda = await lireAgenda();
+            exige(/vérification/.test(agenda.titre), 'la fenêtre d’agenda ne s’ouvre pas depuis une série');
+            exige(agenda.visible && agenda.seances.length === 2,
+                `la fenêtre d’agenda ne propose pas les deux séances de la série : ${JSON.stringify(agenda.seances)}`);
+            exige(agenda.choisie === 1 && /scolaire/.test(agenda.seances[0]) && /20h00/.test(agenda.seances[1]),
+                `la séance proposée d’abord n’est pas la séance publique : ${JSON.stringify(agenda)}`);
+            await p.locator('#cal-modal-seances button').first().click();
+            const autre = await lireAgenda();
+            exige(autre.choisie === 0 && autre.sous !== agenda.sous, 'choisir une autre séance ne change pas la date à ajouter');
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(300);
+            // Une date seule n'a rien à choisir.
+            await p.locator('#upcoming-dates-container .dl--seule .dl-agenda').first().click();
+            await p.waitForTimeout(300);
+            const seuleAgenda = await lireAgenda();
+            exige(/Bérénice/.test(seuleAgenda.titre) && !seuleAgenda.visible, 'la fenêtre d’agenda d’une date seule propose de choisir une séance');
             await p.keyboard.press('Escape');
             await p.waitForTimeout(300);
 
@@ -374,6 +428,26 @@ function exige(condition, message) {
             exige(parSpectacle.liens.join() === 'spectacles/berenice/,-',
                 `en-têtes par spectacle et leurs pages : ${JSON.stringify(parSpectacle.liens)}`);
             exige(parSpectacle.retenu === 'spectacle', 'le rangement choisi n’est pas retenu');
+            // La photo est en tête du groupe : la feuille redevient papier, la
+            // ligne ne répète pas le titre, et la frise prend la couleur du
+            // spectacle.
+            const groupeSpectacle = await p.evaluate(() => {
+                const g = document.querySelector('#upcoming-dates-container .dl-groupe--spectacle');
+                const sonde = document.createElement('span');
+                sonde.style.color = 'var(--dl-a)';
+                g.appendChild(sonde);
+                const attendue = getComputedStyle(sonde).color;
+                sonde.remove();
+                return {
+                    couleur: getComputedStyle(g, '::after').backgroundColor === attendue
+                        && getComputedStyle(g.querySelector('.dl-intercalaire'), '::after').backgroundColor === attendue,
+                    papier: !g.querySelector('.dl .dl-feuille img') && !!g.querySelector('.dl-feuille--papier'),
+                    titres: g.querySelectorAll('.dl-titre').length
+                };
+            });
+            exige(groupeSpectacle.couleur, 'rangé par spectacle, le liseré et le point n’ont pas la couleur du spectacle');
+            exige(groupeSpectacle.papier, 'rangé par spectacle, la feuille garde une photo, déjà en tête du groupe');
+            exige(!groupeSpectacle.titres, 'rangé par spectacle, la ligne répète le titre');
 
             // Un rond du sommaire ramène par date, jusqu'à sa ligne.
             await p.locator('#dates-sommaire [data-dl-aller]').first().click();
@@ -784,7 +858,7 @@ function exige(condition, message) {
                 const ELEMENTS = ['.u-ch', '.u-wd', '.u-rw', '.u-reveal', '.u-fig', '.u-fig img', '.u-fig-media',
                     '.u-group .u-fig-media', '.u-cap span', '.u-quote', '.u-chapter', '.u-text', '.u-foot', '.u-meta',
                     '.u-hero-actions', '.u-scroll', '.u-author', '.u-synopsis', '.u-progress span',
-                    '.u-hero-fond', '.u-fig-point', '.u-flou', '.u-of-photo', '.u-of-carton', '.u-of-invite',
+                    '.u-hero-fond', '.u-fig-point', '.u-flou', '.u-of-photo', '.u-of-titre .u-title', '.u-of-invite',
                     '.u-pa-faisceau', '.u-pa-plein', '.u-lum', '.u-voile'];
                 const out = {};
                 for (const s of ELEMENTS) {
@@ -803,15 +877,32 @@ function exige(condition, message) {
                 out.haut = ['.u-eyebrow', '.u-title', '.u-author', '.u-meta'].map(texte).join(' | ');
                 return out;
             };
+            // LA MISE AU POINT ATTEND LA PHOTO NETTE (.est-nette) : tant
+            // qu'elle n'est pas arrivée, la copie floue n'a pas d'animation.
+            // La première photo floue est loin sous le haut de la page, et ne
+            // se charge qu'à l'approche : on l'approche, on attend qu'elle
+            // soit là, et l'on revient en haut — dans le panneau comme sur la
+            // page, sans quoi on comparerait deux chargements.
+            const nette = () => p.evaluate(async () => {
+                const S = document.getElementById('show-universe');
+                const fig = S && S.querySelector('.u-flou')?.closest('.u-fig');
+                if (!fig) return;
+                S.scrollTop = fig.offsetTop;
+                for (let i = 0; i < 60 && !fig.classList.contains('est-nette'); i++) await new Promise((f) => setTimeout(f, 100));
+                S.scrollTop = 0;
+                await new Promise((f) => setTimeout(f, 150));
+            });
             const ecarts = [];
             for (const slug of dossiers) {
                 await p.goto(`${base}/#/univers/${slug}`, { waitUntil: 'load' });
                 await p.waitForFunction(() => document.getElementById('show-universe')?.classList.contains('is-open'), null, { timeout: 8000 })
                     .catch(() => { throw new Error(`${slug} : l’univers ne s’ouvre pas à son adresse`); });
                 await p.waitForTimeout(400);
+                await nette();
                 const panneau = await p.evaluate(releve);
                 await p.goto(`${base}/spectacles/${slug}/`, { waitUntil: 'load' });
                 await p.waitForTimeout(400);
+                await nette();
                 const page = await p.evaluate(releve);
                 exige(page['.u-ch'] && !page['.u-ch'].startsWith('aucune'), `${slug} : les lettres du titre n’ont plus de transition sur la page`);
                 for (const k of new Set([...Object.keys(panneau), ...Object.keys(page)])) {
@@ -858,7 +949,10 @@ function exige(condition, message) {
                     });
                     const out = { classe: document.documentElement.className, points: [] };
                     for (const [scene, fractions, sels] of [
-                        ['.u-ouverture', [0.2, 0.5, 0.8, 0.95], ['.u-of-photo', '.u-of-carton', '.u-of-noir', '.u-of-invite']],
+                        ['.u-ouverture', [0.2, 0.5, 0.62, 0.8, 0.95], ['.u-of-photo', '.u-of-titre .u-title', '.u-of-titre .u-hero-fond',
+                            '.u-of-titre .u-eyebrow', '.u-of-titre .u-couche-auteur', '.u-of-titre .u-synopsis', '.u-of-titre .u-synopsis .u-lum',
+                            '.u-of-titre .u-couche-actions', '.u-of-invite']],
+                        ['.u-carton', [0.2, 0.5, 0.8, 0.97], ['.u-carton-texte', '.u-carton .u-lum', '.u-carton-noir']],
                         ['.u-poursuite', [0.1, 0.4, 0.62, 0.85], ['.u-pa-a', '.u-pa-b', '.u-pa-plein', '.u-pa-leg2']],
                     ]) {
                         const el = S.querySelector(scene);
@@ -911,7 +1005,9 @@ function exige(condition, message) {
             const erreurs = guette(p);
             const fautes = [];
             let menees = 0;
-            for (const url of ['/', ...dossiers.map((d) => `/spectacles/${d}/`)]) {
+            // L'onglet Dates d'abord : de « / » à « /#page_dates », le
+            // navigateur ne recharge pas la page, il suit l'ancre.
+            for (const url of ['/#page_dates', '/', ...dossiers.map((d) => `/spectacles/${d}/`)]) {
                 await p.goto(base + url, { waitUntil: 'load' });
                 await p.waitForTimeout(500);
                 const r = await p.evaluate(async () => {
@@ -939,6 +1035,149 @@ function exige(condition, message) {
             await c.close();
         });
 
+        // LE TRAVELLING OUVRE LA PAGE, PUIS LE RÉCIT S'ÉCRIT. La première
+        // chose qu'on voit, c'est la scène : des photos qui arrivent du fond,
+        // et le titre, SEUL, qui avance jusqu'à sa place — la page entière
+        // qui avançait faisait un grand rectangle. Le titre posé, la scène
+        // se tient : le reste paraît sous le geste, et la lumière écrit le
+        // synopsis ligne à ligne — tout arrivait d'un bloc, déjà écrit. Le
+        // bouton ne vient, cliquable, qu'une fois le récit écrit. Puis le
+        // carton du chapitre tient l'écran, dans sa propre scène, et finit
+        // dans le noir si la salle est sombre, dans le papier si elle est
+        // claire : un écran noir sur le parchemin de L'Homme moderne passait
+        // pour une page cassée. La première photo s'allume — ou se révèle
+        // dans le papier — dès qu'elle entre dans le quart inférieur de
+        // l'écran.
+        await verifie('les pages spectacle s’ouvrent sur le travelling, puis le récit s’écrit sous le geste ; le carton du chapitre tient l’écran, et le noir ne vient que dans une salle sombre', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            for (const [slug, attendue] of [['alabarre', 'sombre'], ['berenice', 'claire'], ['cleophene', 'sombre'], ['hommemoderne', 'claire']]) {
+                await p.goto(`${base}/spectacles/${slug}/`, { waitUntil: 'load' });
+                await p.waitForTimeout(700);
+                const etat = await p.evaluate(async () => {
+                    const S = document.getElementById('show-universe');
+                    const dort = (ms) => new Promise((f) => setTimeout(f, ms));
+                    const scene = S.querySelector('.u-ouverture');
+                    const zone = scene && scene.querySelector('.u-of-titre');
+                    const figs = S.querySelector('.u-figs');
+                    const carton = S.querySelector('.u-carton');
+                    const identite = (t) => t === 'none' || /^matrix(3d)?\((1, 0, 0, 1, 0, 0|1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)\)$/.test(t);
+                    const op = (e) => (e ? +getComputedStyle(e).opacity : null);
+                    const out = {
+                        enTete: !!scene && !!zone && !!zone.querySelector('h1.u-title')
+                            && !!(scene.compareDocumentPosition(figs) & Node.DOCUMENT_POSITION_FOLLOWING),
+                        dansLaScene: !!scene.querySelector('.u-of-noir, .u-of-carton, .u-carton'),
+                        // Le premier temps du montage, après l'affiche d'un film.
+                        carton: !!carton && [...figs.children].find((e) => !e.classList.contains('u-affiche')) === carton,
+                        salle: carton && carton.dataset.salle,
+                        ecrans: carton ? +(carton.offsetHeight / S.clientHeight).toFixed(2) : 0
+                    };
+                    const titre = zone.querySelector('.u-title');
+                    const syn = zone.querySelector('.u-synopsis');
+                    const bouton = zone.querySelector('.u-couche-actions');
+                    const reste = ['.u-hero-fond', '.u-eyebrow', '.u-couche-auteur', '.u-synopsis', '.u-couche-meta', '.u-couche-actions']
+                        .map((sel) => zone.querySelector(sel)).filter(Boolean);
+                    // Une ligne est écrite quand sa fenêtre de lumière est arrivée.
+                    const ecrites = (el) => [...el.querySelectorAll('.u-lum')].map((l) => identite(getComputedStyle(l).transform));
+                    const lire = () => {
+                        const l = ecrites(syn);
+                        return {
+                            titre: op(titre),
+                            face: identite(getComputedStyle(titre).transform),
+                            // Le plus visible, et le moins visible, de ce qui accompagne le titre.
+                            reste: Math.max(...reste.map(op)),
+                            tout: Math.min(...reste.map(op)),
+                            bouton: op(bouton),
+                            clic: getComputedStyle(bouton).pointerEvents,
+                            lignes: `${l.filter(Boolean).length}/${l.length}`
+                        };
+                    };
+                    const aller = async (el, f) => {
+                        S.scrollTop = el.offsetTop + (el.offsetHeight - S.clientHeight) * f;
+                        await dort(300);
+                    };
+                    // Les plages que le montage a calculées pour cette scène.
+                    const pose = parseFloat(getComputedStyle(scene).getPropertyValue('--of-titre'));
+                    const de = +syn.dataset.de, a = +syn.dataset.a;
+                    out.plages = { pose, de, a };
+                    // Le premier écran : le travelling, sans le titre.
+                    await aller(scene, 0);
+                    out.debut = lire();
+                    out.debut.photo = Math.max(...[...scene.querySelectorAll('.u-of-photo')].map(op));
+                    // En route : le titre, seul, pas encore à sa place.
+                    await aller(scene, pose * 0.6);
+                    out.milieu = lire();
+                    // Posé — un pixel plus loin : le défilement s'arrondit au
+                    // pixel, et le titre serait encore à un millième du bout.
+                    // Rien d'autre encore.
+                    await aller(scene, pose + 0.002);
+                    out.pose = lire();
+                    // En pleine écriture : des lignes écrites, d'autres non,
+                    // et le bouton pas encore là.
+                    await aller(scene, (de + a) / 2);
+                    out.ecriture = lire();
+                    // Au bout : le synopsis écrit, tout paru, le bouton qui répond.
+                    await aller(scene, 1);
+                    out.fin = lire();
+                    // Le carton : l'écran entier, sa phrase écrite ; puis le noir,
+                    // ou le papier.
+                    if (carton) {
+                        const texte = carton.querySelector('.u-carton-texte');
+                        const noir = carton.querySelector('.u-carton-noir');
+                        await aller(carton, 0.5);
+                        const r = carton.querySelector('.u-carton-scene').getBoundingClientRect();
+                        const l = ecrites(carton);
+                        out.tenu = { ecran: Math.round(r.top) === 0 && Math.round(r.height) === S.clientHeight, ecrit: l.length > 0 && l.every(Boolean), texte: op(texte), noir: op(noir) };
+                        await aller(carton, 1);
+                        out.bout = { texte: op(texte), noir: op(noir) };
+                    }
+                    // La première photo : encore dans l'ombre — ou dans le papier —
+                    // au bas de l'écran, allumée dès qu'elle entre dans son quart
+                    // inférieur.
+                    const fig = S.querySelector('.u-allumage');
+                    if (fig) {
+                        const bg = getComputedStyle(fig.querySelector('.u-voile')).backgroundColor;
+                        const n = (bg.match(/[\d.]+/g) || []).map(Number);
+                        const canaux = bg.startsWith('color(') ? n.slice(0, 3) : n.slice(0, 3).map((v) => v / 255);
+                        out.voile = { salle: fig.dataset.salle, clair: canaux.reduce((x, y) => x + y, 0) / 3 > 0.5, bg };
+                    }
+                    const placer = async (f) => {
+                        S.scrollTop += fig.getBoundingClientRect().top - S.clientHeight * f;
+                        await dort(350);
+                        return fig.classList.contains('est-allume');
+                    };
+                    out.allumage = fig ? [await placer(0.92), await placer(0.7)] : null;
+                    return out;
+                });
+                const sombre = attendue === 'sombre';
+                const [ecr, tot] = etat.ecriture.lignes.split('/').map(Number);
+                exige(etat.enTete, `${slug} : la page ne s’ouvre pas sur le travelling, le titre au bout`);
+                exige(!etat.dansLaScene, `${slug} : un carton ou un noir est resté dans le travelling`);
+                exige(etat.debut.titre < 0.05 && etat.debut.reste < 0.05 && etat.debut.photo > 0.5,
+                    `${slug} : au premier écran, le titre ou la page devance le travelling (${JSON.stringify(etat.debut)})`);
+                exige(etat.milieu.titre > 0.5 && !etat.milieu.face && etat.milieu.reste < 0.05,
+                    `${slug} : en plein travelling, le titre n’avance pas seul (${JSON.stringify(etat.milieu)})`);
+                exige(etat.pose.titre === 1 && etat.pose.face && etat.pose.reste < 0.05,
+                    `${slug} : le titre posé, le reste est déjà là — il arrive d’un bloc (${JSON.stringify(etat.pose)})`);
+                exige(tot > 1 && ecr > 0 && ecr < tot && etat.ecriture.bouton < 0.05 && etat.ecriture.clic === 'none',
+                    `${slug} : le synopsis ne s’écrit pas sous le geste, ou le bouton devance le récit (${JSON.stringify(etat.ecriture)} ; plages ${JSON.stringify(etat.plages)})`);
+                exige(etat.fin.titre === 1 && etat.fin.face && etat.fin.tout === 1 && etat.fin.clic === 'auto' && etat.fin.lignes === `${tot}/${tot}`,
+                    `${slug} : au bout de la scène, le récit n’est pas écrit ou le haut de la page n’a pas paru (${JSON.stringify(etat.fin)})`);
+                exige(etat.carton && etat.ecrans >= 2, `${slug} : le carton du chapitre ne tient pas l’écran après le titre (${etat.ecrans} écran)`);
+                exige(etat.salle === attendue && etat.voile && etat.voile.salle === attendue && etat.voile.clair === !sombre,
+                    `${slug} : la salle devrait être ${attendue} (carton ${etat.salle}, photo ${JSON.stringify(etat.voile)})`);
+                exige(etat.tenu && etat.tenu.ecran && etat.tenu.ecrit && etat.tenu.texte === 1 && (sombre ? etat.tenu.noir < 0.05 : etat.tenu.noir === null),
+                    `${slug} : le carton ne tient pas l’écran, sa phrase écrite (${JSON.stringify(etat.tenu)})`);
+                exige(sombre ? etat.bout.noir === 1 : (etat.bout.noir === null && etat.bout.texte < 0.05),
+                    `${slug} : au bout du carton, ${sombre ? 'le noir n’est pas venu' : 'le carton ne s’est pas effacé dans le papier, ou un noir est venu'} (${JSON.stringify(etat.bout)})`);
+                exige(etat.allumage && !etat.allumage[0] && etat.allumage[1],
+                    `${slug} : la première photo ne s’allume pas à l’entrée du quart inférieur (${JSON.stringify(etat.allumage)})`);
+            }
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
         await verifie('en mouvement réduit, chaque scène a un état fixe qui a du sens', async () => {
             const c = await visiteur({ viewport: { width: 1280, height: 860 }, reducedMotion: 'reduce' });
             const p = await c.newPage();
@@ -952,7 +1191,11 @@ function exige(condition, message) {
                 return {
                     ouverture: S.querySelector('.u-ouverture')?.offsetHeight / h,
                     plans: cs('.u-of-plans')?.display,
-                    carton: cs('.u-of-carton') && +cs('.u-of-carton').opacity,
+                    titre: ['.u-of-titre .u-title', '.u-of-titre .u-hero-fond', '.u-of-titre .u-eyebrow', '.u-of-titre .u-couche-auteur', '.u-of-titre .u-synopsis', '.u-of-titre .u-couche-actions']
+                        .every((sel) => cs(sel) && +cs(sel).opacity === 1 && cs(sel).transform === 'none' && cs(sel).clipPath === 'none'),
+                    carton: S.querySelector('.u-carton')?.offsetHeight / h,
+                    cartonTexte: cs('.u-carton-texte') && +cs('.u-carton-texte').opacity === 1 && cs('.u-carton-texte').transform === 'none',
+                    noir: cs('.u-carton-noir')?.display,
                     faisceaux: cs('.u-pa-faisceau')?.display,
                     plein: cs('.u-pa-plein') && +cs('.u-pa-plein').opacity,
                     poursuite: S.querySelector('.u-poursuite')?.offsetHeight / h,
@@ -963,7 +1206,8 @@ function exige(condition, message) {
                 };
             });
             exige(etat.ouverture < 1.2, `l’ouverture reste une scène tenue (${etat.ouverture?.toFixed(2)} écran)`);
-            exige(etat.plans === 'none' && etat.carton === 1, 'l’ouverture ne se réduit pas à son carton');
+            exige(etat.plans === 'none' && etat.titre, 'l’ouverture ne se réduit pas au titre, posé à la face');
+            exige(etat.carton < 1.2 && etat.cartonTexte && etat.noir === 'none', `le carton du chapitre reste une scène tenue, ou finit dans le noir (${etat.carton?.toFixed(2)} écran)`);
             exige(etat.poursuite < 1.2 && etat.faisceaux === 'none' && etat.plein === 1, 'la poursuite ne montre pas sa photo en plein feux');
             exige(etat.voile === 'none', 'la première photo attend un allumage qui ne viendra pas');
             exige(!etat.lumieres && !etat.mots, 'le texte attend une lumière qui ne viendra pas');
@@ -1082,8 +1326,11 @@ function exige(condition, message) {
                     const liste = document.getElementById('cv-theatre-list');
                     const lignes = [...liste.querySelectorAll('li.cv-has-universe')];
                     document.documentElement.style.scrollBehavior = 'auto';
+                    // La ligne de lecture, telle que la page la déclare
+                    // (une fraction de l'écran, depuis son haut).
+                    const L = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ligne-lecture'));
                     // La quatrième ligne sur la ligne de lecture.
-                    const y = lignes[3].getBoundingClientRect().top + scrollY - innerHeight * 0.5 + 4;
+                    const y = lignes[3].getBoundingClientRect().top + scrollY - innerHeight * L + 4;
                     window.scrollTo(0, y);
                     await new Promise((r) => setTimeout(r, 400));
                     const px = (v) => parseFloat(v) || 0;
@@ -1092,8 +1339,9 @@ function exige(condition, message) {
                     const echelle = (li) => { const t = point(li).transform; return t === 'none' ? 1 : +(t.match(/matrix\(([-\d.e]+)/) || [0, NaN])[1]; };
                     const voile = (li) => +getComputedStyle(li.querySelector('.cv-row-toggle')).opacity;
                     const p0 = point(lignes[0]);
-                    return {
+                    const etat = {
                         frise: liste.classList.contains('cv-frise'),
+                        lecture: L,
                         filGauche: px(fil.left),
                         // Le centre du point et celui du fil, depuis le bord gauche de la liste.
                         ecartPointFil: Math.abs((px(p0.left) + px(p0.width) / 2) - (px(fil.left) + px(fil.width) / 2)),
@@ -1104,9 +1352,24 @@ function exige(condition, message) {
                         horloge: [...document.styleSheets].some((f) => { try { return [...f.cssRules].some((r) => /cv-guirlande|cv-pastille-lueur\b/.test(r.cssText)); } catch (e) { return false; } }),
                         tout: lignes.every((li) => voile(li) > 0.99 && echelle(li) === 1)
                     };
+                    // LA POINTE DU FIL EST SUR LA LIGNE DE LECTURE : le haut du
+                    // fil, plus sa part tracée. Mesurée aux deux tiers de la
+                    // liste : view() sans encart retranchait de l'écran les
+                    // 84 px de scroll-padding-top, et le fil prenait de
+                    // l'avance à mesure qu'il descendait — jusqu'à 84 px.
+                    const r = liste.getBoundingClientRect();
+                    window.scrollTo(0, r.top + scrollY + r.height * 0.67 - innerHeight * L);
+                    await new Promise((f) => setTimeout(f, 400));
+                    const f2 = getComputedStyle(liste, '::after');
+                    const trace = f2.transform === 'none' ? 1 : +(f2.transform.match(/matrix\(([^)]+)\)/) || [0, 'NaN'])[1].split(',')[3];
+                    etat.ecartPointe = Math.abs(liste.getBoundingClientRect().top + px(f2.top) + trace * px(f2.height) - innerHeight * L);
+                    return etat;
                 });
                 const nom = reduit ? 'en mouvement réduit' : repli ? 'avec le repli' : 'en natif';
                 exige(etat.frise, 'la liste du CV ne porte pas la frise');
+                // Aux trois quarts de l'écran : ce qui monte par le bas se
+                // découvre sans attendre d'en avoir atteint le milieu.
+                exige(etat.lecture === 0.75, `la ligne de lecture n’est plus aux trois quarts de l’écran (--ligne-lecture : ${etat.lecture})`);
                 exige(etat.filGauche < 0, `${nom}, le fil d’or n’est plus à gauche de la liste (left ${etat.filGauche} px)`);
                 exige(etat.rond, `${nom}, le repère de la ligne n’est plus un point (filet revenu ?)`);
                 exige(etat.ecartPointFil < 0.6, `${nom}, le point n’est pas centré sur le fil (écart ${etat.ecartPointFil.toFixed(2)} px)`);
@@ -1117,6 +1380,7 @@ function exige(condition, message) {
                     exige(etat.pointsHaut === 1 && etat.pleineHaut > 0.99, `${nom}, une ligne déjà lue n’est pas pleine avec son point (${etat.pleineHaut}, point × ${etat.pointsHaut})`);
                     exige(etat.pointsBas === 0, `${nom}, le point d’une ligne pas encore atteinte est déjà là (× ${etat.pointsBas})`);
                     exige(etat.voileBas < 0.5, `${nom}, une ligne pas encore atteinte n’est pas voilée (${etat.voileBas})`);
+                    exige(etat.ecartPointe < 12, `${nom}, la pointe du fil est à ${Math.round(etat.ecartPointe)} px de la ligne de lecture`);
                 }
                 exige(!etat.horloge, 'la guirlande à horloge est revenue');
                 exige(!erreurs.length, erreurs.join(' | '));
@@ -1137,11 +1401,14 @@ function exige(condition, message) {
                 const p = await c.newPage();
                 await p.goto(base + '/', { waitUntil: 'load' });
                 await p.waitForTimeout(600);
-                // Le fil au milieu de la 2e ligne : la 6e est voilée, sans point.
+                // La 6e ligne juste sous la ligne de lecture, où son voile
+                // commence à peine à se lever : voilée, sans point, et
+                // entière à l'écran — la survoler ne fait rien défiler.
                 await p.evaluate(() => {
                     document.documentElement.style.scrollBehavior = 'auto';
-                    const r = document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[1].getBoundingClientRect();
-                    window.scrollTo(0, r.top + r.height / 2 + scrollY - innerHeight * 0.5);
+                    const L = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ligne-lecture'));
+                    const r = document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[5].getBoundingClientRect();
+                    window.scrollTo(0, r.top + scrollY - innerHeight * (L + 0.14));
                 });
                 await p.waitForTimeout(300);
                 const lire = () => p.evaluate(() => {
@@ -1162,6 +1429,76 @@ function exige(condition, message) {
                 await p.waitForTimeout(250);
                 const clavier = await lire();
                 exige(clavier.voile > 0.99, `${appareil}, la ligne atteinte au clavier reste voilée (${clavier.voile})`);
+                await c.close();
+            }
+        });
+
+        // LA FRISE DES MOIS DE L'ONGLET DATES. Comme le fil du CV : chaque
+        // mois a son liseré dans la marge, qui se trace jusqu'à la ligne de
+        // lecture, au milieu de l'écran ; son point, devant le nom du mois,
+        // éclôt quand elle l'atteint. Un espace sépare deux mois.
+        await verifie('la frise des mois de l’onglet Dates : chaque mois son liseré, séparé du suivant par un espace, tracé jusqu’à la ligne de lecture, son point posé quand elle atteint le nom du mois — avec les deux pilotes, tout tracé en mouvement réduit', async () => {
+            // Une saison fictive : deux lignes par mois, cinq mois de suite,
+            // à partir du mois prochain.
+            const saison = () => {
+                const iso = (a, m, j) => `${a}-${String(m + 1).padStart(2, '0')}-${String(j).padStart(2, '0')}`;
+                const titres = ['Bérénice', 'Cléophène, d’après Rodogune'];
+                const t = new Date();
+                SHOW_DATA.upcoming = [];
+                for (let k = 1; k <= 5; k++) {
+                    const d = new Date(t.getFullYear(), t.getMonth() + k, 1);
+                    const a = d.getFullYear(), m = d.getMonth();
+                    const seance = (j) => ({ dateLabel: iso(a, m, j), icsDate: iso(a, m, j), time: '20h00', bookingUrl: 'https://example.org/billets', isSchool: false });
+                    SHOW_DATA.upcoming.push(
+                        Object.assign({ type: 'single', title: titres[k % 2], location: 'Scène de vérification (76)', city: 'Rouen' }, seance(5)),
+                        { type: 'series', id: `frise-${k}`, title: titres[(k + 1) % 2], location: 'Salle de vérification (76)', city: 'Rouen', dateLabel: iso(a, m, 20), shows: [seance(20), seance(21)] }
+                    );
+                }
+                renderDates();
+            };
+            for (const [repli, reduit] of [[false, false], [true, false], [false, true]]) {
+                const c = await visiteur({ viewport: { width: 390, height: 844 }, reducedMotion: reduit ? 'reduce' : 'no-preference' });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.goto(`${base}/${repli ? '?repli' : ''}#page_dates`, { waitUntil: 'load' });
+                await p.waitForTimeout(600);
+                await p.evaluate(saison);
+                const etat = await p.evaluate(async () => {
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    const groupes = [...document.querySelectorAll('#upcoming-dates-container .dl-groupe')];
+                    // La ligne de lecture (déclarée par la page) au milieu du
+                    // deuxième mois.
+                    const L = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ligne-lecture'));
+                    const r = groupes[1].getBoundingClientRect();
+                    window.scrollTo(0, r.top + scrollY + r.height / 2 - innerHeight * L);
+                    await new Promise((f) => setTimeout(f, 500));
+                    // matrix(a, b, c, d, e, f) : a, l'échelle du point ; d, la hauteur tracée du liseré.
+                    const echelle = (t, n) => (t === 'none' ? 1 : +((t.match(/matrix\(([^)]+)\)/) || [0, 'NaN'])[1].split(',')[n]));
+                    const lire = (g) => ({
+                        trait: echelle(getComputedStyle(g, '::after').transform, 3),
+                        point: echelle(getComputedStyle(g.querySelector('.dl-intercalaire'), '::after').transform, 0)
+                    });
+                    return {
+                        n: groupes.length,
+                        espace: groupes[1].getBoundingClientRect().top - groupes[0].getBoundingClientRect().bottom,
+                        lu: lire(groupes[0]), enCours: lire(groupes[1]), aVenir: lire(groupes[groupes.length - 1]),
+                        tous: groupes.map(lire)
+                    };
+                });
+                const nom = reduit ? 'en mouvement réduit' : repli ? 'avec le repli' : 'en natif';
+                exige(etat.n === 5, `${etat.n} mois au lieu de cinq`);
+                exige(etat.espace >= 8, `${nom}, pas d’espace entre deux mois (${etat.espace} px)`);
+                if (reduit) {
+                    exige(etat.tous.every((x) => x.trait === 1 && x.point === 1),
+                        `en mouvement réduit, un liseré n’est pas tracé ou un point pas posé : ${JSON.stringify(etat.tous)}`);
+                } else {
+                    exige(etat.lu.trait > 0.99 && etat.lu.point === 1, `${nom}, le mois déjà lu n’est pas tracé, son point posé : ${JSON.stringify(etat.lu)}`);
+                    exige(etat.enCours.point === 1 && etat.enCours.trait > 0.2 && etat.enCours.trait < 0.8,
+                        `${nom}, le liseré du mois en cours ne s’arrête pas à la ligne de lecture : ${JSON.stringify(etat.enCours)}`);
+                    exige(etat.aVenir.trait === 0 && etat.aVenir.point === 0,
+                        `${nom}, un mois que la ligne de lecture n’a pas atteint est déjà tracé : ${JSON.stringify(etat.aVenir)}`);
+                }
+                exige(!erreurs.length, erreurs.join(' | '));
                 await c.close();
             }
         });

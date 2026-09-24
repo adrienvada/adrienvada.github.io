@@ -2849,6 +2849,17 @@
 
         }
 
+        /* LA LIGNE DE LECTURE, commune aux deux frises (le CV, les mois de
+           l'onglet Dates), aux deux pilotes et aux vérifications
+           (build/verifier-site.js la relit ici) : une fraction de la
+           hauteur de l'écran, depuis son haut. Aux trois quarts, à l'entrée
+           du quart inférieur : ce qu'on va lire arrive par le bas, et se
+           découvre dès qu'il monte dans l'écran. Au milieu, où elle était,
+           le bas de l'écran restait voilé, sans point, sans fil. */
+        :root {
+            --ligne-lecture: .75;
+        }
+
         /* ── LA FRISE ──
            La guirlande jouait au chargement : une vague de couleur
            descendait le CV, ligne après ligne — sous le rideau de
@@ -2857,8 +2868,9 @@
            couper son animation pour allumer une ligne, puis la rendre,
            la relançait.
 
-           La frise suit le regard. Une LIGNE DE LECTURE court au milieu
-           de l'écran ; en descendant le CV :
+           La frise suit le regard. Une LIGNE DE LECTURE court aux trois
+           quarts de l'écran (--ligne-lecture, plus haut) ; en descendant le
+           CV :
              · un fil d'or se trace le long du bord GAUCHE de la liste,
                jusqu'à elle (.cv-frise::after) ;
              · sur le fil, au milieu de chaque ligne, le POINT du spectacle,
@@ -2982,40 +2994,54 @@
 
         /* Au repos, le fil est tracé, les points posés, les lignes pleines :
            ce sont les animations qui effacent et voilent ce que la ligne de
-           lecture n'a pas encore atteint. */
+           lecture n'a pas encore atteint.
+
+           view(0px), ET NON view() : sans encart, view() retranche de
+           l'écran le scroll-padding-top du html (84 px, sous la barre
+           d'onglets). Les plages comptées depuis le bas n'en voyaient
+           rien ; celle du fil, qui finit quand le bas de la liste passe la
+           ligne de lecture, finissait 84 px trop tôt — le fil courait
+           jusqu'à 84 px devant elle, et le repli, qui mesure l'écran
+           entier, ne faisait pas pareil.
+
+           LES PLAGES SE COMPTENT DEPUIS LE BAS DE L'ÉCRAN (« cover 0 » :
+           le haut de l'élément y entre) : la ligne de lecture L y est à
+           (1 - L) × 100vh. */
         @supports (animation-timeline: view()) {
             :where(html:not(.regie-repli)) .cv-frise::after,
             :where(html:not(.regie-repli)) .cv-has-universe::before,
             :where(html:not(.regie-repli)) .cv-has-universe .cv-row-toggle,
             :where(html:not(.regie-repli)) .cv-vignette.a-etat::after {
-                animation-timeline: view();
+                animation-timeline: view(0px);
                 animation-duration: auto;
                 animation-timing-function: linear;
                 animation-fill-mode: both;
             }
 
+            /* Le fil, de son haut à son bas, passe la ligne de lecture. */
             :where(html:not(.regie-repli)) .cv-frise::after {
                 animation-name: cv-fil;
-                animation-range: cover 50vh cover calc(100% - 50vh);
+                animation-range: cover calc((1 - var(--ligne-lecture)) * 100vh) cover calc(100% - var(--ligne-lecture) * 100vh);
             }
 
-            /* Le haut de la ligne de 65 % à 50 % de l'écran : pleine quand
-               la pointe du fil, sur la ligne de lecture, l'atteint. */
+            /* Le haut de la ligne, sur les 15 % d'écran qui précèdent la
+               ligne de lecture : pleine quand la pointe du fil l'atteint. */
             :where(html:not(.regie-repli)) .cv-has-universe .cv-row-toggle {
                 animation-name: cv-decouverte;
-                animation-range: cover 35vh cover 50vh;
+                animation-range: cover calc((.85 - var(--ligne-lecture)) * 100vh) cover calc((1 - var(--ligne-lecture)) * 100vh);
             }
 
-            /* Le point, de 56 % à 44 % de l'écran : au plus grand quand la
-               pointe du fil le touche, au milieu. */
+            /* Le point, 6 % d'écran de part et d'autre de la ligne de
+               lecture : au plus grand quand la pointe du fil le touche. */
             :where(html:not(.regie-repli)) .cv-has-universe::before {
                 animation-name: cv-point;
-                animation-range: cover 44vh cover 56vh;
+                animation-range: cover calc((.94 - var(--ligne-lecture)) * 100vh) cover calc((1.06 - var(--ligne-lecture)) * 100vh);
             }
 
+            /* Le halo, 12 % d'écran de part et d'autre. */
             :where(html:not(.regie-repli)) .cv-vignette.a-etat::after {
                 animation-name: cv-lueur-passe;
-                animation-range: cover 38vh cover 62vh;
+                animation-range: cover calc((.88 - var(--ligne-lecture)) * 100vh) cover calc((1.12 - var(--ligne-lecture)) * 100vh);
             }
         }
 
@@ -3029,26 +3055,31 @@
             animation-play-state: paused;
         }
 
+        /* TANT QUE LA RÉGIE N'A PAS MESURÉ (loin de l'écran, ou avant sa
+           première image), --ph manque. Le fil, le point et le halo le
+           supposent alors sous l'écran (1) : rien n'y est tracé d'avance.
+           Le voile suppose l'inverse (0) : une ligne n'attend jamais une
+           mesure pour être lisible. */
         :where(.regie-repli) .cv-frise::after {
             animation-name: cv-fil;
-            animation-delay: calc((.5 - var(--ph, 0)) / var(--pt, 1) * -1s);
+            animation-delay: calc((var(--ligne-lecture) - var(--ph, 1)) / var(--pt, 1) * -1s);
         }
 
         /* --ph et --pt sont écrits sur la ligne ; le bouton et le point en
            héritent. Le point est au milieu de la ligne : --ph + --pt / 2. */
         :where(.regie-repli) .cv-has-universe .cv-row-toggle {
             animation-name: cv-decouverte;
-            animation-delay: calc((.65 - var(--ph, 0)) / .15 * -1s);
+            animation-delay: calc((var(--ligne-lecture) + .15 - var(--ph, 0)) / .15 * -1s);
         }
 
         :where(.regie-repli) .cv-has-universe::before {
             animation-name: cv-point;
-            animation-delay: calc((.56 - var(--ph, 0) - var(--pt, 0) / 2) / .12 * -1s);
+            animation-delay: calc((var(--ligne-lecture) + .06 - var(--ph, 1) - var(--pt, 0) / 2) / .12 * -1s);
         }
 
         :where(.regie-repli) .cv-vignette.a-etat::after {
             animation-name: cv-lueur-passe;
-            animation-delay: calc((.62 - var(--ph, 0)) / .24 * -1s);
+            animation-delay: calc((var(--ligne-lecture) + .12 - var(--ph, 1)) / .24 * -1s);
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -3915,59 +3946,79 @@
             position: relative;
             scroll-margin-top: calc(var(--dl-colle, 72px) - 84px);
             --dl-lisere: rgb(var(--c-gold-ink));
+            /* Le milieu de l'intercalaire (32 px de haut) : le point du mois
+               y est posé, et son liseré en part. */
+            --dl-depart: 16px;
         }
 
+        /* Un espace entre deux groupes : le liseré s'y interrompt, on voit
+           d'un coup d'œil où finit un mois et où commence le suivant. */
         .dl-groupe+.dl-groupe {
             margin-top: 0.75rem;
         }
 
-        /* LE LISERÉ. Chaque groupe — un mois, ou un spectacle — porte un
-           trait au bord gauche de la carte, du haut de son intercalaire à sa
-           dernière ligne. Il s'interrompt entre deux groupes : on voit d'un
-           coup d'œil où finit un mois et où commence le suivant. Chaque mois
-           a sa couleur, qui suit les saisons (--dl-mois-*, plus haut) ; un
+        /* LA FRISE DES MOIS. Chaque groupe — un mois, ou un spectacle —
+           porte son liseré dans la marge de la carte, comme le fil du CV :
+           centré à 8 px de son bord, il part du point posé devant le nom du
+           mois et descend jusqu'à la dernière ligne. Chaque mois a sa
+           couleur, qui suit les saisons (--dl-mois-*, plus haut) ; un
            spectacle, la sienne. L'or du site reste pour « Date à préciser ».
-           L'intercalaire, qui reste accroché et couvre ce qui défile, porte
-           le même trait (voir plus bas) : il ne s'interrompt pas sous lui. */
+
+           Le liseré SE TRACE À MESURE QU'ON LIT : sa trace (::before) est
+           là d'emblée, pâle ; le trait plein (::after) descend avec la ligne
+           de lecture, aux trois quarts de l'écran (--ligne-lecture, à la
+           frise du CV), et le point éclôt quand elle atteint le nom du mois
+           (voir l'intercalaire). Les mêmes images que
+           la frise du CV (cv-fil, cv-point), les deux mêmes régimes (voir
+           « La frise » plus haut, et regie.js) ; en mouvement réduit, sans
+           pilote, sur papier : tout est tracé d'emblée. */
         .dl-groupe--spectacle {
             --dl-lisere: var(--dl-a);
+            /* son intercalaire porte la photo : 66 px de haut */
+            --dl-depart: 33px;
+        }
+
+        .dl-groupe::before,
+        .dl-groupe::after {
+            content: "";
+            position: absolute;
+            /* la liste est à 16 px du bord de la carte (p-4) : le centre du
+               trait, à 8 px du bord, est à 8 px avant la liste */
+            left: -9.5px;
+            top: var(--dl-depart);
+            bottom: 0;
+            width: 3px;
+            border-radius: 2px;
+            pointer-events: none;
         }
 
         .dl-groupe::before {
-            content: "";
-            position: absolute;
-            /* le bord de la carte : l'intercalaire, qui déborde de la marge
-               intérieure (p-4), va jusque-là */
-            left: -1rem;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            border-radius: 0 3px 3px 0;
+            background: color-mix(in srgb, var(--dl-lisere) 18%, transparent);
+        }
+
+        .dl-groupe::after {
             background: var(--dl-lisere);
-            pointer-events: none;
+            transform-origin: 50% 0;
         }
 
         /* L'intercalaire reste accroché sous la barre d'onglets pendant
            qu'on parcourt son mois : --dl-colle est mesurée par le script
-           (hauteur de la barre + son retrait de 8 px). Il déborde de la
-           marge intérieure de la carte (p-4) pour en prendre toute la
-           largeur, et son fond est plein : du texte défile dessous. */
+           (hauteur de la barre + son retrait de 8 px). Il va jusqu'au bord
+           droit de la carte ; à gauche, il laisse la marge à la frise. Son
+           fond est plein : les lignes défilent dessous. */
         .dl-intercalaire {
             position: sticky;
             top: var(--dl-colle, 72px);
             z-index: 5;
             display: flex;
-            align-items: baseline;
+            align-items: center;
             justify-content: space-between;
             gap: 0.5rem;
-            margin: 0 -1rem 0.15rem;
-            padding: 0.6rem 1rem 0.5rem;
+            min-height: 32px;
+            margin: 0 -1rem 0.15rem 0;
+            padding: 0 1rem 0 0.6rem;
             background: rgb(var(--c-surface));
-            /* Le liseré de son groupe, à la même place, puis le filet du bas.
-               Deux ombres plutôt qu'une bordure : la première passe par-dessus
-               la seconde, et le filet file SOUS le liseré au lieu de le
-               couper d'un trait clair. */
-            box-shadow: inset 3px 0 0 var(--dl-lisere, transparent), inset 0 -1px 0 rgb(var(--c-s200) / 0.7);
+            box-shadow: inset 0 -1px 0 rgb(var(--c-s200) / 0.7);
         }
 
         /* Les six pixels entre la barre et l'intercalaire accroché : sans ce
@@ -3980,6 +4031,82 @@
             bottom: 100%;
             height: 8px;
             background: inherit;
+        }
+
+        /* LE POINT DU MOIS, devant son nom, sur le liseré — le point des
+           spectacles du CV. Il éclôt quand la ligne de lecture atteint
+           l'intercalaire, et reste posé ; accroché avec lui en haut de
+           l'écran, il dit quel mois on lit. */
+        .dl-intercalaire::after {
+            content: "";
+            position: absolute;
+            left: -12px;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            margin-top: -4px;
+            border-radius: 50%;
+            background: var(--dl-lisere);
+            box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--dl-lisere) 22%, transparent);
+            pointer-events: none;
+        }
+
+        /* Au repos, le liseré est tracé et le point posé : ce sont les
+           animations qui effacent ce que la ligne de lecture n'a pas encore
+           atteint. Sous :where(), comme celles du CV. */
+        @supports (animation-timeline: view()) {
+
+            :where(html:not(.regie-repli)) .dl-groupe::after,
+            :where(html:not(.regie-repli)) .dl-intercalaire::after {
+                /* l'écran entier, comme au CV (voir view(0px), plus haut) */
+                animation-timeline: view(0px);
+                animation-duration: auto;
+                animation-timing-function: linear;
+                animation-fill-mode: both;
+            }
+
+            /* Le trait est plein jusqu'à la ligne de lecture : vide quand
+               le haut du groupe la passe, entier quand son bas y passe. Les
+               plages sont celles du fil et des points du CV. */
+            :where(html:not(.regie-repli)) .dl-groupe::after {
+                animation-name: cv-fil;
+                animation-range: cover calc((1 - var(--ligne-lecture)) * 100vh) cover calc(100% - var(--ligne-lecture) * 100vh);
+            }
+
+            :where(html:not(.regie-repli)) .dl-intercalaire::after {
+                animation-name: cv-point;
+                animation-range: cover calc((.94 - var(--ligne-lecture)) * 100vh) cover calc((1.06 - var(--ligne-lecture)) * 100vh);
+            }
+        }
+
+        /* Le repli : regie.js écrit sur le groupe et sur l'intercalaire
+           (.rg-ligne) où est leur haut (--ph) et leur hauteur (--pt), en
+           hauteurs d'écran. Pas encore mesurés, ils sont supposés sous
+           l'écran, comme au CV : rien de tracé d'avance. */
+        :where(.regie-repli) .dl-groupe::after,
+        :where(.regie-repli) .dl-intercalaire::after {
+            animation-duration: 1s;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
+            animation-play-state: paused;
+        }
+
+        :where(.regie-repli) .dl-groupe::after {
+            animation-name: cv-fil;
+            animation-delay: calc((var(--ligne-lecture) - var(--ph, 1)) / var(--pt, 1) * -1s);
+        }
+
+        :where(.regie-repli) .dl-intercalaire::after {
+            animation-name: cv-point;
+            animation-delay: calc((var(--ligne-lecture) + .06 - var(--ph, 1) - var(--pt, 0) / 2) / .12 * -1s);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .dl-groupe::after,
+            .dl-intercalaire::after {
+                animation: none !important;
+            }
         }
 
         .dl-intercalaire h4 {
@@ -3995,40 +4122,46 @@
             letter-spacing: 0.1em;
         }
 
-        .dl-compte {
-            flex-shrink: 0;
-            font-size: 12px;
-            color: rgb(var(--c-muted));
-        }
+        /* LA LIGNE, À LA DENSITÉ DU CV. La feuille d'éphéméride tient la
+           place de la vignette du CV, et à côté trois lignes : le
+           spectacle, la ville et la salle, puis une puce par séance. Une
+           série y tient comme une date seule : 69 px, là où il en fallait
+           près de 200 quand chaque séance avait sa case. La même ligne au
+           téléphone et sur grand écran.
 
-        /* LA LIGNE. Téléphone : la feuille, et à côté la date, le titre, le
-           lieu ; dessous, les cases des séances sur toute la largeur — une
-           date seule a la sienne, comme chaque soir d'une série. Grand
-           écran : les cases passent à droite, sur la même ligne. */
+           La ligne va, comme l'intercalaire, jusqu'au bord droit de la
+           carte ; une sur deux porte un voile, pour que l'œil la suive
+           jusqu'à ses puces. */
         .dl {
             display: grid;
-            grid-template-columns: 54px minmax(0, 1fr);
-            column-gap: 0.85rem;
-            row-gap: 0.65rem;
-            padding: 0.85rem 0.2rem;
-            border-bottom: 1px solid rgb(var(--c-s200) / 0.55);
-            border-radius: 0.6rem;
-            scroll-margin-top: calc(var(--dl-colle, 72px) + 44px - 84px);
+            grid-template-columns: 48px minmax(0, 1fr);
+            column-gap: 11px;
+            align-items: center;
+            margin-right: -1rem;
+            padding: 4px 0.75rem 4px 0.5rem;
+            border-top: 1px solid rgb(var(--c-s200) / 0.55);
+            /* sous l'intercalaire accroché (32 px), avec 4 px d'air */
+            scroll-margin-top: calc(var(--dl-colle, 72px) + 36px - 84px);
             transition: background-color 0.5s ease, box-shadow 0.5s ease;
         }
 
-        .dl-groupe>.dl:last-child {
-            border-bottom: 0;
+        .dl-groupe--spectacle .dl {
+            scroll-margin-top: calc(var(--dl-colle, 72px) + 70px - 84px);
         }
 
-        .dl-droite {
-            grid-column: 1 / -1;
+        .dl-intercalaire+.dl {
+            border-top: 0;
         }
 
-        /* La ligne visée depuis le sommaire s'éclaire un instant. */
+        .dl:nth-of-type(even) {
+            background: var(--c-stripe);
+        }
+
+        /* La ligne visée depuis le sommaire s'éclaire un instant. Les
+           anneaux sont tracés dedans : la ligne touche le bord de la carte. */
         .dl.dl-eclaire {
             background: rgb(var(--c-gold) / 0.12);
-            box-shadow: 0 0 0 1.5px rgb(var(--c-gold-ink));
+            box-shadow: inset 0 0 0 1.5px rgb(var(--c-gold-ink));
         }
 
         .dl:focus {
@@ -4036,79 +4169,140 @@
         }
 
         .dl:focus-visible {
-            box-shadow: 0 0 0 2px rgb(var(--c-gold-ink));
+            box-shadow: inset 0 0 0 2px rgb(var(--c-gold-ink));
         }
 
-        @media (min-width: 768px) {
-            .dl {
-                grid-template-columns: 58px minmax(0, 1fr) minmax(0, 1.2fr);
-                column-gap: 1.1rem;
-                align-items: start;
-            }
-
-            .dl-droite {
-                grid-column: 3;
-            }
-        }
-
-        /* LA FEUILLE D'ÉPHÉMÉRIDE. Le mois dans le bandeau, à la couleur du
-           spectacle ; le quantième ; le jour. Une série de plusieurs jours
-           empile ses feuilles (trois au plus). Décorative : la date entière
-           est écrite à côté, c'est elle que lisent les lecteurs d'écran. */
-        .dl-pile {
-            position: relative;
-            width: 54px;
-            height: 66px;
-            margin-top: 8px;
-        }
-
+        /* LA FEUILLE D'ÉPHÉMÉRIDE, POSÉE SUR LA PHOTO DU SPECTACLE. La
+           largeur de la vignette du CV (48 px), 8 px de moins en hauteur.
+           En haut, le mois, dans le bandeau à la couleur du spectacle ; au
+           centre, le jour — les jours d'une série, avec un tiret ; en bas,
+           le jour de la semaine, là où la vignette du CV écrit l'année. La
+           photo, assombrie, reste visible autour : on reconnaît le
+           spectacle avant de lire. Sans photo, la feuille prend la couleur
+           du spectacle ; rangée par spectacle, la photo est déjà en tête du
+           groupe, et la feuille redevient papier.
+           Décorative (aria-hidden) : la date entière est écrite dans la
+           ligne pour les lecteurs d'écran.
+           `clip` plutôt que `hidden` : rogner ne doit pas faire de la
+           feuille une boîte de défilement (voir « L'année, elle, ne bouge
+           pas », à la frise du CV). */
         .dl-feuille {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 48px;
+            height: 56px;
+            overflow: hidden;
+            overflow: clip;
+            border-radius: 6px;
+            background: var(--dl-a);
+            color: var(--dl-sa);
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+        }
+
+        .dl-feuille img {
             position: absolute;
             inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow: hidden;
-            border-radius: 7px;
-            background: var(--dl-papier);
-            border: 1px solid rgb(var(--c-s200));
-            box-shadow: 0 1px 3px rgb(0 0 0 / 0.18);
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.6);
         }
 
-        .dl-derriere {
-            background: linear-gradient(var(--dl-a) 0 18px, var(--dl-papier) 18px);
-            transform: translate(4px, -4px);
-            opacity: 0.75;
-        }
-
-        .dl-derriere--2 {
-            transform: translate(8px, -8px);
-            opacity: 0.5;
+        /* Derrière le jour, une ombre douce, qui s'efface vers les bords :
+           la photo reste visible autour, et sur la plus claire (Bérénice)
+           le blanc du jour garde son contraste. Après la photo dans le
+           document, donc au-dessus d'elle ; sous le texte (z-index 1). */
+        .dl-feuille--photo::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(closest-side, rgb(0 0 0 / 0.5), rgb(0 0 0 / 0));
         }
 
         .dl-bande {
-            align-self: stretch;
-            height: 18px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1;
+            height: 13px;
             background: var(--dl-a);
             color: var(--dl-sa);
-            font: 700 11px/18px Montserrat, sans-serif;
-            letter-spacing: 0.08em;
+            font: 700 8px/13px Montserrat, sans-serif;
+            letter-spacing: 0.06em;
             text-transform: uppercase;
             text-align: center;
+            white-space: nowrap;
+        }
+
+        /* Une série à cheval sur deux mois : « janv–févr ». */
+        .dl-bande--2 {
+            font-size: 7px;
+            letter-spacing: 0;
         }
 
         .dl-num {
-            margin-top: 6px;
-            font: 600 23px/1 Inter, sans-serif;
+            position: relative;
+            z-index: 1;
+            margin-top: 1px;
+            font: 700 19px/1 Inter, sans-serif;
             font-variant-numeric: tabular-nums;
-            color: rgb(var(--c-text));
+            letter-spacing: -0.01em;
+            color: #fff;
+            text-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
+            white-space: nowrap;
+        }
+
+        .dl-feuille--2 .dl-num {
+            font-size: 14px;
+            letter-spacing: -0.02em;
         }
 
         .dl-jour {
-            margin-top: 4px;
-            font: 600 11px/1 Inter, sans-serif;
-            letter-spacing: 0.04em;
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+            padding: 7px 0 3px;
+            background: linear-gradient(to top, rgb(0 0 0 / 0.7), rgb(0 0 0 / 0));
+            color: #fff;
+            font: 700 8px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            letter-spacing: 0.02em;
             text-transform: uppercase;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* Sans photo : le fond est déjà la couleur du spectacle, le bandeau
+           s'en détache en plus sombre — comme la vignette du CV. */
+        .dl-feuille--sans-photo .dl-bande {
+            background: rgb(0 0 0 / 0.28);
+            color: #fff;
+        }
+
+        .dl-feuille--sans-photo .dl-num,
+        .dl-feuille--sans-photo .dl-jour {
+            background: none;
+            color: var(--dl-sa);
+            text-shadow: none;
+        }
+
+        .dl-feuille--papier {
+            background: var(--dl-papier);
+            border: 1px solid rgb(var(--c-s200));
+            box-shadow: none;
+        }
+
+        .dl-feuille--papier .dl-num {
+            color: rgb(var(--c-text));
+            text-shadow: none;
+        }
+
+        .dl-feuille--papier .dl-jour {
+            background: none;
             color: rgb(var(--c-muted));
         }
 
@@ -4116,31 +4310,39 @@
             min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 2px;
-            padding-top: 4px;
+            gap: 1px;
         }
 
-        .dl-quand {
-            font: 600 13px/1.35 Inter, sans-serif;
-            color: rgb(var(--c-gold-ink));
+        /* Le spectacle, puis la ville et la salle : une ligne chacun, qui
+           s'arrête sur des points de suspension si elle déborde — le texte
+           reste entier dans le document. */
+        .dl-titre,
+        .dl-lieu {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
+        /* Le titre en Cinzel, comme dans le CV et en tête de chaque univers. */
+        .dl-titre {
+            font: 600 13px/17px Cinzel, serif;
+            letter-spacing: 0.01em;
+            text-transform: uppercase;
+            color: rgb(var(--c-text));
+        }
+
+        /* « Ce soir », « Demain » : en tête de la ligne. */
         .dl-proche {
             display: inline-block;
-            margin-right: 0.4rem;
-            padding: 1px 7px;
+            margin-right: 6px;
+            padding: 0 6px;
             border-radius: 999px;
             background: rgb(var(--c-gold-ink));
             color: rgb(var(--c-on-gold));
-            font: 700 11px/1.5 Montserrat, sans-serif;
+            font: 700 9px/15px Montserrat, sans-serif;
             letter-spacing: 0.08em;
             text-transform: uppercase;
             vertical-align: 1px;
-        }
-
-        .dl-titre {
-            font: 700 14px/1.25 Inter, sans-serif;
-            color: rgb(var(--c-text));
         }
 
         /* Le nom d'un spectacle mène à sa page (dlVersPage) : un souligné
@@ -4159,196 +4361,117 @@
         }
 
         .dl-sous {
-            font-weight: 400;
-            font-style: italic;
-            font-size: 12px;
+            font: italic 400 11.5px Inter, sans-serif;
+            letter-spacing: 0;
+            text-transform: none;
             color: rgb(var(--c-muted));
         }
 
         .dl-lieu {
-            font-size: 12.5px;
-            line-height: 1.35;
+            font-size: 11.5px;
+            line-height: 15px;
             color: rgb(var(--c-muted));
         }
 
-        .dl-lieu .ico {
-            margin-right: 3px;
-            font-size: 10px;
+        .dl-ville {
+            font-weight: 600;
             color: rgb(var(--c-gold-ink));
         }
 
-        /* LES BOUTONS. « Réserver » est l'action qui compte le plus : un
-           aplat, comme partout sur le site. L'agenda, à côté, en pictogramme. */
-        .dl-actions {
+        /* LES SÉANCES, EN PUCES : une par séance, sous la salle. Une puce
+           publique réserve d'un geste — elle mène à sa billetterie (↗). Une
+           séance scolaire a sa puce en pointillé, sans lien : elle n'est pas
+           ouverte au public ; de même une séance dont la billetterie n'est
+           pas encore ouverte. Le jour de la semaine n'y est écrit que pour
+           une série de plusieurs jours : la feuille donne déjà le
+           quantième. Au moins 24 px de haut : la cible du doigt.
+           L'agenda ferme la rangée, au bord droit : d'une ligne à l'autre,
+           on le trouve au même endroit, et une rangée pleine ne le laisse
+           pas seul en tête de la suivante. */
+        .dl-seances {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
+            margin-top: 3px;
         }
 
-        .dl-reserver {
+        .dl-puce {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 8px 11px;
-            border-radius: 8px;
-            background: rgb(var(--c-gold-ink));
-            color: rgb(var(--c-on-gold));
-            font: 700 11px/1 Inter, sans-serif;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
+            gap: 3px;
+            min-height: 24px;
+            padding: 0 7px;
+            border: 1px solid rgb(var(--c-gold) / 0.55);
+            border-radius: 12px;
+            font: 600 11px/1.2 Inter, sans-serif;
+            font-variant-numeric: tabular-nums;
+            color: rgb(var(--c-text));
             white-space: nowrap;
-            box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
-            transition: background-color var(--dur-quick) ease;
         }
 
-        .dl-reserver:hover {
-            background: rgb(var(--c-gold-deep));
-        }
-
-        .dl-reserver .ico {
-            font-size: 10px;
-        }
-
-        .dl-etat {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 9px;
-            border-radius: 999px;
-            border: 1px solid rgb(var(--c-s200));
-            color: rgb(var(--c-muted));
-            font: 500 12px/1.25 Inter, sans-serif;
-        }
-
-        .dl-etat .ico {
-            flex-shrink: 0;
-            font-size: 11px;
-        }
-
-        .dl-etat--attente {
-            color: rgb(var(--c-warn));
-            border-color: rgb(var(--c-warn) / 0.45);
-        }
-
-        .dl-agenda {
-            flex-shrink: 0;
-            display: grid;
-            place-items: center;
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
-            border: 1px solid rgb(var(--c-s200));
-            color: rgb(var(--c-gold-ink));
-            transition: border-color var(--dur-quick) ease, background-color var(--dur-quick) ease;
-        }
-
-        .dl-agenda:hover {
+        a.dl-puce:hover {
             border-color: rgb(var(--c-gold));
             background: rgb(var(--c-gold) / 0.1);
         }
 
-        .dl-agenda .ico {
-            font-size: 14px;
-        }
-
-        /* LES SÉANCES : une case chacune, pour une date seule comme pour
-           chaque soir d'une série ; deux par ligne au téléphone. Une séance
-           scolaire a un bord en pointillé : elle n'est pas ouverte au
-           public. */
-        .dl-seances {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 6px;
-        }
-
-        @media (min-width: 768px) {
-            .dl-seances {
-                grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
-            }
-
-            /* Sur une case large, l'agenda reste à côté de « Réserver »
-               plutôt que de partir à l'autre bout. */
-            .dl-s-bas {
-                justify-content: flex-start;
-            }
-        }
-
-        .dl-seance {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 7px;
-            min-width: 0;
-            padding: 8px 8px 8px 10px;
-            border-radius: 9px;
-            border: 1px solid rgb(var(--c-s200));
-            background: var(--panel-bg);
-        }
-
-        .dl-seance--scolaire {
-            border-style: dashed;
-        }
-
-        .dl-s-quand {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: baseline;
-            gap: 1px 7px;
-            min-width: 0;
+        /* La flèche de l'onglet Dates, tournée vers le haut : on part
+           ailleurs, à la billetterie. */
+        .dl-puce .ico {
+            font-size: 9px;
+            color: rgb(var(--c-gold-ink));
+            transform: rotate(-45deg);
         }
 
         .dl-s-jour {
-            font: 500 12.5px/1.2 Inter, sans-serif;
+            font-weight: 500;
             color: rgb(var(--c-muted));
-            white-space: nowrap;
         }
 
-        .dl-s-jour b {
-            font-size: 14.5px;
-            font-weight: 700;
-            color: rgb(var(--c-text));
-            font-variant-numeric: tabular-nums;
-        }
-
-        .dl-s-heure {
-            font: 500 13px/1.25 Inter, sans-serif;
-            color: rgb(var(--c-text));
-            font-variant-numeric: tabular-nums;
-        }
-
-        .dl-s-heure--fort {
-            font-size: 14.5px;
-            font-weight: 700;
-        }
-
+        .dl-puce i,
         .dl-s-heure--flou {
-            font-size: 12px;
             font-style: italic;
+            font-weight: 500;
+        }
+
+        .dl-puce--muette {
+            border-style: dashed;
+            border-color: rgb(var(--c-s300));
             color: rgb(var(--c-muted));
+            font-weight: 500;
         }
 
-        .dl-s-bas {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 6px;
+        /* Il prend 4 px sur la marge de droite, que son dessin laisse vide :
+           une série de deux séances tient alors sur une rangée dès 375 px. */
+        .dl-seances-agenda {
+            margin-left: auto;
+            margin-right: -4px;
         }
 
-        .dl-seance .dl-etat {
-            min-width: 0;
-            padding: 0;
-            border: 0;
-            font-size: 11.5px;
+        /* Sur grand écran, la rangée ne passe jamais à la ligne, et le bord
+           droit est loin : l'agenda suit les puces. */
+        @media (min-width: 768px) {
+            .dl-seances-agenda {
+                margin: 0 0 0 2px;
+            }
         }
 
-        .dl-seance .dl-reserver {
-            padding: 7px 9px;
+        .dl-agenda {
+            display: grid;
+            place-items: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            color: rgb(var(--c-gold-ink));
+            transition: background-color var(--dur-quick) ease;
         }
 
-        .dl-seance .dl-agenda {
-            width: 32px;
-            height: 32px;
+        .dl-agenda:hover {
+            background: rgb(var(--c-gold) / 0.1);
+        }
+
+        .dl-agenda .ico {
+            font-size: 13px;
         }
 
         .dl-vide {
@@ -4358,13 +4481,68 @@
             color: rgb(var(--c-muted));
         }
 
+        /* L'AGENDA D'UNE SÉRIE. Un seul bouton par ligne : pour une série,
+           la fenêtre « Ajouter à l'agenda » demande laquelle des séances
+           ajouter (voir openCalendarModal). */
+        .cal-seances {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .cal-seance {
+            min-height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgb(var(--c-s200));
+            font: 600 12px/1.2 Inter, sans-serif;
+            font-variant-numeric: tabular-nums;
+            color: rgb(var(--c-text));
+        }
+
+        .cal-seance:hover {
+            border-color: rgb(var(--c-gold));
+        }
+
+        .cal-seance[aria-pressed="true"] {
+            background: rgb(var(--c-gold-ink));
+            border-color: rgb(var(--c-gold-ink));
+            color: rgb(var(--c-on-gold));
+        }
+
         @media print {
             .dl-intercalaire {
                 position: static;
             }
 
+            /* Le papier ne défile pas : la frise n'a rien à suivre. */
+            .dl-groupe::before,
+            .dl-groupe::after,
+            .dl-intercalaire::after {
+                display: none !important;
+            }
+
             .dl-agenda {
                 display: none !important;
+            }
+
+            /* Pas de photo sombre sur papier : la feuille redevient papier. */
+            .dl-feuille img {
+                display: none;
+            }
+
+            .dl-feuille {
+                background: none;
+                border: 1px solid rgb(var(--c-s200));
+                box-shadow: none;
+            }
+
+            .dl-feuille .dl-num,
+            .dl-feuille .dl-jour {
+                background: none;
+                color: rgb(var(--c-text));
+                text-shadow: none;
             }
         }
 
@@ -4446,11 +4624,13 @@
             }
         }
 
-        /* ── Rangé par spectacle : l'intercalaire porte la pièce ── */
+        /* ── Rangé par spectacle : l'intercalaire porte la pièce ──
+           Sa photo, centrée au-dessus des feuilles de ses lignes : 66 px de
+           haut (--dl-depart, sur le groupe, en dépend). */
         .dl-intercalaire--spectacle {
-            align-items: center;
             gap: 0.7rem;
-            padding: 0.5rem 1rem 0.5rem 1.2rem;
+            min-height: 66px;
+            padding: 8px 1rem 8px 0.75rem;
         }
 
         .dl-intercalaire--spectacle h4 {
@@ -7873,6 +8053,9 @@
                     <h4 class="font-bold text-luxury-textMain text-sm leading-tight" id="cal-modal-title">Spectacle
                     </h4>
                     <p class="text-xs text-luxury-textMuted mt-1" id="cal-modal-subtitle">Date & Lieu</p>
+                    <!-- Les séances d'une série, écrites par openCalendarModal :
+                         la ligne n'a qu'un bouton d'agenda. -->
+                    <div class="cal-seances" id="cal-modal-seances" role="group" aria-label="Séance à ajouter" hidden></div>
                 </div>
 
                 <div class="border-t border-stone-100 pt-3 space-y-2.5">
@@ -8788,29 +8971,30 @@
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  LES DATES À VENIR — une feuille, une date écrite, des séances
+        //  LES DATES À VENIR — une ligne à la densité du CV
         // ════════════════════════════════════════════════════════════════
         //  Chaque entrée de dates.js (une date seule, ou une série : même
-        //  spectacle, même lieu, soirées rapprochées) devient UNE ligne :
+        //  spectacle, même lieu, soirées rapprochées) devient UNE ligne, de
+        //  la hauteur d'une ligne du CV — près de 200 px quand chaque séance
+        //  avait sa case, 69 au téléphone désormais :
         //
-        //    · une FEUILLE D'ÉPHÉMÉRIDE — le mois dans un bandeau à la
-        //      couleur du spectacle, le quantième, le jour. Une série de
-        //      plusieurs jours empile ses feuilles. Elle est décorative
-        //      (aria-hidden) : la date entière est écrite juste à côté ;
-        //    · la DATE EN TOUTES LETTRES — « Jeudi 22 et vendredi 23
-        //      octobre » —, puis le titre et le lieu. L'ancienne étiquette
-        //      en police machine, abrégée, avec l'année sur chaque ligne, se
-        //      déchiffrait plus qu'elle ne se lisait, et le jour de la
-        //      semaine y manquait ;
-        //    · les SÉANCES. Une date seule garde ses boutons dans la ligne.
-        //      Une série donne une case à chaque séance — jour, heure,
-        //      « Réserver », agenda — au lieu de les cacher derrière un
-        //      chevron : c'était un toucher de plus pour réserver, et
-        //      « à quelle heure, le 23 ? » demandait d'ouvrir quoi que ce
-        //      soit.
+        //    · une FEUILLE D'ÉPHÉMÉRIDE POSÉE SUR LA PHOTO du spectacle, à
+        //      la place de la vignette du CV — le mois dans le bandeau, à la
+        //      couleur du spectacle ; au centre le jour, ou les jours d'une
+        //      série avec un tiret ; en bas le jour de la semaine. On
+        //      reconnaît le spectacle avant de lire. Elle est décorative
+        //      (aria-hidden) : la date en toutes lettres reste écrite pour
+        //      les lecteurs d'écran ;
+        //    · le TITRE, puis la VILLE ET LA SALLE ;
+        //    · les SÉANCES, EN PUCES : une par séance, qui mène à sa
+        //      billetterie ; « à quelle heure, le 23 ? » se lit sans rien
+        //      ouvrir, et on réserve d'un geste. L'AGENDA ferme la rangée :
+        //      un seul bouton, dont la fenêtre demande la séance d'une série.
         //
         //  Les lignes se rangent sous un INTERCALAIRE par mois, qui reste
-        //  accroché sous la barre d'onglets pendant qu'on parcourt ce mois.
+        //  accroché sous la barre d'onglets pendant qu'on parcourt ce mois ;
+        //  la FRISE DES MOIS court dans la marge et se trace à mesure qu'on
+        //  lit (voir « La frise des mois » dans les styles).
         // ════════════════════════════════════════════════════════════════
         // Les jours, les mois et la date en lettres (DL_JOURS, DL_MOIS,
         // dlJour, dlDateEnLettres…) sont écrits plus haut, avec la prochaine
@@ -8879,9 +9063,15 @@
                         ecole: Boolean(r.isSchool || show.isSchool),
                         billetterie: lienSur(r.bookingUrl || show.bookingUrl)
                     };
+                    // « jeu. 22 oct. · 19h00 » : le nom de la séance dans la
+                    // fenêtre d'agenda, qui demande laquelle ajouter.
+                    const seance = [
+                        p.jour ? `${DL_JOURS_COURTS[p.jour.js]} ${dlQuantieme(p.jour)} ${DL_MOIS_COURTS[p.jour.m]}` : p.dateLabel,
+                        p.heure || 'horaire à confirmer', p.ecole ? 'scolaire' : ''
+                    ].filter(Boolean).join(' · ');
                     p.cal = window.renderedEventsData.push({
                         title: show.title, subtitle: show.subtitle || '', location: show.location,
-                        icsDate: r.icsDate, time: r.time, times: r.times, dateLabel: p.dateLabel
+                        icsDate: r.icsDate, time: r.time, times: r.times, dateLabel: p.dateLabel, seance
                     }) - 1;
                     return p;
                 });
@@ -8900,55 +9090,97 @@
             return out;
         }
 
-        function dlFeuille(e) {
+        // LA FEUILLE, posée sur la photo du spectacle (voir « La feuille
+        // d'éphéméride » dans les styles) : le mois, le jour — les jours
+        // d'une série, avec un tiret —, le jour de la semaine. Rangée par
+        // spectacle, la photo est déjà en tête du groupe : la feuille
+        // redevient papier. Une série à cheval sur deux mois les écrit
+        // tous deux, en bref.
+        const DL_MOIS_BREFS = ['janv', 'févr', 'mars', 'avr', 'mai', 'juin', 'juil', 'août', 'sept', 'oct', 'nov', 'déc'];
+        function dlFeuille(e, vue) {
             const d = e.debut;
             if (!d) {
-                return '<span class="dl-pile" aria-hidden="true"><span class="dl-feuille"><span class="dl-bande">·</span><span class="dl-num">?</span></span></span>';
+                return '<span class="dl-feuille dl-feuille--papier" aria-hidden="true"><span class="dl-bande">·</span><span class="dl-num">?</span></span>';
             }
-            const n = Math.min(e.jours.length, 3);
-            return `<span class="dl-pile" aria-hidden="true">`
-                + (n > 2 ? '<span class="dl-feuille dl-derriere dl-derriere--2"></span>' : '')
-                + (n > 1 ? '<span class="dl-feuille dl-derriere"></span>' : '')
-                + `<span class="dl-feuille"><span class="dl-bande">${DL_MOIS_COURTS[d.m]}</span>`
-                + `<span class="dl-num">${d.j}</span><span class="dl-jour">${DL_JOURS_COURTS[d.js]}</span></span></span>`;
+            const z = e.jours[e.jours.length - 1];
+            const plusieurs = z.iso !== d.iso;
+            const deuxMois = plusieurs && (z.m !== d.m || z.a !== d.a);
+            const c = vue === 'date' ? dlCouverture(e.spectacle) : null;
+            const genre = vue !== 'date' ? ' dl-feuille--papier' : c ? ' dl-feuille--photo' : ' dl-feuille--sans-photo';
+            const photo = c
+                ? `<img src="${esc(c.src)}" data-repli="${esc(c.repli)}" alt="" width="48" height="56" loading="lazy" decoding="async"${c.pos ? ` style="object-position:${esc(c.pos)}"` : ''}>`
+                : '';
+            return `<span class="dl-feuille${plusieurs ? ' dl-feuille--2' : ''}${genre}" aria-hidden="true">${photo}`
+                + `<span class="dl-bande${deuxMois ? ' dl-bande--2' : ''}">${deuxMois ? `${DL_MOIS_BREFS[d.m]}–${DL_MOIS_BREFS[z.m]}` : DL_MOIS_COURTS[d.m]}</span>`
+                + `<span class="dl-num">${plusieurs ? `${d.j}–${z.j}` : d.j}</span>`
+                + `<span class="dl-jour">${plusieurs ? `${DL_JOURS_COURTS[d.js]}–${DL_JOURS_COURTS[z.js]}` : DL_JOURS_COURTS[d.js]}</span></span>`;
         }
 
-        // Ce qu'on peut faire d'une séance. Pas de « Réserver » pour une
-        // séance scolaire : l'accès y est restreint.
-        function dlAction(p, e, court) {
-            // Dans une case, pas de pictogramme : la place manque, et le bord
-            // en pointillé dit déjà la séance scolaire.
+        // « Rouen · Tribunal judiciaire (76) » : la ville, puis la salle —
+        // le libellé du lieu sans sa ville (« L'Éclat, Pont-Audemer »,
+        // « Tribunal judiciaire de Rouen »). Une ville qu'on n'y retrouve
+        // pas laisse le libellé entier.
+        function dlLieu(show) {
+            const ville = placeOf(show);
+            let salle = String(show.location || '').trim();
+            const dep = salle.match(/\s*\((\d{2,3}[AB]?)\)$/i);
+            if (dep) salle = salle.slice(0, dep.index).trim();
+            if (ville) {
+                const bas = salle.toLowerCase();
+                const lien = [', ', ' de ', ' du ', ' d’', " d'", ' à '].find(l => bas.endsWith((l + ville).toLowerCase()));
+                if (lien) salle = salle.slice(0, salle.length - (lien + ville).length).trim();
+                else if (bas === ville.toLowerCase()) salle = '';
+            }
+            return { ville, salle, dep: dep ? dep[1] : '' };
+        }
+
+        // UNE PUCE PAR SÉANCE (voir « Les séances, en puces » dans les
+        // styles). Pas de « Réserver » pour une séance scolaire : l'accès y
+        // est restreint. Le jour de la semaine n'est écrit que pour une
+        // série de plusieurs jours — la feuille donne le quantième —, et le
+        // quantième avec lui quand la série dépasse une semaine, où
+        // « jeu. » ne suffirait plus.
+        function dlSeance(p, e) {
+            const z = e.jours[e.jours.length - 1];
+            const longue = e.jours.length > 1 && z.t - e.jours[0].t > 6.5 * 864e5;
+            const jour = !p.jour ? `<span class="dl-s-jour">${esc(p.dateLabel)}</span> `
+                : e.jours.length > 1 ? `<span class="dl-s-jour">${DL_JOURS_COURTS[p.jour.js]}${longue ? ` ${dlQuantieme(p.jour)}` : ''}</span> `
+                    : '';
+            const heure = p.heure
+                ? `<span class="dl-s-heure">${esc(p.heure)}</span>`
+                : '<span class="dl-s-heure dl-s-heure--flou">horaire à confirmer</span>';
             if (p.ecole) {
-                return `<span class="dl-etat">${court ? '' : '<svg class="ico" aria-hidden="true"><use href="#i-solid-graduation-cap"></use></svg>'}Séance scolaire</span>`;
+                return `<li class="dl-seance dl-seance--scolaire"><span class="dl-puce dl-puce--muette">${jour}${p.heure ? `${heure} ` : ''}<i>scolaire</i></span></li>`;
             }
             if (p.billetterie) {
-                return `<a class="dl-reserver" href="${esc(p.billetterie)}" target="_blank" rel="noopener"
-                    data-track="date_booking" data-track-detail="${esc(e.titre)}">Réserver<span class="sr-only"> : ${esc(e.titre)}, ${esc(dlQuandComplet(p))} (nouvel onglet)</span><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`;
+                // Le lecteur d'écran entend « Réserver, jeu. 19h00 : Bérénice,
+                // jeudi 22 octobre 2026 à 19h00 (nouvel onglet) ».
+                return `<li class="dl-seance"><a class="dl-puce dl-reserver" href="${esc(p.billetterie)}" target="_blank" rel="noopener"`
+                    + ` data-track="date_booking" data-track-detail="${esc(e.titre)}"><span class="sr-only">Réserver, </span>${jour}${heure}`
+                    + `<svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg>`
+                    + `<span class="sr-only"> : ${esc(e.titre)}, ${esc(dlQuandComplet(p))} (nouvel onglet)</span></a></li>`;
             }
-            return `<span class="dl-etat dl-etat--attente">${court ? '' : '<svg class="ico" aria-hidden="true"><use href="#i-solid-circle-info"></use></svg>'}Billetterie à venir</span>`;
+            return `<li class="dl-seance"><span class="dl-puce dl-puce--muette">${jour}${p.heure ? `${heure} · ` : ''}<i>billetterie à venir</i></span></li>`;
         }
 
-        const dlAgenda = (p, e) => `<button type="button" class="dl-agenda" data-cal-index="${p.cal}"
-            aria-label="${esc(`Ajouter au calendrier : ${e.titre}, ${dlQuandComplet(p)}`)}"><svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button>`;
-
-        // Une case de séance. Pour une date seule, ou une série d'un seul
-        // jour (deux horaires le même soir), la case ne répète pas le jour :
-        // l'heure suffit.
-        function dlSeance(p, e) {
-            const sansJour = e.jours.length === 1 && p.jour;
-            const jour = p.jour
-                ? `<span class="dl-s-jour">${DL_JOURS_COURTS[p.jour.js]} <b>${dlQuantieme(p.jour)}</b></span>`
-                : `<span class="dl-s-jour">${esc(p.dateLabel)}</span>`;
-            const heure = p.heure
-                ? `<span class="dl-s-heure${sansJour ? ' dl-s-heure--fort' : ''}">${esc(p.heure)}</span>`
-                : '<span class="dl-s-heure dl-s-heure--flou">horaire à confirmer</span>';
-            return `<li class="dl-seance${p.ecole ? ' dl-seance--scolaire' : ''}"><span class="dl-s-quand">${sansJour ? '' : jour}${heure}</span>`
-                + `<span class="dl-s-bas">${dlAction(p, e, true)}${dlAgenda(p, e)}</span></li>`;
+        // L'agenda ferme la rangée : un seul bouton par ligne. Pour une
+        // série, la fenêtre demande quelle séance ajouter (data-cal-serie :
+        // leurs places dans renderedEventsData) ; elle propose d'abord la
+        // première séance publique.
+        function dlAgenda(e) {
+            const p = e.perfs.find(q => !q.ecole) || e.perfs[0];
+            const serie = e.perfs.length > 1;
+            const quand = serie && e.debut ? dlDateEnLettres(e.jours, true) : dlQuandComplet(p);
+            return `<li class="dl-seances-agenda"><button type="button" class="dl-agenda" data-cal-index="${p.cal}"`
+                + (serie ? ` data-cal-serie="${e.perfs.map(q => q.cal).join(' ')}"` : '')
+                + ` aria-label="${esc(`Ajouter au calendrier : ${e.titre}, ${quand}`)}"><svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button></li>`;
         }
 
         // La ligne. `vue` : 'date' (sous un intercalaire de mois, le titre
         // est écrit) ou 'spectacle' (sous le nom de la pièce, il serait
-        // répété ; l'année est alors écrite, faute d'intercalaire de mois).
+        // répété). La date en lettres n'est écrite que pour les lecteurs
+        // d'écran : la feuille, décorative, la montre aux autres — avec
+        // l'année, rangé par spectacle, faute d'intercalaire de mois.
         function dlLigne(e, vue) {
             const p = e.perfs[0];
             const avecAnnee = vue === 'spectacle' && e.debut && e.debut.a !== new Date().getFullYear();
@@ -8956,20 +9188,20 @@
             // « Ce soir », « Demain » : les deux jours où l'information décide
             // de quelque chose (même règle que la prochaine date du CV).
             const proche = e.debut ? relativeDayLabel(e.debut.t, '') : '';
+            const pastille = proche ? `<span class="dl-proche">${esc(proche)}</span>` : '';
             const titre = vue === 'date'
-                ? `<h5 class="dl-titre">${dlVersPage(e.spectacle, esc(e.titre))}${e.show.subtitle ? ` <span class="dl-sous">(${esc(e.show.subtitle)})</span>` : ''}</h5>`
+                ? `<h5 class="dl-titre">${pastille}${dlVersPage(e.spectacle, esc(e.titre))}${e.show.subtitle ? ` <span class="dl-sous">(${esc(e.show.subtitle)})</span>` : ''}</h5>`
                 : '';
-            // Chaque séance a sa case, une date seule comme chaque soir d'une
-            // série : l'heure, « Réserver » et l'agenda s'y lisent toujours
-            // au même endroit.
-            const droite = `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}</ul>`;
+            const l = dlLieu(e.show);
+            const lieu = (l.ville ? `<span class="dl-ville">${esc(l.ville)}</span>` : '')
+                + (l.ville && l.salle ? ' · ' : '') + esc(l.salle) + (l.dep ? ` (${esc(l.dep)})` : '');
             return `<article class="dl ${e.serie ? 'dl--serie' : 'dl--seule'}" id="dl-e${e.k}"`
                 + ` data-dl-cle="${esc((e.debut ? e.debut.iso : '') + '|' + e.titre)}" style="${dlStyle(e.spectacle)}">`
-                + dlFeuille(e)
-                + `<div class="dl-corps"><p class="dl-quand">${proche ? `<span class="dl-proche">${esc(proche)}</span>` : ''}${esc(quand)}</p>`
+                + dlFeuille(e, vue)
+                + `<div class="dl-corps"><p class="dl-quand sr-only">${esc(quand)}</p>`
                 + titre
-                + `<p class="dl-lieu"><svg class="ico" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg>${esc(e.show.location || '')}</p></div>`
-                + `<div class="dl-droite">${droite}</div></article>`;
+                + `<p class="dl-lieu">${vue === 'date' ? '' : pastille}${lieu}</p>`
+                + `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}${dlAgenda(e)}</ul></div></article>`;
         }
 
         function dlParMois(entrees) {
@@ -8978,11 +9210,10 @@
                 const cle = e.debut ? `${e.debut.a}-${e.debut.m + 1}` : 'sans-date';
                 let g = groupes.find(x => x.cle === cle);
                 if (!g) {
-                    g = { cle, a: e.debut ? e.debut.a : null, m: e.debut ? e.debut.m : null, entrees: [], n: 0 };
+                    g = { cle, a: e.debut ? e.debut.a : null, m: e.debut ? e.debut.m : null, entrees: [] };
                     groupes.push(g);
                 }
                 g.entrees.push(e);
-                g.n += e.perfs.length;
             });
             return groupes;
         }
@@ -9046,8 +9277,8 @@
                         ? `<a class="dl-spec-lien" href="spectacles/${esc(s.slug)}/" tabindex="-1" aria-hidden="true" data-track="date_spectacle" data-track-detail="${esc(s.titre)}"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
                         : '';
                     const info = [s.genre, dlPluriel(g.n, 'représentation')].filter(Boolean).join(' · ');
-                    return `<section class="dl-groupe dl-groupe--spectacle" id="${id}" aria-labelledby="${id}-t" style="${dlStyle(s)}">`
-                        + `<div class="dl-intercalaire dl-intercalaire--spectacle"><span class="dl-vignette" aria-hidden="true">${vignette}</span>`
+                    return `<section class="dl-groupe dl-groupe--spectacle rg-ligne" id="${id}" aria-labelledby="${id}-t" style="${dlStyle(s)}">`
+                        + `<div class="dl-intercalaire dl-intercalaire--spectacle rg-ligne"><span class="dl-vignette" aria-hidden="true">${vignette}</span>`
                         + `<span class="dl-spec-texte"><h4 id="${id}-t" tabindex="-1">${dlVersPage(s, esc(s.titre))}</h4>`
                         + (s.sousTitre ? `<span class="dl-spec-sous">${esc(s.sousTitre)}</span>` : '')
                         + `<span class="dl-spec-info">${esc(info)}</span></span>${fleche}</div>`
@@ -9058,10 +9289,12 @@
             return dlParMois(entrees).map(g => {
                 const id = `dl-mois-${g.cle}`;
                 const nom = g.a === null ? 'Date à préciser' : `${dlCap(DL_MOIS[g.m])} <span>${g.a}</span>`;
-                // Le liseré prend la couleur du mois (voir --dl-mois-*).
+                // Le liseré prend la couleur du mois (voir --dl-mois-*). Le
+                // total du mois n'est plus écrit : la frise suffit à le
+                // borner, et le sommaire compte déjà les représentations.
                 const lisere = g.m === null ? '' : ` data-mois="${g.m + 1}" style="--dl-lisere:var(--dl-mois-${g.m + 1})"`;
-                return `<section class="dl-groupe" id="${id}" aria-labelledby="${id}-t"${lisere}>`
-                    + `<div class="dl-intercalaire"><h4 id="${id}-t" tabindex="-1">${nom}</h4><span class="dl-compte">${dlPluriel(g.n, 'représentation')}</span></div>`
+                return `<section class="dl-groupe rg-ligne" id="${id}" aria-labelledby="${id}-t"${lisere}>`
+                    + `<div class="dl-intercalaire rg-ligne"><h4 id="${id}-t" tabindex="-1">${nom}</h4></div>`
                     + g.entrees.map(e => dlLigne(e, vue)).join('')
                     + '</section>';
             }).join('');
@@ -9255,6 +9488,11 @@
                     : `<p class="dl-vide">${filtersActive()
                         ? 'Aucune représentation à venir ne correspond à cette recherche.'
                         : 'Aucune date à venir pour le moment.'}</p>`;
+                // La frise des mois suit le défilement. Sans view(), c'est
+                // regie.js qui mesure les groupes : les anciens partent avec
+                // le rendu, les nouveaux sont suivis.
+                window.Regie?.oublier(upcomingContainer);
+                window.Regie?.observer(upcomingContainer);
             }
             document.querySelectorAll('[data-dates-vue]').forEach(b =>
                 b.setAttribute('aria-pressed', String(b.dataset.datesVue === dlVue)));
@@ -9336,12 +9574,19 @@
         // Délégation : les boutons agenda des dates (le rendu les refait à
         // chaque filtre, d'où l'écoute au niveau du document).
         document.addEventListener('click', (e) => {
+            const choix = e.target.closest('[data-cal-choix]');
+            if (choix) {
+                const data = window.renderedEventsData[+choix.dataset.calChoix];
+                if (data) calChoisirSeance(data);
+                return;
+            }
             const cal = e.target.closest('[data-cal-index]');
             if (!cal) return;
             e.preventDefault();
             e.stopPropagation();
             const data = window.renderedEventsData[+cal.dataset.calIndex];
-            if (data) openCalendarModal(data);
+            const serie = (cal.dataset.calSerie || '').split(' ').filter(Boolean).map(Number);
+            if (data) openCalendarModal(data, serie);
         });
 
         // ════════════════════════════════════════════════════════════════
@@ -9875,15 +10120,18 @@
         // ════════════════════════════════════════════════════════════════
         let currentCalendarEventData = null;
 
-        function openCalendarModal(data) {
-            currentCalendarEventData = data;
-            const titleEl = document.getElementById('cal-modal-title');
-            const subtitleEl = document.getElementById('cal-modal-subtitle');
-            if (titleEl) titleEl.textContent = data.title || 'Spectacle';
-            if (subtitleEl) {
-                const cleanSubtitle = data.subtitle ? ` (${data.subtitle})` : '';
-                subtitleEl.textContent = `${data.dateLabel || data.icsDate || ''}${cleanSubtitle} • ${data.location || ''}`;
+        // `serie` : pour une ligne de plusieurs séances, leurs places dans
+        // renderedEventsData. La ligne n'a qu'un bouton d'agenda ; la
+        // fenêtre demande alors laquelle ajouter, et propose `data`.
+        function openCalendarModal(data, serie) {
+            const choix = document.getElementById('cal-modal-seances');
+            if (choix) {
+                const seances = (serie || []).filter(i => window.renderedEventsData[i]);
+                choix.hidden = seances.length < 2;
+                choix.innerHTML = seances.length < 2 ? '' : seances.map(i => `<button type="button" class="cal-seance"`
+                    + ` data-cal-choix="${i}" aria-pressed="false">${esc(window.renderedEventsData[i].seance || '')}</button>`).join('');
             }
+            calChoisirSeance(data);
 
             const shareBtn = document.getElementById('cal-option-share');
             if (shareBtn) {
@@ -9895,6 +10143,19 @@
                 shareBtn.style.display = canShareFile ? 'flex' : 'none';
             }
             openModal('calendar-modal', 'calendar-modal-card');
+        }
+
+        function calChoisirSeance(data) {
+            currentCalendarEventData = data;
+            const titleEl = document.getElementById('cal-modal-title');
+            const subtitleEl = document.getElementById('cal-modal-subtitle');
+            if (titleEl) titleEl.textContent = data.title || 'Spectacle';
+            if (subtitleEl) {
+                const cleanSubtitle = data.subtitle ? ` (${data.subtitle})` : '';
+                subtitleEl.textContent = `${data.dateLabel || data.icsDate || ''}${cleanSubtitle} • ${data.location || ''}`;
+            }
+            document.querySelectorAll('#cal-modal-seances [data-cal-choix]').forEach(b =>
+                b.setAttribute('aria-pressed', String(window.renderedEventsData[+b.dataset.calChoix] === data)));
         }
 
         function closeCalendarModal() {
