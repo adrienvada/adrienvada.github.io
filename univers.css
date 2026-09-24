@@ -1185,8 +1185,12 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     opacity: 0;
 }
 
+/* LA PÉNOMBRE, PAS LE NOIR. Le voile était noir plein : la photo arrivait
+   en rectangle noir sous le carton du chapitre, et ce noir-là passait pour
+   une page cassée. Il laisse désormais deviner la photo — un cinquième de
+   sa lumière —, et la signature en lève le reste. */
 .u-anime .u-allumage .u-voile {
-    background: #000;
+    background: rgb(0 0 0 / .8);
     opacity: 1;
 }
 
