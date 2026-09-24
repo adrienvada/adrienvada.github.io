@@ -30,7 +30,8 @@
  *      sans en-têtes Range ;
  *    · l'impression sans les pastilles ▶ ;
  *    · la ligne à vignette du CV : l'année et l'état sur chaque vignette,
- *      des lignes de même hauteur, rien de tout cela sur papier ;
+ *      l'année lisible même au bas de l'écran, des lignes de même
+ *      hauteur, rien de tout cela sur papier ;
  *    · le site sans JavaScript ;
  *    · les pages spectacle (h1, <main>, données structurées, une image
  *      pour chaque représentation) ;
@@ -38,12 +39,19 @@
  *      univers ouvert depuis le CV ;
  *    · la régie (regie.js) : la même détection partout, et le repli qui
  *      rejoue les mêmes images que le navigateur, scène par scène ;
+ *    · chaque animation menée par le défilement suit la page ou le
+ *      panneau de l'univers, jamais un cadre rogné qui ne défile pas ;
  *    · un état fixe qui a du sens pour chaque scène, en mouvement réduit ;
  *    · les défauts réparés de l'audit du mouvement : verrou de
  *      défilement, changement d'onglet, « Passer » et les touches de
  *      l'ouverture, zoom de l'avatar, course du book, phrase posée sur un
  *      groupe de photos ;
- *    · la frise du CV, liée au défilement, et la page 404 ;
+ *    · la frise du CV, comme le prototype de l'audit : le fil d'or à
+ *      gauche, un point par spectacle posé dessus, les lignes voilées tant
+ *      que le fil ne les a pas atteintes, rien de coloré à droite — avec
+ *      les deux pilotes, et tout posé en mouvement réduit ; le doigt qui
+ *      fait défiler n'y dévoile rien, la souris et le clavier si ;
+ *    · la page 404 ;
  *    · le sitemap, qui doit annoncer toutes les pages spectacle.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
@@ -592,7 +600,7 @@ function exige(condition, message) {
         // vignette, qui dit la même année et le même état que la ligne ;
         // toutes les lignes d'une liste ont la même hauteur, et l'année y
         // tombe au même endroit ; le papier n'en voit rien.
-        await verifie('le CV : une vignette par spectacle et par film, l’année et l’état dessus, les lignes à la même hauteur et l’année au même endroit — au téléphone comme sur ordinateur ; ni image pour les formations, ni vignette sur papier', async () => {
+        await verifie('le CV : une vignette par spectacle et par film, l’année et l’état dessus — l’année lisible sur toute vignette à l’écran, même tout en bas —, les lignes à la même hauteur et l’année au même endroit — au téléphone comme sur ordinateur ; ni image pour les formations, ni vignette sur papier', async () => {
             for (const largeur of [390, 1280]) {
                 const c = await visiteur({ viewport: { width: largeur, height: 900 } });
                 const p = await c.newPage();
@@ -666,6 +674,25 @@ function exige(condition, message) {
                 });
                 exige(cv.formation >= 1, `${ici} : la liste des formations n’est plus marquée .cv-formation`);
                 exige(!cv.imagesFormation, `${ici} : une formation porte une image`);
+
+                // L'année se lit sur chaque vignette posée à l'écran, même
+                // tout en bas, au repos. Elle montait depuis le bas du cadre en
+                // arrivant — et un jour toutes les années sont restées dessous.
+                // C'est une information : on la cherche là où elle se cachait.
+                const sansAnnee = await p.evaluate(async () => {
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    const manquent = [];
+                    for (const li of document.querySelectorAll('#page_cv li.a-vignette')) {
+                        const cadre = li.querySelector('.cv-vignette-cadre');
+                        window.scrollTo(0, cadre.getBoundingClientRect().bottom + scrollY - innerHeight + 2);
+                        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+                        const a = li.querySelector('.cv-vignette-annee').getBoundingClientRect(), k = cadre.getBoundingClientRect();
+                        const vu = Math.min(a.bottom, k.bottom) - Math.max(a.top, k.top);
+                        if (vu < a.height - 0.5) manquent.push(`${li.dataset.cvShow} (${Math.max(0, vu).toFixed(0)} px sur ${a.height.toFixed(0)})`);
+                    }
+                    return manquent;
+                });
+                exige(!sansAnnee.length, `${ici} : l’année ne se voit pas sur la vignette au bas de l’écran — ${sansAnnee.join(', ')}`);
                 exige(!erreurs.length, erreurs.join(' | '));
 
                 // Sur papier : ni vignette ni genre, et l'année revient.
@@ -673,10 +700,14 @@ function exige(condition, message) {
                 const papier = await p.evaluate(() => ({
                     vues: [...document.querySelectorAll('#page_cv .cv-vignette, #page_cv .cv-genre')]
                         .filter((e) => getComputedStyle(e).display !== 'none').length,
+                    // La frise voile les lignes à l'écran ; le papier ne défile pas.
+                    voilees: [...document.querySelectorAll('#page_cv .cv-row-toggle')]
+                        .filter((e) => +getComputedStyle(e).opacity < 0.99).length,
                     annees: [...document.querySelectorAll('#page_cv li.cv-item .cv-year')]
                         .filter((e) => e.getBoundingClientRect().width > 1).length
                 }));
                 exige(!papier.vues, `${papier.vues} vignette(s) ou ligne(s) de genre sur le CV imprimé`);
+                exige(!papier.voilees, `${papier.voilees} ligne(s) voilée(s) sur le CV imprimé`);
                 exige(papier.annees === cv.lignes, `sur papier, ${papier.annees} année(s) visibles pour ${cv.lignes} lignes`);
                 await c.close();
             }
@@ -865,6 +896,49 @@ function exige(condition, message) {
             exige(!ecarts.length, `${ecarts.length} écart(s) entre les deux pilotes, dont ${ecarts.slice(0, 2).join(' ; ')}`);
         });
 
+        // ── CE QUE SUIT UNE ANIMATION AU DÉFILEMENT ──
+        // view() suit la boîte de défilement la plus proche, et
+        // `overflow: hidden` en fait une. Sous un cadre ainsi rogné,
+        // l'animation suivait le cadre, qui ne défile jamais : l'année des
+        // vignettes restait sous la photo, les citations posées sur les
+        // photos ne s'écrivaient pas, les légendes restaient à mi-fondu — et
+        // seulement dans les navigateurs récents, le repli, lui, jouait
+        // juste. Aucune ne doit suivre autre chose que la page ou le
+        // panneau de l'univers.
+        await verifie('chaque animation menée par le défilement suit la page ou l’univers, jamais un cadre qui ne défile pas', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            const fautes = [];
+            let menees = 0;
+            for (const url of ['/', ...dossiers.map((d) => `/spectacles/${d}/`)]) {
+                await p.goto(base + url, { waitUntil: 'load' });
+                await p.waitForTimeout(500);
+                const r = await p.evaluate(async () => {
+                    const S = document.getElementById('show-universe');
+                    const defileur = S && S.scrollHeight > S.clientHeight ? S : document.scrollingElement;
+                    // Tout le montage passe à l'écran : chaque animation existe.
+                    for (let y = 0; y <= defileur.scrollHeight; y += defileur.clientHeight) {
+                        defileur.scrollTop = y;
+                        await new Promise((r) => requestAnimationFrame(r));
+                    }
+                    const nom = (e) => e.nodeName.toLowerCase() + [...e.classList].slice(0, 2).map((k) => '.' + k).join('');
+                    const liees = document.getAnimations().filter((a) => a.timeline && 'source' in a.timeline);
+                    return {
+                        n: liees.length,
+                        fautes: [...new Set(liees.filter((a) => a.timeline.source !== document.scrollingElement && a.timeline.source !== S)
+                            .map((a) => `${a.animationName} (${nom(a.effect.target)}${a.effect.pseudoElement || ''}) suit ${a.timeline.source ? nom(a.timeline.source) : 'rien'}`))]
+                    };
+                });
+                menees += r.n;
+                r.fautes.forEach((f) => fautes.push(`${url} ${f}`));
+            }
+            exige(menees > 100, `${menees} animation(s) menée(s) par le défilement en tout : le navigateur de vérification ne les mène plus ?`);
+            exige(!fautes.length, `${fautes.length} animation(s) accrochée(s) ailleurs, dont ${fautes.slice(0, 3).join(' ; ')}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
         await verifie('en mouvement réduit, chaque scène a un état fixe qui a du sens', async () => {
             const c = await visiteur({ viewport: { width: 1280, height: 860 }, reducedMotion: 'reduce' });
             const p = await c.newPage();
@@ -991,9 +1065,15 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('la frise du CV suit la ligne de lecture, sans horloge — avec les deux pilotes', async () => {
-            for (const repli of [false, true]) {
-                const c = await visiteur({ viewport: { width: 1280, height: 860 } });
+        // ── LA FRISE, COMME LE PROTOTYPE DE L'AUDIT ──
+        // Le fil d'or court à GAUCHE de la liste ; sur lui, au milieu de
+        // chaque ligne, un point dans la couleur du spectacle, qui éclôt
+        // quand la ligne de lecture l'atteint ; les lignes que le fil n'a
+        // pas encore atteintes sont voilées (transparence). Plus rien de
+        // coloré ne court à droite : ni filet, ni lavis au passage.
+        await verifie('la frise du CV comme le prototype : le fil d’or à gauche, un point par spectacle posé dessus, les lignes voilées tant que le fil ne les a pas atteintes, rien de coloré à droite — avec les deux pilotes, sans horloge, tout posé en mouvement réduit ; le doigt qui fait défiler ne dévoile rien, la souris et le clavier si', async () => {
+            for (const [repli, reduit] of [[false, false], [true, false], [false, true]]) {
+                const c = await visiteur({ viewport: { width: 1280, height: 860 }, reducedMotion: reduit ? 'reduce' : 'no-preference' });
                 const p = await c.newPage();
                 const erreurs = guette(p);
                 await p.goto(base + '/' + (repli ? '?repli' : ''), { waitUntil: 'load' });
@@ -1006,19 +1086,82 @@ function exige(condition, message) {
                     const y = lignes[3].getBoundingClientRect().top + scrollY - innerHeight * 0.5 + 4;
                     window.scrollTo(0, y);
                     await new Promise((r) => setTimeout(r, 400));
-                    const filet = (li) => +getComputedStyle(li, '::before').opacity;
+                    const px = (v) => parseFloat(v) || 0;
+                    const fil = getComputedStyle(liste, '::after');
+                    const point = (li) => getComputedStyle(li, '::before');
+                    const echelle = (li) => { const t = point(li).transform; return t === 'none' ? 1 : +(t.match(/matrix\(([-\d.e]+)/) || [0, NaN])[1]; };
+                    const voile = (li) => +getComputedStyle(li.querySelector('.cv-row-toggle')).opacity;
+                    const p0 = point(lignes[0]);
                     return {
                         frise: liste.classList.contains('cv-frise'),
-                        haut: filet(lignes[0]), bas: filet(lignes[lignes.length - 1]),
-                        horloge: [...document.styleSheets].some((f) => { try { return [...f.cssRules].some((r) => /cv-guirlande|cv-pastille-lueur\b/.test(r.cssText)); } catch (e) { return false; } })
+                        filGauche: px(fil.left),
+                        // Le centre du point et celui du fil, depuis le bord gauche de la liste.
+                        ecartPointFil: Math.abs((px(p0.left) + px(p0.width) / 2) - (px(fil.left) + px(fil.width) / 2)),
+                        rond: px(p0.width) === px(p0.height) && px(p0.width) > 0,
+                        pointsHaut: echelle(lignes[0]), pointsBas: echelle(lignes[lignes.length - 1]),
+                        pleineHaut: voile(lignes[0]), voileBas: voile(lignes[lignes.length - 1]),
+                        lavis: lignes.filter((li) => +getComputedStyle(li, '::after').opacity > 0.01).length,
+                        horloge: [...document.styleSheets].some((f) => { try { return [...f.cssRules].some((r) => /cv-guirlande|cv-pastille-lueur\b/.test(r.cssText)); } catch (e) { return false; } }),
+                        tout: lignes.every((li) => voile(li) > 0.99 && echelle(li) === 1)
                     };
                 });
-                const nom = repli ? 'avec le repli' : 'en natif';
+                const nom = reduit ? 'en mouvement réduit' : repli ? 'avec le repli' : 'en natif';
                 exige(etat.frise, 'la liste du CV ne porte pas la frise');
-                exige(etat.haut > 0.9, `${nom}, le filet d’une ligne déjà lue n’est pas allumé (${etat.haut})`);
-                exige(etat.bas < 0.6, `${nom}, le filet d’une ligne pas encore lue est allumé (${etat.bas})`);
+                exige(etat.filGauche < 0, `${nom}, le fil d’or n’est plus à gauche de la liste (left ${etat.filGauche} px)`);
+                exige(etat.rond, `${nom}, le repère de la ligne n’est plus un point (filet revenu ?)`);
+                exige(etat.ecartPointFil < 0.6, `${nom}, le point n’est pas centré sur le fil (écart ${etat.ecartPointFil.toFixed(2)} px)`);
+                exige(!etat.lavis, `${nom}, le lavis passe encore au défilement sur ${etat.lavis} ligne(s)`);
+                if (reduit) {
+                    exige(etat.tout, 'en mouvement réduit, une ligne reste voilée ou sans son point');
+                } else {
+                    exige(etat.pointsHaut === 1 && etat.pleineHaut > 0.99, `${nom}, une ligne déjà lue n’est pas pleine avec son point (${etat.pleineHaut}, point × ${etat.pointsHaut})`);
+                    exige(etat.pointsBas === 0, `${nom}, le point d’une ligne pas encore atteinte est déjà là (× ${etat.pointsBas})`);
+                    exige(etat.voileBas < 0.5, `${nom}, une ligne pas encore atteinte n’est pas voilée (${etat.voileBas})`);
+                }
                 exige(!etat.horloge, 'la guirlande à horloge est revenue');
                 exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+
+            // LE DOIGT QUI FAIT DÉFILER NE DÉVOILE RIEN. Au téléphone, on pose
+            // le doigt sur une ligne pour défiler, et le navigateur garde le
+            // survol de la dernière ligne touchée : elle restait pleine, son
+            // point posé, avant que le fil l'atteigne. À la souris, la ligne
+            // pointée est pleine ; au clavier aussi. Le point, lui, n'attend
+            // que le fil.
+            for (const [appareil, options] of [
+                ['au téléphone', { viewport: { width: 412, height: 839 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }],
+                ['à la souris', { viewport: { width: 1280, height: 860 } }]
+            ]) {
+                const c = await visiteur(options);
+                const p = await c.newPage();
+                await p.goto(base + '/', { waitUntil: 'load' });
+                await p.waitForTimeout(600);
+                // Le fil au milieu de la 2e ligne : la 6e est voilée, sans point.
+                await p.evaluate(() => {
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    const r = document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[1].getBoundingClientRect();
+                    window.scrollTo(0, r.top + r.height / 2 + scrollY - innerHeight * 0.5);
+                });
+                await p.waitForTimeout(300);
+                const lire = () => p.evaluate(() => {
+                    const li = document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[5];
+                    const t = getComputedStyle(li, '::before').transform;
+                    return { voile: +getComputedStyle(li.querySelector('.cv-row-toggle')).opacity, point: t === 'none' ? 1 : +(t.match(/matrix\(([-\d.e]+)/) || [0, NaN])[1] };
+                });
+                await p.locator('#cv-theatre-list > li.cv-has-universe').nth(5).locator('.cv-vignette').hover();
+                await p.waitForTimeout(250);
+                const survol = await lire();
+                if (options.isMobile) exige(survol.voile < 0.5, `${appareil}, une ligne touchée avant le fil s’allume (${survol.voile})`);
+                else exige(survol.voile > 0.99, `${appareil}, la ligne pointée reste voilée (${survol.voile})`);
+                exige(survol.point === 0, `${appareil}, le point d’une ligne désignée éclôt avant le fil (× ${survol.point})`);
+                // Au clavier : depuis la ligne d'après, Maj+Tab.
+                await p.mouse.move(1, 1);
+                await p.evaluate(() => document.querySelectorAll('#cv-theatre-list > li.cv-has-universe .cv-row-toggle')[6].focus({ preventScroll: true }));
+                await p.keyboard.press('Shift+Tab');
+                await p.waitForTimeout(250);
+                const clavier = await lire();
+                exige(clavier.voile > 0.99, `${appareil}, la ligne atteinte au clavier reste voilée (${clavier.voile})`);
                 await c.close();
             }
         });

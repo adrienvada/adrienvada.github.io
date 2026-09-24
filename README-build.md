@@ -83,10 +83,11 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - les pastilles ▶ ne s'impriment pas ;
 - la ligne à vignette du CV : chaque spectacle et chaque film ont leur
   vignette, qui dit l'année et l'état de la ligne (cachée aux lecteurs
-  d'écran, qui les lisent dans le texte) ; les lignes d'une liste ont la même
+  d'écran, qui les lisent dans le texte) ; l'année se lit sur chaque vignette
+  à l'écran, même posée tout en bas ; les lignes d'une liste ont la même
   hauteur, l'année y tombe au même endroit, et le texte tient dans la hauteur
   de la vignette — au téléphone comme sur ordinateur ; les formations n'ont
-  pas d'image ; rien de tout cela sur papier ;
+  pas d'image ; rien de tout cela sur papier, où aucune ligne n'est voilée ;
 - sans JavaScript, le site reste lisible ;
 - chaque page spectacle a son `h1`, son `<main>` et des données structurées
   lisibles, où chaque représentation a son image ;
@@ -99,6 +100,10 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   `regie.js`, et le second pilote (`?repli`) rejoue les images du navigateur —
   opacité et transformation des éléments de l'ouverture et de la poursuite,
   relevées aux mêmes endroits du défilement ;
+- chaque animation menée par le défilement, sur l'accueil et sur chaque page
+  spectacle, suit la page ou le panneau de l'univers — jamais un cadre rogné
+  en `overflow: hidden`, qui ne défile pas (voir [Ce que suit une animation au
+  défilement](#ce-que-suit-une-animation-au-défilement)) ;
 - en mouvement réduit, chaque scène a un état fixe : l'ouverture réduite à son
   carton, la poursuite à sa photo en plein feux, la première photo allumée, le
   texte écrit, plus rien d'animé au défilement ;
@@ -108,9 +113,13 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   ne lève pas le rideau (Échap, si), le zoom de l'avatar dans `styles.css`, la
   phrase posée sur un groupe de photos (« Jusqu'où serez-vous semblables ? ») ;
 - le book : fermer puis rouvrir aussitôt ne laisse pas une page morte ;
-- la frise du CV, avec les deux pilotes : le filet d'une ligne déjà lue est
-  allumé, celui d'une ligne à venir ne l'est pas, et la guirlande à horloge
-  n'est pas revenue ;
+- la frise du CV, comme le prototype de l'audit, avec les deux pilotes : le
+  fil d'or à gauche de la liste, un point rond par spectacle centré dessus ;
+  une ligne déjà lue est pleine avec son point, une ligne à venir voilée et
+  sans point ; aucun lavis ne passe plus à droite ; tout est posé en mouvement
+  réduit, et la guirlande à horloge n'est pas revenue ; au téléphone, une
+  ligne touchée avant le fil (le survol que garde le navigateur) reste voilée,
+  sans point ; à la souris et au clavier, elle est pleine ;
 - la page 404 : son titre, son retour, sa lampe, sans erreur ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
@@ -1536,6 +1545,32 @@ le même test que `regie.js` (le contrôle automatique compare les deux).
 ajouter `?repli` à l'adresse (`/spectacles/cleophene/?repli`). Le contrôle
 automatique relève les deux et exige les mêmes images.
 
+### Ce que suit une animation au défilement
+
+`view()` — comme une scène `.rg-vue`, qui déclare sa propre ligne de temps —
+suit **la boîte de défilement la plus proche**, et `overflow: hidden` en fait
+une, même quand rien n'y défile. Une animation posée sous un cadre ainsi rogné
+suit ce cadre immobile, et reste figée. Seulement dans les navigateurs
+récents : le repli, qui lit la place de la ligne à l'écran, jouait juste, et
+rien ne le signalait. C'est arrivé à trois endroits à la fois : l'année des
+vignettes du CV restait sous la photo, les citations posées sur les photos
+plein cadre ne s'écrivaient pas, leurs légendes restaient à mi-fondu.
+
+D'où deux règles :
+
+- **pour rogner ce qui contient des scènes, `overflow: clip`**, qui rogne de
+  la même façon sans créer de boîte de défilement, précédé
+  d'`overflow: hidden` pour les navigateurs qui ne connaissent pas `clip`
+  (ils n'ont pas de ligne de temps non plus : c'est le repli qui les mène).
+  C'est le cas de `.u-fig--plein`, comme du `<body>` pour la barre collante ;
+- **une information ne s'anime pas.** L'année des vignettes ne monte plus sur
+  la photo : même réparée, la montée la cachait sur les vignettes du bas de
+  l'écran tant qu'on n'avait pas défilé.
+
+Le contrôle automatique relève chaque animation menée par le défilement, sur
+l'accueil et sur chaque page spectacle, et exige qu'elle suive la page ou le
+panneau de l'univers.
+
 ### Les scènes d'un univers
 
 | Scène | Ce qu'on voit | Où |
@@ -1608,14 +1643,27 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
 
 ### Le CV, le bandeau, la page 404
 
-- **La frise.** Une ligne de lecture court au milieu de l'écran : un fil d'or
-  se trace le long du bord droit de la liste jusqu'à elle, le filet de chaque
-  spectacle s'allume quand elle le passe et le reste, le lavis de couleur
-  passe sur la ligne qui la traverse, l'année monte sur la vignette. Tout est
-  lié au défilement — plus d'horloge, donc rien qui rejoue après un survol,
-  comme le faisait la guirlande. Pilotes : `view()` en natif ; `--ph` et `--pt`
-  (la place de la ligne, en hauteurs d'écran) écrits par `regie.js` ailleurs
-  (`.rg-ligne`). Voir « La frise » dans `index.html`.
+- **La frise**, telle que le prototype de l'audit la proposait (« La frise
+  qui s'allume »). Une ligne de lecture court au milieu de l'écran : un fil
+  d'or se trace le long du bord **gauche** de la liste, dans la marge de la
+  carte, jusqu'à elle ; sur le fil, au milieu de chaque ligne, un **point**
+  dans la couleur du spectacle éclôt quand elle l'atteint (× 1,3, puis il se
+  pose) ; et le fil **découvre** les lignes : chacune reste voilée (opacité
+  .38) tant qu'il ne l'a pas atteinte, et elle est pleine quand la pointe du
+  fil touche son haut. Voilée, jamais effacée : tout s'y lit, et la souris,
+  le clavier ou le murmure la rendent pleine à l'instant — **pas le doigt qui
+  fait défiler** : le téléphone garde le survol de la dernière ligne touchée,
+  qui restait pleine avant que le fil l'atteigne. Le point ne répond qu'au
+  fil. Rien de coloré ne court
+  plus à droite — ni filet, ni lavis au passage (le lavis ne répond plus qu'à
+  la souris et au doigt) ; le halo des vignettes « tournée » et « création »
+  s'allume avec le point. Tout est lié au défilement — plus d'horloge, donc
+  rien qui rejoue après un survol, comme le faisait la guirlande. Pilotes : `view()` en natif ; `--ph` et `--pt` (la place de la
+  ligne, en hauteurs d'écran) écrits par `regie.js` ailleurs (`.rg-ligne`).
+  Voir « La frise » dans `index.html`. **L'année, elle, ne bouge pas** : elle
+  montait sur la vignette depuis le bas du cadre, et toutes les années ont un
+  jour disparu (voir ci-dessous) ; même réparée, la montée laissait sans année
+  les vignettes du bas de l'écran. Une information ne s'anime pas.
 - **L'ambiance** (la salle aux couleurs du spectacle survolé) n'hérite plus :
   la cible (`--ambiance-cible`) change une fois par geste, et seuls ses deux
   consommateurs — la lueur et la barre collée — glissent vers elle. Survoler

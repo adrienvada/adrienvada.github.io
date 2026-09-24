@@ -2593,11 +2593,11 @@
             opacity: 1;
         }
 
-        /*  2. LE FILET. Un trait dans la couleur du spectacle, à gauche de
-               la ligne. Presque muet au repos, franc au survol : le CV
-               devient un sommaire où chaque monde a déjà sa couleur avant
-               qu'on y entre. En position absolue, donc sans effet sur la
-               mise en page — la liste garde exactement sa forme. */
+        /*  2. LE POINT. Sur le fil d'or de la frise, à gauche, au milieu de
+               chaque ligne : un point dans la couleur du spectacle — le CV
+               devient une ligne de temps où chaque monde a déjà sa couleur
+               avant qu'on y entre. En position absolue, dans la marge de la
+               carte : la liste garde exactement sa forme. */
         .cv-has-universe {
             position: relative;
             /* LA CRÊTE DE LA GUIRLANDE, à un seul endroit. Elle sert deux
@@ -2612,50 +2612,39 @@
             --cv-lueur-designee: 46%;
         }
 
-        /* LE FILET EST À DROITE, comme le lavis. Les deux signaux de la
-           ligne — le filet qui la marque, la lueur qui la traverse — sont
-           du même côté, et c'est celui du geste : la marge droite porte
-           déjà le badge et la flèche, et c'est là que le pouce arrive.
-           À gauche ils bordaient les titres, qui commencent au ras du
-           texte ; l'œil devait franchir une couleur avant de lire. */
+        /* LE POINT EST SUR LE FIL, pas au bord de la ligne. Il y a eu un
+           filet de couleur à droite de chaque ligne, puis le fil d'or à
+           droite lui aussi : deux traits côte à côte, qui se confondaient.
+           Le prototype de l'audit mettait tout à gauche — le fil, et sur
+           lui un point par spectacle —, et c'est ce qui se lit comme une
+           ligne de temps. Centré sur le fil (.cv-frise::after, à -9 px) :
+           8 px et un anneau de 2,5 px dans sa couleur — 13 px au repos,
+           17 px au plus fort de son éclosion (× 1,3), soit exactement la
+           marge de la carte : il ne déborde ni sur le bord ni sur la
+           ligne. Au-dessus du fil (z-index). */
         .cv-has-universe::before {
             content: '';
             position: absolute;
-            right: 0;
-            top: 7px;
-            bottom: 7px;
-            width: 2px;
-            border-radius: 2px;
+            left: -12.5px;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            margin-top: -4px;
+            border-radius: 50%;
             background: var(--cv-accent, currentColor);
-            /* Assez présent pour qu'on le remarque en balayant la liste,
-               assez discret pour ne pas devenir un décor. Sur fond sombre,
-               en dessous de .3 il disparaissait tout simplement. */
-            opacity: .4;
-            transform: scaleY(.72);
-            transform-origin: 50% 50%;
-            transition: opacity var(--dur-base) var(--ease-out),
-                transform var(--dur-base) var(--ease-out);
+            box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--cv-accent, currentColor) 22%, transparent);
+            z-index: 3;
+            pointer-events: none;
         }
 
-        .cv-has-universe:hover::before,
-        .cv-has-universe:focus-within::before {
-            animation: none;
-            opacity: 1;
-            transform: scaleY(1);
-        }
+        /* Le point ne répond qu'au fil : ni au survol, ni au doigt, ni au
+           clavier. Il dit « le fil est passé ici », rien d'autre. */
 
         /*  3. L'ÉTAT PRESSÉ. Au doigt, il n'y a pas de survol : sans cette
                règle, une ligne touchée ne répondait rien jusqu'à l'ouverture
                du panneau. On reprend l'asymétrie du site — enfoncement quasi
                immédiat, relâchement qui s'étire — pour que la ligne réponde
                comme une matière. */
-        .cv-has-universe:has(.cv-row-toggle:active)::before {
-            animation: none;
-            opacity: 1;
-            transform: scaleY(1);
-            transition-duration: var(--dur-press);
-        }
-
         .cv-has-universe .cv-row-toggle:active .cv-chevron {
             transform: rotate(-45deg) translateX(3px);
             opacity: 1;
@@ -2814,7 +2803,13 @@
                qu'on désigne : la ligne visée s'ouvre, les autres se
                contentent de scintiller. La largeur devient ainsi le
                second signal de la désignation, avec l'opacité — et
-               l'étalement se voit même quand la couleur est déjà là. */
+               l'étalement se voit même quand la couleur est déjà là.
+
+               ELLE NE PASSE PLUS AU DÉFILEMENT. La frise marque le passage
+               à gauche, par le point de chaque spectacle sur le fil ; une
+               couleur qui balayait aussi la droite de chaque ligne en
+               faisait deux signaux pour un. Le lavis ne répond plus qu'à la
+               souris et au doigt. */
         .cv-has-universe::after {
             content: '';
             position: absolute;
@@ -2852,10 +2847,6 @@
                 white-space: pre;
             }
 
-            .cv-has-universe::before {
-                width: 3px;
-            }
-
         }
 
         /* ── LA FRISE ──
@@ -2868,17 +2859,35 @@
 
            La frise suit le regard. Une LIGNE DE LECTURE court au milieu
            de l'écran ; en descendant le CV :
-             · un fil d'or se trace le long du bord droit de la liste, jusqu'à
-               elle (.cv-frise::after) ;
-             · le filet de chaque spectacle s'allume quand la ligne la passe,
-               et reste allumé — ce qu'on a lu est éclairé (::before) ;
-             · le lavis de couleur passe sur la ligne pendant qu'elle la
-               traverse, puis s'éteint (::after) ; la pastille et le bandeau
-               de la vignette s'allument avec lui ;
-             · l'année monte sur la vignette en arrivant à l'écran.
+             · un fil d'or se trace le long du bord GAUCHE de la liste,
+               jusqu'à elle (.cv-frise::after) ;
+             · sur le fil, au milieu de chaque ligne, le POINT du spectacle,
+               dans sa couleur, éclôt quand la pointe du fil l'atteint, et
+               reste posé : ce qu'on a lu est marqué (::before) ;
+             · le fil DÉCOUVRE les lignes : chacune reste voilée — en
+               transparence — tant qu'il ne l'a pas atteinte, sort du voile
+               sur les 15 % d'écran qui précèdent la ligne de lecture, et
+               elle est pleine quand la pointe du fil touche son haut
+               (.cv-row-toggle, cv-decouverte). Voilée, jamais effacée :
+               tout s'y lit encore, et la souris, le clavier ou le murmure la
+               rendent pleine à l'instant — pas le doigt qui fait défiler.
+           Rien de coloré ne court plus à droite des lignes : ni filet, ni
+           lavis au passage (il ne répond plus qu'à la souris et au doigt).
+           C'est le prototype de l'audit, « La frise qui s'allume ».
            Tout est lié au défilement : il n'y a plus d'horloge, donc rien
            à rejouer — un survol coupe l'animation, la rend, et elle
            reprend exactement où en est le défilement.
+
+           L'ANNÉE, ELLE, NE BOUGE PAS. Elle montait sur la vignette en
+           arrivant à l'écran, depuis le bas du cadre qui la rognait — et
+           toutes les années ont disparu : `overflow: hidden` fait du cadre
+           une boîte de défilement, view() s'y est accroché au lieu de
+           suivre la page, et ce cadre-là ne défile jamais. Même réparée,
+           la montée laissait sans année les vignettes du bas de l'écran
+           tant qu'on n'avait pas défilé. L'année est une information :
+           aucune animation ne doit pouvoir la cacher. (Le voile de la
+           découverte la couvre avec toute sa ligne, sans la déplacer ni
+           l'effacer : elle reste lisible, à sa place.)
 
            DEUX RÉGIMES, comme dans les univers (voir regie.js). Le
            navigateur récent lit le défilement lui-même (view()) ; ailleurs
@@ -2897,11 +2906,16 @@
             position: relative;
         }
 
+        /* LE FIL COURT À GAUCHE, dans la marge de la carte : 8 px du bord,
+           9 px des lignes, et les points des spectacles posés dessus. Une
+           ligne de temps se lit dans le sens de la lecture ; à droite, le
+           fil doublait le filet de couleur de chaque ligne, et se perdait
+           dans ses couleurs. */
         .cv-frise::before,
         .cv-frise::after {
             content: '';
             position: absolute;
-            right: 0;
+            left: -9px;
             top: 10px;
             bottom: 10px;
             width: 1px;
@@ -2924,25 +2938,27 @@
             }
         }
 
-        @keyframes cv-filet {
+        /* LE POINT ÉCLÔT QUAND LE FIL L'ATTEINT : de rien à 1,3 au passage
+           de la ligne de lecture, puis il se pose — la pastille du
+           prototype de l'audit. */
+        @keyframes cv-point {
             from {
-                opacity: .4;
-                transform: scaleY(.72);
-            }
-        }
-
-        @keyframes cv-lavis-passe {
-
-            0%,
-            100% {
-                opacity: 0;
+                transform: scale(0);
             }
 
             50% {
-                opacity: var(--cv-crete);
+                transform: scale(1.3);
+            }
+
+            75%,
+            to {
+                transform: none;
             }
         }
 
+        /* Le halo des vignettes qui portent un état (« tournée »,
+           « création ») : il s'allume quand la ligne de lecture les passe,
+           avec le point du spectacle. */
         @keyframes cv-lueur-passe {
 
             0%,
@@ -2955,26 +2971,23 @@
             }
         }
 
-        @keyframes cv-annee {
+        /* Le voile des lignes que le fil n'a pas encore atteintes : .38,
+           celui du prototype. Tout y reste lisible — le titre, la vignette,
+           l'année —, mais la ligne attend son tour. */
+        @keyframes cv-decouverte {
             from {
-                translate: 0 100%;
+                opacity: .38;
             }
         }
 
-        /* Le filet et le fil sont allumés au repos : ce sont les animations
-           qui les éteignent en dessous de la ligne de lecture. */
-        .cv-has-universe::before {
-            opacity: 1;
-            transform: none;
-        }
-
+        /* Au repos, le fil est tracé, les points posés, les lignes pleines :
+           ce sont les animations qui effacent et voilent ce que la ligne de
+           lecture n'a pas encore atteint. */
         @supports (animation-timeline: view()) {
             :where(html:not(.regie-repli)) .cv-frise::after,
             :where(html:not(.regie-repli)) .cv-has-universe::before,
-            :where(html:not(.regie-repli)) .cv-has-universe::after,
-            :where(html:not(.regie-repli)) .cv-has-universe .cv-badge::after,
-            :where(html:not(.regie-repli)) .cv-vignette.a-etat::after,
-            :where(html:not(.regie-repli)) .cv-vignette-annee {
+            :where(html:not(.regie-repli)) .cv-has-universe .cv-row-toggle,
+            :where(html:not(.regie-repli)) .cv-vignette.a-etat::after {
                 animation-timeline: view();
                 animation-duration: auto;
                 animation-timing-function: linear;
@@ -2986,34 +2999,30 @@
                 animation-range: cover 50vh cover calc(100% - 50vh);
             }
 
+            /* Le haut de la ligne de 65 % à 50 % de l'écran : pleine quand
+               la pointe du fil, sur la ligne de lecture, l'atteint. */
+            :where(html:not(.regie-repli)) .cv-has-universe .cv-row-toggle {
+                animation-name: cv-decouverte;
+                animation-range: cover 35vh cover 50vh;
+            }
+
+            /* Le point, de 56 % à 44 % de l'écran : au plus grand quand la
+               pointe du fil le touche, au milieu. */
             :where(html:not(.regie-repli)) .cv-has-universe::before {
-                animation-name: cv-filet;
-                animation-range: cover 45vh cover 55vh;
+                animation-name: cv-point;
+                animation-range: cover 44vh cover 56vh;
             }
 
-            :where(html:not(.regie-repli)) .cv-has-universe::after {
-                animation-name: cv-lavis-passe;
-                animation-range: cover 38vh cover 62vh;
-            }
-
-            :where(html:not(.regie-repli)) .cv-has-universe .cv-badge::after,
             :where(html:not(.regie-repli)) .cv-vignette.a-etat::after {
                 animation-name: cv-lueur-passe;
                 animation-range: cover 38vh cover 62vh;
-            }
-
-            :where(html:not(.regie-repli)) .cv-vignette-annee {
-                animation-name: cv-annee;
-                animation-range: cover 15vh cover 30vh;
             }
         }
 
         :where(.regie-repli) .cv-frise::after,
         :where(.regie-repli) .cv-has-universe::before,
-        :where(.regie-repli) .cv-has-universe::after,
-        :where(.regie-repli) .cv-has-universe .cv-badge::after,
-        :where(.regie-repli) .cv-vignette.a-etat::after,
-        :where(.regie-repli) .cv-vignette-annee {
+        :where(.regie-repli) .cv-has-universe .cv-row-toggle,
+        :where(.regie-repli) .cv-vignette.a-etat::after {
             animation-duration: 1s;
             animation-timing-function: linear;
             animation-fill-mode: both;
@@ -3025,35 +3034,29 @@
             animation-delay: calc((.5 - var(--ph, 0)) / var(--pt, 1) * -1s);
         }
 
+        /* --ph et --pt sont écrits sur la ligne ; le bouton et le point en
+           héritent. Le point est au milieu de la ligne : --ph + --pt / 2. */
+        :where(.regie-repli) .cv-has-universe .cv-row-toggle {
+            animation-name: cv-decouverte;
+            animation-delay: calc((.65 - var(--ph, 0)) / .15 * -1s);
+        }
+
         :where(.regie-repli) .cv-has-universe::before {
-            animation-name: cv-filet;
-            animation-delay: calc((.55 - var(--ph, 0)) / .1 * -1s);
+            animation-name: cv-point;
+            animation-delay: calc((.56 - var(--ph, 0) - var(--pt, 0) / 2) / .12 * -1s);
         }
 
-        :where(.regie-repli) .cv-has-universe::after {
-            animation-name: cv-lavis-passe;
-            animation-delay: calc((.62 - var(--ph, 0)) / .24 * -1s);
-        }
-
-        :where(.regie-repli) .cv-has-universe .cv-badge::after,
         :where(.regie-repli) .cv-vignette.a-etat::after {
             animation-name: cv-lueur-passe;
             animation-delay: calc((.62 - var(--ph, 0)) / .24 * -1s);
-        }
-
-        :where(.regie-repli) .cv-vignette-annee {
-            animation-name: cv-annee;
-            animation-delay: calc((.85 - var(--ph, 0)) / .15 * -1s);
         }
 
         @media (prefers-reduced-motion: reduce) {
 
             .cv-frise::after,
             .cv-has-universe::before,
-            .cv-has-universe::after,
-            .cv-has-universe .cv-badge::after,
-            .cv-vignette.a-etat::after,
-            .cv-vignette-annee {
+            .cv-has-universe .cv-row-toggle,
+            .cv-vignette.a-etat::after {
                 animation: none !important;
             }
         }
@@ -3064,11 +3067,35 @@
             .cv-frise::after {
                 display: none !important;
             }
+
+            /* Le papier ne défile pas : aucune ligne n'y attend le fil. */
+            .cv-has-universe .cv-row-toggle {
+                animation: none !important;
+            }
+        }
+
+        /* DÉSIGNÉE, LA LIGNE EST PLEINE à l'instant — quand on la désigne
+           vraiment : atteinte au clavier, pointée à la souris, ou le
+           murmure ouvert par un appui long. PAS AU SIMPLE TOUCHER : au
+           téléphone, on pose le doigt sur une ligne pour faire défiler, et
+           le navigateur garde le survol de la dernière ligne touchée. Elle
+           s'allumait sous le doigt et restait pleine, son point posé, avant
+           que le fil l'atteigne. Rendue, l'animation reprend où en est le
+           défilement. */
+        .cv-has-universe .cv-row-toggle:focus-visible,
+        .cv-item.is-whispering .cv-row-toggle {
+            animation: none;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .cv-has-universe:hover .cv-row-toggle {
+                animation: none;
+            }
         }
 
         /* Au doigt, la ligne touchée s'allume à la CRÊTE DU LAVIS — la
-           même couleur que celle qui passe au défilement, ni plus ni
-           moins : on touche ce qu'on voyait passer.
+           même qu'à la souris. Le lavis ne passe plus au défilement (voir
+           « La frise ») : il est le signe du geste, et de lui seul.
 
            Une animation l'emporte sur une opacité déclarée : il faut
            la couper pour reprendre la main, pas seulement la
@@ -3084,8 +3111,7 @@
             transition-duration: var(--dur-press);
         }
 
-        /* Et la pastille suit sa ligne : elle s'allume sous le doigt comme
-           elle s'allume au passage de la vague, ni plus ni moins. */
+        /* Et la pastille suit sa ligne : elle s'allume sous le doigt. */
         .cv-item.is-pressed.cv-has-universe .cv-badge::after,
         .cv-has-universe:has(.cv-row-toggle:active) .cv-badge::after {
             animation: none;
@@ -3093,8 +3119,7 @@
         }
 
         /* À la souris, le même geste : la ligne visée s'arrête à la crête
-           du lavis. Elle ne s'allume ni plus ni moins qu'à son passage —
-           on désigne ce qu'on voyait déjà. */
+           du lavis. */
         @media (hover: hover) and (pointer: fine) {
             .cv-has-universe:hover::after {
                 animation: none;
@@ -3118,11 +3143,12 @@
            allume. C'est le seul endroit du CV où une information se
            distingue d'elle-même : les spectacles qui se jouent encore.
 
-           DEUX ÉLÉMENTS, UN SEUL DÉFILEMENT. Le lavis vit sur le ::after de
-           la ligne, le halo sur celui de la pastille — deux animations
-           distinctes, mais sur la même plage du défilement (voir « La
-           frise ») : elles ne peuvent pas dériver l'une par rapport à
-           l'autre. Rien à synchroniser en script.
+           AUJOURD'HUI, C'EST LA VIGNETTE QUI S'ALLUME. Sur les lignes à
+           vignette, la pastille est cachée (lue dans le texte) et son halo
+           est passé à la vignette, qui s'allume quand la ligne de lecture
+           la passe, avec le point du spectacle (voir « La frise » et « Le
+           halo passe du badge à la vignette »). La pastille ne garde que
+           le halo sous le doigt et la souris.
 
            SEULE L'OPACITÉ EST ANIMÉE, comme pour le lavis. Le halo est un
            box-shadow FIGÉ que porte un pseudo-élément, et l'on ne fait
@@ -3511,6 +3537,13 @@
                 border: 0;
             }
 
+            /* Le halo est passé du badge à la vignette (plus bas) : le badge
+               caché n'en porte plus. Rogné en `hidden`, il était d'ailleurs
+               la boîte de défilement de ce halo, qui ne pouvait rien suivre. */
+            #page_cv li.a-vignette .cv-badge::after {
+                content: none;
+            }
+
             /* Le titre en Cinzel, comme en tête de chaque spectacle dans
                l'onglet Dates et dans son univers. */
             #page_cv li.a-vignette .cv-title-row,
@@ -3584,10 +3617,10 @@
 
             /* LE HALO PASSE DU BADGE À LA VIGNETTE. « En tournée », « En
                création » ne sont plus écrits dans un badge à droite, mais en
-               bandeau sur la vignette : c'est elle qui s'allume au passage du
-               lavis, sur la même plage que le badge avant elle (voir « La
-               frise »). Seulement les lignes
-               qui portent un état — les spectacles qui se jouent encore. */
+               bandeau sur la vignette : c'est elle qui s'allume quand la
+               ligne de lecture la passe, avec le point du spectacle sur le fil
+               (voir « La frise »). Seulement les lignes qui portent un état —
+               les spectacles qui se jouent encore. */
             .cv-vignette.a-etat::after {
                 content: '';
                 position: absolute;
