@@ -107,7 +107,7 @@ function fichiersDuSite() {
             .concat(lister('spectacles', '.html'))
             .concat(lister('galerie', '.html')),
         js: existants([
-            'univers.js', 'univers-montage.js', 'intro.js', 'mask-points.js',
+            'regie.js', 'univers.js', 'univers-montage.js', 'intro.js', 'mask-points.js',
             'dates.js', 'dates-live.js',
         ]),
         css: existants(['univers.css', 'univers-statique.css', 'ressources/polices/polices.css'])

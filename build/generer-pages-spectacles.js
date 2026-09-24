@@ -556,6 +556,26 @@ ${MESURE}
         // reviendra un autre jour depuis un autre site y aura droit — voir
         // « Le lien direct entre sans rideau » dans index.html.
         try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+
+        // Le titre qui attend de s'écrire, la première photo qui attend son
+        // allumage dans le noir : cachés seulement si le moteur est là pour
+        // les montrer (u-anime). Et le drapeau de la régie, posé avant le
+        // premier rendu — le même en-tête que sur l'accueil (index.html),
+        // où tout cela est expliqué ; build/verifier-site.js compare les
+        // deux.
+        (function () {
+            var racine = document.documentElement;
+            racine.classList.add('u-anime');
+            if (/[?&]repli(?:[=&]|$)/.test(location.search) || !(window.CSS && CSS.supports &&
+                CSS.supports('animation-timeline: view()') && CSS.supports('view-timeline: --rg block')))
+                racine.classList.add('regie-repli');
+            addEventListener('DOMContentLoaded', function () {
+                setTimeout(function () {
+                    if (!window.__universPret) racine.classList.remove('u-anime');
+                    if (!window.Regie) racine.classList.remove('regie-repli');
+                }, 0);
+            });
+        })();
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -586,14 +606,26 @@ ${MESURE}
             color: var(--u-muted); text-decoration: none;
         }
         .u-retour:hover { color: var(--u-accent-ink); }
-        /* Le morphing depuis le répertoire : les deux documents y
-           consentent, et le panneau porte le nom que la carte cliquée
-           prend au départ — sa vignette glisse jusqu'à devenir cette
-           page. Navigateurs plus anciens : navigation ordinaire. */
+        /* Le morphing depuis le répertoire — et depuis l'onglet Dates de
+           l'accueil : les documents y consentent, et cette page porte le
+           nom que la vignette touchée prend au départ. La photo de la
+           vignette grandit jusqu'à devenir le fond du titre, comme dans le
+           panneau de l'accueil (voir « La vignette devient l'univers »
+           dans univers.js). Sans photo, c'est la page entière qui sort de
+           la vignette. Navigateurs plus anciens : navigation ordinaire.
+
+           La petite image ne se montre jamais en grand : elle s'efface tôt,
+           tant qu'elle est encore petite, et le fond arrive en même temps. */
         @view-transition { navigation: auto; }
-        #show-universe { view-transition-name: fiche-${uni.slug}; }
+        ${corps.includes('u-hero-fond') ? '#show-universe .u-hero-fond' : '#show-universe'} { view-transition-name: fiche-${uni.slug}; view-transition-class: fiche; }
         ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
         ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+        ::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
+        ::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
+        ::view-transition-old(*.fiche) { animation: vt-fiche-sort calc(var(--dur-morph) * .35) ease-out both; }
+        ::view-transition-new(*.fiche) { animation: vt-fiche-entre calc(var(--dur-morph) * .4) ease-out both; }
+        @keyframes vt-fiche-sort { to { opacity: 0; } }
+        @keyframes vt-fiche-entre { from { opacity: 0; } }
         @media (prefers-reduced-motion: reduce) {
             ::view-transition-group(*), ::view-transition-image-pair(*),
             ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
@@ -645,9 +677,12 @@ ${MESURE}
     <script src="../../dates.js"></script>
     <script src="../../dates-live.js"></script>
 
-    <!-- Le moteur, dans l'ordre : le montage d'abord (univers.js s'en sert),
-         puis univers.js, qui reconnaît la classe du <body> et anime le
-         panneau déjà en place. Aucun des deux n'est propre à cette page. -->
+    <!-- Le moteur, dans l'ordre : la régie (le défilement qui mène les
+         scènes, là où le navigateur ne le fait pas lui-même), le montage
+         (univers.js s'en sert), puis univers.js, qui reconnaît la classe du
+         <body> et anime le panneau déjà en place. Aucun n'est propre à
+         cette page. -->
+    <script src="../../regie.js"></script>
     <script src="../../univers-montage.js"></script>
     <script src="../../univers.js"></script>
 </body>
@@ -1189,9 +1224,33 @@ ${JSON.stringify(liste, null, 2)}
             if (meta) meta.setAttribute('content', theme === 'light' ? '#FAF9F5' : '#0a0907');
         }
         appliqueTheme(document.documentElement.getAttribute('data-theme') || 'dark', false);
+        // LE THÈME BASCULE EN CERCLE depuis la bascule, comme sur l'accueil
+        // (voir basculerTheme dans index.html) : une View Transition, un
+        // cercle qui grandit jusqu'au coin le plus éloigné, et aucune couleur
+        // qui transitionne pendant ce temps (vt-theme).
         if (bascule) bascule.addEventListener('click', function () {
             var t = document.documentElement.getAttribute('data-theme');
-            appliqueTheme(t === 'light' ? 'dark' : 'light', true);
+            var vers = t === 'light' ? 'dark' : 'light';
+            var racine = document.documentElement;
+            if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                appliqueTheme(vers, true);
+                return;
+            }
+            // Un nom de passage resté sur une carte (le retour depuis une
+            // fiche) ferait sauter l'ancienne image : on les retire d'abord.
+            document.querySelectorAll('[style*="view-transition-name"]').forEach(function (el) {
+                el.style.viewTransitionName = '';
+            });
+            var r = bascule.getBoundingClientRect();
+            var x = r.left + r.width / 2, y = r.top + r.height / 2;
+            var rayon = Math.sqrt(Math.pow(Math.max(x, innerWidth - x), 2) + Math.pow(Math.max(y, innerHeight - y), 2));
+            racine.classList.add('vt-theme');
+            var passage = document.startViewTransition(function () { appliqueTheme(vers, true); });
+            passage.ready.then(function () {
+                racine.animate({ clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + rayon + 'px at ' + x + 'px ' + y + 'px)'] },
+                    { duration: 620, easing: 'cubic-bezier(.65, 0, .35, 1)', pseudoElement: '::view-transition-new(root)' });
+            }).catch(function () { });
+            passage.finished.catch(function () { }).then(function () { racine.classList.remove('vt-theme'); });
         });
 
         addEventListener('pagereveal', function (e) {
@@ -1219,6 +1278,12 @@ const FEUILLE = `/* RÉPERTOIRE (/spectacles/) — feuille générée (build/gen
    le grain de pellicule, les kakemonos, la vitrine en profondeur, la
    salle qui prend les couleurs du spectacle survolé (--ambiance). */
 *, *::before, *::after { box-sizing: border-box; }
+
+/* Le thème bascule en cercle (voir la bascule, dans le script) : pendant
+   le passage, rien ne transitionne. */
+html.vt-theme *, html.vt-theme *::before, html.vt-theme *::after { transition: none !important; }
+html.vt-theme::view-transition-old(root), html.vt-theme::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-theme::view-transition-new(root) { z-index: 2; }
 
 /* L'ambiance est une COULEUR ENREGISTRÉE : déclarée en <color>, elle
    s'interpole — le passage d'un or à un carmin est un glissement, pas un
@@ -1601,6 +1666,17 @@ html.retour-vt .carte .cadre::after { animation: none !important; }
 @view-transition { navigation: auto; }
 ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+/* AU RETOUR, la fiche revient se ranger dans sa carte : le fond du titre
+   garde sa place le temps de rapetisser, puis la vignette le remplace —
+   une photo de carte agrandie à la taille de l'écran ne serait qu'un
+   flou. Même tempo que le panneau de l'accueil qui se referme. */
+.carte .cadre { view-transition-class: fiche; }
+::view-transition-group(*.fiche) { animation-duration: .62s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
+::view-transition-old(*.fiche) { animation: vt-fiche-sort .19s ease-in .12s both; }
+::view-transition-new(*.fiche) { animation: vt-fiche-entre .19s ease-out .22s both; }
+@keyframes vt-fiche-sort { to { opacity: 0; } }
+@keyframes vt-fiche-entre { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
     ::view-transition-group(*), ::view-transition-image-pair(*),
     ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }

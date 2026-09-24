@@ -58,6 +58,26 @@
         // reviendra un autre jour depuis un autre site y aura droit — voir
         // « Le lien direct entre sans rideau » dans index.html.
         try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+
+        // Le titre qui attend de s'écrire, la première photo qui attend son
+        // allumage dans le noir : cachés seulement si le moteur est là pour
+        // les montrer (u-anime). Et le drapeau de la régie, posé avant le
+        // premier rendu — le même en-tête que sur l'accueil (index.html),
+        // où tout cela est expliqué ; build/verifier-site.js compare les
+        // deux.
+        (function () {
+            var racine = document.documentElement;
+            racine.classList.add('u-anime');
+            if (/[?&]repli(?:[=&]|$)/.test(location.search) || !(window.CSS && CSS.supports &&
+                CSS.supports('animation-timeline: view()') && CSS.supports('view-timeline: --rg block')))
+                racine.classList.add('regie-repli');
+            addEventListener('DOMContentLoaded', function () {
+                setTimeout(function () {
+                    if (!window.__universPret) racine.classList.remove('u-anime');
+                    if (!window.Regie) racine.classList.remove('regie-repli');
+                }, 0);
+            });
+        })();
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -67,7 +87,7 @@
         /* Le mouvement de l'accueil — relu dans index.html (voir
            chargerMouvement) : sans lui, les transitions d'univers.css
            tombaient à zéro sur cette page. */
-        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; }
+        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --ease-ressort: linear(0, 0.005 1%, 0.039 3%, 0.098 5%, 0.215 8%, 0.566 16%, 0.715 20%, 0.807 23%, 0.901 27%, 0.966 31%, 1.013 36%, 1.036 42%, 1.032 52%, 1.002 75%, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; --dur-scene: 460ms; --dur-morph: 620ms; }
         body { margin: 0; background: #150c05; }
         #show-universe {
             --u-bg: #150c05;
@@ -88,14 +108,26 @@
             color: var(--u-muted); text-decoration: none;
         }
         .u-retour:hover { color: var(--u-accent-ink); }
-        /* Le morphing depuis le répertoire : les deux documents y
-           consentent, et le panneau porte le nom que la carte cliquée
-           prend au départ — sa vignette glisse jusqu'à devenir cette
-           page. Navigateurs plus anciens : navigation ordinaire. */
+        /* Le morphing depuis le répertoire — et depuis l'onglet Dates de
+           l'accueil : les documents y consentent, et cette page porte le
+           nom que la vignette touchée prend au départ. La photo de la
+           vignette grandit jusqu'à devenir le fond du titre, comme dans le
+           panneau de l'accueil (voir « La vignette devient l'univers »
+           dans univers.js). Sans photo, c'est la page entière qui sort de
+           la vignette. Navigateurs plus anciens : navigation ordinaire.
+
+           La petite image ne se montre jamais en grand : elle s'efface tôt,
+           tant qu'elle est encore petite, et le fond arrive en même temps. */
         @view-transition { navigation: auto; }
-        #show-universe { view-transition-name: fiche-cleophene; }
+        #show-universe .u-hero-fond { view-transition-name: fiche-cleophene; view-transition-class: fiche; }
         ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
         ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+        ::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
+        ::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
+        ::view-transition-old(*.fiche) { animation: vt-fiche-sort calc(var(--dur-morph) * .35) ease-out both; }
+        ::view-transition-new(*.fiche) { animation: vt-fiche-entre calc(var(--dur-morph) * .4) ease-out both; }
+        @keyframes vt-fiche-sort { to { opacity: 0; } }
+        @keyframes vt-fiche-entre { from { opacity: 0; } }
         @media (prefers-reduced-motion: reduce) {
             ::view-transition-group(*), ::view-transition-image-pair(*),
             ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
@@ -387,14 +419,21 @@
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
-        <div class="u-hero-wrap">
+        <!-- LE HÉROS SE DÉFAIT PAR COUCHES, chacune sur sa propre course au
+             défilement (voir « Le héros s'en va » dans univers.css) : le
+             surtitre part d'abord, le titre en dernier. L'auteur, la ligne
+             du rôle, le bouton et la flèche sont enveloppés d'une couche : ils
+             ont déjà leur propre fondu d'arrivée, et deux animations ne se
+             partagent pas une même opacité. -->
+        <div class="u-hero-wrap rg-vue">
+        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/cleophene/5-1280.webp" srcset="../../ressources/images/univers/cleophene/5-640.webp 640w, ../../ressources/images/univers/cleophene/5-1280.webp 1280w" sizes="100vw" alt="" decoding="async" style="object-position:15% 25%"></div>
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
                  que la date et l'état de la tournée : c'est la ligne d'une
                  feuille de salle, et elle dit en trois mots ce qu'on va voir
                  avant même le titre. Il est pris sur l'univers et non sur la
                  ligne du CV, qui ne le porte pas. -->
-            <p class="u-eyebrow">2024 · Tragédie · En tournée</p>
+            <p class="u-eyebrow rg-k">2024 · Tragédie · En tournée</p>
             <!-- LE TITRE, D'UN SEUL TENANT POUR QUI NE LE VOIT PAS. Les lettres
                  tombent une à une et sont donc cachées aux lecteurs d'écran
                  (voir splitChars) ; aria-label leur donne le mot entier.
@@ -404,28 +443,23 @@
                  Sur une page autonome c'est le titre de la page, de premier
                  niveau ; dans le panneau de l'accueil, qui a déjà le sien, de
                  second niveau. -->
-            <h1 class="u-title" id="u-titre" aria-label="Cléophène" style="--u-title-chars:9;--u-title-len:9"><span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:0">C</span><span class="u-ch" style="--i:1">l</span><span class="u-ch" style="--i:2">é</span><span class="u-ch" style="--i:3">o</span><span class="u-ch" style="--i:4">p</span><span class="u-ch" style="--i:5">h</span><span class="u-ch" style="--i:6">è</span><span class="u-ch" style="--i:7">n</span><span class="u-ch" style="--i:8">e</span></span></h1>
-            <p class="u-author">d’après Rodogune, de Corneille</p>
-            <p class="u-synopsis"><span class="u-line"><span class="u-wd" style="--i:0">Royaume</span> <span class="u-wd" style="--i:1">de</span> <span class="u-wd" style="--i:2">Pyrie,</span> <span class="u-wd" style="--i:3">124</span> <span class="u-wd" style="--i:4">av.</span> <span class="u-wd" style="--i:5">J-C.</span></span><span class="u-line"><span class="u-wd" style="--i:6">Lorsqu’un</span> <span class="u-wd" style="--i:7">roi</span> <span class="u-wd" style="--i:8">meurt</span> <span class="u-wd" style="--i:9">et</span> <span class="u-wd" style="--i:10">qu’il</span> <span class="u-wd" style="--i:11">est</span> <span class="u-wd" style="--i:12">père</span> <span class="u-wd" style="--i:13">de</span> <span class="u-wd" style="--i:14">jumeaux,</span> <span class="u-wd" style="--i:15">lequel</span> <span class="u-wd" style="--i:16">des</span> <span class="u-wd" style="--i:17">deux</span> <span class="u-wd" style="--i:18">est</span> <span class="u-wd" style="--i:19">l’aîné</span> <span class="u-wd" style="--i:20">et</span> <span class="u-wd" style="--i:21">doit</span> <span class="u-wd" style="--i:22">prendre</span> <span class="u-wd" style="--i:23">sa</span> <span class="u-wd" style="--i:24">place ?</span> <span class="u-wd" style="--i:25">La</span> <span class="u-wd" style="--i:26">reine</span> <span class="u-wd" style="--i:27">veuve</span> <span class="u-wd" style="--i:28">Cléophène,</span> <span class="u-wd" style="--i:29">dépositaire</span> <span class="u-wd" style="--i:30">du</span> <span class="u-wd" style="--i:31">pouvoir,</span> <span class="u-wd" style="--i:32">doit</span> <span class="u-wd" style="--i:33">céder</span> <span class="u-wd" style="--i:34">sa</span> <span class="u-wd" style="--i:35">couronne,</span> <span class="u-wd" style="--i:36">et</span> <span class="u-wd" style="--i:37">elle</span> <span class="u-wd" style="--i:38">seule</span> <span class="u-wd" style="--i:39">connaît</span> <span class="u-wd" style="--i:40">le</span> <span class="u-wd" style="--i:41">secret</span> <span class="u-wd" style="--i:42">de</span> <span class="u-wd" style="--i:43">son</span> <span class="u-wd" style="--i:44">successeur…</span></span></p>
-            <p class="u-meta">Rôle · Antiochus<br>Compagnie Crescite — Angelo Jossec</p>
+            <h1 class="u-title rg-k" id="u-titre" aria-label="Cléophène" style="--u-title-chars:9;--u-title-len:9"><span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:0">C</span><span class="u-ch" style="--i:1">l</span><span class="u-ch" style="--i:2">é</span><span class="u-ch" style="--i:3">o</span><span class="u-ch" style="--i:4">p</span><span class="u-ch" style="--i:5">h</span><span class="u-ch" style="--i:6">è</span><span class="u-ch" style="--i:7">n</span><span class="u-ch" style="--i:8">e</span></span></h1>
+            <div class="u-couche u-couche-auteur rg-k"><p class="u-author">d’après Rodogune, de Corneille</p></div>
+            <p class="u-synopsis rg-k"><span class="u-line"><span class="u-wd" style="--i:0">Royaume</span> <span class="u-wd" style="--i:1">de</span> <span class="u-wd" style="--i:2">Pyrie,</span> <span class="u-wd" style="--i:3">124</span> <span class="u-wd" style="--i:4">av.</span> <span class="u-wd" style="--i:5">J-C.</span></span><span class="u-line"><span class="u-wd" style="--i:6">Lorsqu’un</span> <span class="u-wd" style="--i:7">roi</span> <span class="u-wd" style="--i:8">meurt</span> <span class="u-wd" style="--i:9">et</span> <span class="u-wd" style="--i:10">qu’il</span> <span class="u-wd" style="--i:11">est</span> <span class="u-wd" style="--i:12">père</span> <span class="u-wd" style="--i:13">de</span> <span class="u-wd" style="--i:14">jumeaux,</span> <span class="u-wd" style="--i:15">lequel</span> <span class="u-wd" style="--i:16">des</span> <span class="u-wd" style="--i:17">deux</span> <span class="u-wd" style="--i:18">est</span> <span class="u-wd" style="--i:19">l’aîné</span> <span class="u-wd" style="--i:20">et</span> <span class="u-wd" style="--i:21">doit</span> <span class="u-wd" style="--i:22">prendre</span> <span class="u-wd" style="--i:23">sa</span> <span class="u-wd" style="--i:24">place ?</span> <span class="u-wd" style="--i:25">La</span> <span class="u-wd" style="--i:26">reine</span> <span class="u-wd" style="--i:27">veuve</span> <span class="u-wd" style="--i:28">Cléophène,</span> <span class="u-wd" style="--i:29">dépositaire</span> <span class="u-wd" style="--i:30">du</span> <span class="u-wd" style="--i:31">pouvoir,</span> <span class="u-wd" style="--i:32">doit</span> <span class="u-wd" style="--i:33">céder</span> <span class="u-wd" style="--i:34">sa</span> <span class="u-wd" style="--i:35">couronne,</span> <span class="u-wd" style="--i:36">et</span> <span class="u-wd" style="--i:37">elle</span> <span class="u-wd" style="--i:38">seule</span> <span class="u-wd" style="--i:39">connaît</span> <span class="u-wd" style="--i:40">le</span> <span class="u-wd" style="--i:41">secret</span> <span class="u-wd" style="--i:42">de</span> <span class="u-wd" style="--i:43">son</span> <span class="u-wd" style="--i:44">successeur…</span></span></p>
+            <div class="u-couche u-couche-meta rg-k"><p class="u-meta">Rôle · Antiochus<br>Compagnie Crescite — Angelo Jossec</p></div>
 
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
                  traverser tout le défilé de photos pour savoir quand voir le
                  spectacle — or c'est souvent la seule raison de la visite.
                  Ce que les dates y changent est dans heroActionsHtml. -->
-            <div class="u-hero-actions">
+            <div class="u-couche u-couche-actions rg-k"><div class="u-hero-actions">
                 <button type="button" class="u-btn" data-u-jump>
                         Accéder aux dates
                         <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
                     </button>
-            </div>
+            </div></div>
 
-            <span class="u-scroll" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span>
-            <!-- Le masque neutre : l'objet du plateau, pas le rouage du
-                 navigateur. Un ovoïde lisse, deux yeux, l'arête du nez, pas
-                 de bouche — rien qui exprime, tout qui attend. Tracé ici
-                 plutôt qu'en CSS : une forme se dessine, elle ne se bricole
-                 pas en bordures et rayons. -->
+            <span class="u-couche u-couche-fleche rg-k" aria-hidden="true"><span class="u-scroll"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span></span>
             <span class="u-loader" role="status" aria-label="Chargement des visuels">
                 <svg viewBox="0 0 100 128" aria-hidden="true" focusable="false">
                     <path fill-rule="evenodd" d="M50 8C71 8 85 25 85 49c0 33-15 71-35 71S15 82 15 49C15 25 29 8 50 8z
@@ -437,154 +471,207 @@
         </header>
         </div>
 
-        <div class="u-figs"><div class="u-chapter u-reveal">
-                    <span class="u-chapter-num">1h30</span>
-                    <h2><span class="u-line"><span class="u-rw">Un</span> <span class="u-rw">drame</span> <span class="u-rw">familial</span> <span class="u-rw">de</span> <span class="u-rw">l’amour</span> <span class="u-rw">et</span> <span class="u-rw">de</span> <span class="u-rw">la</span> <span class="u-rw">haine</span></span></h2>
-                </div><blockquote class="u-quote u-reveal">
+        <div class="u-figs"><section class="u-ouverture rg-scene" aria-label="Ouverture">
+            <div class="u-of-scene">
+                <span class="u-of-fond" aria-hidden="true"></span>
+                <span class="u-of-plans" aria-hidden="true"><span class="u-of-photo rg-k" style="--x:-22cqw;--y:-9cqh;--s:-0.18;--e:0.4">
+                    <img src="../../ressources/images/univers/cleophene/9-640.webp" srcset="../../ressources/images/univers/cleophene/9-640.webp 640w, ../../ressources/images/univers/cleophene/9-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:21cqw;--y:9cqh;--s:0.06;--e:0.52">
+                    <img src="../../ressources/images/univers/cleophene/17-640.webp" srcset="../../ressources/images/univers/cleophene/17-640.webp 640w, ../../ressources/images/univers/cleophene/17-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:-19cqw;--y:11cqh;--s:0.18;--e:0.64">
+                    <img src="../../ressources/images/univers/cleophene/13-640.webp" srcset="../../ressources/images/univers/cleophene/13-640.webp 640w, ../../ressources/images/univers/cleophene/13-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:23cqw;--y:-8cqh;--s:0.3;--e:0.74">
+                    <img src="../../ressources/images/univers/cleophene/16-640.webp" srcset="../../ressources/images/univers/cleophene/16-640.webp 640w, ../../ressources/images/univers/cleophene/16-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span></span>
+                <div class="u-of-carton rg-k">
+                <span class="u-chapter-num">1h30</span>
+                <h2 class="u-ecrit" data-ecrire="scene" data-de="0.6" data-a="0.8"><span class="u-line"><span class="u-rw">Un</span> <span class="u-rw">drame</span> <span class="u-rw">familial</span> <span class="u-rw">de</span> <span class="u-rw">l’amour</span> <span class="u-rw">et</span> <span class="u-rw">de</span> <span class="u-rw">la</span> <span class="u-rw">haine</span></span></h2>
+            </div>
+                <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
+                <span class="u-of-noir rg-k" aria-hidden="true"></span>
+            </div>
+        </section><blockquote class="u-quote u-ecrit rg-vue">
                     <p class="u-fit" style="--chars:55"><span class="u-line"><span class="u-rw">« Rodogune ?</span> <span class="u-rw">Shakespeare</span> <span class="u-rw">n’a</span> <span class="u-rw">rien</span> <span class="u-rw">écrit</span> <span class="u-rw">de</span> <span class="u-rw">plus</span> <span class="u-rw">beau. »</span></span></p>
-                    <cite>Stendhal, 16 juillet 1804</cite>
-                </blockquote><figure class="u-fig u-fig--plein" style="--i:0">
-            <button type="button" class="u-fig-media" data-u-zoom="0"
-                    aria-label="Agrandir : Les Crescite poursuivent le travail de l’alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir.">
-                <picture>
+                    <cite class="rg-k">Stendhal, 16 juillet 1804</cite>
+                </blockquote><figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="torche" style="--i:0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="0"
+                    aria-label="Agrandir : Les Crescite poursuivent le travail de l’alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir.">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/5-640.webp 640w, ../../ressources/images/univers/cleophene/5-1280.webp 1280w, ../../ressources/images/univers/cleophene/5-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/cleophene/5.jpg" alt="Les Crescite poursuivent le travail de l’alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir." style="object-position:15% 25%"
-                     loading="eager" decoding="async">
+                    <img src="../../ressources/images/univers/cleophene/5.jpg" class="u-fig-img rg-k" alt="Les Crescite poursuivent le travail de l’alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir." style="object-position:15% 25%"
+                         loading="eager" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/5-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:15% 25%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
+            <span class="u-voile" aria-hidden="true"></span><span class="u-eclat" aria-hidden="true"></span>
             
-            <figcaption class="u-cap"><span>Les Crescite poursuivent le travail de l’alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir.</span></figcaption>
-        </figure><blockquote class="u-quote u-reveal">
-                    <p class="u-fit" style="--chars:55"><span class="u-line"><span class="u-rw">« Je</span> <span class="u-rw">vois</span> <span class="u-rw">dans</span> <span class="u-rw">le</span> <span class="u-rw">hasard</span> <span class="u-rw">tout</span> <span class="u-rw">les</span> <span class="u-rw">biens</span> <span class="u-rw">que</span> <span class="u-rw">j’espère,</span></span><span class="u-line"><span class="u-rw">Mais</span> <span class="u-rw">ne</span> <span class="u-rw">puis</span> <span class="u-rw">être</span> <span class="u-rw">heureux</span> <span class="u-rw">sans</span> <span class="u-rw">le</span> <span class="u-rw">malheur</span> <span class="u-rw">d’un</span> <span class="u-rw">frère. »</span></span></p>
-                    <cite>Antiochus, Acte I</cite>
-                </blockquote><figure class="u-fig u-fig--plein" style="--i:1">
-            <button type="button" class="u-fig-media" data-u-zoom="1"
-                    aria-label="Agrandir : La figure des jumeaux : une incarnation à deux têtes du dilemme cornéliens.">
-                <picture>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Les Crescite poursuivent le travail de l’alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir.</span></figcaption>
+        </figure><blockquote class="u-quote u-ecrit rg-vue">
+                    <p class="u-fit" style="--chars:55"><span class="u-line"><span class="u-rw">« Je</span> <span class="u-rw">vois</span> <span class="u-rw">dans</span> <span class="u-rw">le</span> <span class="u-rw">hasard</span> <span class="u-cesure" aria-hidden="true"></span> <span class="u-rw">tous</span> <span class="u-rw">les</span> <span class="u-rw">biens</span> <span class="u-rw">que</span> <span class="u-rw">j’espère,</span></span><span class="u-line"><span class="u-rw">Mais</span> <span class="u-rw">ne</span> <span class="u-rw">puis</span> <span class="u-rw">être</span> <span class="u-rw">heureux</span> <span class="u-cesure" aria-hidden="true"></span> <span class="u-rw">sans</span> <span class="u-rw">le</span> <span class="u-rw">malheur</span> <span class="u-rw">d’un</span> <span class="u-rw">frère. »</span></span></p>
+                    <cite class="rg-k">Antiochus, Acte I</cite>
+                </blockquote><section class="u-poursuite rg-scene" style="--ratio:1.5;--a0x:20;--a0y:48;--b0x:83;--b0y:48;--b0on:1;--a1x:51;--a1y:60;--b1x:83;--b1y:48;--b1on:0;--a2x:51;--a2y:60;--b2x:83;--b2y:48;--b2on:0">
+            <div class="u-pa-scene">
+                <div class="u-pa-cadre">
+                    <span class="u-pa-base" aria-hidden="true"><img src="../../ressources/images/univers/cleophene/9-1280.webp" alt="" decoding="async" loading="lazy"></span>
+                    <span class="u-pa-faisceau u-pa-a rg-k" aria-hidden="true"><span class="u-pa-lum rg-k"><img src="../../ressources/images/univers/cleophene/9-1280.webp" alt="" decoding="async" loading="lazy"></span></span>
+                    <span class="u-pa-faisceau u-pa-b rg-k" aria-hidden="true"><span class="u-pa-lum rg-k"><img src="../../ressources/images/univers/cleophene/9-1280.webp" alt="" decoding="async" loading="lazy"></span></span>
+                    <button type="button" class="u-pa-plein rg-k" data-u-zoom="1" aria-label="Agrandir : La figure des jumeaux : une incarnation à deux têtes du dilemme cornélien.">
+                        <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/9-640.webp 640w, ../../ressources/images/univers/cleophene/9-1280.webp 1280w, ../../ressources/images/univers/cleophene/9-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/cleophene/9.jpg" alt="La figure des jumeaux : une incarnation à deux têtes du dilemme cornéliens." style="object-position:50% 35%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/cleophene/9.jpg" alt="La figure des jumeaux : une incarnation à deux têtes du dilemme cornélien." loading="lazy" decoding="async">
                 </picture>
-                <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
-            </button>
-            
-            <figcaption class="u-cap"><span>La figure des jumeaux : une incarnation à deux têtes du dilemme cornéliens.</span></figcaption>
-        </figure><div class="u-group u-trio"><figure class="u-fig u-fig--trio" style="--i:2">
-            <button type="button" class="u-fig-media" data-u-zoom="2"
-                    aria-label="Agrandir : Cléophène, photo 3">
-                <picture>
+                    </button>
+                </div>
+                <p class="u-pa-legende"><span class="u-pa-leg1 rg-k">La figure des jumeaux :</span> <span class="u-pa-leg2 rg-k">une incarnation à deux têtes du dilemme cornélien.</span></p>
+            </div>
+        </section><div class="u-group u-trio"><figure class="u-fig u-fig--trio rg-vue" style="--i:2;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="2"
+                    aria-label="Agrandir : Cléophène, photo 3">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/20-640.webp 640w, ../../ressources/images/univers/cleophene/20-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/cleophene/20.jpg" alt="Cléophène, photo 3" style="object-position:42% 30%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/cleophene/20.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 3" style="object-position:42% 30%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/20-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:42% 30%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--trio" style="--i:3">
-            <button type="button" class="u-fig-media" data-u-zoom="3"
-                    aria-label="Agrandir : Cléophène, photo 4">
-                <picture>
+        </figure><figure class="u-fig u-fig--trio rg-vue" style="--i:3;--prof:1.9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="3"
+                    aria-label="Agrandir : Cléophène, photo 4">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/15-640.webp 640w, ../../ressources/images/univers/cleophene/15-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/cleophene/15.jpg" alt="Cléophène, photo 4" style="object-position:48% 15%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/cleophene/15.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 4" style="object-position:48% 15%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/15-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:48% 15%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--trio" style="--i:4">
-            <button type="button" class="u-fig-media" data-u-zoom="4"
-                    aria-label="Agrandir : Cléophène, photo 5">
-                <picture>
+        </figure><figure class="u-fig u-fig--trio rg-vue" style="--i:4;--prof:2.8">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="4"
+                    aria-label="Agrandir : Cléophène, photo 5">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/17-640.webp 640w, ../../ressources/images/univers/cleophene/17-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/cleophene/17.jpg" alt="Cléophène, photo 5" style="object-position:46% 22%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/cleophene/17.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 5" style="object-position:46% 22%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/17-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:46% 22%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><p class="u-aside u-reveal"><span class="u-line"><span class="u-rw">La</span> <span class="u-rw">princesse</span> <span class="u-rw">Rodogune,</span> <span class="u-rw">fille</span> <span class="u-rw">du</span> <span class="u-rw">roi</span> <span class="u-rw">ennemi,</span> <span class="u-rw">est</span> <span class="u-rw">tenue</span> <span class="u-rw">captives.</span> <span class="u-rw">Les</span> <span class="u-rw">deux</span> <span class="u-rw">princes</span> <span class="u-rw">héritiers</span> <span class="u-rw">l’aiment,</span> <span class="u-rw">contre</span> <span class="u-rw">la</span> <span class="u-rw">loi</span> <span class="u-rw">de</span> <span class="u-rw">leur</span> <span class="u-rw">mère.</span></span></p></div><blockquote class="u-quote u-reveal">
-                    <p class="u-fit" style="--chars:53"><span class="u-line"><span class="u-rw">« Je</span> <span class="u-rw">puis,</span> <span class="u-rw">comme</span> <span class="u-rw">je</span> <span class="u-rw">veux,</span> <span class="u-rw">tourner</span> <span class="u-rw">le</span> <span class="u-rw">droit</span> <span class="u-rw">d’aînesse,</span></span><span class="u-line"><span class="u-rw">Et</span> <span class="u-rw">donne</span> <span class="u-rw">à</span> <span class="u-rw">ton</span> <span class="u-rw">rival</span> <span class="u-rw">ton</span> <span class="u-rw">sceptre</span> <span class="u-rw">et</span> <span class="u-rw">ta</span> <span class="u-rw">maîtresse. »</span></span></p>
-                    <cite>Cléophène, Acte IV</cite>
-                </blockquote><figure class="u-fig u-fig--plein" style="--i:5">
-            <button type="button" class="u-fig-media" data-u-zoom="5"
-                    aria-label="Agrandir : La mise en scène, volontairement spectaculaire, dépayse le spectateur dans un univers où sons et lumières soutiennent l’immersion dans un drame antique épique.">
-                <picture>
+        </figure><p class="u-aside u-ecrit rg-vue"><span class="u-line"><span class="u-rw">La</span> <span class="u-rw">princesse</span> <span class="u-rw">Rodogune,</span> <span class="u-rw">fille</span> <span class="u-rw">du</span> <span class="u-rw">roi</span> <span class="u-rw">ennemi,</span> <span class="u-rw">est</span> <span class="u-rw">tenue</span> <span class="u-rw">captive.</span> <span class="u-rw">Les</span> <span class="u-rw">deux</span> <span class="u-rw">princes</span> <span class="u-rw">héritiers</span> <span class="u-rw">l’aiment,</span> <span class="u-rw">contre</span> <span class="u-rw">la</span> <span class="u-rw">loi</span> <span class="u-rw">de</span> <span class="u-rw">leur</span> <span class="u-rw">mère.</span></span></p></div><blockquote class="u-quote u-ecrit rg-vue">
+                    <p class="u-fit" style="--chars:53"><span class="u-line"><span class="u-rw">« Je</span> <span class="u-rw">puis,</span> <span class="u-rw">comme</span> <span class="u-rw">je</span> <span class="u-rw">veux,</span> <span class="u-cesure" aria-hidden="true"></span> <span class="u-rw">tourner</span> <span class="u-rw">le</span> <span class="u-rw">droit</span> <span class="u-rw">d’aînesse,</span></span><span class="u-line"><span class="u-rw">Et</span> <span class="u-rw">donne</span> <span class="u-rw">à</span> <span class="u-rw">ton</span> <span class="u-rw">rival</span> <span class="u-cesure" aria-hidden="true"></span> <span class="u-rw">ton</span> <span class="u-rw">sceptre</span> <span class="u-rw">et</span> <span class="u-rw">ta</span> <span class="u-rw">maîtresse. »</span></span></p>
+                    <cite class="rg-k">Cléophène, Acte IV</cite>
+                </blockquote><figure class="u-fig u-fig--plein rg-vue" style="--i:5">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="5"
+                    aria-label="Agrandir : La mise en scène, volontairement spectaculaire, dépayse le spectateur dans un univers où sons et lumières soutiennent l’immersion dans un drame antique épique.">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/21-640.webp 640w, ../../ressources/images/univers/cleophene/21-1280.webp 1280w, ../../ressources/images/univers/cleophene/21-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/cleophene/21.jpg" alt="La mise en scène, volontairement spectaculaire, dépayse le spectateur dans un univers où sons et lumières soutiennent l’immersion dans un drame antique épique." style="object-position:38% 32%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/cleophene/21.jpg" class="u-fig-img rg-k" alt="La mise en scène, volontairement spectaculaire, dépayse le spectateur dans un univers où sons et lumières soutiennent l’immersion dans un drame antique épique." style="object-position:38% 32%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/21-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:38% 32%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
-            <figcaption class="u-cap"><span>La mise en scène, volontairement spectaculaire, dépayse le spectateur dans un univers où sons et lumières soutiennent l’immersion dans un drame antique épique.</span></figcaption>
-        </figure><div class="u-group u-duo"><figure class="u-fig u-fig--duo" style="--i:6">
-            <button type="button" class="u-fig-media" data-u-zoom="6"
-                    aria-label="Agrandir : Cléophène, photo 7">
-                <picture>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">La mise en scène, volontairement spectaculaire, dépayse le spectateur dans un univers où sons et lumières soutiennent l’immersion dans un drame antique épique.</span></figcaption>
+        </figure><div class="u-group u-duo"><figure class="u-fig u-fig--duo rg-vue" style="--i:6;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="6"
+                    aria-label="Agrandir : Cléophène, photo 7">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/10-640.webp 640w, ../../ressources/images/univers/cleophene/10-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/cleophene/10.jpg" alt="Cléophène, photo 7" style="object-position:50% 65%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/cleophene/10.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 7" style="object-position:50% 65%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/10-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:50% 65%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--duo" style="--i:7">
-            <button type="button" class="u-fig-media" data-u-zoom="7"
-                    aria-label="Agrandir : Cléophène, photo 8">
-                <picture>
+        </figure><figure class="u-fig u-fig--duo rg-vue" style="--i:7;--prof:1.9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="7"
+                    aria-label="Agrandir : Cléophène, photo 8">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/13-640.webp 640w, ../../ressources/images/univers/cleophene/13-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/cleophene/13.jpg" alt="Cléophène, photo 8" style="object-position:42% 45%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/cleophene/13.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 8" style="object-position:42% 45%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/13-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:42% 45%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><p class="u-aside u-reveal"><span class="u-line"><span class="u-rw">Corneille</span> <span class="u-rw">excelle</span> <span class="u-rw">lorsqu’il</span> <span class="u-rw">n’est</span> <span class="u-rw">pas</span> <span class="u-rw">corseté</span> <span class="u-rw">par</span> <span class="u-rw">les</span> <span class="u-rw">unités</span> <span class="u-rw">ou</span> <span class="u-rw">la</span> <span class="u-rw">bienséance.</span></span></p></div><figure class="u-fig u-fig--plein" style="--i:8">
-            <button type="button" class="u-fig-media" data-u-zoom="8"
-                    aria-label="Agrandir : La rigueur sur le travail du vers sera la même que sur Bérénice.">
-                <picture>
+        </figure><p class="u-aside u-ecrit rg-vue"><span class="u-line"><span class="u-rw">Corneille</span> <span class="u-rw">excelle</span> <span class="u-rw">lorsqu’il</span> <span class="u-rw">n’est</span> <span class="u-rw">pas</span> <span class="u-rw">corseté</span> <span class="u-rw">par</span> <span class="u-rw">les</span> <span class="u-rw">unités</span> <span class="u-rw">ou</span> <span class="u-rw">la</span> <span class="u-rw">bienséance.</span></span></p></div><figure class="u-fig u-fig--plein rg-vue" style="--i:8">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="8"
+                    aria-label="Agrandir : La rigueur sur le travail du vers sera la même que sur Bérénice.">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/7-640.webp 640w, ../../ressources/images/univers/cleophene/7-1280.webp 1280w, ../../ressources/images/univers/cleophene/7-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/cleophene/7.jpg" alt="La rigueur sur le travail du vers sera la même que sur Bérénice." style="object-position:78% 50%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/cleophene/7.jpg" class="u-fig-img rg-k" alt="La rigueur sur le travail du vers sera la même que sur Bérénice." style="object-position:78% 50%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/7-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:78% 50%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
-            <figcaption class="u-cap"><span>La rigueur sur le travail du vers sera la même que sur Bérénice.</span></figcaption>
-        </figure><blockquote class="u-quote u-reveal">
-                    <p class="u-fit" style="--chars:49"><span class="u-line"><span class="u-rw">« Il</span> <span class="u-rw">vaut</span> <span class="u-rw">mieux</span> <span class="u-rw">mériter</span> <span class="u-rw">le</span> <span class="u-rw">sort</span> <span class="u-rw">le</span> <span class="u-rw">plus</span> <span class="u-rw">étrange.</span></span><span class="u-line"><span class="u-rw">Tombe</span> <span class="u-rw">sur</span> <span class="u-rw">moi</span> <span class="u-rw">le</span> <span class="u-rw">ciel,</span> <span class="u-rw">pourvu</span> <span class="u-rw">que</span> <span class="u-rw">je</span> <span class="u-rw">me</span> <span class="u-rw">venge ! »</span></span></p>
-                    <cite>Cléophène, Acte V</cite>
-                </blockquote><div class="u-group u-duo"><figure class="u-fig u-fig--duo" style="--i:9">
-            <button type="button" class="u-fig-media" data-u-zoom="9"
-                    aria-label="Agrandir : Cléophène, photo 10">
-                <picture>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">La rigueur sur le travail du vers sera la même que sur Bérénice.</span></figcaption>
+        </figure><blockquote class="u-quote u-ecrit rg-vue">
+                    <p class="u-fit" style="--chars:49"><span class="u-line"><span class="u-rw">« Il</span> <span class="u-rw">vaut</span> <span class="u-rw">mieux</span> <span class="u-rw">mériter</span> <span class="u-cesure" aria-hidden="true"></span> <span class="u-rw">le</span> <span class="u-rw">sort</span> <span class="u-rw">le</span> <span class="u-rw">plus</span> <span class="u-rw">étrange.</span></span><span class="u-line"><span class="u-rw">Tombe</span> <span class="u-rw">sur</span> <span class="u-rw">moi</span> <span class="u-rw">le</span> <span class="u-rw">ciel,</span> <span class="u-cesure" aria-hidden="true"></span> <span class="u-rw">pourvu</span> <span class="u-rw">que</span> <span class="u-rw">je</span> <span class="u-rw">me</span> <span class="u-rw">venge ! »</span></span></p>
+                    <cite class="rg-k">Cléophène, Acte V</cite>
+                </blockquote><div class="u-group u-duo"><figure class="u-fig u-fig--duo rg-vue" style="--i:9;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="9"
+                    aria-label="Agrandir : Cléophène, photo 10">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/23-640.webp 640w, ../../ressources/images/univers/cleophene/23-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/cleophene/23.jpg" alt="Cléophène, photo 10" style="object-position:42% 30%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/cleophene/23.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 10" style="object-position:42% 30%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/23-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:42% 30%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--duo" style="--i:10">
-            <button type="button" class="u-fig-media" data-u-zoom="10"
-                    aria-label="Agrandir : Cléophène, photo 11">
-                <picture>
+        </figure><figure class="u-fig u-fig--duo rg-vue" style="--i:10;--prof:1.9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="10"
+                    aria-label="Agrandir : Cléophène, photo 11">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/16-640.webp 640w, ../../ressources/images/univers/cleophene/16-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/cleophene/16.jpg" alt="Cléophène, photo 11" style="object-position:48% 55%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/cleophene/16.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 11" style="object-position:48% 55%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/16-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:48% 55%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure></div><div class="u-text u-reveal">
+        </figure><div class="u-over u-ecrit rg-vue u-over--droite">
+            <p class="u-fit" style="--chars:21"><span class="u-line"><span class="u-rw">« Jusqu’où</span> <span class="u-rw">serez-vous</span></span><span class="u-line"><span class="u-rw">semblables ? »</span></span></p>
+            
+        </div></div><div class="u-text u-ecrit rg-vue">
                     <p><span class="u-line"><span class="u-rw">Dans</span> <span class="u-rw">ce</span> <span class="u-rw">travail</span> <span class="u-rw">de</span> <span class="u-rw">la</span> <span class="u-rw">compagnie</span> <span class="u-rw">Crescite,</span> <span class="u-rw">les</span> <span class="u-rw">rebondissements</span> <span class="u-rw">vont</span> <span class="u-rw">arriver</span> <span class="u-rw">à</span> <span class="u-rw">chaque</span> <span class="u-rw">acte.</span> <span class="u-rw">L’acte</span> <span class="u-rw">final</span> <span class="u-rw">termine</span> <span class="u-rw">en</span> <span class="u-rw">apothéose</span> <span class="u-rw">quasi</span> <span class="u-rw">burlesque,</span> <span class="u-rw">et</span> <span class="u-rw">donne</span> <span class="u-rw">à</span> <span class="u-rw">cette</span> <span class="u-rw">adaptation</span> <span class="u-rw">de</span> <span class="u-rw">Rodogune</span> <span class="u-rw">de</span> <span class="u-rw">Corneille</span> <span class="u-rw">toute</span> <span class="u-rw">sa</span> <span class="u-rw">dimension</span> <span class="u-rw">shakespearienne.</span></span></p>
                 </div><figure class="u-video u-reveal">
             <button type="button" class="u-video-play" data-u-video="yt:bTr685C1YL8"
@@ -592,7 +679,7 @@
                 <img src="https://i.ytimg.com/vi/bTr685C1YL8/maxresdefault.jpg" data-u-poster="bTr685C1YL8" alt="" loading="lazy" decoding="async">
                 <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
             </button>
-            <figcaption class="u-cap"><span>Bande annonce — Théâtre l’Étincelle, Ville de Rouen</span></figcaption>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Bande annonce — Théâtre l’Étincelle, Ville de Rouen</span></figcaption>
         </figure></div>
 
         <footer class="u-foot" id="u-foot">
@@ -706,9 +793,12 @@
     <script src="../../dates.js"></script>
     <script src="../../dates-live.js"></script>
 
-    <!-- Le moteur, dans l'ordre : le montage d'abord (univers.js s'en sert),
-         puis univers.js, qui reconnaît la classe du <body> et anime le
-         panneau déjà en place. Aucun des deux n'est propre à cette page. -->
+    <!-- Le moteur, dans l'ordre : la régie (le défilement qui mène les
+         scènes, là où le navigateur ne le fait pas lui-même), le montage
+         (univers.js s'en sert), puis univers.js, qui reconnaît la classe du
+         <body> et anime le panneau déjà en place. Aucun n'est propre à
+         cette page. -->
+    <script src="../../regie.js"></script>
     <script src="../../univers-montage.js"></script>
     <script src="../../univers.js"></script>
 </body>

@@ -51,6 +51,35 @@
         })();
 
         // ════════════════════════════════════════════════════════════════
+        //  LE MONTAGE DES UNIVERS : MÊME PRUDENCE, ET LA RÉGIE
+        //  ----------------------------------------------------------------
+        //  Dans un univers, le titre attend de s'écrire et la première photo
+        //  attend son allumage dans le noir : des états cachés que seul
+        //  univers.js sait défaire. Ils attendent ce drapeau-ci, u-anime,
+        //  levé de la même façon si le moteur n'a pas démarré.
+        //
+        //  Et la régie (regie.js) : là où le navigateur ne sait pas faire
+        //  avancer une animation au défilement, c'est elle qui mène. Son
+        //  drapeau est posé ici, avant le premier rendu : posé en fin de
+        //  page, il ferait passer ce qui est déjà à l'écran de son état
+        //  lisible à son premier temps, puis au bon. MÊME TEST que dans
+        //  regie.js — build/verifier-site.js y veille. Et si regie.js n'est
+        //  pas arrivé, le drapeau part : sans pilote, rien ne doit bouger.
+        (function () {
+            var racine = document.documentElement;
+            racine.classList.add('u-anime');
+            if (/[?&]repli(?:[=&]|$)/.test(location.search) || !(window.CSS && CSS.supports &&
+                CSS.supports('animation-timeline: view()') && CSS.supports('view-timeline: --rg block')))
+                racine.classList.add('regie-repli');
+            addEventListener('DOMContentLoaded', function () {
+                setTimeout(function () {
+                    if (!window.__universPret) racine.classList.remove('u-anime');
+                    if (!window.Regie) racine.classList.remove('regie-repli');
+                }, 0);
+            });
+        })();
+
+        // ════════════════════════════════════════════════════════════════
         //  L'INTERRUPTEUR DE MESURE — ne pas se compter soi-même
         //  ----------------------------------------------------------------
         //  Adrien est de loin le visiteur le plus assidu de son site : il
@@ -333,17 +362,28 @@
             --c-warn: 240 191 118;
 
             /* ── Mouvement ────────────────────────────────────────────
-               Un seul vocabulaire pour tout le site : deux courbes et
-               quatre durées. La sensation « tactile » vient surtout du
+               Un seul vocabulaire pour tout le site : trois courbes et
+               six durées. La sensation « tactile » vient surtout du
                contraste entre --dur-press (l'enfoncement, quasi immédiat)
                et --dur-base (le relâchement, qui s'étire). Un aller-retour
-               à durée égale donne au contraire une impression de mollesse. */
+               à durée égale donne au contraire une impression de mollesse.
+
+               LE RESSORT (--ease-ressort) est réservé à ce qui SE DÉPLACE
+               d'un point à un autre : la pastille des onglets, une vignette
+               qui devient page. Il dépasse sa cible de 4 % et s'y pose —
+               c'est ce qui donne du poids à l'objet. Une apparition, un
+               fondu n'en ont pas : ils gardent --ease-out. Les deux durées
+               de scène servent aux passages d'un lieu à l'autre : un onglet
+               (--dur-scene), une vignette qui s'ouvre (--dur-morph). */
             --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
             --ease-panel: cubic-bezier(0.4, 0, 0.2, 1);
+            --ease-ressort: linear(0, 0.005 1%, 0.039 3%, 0.098 5%, 0.215 8%, 0.566 16%, 0.715 20%, 0.807 23%, 0.901 27%, 0.966 31%, 1.013 36%, 1.036 42%, 1.032 52%, 1.002 75%, 1);
             --dur-press: 90ms;
             --dur-quick: 180ms;
             --dur-base: 320ms;
             --dur-panel: 400ms;
+            --dur-scene: 460ms;
+            --dur-morph: 620ms;
 
             --glass-bg: rgba(255, 255, 255, 0.035);
             --glass-border: rgba(255, 255, 255, 0.07);
@@ -419,26 +459,42 @@
             --glass-border: rgba(255, 255, 255, 0.08);
         }
 
-        /* Fondu doux lors du changement de thème : toutes les couleurs
-           passant par des variables CSS, il suffit de faire transitionner
-           les propriétés qui les consomment. Volontairement générique (le
-           sélecteur universel) mais peu coûteux : seules quelques propriétés
-           colorimétriques sont concernées, jamais transform/opacity/layout.
-           Les règles plus spécifiques plus bas (.glass-card, a, button…)
-           l'emportent naturellement par spécificité CSS et gardent leurs
-           propres transitions (hover, etc.) intactes. */
-        *,
-        *::before,
-        *::after {
-            transition: background-color 0.45s ease, color 0.45s ease, border-color 0.45s ease,
-                fill 0.45s ease, stroke 0.45s ease, box-shadow 0.45s ease, outline-color 0.45s ease;
+        /* ── LE THÈME BASCULE EN CERCLE ──
+           Chaque élément de la page portait une transition de couleur
+           permanente (le sélecteur universel), pour le seul changement de
+           thème : une image figée de 0,13 à 0,22 s au moment de basculer —
+           près d'une seconde sur un téléphone modeste —, et des éléments qui
+           ne changeaient pas ensemble (150 ms les liens, 300 les onglets,
+           450 le reste, les icônes en retard sur leur libellé).
+
+           Le nouveau thème s'ouvre désormais en cercle depuis le bouton
+           qu'on a pressé, par une View Transition (voir basculerTheme) :
+           deux images de la page, l'ancienne et la nouvelle, et un cercle
+           qui grandit. Aucune couleur ne transitionne — la page change
+           d'un coup, sous le cercle. Le temps du passage, rien ne doit
+           transitionner du tout, sans quoi la nouvelle image montrerait
+           ses couleurs encore en route (vt-theme). Navigateurs plus
+           anciens, ou mouvement réduit : la bascule est nette. */
+        html.vt-theme *,
+        html.vt-theme *::before,
+        html.vt-theme *::after {
+            transition: none !important;
+        }
+
+        html.vt-theme::view-transition-old(root),
+        html.vt-theme::view-transition-new(root) {
+            animation: none;
+            mix-blend-mode: normal;
+        }
+
+        html.vt-theme::view-transition-new(root) {
+            z-index: 2;
         }
 
         body {
             background-color: rgb(var(--c-bg));
             background-image: var(--page-glow);
             background-attachment: fixed;
-            transition: background-color 0.45s ease;
         }
 
         /* ══════════════════════════════════════════════════════════════
@@ -456,11 +512,20 @@
            saute. C'est toute la différence entre une lumière de salle et
            un interrupteur.
 
-           C'est univers.js qui la pose sur <html>, en relayant le
-           `--cv-accent` de la ligne regardée. Le répertoire, lui, doit
-           écrire une règle par spectacle : le CSS ne sait pas lire la
-           couleur d'un élément survolé. Ici la couleur est déjà connue du
-           script, il n'y a qu'à la faire remonter.
+           C'est univers.js qui en pose la CIBLE sur <html>
+           (--ambiance-cible), en relayant le `--cv-accent` de la ligne
+           regardée. Le répertoire, lui, doit écrire une règle par
+           spectacle : le CSS ne sait pas lire la couleur d'un élément
+           survolé. Ici la couleur est déjà connue du script, il n'y a qu'à
+           la faire remonter.
+
+           ELLE N'EST ANIMÉE QUE LÀ OÙ ELLE SE VOIT. Enregistrée héritée et
+           transitionnée sur la racine, elle passait à chacun des 2 276
+           éléments du document, recalculés à chaque image pendant le
+           glissement : survoler une ligne coûtait 0,46 s de calcul de style
+           en 0,8 s. Elle n'hérite donc plus : la cible change une fois par
+           geste, et seuls ses deux consommateurs — la lueur de salle et la
+           barre collée — font glisser leur propre --ambiance jusqu'à elle.
 
            RESTER DISCRET EST LA CONSIGNE. Un CV se lit ; ce n'est pas une
            devanture. La teinte n'entre que dans la lueur de fond, dans le
@@ -469,7 +534,7 @@
            ══════════════════════════════════════════════════════════════ */
         @property --ambiance {
             syntax: '<color>';
-            inherits: true;
+            inherits: false;
             initial-value: #bfa98a;
         }
 
@@ -495,7 +560,15 @@
         }
 
         :root {
-            --ambiance: rgb(var(--c-gold));
+            --ambiance-cible: rgb(var(--c-gold));
+        }
+
+        body::before,
+        #nav-barre {
+            --ambiance: var(--ambiance-cible);
+        }
+
+        body::before {
             transition: --ambiance 0.55s ease;
         }
 
@@ -592,9 +665,16 @@
             border: 1px solid var(--panel-border);
         }
 
-        /* Fix: force vertical scrollbar to always show to prevent layout shift on tab switch */
+        /* LA PLACE DE LA BARRE DE DÉFILEMENT EST TOUJOURS RÉSERVÉE : un onglet
+           court (Contact) ne fait pas sauter la page de sa largeur. C'était
+           `overflow-y: scroll`, qui forçait la barre — et rendait le verrou
+           des fenêtres inopérant : posé sur <body>, il ne s'applique pas
+           quand <html> défile pour son compte, et la page défilait derrière
+           le lecteur vidéo, l'agenda ou le rideau d'ouverture. La place
+           réservée tient aussi quand le verrou coupe le défilement (voir
+           plus bas) : rien ne bouge en ouvrant une fenêtre. */
         html {
-            overflow-y: scroll;
+            scrollbar-gutter: stable;
             background: rgb(var(--c-bg));
             color-scheme: dark;
         }
@@ -714,18 +794,135 @@
                 transform var(--dur-base) var(--ease-out);
         }
 
-        /* Page active states */
+        /* ── LE CHANGEMENT D'ONGLET ──
+           La page passait de masquée à visible dans le même calcul de style
+           que son opacité : sa transition ne se jouait jamais, et l'ancienne
+           page disparaissait sans sortie.
+
+           Il est désormais DIRECTIONNEL : la nouvelle page arrive du côté de
+           l'onglet qu'on a choisi — de la droite si l'on va vers « Démos
+           voix », de la gauche si l'on revient au CV. L'en-tête et la barre
+           d'onglets ne bougent pas ; seule la pastille de l'onglet actif
+           glisse, sur un ressort (voir .onglet-pastille).
+
+           Par une View Transition (vt-onglet, posée par showPage le temps du
+           passage) : l'ancienne page s'efface vers un côté pendant que la
+           nouvelle arrive de l'autre. Ailleurs, une animation d'entrée fait
+           au moins arriver la nouvelle (onglet-glisse). --onglet-dx porte le
+           sens. En mouvement réduit : le changement est net. */
         .page {
             display: none;
-            opacity: 0;
-            transform: translateY(12px) scale(0.99);
-            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .page.active {
             display: block;
-            opacity: 1;
-            transform: translateY(0) scale(1);
+            /* Un contexte d'empilement à elle, comme quand elle portait une
+               transformation : ce qui s'y superpose reste sous la barre
+               d'onglets collée. */
+            isolation: isolate;
+        }
+
+        /* Une animation d'entrée, et non @starting-style : elle se rejoue
+           d'elle-même chaque fois que la page repasse de masquée à
+           affichée, et l'outil qui allège la copie publiée la laisse
+           intacte — il réduisait un bloc @starting-style à une ligne sans
+           sélecteur. */
+        html.onglet-glisse .page.active {
+            animation: onglet-entre var(--dur-scene) var(--ease-out) both;
+        }
+
+        @keyframes onglet-entre {
+            from {
+                opacity: 0;
+                translate: var(--onglet-dx, 0px) 0;
+            }
+        }
+
+        html.vt-onglet .page.active {
+            animation: none;
+        }
+
+        /* VERS LA PAGE D'UN SPECTACLE, LA VIGNETTE D'ABORD. Depuis l'onglet
+           Dates rangé par spectacle, la vignette touchée grandit jusqu'à
+           devenir le fond du titre de la page (voir pageswap plus bas, et
+           le <style> des pages générées) : les deux documents consentent au
+           passage. Ailleurs, un simple fondu ; navigateurs plus anciens,
+           une navigation ordinaire. */
+        @view-transition {
+            navigation: auto;
+        }
+
+        .dl-vignette img {
+            view-transition-class: fiche;
+        }
+
+        html.vt-onglet #en-tete {
+            view-transition-name: en-tete;
+        }
+
+        html.vt-onglet #nav-barre {
+            view-transition-name: nav-barre;
+        }
+
+        /* L'en-tête et la barre restent vivants, sans double image : c'est
+           leur propre repli (la bio) et leur propre pastille qui bougent. */
+        html.vt-onglet::view-transition-old(en-tete),
+        html.vt-onglet::view-transition-old(nav-barre) {
+            display: none;
+        }
+
+        html.vt-onglet::view-transition-group(en-tete),
+        html.vt-onglet::view-transition-group(nav-barre),
+        html.vt-onglet::view-transition-new(en-tete),
+        html.vt-onglet::view-transition-new(nav-barre) {
+            animation: none;
+        }
+
+        html.vt-onglet::view-transition-old(root) {
+            animation: vt-onglet-sort var(--dur-quick) var(--ease-panel) both;
+        }
+
+        html.vt-onglet::view-transition-new(root) {
+            animation: vt-onglet-entre var(--dur-scene) var(--ease-out) both;
+        }
+
+        @keyframes vt-onglet-sort {
+            to {
+                opacity: 0;
+                translate: calc(var(--onglet-dx, 0px) * -1.4) 0;
+            }
+        }
+
+        @keyframes vt-onglet-entre {
+            from {
+                opacity: 0;
+                translate: var(--onglet-dx, 0px) 0;
+            }
+        }
+
+        /* La pastille de l'onglet actif : UN objet qui se déplace d'un
+           onglet à l'autre, au lieu d'un fond qui s'éteint ici pendant qu'un
+           autre s'allume là. Placée par placerPastille (plus bas). */
+        .onglet-pastille {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: var(--w, 0px);
+            height: var(--h, 0px);
+            translate: var(--x, 0px) var(--y, 0px);
+            border: 1px solid rgb(var(--c-s200) / .8);
+            background: rgb(var(--c-s200) / .4);
+            border-radius: .25rem;
+            pointer-events: none;
+            transition: translate var(--dur-scene) var(--ease-ressort), width var(--dur-scene) var(--ease-ressort);
+        }
+
+        .onglet-pastille.sans-transition {
+            transition: none;
+        }
+
+        #nav-tabs-container>a {
+            position: relative;
         }
 
         /* HIDDEN VEUT DIRE CACHÉ. Les fenêtres fermées portaient l'attribut
@@ -1280,21 +1477,20 @@
            Le CV lui-même doit être ce qu'on voit en premier.
 
            Il devient donc un lien discret : pas d'aplat, texte en gris de
-           service, l'or réservé au survol. Il existe en deux exemplaires —
-           la barre de navigation n'a pas de place pour lui sur écran
-           étroit — mais ils partagent cette seule classe, de sorte qu'ils
-           ne puissent plus diverger comme ils l'avaient fait (deux
-           libellés, deux tailles, deux fers).
+           service, l'or réservé au survol. Il n'existe plus qu'en un
+           exemplaire, sous la prochaine date à toutes les largeurs : il
+           était dans la barre d'onglets sur grand écran et au-dessus de la
+           date sur téléphone — d'abord l'action, ensuite l'information.
+           C'est l'inverse qu'on veut.
 
-           Ce sont désormais des <a download> et non plus des <button> : le
-           soulignement des liens ne revient pas (la préflight Tailwind pose
-           `text-decoration: inherit`), et l'un comme l'autre restent hors
-           du PDF — celui du haut par le `nav` en no-print, celui du bas par
-           sa propre classe.
+           C'est un <a download> et non plus un <button> : le soulignement
+           des liens ne revient pas (la préflight Tailwind pose
+           `text-decoration: inherit`), et il reste hors du PDF par sa
+           rangée en no-print.
 
-           Le `display` reste à Tailwind (`hidden md:inline-flex`) : ce bloc
-           est chargé APRÈS styles.css, y écrire un display écraserait
-           `hidden` et les deux exemplaires paraîtraient ensemble. */
+           Le `display` reste à Tailwind (`inline-flex`) : ce bloc est
+           chargé APRÈS styles.css, et y écrire un display l'emporterait
+           sur tout réglage posé en classe utilitaire. */
         .pdf-btn {
             align-items: center;
             gap: 6px;
@@ -1322,14 +1518,16 @@
             border-color: rgb(var(--c-s200));
         }
 
-        /* Le lien se range juste sous la barre d'onglets, du même côté que
-           sur grand écran. La marge est posée ici, et non en classe
-           utilitaire : `space-y-4` de la page l'emporterait en spécificité.
-           Le `display`, lui, reste à Tailwind — un display écrit ici
-           l'emporterait sur `md:hidden` et ferait apparaître l'exemplaire
-           mobile sur grand écran. */
+        /* Le lien se range juste sous la prochaine date, à droite, pour s'y
+           rattacher : sa rangée commence à 2 px du tableau, au lieu des
+           16 px qui séparent les blocs (le texte, centré dans sa zone de
+           clic, se lit une douzaine de pixels plus bas). Cette marge
+           REMPLACE celle de `space-y-4`, qu'elle l'emporte en spécificité —
+           une marge négative ferait donc chevaucher le tableau. Sans date
+           à venir, le tableau reste masqué et le lien se range sous la
+           barre d'onglets. */
         #page_cv>.pdf-btn-row {
-            margin-top: -8px;
+            margin-top: 2px;
         }
 
         @media (max-width: 767px) {
@@ -1504,7 +1702,7 @@
 
         /* ── CE QUI BOUGE S'ARRÊTE ──
            La guirlande du CV, la lueur des pastilles, le phare et le pouls
-           du bandeau « Prochainement » tournaient en boucle, sans fin et
+           de l'ancien bandeau « Prochainement » tournaient en boucle, sans fin et
            sans rien pour les arrêter. Or une animation qui dure plus de
            cinq secondes à côté du contenu doit pouvoir être mise en pause
            (WCAG 2.2.2) : pour qui a du mal à se concentrer, un point qui
@@ -1522,8 +1720,7 @@
         body.modal-open .cv-has-universe::after,
         body.modal-open .cv-has-universe .cv-badge::after,
         body.modal-open .cv-vignette.a-etat::after,
-        body.modal-open .next-date-dot,
-        body.modal-open .next-date-shine::after {
+        body.modal-open .td-voyant {
             animation-play-state: paused;
         }
 
@@ -1557,8 +1754,9 @@
             }
         }
 
-        /* Verrouillage du défilement de l'arrière-plan quand une modale est ouverte */
-        body.modal-open {
+        /* Verrouillage du défilement de l'arrière-plan quand une fenêtre est
+           ouverte : sur <html>, qui est la boîte qui défile. */
+        html:has(> body.modal-open) {
             overflow: hidden;
         }
 
@@ -1574,8 +1772,8 @@
         }
 
         /* ── Ce qui, dans l'en-tête, n'a de sens qu'en regard du CV ──
-           La signature casting, les liens externes, le métier, le bandeau
-           « Prochainement » : l'en-tête étant commun aux quatre onglets,
+           La signature casting, les liens externes, le métier : l'en-tête
+           étant commun aux quatre onglets,
            ces morceaux-là doivent s'escamoter quand on va aux dates ou aux
            démos. Même technique que les tiroirs de dates : grid-template-rows
            0fr→1fr anime la hauteur sans la connaître à l'avance.
@@ -1594,8 +1792,8 @@
         }
 
         /* `grid-template-rows: 0fr` ne réduit que la ligne de grille — la
-           marge EXTÉRIEURE de l'élément (ex. `mb-5` sur le bandeau
-           « Prochainement ») n'en fait pas partie et resterait sinon un
+           marge EXTÉRIEURE de l'élément (un `mb-5`, par exemple) n'en fait
+           pas partie et resterait sinon un
            espace fantôme au-dessus de ce qui suit, une fois le contenu
            invisible. On la ramène donc à zéro ici, plutôt que sur chaque
            élément qui replie un `mb-*`. */
@@ -2441,6 +2639,7 @@
 
         .cv-has-universe:hover::before,
         .cv-has-universe:focus-within::before {
+            animation: none;
             opacity: 1;
             transform: scaleY(1);
         }
@@ -2451,6 +2650,7 @@
                immédiat, relâchement qui s'étire — pour que la ligne réponde
                comme une matière. */
         .cv-has-universe:has(.cv-row-toggle:active)::before {
+            animation: none;
             opacity: 1;
             transform: scaleY(1);
             transition-duration: var(--dur-press);
@@ -2658,42 +2858,217 @@
 
         }
 
-        /* ── LA GUIRLANDE, PARTOUT ──
-           Elle était réservée au petit écran, du temps où le lavis partait
-           du bord gauche : sur une liste large, une couleur qui traversait
-           le début des lignes gênait la lecture. Depuis, le lavis vient de
-           la DROITE — il ne tombe plus que sur la marge, le badge et la
-           flèche. Rien ne s'oppose plus à ce que la vague descende aussi
-           l'écran d'ordinateur, et le CV y gagne le même appel du regard. */
-        /* ── LA GUIRLANDE ──
-           Le lavis de couleur se retire : à .13 partout et en même
-           temps, huit aplats posés les uns sous les autres finissaient
-           par faire un décor, et le CV se lisait à travers une nappe.
-           Il tombe donc à ZÉRO — la ligne est nue, la couleur n'existe
-           que le temps de son passage — et ne monte à .16 qu'à son
-           tour. Rien ne reste allumé derrière la vague.
+        /* ── LA FRISE ──
+           La guirlande jouait au chargement : une vague de couleur
+           descendait le CV, ligne après ligne — sous le rideau de
+           l'ouverture, ou hors de l'écran sur téléphone, où presque
+           personne ne la voyait. Et elle REJOUAIT après chaque survol :
+           couper son animation pour allumer une ligne, puis la rendre,
+           la relançait.
 
-           La vague part du haut et descend, une ligne après l'autre :
-           --cv-rang est le rang de la ligne dans le CV, posé par
-           univers.js en ordre de lecture, et c'est lui qui retarde le
-           départ. Chaque pulsation dure plus longtemps que l'intervalle
-           qui sépare deux lignes : plusieurs restent donc allumées
-           ensemble, et l'on voit passer une onde plutôt qu'un point
-           qui saute de ligne en ligne. Les deux tiers du cycle sont du
-           repos — une guirlande respire, elle ne clignote pas.
+           La frise suit le regard. Une LIGNE DE LECTURE court au milieu
+           de l'écran ; en descendant le CV :
+             · un fil d'or se trace le long du bord droit de la liste, jusqu'à
+               elle (.cv-frise::after) ;
+             · le filet de chaque spectacle s'allume quand la ligne la passe,
+               et reste allumé — ce qu'on a lu est éclairé (::before) ;
+             · le lavis de couleur passe sur la ligne pendant qu'elle la
+               traverse, puis s'éteint (::after) ; la pastille et le bandeau
+               de la vignette s'allument avec lui ;
+             · l'année monte sur la vignette en arrivant à l'écran.
+           Tout est lié au défilement : il n'y a plus d'horloge, donc rien
+           à rejouer — un survol coupe l'animation, la rend, et elle
+           reprend exactement où en est le défilement.
 
-           Seule l'opacité est animée : le compositeur la traite sans
-           repeindre quoi que ce soit, et le CV en porte une dizaine. */
+           DEUX RÉGIMES, comme dans les univers (voir regie.js). Le
+           navigateur récent lit le défilement lui-même (view()) ; ailleurs
+           regie.js écrit sur chaque ligne où est son haut (--ph, en
+           hauteurs d'écran) et sa hauteur (--pt), et la même animation, en
+           pause, avance d'un délai négatif. Sans l'un ni l'autre, et en
+           mouvement réduit : tout est allumé, d'emblée.
+
+           Sélecteurs sous :where() : les états désignés (survol, appui),
+           plus bas, doivent l'emporter sans surenchère. */
         .cv-has-universe::after {
             opacity: 0;
-            /* UNE VAGUE, PAS UNE BOUCLE — voir « Ce qui bouge s'arrête ». */
-            animation: cv-guirlande 4s ease-in-out 1;
-            animation-delay: calc(var(--cv-rang, 0) * .25s);
         }
 
-        /* Au doigt, la ligne touchée s'allume à la CRÊTE DE LA
-           GUIRLANDE — la même couleur que la vague, ni plus ni moins :
-           on touche ce qu'on voyait passer.
+        .cv-frise {
+            position: relative;
+        }
+
+        .cv-frise::before,
+        .cv-frise::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 10px;
+            bottom: 10px;
+            width: 1px;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .cv-frise::before {
+            background: rgb(var(--c-s200) / .9);
+        }
+
+        .cv-frise::after {
+            background: linear-gradient(rgb(var(--c-gold)), rgb(var(--c-gold) / .5));
+            transform-origin: 50% 0;
+        }
+
+        @keyframes cv-fil {
+            from {
+                transform: scaleY(0);
+            }
+        }
+
+        @keyframes cv-filet {
+            from {
+                opacity: .4;
+                transform: scaleY(.72);
+            }
+        }
+
+        @keyframes cv-lavis-passe {
+
+            0%,
+            100% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: var(--cv-crete);
+            }
+        }
+
+        @keyframes cv-lueur-passe {
+
+            0%,
+            100% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes cv-annee {
+            from {
+                translate: 0 100%;
+            }
+        }
+
+        /* Le filet et le fil sont allumés au repos : ce sont les animations
+           qui les éteignent en dessous de la ligne de lecture. */
+        .cv-has-universe::before {
+            opacity: 1;
+            transform: none;
+        }
+
+        @supports (animation-timeline: view()) {
+            :where(html:not(.regie-repli)) .cv-frise::after,
+            :where(html:not(.regie-repli)) .cv-has-universe::before,
+            :where(html:not(.regie-repli)) .cv-has-universe::after,
+            :where(html:not(.regie-repli)) .cv-has-universe .cv-badge::after,
+            :where(html:not(.regie-repli)) .cv-vignette.a-etat::after,
+            :where(html:not(.regie-repli)) .cv-vignette-annee {
+                animation-timeline: view();
+                animation-duration: auto;
+                animation-timing-function: linear;
+                animation-fill-mode: both;
+            }
+
+            :where(html:not(.regie-repli)) .cv-frise::after {
+                animation-name: cv-fil;
+                animation-range: cover 50vh cover calc(100% - 50vh);
+            }
+
+            :where(html:not(.regie-repli)) .cv-has-universe::before {
+                animation-name: cv-filet;
+                animation-range: cover 45vh cover 55vh;
+            }
+
+            :where(html:not(.regie-repli)) .cv-has-universe::after {
+                animation-name: cv-lavis-passe;
+                animation-range: cover 38vh cover 62vh;
+            }
+
+            :where(html:not(.regie-repli)) .cv-has-universe .cv-badge::after,
+            :where(html:not(.regie-repli)) .cv-vignette.a-etat::after {
+                animation-name: cv-lueur-passe;
+                animation-range: cover 38vh cover 62vh;
+            }
+
+            :where(html:not(.regie-repli)) .cv-vignette-annee {
+                animation-name: cv-annee;
+                animation-range: cover 15vh cover 30vh;
+            }
+        }
+
+        :where(.regie-repli) .cv-frise::after,
+        :where(.regie-repli) .cv-has-universe::before,
+        :where(.regie-repli) .cv-has-universe::after,
+        :where(.regie-repli) .cv-has-universe .cv-badge::after,
+        :where(.regie-repli) .cv-vignette.a-etat::after,
+        :where(.regie-repli) .cv-vignette-annee {
+            animation-duration: 1s;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
+            animation-play-state: paused;
+        }
+
+        :where(.regie-repli) .cv-frise::after {
+            animation-name: cv-fil;
+            animation-delay: calc((.5 - var(--ph, 0)) / var(--pt, 1) * -1s);
+        }
+
+        :where(.regie-repli) .cv-has-universe::before {
+            animation-name: cv-filet;
+            animation-delay: calc((.55 - var(--ph, 0)) / .1 * -1s);
+        }
+
+        :where(.regie-repli) .cv-has-universe::after {
+            animation-name: cv-lavis-passe;
+            animation-delay: calc((.62 - var(--ph, 0)) / .24 * -1s);
+        }
+
+        :where(.regie-repli) .cv-has-universe .cv-badge::after,
+        :where(.regie-repli) .cv-vignette.a-etat::after {
+            animation-name: cv-lueur-passe;
+            animation-delay: calc((.62 - var(--ph, 0)) / .24 * -1s);
+        }
+
+        :where(.regie-repli) .cv-vignette-annee {
+            animation-name: cv-annee;
+            animation-delay: calc((.85 - var(--ph, 0)) / .15 * -1s);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .cv-frise::after,
+            .cv-has-universe::before,
+            .cv-has-universe::after,
+            .cv-has-universe .cv-badge::after,
+            .cv-vignette.a-etat::after,
+            .cv-vignette-annee {
+                animation: none !important;
+            }
+        }
+
+        @media print {
+
+            .cv-frise::before,
+            .cv-frise::after {
+                display: none !important;
+            }
+        }
+
+        /* Au doigt, la ligne touchée s'allume à la CRÊTE DU LAVIS — la
+           même couleur que celle qui passe au défilement, ni plus ni
+           moins : on touche ce qu'on voyait passer.
 
            Une animation l'emporte sur une opacité déclarée : il faut
            la couper pour reprendre la main, pas seulement la
@@ -2718,8 +3093,8 @@
         }
 
         /* À la souris, le même geste : la ligne visée s'arrête à la crête
-           de la vague. Elle ne s'allume ni plus ni moins qu'au passage de
-           la guirlande — on désigne ce qu'on voyait déjà. */
+           du lavis. Elle ne s'allume ni plus ni moins qu'à son passage —
+           on désigne ce qu'on voyait déjà. */
         @media (hover: hover) and (pointer: fine) {
             .cv-has-universe:hover::after {
                 animation: none;
@@ -2735,38 +3110,19 @@
             }
         }
 
-        @keyframes cv-guirlande {
-
-            0%,
-            100% {
-                opacity: 0;
-            }
-
-            14% {
-                opacity: var(--cv-crete);
-            }
-
-            34% {
-                opacity: 0;
-            }
-        }
-
         /* ── LA PASTILLE S'ALLUME AVEC SA LIGNE ──
            « En tournée », « En création » : cinq lignes du CV portent une
            pastille, et elle prend déjà la couleur de son spectacle. Au
-           passage de la vague, elle reçoit en plus un halo de cette même
+           passage du lavis, elle reçoit en plus un halo de cette même
            couleur — la ligne ne fait pas que se teinter, quelque chose s'y
            allume. C'est le seul endroit du CV où une information se
            distingue d'elle-même : les spectacles qui se jouent encore.
 
-           DEUX ÉLÉMENTS, UNE SEULE HORLOGE. Le lavis vit sur le ::after de
+           DEUX ÉLÉMENTS, UN SEUL DÉFILEMENT. Le lavis vit sur le ::after de
            la ligne, le halo sur celui de la pastille — deux animations
-           distinctes, donc, mais de même durée et de même retard, toutes
-           deux déclarées en CSS sur des éléments présents dès le premier
-           rendu. Elles démarrent à la même image et ne peuvent pas dériver
-           l'une par rapport à l'autre. Rien à synchroniser en script, et
-           rien à rejouer quand --cv-rang change : le retard des deux se
-           recale ensemble.
+           distinctes, mais sur la même plage du défilement (voir « La
+           frise ») : elles ne peuvent pas dériver l'une par rapport à
+           l'autre. Rien à synchroniser en script.
 
            SEULE L'OPACITÉ EST ANIMÉE, comme pour le lavis. Le halo est un
            box-shadow FIGÉ que porte un pseudo-élément, et l'on ne fait
@@ -2776,9 +3132,7 @@
            SES PROPRES BORNES, mais les mêmes instants. La crête du lavis
            vaut .16 : un halo à .16 ne se verrait pas. Le halo monte donc à
            1, sa force étant portée par l'alpha de son ombre, et non par
-           l'opacité. Les pourcentages, eux, sont ceux de cv-guirlande —
-           c'est ce qui les fait battre ensemble, et ils sont à garder
-           ensemble. */
+           l'opacité. La plage, elle, est celle du lavis. */
         .cv-has-universe .cv-badge::after {
             content: '';
             position: absolute;
@@ -2792,24 +3146,6 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity var(--dur-base) var(--ease-out);
-            animation: cv-pastille-lueur 4s ease-in-out 1;
-            animation-delay: calc(var(--cv-rang, 0) * .25s);
-        }
-
-        @keyframes cv-pastille-lueur {
-
-            0%,
-            100% {
-                opacity: 0;
-            }
-
-            14% {
-                opacity: 1;
-            }
-
-            34% {
-                opacity: 0;
-            }
         }
 
         /* « Moins d'animations » : le halo ne s'immobilise pas allumé, il
@@ -3248,9 +3584,9 @@
 
             /* LE HALO PASSE DU BADGE À LA VIGNETTE. « En tournée », « En
                création » ne sont plus écrits dans un badge à droite, mais en
-               bandeau sur la vignette : c'est elle qui s'allume au passage de
-               la guirlande, avec la même horloge que le badge avant elle (voir
-               « La pastille s'allume avec sa ligne »). Seulement les lignes
+               bandeau sur la vignette : c'est elle qui s'allume au passage du
+               lavis, sur la même plage que le badge avant elle (voir « La
+               frise »). Seulement les lignes
                qui portent un état — les spectacles qui se jouent encore. */
             .cv-vignette.a-etat::after {
                 content: '';
@@ -3261,8 +3597,6 @@
                 opacity: 0;
                 pointer-events: none;
                 transition: opacity var(--dur-base) var(--ease-out);
-                animation: cv-pastille-lueur 4s ease-in-out 1;
-                animation-delay: calc(var(--cv-rang, 0) * .25s);
             }
 
             .cv-item.is-pressed .cv-vignette.a-etat::after,
@@ -3786,8 +4120,7 @@
         }
 
         .dl-vers-page:hover {
-            /* Hors de l'onglet Dates (le carton « Prochainement » du CV),
-               pas de couleur de spectacle : l'or du site. */
+            /* Sans couleur de spectacle : l'or du site. */
             text-decoration-color: var(--dl-a, rgb(var(--c-gold-ink)));
             text-decoration-thickness: 2px;
         }
@@ -4151,9 +4484,8 @@
         }
 
         /* ── Le sommaire : la saison d'un regard ──
-           La prochaine représentation n'y est plus : elle a son carton en
-           tête du CV (voir renderNextDate), et la liste ci-dessous commence
-           par elle. */
+           La prochaine représentation n'y est pas : elle est en tête du CV
+           (voir renderNextDate), et la liste ci-dessous commence par elle. */
         .dates-sommaire {
             margin-bottom: 1.1rem;
         }
@@ -4303,6 +4635,24 @@
         #intro-overlay.intro-out {
             opacity: 0;
             pointer-events: none;
+        }
+
+        /* Le rideau s'ouvre en iris depuis le sceau, et le nom rejoint
+           l'en-tête (voir ouvrirEnIris dans intro.js). L'iris est porté
+           par le script, le nom par le passage : même durée, même courbe. */
+        html.vt-rideau::view-transition-old(root),
+        html.vt-rideau::view-transition-new(root) {
+            animation: none;
+            mix-blend-mode: normal;
+        }
+
+        html.vt-rideau::view-transition-new(root) {
+            z-index: 2;
+        }
+
+        html.vt-rideau::view-transition-group(nom-adrien) {
+            animation-duration: 1s;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
         }
 
         #intro-overlay[hidden] {
@@ -4500,8 +4850,10 @@
             }
         }
 
+        /* Trois respirations, puis le sceau se tient : une invitation, pas
+           un clignotant. Elle battait sans fin tant qu'on n'avait pas cliqué. */
         .intro-cta.intro-cta-pulse .intro-seal {
-            animation: introSealPulse 2.4s ease-in-out infinite;
+            animation: introSealPulse 2.4s ease-in-out 3;
         }
 
         .intro-cta-hint {
@@ -4653,251 +5005,335 @@
         @media (prefers-reduced-motion: no-preference) {
             #nav-barre {
                 transition: background 240ms ease, box-shadow 240ms ease,
-                    border-color 240ms ease;
+                    border-color 240ms ease, --ambiance 0.55s ease;
             }
         }
 
         /* ══════════════════════════════════════════════════════════════
-           BANDEAU « PROCHAINEMENT »
-           Un battement lent, pas un clignotant : le point dit que la donnée
-           est vivante, il ne réclame pas l'attention. L'anneau se dilate et
-           s'efface — jamais d'opacité qui bat sur le point lui-même, qui
-           donnerait le rouge du « direct » télévisé.
+           LA PROCHAINE DATE — une ligne de tableau de gare, en tête du CV
+           ──────────────────────────────────────────────────────────────
+           Écrite par renderNextDate, pendant la lecture de la page. La
+           date, l'heure, le spectacle, la ville, comme une ligne de tableau
+           d'affichage : palettes noires, date et heure en jaune, spectacle
+           et ville en blanc, l'intitulé de chaque colonne au-dessus. Noir
+           dans les deux thèmes : c'est un objet, un tableau, pas une carte
+           du site. Ce qui l'attache au reste : l'arrondi des cartes, les
+           polices du site, un jaune tiré de son or, et le trait à la
+           couleur du spectacle — celle de ses lignes dans l'onglet Dates.
 
-           DEUX COUPS RAPPROCHÉS, PUIS LE SILENCE. Le point pulsait toutes
-           les 2,6 s, d'un battement égal — à ce train-là, l'œil cesse de le
-           voir au bout de trois tours, exactement comme on n'entend plus une
-           horloge. Il frappe maintenant deux fois coup sur coup, puis se
-           tait quatre secondes et demie. C'est un pouls, pas un métronome.
-           (Il ne joue plus qu'UNE mesure de sept secondes, phare compris :
-           voir « Ce qui bouge s'arrête ».)
+           UNE PALETTE (.fl), ce sont quatre moitiés : le haut et le bas
+           fixes (.fl-h, .fl-b) et les deux volets qui battent (.fl-v1, le
+           haut qui tombe ; .fl-v2, le bas qui se pose). Chaque moitié porte
+           la même lettre, centrée sur la palette entière et rognée à sa
+           moitié. Seuls les volets bougent (transform), et seulement le
+           temps du battement.
 
-           SEPT SECONDES, COMME LE PHARE, ET C'EST TOUT L'ENJEU. Les deux
-           animations du bandeau tournaient sur 2,6 s et 7 s — deux périodes
-           sans diviseur commun, qui ne retombaient jamais ensemble et se
-           chevauchaient au hasard. Elles partagent désormais la même mesure,
-           mais pas le même temps : le phare fait son tour dans les 2,8
-           premières secondes, la pastille attend que la nuit soit installée
-           et frappe à 3,4 s. Un événement, puis l'autre, puis rien — jamais
-           les deux à la fois.
-           ══════════════════════════════════════════════════════════════ */
-        .next-date-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 9999px;
-            flex-shrink: 0;
-            background: rgb(var(--c-gold-ink));
-            animation: nextDatePulse 7s ease-out 1;
+           LA TAILLE vient de la largeur du tableau (cqw) : autant de
+           palettes que de lettres visibles, qui tiennent toujours sur la
+           ligne, 28 px au plus. `--fixe` est ce qui n'est pas palette : le
+           trait, les écarts entre colonnes (12 px, 14 sur grand écran) et
+           entre palettes (2 px), et un pixel de marge pour les arrondis.
+           Sur téléphone, la
+           date et le spectacle ont leurs palettes, l'heure et la ville
+           s'écrivent en clair dessous ; l'heure, puis la ville, prennent
+           leur colonne quand la place le permet. */
+        .td {
+            --td-jaune: #f2c14e;
+            --td-blanc: #f4efe4;
+            --td-sourd: #9a8f7c;
+            --td-gc: 12px;
+            --td-barre: 3px;
+            position: relative;
+            padding: clamp(12px, 3vw, 18px) clamp(14px, 3.4vw, 24px);
+            border-radius: 0.75rem;
+            background: #0d0c0a;
+            color: var(--td-blanc);
+            border: 1px solid rgb(255 255 255 / 0.08);
+            box-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.6);
+            container-type: inline-size;
         }
 
-        @keyframes nextDatePulse {
+        .td-sur {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font: 700 11px/1.3 Montserrat, sans-serif;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--td-blanc);
+        }
 
+        /* LE VOYANT : la donnée est vivante. Deux coups rapprochés, puis il
+           se tient (une seule mesure de sept secondes : voir « Ce qui
+           bouge s'arrête ») — un pouls, pas un clignotant. L'anneau se
+           dilate et s'efface ; le point lui-même ne clignote jamais. */
+        .td-voyant {
+            flex: none;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--td-jaune);
+            box-shadow: 0 0 6px rgb(242 193 78 / 0.55);
+            animation: td-voyant 7s ease-out 1;
+        }
+
+        @keyframes td-voyant {
             0%,
             48% {
-                box-shadow: 0 0 0 0 rgb(var(--c-gold) / 0);
+                box-shadow: 0 0 6px rgb(242 193 78 / 0.55), 0 0 0 0 rgb(242 193 78 / 0);
             }
 
-            /* premier coup */
             49% {
-                box-shadow: 0 0 0 0 rgb(var(--c-gold) / 0.5);
+                box-shadow: 0 0 6px rgb(242 193 78 / 0.55), 0 0 0 0 rgb(242 193 78 / 0.5);
             }
 
             56% {
-                box-shadow: 0 0 0 6px rgb(var(--c-gold) / 0);
+                box-shadow: 0 0 6px rgb(242 193 78 / 0.55), 0 0 0 6px rgb(242 193 78 / 0);
             }
 
-            /* le second, plus discret — un contretemps, pas un écho */
             57% {
-                box-shadow: 0 0 0 0 rgb(var(--c-gold) / 0.35);
+                box-shadow: 0 0 6px rgb(242 193 78 / 0.55), 0 0 0 0 rgb(242 193 78 / 0.35);
             }
 
             64%,
             100% {
-                box-shadow: 0 0 0 6px rgb(var(--c-gold) / 0);
+                box-shadow: 0 0 6px rgb(242 193 78 / 0.55), 0 0 0 6px rgb(242 193 78 / 0);
             }
         }
 
-        @media (prefers-reduced-motion: reduce) {
-            .next-date-dot {
-                animation: none;
-            }
+        /* La ligne est un bouton : il déborde de 6 px de chaque côté, pour
+           que le survol et le focus l'entourent sans décaler les palettes. */
+        .td-dep {
+            display: block;
+            width: calc(100% + 12px);
+            margin: 0 -6px;
+            padding: 4px 6px;
+            border-radius: 8px;
+            text-align: left;
+            color: inherit;
+            transition: background-color var(--dur-base) var(--ease-out);
         }
 
-        /* ── LE BOUTON « RÉSERVER » PREND SA LIGNE SUR PETIT ÉCRAN ──
-           Le bandeau range trois blocs sur une rangée : la mention
-           « Prochainement », le titre avec sa date, et le bouton. Sur 375 px,
-           le bouton — qui ne se comprime pas, et c'est normal pour une cible
-           tactile — laisse si peu de largeur au titre que « À la barre, peine
-           perdue ? » se casse en TROIS lignes. On lit alors trois fragments
-           empilés au lieu d'un titre.
+        .td-dep:hover {
+            background: rgb(236 217 174 / 0.07);
+        }
 
-           Le conteneur enroule déjà (flex-wrap) : il suffit de donner aux
-           boutons une base de 100 % pour qu'ils descendent d'office. Le titre
-           retrouve toute la largeur, et la réservation devient une cible
-           pleine largeur — ce qu'on veut d'une action principale au pouce —,
-           l'agenda à côté.
+        .td-dep:focus-visible {
+            outline: 2px solid var(--td-jaune);
+            outline-offset: 1px;
+        }
 
-           Invisible tant qu'aucune date n'a de `bookingUrl` : sans lien de
-           billetterie, le bouton n'est pas rendu du tout. */
-        .next-date-actions {
+        .td-ligne {
+            --n: 19;
+            --fixe: 62px;
+            --w: min(28px, (100cqw - var(--fixe)) / var(--n));
             display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
+            align-items: flex-end;
+            gap: var(--td-gc);
         }
 
-        /* L'agenda à la hauteur de « Réserver », qui est plus menu ici que
-           dans les cases de l'onglet Dates. */
-        .next-date-actions .dl-agenda {
-            width: 28px;
-            height: 28px;
+        /* Le trait à la couleur du spectacle (le jaune du tableau tant
+           qu'univers.js n'est pas là). */
+        .td-ligne::before {
+            content: '';
+            flex: none;
+            width: var(--td-barre);
+            height: calc(var(--w) * 1.5);
+            border-radius: 2px;
+            background: var(--dl-a, var(--td-jaune));
         }
 
-        @media (max-width: 767px) {
+        /* Chaque colonne porte son intitulé au-dessus de ses palettes :
+           alignés par construction. */
+        .td-col {
+            display: grid;
+            flex: none;
+            gap: 4px;
+            justify-items: start;
+        }
 
-            /* Le nom et la date passent sous « Prochainement », sur toute la
-               largeur : à côté de la mention, il ne leur restait qu'une
-               colonne étroite, où la date se coupait en trois. */
-            .next-date-quoi {
-                flex-basis: 100%;
+        .td .td-col.heure,
+        .td .td-col.ville {
+            display: none;
+        }
+
+        .td-lib {
+            font: 600 10px/1.2 Montserrat, sans-serif;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #8b8272;
+        }
+
+        .td-fl {
+            display: flex;
+            gap: 2px;
+        }
+
+        /* Sur téléphone, l'heure et la ville en clair sous les palettes. */
+        .td-sous {
+            display: block;
+            margin-top: 5px;
+            padding-left: calc(var(--td-barre) + var(--td-gc));
+            font: 500 12px/1.35 Inter, sans-serif;
+            color: var(--td-blanc);
+        }
+
+        .td-sous .s-heure {
+            color: var(--td-jaune);
+            font-weight: 600;
+        }
+
+        .td-sous .s-sep {
+            color: var(--td-sourd);
+            font-weight: 500;
+        }
+
+        @container (min-width: 520px) {
+            .td-ligne {
+                --n: 24;
+                --fixe: 82px;
             }
 
-            .next-date-actions:has(.next-date-reserver) {
-                flex-basis: 100%;
-                margin-top: 2px;
+            .td .td-col.heure {
+                display: grid;
             }
 
-            .next-date-reserver {
-                flex: 1;
-                justify-content: center;
+            .td-sous .s-heure {
+                display: none;
             }
         }
 
-        /* ── LE PHARE DU BANDEAU « PROCHAINEMENT » ──
-           Un point de lumière fait LE TOUR du cadre, à intervalle régulier.
-           Même respiration que la guirlande du CV : un passage bref, un
-           long repos — une politesse qui signale, pas une réclame.
+        @container (min-width: 720px) {
+            /* Un peu plus d'air entre les colonnes, qui sont quatre. (Posé
+               sur la ligne : une requête de conteneur ne règle pas le
+               conteneur lui-même.) */
+            .td-ligne {
+                --td-gc: 14px;
+                --n: 36;
+                --fixe: 124px;
+            }
 
-           DEUX FORMES ONT ÉTÉ ESSAYÉES AVANT, ET AUCUNE NE TOURNAIT :
+            .td .td-col.ville {
+                display: grid;
+            }
 
-           · Un dégradé CONIQUE dont l'angle tourne. Il fait bien le tour,
-             mais un conique avance en ANGLE, et sur une carte bien plus
-             large que haute l'angle et la position n'ont aucun rapport
-             constant : au milieu du bord supérieur le faisceau rampe, vers
-             les coins il file trente fois plus vite, et sa largeur — fixée
-             en degrés — s'étire sur des centaines de pixels près des
-             angles. On voyait une lumière détraquée qui s'étalait.
+            .td-sous {
+                display: none;
+            }
+        }
 
-           · Un dégradé LINÉAIRE qui se déplace. Vitesse enfin constante,
-             mais la bande est droite : elle traverse la carte de part en
-             part et allume donc le haut et le bas AU MÊME INSTANT. Ça ne
-             tourne pas, ça balaie — et le flou en faisait une bavure.
-
-           CE QUI TOURNE VRAIMENT, c'est un point. Un dégradé radial compact
-           dont on déplace la POSITION le long des quatre bords : coin haut
-           gauche, coin haut droit, bas droit, bas gauche, retour. Le point
-           garde sa taille tout du long — un dégradé radial ne se déforme
-           pas quand on le déplace — et le masque de bordure n'en laisse
-           voir que le segment posé sur le filet. C'est un phare.
-
-           LE TEMPS EST RÉPARTI À LA LONGUEUR DES CÔTÉS, pas à parts égales :
-           44 % du tour pour chacun des deux longs bords, 6 % pour chacun des
-           petits. À parts égales, le point aurait rampé sur les côtés et
-           filé sur le dessus — on retombait sur le défaut du conique.
-
-           `linear` est délibéré : la moindre courbe de vitesse ramènerait
-           l'accélération qu'on vient de corriger. */
-        .next-date-shine {
+        /* `contain: strict` : une lettre qui change ne fait recalculer que
+           sa palette, pas la page (des dizaines de lettres par seconde
+           pendant le battement). */
+        .fl {
             position: relative;
+            flex: none;
+            width: var(--w);
+            height: calc(var(--w) * 1.5);
+            contain: strict;
+            perspective: calc(var(--w) * 10);
+            font: 600 calc(var(--w) * 0.88)/calc(var(--w) * 1.5) Montserrat, sans-serif;
+            color: var(--td-blanc);
+            text-align: center;
         }
 
-        .next-date-shine::after {
-            content: "";
+        /* La date et l'heure en jaune, comme les heures d'un tableau de gare. */
+        .td-col.date .fl,
+        .td-col.heure .fl {
+            color: var(--td-jaune);
+        }
+
+        .fl > span {
             position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            /* 2 px : le masque ne laisse voir QUE l'épaisseur du filet, et
-               il rogne au passage le halo du drop-shadow. À un pixel et demi,
-               le point passait sans qu'on le voie — mesuré, puis constaté à
-               l'écran. Deux suffisent, et le trait reste fin. */
-            padding: 2px;
-            /* AUCUN BLANC : c'est lui qui rendait le phare clinquant. Le point
-               est entièrement doré — du doré clair au cœur, l'or du thème
-               ensuite — et l'ensemble reste sous les deux tiers d'opacité.
-               Il signale, il n'éclaire pas. */
-            background: radial-gradient(closest-side,
-                    rgb(var(--c-gold-light) / 0.62) 0%,
-                    rgb(var(--c-gold) / 0.42) 34%,
-                    rgb(var(--c-gold) / 0) 72%);
-            /* Compact : c'est un point qui se déplace, pas une nappe. Assez
-               petit pour que le segment de bordure allumé reste court, assez
-               large pour que le point atteigne presque les coins. */
-            background-size: 72px 72px;
-            background-repeat: no-repeat;
-            /* Sans halo, il ne reste qu'un filet d'un pixel et demi : le
-               point passe sans qu'on le voie. Le flou est calé sur la
-               taille du point — 4 px, pas 3 fois plus — sinon on retrouve
-               la bavure qu'on vient de chasser. */
-            filter: drop-shadow(0 0 3px rgb(var(--c-gold) / 0.3));
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            opacity: 0;
-            pointer-events: none;
-            animation: next-date-phare 7s linear 1;
+            left: 0;
+            right: 0;
+            height: 50%;
+            overflow: hidden;
         }
 
-        @keyframes next-date-phare {
+        .fl > span > i {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 200%;
+            font-style: normal;
+        }
 
-            /* LE POINT EST CENTRÉ SUR LE FILET, PAS À L'INTÉRIEUR. C'est
-               tout l'enjeu de ces `calc()`. `background-position` cale les
-               BORDS de l'image, pas son centre : à `0 0`, le point de 72 px
-               a son centre 36 px sous le bord supérieur — c'est-à-dire là où
-               son dégradé est déjà transparent. Le masque ne révélait donc
-               rigoureusement rien, et le phare restait éteint alors que tout
-               le reste était juste. Le décalage de 36 px — la moitié du
-               point — le remet sur le filet.
+        .fl-h,
+        .fl-v1 {
+            top: 0;
+            border-radius: 3px 3px 0 0;
+            background: linear-gradient(#2b261e, #1f1b15);
+        }
 
-               Le tour dure 2,8 s. Puis 4,2 s de nuit. */
-            0% {
-                background-position: -36px -36px;
-                opacity: 0;
-            }
+        .fl-b,
+        .fl-v2 {
+            top: 50%;
+            border-radius: 0 0 3px 3px;
+            background: linear-gradient(#211d17, #16130f);
+        }
 
-            3% {
-                opacity: 1;
-            }
+        .fl-h > i,
+        .fl-v1 > i {
+            top: 0;
+        }
 
-            /* le bord du haut, de gauche à droite */
-            17.6% {
-                background-position: calc(100% + 36px) -36px;
-            }
+        .fl-b > i,
+        .fl-v2 > i {
+            top: -100%;
+        }
 
-            /* le petit côté droit, en descendant */
-            20% {
-                background-position: calc(100% + 36px) calc(100% + 36px);
-            }
+        .fl-v1,
+        .fl-v2 {
+            z-index: 2;
+            visibility: hidden;
+            backface-visibility: hidden;
+        }
 
-            /* le bord du bas, de droite à gauche */
-            37.6% {
-                background-position: -36px calc(100% + 36px);
-                opacity: 1;
-            }
+        .fl-v1 {
+            transform-origin: 50% 100%;
+        }
 
-            /* le petit côté gauche, en remontant — et on s'éteint */
-            40% {
-                background-position: -36px -36px;
-                opacity: 0;
-            }
+        .fl-v2 {
+            transform-origin: 50% 0;
+        }
 
-            100% {
-                background-position: -36px -36px;
-                opacity: 0;
-            }
+        /* PENDANT LE BATTEMENT (.td-roule, posée par tdDerouler), les volets
+           restent visibles et sur leur calque, mais repliés au-delà de
+           l'équerre entre deux battements : on n'en voit que le dos, que
+           `backface-visibility` efface. Chaque battement n'a donc plus à
+           les montrer ni à les cacher, et le navigateur n'a pas à créer
+           puis défaire un calque à chaque fois — c'était l'essentiel du
+           coût, mesuré sur un téléphone lent. Le battement fini, la classe
+           part, et les calques avec. */
+        .td-roule .fl-v1 {
+            visibility: visible;
+            transform: rotateX(-91deg);
+            will-change: transform;
+        }
+
+        .td-roule .fl-v2 {
+            visibility: visible;
+            transform: rotateX(91deg);
+            will-change: transform;
+        }
+
+        /* La charnière : un trait sombre en travers de la palette. */
+        .fl::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 1px;
+            margin-top: -0.5px;
+            background: rgb(0 0 0 / 0.8);
+            z-index: 3;
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .next-date-shine::after {
+            .td-voyant {
                 animation: none;
             }
         }
@@ -5275,6 +5711,21 @@
                 if (rideau) rideau.hidden = true;
                 document.body.classList.remove('modal-open');
             });
+
+            // « PASSER » RÉPOND DÈS QU'IL EST À L'ÉCRAN. intro.js n'arrive
+            // qu'après la page (voir plus haut) : jusque-là, le bouton était
+            // affiché sur un écran noir et ne répondait pas. On lève donc le
+            // rideau soi-même, sans animation ; intro.js, s'il arrive ensuite,
+            // trouve la scène passée (__introPassee) et ne démarre pas. Une fois
+            // intro.js là, c'est lui qui répond, avec son fondu.
+            var passer = document.getElementById('intro-skip');
+            if (passer) passer.addEventListener('click', function () {
+                if (window.__introPret) return;
+                window.__introPassee = true;
+                var rideau = document.getElementById('intro-overlay');
+                if (rideau) rideau.hidden = true;
+                document.body.classList.remove('modal-open');
+            });
         })();
     </script>
 
@@ -5282,7 +5733,7 @@
     <div class="max-w-4xl mx-auto px-4 md:px-6 py-6 relative z-10 flex flex-col min-h-screen justify-between">
 
         <!-- HEADER (Light Luxury Style) -->
-        <header
+        <header id="en-tete"
             class="glass-card rounded-xl p-4 md:p-5 mb-5 shadow-sm border border-stone-200/50 hover:border-luxury-gold/30 transition duration-500">
             <div class="flex flex-col-reverse md:flex-row items-center md:items-start justify-between gap-4">
                 <!-- Info column -->
@@ -5480,6 +5931,7 @@
         <nav aria-label="Sections du site" id="nav-barre"
             class="glass-card rounded-lg p-1 mb-5 flex flex-row items-center justify-between border border-stone-200/50 shadow-sm relative no-print">
             <div class="flex items-center gap-0.5 flex-1 min-w-0 md:flex-none md:w-auto relative" id="nav-tabs-container">
+                <span class="onglet-pastille sans-transition" aria-hidden="true"></span>
                 <a href="#page_cv" id="tab-page_cv"
                     class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase transition-all duration-300 flex items-center justify-center gap-1.5 border border-transparent">
                     <svg class="ico text-[10px]" aria-hidden="true">
@@ -5506,31 +5958,10 @@
                 </a>
             </div>
 
-            <!-- Télécharger le CV + bascule de thème, groupés à droite des
-                 onglets : sans ce groupe, le `justify-between` de la barre
-                 les aurait dispersés au lieu de les garder collés l'un à
-                 l'autre. -->
+            <!-- La bascule de thème, à droite des onglets. « Télécharger le
+                 CV » n'est plus ici : il vient après la prochaine date, en
+                 tête du CV (voir .pdf-btn-row). -->
             <div class="flex items-center gap-2 flex-shrink-0">
-                <!-- Télécharger le CV (voir .pdf-btn).
-
-                     UN LIEN, ET NON UN BOUTON. Ce bouton appelait `window.print()` :
-                     le libellé était honnête, mais on repartait avec un fichier
-                     nommé d'après le domaine, au terme d'une boîte de dialogue —
-                     et de trois manipulations sur iPhone. Le métier d'Adrien fait
-                     circuler des CV en pièce jointe : ce que reçoit un directeur
-                     de casting doit s'appeler `cv-adrien-vada.pdf`.
-
-                     Le fichier est fabriqué par build/generer-cv-pdf.js, avec le
-                     moteur d'impression de Chromium et les MÊMES règles @media
-                     print que Ctrl+P. Il est versionné, et régénéré à chaque
-                     publication : il ne peut pas dater. -->
-                <a href="/ressources/cv-adrien-vada.pdf" download="cv-adrien-vada.pdf" id="pdf-download-btn"
-                    data-track="cv_pdf" data-track-detail="bureau" class="pdf-btn hidden md:inline-flex">
-                    <svg class="ico" aria-hidden="true">
-                        <use href="#i-solid-file-pdf"></use>
-                    </svg> Télécharger le CV
-                </a>
-
                 <!-- Bascule clair / sombre — visible mobile et desktop.
                      Remplace les deux boutons d'avant (près de l'avatar sur
                      mobile, en bout de ligne des liens sur desktop) : un seul
@@ -5552,32 +5983,20 @@
             <!-- PAGE 1: CV -->
             <div id="page_cv" class="page active space-y-4">
                 <h2 class="sr-only">Curriculum Vitae</h2>
-                <!-- Télécharger le CV, version mobile : la barre d'onglets prend
-                     toute la largeur sur écran étroit, le lien ne peut pas
-                     y tenir. Même classe, même allure — seule la place change.
-                     C'est ici que le vrai fichier compte le plus : sur iPhone,
-                     l'ancien `window.print()` passait par la feuille de partage. -->
-                <div class="pdf-btn-row flex justify-end md:hidden no-print">
-                    <a href="/ressources/cv-adrien-vada.pdf" download="cv-adrien-vada.pdf" data-track="cv_pdf"
-                        data-track-detail="mobile" class="pdf-btn inline-flex">
-                        <svg class="ico" aria-hidden="true">
-                            <use href="#i-solid-file-pdf"></use>
-                        </svg> Télécharger le CV
-                    </a>
-                </div>
-
-                <!-- ── BANDEAU « PROCHAINEMENT » ──
+                <!-- ── LA PROCHAINE DATE ──
                      En tête du CV, juste avant le théâtre : la prochaine date
                      est la suite de la liste qu'on s'apprête à lire, pas une
-                     annonce posée sur la page. Elle se lit donc dans la foulée
-                     du titre du spectacle qu'elle concerne, et non à côté du
-                     portrait. Savoir qu'Adrien joue le 22 octobre ne demande
-                     toujours pas d'aller voir l'onglet Dates.
+                     annonce posée sur la page. Savoir qu'Adrien joue le 22
+                     octobre ne demande toujours pas d'aller voir l'onglet
+                     Dates. Une ligne de tableau de gare, en palettes noires :
+                     la date, l'heure, le spectacle, la ville (voir
+                     renderNextDate). Elle mène à sa date dans l'onglet Dates,
+                     où l'on réserve.
 
                      Le bandeau lit la MÊME source que la page Dates (dates.js,
                      via splitUpcoming) : rien n'est saisi deux fois, et il ne
-                     peut donc pas la contredire. L'onglet Dates, lui, n'a pas
-                     de carton : sa liste commence déjà par la prochaine date.
+                     peut donc pas la contredire. L'onglet Dates, lui, n'affiche
+                     pas de prochaine date : sa liste commence par elle.
 
                      Posé `hidden` : c'est renderNextDate() qui l'ouvre, et
                      seulement s'il reste une représentation à venir. Une saison
@@ -5594,7 +6013,7 @@
 
                      `no-print` : la version imprimée est un CV, pas une
                      affiche. -->
-                <div id="next-date-banner" hidden class="no-print"></div>
+                <section id="next-date-banner" class="td no-print" aria-labelledby="td-titre" hidden></section>
                 <!-- LE BANDEAU EST RENDU ICI, PENDANT LA LECTURE DE LA PAGE, et non
                      plus au chargement complet. Posé après coup, il poussait
                      vers le bas un CV déjà affiché — la première ligne, que
@@ -5613,10 +6032,7 @@
         // Un lien de réservation ne part que vers une page web : lienSur()
         // écarte « javascript: » et complète « www. » (voir dates-live.js,
         // qui fait le même tri dès la lecture de la base). Tant que ce
-        // fichier n'est pas là — le bandeau ci-dessous est rendu avant —, le
-        // même tri est fait ici, à l'identique : sans cela le bouton
-        // « Réserver » d'une adresse en « www. » n'apparaîtrait qu'au second
-        // rendu, et le bandeau changerait de hauteur sous les yeux.
+        // fichier n'est pas là, le même tri est fait ici, à l'identique.
         function lienSur(url) {
             if (window.DatesLive && DatesLive.lienSur) return DatesLive.lienSur(url);
             const u = String(url == null ? '' : url).trim();
@@ -5632,35 +6048,6 @@
                 .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
-        // Une série de trois soirs vaut trois représentations. Sans cet
-        // aplatissement, le deuxième soir d'une série passerait derrière un
-        // spectacle plus lointain simplement parce qu'il est déclaré plus haut
-        // dans le fichier — l'ordre du fichier n'est pas l'ordre du calendrier.
-        function flattenUpcoming(entries) {
-            const out = [];
-            (entries || []).forEach(entry => {
-                const reps = (entry.type === 'series' && Array.isArray(entry.shows))
-                    ? entry.shows
-                    : [entry];
-                reps.forEach(r => out.push({
-                    time: icsToTime(r.icsDate),
-                    icsDate: r.icsDate,
-                    // L'heure telle qu'on l'écrit (« 19h00 », « 14h00 & 20h00 ») ;
-                    // `time`, lui, est l'instant qui sert à classer.
-                    heure: Array.isArray(r.times) && r.times.length ? r.times.join(' & ') : (r.time || ''),
-                    heureBrute: r.time,
-                    heures: r.times,
-                    dateLabel: r.dateLabel || entry.dateLabel || '',
-                    title: entry.title || '',
-                    subtitle: entry.subtitle || '',
-                    location: entry.location || '',
-                    bookingUrl: r.bookingUrl || entry.bookingUrl || '',
-                    isSchool: Boolean(r.isSchool || entry.isSchool)
-                }));
-            });
-            return out;
-        }
-
         // « Ce soir » et « Demain » se lisent plus vite qu'une date — et ce
         // sont précisément les deux jours où l'information décide de quelque
         // chose. Au-delà, la date chiffrée reste plus utile que « dans 9 jours ».
@@ -5672,93 +6059,448 @@
             return repli;
         }
 
-        // ── LA PROCHAINE REPRÉSENTATION, EN TÊTE DU CV ──
-        //  Le carton n'est qu'au CV : l'onglet Dates n'en a pas, sa liste
-        //  commence déjà par la prochaine date. Le jour, l'heure et le lieu ;
-        //  la date mène à l'onglet Dates ; « Réserver » et l'agenda.
+        // ── LES JOURS, LES MOIS, LA DATE EN LETTRES ──
+        //  Écrits ici, en tête, parce que la prochaine date du CV s'en sert
+        //  dès la lecture de la page ; l'onglet Dates les trouve déjà là.
+        const DL_JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+        const DL_JOURS_COURTS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+        const DL_MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
+            'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+        const DL_MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.',
+            'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
+        function dlJour(icsDate) {
+            const t = icsToTime(icsDate);
+            if (isNaN(t)) return null;
+            const d = new Date(t);
+            return { t, iso: icsDate, a: d.getFullYear(), m: d.getMonth(), j: d.getDate(), js: d.getDay() };
+        }
+        // « 1er décembre » : le premier du mois s'écrit en ordinal.
+        const dlQuantieme = (d) => (d.j === 1 ? '1er' : String(d.j));
+        const dlCap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+        const dlPluriel = (n, mot) => `${n}\u00a0${mot}${n > 1 ? 's' : ''}`;
+
+        // « jeudi 22 octobre » · « jeudi 22 et vendredi 23 octobre » ·
+        // « du mardi 18 au vendredi 21 mai » · « samedi 31 octobre et
+        // dimanche 1er novembre ».
+        function dlDateEnLettres(jours, avecAnnee) {
+            const f = (d) => `${DL_JOURS[d.js]} ${dlQuantieme(d)}`;
+            const a = jours[0], b = jours[jours.length - 1];
+            const annee = avecAnnee ? ` ${b.a}` : '';
+            if (jours.length === 1) return `${f(a)} ${DL_MOIS[a.m]}${annee}`;
+            const lien = jours.length === 2 ? ' et ' : ' au ';
+            const du = jours.length === 2 ? '' : 'du ';
+            const premier = a.m === b.m && a.a === b.a ? f(a) : `${f(a)} ${DL_MOIS[a.m]}`;
+            return `${du}${premier}${lien}${f(b)} ${DL_MOIS[b.m]}${annee}`;
+        }
+
+        // ── LA VILLE D'UNE DATE ──
+        // Repli : déduit la ville du libellé du lieu quand le champ `city`
+        // est absent. Deux formes coexistent dans les anciennes saisies :
+        //   « Le Forum, Falaise (14) »            -> après la virgule
+        //   « Tribunal judiciaire de Rouen (76) » -> après le dernier « de/du/d' »
+        function cityFromLocation(location) {
+            const s = String(location || '').replace(/\s*\(\d{2,3}\)\s*$/, '').trim();
+            if (!s) return '';
+            const parts = s.split(',').map(x => x.trim()).filter(Boolean);
+            if (parts.length > 1) return parts[parts.length - 1];
+            const m = s.match(/^.*(?:\sde\s|\sdu\s|\sd')\s*(.+)$/i);
+            return m ? m[1].trim() : s;
+        }
+
+        // La ville vient du champ `city` de dates.js (voir l'en-tête de ce
+        // fichier), qui fait autorité : le déduire du libellé produisait des
+        // doublons (« Rouen » à côté de « Tribunal judiciaire de Rouen »)
+        // selon la façon dont le lieu avait été saisi.
         //
-        //  Le nom du spectacle mène à sa page, comme partout dans les dates.
-        //  univers.js, qui sait quelle page, n'arrive qu'en fin de document :
-        //  au rendu fait pendant la lecture, le nom est encore du texte ; celui
-        //  du chargement (DOMContentLoaded) en fait un lien, sans rien déplacer.
-        const JOUR_COURT = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
-        // Ce qu'ouvre le bouton agenda du carton (voir la délégation des
-        // boutons agenda, [data-cal-prochaine]).
-        window.calProchaine = null;
+        // Le repli reste indispensable : index.html et dates.js sont mis en
+        // cache indépendamment par les navigateurs. Un visiteur peut donc
+        // recevoir un index.html récent avec un dates.js encore ancien, sans
+        // champ `city` — sans ce repli, le filtre Ville se retrouverait vide.
+        function placeOf(entry) {
+            if (!entry) return '';
+            return entry.city || cityFromLocation(entry.location);
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  LA PROCHAINE DATE, EN TÊTE DU CV — une ligne de tableau de gare
+        //  ----------------------------------------------------------------
+        //  La date, l'heure, le spectacle, la ville, en palettes noires
+        //  (voir « LA PROCHAINE DATE » dans les styles). Une seule ligne, la
+        //  prochaine date et elle seule : l'onglet Dates n'en affiche pas —
+        //  sa liste commence par elle. La ligne mène à sa date dans cet
+        //  onglet, où l'on réserve et où l'on garde la date dans son agenda
+        //  (voir le clic sur [data-depart]).
+        //
+        //  RENDUE ICI, PENDANT LA LECTURE (voir le commentaire du bandeau) :
+        //  la taille des palettes ne dépend que de la largeur du tableau, et
+        //  le CV qui suit ne bouge pas. La couleur du spectacle vient
+        //  d'univers.js, qui n'arrive qu'en fin de document : le rendu du
+        //  chargement la pose, sans rien redessiner.
+        //
+        //  Les lettres battent UNE fois, quand le tableau arrive à l'écran —
+        //  pas sous le rideau de l'ouverture. Le texte réel est dans le
+        //  bouton, en clair pour les lecteurs d'écran : les palettes leur
+        //  sont cachées et ne disent jamais une lettre de passage. Mouvement
+        //  réduit, ou données qui changent après coup (la base en direct) :
+        //  les palettes sont posées d'emblée sur la bonne lettre.
+        // ════════════════════════════════════════════════════════════════
+        const TD_LARGEURS = { date: 7, heure: 5, titre: 12, ville: 12 };
+        const TD_INTITULES = { date: 'Date', heure: 'Heure', titre: 'Spectacle', ville: 'Ville' };
+        const TD_MOIS = ['JAN', 'FÉV', 'MARS', 'AVR', 'MAI', 'JUIN', 'JUIL', 'AOÛT', 'SEPT', 'OCT', 'NOV', 'DÉC'];
+        // Les jeux du tambour (voir tdPassage).
+        const TD_LETTRES = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', TD_CHIFFRES = '0123456789';
+        // Ce qu'on ne laisse pas pendre au bout d'un nom coupé : « Déville-lès ».
+        const TD_LIAISONS = /[\s-](?:LÈS|LES|LEZ|SUR|SOUS|EN|DE|DU|DES|LA|LE|ET|À|AU|AUX)$/;
+        // tdJoue : le battement a eu lieu (il n'a lieu qu'une fois) ;
+        // tdEnAttente : il est décidé et attend les polices et son délai.
+        let tdJoue = false, tdEnAttente = false, tdJeton = 0, tdCellules = [], tdIO = null, tdCle = null;
+
+        const tdMaj = (t) => String(t || '').normalize('NFC').toLocaleUpperCase('fr-FR').replace(/\s+/g, ' ').trim();
+
+        // Tenir en n lettres : on coupe entre deux mots, jamais au milieu
+        // d'un mot, sans laisser pendre un « lès » ; un mot seul trop long
+        // perd sa fin derrière un point.
+        function tdCouper(texte, n) {
+            if (texte.length <= n) return texte;
+            let coupe = -1;
+            for (let i = n; i > 0; i--) if (texte[i] === ' ' || texte[i] === '-') { coupe = i; break; }
+            if (coupe < 1) return texte.slice(0, n - 1) + '.';
+            let t = texte.slice(0, coupe);
+            while (TD_LIAISONS.test(t)) t = t.replace(TD_LIAISONS, '');
+            return t;
+        }
+
+        // « Saint-Quentin » → « ST QUENTIN », seulement s'il le faut :
+        // « SAINT LÔ » tient en entier. Le trait d'union devient un blanc,
+        // comme sur les tableaux de gare : sur une palette, la charnière le
+        // coupait en deux et il se lisait « = ».
+        function tdVille(e) {
+            let v = tdMaj(placeOf(e.show));
+            if (v.length > TD_LARGEURS.ville) {
+                v = v.replace(/\bSAINTE-/g, 'STE-').replace(/\bSAINT-/g, 'ST-').replace(/\bGRAND-/g, 'GD-');
+            }
+            return tdCouper(v, TD_LARGEURS.ville).replace(/-/g, ' ');
+        }
+
+        // L'heure du premier soir, celle du public de préférence (une séance
+        // scolaire à 14h15 ne dit pas quand le public peut venir).
+        function tdSeance(e) {
+            const soir = e.perfs.filter(p => !e.debut || (p.jour && p.jour.iso === e.debut.iso));
+            return soir.find(p => !p.ecole && p.heure) || soir.find(p => p.heure) || null;
+        }
+
+        // « 19h00 » → « 19H00 ». Une heure qui n'en est pas une (« matin »)
+        // laisse la case vide : le texte en clair la dit.
+        function tdHeure(p) {
+            const m = p && String(p.heure).split('&')[0].trim().match(/^(\d{1,2})\s*h\s*(\d{2})?$/i);
+            return m ? `${m[1].padStart(2, '0')}H${m[2] || '00'}` : '';
+        }
+
+        // La prochaine entrée des dates, dans la forme des lignes de l'onglet
+        // Dates (voir dlEntrees) : ses séances, ses jours, le premier. Sans
+        // rien d'autre : dlEntrees réserve aussi la place de chaque séance
+        // dans l'agenda, et lit univers.js, qui n'est pas encore là.
+        function prochaineEntree() {
+            if (typeof SHOW_DATA === 'undefined') return null;
+            const entrees = splitUpcoming(SHOW_DATA.upcoming).upcoming.map(show => {
+                const reps = (show.type === 'series' && Array.isArray(show.shows)) ? show.shows : [show];
+                const perfs = reps.map(r => ({
+                    jour: dlJour(r.icsDate),
+                    heure: Array.isArray(r.times) && r.times.length ? r.times.join(' & ') : (r.time || ''),
+                    ecole: Boolean(r.isSchool || show.isSchool),
+                    dateLabel: r.dateLabel || show.dateLabel || show.date || ''
+                }));
+                const jours = [];
+                perfs.forEach(p => { if (p.jour && !jours.some(d => d.iso === p.jour.iso)) jours.push(p.jour); });
+                jours.sort((x, y) => x.t - y.t);
+                return { show, titre: show.title || '', perfs, jours, debut: jours[0] || null };
+            });
+            entrees.sort((x, y) => (x.debut ? x.debut.t : 8.64e15) - (y.debut ? y.debut.t : 8.64e15));
+            return entrees[0] || null;
+        }
+
+        // Ce que lit un lecteur d'écran, et ce qui fait le nom du bouton.
+        function tdEnClair(e) {
+            const quand = e.debut ? dlCap(dlDateEnLettres(e.jours)) : (e.perfs[0].dateLabel || 'Date à préciser');
+            const heures = [...new Set(e.perfs.map(p => String(p.heure || '').replace(/\s*&\s*/g, ' et ')).filter(Boolean))];
+            const scolaire = e.perfs.every(p => p.ecole)
+                ? (e.perfs.length > 1 ? ', séances scolaires' : ', séance scolaire') : '';
+            return `${quand}${heures.length ? `, ${heures.join(' et ')}` : ''} : ${e.titre}, `
+                + `${e.show.location || placeOf(e.show)}${scolaire}. Voir cette date dans l’onglet Dates`;
+        }
+
+        // Les palettes d'une colonne. `anime` : elles partent de blanc et
+        // portent leurs volets ; sinon elles sont posées sur leur lettre.
+        function tdPalettes(texte, n, anime) {
+            return [...texte.padEnd(n).slice(0, n)].map(ch => {
+                const vu = esc(anime ? ' ' : ch);
+                return `<span class="fl" data-c="${esc(ch)}"><span class="fl-h"><i>${vu}</i></span><span class="fl-b"><i>${vu}</i></span>`
+                    + (anime ? '<span class="fl-v1"><i></i></span><span class="fl-v2"><i></i></span>' : '')
+                    + '</span>';
+            }).join('');
+        }
+
+        // Tout ce que la ligne affiche — et rien d'autre : c'est aussi ce qui
+        // dit si elle a changé.
+        function tdDonnees(e) {
+            const seance = tdSeance(e);
+            const proche = e.debut ? relativeDayLabel(e.debut.t, '') : '';
+            return {
+                cle: (e.debut ? e.debut.iso : '') + '|' + e.titre,
+                titre: e.titre,
+                clair: tdEnClair(e),
+                cols: {
+                    // « CE SOIR », « DEMAIN » : les deux jours où l'on ne
+                    // lit pas une date, mais une urgence.
+                    date: proche ? tdMaj(proche) : (e.debut ? `${String(e.debut.j).padStart(2, '0')} ${TD_MOIS[e.debut.m]}` : ''),
+                    heure: tdHeure(seance),
+                    titre: tdCouper(tdMaj(e.titre.split(',')[0].replace(/\s*[?!]$/, '')), TD_LARGEURS.titre).replace(/-/g, ' '),
+                    ville: tdVille(e)
+                },
+                heure: seance ? String(seance.heure).split('&')[0].trim() : '',
+                ville: placeOf(e.show)
+            };
+        }
+
+        // La couleur du spectacle, celle de ses lignes dans l'onglet Dates.
+        // Tant qu'univers.js n'est pas là, le trait prend le jaune du tableau.
+        function tdCouleur(titre) {
+            const t = typeof window.spectacleParTitre === 'function' ? window.spectacleParTitre(titre) : null;
+            const accent = t && t.uni && t.uni.palette && t.uni.palette.accent;
+            return accent ? `--dl-a:${esc(accent)}` : '';
+        }
 
         function renderNextDate() {
-            const bandeau = document.getElementById('next-date-banner');
-            if (!bandeau) return;
-            const cacher = () => { bandeau.hidden = true; bandeau.innerHTML = ''; bandeau.__rendu = ''; };
-            if (typeof SHOW_DATA === 'undefined') return cacher();
+            const tableau = document.getElementById('next-date-banner');
+            if (!tableau) return;
+            const e = prochaineEntree();
+            if (!e) {
+                tableau.hidden = true;
+                tableau.innerHTML = '';
+                tdCle = null;
+                return;
+            }
+            const d = tdDonnees(e);
+            const style = tdCouleur(e.titre);
+            // Rien n'a changé (le rendu du chargement, des données en direct
+            // identiques) : on ne redessine pas — les palettes repartiraient
+            // de blanc. Seule la couleur a pu arriver entre-temps.
+            const cle = JSON.stringify(d);
+            if (tdCle === cle) {
+                tableau.hidden = false;
+                const ligne = tableau.querySelector('.td-dep');
+                if (ligne && ligne.getAttribute('style') !== style) ligne.setAttribute('style', style);
+                return;
+            }
+            tdCle = cle;
+            tdJeton++;   // un battement en cours s'arrête là
+            tableau.classList.remove('td-roule');
 
-            const toutes = flattenUpcoming(splitUpcoming(SHOW_DATA.upcoming).upcoming);
-            // Une entrée sans icsDate exploitable ne peut pas être classée :
-            // elle ne sert de secours que si aucune autre n'est datée.
-            const datees = toutes.filter(r => !isNaN(r.time)).sort((a, b) => a.time - b.time);
-            const p = datees[0] || toutes[0];
-            if (!p) return cacher();
+            const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const anime = !tdJoue && !reduit && 'IntersectionObserver' in window
+                && typeof Element.prototype.animate === 'function';
+            // Le point qui sépare l'heure de la ville part avec l'heure,
+            // quand elle prend sa colonne sur un tableau plus large.
+            const sous = (d.heure ? `<span class="s-heure">${esc(d.heure)}${d.ville ? '<span class="s-sep"> · </span>' : ''}</span>` : '')
+                + (d.ville ? `<span class="s-ville">${esc(d.ville)}</span>` : '');
+            tableau.innerHTML = '<h3 class="td-sur" id="td-titre"><span class="td-voyant" aria-hidden="true"></span>Prochaine date</h3>'
+                + `<button type="button" class="td-dep" data-depart="${esc(d.cle)}" data-track="banner_next_date"`
+                + ` data-track-detail="${esc(d.titre)}" style="${style}">`
+                + `<span class="sr-only">${esc(d.clair)}</span>`
+                + '<span class="td-ligne" aria-hidden="true">'
+                + Object.keys(TD_LARGEURS).map(c => `<span class="td-col ${c}"><span class="td-lib">${TD_INTITULES[c]}</span>`
+                    + `<span class="td-fl">${tdPalettes(d.cols[c], TD_LARGEURS[c], anime)}</span></span>`).join('')
+                + '</span>'
+                + (sous ? `<span class="td-sous" aria-hidden="true">${sous}</span>` : '')
+                + '</button>';
+            tableau.hidden = false;
 
-            // « Ce soir », « Demain » ; sinon le jour, écrit court : « Jeu. 22 oct. ».
-            const datee = !isNaN(p.time);
-            const jour = datee ? JOUR_COURT.format(new Date(p.time)).replace(/^./, c => c.toUpperCase()) : p.dateLabel;
-            const point = '<span class="text-stone-300 mx-1" aria-hidden="true">·</span>';
-            // Le jour et l'heure ne se coupent pas en deux (« Jeu. 22 » puis
-            // « oct. ») ; le lieu, long, passe à la ligne où il peut.
-            const insecable = (t) => t ? `<span class="whitespace-nowrap">${esc(t)}</span>` : '';
-            const quand = [insecable(relativeDayLabel(p.time, jour)), insecable(p.heure), esc(p.location || '')]
-                .filter(Boolean).join(point);
+            tdCellules = [];
+            if (!anime) return;
+            tableau.querySelectorAll('.fl').forEach((el, k) => {
+                const [h, b, v1, v2] = el.children;
+                tdCellules.push({ el, h: h.firstChild, b: b.firstChild, v1, v2, cible: el.dataset.c, cur: ' ', k });
+            });
+            // Redessiné avant d'avoir battu (les données en direct arrivent
+            // pendant l'attente) : on repart de zéro, avec un guet neuf, qui
+            // dit tout de suite si le tableau est à l'écran.
+            tdEnAttente = false;
+            if (tdIO) { tdIO.disconnect(); tdIO = null; }
+            tdGuetter(tableau);
+        }
 
-            const trouve = typeof window.spectacleParTitre === 'function' ? window.spectacleParTitre(p.title) : null;
-            const uni = trouve && trouve.uni;
-            const nomClasses = 'text-xs font-bold font-montserrat uppercase tracking-wide text-luxury-textMain';
-            const nom = uni && uni.slug
-                ? `<a class="dl-vers-page ${nomClasses}" href="spectacles/${esc(uni.slug)}/" data-track="date_spectacle" data-track-detail="${esc(uni.title || p.title)}">${esc(p.title)}</a>`
-                : `<span class="${nomClasses}">${esc(p.title)}</span>`;
+        function tdGuetter(tableau) {
+            if (tdIO) return;
+            tdIO = new IntersectionObserver((vus) => {
+                if (vus.some(v => v.isIntersecting)) tdLancer();
+            }, { threshold: 0.6 });
+            tdIO.observe(tableau);
+        }
 
-            // Pas de bouton pour une séance scolaire : l'accès y est restreint,
-            // et proposer « Réserver » ferait une promesse que la page Dates
-            // dément trois lignes plus bas.
-            const billetterie = lienSur(p.bookingUrl);
-            const reserver = (billetterie && !p.isSchool)
-                ? `<a href="${esc(billetterie)}" target="_blank" rel="noopener" data-track="date_booking"
-                       data-track-detail="${esc(p.title)}"
-                       class="next-date-reserver flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-luxury-goldInk text-luxury-onGold text-[11px] font-bold font-montserrat tracking-wider uppercase hover:bg-luxury-goldDeep transition">
-                       Réserver<span class="sr-only"> (nouvel onglet)</span> <svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
-                : '';
-            // L'agenda, comme sur chaque ligne de l'onglet Dates — seulement
-            // pour une date lisible, sans quoi il n'y a rien à y inscrire.
-            window.calProchaine = datee ? {
-                title: p.title, subtitle: p.subtitle, location: p.location,
-                icsDate: p.icsDate, time: p.heureBrute, times: p.heures, dateLabel: p.dateLabel
-            } : null;
-            const agenda = datee
-                ? `<button type="button" class="dl-agenda" data-cal-prochaine
-                       aria-label="${esc(`Ajouter au calendrier : ${p.title}, ${[jour, p.heure].filter(Boolean).join(' ')}`)}"><svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button>`
-                : '';
-            const actions = reserver || agenda ? `<span class="next-date-actions">${reserver}${agenda}</span>` : '';
+        const tdAlEcran = (el) => {
+            const r = el.getBoundingClientRect();
+            return r.height > 0 && r.bottom > 0 && r.top < window.innerHeight;
+        };
 
-            const date = `<a href="#page_dates" data-track="banner_next_date" class="text-[11px] text-luxury-textMuted font-mono break-words min-w-0 hover:text-luxury-goldInk transition">${quand}</a>`;
-            // gap-y-2 : le nom et la date sont deux liens l'un sous l'autre ;
-            // 8 px les tiennent à 24 px de centre à centre, la distance
-            // minimale entre deux cibles tactiles (WCAG 2.5.8).
-            const html = `
-                <div class="next-date-shine glass-card rounded-lg border border-stone-200/50 shadow-sm px-3.5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                    <span class="flex items-center gap-1.5 flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
-                        <span class="next-date-dot" aria-hidden="true"></span> Prochainement
-                    </span>
-                    <span class="next-date-quoi flex-[1_1_10rem] min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-2">${nom}${date}</span>
-                    ${actions}
-                </div>`;
-            // Rien n'a changé ? Rien ne bouge : réécrire le carton relancerait
-            // le phare et la pastille, qui ne passent qu'une fois.
-            if (bandeau.__rendu === html) return;
-            bandeau.__rendu = html;
-            bandeau.innerHTML = html;
-            bandeau.hidden = false;
+        function tdLancer() {
+            if (tdJoue || tdEnAttente || !tdCellules.length) return;
+            // Sous le rideau de l'ouverture : on repassera quand il sera levé
+            // (il ne fait pas défiler la page, l'observateur ne se
+            // redéclencherait pas de lui-même).
+            if (document.body.classList.contains('modal-open')) {
+                clearTimeout(tdLancer.attente);
+                tdLancer.attente = setTimeout(() => {
+                    const t = document.getElementById('next-date-banner');
+                    if (t && tdAlEcran(t)) tdLancer();
+                }, 400);
+                return;
+            }
+            tdEnAttente = true;
+            if (tdIO) { tdIO.disconnect(); tdIO = null; }
+            const jeton = tdJeton;
+            // Les polices d'abord : une palette qui change de police en cours
+            // de route sauterait. Puis un temps pour que le regard se pose —
+            // au chargement, le tableau est déjà là.
+            //
+            // ET IL FAUT ENCORE LE VOIR À CE MOMENT-LÀ. Une adresse qui vise
+            // un autre onglet (…/#page_dates) montre le CV un instant, le
+            // temps de lire la page : le tableau était alors vu, puis masqué
+            // avant de battre — et son battement, consommé pour personne, ne
+            // revenait plus quand on ouvrait le CV. S'il n'est plus à
+            // l'écran, on le guette de nouveau.
+            const pret = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+            pret.then(() => setTimeout(() => {
+                if (jeton !== tdJeton) return;   // redessiné entre-temps : il guette de lui-même
+                tdEnAttente = false;
+                const tableau = document.getElementById('next-date-banner');
+                if (!tableau || !tdAlEcran(tableau)) {
+                    if (tableau) tdGuetter(tableau);
+                    return;
+                }
+                tdJoue = true;
+                tdDerouler(jeton);
+            }, 450));
+        }
+
+        const tdPoser = (cl, ch) => { cl.cur = ch; cl.h.textContent = ch; cl.b.textContent = ch; };
+
+        // Un battement : le haut de l'ancienne lettre tombe, le bas de la
+        // nouvelle se pose. Derrière le volet qui tombe, le haut fixe montre
+        // déjà la nouvelle lettre ; le bas fixe garde l'ancienne jusqu'à ce
+        // que le second volet l'ait recouverte — ce volet reste posé
+        // (`fill`) le temps que le bas fixe change sous lui, sans quoi
+        // l'ancienne lettre reparaîtrait l'espace d'une image. Il reste donc
+        // à plat jusqu'au battement suivant, et ne reçoit la nouvelle lettre
+        // qu'au moment de se relever : écrite plus tôt, elle aurait paru sur
+        // la moitié basse avant que le haut ne soit tombé.
+        function tdBattre(cl, vers, jeton) {
+            const DUREE = 64;
+            cl.v1.firstChild.textContent = cl.cur;
+            cl.h.textContent = vers;
+            return cl.v1.animate([{ transform: 'rotateX(0deg)' }, { transform: 'rotateX(-90deg)' }],
+                { duration: DUREE, easing: 'ease-in' }).finished
+                .then(() => {
+                    if (jeton !== tdJeton) return;
+                    cl.v2.firstChild.textContent = vers;
+                    return cl.v2.animate([{ transform: 'rotateX(90deg)' }, { transform: 'rotateX(0deg)' }],
+                        { duration: DUREE, easing: 'ease-out', fill: 'forwards' }).finished;
+                })
+                .then(() => {
+                    if (jeton === tdJeton) { cl.cur = vers; cl.b.textContent = vers; }
+                });
+        }
+
+        // Les lettres de passage : trois à sept, prises dans le jeu de la
+        // palette juste avant la sienne — un chiffre roule parmi les
+        // chiffres, une lettre parmi les lettres, et une lettre accentuée
+        // passe par les lettres simples avant de se poser sur son accent
+        // (« É » : …C, D, É). La ponctuation tombe d'un coup.
+        function tdPassage(cible, k) {
+            const base = cible.normalize('NFD').replace(/[̀-ͯ]/g, '');
+            const jeu = /^\d$/.test(base) ? TD_CHIFFRES : (TD_LETTRES.includes(base) ? TD_LETTRES : '');
+            if (!jeu) return [cible];
+            const i = jeu.indexOf(base);
+            const suite = [];
+            for (let t = 3 + ((i * 7 + k) % 5); t >= 1; t--) suite.push(jeu[(i - t + jeu.length * 2) % jeu.length]);
+            suite.push(cible);
+            return suite;
+        }
+
+        async function tdRouler(cl, jeton) {
+            for (const ch of tdPassage(cl.cible, cl.k)) {
+                if (jeton !== tdJeton) return;
+                if (ch !== cl.cur) await tdBattre(cl, ch, jeton);
+            }
+        }
+
+        // Dans l'ordre de lecture, de gauche à droite, 22 ms d'une palette à
+        // l'autre : moins de deux secondes en tout. Les palettes des colonnes
+        // repliées (l'heure et la ville, sur téléphone) sont posées sans
+        // battre. Quand la dernière palette est tombée — ou au bout de six
+        // secondes, quoi qu'il arrive (un onglet en arrière-plan ralentit les
+        // minuteries) —, tout est posé sur la bonne lettre et les volets
+        // rendent leurs calques.
+        function tdDerouler(jeton) {
+            const tableau = document.getElementById('next-date-banner');
+            const battantes = [];
+            tdCellules.forEach(cl => {
+                if (!cl.el.offsetWidth) tdPoser(cl, cl.cible);
+                else if (cl.cible !== ' ') battantes.push(cl);
+            });
+            const finir = () => {
+                if (jeton !== tdJeton) return;
+                tdJeton++;
+                tableau.classList.remove('td-roule');
+                tdCellules.forEach(cl => {
+                    cl.v1.getAnimations().concat(cl.v2.getAnimations()).forEach(a => a.cancel());
+                    tdPoser(cl, cl.cible);
+                });
+            };
+            let restantes = battantes.length;
+            if (!restantes) { finir(); return; }
+            const boites = battantes.map(cl => cl.el.getBoundingClientRect());
+            const gauche = Math.min(...boites.map(b => b.left));
+            tableau.classList.add('td-roule');
+            battantes.forEach((cl, i) => setTimeout(() => {
+                tdRouler(cl, jeton).catch(() => { }).then(() => { if (--restantes === 0) finir(); });
+            }, (boites[i].left - gauche) / (boites[i].width + 2) * 22));
+            setTimeout(finir, 6000);
         }
 
         renderNextDate();
+                </script>
+
+                <!-- ── TÉLÉCHARGER LE CV ──
+                     Après la prochaine date, à toutes les largeurs : on lit
+                     d'abord où Adrien joue, puis on emporte le CV. Il était
+                     au-dessus de la date sur téléphone et dans la barre
+                     d'onglets sur grand écran ; il n'y a plus qu'un lien, au
+                     même endroit partout.
+
+                     `data-track-detail` (bureau / mobile) est posé par
+                     largeurDuLienCv(), plus bas : la mesure distingue toujours
+                     les deux usages, comme au temps des deux exemplaires. -->
+                <div class="pdf-btn-row flex justify-end no-print">
+                    <a href="/ressources/cv-adrien-vada.pdf" download="cv-adrien-vada.pdf" id="pdf-download-btn"
+                        data-track="cv_pdf" data-track-detail="mobile" class="pdf-btn inline-flex">
+                        <svg class="ico" aria-hidden="true">
+                            <use href="#i-solid-file-pdf"></use>
+                        </svg> Télécharger le CV
+                    </a>
+                </div>
+                <script>
+        // La mesure garde ses deux détails (voir `cv_pdf` dans
+        // README-build.md) : « bureau » au-delà de 768 px, « mobile » en deçà
+        // — la limite où le lien vivait autrefois dans la barre d'onglets.
+        (function largeurDuLienCv() {
+            const lien = document.getElementById('pdf-download-btn');
+            if (!lien || !window.matchMedia) return;
+            const large = window.matchMedia('(min-width: 768px)');
+            const poser = () => lien.setAttribute('data-track-detail', large.matches ? 'bureau' : 'mobile');
+            poser();
+            if (large.addEventListener) large.addEventListener('change', poser);
+        })();
                 </script>
 
                 <!-- SECTION 1.1: THÉÂTRE -->
@@ -7185,8 +7927,8 @@
     </div>
 
     <!-- VANILLA JS SCRIPTS
-         (dates.js est chargé plus haut, juste avant le bandeau
-         « Prochainement » : voir là-bas pourquoi.)
+         (dates.js est chargé plus haut, juste avant la prochaine date du
+         CV : voir là-bas pourquoi.)
          Dates en direct depuis Supabase ; dates.js reste le repli si la base
          ne répond pas. Voir l'en-tête de dates-live.js. -->
     <script src="dates-live.js"></script>
@@ -7294,12 +8036,32 @@
             if (meta) meta.setAttribute('content', theme === 'light' ? '#FAF9F5' : '#0a0907');
         }
 
+        // Le cercle part du bouton pressé et grandit jusqu'au coin le plus
+        // éloigné de l'écran (voir « Le thème bascule en cercle »).
+        function basculerTheme(theme, bouton) {
+            const html = document.documentElement;
+            const calme = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!document.startViewTransition || calme || !bouton) { applyTheme(theme, true); return; }
+            const r = bouton.getBoundingClientRect();
+            const x = r.left + r.width / 2, y = r.top + r.height / 2;
+            const rayon = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+            html.classList.add('vt-theme');
+            const passage = document.startViewTransition(() => applyTheme(theme, true));
+            passage.ready.then(() => {
+                html.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${rayon}px at ${x}px ${y}px)`] }, {
+                    duration: 620, easing: 'cubic-bezier(.65, 0, .35, 1)',
+                    pseudoElement: '::view-transition-new(root)'
+                });
+            }).catch(() => { });
+            passage.finished.catch(() => { }).finally(() => html.classList.remove('vt-theme'));
+        }
+
         function initThemeToggle() {
             applyTheme(document.documentElement.getAttribute('data-theme') || 'dark', false);
             document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const now = document.documentElement.getAttribute('data-theme');
-                    applyTheme(now === 'light' ? 'dark' : 'light', true);
+                    basculerTheme(now === 'light' ? 'dark' : 'light', btn);
                 });
             });
 
@@ -7547,12 +8309,11 @@
             // dernier — d'où un résultat différent selon le navigateur et la
             // machine. On garde le href (URL partageable, ouverture dans un
             // onglet, lecteurs d'écran) et on ne lui retire que le défilement.
-            // Posé sur le DOCUMENT, et non sur la seule barre d'onglets : le
-            // bandeau « Prochainement » renvoie lui aussi vers #page_dates,
-            // et depuis qu'il vit dans le CV il serait le seul lien d'onglet
-            // de la page à garder le double défilement qu'on vient d'ôter aux
-            // autres. La règle vaut donc partout : un lien dont le fragment
-            // désigne un conteneur de page est un changement d'onglet.
+            // Posé sur le DOCUMENT, et non sur la seule barre d'onglets : un
+            // lien d'onglet placé ailleurs dans la page garderait sinon le
+            // double défilement qu'on vient d'ôter aux autres. La règle vaut
+            // donc partout : un lien dont le fragment désigne un conteneur de
+            // page est un changement d'onglet.
             document.addEventListener('click', (e) => {
                 // Clic milieu, ⌘/Ctrl-clic… : c'est une demande de nouvel
                 // onglet, elle ne nous regarde pas.
@@ -7731,15 +8492,18 @@
             // ligne en enchaînait trois : showPage, puis `location.hash` (qui
             // relançait showPage par hashchange), puis un scrollIntoView vers
             // une troisième cible.
-            allerAOnglet('page_dates');
             // LE FOCUS ARRIVE AVEC LA PAGE. Venu d'un univers refermé, il
             // restait sur <body> : la touche Tab suivante repartait du haut
-            // du site au lieu des dates qu'on venait demander.
-            const titre = document.querySelector('#page_dates h3');
-            if (titre) {
-                titre.setAttribute('tabindex', '-1');
-                titre.focus({ preventScroll: true });
-            }
+            // du site au lieu des dates qu'on venait demander. On attend que
+            // la page soit posée : pendant le passage animé, elle est encore
+            // masquée une image, et un élément masqué ne prend pas le focus.
+            allerAOnglet('page_dates').then(() => {
+                const titre = document.querySelector('#page_dates h3');
+                if (titre) {
+                    titre.setAttribute('tabindex', '-1');
+                    titre.focus({ preventScroll: true });
+                }
+            });
         }
 
         document.addEventListener('click', (e) => {
@@ -7827,33 +8591,6 @@
         function norm(str) {
             return String(str || '').toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        }
-
-        // Repli : déduit la ville du libellé du lieu quand le champ `city`
-        // est absent. Deux formes coexistent dans les anciennes saisies :
-        //   « Le Forum, Falaise (14) »            -> après la virgule
-        //   « Tribunal judiciaire de Rouen (76) » -> après le dernier « de/du/d' »
-        function cityFromLocation(location) {
-            const s = String(location || '').replace(/\s*\(\d{2,3}\)\s*$/, '').trim();
-            if (!s) return '';
-            const parts = s.split(',').map(x => x.trim()).filter(Boolean);
-            if (parts.length > 1) return parts[parts.length - 1];
-            const m = s.match(/^.*(?:\sde\s|\sdu\s|\sd')\s*(.+)$/i);
-            return m ? m[1].trim() : s;
-        }
-
-        // La ville vient du champ `city` de dates.js (voir l'en-tête de ce
-        // fichier), qui fait autorité : le déduire du libellé produisait des
-        // doublons (« Rouen » à côté de « Tribunal judiciaire de Rouen »)
-        // selon la façon dont le lieu avait été saisi.
-        //
-        // Le repli reste indispensable : index.html et dates.js sont mis en
-        // cache indépendamment par les navigateurs. Un visiteur peut donc
-        // recevoir un index.html récent avec un dates.js encore ancien, sans
-        // champ `city` — sans ce repli, le filtre Ville se retrouverait vide.
-        function placeOf(entry) {
-            if (!entry) return '';
-            return entry.city || cityFromLocation(entry.location);
         }
 
         function matchesFilters(title, location, city) {
@@ -8042,37 +8779,9 @@
         //  Les lignes se rangent sous un INTERCALAIRE par mois, qui reste
         //  accroché sous la barre d'onglets pendant qu'on parcourt ce mois.
         // ════════════════════════════════════════════════════════════════
-        const DL_JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-        const DL_JOURS_COURTS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
-        const DL_MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
-            'août', 'septembre', 'octobre', 'novembre', 'décembre'];
-        const DL_MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.',
-            'août', 'sept.', 'oct.', 'nov.', 'déc.'];
-
-        function dlJour(icsDate) {
-            const t = icsToTime(icsDate);
-            if (isNaN(t)) return null;
-            const d = new Date(t);
-            return { t, iso: icsDate, a: d.getFullYear(), m: d.getMonth(), j: d.getDate(), js: d.getDay() };
-        }
-        // « 1er décembre » : le premier du mois s'écrit en ordinal.
-        const dlQuantieme = (d) => (d.j === 1 ? '1er' : String(d.j));
-        const dlCap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-        const dlPluriel = (n, mot) => `${n}\u00a0${mot}${n > 1 ? 's' : ''}`;
-
-        // « jeudi 22 octobre » · « jeudi 22 et vendredi 23 octobre » ·
-        // « du mardi 18 au vendredi 21 mai » · « samedi 31 octobre et
-        // dimanche 1er novembre ».
-        function dlDateEnLettres(jours, avecAnnee) {
-            const f = (d) => `${DL_JOURS[d.js]} ${dlQuantieme(d)}`;
-            const a = jours[0], b = jours[jours.length - 1];
-            const annee = avecAnnee ? ` ${b.a}` : '';
-            if (jours.length === 1) return `${f(a)} ${DL_MOIS[a.m]}${annee}`;
-            const lien = jours.length === 2 ? ' et ' : ' au ';
-            const du = jours.length === 2 ? '' : 'du ';
-            const premier = a.m === b.m && a.a === b.a ? f(a) : `${f(a)} ${DL_MOIS[a.m]}`;
-            return `${du}${premier}${lien}${f(b)} ${DL_MOIS[b.m]}${annee}`;
-        }
+        // Les jours, les mois et la date en lettres (DL_JOURS, DL_MOIS,
+        // dlJour, dlDateEnLettres…) sont écrits plus haut, avec la prochaine
+        // date du CV, qui s'en sert dès la lecture de la page.
 
         // « jeudi 22 octobre 2026 à 19h00 » — pour les libellés lus à voix
         // haute, qui ne voient ni la feuille ni l'intercalaire du mois.
@@ -8172,8 +8881,7 @@
         }
 
         // Ce qu'on peut faire d'une séance. Pas de « Réserver » pour une
-        // séance scolaire : l'accès y est restreint (même règle que le bandeau
-        // « Prochainement »).
+        // séance scolaire : l'accès y est restreint.
         function dlAction(p, e, court) {
             // Dans une case, pas de pictogramme : la place manque, et le bord
             // en pointillé dit déjà la séance scolaire.
@@ -8213,7 +8921,7 @@
             const avecAnnee = vue === 'spectacle' && e.debut && e.debut.a !== new Date().getFullYear();
             const quand = e.debut ? dlCap(dlDateEnLettres(e.jours, avecAnnee)) : (p.dateLabel || 'Date à préciser');
             // « Ce soir », « Demain » : les deux jours où l'information décide
-            // de quelque chose (même règle que le bandeau « Prochainement »).
+            // de quelque chose (même règle que la prochaine date du CV).
             const proche = e.debut ? relativeDayLabel(e.debut.t, '') : '';
             const titre = vue === 'date'
                 ? `<h5 class="dl-titre">${dlVersPage(e.spectacle, esc(e.titre))}${e.show.subtitle ? ` <span class="dl-sous">(${esc(e.show.subtitle)})</span>` : ''}</h5>`
@@ -8222,7 +8930,8 @@
             // série : l'heure, « Réserver » et l'agenda s'y lisent toujours
             // au même endroit.
             const droite = `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}</ul>`;
-            return `<article class="dl ${e.serie ? 'dl--serie' : 'dl--seule'}" id="dl-e${e.k}" style="${dlStyle(e.spectacle)}">`
+            return `<article class="dl ${e.serie ? 'dl--serie' : 'dl--seule'}" id="dl-e${e.k}"`
+                + ` data-dl-cle="${esc((e.debut ? e.debut.iso : '') + '|' + e.titre)}" style="${dlStyle(e.spectacle)}">`
                 + dlFeuille(e)
                 + `<div class="dl-corps"><p class="dl-quand">${proche ? `<span class="dl-proche">${esc(proche)}</span>` : ''}${esc(quand)}</p>`
                 + titre
@@ -8332,7 +9041,7 @@
         //  rond conduisent aux lignes qu'ils résument (voir dlAller).
         //  Filtrer aurait fait disparaître le reste de la page sous les
         //  doigts ; y conduire ne retire rien. (La prochaine représentation
-        //  n'est pas répétée ici : elle a son carton en tête du CV — voir
+        //  n'est pas répétée ici : elle est en tête du CV — voir
         //  renderNextDate —, et la liste commence par elle.)
         function dlSommaire(entrees) {
             const datees = entrees.filter(e => e.debut);
@@ -8397,9 +9106,22 @@
             dlChoisirVue(d.dlSpec ? 'spectacle' : 'date');
             const cible = document.getElementById(d.dlSpec ? `dl-spec-${d.dlSpec}`
                 : d.dlMois ? `dl-mois-${d.dlMois}` : `dl-e${d.dlAller}`);
-            if (!cible) return;
+            if (cible) dlViser(cible);
+        }
+
+        // On vise la place de la cible DANS LA PAGE, pas à l'écran : une
+        // carte qui entre encore (.reveal : 15 px plus bas le temps de son
+        // apparition) faussait scrollIntoView d'autant — venue du CV, la
+        // ligne finissait sous l'intercalaire de son mois. Les marges sont
+        // celles que lirait scrollIntoView (scroll-padding de la page,
+        // scroll-margin de la cible).
+        function dlViser(cible) {
             const doux = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-            cible.scrollIntoView({ behavior: doux ? 'smooth' : 'auto', block: 'start' });
+            let y = 0;
+            for (let n = cible; n; n = n.offsetParent) y += n.offsetTop;
+            const marge = (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0)
+                + (parseFloat(getComputedStyle(cible).scrollMarginTop) || 0);
+            window.scrollTo({ top: Math.max(0, y - marge), behavior: doux ? 'smooth' : 'auto' });
             let focus = cible.querySelector('h4');
             if (cible.classList.contains('dl')) {
                 focus = cible;
@@ -8409,6 +9131,33 @@
             }
             if (focus) focus.focus({ preventScroll: true });
         }
+
+        // La prochaine date du CV mène à sa ligne dans l'onglet Dates, où
+        // l'on réserve et où l'on garde la date dans son agenda. Une
+        // recherche en cours est levée d'abord : la ligne doit être dans la
+        // liste. On la retrouve par sa clé (le premier jour et le titre),
+        // pas par son rang, qui dépend des filtres.
+        //
+        // L'EN-TÊTE SE REPLIE D'UN COUP. En quittant le CV, sa bio se replie
+        // en 400 ms (voir .bio-collapse) : pendant ce temps, tout ce qui suit
+        // remonte, et la ligne visée finissait sous la barre d'onglets (19 px
+        // au-dessus de l'écran, mesuré sur téléphone). On file vers le bas,
+        // ce repli n'a pas de spectateur : il se fait d'un coup, comme quand
+        // showPage recadre la vue, et la ligne est visée sur une page posée.
+        document.addEventListener('click', (e) => {
+            const depart = e.target.closest('#next-date-banner [data-depart]');
+            if (!depart) return;
+            if (filtersActive()) document.getElementById('dates-reset')?.click();
+            const replis = document.querySelectorAll('.bio-collapse');
+            replis.forEach(el => el.classList.add('bio-sans-transition'));
+            allerAOnglet('page_dates').then(() => {
+                document.body.offsetHeight;   // le repli est acquis
+                replis.forEach(el => el.classList.remove('bio-sans-transition'));
+                const cible = [...document.querySelectorAll('#upcoming-dates-container .dl[data-dl-cle]')]
+                    .find(a => a.dataset.dlCle === depart.dataset.depart);
+                if (cible) dlViser(cible);
+            });
+        });
 
         document.addEventListener('click', (e) => {
             const vue = e.target.closest('[data-dates-vue]');
@@ -8552,17 +9301,13 @@
         }
 
         // Délégation : les boutons agenda des dates (le rendu les refait à
-        // chaque filtre, d'où l'écoute au niveau du document), et celui du
-        // carton « Prochainement », qui porte sa date à part : il vit dans le
-        // CV, hors des rendus de l'onglet Dates.
+        // chaque filtre, d'où l'écoute au niveau du document).
         document.addEventListener('click', (e) => {
-            const cal = e.target.closest('[data-cal-index], [data-cal-prochaine]');
+            const cal = e.target.closest('[data-cal-index]');
             if (!cal) return;
             e.preventDefault();
             e.stopPropagation();
-            const data = cal.hasAttribute('data-cal-prochaine')
-                ? window.calProchaine
-                : window.renderedEventsData[+cal.dataset.calIndex];
+            const data = window.renderedEventsData[+cal.dataset.calIndex];
             if (data) openCalendarModal(data);
         });
 
@@ -9246,7 +9991,10 @@
         // ════════════════════════════════════════════════════════════════
         //  ROUTEUR D'ONGLETS
         // ════════════════════════════════════════════════════════════════
-        const TAB_ACTIVE = ['text-luxury-goldInk', 'border-stone-200/80', 'bg-stone-200/40'];
+        // Le fond et le filet de l'onglet actif sont ceux de la pastille, qui
+        // glisse de l'un à l'autre (voir .onglet-pastille) : l'onglet ne
+        // garde que sa couleur.
+        const TAB_ACTIVE = ['text-luxury-goldInk'];
         const TAB_IDLE = ['text-stone-500', 'border-transparent'];
         // LE TITRE DE LA FENÊTRE SUIT L'ONGLET. C'est lui qu'un lecteur
         // d'écran annonce au changement, et lui que montrent l'historique et
@@ -9297,13 +10045,91 @@
         // Changer d'onglet pour de bon : l'URL suit (lien partageable, bouton
         // « précédent »), et c'est nous — nous seuls — qui décidons du
         // défilement (voir le gestionnaire de clic des onglets).
+        //
+        // Rend une promesse tenue quand la nouvelle page est EN PLACE : le
+        // passage animé la pose une image plus tard (voir showPage), et qui
+        // veut y mettre le focus doit l'attendre.
         function allerAOnglet(pageId) {
-            if (!document.getElementById(pageId)) return;
+            if (!document.getElementById(pageId)) return Promise.resolve();
             if ('#' + pageId !== window.location.hash) history.pushState(null, '', '#' + pageId);
-            showPage(pageId, true);
+            return showPage(pageId, true);
         }
 
+        // ── LE PASSAGE D'UN ONGLET À L'AUTRE ──
+        //  Dans l'ordre de la barre : c'est lui qui donne le sens. On va vers
+        //  la droite, la page arrive de la droite ; on revient, elle revient
+        //  de la gauche (voir « Le changement d'onglet » dans le <style>).
+        const ORDRE_ONGLETS = ['page_cv', 'page_dates', 'demos_camera', 'demos_voix'];
+        const ONGLETS_IMMOBILES = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+        let passageOnglet = 0;
+
         function showPage(pageId, animate = true) {
+            const avant = document.querySelector('.page.active');
+            const html = document.documentElement;
+            if (!animate || !avant || avant.id === pageId || (ONGLETS_IMMOBILES && ONGLETS_IMMOBILES.matches)) {
+                poserPage(pageId, animate);
+                return Promise.resolve();
+            }
+            const sens = ORDRE_ONGLETS.indexOf(pageId) >= ORDRE_ONGLETS.indexOf(avant.id) ? 1 : -1;
+            html.style.setProperty('--onglet-dx', (sens * 28) + 'px');
+            if (!document.startViewTransition) {
+                html.classList.add('onglet-glisse');
+                poserPage(pageId, animate);
+                return Promise.resolve();
+            }
+            // Un second clic pendant le passage : la première transition est
+            // abandonnée, et sa fin ne doit pas retirer la classe de la seconde.
+            const jeton = ++passageOnglet;
+            html.classList.add('vt-onglet');
+            const passage = document.startViewTransition(() => poserPage(pageId, animate));
+            passage.finished.finally(() => {
+                if (jeton === passageOnglet) html.classList.remove('vt-onglet');
+            });
+            return passage.updateCallbackDone.catch(() => { });
+        }
+
+        // La vignette du spectacle qu'on va voir prend le nom que porte le
+        // fond du titre de sa page : c'est elle qui voyage. Seulement si elle
+        // est à l'écran, et le nom est retiré au retour sur cette page.
+        addEventListener('pageswap', (e) => {
+            if (!e.viewTransition || !e.activation || !e.activation.entry) return;
+            const chemin = new URL(e.activation.entry.url).pathname;
+            const m = chemin.match(/\/spectacles\/([^/]+)\/$/);
+            if (!m) return;
+            const groupe = [...document.querySelectorAll('#page_dates .dl-groupe--spectacle')]
+                .find(g => [...g.querySelectorAll('a[href]')].some(a => new URL(a.href).pathname === chemin));
+            const img = groupe && groupe.querySelector('.dl-vignette img');
+            if (!img) return;
+            const r = img.getBoundingClientRect();
+            if (r.width && r.bottom > 0 && r.top < innerHeight) img.style.viewTransitionName = 'fiche-' + m[1];
+        });
+        addEventListener('pageshow', () => {
+            document.querySelectorAll('.dl-vignette img').forEach(img => { img.style.viewTransitionName = ''; });
+        });
+
+        // La pastille sous l'onglet actif. Sans transition au premier
+        // placement et quand la barre change de taille : elle ne glisse que
+        // pour aller d'un onglet à un autre.
+        function placerPastille(onglet, glisser) {
+            const pastille = document.querySelector('#nav-tabs-container .onglet-pastille');
+            if (!pastille || !onglet) return;
+            pastille.classList.toggle('sans-transition', !glisser);
+            pastille.style.setProperty('--x', onglet.offsetLeft + 'px');
+            pastille.style.setProperty('--y', onglet.offsetTop + 'px');
+            pastille.style.setProperty('--w', onglet.offsetWidth + 'px');
+            pastille.style.setProperty('--h', onglet.offsetHeight + 'px');
+        }
+
+        // Les onglets changent de largeur avec la barre, et quand la police
+        // arrive : la pastille les suit, sans glisser.
+        addEventListener('DOMContentLoaded', () => {
+            const replacer = () => placerPastille(document.querySelector('#nav-tabs-container a[aria-current="page"]'), false);
+            const barre = document.getElementById('nav-tabs-container');
+            if (barre && 'ResizeObserver' in window) new ResizeObserver(replacer).observe(barre);
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(replacer);
+        });
+
+        function poserPage(pageId, animate) {
             if (activeAudioId) {
                 const audio = document.getElementById(activeAudioId);
                 if (audio) { audio.pause(); audio.currentTime = 0; resetAudioPlayer(activeAudioId); }
@@ -9312,10 +10138,7 @@
 
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             const activePage = document.getElementById(pageId);
-            if (activePage) {
-                activePage.classList.add('active');
-                if (animate) activePage.offsetHeight; // reflow pour relancer la transition
-            }
+            if (activePage) activePage.classList.add('active');
 
             document.querySelectorAll('#nav-tabs-container a').forEach(btn => {
                 btn.classList.remove(...TAB_ACTIVE);
@@ -9328,11 +10151,9 @@
                 activeTabButton.classList.add(...TAB_ACTIVE);
                 activeTabButton.setAttribute('aria-current', 'page');
             }
+            placerPastille(activeTabButton, animate);
 
             if (TITRES_ONGLETS[pageId]) document.title = TITRES_ONGLETS[pageId];
-
-            const pdfBtn = document.getElementById('pdf-download-btn');
-            if (pdfBtn) pdfBtn.classList.toggle('invisible', pageId !== 'page_cv');
 
             // CADRAGE — la question se pose AVANT de replier l'en-tête, dont
             // le repli déplace le seuil d'une centaine de pixels.
@@ -9350,8 +10171,8 @@
             //     est remplacé.
             const recadrer = animate && window.scrollY > seuilBarre();
 
-            // La bio, la signature casting, les liens externes et le bandeau
-            // « Prochainement » n'ont de sens qu'en regard du CV : ailleurs
+            // La bio, la signature casting et les liens externes n'ont de
+            // sens qu'en regard du CV : ailleurs
             // ils se replient en fondu et rendent leur place aux dates et
             // aux démos. Seuls restent alors la photo, le nom, le métier,
             // le mail et la barre de navigation.
@@ -9376,7 +10197,7 @@
 
             // `animate=false` ne sert QU'AU TOUT PREMIER CHARGEMENT (le seul
             // appel ainsi plus bas) : on arrive sur adrienvada.fr par la porte
-            // d'entrée, l'en-tête et le bandeau « Prochainement » doivent être
+            // d'entrée, l'en-tête et la prochaine date doivent être
             // visibles — c'est le haut du DOCUMENT qu'il faut, quelle que soit
             // la page visée. Tous les autres appels viennent d'un clic, et le
             // cadrage a déjà été décidé plus haut.
@@ -9482,15 +10303,12 @@
                     const audio = document.getElementById(id);
                     if (!audio || !audio.duration) return;
                     const step = audio.duration / 20;
-                    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-                        audio.currentTime = Math.min(audio.duration, audio.currentTime + step);
-                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-                        audio.currentTime = Math.max(0, audio.currentTime - step);
-                    } else if (e.key === 'Home') { audio.currentTime = 0; }
-                    else if (e.key === 'End') { audio.currentTime = audio.duration; }
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') allerDansLaDemo(id, audio.currentTime + step);
+                    else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') allerDansLaDemo(id, audio.currentTime - step);
+                    else if (e.key === 'Home') allerDansLaDemo(id, 0);
+                    else if (e.key === 'End') allerDansLaDemo(id, audio.duration);
                     else return;
                     e.preventDefault();
-                    updateAudioProgress(id);
                 });
             });
         }
@@ -9610,14 +10428,58 @@
         }
 
         function seekAudio(e, audioId) {
-            const container = e.currentTarget;
             const audio = document.getElementById(audioId);
-            const rect = container.getBoundingClientRect();
-            const clickPercentage = (e.clientX - rect.left) / rect.width;
-            if (audio.duration) {
-                audio.currentTime = clickPercentage * audio.duration;
-                updateAudioProgress(audioId);
+            const rect = e.currentTarget.getBoundingClientRect();
+            if (audio && audio.duration) allerDansLaDemo(audioId, (e.clientX - rect.left) / rect.width * audio.duration);
+        }
+
+        // ── ALLER À UN POINT D'UNE DÉMO ──
+        //  Un navigateur ne saute au milieu d'un fichier que si le serveur
+        //  lui en sert des morceaux (l'en-tête Range). GitHub Pages le fait :
+        //  sur adrienvada.fr, `seekable` couvre toute la démo. L'aperçu de
+        //  branche sur Cloudflare, non : `seekable` y reste vide, et toucher
+        //  la barre ramenait au début de l'extrait (constaté sur téléphone,
+        //  puis reproduit). Quand le point visé n'est pas atteignable, on lit
+        //  donc le fichier entier en mémoire — il est d'ordinaire déjà dans
+        //  le cache, puisque la démo joue — et l'on saute dedans ; la lecture
+        //  reprend si elle jouait. Si même cela échoue, rien ne bouge : mieux
+        //  vaut rester où l'on est que repartir de zéro.
+        function atteignable(audio, t) {
+            for (let i = 0; i < audio.seekable.length; i++) {
+                if (t >= audio.seekable.start(i) && t <= audio.seekable.end(i)) return true;
             }
+            return false;
+        }
+
+        function demoEnMemoire(audio) {
+            if (!audio.__enMemoire) {
+                audio.__enMemoire = fetch(audio.currentSrc || audio.src)
+                    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
+                    .then(blob => new Promise((ok, ko) => {
+                        const jouait = !audio.paused;
+                        audio.addEventListener('loadedmetadata', () => ok(jouait), { once: true });
+                        audio.addEventListener('error', ko, { once: true });
+                        audio.src = URL.createObjectURL(blob);
+                    }));
+                audio.__enMemoire.catch(() => { audio.__enMemoire = null; });
+            }
+            return audio.__enMemoire;
+        }
+
+        function allerDansLaDemo(audioId, cible) {
+            const audio = document.getElementById(audioId);
+            if (!audio || !audio.duration || !isFinite(audio.duration)) return;
+            cible = Math.max(0, Math.min(audio.duration, cible));
+            if (atteignable(audio, cible)) {
+                audio.currentTime = cible;
+                updateAudioProgress(audioId);
+                return;
+            }
+            demoEnMemoire(audio).then((jouait) => {
+                audio.currentTime = cible;
+                updateAudioProgress(audioId);
+                if (jouait && activeAudioId === audioId) audio.play().catch(() => { });
+            }, () => { });
         }
 
         function formatDuration(seconds) {
@@ -9716,9 +10578,12 @@
         </div>
     </div>
 
-    <!-- Le moteur de montage, avant univers.js qui s'en sert.
-         Même fichier que celui dont se sert build/generer-pages-spectacles.js :
+    <!-- La régie d'abord : le défilement qui mène les scènes, là où le
+         navigateur ne le fait pas lui-même (voir regie.js).
+         Puis le moteur de montage, avant univers.js qui s'en sert.
+         Mêmes fichiers que ceux dont se sert build/generer-pages-spectacles.js :
          c'est ce qui garantit qu'une page spectacle a le visage de son univers. -->
+    <script src="regie.js"></script>
     <script src="univers-montage.js"></script>
     <script src="univers.js"></script>
 </body>

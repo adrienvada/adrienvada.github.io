@@ -34,6 +34,17 @@ CE QUE LE SCRIPT PRODUIT, à côté des originaux servis :
       petite des autres versions, 640 px, pesait jusqu'à 86 Ko pour cette
       vignette.
 
+  ressources/images/univers/<slug>/<nom>-flou.webp    la photo HORS POINT
+      200 px de large, passée au flou. C'est la photo telle qu'on la voit
+      avant la mise au point : posée sur la vraie, elle s'efface quand la
+      photo arrive au milieu de l'écran, et revient à peine quand elle
+      s'en va (voir .u-flou dans univers.css). Flouter en direct — un
+      filter: blur() animé — recalculerait l'image entière à chaque image
+      du défilement, sur des photos de 2400 px : un téléphone y cale. Un
+      fondu entre deux images toutes faites ne coûte presque rien. Et
+      l'image floue n'a pas besoin de pixels : 200 px agrandis sous un
+      tel flou ne se distinguent pas de l'original flouté, pour 3 Ko.
+
   ressources/images/galerie/vignettes/<nom>-{320,640,960}.webp
       Les vignettes du book, recadrées en 3:4 (le format de la grille),
       en visant le haut du cadre — là où sont les visages.
@@ -55,7 +66,7 @@ import os
 import re
 import sys
 import glob
-from PIL import Image, ImageOps
+from PIL import Image, ImageFilter, ImageOps
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 UNIVERS = os.path.join(ROOT, "ressources", "images", "univers")
@@ -68,6 +79,12 @@ VIGNETTES = os.path.join(GALERIE, "vignettes")
 LARGEURS_UNIVERS = (640, 1280)
 LARGEUR_PLEIN = 1920
 LARGEUR_COUVERTURE = 240
+# La photo hors point : sa largeur, le rayon du flou à cette largeur (4 px
+# sur 200, soit 2 % : une vraie photo hors point, pas une bouillie), et une
+# qualité plus basse — le flou n'a pas de détail à perdre.
+LARGEUR_FLOU = 200
+RAYON_FLOU = 4
+QUALITE_FLOU = 75
 # Trois pour la galerie : sa grille passe de quatre colonnes à une seule
 # (boutons − / +), et la vignette doit rester nette à chaque cran.
 LARGEURS_GALERIE = (320, 640, 960)
@@ -91,9 +108,9 @@ def ouvrir(chemin):
     return im.convert("RGB")
 
 
-def ecrire_webp(im, chemin):
+def ecrire_webp(im, chemin, qualite=QUALITE):
     tmp = chemin + ".tmp"
-    im.save(tmp, "WEBP", quality=QUALITE, method=6)
+    im.save(tmp, "WEBP", quality=qualite, method=6)
     os.replace(tmp, chemin)
 
 
@@ -158,7 +175,7 @@ def largeurs_pour(source):
 
 
 def variantes_univers(source, forcer):
-    """<nom>.jpg → [<nom>-240.webp, ]<nom>-640.webp, <nom>-1280.webp[, <nom>-1920.webp]."""
+    """<nom>.jpg → [<nom>-240.webp, ]<nom>-640.webp, <nom>-1280.webp[, <nom>-1920.webp], <nom>-flou.webp."""
     base = source[:-len(".jpg")]
     faites = []
     im = None
@@ -174,6 +191,14 @@ def variantes_univers(source, forcer):
         # même — les pages le demandent sans savoir la taille de l'original.
         r = im if w <= largeur else im.resize((largeur, round(h * largeur / w)), Image.LANCZOS)
         ecrire_webp(r, cible)
+        faites.append(cible)
+    cible = f"{base}-flou.webp"
+    if forcer or not os.path.exists(cible):
+        if im is None:
+            im = ouvrir(source)
+        w, h = im.size
+        r = im if w <= LARGEUR_FLOU else im.resize((LARGEUR_FLOU, round(h * LARGEUR_FLOU / w)), Image.LANCZOS)
+        ecrire_webp(r.filter(ImageFilter.GaussianBlur(RAYON_FLOU)), cible, QUALITE_FLOU)
         faites.append(cible)
     return faites
 
@@ -216,7 +241,7 @@ def orphelines():
     """Les versions allégées dont l'original a disparu."""
     out = []
     for v in glob.glob(os.path.join(UNIVERS, "*", "*-*.webp")):
-        base = re.sub(r"-\d+\.webp$", "", v)
+        base = re.sub(r"-(?:\d+|flou)\.webp$", "", v)
         if not os.path.exists(base + ".jpg"):
             out.append(v)
     book = {os.path.splitext(os.path.basename(p))[0] for p in fichiers_du_book()}

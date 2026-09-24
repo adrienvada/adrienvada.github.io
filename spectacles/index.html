@@ -655,9 +655,33 @@
             if (meta) meta.setAttribute('content', theme === 'light' ? '#FAF9F5' : '#0a0907');
         }
         appliqueTheme(document.documentElement.getAttribute('data-theme') || 'dark', false);
+        // LE THÈME BASCULE EN CERCLE depuis la bascule, comme sur l'accueil
+        // (voir basculerTheme dans index.html) : une View Transition, un
+        // cercle qui grandit jusqu'au coin le plus éloigné, et aucune couleur
+        // qui transitionne pendant ce temps (vt-theme).
         if (bascule) bascule.addEventListener('click', function () {
             var t = document.documentElement.getAttribute('data-theme');
-            appliqueTheme(t === 'light' ? 'dark' : 'light', true);
+            var vers = t === 'light' ? 'dark' : 'light';
+            var racine = document.documentElement;
+            if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                appliqueTheme(vers, true);
+                return;
+            }
+            // Un nom de passage resté sur une carte (le retour depuis une
+            // fiche) ferait sauter l'ancienne image : on les retire d'abord.
+            document.querySelectorAll('[style*="view-transition-name"]').forEach(function (el) {
+                el.style.viewTransitionName = '';
+            });
+            var r = bascule.getBoundingClientRect();
+            var x = r.left + r.width / 2, y = r.top + r.height / 2;
+            var rayon = Math.sqrt(Math.pow(Math.max(x, innerWidth - x), 2) + Math.pow(Math.max(y, innerHeight - y), 2));
+            racine.classList.add('vt-theme');
+            var passage = document.startViewTransition(function () { appliqueTheme(vers, true); });
+            passage.ready.then(function () {
+                racine.animate({ clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + rayon + 'px at ' + x + 'px ' + y + 'px)'] },
+                    { duration: 620, easing: 'cubic-bezier(.65, 0, .35, 1)', pseudoElement: '::view-transition-new(root)' });
+            }).catch(function () { });
+            passage.finished.catch(function () { }).then(function () { racine.classList.remove('vt-theme'); });
         });
 
         addEventListener('pagereveal', function (e) {

@@ -6,6 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
     <meta name="theme-color" content="#0a0907">
+    <script>
+        // Le thème du site, posé avant le premier rendu : celui qu'on a
+        // choisi, sinon celui de l'appareil (voir index.html).
+        (function () {
+            var t = 'dark', choisi = null;
+            try { choisi = localStorage.getItem('avTheme'); } catch (e) { }
+            if (choisi === 'light' || choisi === 'dark') t = choisi;
+            else if (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) t = 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <title>Page introuvable — Adrien Vada</title>
 
     <!-- Mesure d'audience — Umami, sans cookie ni identifiant persistant.
@@ -31,128 +42,399 @@
     <link rel="shortcut icon" href="/favicon.ico" />
 
     <style>
-        /* Aligné sur le thème sombre du site (voir index.html) */
+        /* ══════════════════════════════════════════════════════════════
+           LA SERVANTE
+           ══════════════════════════════════════════════════════════════
+           Au théâtre, quand la salle est vide, on laisse une lampe allumée
+           sur le plateau : la servante. La page perdue devient ce plateau
+           vide. L'ampoule s'allume en hésitant — deux fois, puis elle se
+           tient : rien ne bat sans fin —, la lumière tombe au sol, et le
+           pointeur éclaire la scène comme une lampe de poche.
+
+           Rien que des opacités et des déplacements : la carte graphique
+           s'en charge seule. Mouvement réduit : la lampe est allumée
+           d'emblée, et la lampe de poche suit le pointeur sans traîner.
+           Thème clair : les lumières de la salle sont restées allumées —
+           le plateau est clair, la servante brille quand même, et la
+           lampe de poche devient une gélatine ambrée posée sur le décor. */
         :root {
-            --bg: #0a0907;
-            --text: #f2ece0;
-            --muted: #b0a798;
-            --gold: #bfa98a;
-            --card: rgba(255, 255, 255, 0.035);
-            --line: rgba(255, 255, 255, 0.07);
+            --fond: #050403;
+            --texte: #f2ece0;
+            --discret: #a89f8e;
+            --or: #bfa98a;
+            --or-encre: #e6d3ad;
+            --plancher-a: #0c0906;
+            --plancher-b: #17110b;
+            --lattes: rgba(255, 240, 220, .05);
+            --pied: #3a342a;
+            --pied-bas: #16130e;
+            --halo: rgba(255, 214, 150, .16);
+            --flaque: rgba(255, 210, 140, .22);
+            --torche: rgba(255, 232, 196, .3);
+            --torche-mode: screen;
             color-scheme: dark;
+        }
+
+        :root[data-theme="light"] {
+            --fond: #efe8dc;
+            --texte: #1f1a14;
+            --discret: #5f5548;
+            --or: #8a6d44;
+            --or-encre: #6f5634;
+            --plancher-a: #d9cdb9;
+            --plancher-b: #c9b89c;
+            --lattes: rgba(80, 60, 30, .08);
+            --pied: #5a4f40;
+            --pied-bas: #3a3228;
+            --halo: rgba(255, 190, 110, .26);
+            --flaque: rgba(240, 170, 80, .28);
+            --torche: rgba(245, 175, 90, .35);
+            --torche-mode: multiply;
+            color-scheme: light;
         }
 
         * {
             box-sizing: border-box;
         }
 
+        html,
         body {
             margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            /* La couleur de repli doit précéder l'image : la forme courte
-               `background` réinitialise sinon le dégradé. */
-            background: var(--bg);
-            background-image: radial-gradient(ellipse 90% 60% at 50% 0%, #17140f 0%, #0b0906 55%, #060504 100%);
-            background-attachment: fixed;
-            color: var(--text);
+            height: 100%;
+        }
+
+        body {
+            background: var(--fond);
+            color: var(--texte);
             font-family: 'Montserrat', system-ui, sans-serif;
+        }
+
+        /* Le passage vers l'accueil : un fondu, pas une coupe. */
+        @view-transition {
+            navigation: auto;
+        }
+
+        .scene {
+            position: relative;
+            min-height: 100svh;
+            overflow: hidden;
+            isolation: isolate;
+            cursor: crosshair;
+            touch-action: pan-y pinch-zoom;
+        }
+
+        /* Le plancher, en perspective, qui file vers le lointain. */
+        .scene::before {
+            content: '';
+            position: absolute;
+            left: -25%;
+            right: -25%;
+            bottom: 0;
+            height: 42%;
+            background: repeating-linear-gradient(90deg, var(--lattes) 0 1px, transparent 1px 64px),
+                linear-gradient(var(--plancher-a), var(--plancher-b));
+            transform: perspective(520px) rotateX(58deg);
+            transform-origin: 50% 100%;
+        }
+
+        .halo,
+        .flaque,
+        .pied,
+        .cage,
+        .ampoule,
+        .torche {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .halo {
+            left: 50%;
+            bottom: calc(10% + 22% + 15px);
+            width: 900px;
+            height: 900px;
+            margin: 0 0 -450px -450px;
+            border-radius: 50%;
+            background: radial-gradient(closest-side, var(--halo), transparent 70%);
+            animation: servante 5s linear both;
+        }
+
+        .flaque {
+            left: 50%;
+            bottom: 5%;
+            width: 70%;
+            height: 22%;
+            margin-left: -35%;
+            border-radius: 50%;
+            background: radial-gradient(closest-side, var(--flaque), transparent);
+            animation: flaque 5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .pied {
+            left: 50%;
+            bottom: 10%;
+            width: 3px;
+            height: 22%;
+            margin-left: -1.5px;
+            background: linear-gradient(var(--pied), var(--pied-bas));
+        }
+
+        .pied::after {
+            content: '';
+            position: absolute;
+            left: -22px;
+            bottom: -6px;
+            width: 47px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--pied-bas);
+        }
+
+        .cage {
+            left: 50%;
+            bottom: calc(10% + 22% - 4px);
+            width: 30px;
+            height: 40px;
+            margin-left: -15px;
+            border: 1.5px solid var(--pied);
+            border-radius: 50% 50% 40% 40%;
+        }
+
+        .ampoule {
+            left: 50%;
+            bottom: calc(10% + 22%);
+            width: 22px;
+            height: 30px;
+            margin-left: -11px;
+            border-radius: 50% 50% 45% 45%;
+            background: radial-gradient(circle at 50% 40%, #fffaf0, #ffd996 45%, #f0a94a 80%);
+            box-shadow: 0 0 18px 6px rgba(255, 214, 150, .55), 0 0 90px 30px rgba(255, 190, 110, .18);
+            animation: servante 5s linear both;
+        }
+
+        /* Deux hésitations, puis la lampe se tient. */
+        @keyframes servante {
+            0% {
+                opacity: 0;
+            }
+
+            3% {
+                opacity: .9;
+            }
+
+            5% {
+                opacity: .15;
+            }
+
+            8% {
+                opacity: 1;
+            }
+
+            11% {
+                opacity: .35;
+            }
+
+            14%,
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes flaque {
+            0% {
+                opacity: 0;
+                transform: scaleX(.6);
+            }
+
+            16% {
+                opacity: .6;
+            }
+
+            100% {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .torche {
+            left: 0;
+            top: 0;
+            z-index: 4;
+            width: 440px;
+            height: 440px;
+            margin: -220px 0 0 -220px;
+            border-radius: 50%;
+            background: radial-gradient(closest-side, var(--torche), transparent);
+            mix-blend-mode: var(--torche-mode);
+            opacity: 0;
+            transition: opacity .6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .scene.eclairee .torche {
+            opacity: 1;
+        }
+
+        .texte {
+            position: relative;
+            z-index: 3;
+            width: min(92%, 540px);
+            margin: 0 auto;
+            padding: 9svh 0 0;
+            display: grid;
+            gap: 12px;
+            justify-items: center;
             text-align: center;
         }
 
-        .card {
-            max-width: 520px;
-            background: var(--card);
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            padding: 40px 32px;
-            box-shadow: 0 4px 24px -4px rgba(0, 0, 0, .5);
-            backdrop-filter: blur(8px);
+        .code {
+            margin: 0;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .26em;
+            text-transform: uppercase;
+            color: var(--or);
         }
 
         h1 {
-            margin: 0 0 6px;
-            font-size: 2rem;
-            font-weight: 800;
-            letter-spacing: -.02em;
+            margin: 0;
+            font: 600 clamp(1.6rem, 4.4vw, 2.5rem)/1.15 'Cinzel', serif;
         }
 
-        h1 span {
-            font-family: 'Cinzel', serif;
-            color: var(--gold);
-        }
-
-        .code {
-            font-size: .7rem;
-            letter-spacing: .2em;
-            text-transform: uppercase;
-            color: var(--gold);
-            font-weight: 700;
-            margin-bottom: 18px;
-        }
-
-        p {
-            color: var(--muted);
+        .texte p {
+            margin: 0;
+            max-width: 44ch;
             font-size: .92rem;
             line-height: 1.6;
-            margin: 0 0 26px;
+            color: var(--discret);
         }
 
-        a.btn {
-            display: inline-block;
-            padding: 11px 22px;
-            border-radius: 8px;
-            background: var(--gold);
-            color: #0c0a08;
+        .retour {
+            margin-top: 8px;
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 8px 22px;
+            border-radius: 999px;
+            border: 1px solid color-mix(in srgb, var(--or) 65%, transparent);
+            color: var(--or-encre);
             text-decoration: none;
             font-size: .78rem;
             font-weight: 700;
             letter-spacing: .08em;
             text-transform: uppercase;
-            transition: background .3s;
+            transition: background-color .32s cubic-bezier(0.16, 1, 0.3, 1), color .32s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        a.btn:hover {
-            background: #e0d2ba;
+        .retour:hover,
+        .retour:focus-visible {
+            background: var(--or);
+            color: var(--fond);
         }
 
-        hr {
-            border: 0;
-            border-top: 1px solid var(--line);
-            margin: 26px 0 16px;
+        .liens {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px 16px;
         }
 
-        .links a {
-            color: var(--muted);
+        .liens a {
+            color: var(--discret);
             font-size: .75rem;
             text-decoration: none;
-            margin: 0 8px;
         }
 
-        .links a:hover {
-            color: var(--gold);
+        .liens a:hover,
+        .liens a:focus-visible {
+            color: var(--or-encre);
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--or);
+            outline-offset: 3px;
+            border-radius: 4px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .halo,
+            .flaque,
+            .ampoule {
+                animation: none;
+            }
+
+            .torche {
+                transition: none;
+            }
         }
     </style>
 </head>
 
 <body>
-    <main class="card">
-        <div class="code">Erreur 404</div>
-        <h1>Adrien <span>VADA</span></h1>
-        <p>Cette page n’existe pas ou a été déplacée.<br>Retrouvez le CV, les dates de représentation et les démos sur
-            la page d’accueil.</p>
-        <a class="btn" href="/">Retour à l’accueil</a>
-        <hr>
-        <div class="links">
-            <a href="/#page_cv">CV</a>
-            <a href="/#page_dates">Dates</a>
-            <a href="/#demos_camera">Démos caméra</a>
-            <a href="/#demos_voix">Voix</a>
+    <main class="scene" id="scene">
+        <div class="halo" aria-hidden="true"></div>
+        <div class="flaque" aria-hidden="true"></div>
+        <div class="pied" aria-hidden="true"></div>
+        <div class="cage" aria-hidden="true"></div>
+        <div class="ampoule" aria-hidden="true"></div>
+        <div class="texte">
+            <p class="code">Erreur 404</p>
+            <h1>Cette page n’est plus à l’affiche</h1>
+            <p>Elle n’existe pas, ou a été déplacée. La servante veille sur le plateau : le CV, les dates et
+                les démos vous attendent à l’accueil.</p>
+            <a class="retour" href="/">Retour à l’accueil</a>
+            <nav class="liens" aria-label="Rubriques du site">
+                <a href="/#page_cv">CV</a>
+                <a href="/#page_dates">Dates</a>
+                <a href="/#demos_camera">Démos caméra</a>
+                <a href="/#demos_voix">Voix</a>
+            </nav>
         </div>
+        <div class="torche" id="torche" aria-hidden="true"></div>
     </main>
+
+    <script>
+        // LA LAMPE DE POCHE. Elle suit le pointeur — ou le doigt — avec un
+        // léger retard, comme une main qui balaie le plateau ; elle s'éteint
+        // quand le pointeur quitte la scène. Un seul déplacement (transform)
+        // par image, et seulement tant qu'elle n'a pas rejoint sa cible.
+        (function () {
+            var scene = document.getElementById('scene');
+            var torche = document.getElementById('torche');
+            if (!scene || !torche) return;
+            var calme = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var tx = 0, ty = 0, cx = 0, cy = 0, image = 0;
+            function poser(x, y) {
+                torche.style.transform = 'translate(' + x.toFixed(1) + 'px, ' + y.toFixed(1) + 'px)';
+            }
+            function suivre() {
+                cx += (tx - cx) * 0.18;
+                cy += (ty - cy) * 0.18;
+                poser(cx, cy);
+                image = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.5 ? requestAnimationFrame(suivre) : 0;
+            }
+            scene.addEventListener('pointermove', function (e) {
+                var r = scene.getBoundingClientRect();
+                tx = e.clientX - r.left;
+                ty = e.clientY - r.top;
+                if (!scene.classList.contains('eclairee') || calme) {
+                    cx = tx; cy = ty; poser(cx, cy);
+                    scene.classList.add('eclairee');
+                    return;
+                }
+                if (!image) image = requestAnimationFrame(suivre);
+            });
+            scene.addEventListener('pointerdown', function (e) {
+                var r = scene.getBoundingClientRect();
+                tx = cx = e.clientX - r.left;
+                ty = cy = e.clientY - r.top;
+                poser(cx, cy);
+                scene.classList.add('eclairee');
+            });
+            scene.addEventListener('pointerleave', function () {
+                scene.classList.remove('eclairee');
+            });
+        })();
+    </script>
 </body>
 
 </html>

@@ -60,9 +60,26 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   sur une séance scolaire), nom du spectacle qui mène à sa page (et aucun lien
   pour un spectacle sans page, aucun lien mort), rangement par spectacle
   retenu, sommaire qui mène à la bonne ligne, une image pour chaque
-  représentation annoncée aux moteurs ; le carton « Prochainement » en tête
-  du CV, avec son lien et son agenda, et nulle part dans l'onglet Dates — sur
-  une saison fictive, elle aussi ;
+  représentation annoncée aux moteurs ; la prochaine date en tête du CV, et
+  nulle part dans l'onglet Dates — sur une saison fictive, elle aussi ;
+- la prochaine date du CV, une ligne de tableau de gare : titrée « Prochaine
+  date », jamais « Départs » ; la date et elle seule (la ville abrégée sans
+  trait d'union, l'heure du public plutôt que celle d'une séance scolaire,
+  l'heure et la ville en clair dessous sur téléphone) ; des palettes muettes
+  pour les lecteurs d'écran et le texte en clair dans le bouton ; rien ne
+  bat avant que le CV soit à l'écran, puis les palettes passent par d'autres
+  lettres et se posent toutes sur la bonne, sans volet resté à mi-course —
+  et, observé image par image, la moitié basse ne prend jamais la nouvelle
+  lettre avant que le haut soit tombé ; un rendu identique ne la fait pas
+  rejouer ; elle mène à sa ligne dans l'onglet Dates, juste sous
+  l'intercalaire de son mois ; en mouvement réduit, elle est posée
+  d'emblée ;
+- « Télécharger le CV » : un seul lien, sous la prochaine date, sur
+  téléphone comme sur ordinateur, et la mesure qui dit toujours `mobile` ou
+  `bureau` ;
+- les démos voix : toucher la barre de lecture mène au point touché, même
+  servi par un hôte qui ne découpe pas les fichiers (en-têtes Range : c'est
+  le cas du serveur de vérification comme de l'aperçu Cloudflare) ;
 - les pastilles ▶ ne s'impriment pas ;
 - la ligne à vignette du CV : chaque spectacle et chaque film ont leur
   vignette, qui dit l'année et l'état de la ligne (cachée aux lecteurs
@@ -75,8 +92,26 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   lisibles, où chaque représentation a son image ;
 - chaque page spectacle s'anime et s'ouvre comme son univers ouvert depuis le
   CV : mêmes transitions d'apparition (opacité, mouvement, flou) et mêmes
-  animations, élément par élément, et même haut de page (année, titre,
-  auteur, rôle, compagnie) ;
+  animations, élément par élément — scènes de défilement comprises —, et même
+  haut de page (année, titre, auteur, rôle, compagnie) ;
+- la régie (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) :
+  l'en-tête de l'accueil et des pages spectacle teste la même chose que
+  `regie.js`, et le second pilote (`?repli`) rejoue les images du navigateur —
+  opacité et transformation des éléments de l'ouverture et de la poursuite,
+  relevées aux mêmes endroits du défilement ;
+- en mouvement réduit, chaque scène a un état fixe : l'ouverture réduite à son
+  carton, la poursuite à sa photo en plein feux, la première photo allumée, le
+  texte écrit, plus rien d'animé au défilement ;
+- les défauts réparés de l'audit du mouvement : le verrou de défilement posé
+  sur `<html>` et la place de la barre réservée, le changement d'onglet et sa
+  pastille, « Passer » qui répond avant l'arrivée d'`intro.js`, Maj seule qui
+  ne lève pas le rideau (Échap, si), le zoom de l'avatar dans `styles.css`, la
+  phrase posée sur un groupe de photos (« Jusqu'où serez-vous semblables ? ») ;
+- le book : fermer puis rouvrir aussitôt ne laisse pas une page morte ;
+- la frise du CV, avec les deux pilotes : le filet d'une ligne déjà lue est
+  allumé, celui d'une ligne à venir ne l'est pas, et la guirlande à horloge
+  n'est pas revenue ;
+- la page 404 : son titre, son retour, sa lampe, sans erreur ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
 Il tourne sur **chaque demande de fusion** (`.github/workflows/verifier.yml`) :
@@ -95,7 +130,8 @@ ici : c'est ce qui l'empêche de revenir.
 | le **vocabulaire du mouvement** dans `index.html` (`--ease-*`, `--dur-*`) | la même commande | idem : les pages spectacle le relisent (voir [Un seul moteur](#un-seul-moteur-un-seul-visage)) |
 | une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis la commande ci-dessus | `dates.js`, puis `/spectacles/…` |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
-| le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées comprises |
+| le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées et copies floues (`-flou.webp`) comprises |
+| une **scène** d'un univers — `lumiere`, `ouverture`, `poursuite`, une césure ` \| ` | `node build/generer-pages-spectacles.js` | `/spectacles/…` (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) |
 | une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
 | la **signature** — un nouvel export reMarkable | `python3 build/signature-vers-svg.py <export.pdf>` | `signature.webp` + le bloc SVG à coller |
 
@@ -426,6 +462,14 @@ redéfinies localement (voir le sélecteur `#gallery-modal, #video-modal,
 #intro-overlay`) — sans cela leurs contenus deviendraient illisibles sur noir
 lorsque le site est en thème clair.
 
+**Le thème bascule en cercle** depuis le bouton pressé, par une View
+Transition (`basculerTheme`, dans `index.html` ; la même chose au répertoire et
+au book) : deux images de la page, et un cercle qui grandit. Aucune couleur ne
+transitionne. ⚠️ **Ne pas remettre de transition de couleur sur `*`** : chaque
+élément de la page en portait une, pour ce seul geste — une image figée de
+0,13 à 0,22 s au moment de basculer (près d'une seconde sur un téléphone
+modeste), et des éléments qui ne changeaient pas ensemble.
+
 **L'impression reste toujours claire**, même quand le site est affiché en
 sombre : le bloc `@media print` réimpose la palette claire à la racine. Un CV
 imprimé sur fond noir gâcherait l'encre et passerait mal en photocopie.
@@ -574,12 +618,38 @@ Qui a déjà vu l'ouverture ne les télécharge plus. Ils s'exécutent dans
 l'ordre (`async = false`) sans retenir la lecture de la page.
 
 Le même garde pose `modal-open` sur le `<body>` dès cet instant : la page
-ne défile pas sous le rideau, et les animations du CV (guirlande, phare du
-bandeau) attendent qu'il se lève pour jouer — elles ne jouent qu'une fois.
+ne défile pas sous le rideau (le verrou tient sur `<html>`, la boîte qui
+défile), et les animations du CV (le voyant et les palettes de la prochaine date)
+attendent qu'il se lève pour jouer — elles ne jouent qu'une fois.
 
-Deux filets restent en place : sans JavaScript, un `<noscript>` escamote le
-rideau ; et si `intro.js` n'a pas démarré quand la page a fini de charger
-(fichier perdu, navigateur trop ancien), le garde lève le rideau lui-même.
+Trois filets restent en place : sans JavaScript, un `<noscript>` escamote le
+rideau ; si `intro.js` n'a pas démarré quand la page a fini de charger
+(fichier perdu, navigateur trop ancien), le garde lève le rideau lui-même ; et
+**« Passer » répond dès qu'il est à l'écran** — tant qu'`intro.js` n'est pas
+arrivé, le garde lève le rideau sans animation et marque la scène passée
+(`__introPassee`), qu'`intro.js` trouve en arrivant et ne démarre pas. Il la
+relançait derrière le rideau fermé, et la page restait verrouillée.
+
+### La sortie : l'iris, et le nom qui rejoint l'en-tête
+
+Au clic sur le sceau (ou sur « Passer »), le rideau **s'ouvre en iris depuis
+le sceau**, et « Adrien Vada » quitte le centre de la scène pour aller se poser
+à sa place dans l'en-tête (`ouvrirEnIris`, dans `intro.js`) : une View
+Transition, deux images — le rideau et la page — et le nom qui voyage de l'une
+à l'autre. Le nom ne voyage que s'il est à l'écran. Sans View Transitions, le
+fondu d'avant.
+
+Au clavier, seules les touches qui veulent dire « aller au site » lèvent le
+rideau : Échap, Entrée, Espace, Tab et les touches de défilement. Maj ou Ctrl
+seuls — le début d'un raccourci, un lecteur d'écran qui prend la parole — le
+fermaient aussi. Le sceau respire trois fois, puis se tient.
+
+**La densité du canevas est plafonnée à 1,5**, et l'auto-régulation regarde
+aussi le rythme réel des images : sur un portable Retina, le canevas faisait
+2 560 × 1 800 pixels, relus puis recouverts en entier à chaque image par la
+nappe — 28 images par seconde. Si l'écart entre deux images dépasse
+durablement 48 ms alors que le dessin tient son budget, c'est la carte
+graphique qui peine : la densité baisse d'un cran (`jugerLeRythme`).
 
 ### Régler l'animation
 
@@ -698,6 +768,10 @@ manipulations.
 Or le métier fait circuler des CV en pièce jointe. Ce que reçoit un directeur
 de casting doit s'appeler `cv-adrien-vada.pdf`, et s'obtenir d'un seul geste.
 Le bouton est donc devenu un `<a download>` qui pointe sur un vrai fichier.
+Il n'y en a qu'un, **sous la prochaine date**, sur téléphone comme
+sur ordinateur : on lit d'abord où Adrien joue, puis on emporte le CV (il
+était auparavant dans la barre d'onglets sur ordinateur, et au-dessus du
+carton sur téléphone).
 
 ```bash
 node build/generer-cv-pdf.js
@@ -1012,20 +1086,55 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   portent le même code couleur**, mêlé d'un quart de la couleur du texte : une
   lettre de 11 px doit garder 4,5:1, là où un trait se contente de 3:1 (5,1:1
   au pire, dans les deux thèmes).
-- **Pas de carton « Prochainement » ici.** Il n'est qu'en tête du CV
-  (`renderNextDate()`) : le jour, l'heure et le lieu, le nom du spectacle qui
-  mène à sa page, « Réserver » et l'agenda ; sa date mène à l'onglet Dates.
-  Dans l'onglet Dates, la liste commence déjà par la prochaine représentation.
+- **Pas de prochaine date ici.** Elle n'est qu'en tête du CV
+  (`renderNextDate()`, voir [La prochaine date](#la-prochaine-date-en-tête-du-cv)) :
+  la liste de l'onglet Dates commence déjà par elle, et c'est là que mène sa
+  ligne — chaque ligne de la liste porte une clé (`data-dl-cle` : le premier
+  jour et le titre) qui la retrouve quels que soient les filtres.
 - **Le sommaire**, en tête de la carte : la saison d'un regard — les
   spectacles en lignes, les mois en colonnes. Il ne filtre rien : un mois, un
   spectacle ou un rond **mènent** aux lignes qu'ils résument. Il se retire
   pendant une recherche, où seule la liste compte.
 - **Le nom d'un spectacle mène à sa page** (`spectacles/<slug>/`), partout où
   l'onglet l'écrit : la ligne, l'en-tête du rangement par spectacle, les
-  archives (`dlVersPage()`) — et, au CV, le carton « Prochainement ». Chaque univers a sa
+  archives (`dlVersPage()`). Chaque univers a sa
   page ; un spectacle sans univers garde son nom en simple texte, jamais un
   lien mort. Le retour du navigateur ramène à l'onglet Dates : changer
   d'onglet inscrit `#page_dates` dans l'historique.
+
+### La prochaine date, en tête du CV
+
+`renderNextDate()`, dans le script écrit juste après son emplacement : la
+prochaine date comme **une ligne de tableau de gare**, sous le titre
+« Prochaine date » — la date, l'heure, le spectacle, la ville, en palettes
+noires ; la date et l'heure en jaune, le spectacle et la ville en blanc,
+l'intitulé de chaque colonne au-dessus, le trait à la couleur du spectacle.
+Noire dans les deux thèmes : c'est un tableau, pas une carte du site.
+
+- **Une seule date**, la prochaine entrée de la liste (un soir, ou une série
+  au même endroit). Sur ordinateur, les quatre colonnes ; sur tablette, la
+  ville passe dessous ; sur téléphone, la date et le spectacle en palettes,
+  l'heure et la ville en clair dessous.
+- **Ce qui ne tient pas est abrégé sans rien inventer** : « Saint- » devient
+  « ST », un nom trop long est coupé entre deux mots (« ST PIERRE » pour
+  Saint-Pierre-lès-Elbeuf), le trait d'union devient un blanc — la charnière
+  d'une palette le coupait en deux. L'heure est celle du public quand une
+  séance scolaire la précède ; « CE SOIR » et « DEMAIN » remplacent la date
+  les deux jours où ils disent plus qu'elle.
+- **Elle mène à sa date** dans l'onglet Dates, juste sous l'intercalaire de
+  son mois — c'est là qu'on réserve et qu'on garde la date dans son agenda.
+  Une recherche en cours est levée d'abord. Le texte complet (la date en
+  lettres, toutes les heures, le lieu exact) est dans le bouton, pour les
+  lecteurs d'écran ; les palettes leur sont cachées.
+- **Rendue pendant la lecture de la page**, pas au chargement : la taille des
+  palettes ne dépend que de la largeur du tableau, et le CV qui suit ne bouge
+  pas. Les jours, les mois et la date en lettres (`dlJour`,
+  `dlDateEnLettres`…) sont donc écrits dans ce premier script ; l'onglet
+  Dates les y trouve. La couleur du spectacle vient d'univers.js, qui arrive
+  en fin de document : le rendu du chargement la pose sans rien redessiner.
+- **Les lettres battent une fois** (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)),
+  quand le tableau est à l'écran — pas sous le rideau, ni pour une adresse
+  qui vise un autre onglet. En mouvement réduit, il est posé d'emblée.
 
 Rien de tout cela ne se saisit : **la couleur, le genre, le sous-titre et la
 photo d'un spectacle viennent de son univers** (`univers.js`), retrouvé par
@@ -1081,6 +1190,17 @@ L'état « collée » est détecté par une **sentinelle** placée juste au-dess
 la barre et surveillée par un `IntersectionObserver` (`suivreBarreCollante`) :
 aucun calcul à chaque pixel parcouru, et c'est le navigateur qui prévient au
 bon instant.
+
+**Changer d'onglet a un sens.** La nouvelle page arrive du côté de l'onglet
+choisi — de la droite vers « Démos voix », de la gauche en revenant au CV —,
+par une View Transition (`showPage` → `poserPage`) : l'ancienne s'efface d'un
+côté pendant que la nouvelle arrive de l'autre ; l'en-tête et la barre ne
+bougent pas. Le fond et le filet de l'onglet actif sont une **pastille** qui
+glisse d'un onglet à l'autre sur un ressort (`placerPastille`, et
+`--ease-ressort`). Sans View Transitions, une animation d'entrée fait arriver
+la nouvelle page ; en mouvement réduit, le changement est net. `showPage` rend
+une promesse : qui veut poser le focus dans la nouvelle page doit l'attendre
+(voir `goToDatesForShow`).
 
 ---
 
@@ -1138,8 +1258,10 @@ couverture de son univers (la première photo du montage, en 240 px — la même
 que dans l'onglet Dates), ou ses initiales sur sa couleur tant qu'il n'a pas
 de photos. L'**année** s'imprime au bas de la photo, en blanc sur un voile ;
 l'**état** (« création », « tournée ») en bandeau, en haut, comme sur la
-feuille des Dates. Au passage de la guirlande, c'est la vignette d'un
-spectacle qui se joue encore qui s'allume, là où s'allumait le badge.
+feuille des Dates. Au passage du lavis (voir la frise, au chapitre
+[Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)), c'est la
+vignette d'un spectacle qui se joue encore qui s'allume, là où s'allumait le
+badge.
 
 Pourquoi : collée au titre, l'année en suivait les retours à la ligne, et le
 contenu se centrait dans la hauteur commune de la liste — l'année tombait
@@ -1247,24 +1369,27 @@ jamais recadrée.
 | Écriture | Où ça tombe |
 |---|---|
 | `{ chapter: 'I', chapterTitle: 'Le palais' }` | intertitre : un chiffre romain et deux mots, qui donnent au défilé une structure d'actes |
-| `{ q: 'phrase', by: 'qui la dit' }` | carton plein écran en Cinzel ; `\n` = fin de vers |
+| `{ q: 'phrase', by: 'qui la dit' }` | carton plein écran en Cinzel ; `\n` = fin de vers ; ` \| ` = la césure d'un alexandrin (voir plus bas) |
 | `{ text: 'un paragraphe…' }` | prose posée : note d'intention, mot de mise en scène |
-| `{ p:[12], over:'texte', overAt:'bas' }` | **incrustation SUR la photo**. `overAt` : `gauche`, `centre`, `droite`, `bas`. Plein cadre uniquement — sur une vignette de groupe le texte couvrirait toute l'image |
+| `{ p:[12], over:'texte', overAt:'bas' }` | **incrustation SUR la photo**. `overAt` : `gauche`, `centre`, `droite`, `bas`. Sur un groupe (`p: [23, 16]`), elle traverse la composition d'un bord à l'autre — elle y était ignorée sans avertissement |
 | `{ p:[12,7], aside:'texte' }` | note en marge, sous les vignettes d'un groupe |
 | `{ p:[12], c:['légende'] }` | légende discrète, en petites capitales |
 
-**Tous s'écrivent mot à mot au rythme du défilement** (`updateReveals`) : chaque
-mot est un `<span class="u-rw">` qui s'allume quand le bloc traverse l'écran.
-La révélation est *pilotée par la position de défilement*, pas déclenchée une
-fois pour toutes par un `IntersectionObserver` — c'est ce lien direct entre le
-geste et le texte qui fait l'effet, et il se perd dès qu'on se contente d'un
-déclencheur.
+**Tous s'écrivent à la lumière pendant qu'on les lit** (voir
+[L'écriture à la lumière](#lécriture-à-la-lumière)) : la lumière part quand la
+première ligne passe aux trois quarts de l'écran, et la dernière est écrite
+quand elle arrive un peu au-dessus du milieu — lignes l'une après l'autre,
+avec un temps à la césure.
 
-Le **titre et le synopsis accompagnent le début du défilement**, puis
-s'effacent : ils restent intacts jusqu'à 62 % de la course du hero collé, et
-ont entièrement disparu — opacité, léger recul, flou — quand la première photo
-arrive (`fadeHero`). Un texte encore lisible par-dessus la photo brouillerait
-l'entrée dans l'univers.
+**La césure** s'écrit ` | ` dans le vers — `'Que le jour recommence | et que le
+jour finisse'` : la lumière s'y arrête un instant, et un filet fin la marque.
+La barre ne s'affiche jamais telle quelle.
+
+Le **hero s'en va par couches** au premier geste : le surtitre, la flèche, le
+synopsis, puis le titre et l'auteur, qui glissent un peu moins vite que la page
+et partent en dernier (`.u-eyebrow`, `.u-couche-*` dans `univers.css`). Les
+couches ne se croisent jamais : le synopsis est parti quand l'auteur se met en
+route.
 
 Les **numéros** sont ceux des fichiers de `ressources/spectacles/<spectacle>/`
 — le même langage que les planches-contact. ⚠️ Le dictionnaire `SEQUENCES` de
@@ -1289,11 +1414,13 @@ l'accord de l'autrice ou de l'auteur.
 
 ### Le récit s'écrit
 
-Le hero reste **collé** pendant environ deux écrans (`.u-hero-wrap`). Pendant
-ce temps le titre se pose lettre à lettre, vite (34 ms), puis le synopsis
-s'inscrit mot à mot, doucement (108 ms), en sortant d'un flou. **Défiler
-accélère l'écriture** au lieu de l'emporter hors de l'écran : le premier geste
-écrit la page avant de la quitter, puis le tempo retombe.
+Le hero fait **exactement un écran**. Le titre s'y pose lettre à lettre, vite
+(34 ms), puis le synopsis s'inscrit mot à mot, doucement (108 ms). **Défiler
+accélère l'écriture** : le premier geste écrit la page en même temps qu'il la
+quitte. Ouvert depuis le CV par le passage de la vignette (voir
+[Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)), le titre
+arrive déjà écrit — c'est lui qui voyage depuis la ligne — et seul le synopsis
+s'inscrit.
 
 Tout est piloté par un compteur en millisecondes dans `playWriting()`, **et
 non par des `animation-delay` CSS** — on ne pourrait pas les accélérer en
@@ -1364,6 +1491,155 @@ en place ; le renseigner pour toute série qui en demande un.
   croix, immobile).
 - `contain: paint` sur les figures, mais **pas** `content-visibility: auto` :
   celui-ci faisait s'effondrer leur hauteur.
+- **Rien n'est animé en JavaScript au défilement.** Les scènes sont des
+  animations CSS que le navigateur fait avancer lui-même ; ailleurs,
+  `regie.js` n'écrit qu'un nombre par scène visible (voir
+  [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)). Aucun
+  `filter: blur()` animé : les photos floues sont des copies floutées d'avance.
+
+---
+
+## Le mouvement — la régie, les scènes, les passages
+
+Le mouvement du site suit trois règles : **ne bouger que ce que la carte
+graphique sait bouger seule** (transform, opacité — jamais de flou calculé à
+chaque image), **confier le défilement au navigateur** quand il sait le lire,
+et **donner à chaque scène un état fixe qui a du sens** en mouvement réduit.
+Rien ne bat sans fin, rien ne rejoue sans raison.
+
+### La régie (`regie.js`)
+
+Dans un univers, c'est le défilement qui donne les tops : une photo fait le
+point quand elle arrive au milieu de l'écran, une réplique s'écrit quand on la
+lit, une scène se tient à l'écran le temps qu'il s'y passe quelque chose.
+
+Chaque mouvement est écrit **une fois**, en CSS : des `@keyframes`, un nom
+(`--rg-anim`) et une plage dans la progression de sa scène (`--s`, `--e`,
+entre 0 et 1) sur un élément `.rg-k`. Deux sortes de scènes : `.rg-scene`, une
+scène **tenue** (un conteneur haut dont le décor reste collé), et `.rg-vue`, un
+élément qui **traverse** l'écran. Puis deux pilotes :
+
+- le navigateur récent (Chrome, Edge, Safari 26) fait avancer ces animations
+  lui-même (`animation-timeline`), hors du fil principal — déclaré dans un
+  `@supports`, sans une ligne de script ;
+- ailleurs, `regie.js` écrit la progression de chaque scène visible dans `--p`,
+  et la même animation, en pause, avance d'un délai négatif (`.regie-repli`).
+
+Le bloc est entre `/* régie:début */` et `/* régie:fin */` dans `univers.css`.
+`--s` et `--e` **n'héritent pas** (`@property`) : une vignette de groupe entre
+entre 2 et 26 % de sa course, et cette plage, héritée, devenait celle de sa
+photo, qui se refloutait sous les yeux. Le drapeau du repli est posé **avant
+le premier rendu**, dans l'en-tête de l'accueil et des pages spectacle, avec
+le même test que `regie.js` (le contrôle automatique compare les deux).
+
+**Pour regarder le second pilote dans un navigateur qui a le premier :**
+ajouter `?repli` à l'adresse (`/spectacles/cleophene/?repli`). Le contrôle
+automatique relève les deux et exige les mêmes images.
+
+### Les scènes d'un univers
+
+| Scène | Ce qu'on voit | Où |
+|---|---|---|
+| **L'écriture à la lumière** | chaque ligne d'une citation, d'un texte ou d'une incrustation s'écrit pendant qu'on la lit : une fenêtre de lumière la parcourt, avec un temps à la césure | `ecrireALaLumiere` (univers.js) |
+| **La mise au point** | chaque photo arrive floue, fait le point au milieu de l'écran, se refloute un peu en partant | `.u-flou`, `-flou.webp` |
+| **Du lointain à la face** | entre le titre et la première photo, des photos arrivent du fond du plateau et passent de part et d'autre ; le carton du chapitre vient se poser à la face ; puis le noir. « Avancer », et une lumière qui descend un rail, invitent à défiler | `ouvertureHtml` (univers-montage.js), `.u-ouverture` |
+| **Les noirs et la signature lumineuse** | après le noir, la première photo s'allume à la façon du spectacle : foudre, néon, guirlande, torche, lumière crue, projecteur | `voileHtml`, `.u-allumage` |
+| **La poursuite** | sur une photo de groupe choisie, la pénombre, une ou deux poursuites qui vont d'un comédien à l'autre, puis plein feux | `poursuiteHtml`, `.u-poursuite` |
+
+Ce que les données en disent (voir aussi l'en-tête de `univers.js`) :
+
+```js
+lumiere: 'foudre',            // foudre | neon | guirlande | torche | crue | projecteur
+                              // sans mention : crue (spectacle), projecteur (film)
+ouverture: [5, 21, 20, 7],    // les photos du lointain — sans mention, quatre
+                              // photos réparties dans le montage, jamais la première
+{ p: [9], poursuite: { etapes: [ [[20, 48], [83, 48]], [[51, 60]] ] } }
+                              // chaque étape éclaire un ou deux points, en %
+                              // de la photo (horizontal, vertical) ; `ratio`
+                              // si la photo n'est pas en 3:2
+```
+
+Pour placer une poursuite : ouvrir la photo (`ressources/images/univers/<slug>/<n>.jpg`),
+relever la position des visages en pourcentage, écrire les étapes, régénérer
+les pages, et regarder la scène — la photo y est montrée entière.
+
+**En mouvement réduit** : l'ouverture se réduit à son carton, la poursuite à
+sa photo en plein feux, la première photo est allumée d'emblée, le texte est
+écrit. **Sans JavaScript** (`univers-statique.css`), même chose.
+
+### L'écriture à la lumière
+
+Les mots restent dans la page — lus par les lecteurs d'écran, indexés —, en
+retrait ; la lumière est une copie décorative de chaque ligne, posée dessus
+(`poserLaLumiere`) : une fenêtre qui glisse de gauche à droite pendant que son
+texte glisse en sens inverse. Deux déplacements, rien à repeindre.
+
+Les lignes sont **mesurées dans la mise en page** (`offsetLeft`, `offsetTop`),
+pas à l'écran : le carton de l'ouverture est mesuré quand il est encore au fond
+de la scène, réduit par la perspective, et ses fenêtres ne couvraient qu'un coin
+du titre. Elles sont refaites quand la largeur change.
+
+### Les passages (View Transitions)
+
+| Passage | Ce qui voyage |
+|---|---|
+| une ligne du CV → son univers, et retour | la boîte de la ligne, sa vignette (qui devient le **fond du titre**, `heroFondHtml`), son titre — `open`/`close` dans univers.js |
+| le répertoire, l'onglet Dates → une page spectacle | la vignette → le fond du titre de la page (`fiche-<slug>`, entre documents) |
+| une vignette du book → la photo, et retour | la photo (`book-photo`) |
+| un onglet → un autre | la page, dans le sens de l'onglet ; la pastille glisse |
+| le thème | un cercle depuis le bouton |
+| l'ouverture → le site | un iris depuis le sceau ; le nom rejoint l'en-tête |
+
+Chaque passage nomme ses éléments **juste avant** et retire les noms juste
+après : un nom qui traîne sur un élément fausse le passage suivant. La petite
+image ne se montre jamais en grand : une vignette de 48 px agrandie à l'écran
+n'est qu'un flou vif — elle s'efface tôt à l'aller, et arrive tard au retour.
+Navigateur sans View Transitions, ou mouvement réduit : l'ancien comportement
+(dépliement en `clip-path`, fondu, coupe franche).
+
+### Le vocabulaire
+
+`--ease-out` pour ce qui apparaît, `--ease-panel` pour ce qui se replie,
+**`--ease-ressort`** (une courbe `linear()` qui dépasse sa cible de 4 % et s'y
+pose) pour ce qui se **déplace** — la pastille des onglets, une vignette qui
+devient page. `--dur-scene` (460 ms) pour un changement d'onglet,
+`--dur-morph` (620 ms) pour une vignette qui s'ouvre. Les pages spectacle
+relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir changé.
+
+### Le CV, le bandeau, la page 404
+
+- **La frise.** Une ligne de lecture court au milieu de l'écran : un fil d'or
+  se trace le long du bord droit de la liste jusqu'à elle, le filet de chaque
+  spectacle s'allume quand elle le passe et le reste, le lavis de couleur
+  passe sur la ligne qui la traverse, l'année monte sur la vignette. Tout est
+  lié au défilement — plus d'horloge, donc rien qui rejoue après un survol,
+  comme le faisait la guirlande. Pilotes : `view()` en natif ; `--ph` et `--pt`
+  (la place de la ligne, en hauteurs d'écran) écrits par `regie.js` ailleurs
+  (`.rg-ligne`). Voir « La frise » dans `index.html`.
+- **L'ambiance** (la salle aux couleurs du spectacle survolé) n'hérite plus :
+  la cible (`--ambiance-cible`) change une fois par geste, et seuls ses deux
+  consommateurs — la lueur et la barre collée — glissent vers elle. Survoler
+  une ligne recalculait les 2 276 éléments du document à chaque image.
+- **La prochaine date du CV** (`renderNextDate`). Une ligne de tableau de
+  gare, en palettes : chaque palette est faite de quatre
+  moitiés — le haut et le bas fixes, et deux volets qui battent en `rotateX`
+  (Web Animations API) : le haut de l'ancienne lettre tombe, le bas de la
+  nouvelle se pose. Chaque palette passe par trois à sept lettres de son jeu
+  (un chiffre parmi les chiffres, une lettre parmi les lettres ; une lettre
+  accentuée se pose sur son accent en dernier), dans l'ordre de lecture,
+  22 ms d'une palette à l'autre : moins de deux secondes. Une seule fois, quand
+  le tableau est à l'écran, après le rideau et les polices — et s'il ne l'est
+  plus au moment de battre (une adresse qui vise l'onglet Dates montre le CV
+  un instant), il attend qu'on revienne. Pendant le
+  battement (classe `td-roule`), les volets restent sur leur calque, repliés
+  hors de vue entre deux battements, et chaque palette est isolée
+  (`contain: strict`) : mesuré sur un téléphone lent simulé (processeur
+  ralenti six fois), l'image médiane reste à 60 par seconde pendant le
+  battement. Des données qui changent pendant le battement (la base en
+  direct) posent aussitôt les bonnes lettres ; avant, elles le relancent.
+- **La servante** (`404.html`). La page perdue est un plateau vide où la
+  servante reste allumée ; l'ampoule hésite deux fois puis se tient, le
+  pointeur éclaire la scène comme une lampe de poche. Thème clair compris.
 
 ---
 
@@ -1405,6 +1681,7 @@ sous ~300 Ko.
 | `ressources/images/galerie/vignettes/<nom>-{320,640,960}.webp` | vignettes du book — `python3 build/variantes-images.py` |
 | `ressources/images/univers/<slug>/<nom>-{640,1280}.webp` (et `-1920` pour un plein cadre) | versions allégées des photos d'univers, servies aux écrans de moins de 900 px et au répertoire — même script, lancé aussi par `prepare-univers-photos.py` |
 | `ressources/images/univers/<slug>/<nom>-240.webp` | la **couverture** de chaque univers (la première photo de son montage), en vignette dans l'onglet Dates rangé par spectacle et sur chaque ligne du CV — même script |
+| `ressources/images/univers/<slug>/<nom>-flou.webp` | la **photo hors point**, 200 px passés au flou : la mise au point des univers fond la photo nette dessus (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) — même script |
 
 Les **sources** de ces images restent dans le dépôt et ne sont plus servies aux
 visiteurs : `profil2_1080x1080.png` (avatar) et `profil_1000x1000.jpg`
@@ -1624,9 +1901,11 @@ galerie et l'administration. À garder en tête en modifiant le site :
   copie masquée du texte : un moteur la lirait collée aux lettres.
 - **Une page, une hiérarchie** : sur une page spectacle le titre est un h1 et
   tous les titres du montage montent d'un cran (voir la fin de `panelHtml`).
-- **Rien ne bouge sans fin** : guirlande, phare, pouls, halo des univers,
-  fleuron et dorures du répertoire jouent une fois (ou trois) puis se
-  taisent (WCAG 2.2.2). Le réglage « réduire les animations » coupe tout.
+- **Rien ne bouge sans fin** : voyant de la prochaine date, halo des univers, sceau de
+  l'ouverture, fleuron et dorures du répertoire jouent une fois (ou trois)
+  puis se taisent (WCAG 2.2.2) ; la frise du CV et les scènes des univers ne
+  bougent qu'avec le défilement. Le réglage « réduire les animations » coupe
+  tout, et chaque scène a alors un état fixe qui a du sens.
 - **Pas de texte sous 11 px**, pas de cible sous 24 px (la piste des démos
   voix et les icônes du pied de page ont une zone de clic agrandie sans
   changer d'aspect).
@@ -1700,6 +1979,14 @@ VBR stéréo pour les publicités et documentaires, qui ont une nappe musicale.
 **Garder les masters ailleurs que dans ce dépôt** : le script écrase les
 fichiers sur place, et un ré-encodage n'est pas réversible.
 
+**La barre de lecture** (`allerDansLaDemo`, dans `index.html`). Un navigateur
+ne saute au milieu d'un fichier que si le serveur lui en sert des morceaux
+(en-têtes Range). GitHub Pages le fait ; l'aperçu de branche sur Cloudflare,
+non — toucher la barre y ramenait au début de l'extrait. Quand le point visé
+n'est pas atteignable, le fichier est lu en mémoire (il vient d'ordinaire du
+cache, puisque la démo joue) et l'on saute dedans ; la lecture reprend si elle
+jouait. Clic, toucher et clavier passent par le même chemin.
+
 ---
 
 ## Pages privées (le château-mystère)
@@ -1771,9 +2058,11 @@ Ce qu'on a **fait** — les gestes qui sortent du site, et les seuls qui disent
 qu'un directeur de casting a fini de regarder :
 
 `contact_mail` (`en-tête` ou `pied` — l'e-mail figure deux fois, et l'on veut
-savoir lequel travaille), `cv_pdf` (`bureau` ou `mobile`), `fiche_pro`
+savoir lequel travaille), `cv_pdf` (`bureau` ou `mobile` : un seul lien,
+dont le détail suit la largeur de l'écran, 768 px), `fiche_pro`
 (`agences-artistiques`, `filmmakers`), `reseau` (`instagram`, `linkedin`,
-`spotify`), `demo_youtube`, `date_agenda`, `date_booking`, `banner_next_date`.
+`spotify`), `demo_youtube`, `date_agenda`, `date_booking`, `banner_next_date`
+(la prochaine date du CV, ouverte dans l'onglet Dates : le nom du spectacle).
 
 **Ne jamais transmettre autre chose que ce que la page affiche déjà** : noms de
 spectacle, noms de démo. Rien qui identifie qui que ce soit.

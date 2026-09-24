@@ -58,6 +58,26 @@
         // reviendra un autre jour depuis un autre site y aura droit — voir
         // « Le lien direct entre sans rideau » dans index.html.
         try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+
+        // Le titre qui attend de s'écrire, la première photo qui attend son
+        // allumage dans le noir : cachés seulement si le moteur est là pour
+        // les montrer (u-anime). Et le drapeau de la régie, posé avant le
+        // premier rendu — le même en-tête que sur l'accueil (index.html),
+        // où tout cela est expliqué ; build/verifier-site.js compare les
+        // deux.
+        (function () {
+            var racine = document.documentElement;
+            racine.classList.add('u-anime');
+            if (/[?&]repli(?:[=&]|$)/.test(location.search) || !(window.CSS && CSS.supports &&
+                CSS.supports('animation-timeline: view()') && CSS.supports('view-timeline: --rg block')))
+                racine.classList.add('regie-repli');
+            addEventListener('DOMContentLoaded', function () {
+                setTimeout(function () {
+                    if (!window.__universPret) racine.classList.remove('u-anime');
+                    if (!window.Regie) racine.classList.remove('regie-repli');
+                }, 0);
+            });
+        })();
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -67,7 +87,7 @@
         /* Le mouvement de l'accueil — relu dans index.html (voir
            chargerMouvement) : sans lui, les transitions d'univers.css
            tombaient à zéro sur cette page. */
-        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; }
+        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --ease-ressort: linear(0, 0.005 1%, 0.039 3%, 0.098 5%, 0.215 8%, 0.566 16%, 0.715 20%, 0.807 23%, 0.901 27%, 0.966 31%, 1.013 36%, 1.036 42%, 1.032 52%, 1.002 75%, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; --dur-scene: 460ms; --dur-morph: 620ms; }
         body { margin: 0; background: #04050d; }
         #show-universe {
             --u-bg: #04050d;
@@ -88,14 +108,26 @@
             color: var(--u-muted); text-decoration: none;
         }
         .u-retour:hover { color: var(--u-accent-ink); }
-        /* Le morphing depuis le répertoire : les deux documents y
-           consentent, et le panneau porte le nom que la carte cliquée
-           prend au départ — sa vignette glisse jusqu'à devenir cette
-           page. Navigateurs plus anciens : navigation ordinaire. */
+        /* Le morphing depuis le répertoire — et depuis l'onglet Dates de
+           l'accueil : les documents y consentent, et cette page porte le
+           nom que la vignette touchée prend au départ. La photo de la
+           vignette grandit jusqu'à devenir le fond du titre, comme dans le
+           panneau de l'accueil (voir « La vignette devient l'univers »
+           dans univers.js). Sans photo, c'est la page entière qui sort de
+           la vignette. Navigateurs plus anciens : navigation ordinaire.
+
+           La petite image ne se montre jamais en grand : elle s'efface tôt,
+           tant qu'elle est encore petite, et le fond arrive en même temps. */
         @view-transition { navigation: auto; }
-        #show-universe { view-transition-name: fiche-fulgurees; }
+        #show-universe .u-hero-fond { view-transition-name: fiche-fulgurees; view-transition-class: fiche; }
         ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
         ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+        ::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
+        ::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
+        ::view-transition-old(*.fiche) { animation: vt-fiche-sort calc(var(--dur-morph) * .35) ease-out both; }
+        ::view-transition-new(*.fiche) { animation: vt-fiche-entre calc(var(--dur-morph) * .4) ease-out both; }
+        @keyframes vt-fiche-sort { to { opacity: 0; } }
+        @keyframes vt-fiche-entre { from { opacity: 0; } }
         @media (prefers-reduced-motion: reduce) {
             ::view-transition-group(*), ::view-transition-image-pair(*),
             ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
@@ -187,14 +219,21 @@
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
-        <div class="u-hero-wrap">
+        <!-- LE HÉROS SE DÉFAIT PAR COUCHES, chacune sur sa propre course au
+             défilement (voir « Le héros s'en va » dans univers.css) : le
+             surtitre part d'abord, le titre en dernier. L'auteur, la ligne
+             du rôle, le bouton et la flèche sont enveloppés d'une couche : ils
+             ont déjà leur propre fondu d'arrivée, et deux animations ne se
+             partagent pas une même opacité. -->
+        <div class="u-hero-wrap rg-vue">
+        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/fulgurees/10-1280.webp" srcset="../../ressources/images/univers/fulgurees/10-640.webp 640w, ../../ressources/images/univers/fulgurees/10-1280.webp 1280w" sizes="100vw" alt="" decoding="async" style="object-position:47% 35%"></div>
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
                  que la date et l'état de la tournée : c'est la ligne d'une
                  feuille de salle, et elle dit en trois mots ce qu'on va voir
                  avant même le titre. Il est pris sur l'univers et non sur la
                  ligne du CV, qui ne le porte pas. -->
-            <p class="u-eyebrow">2023 · Fable contemporaine</p>
+            <p class="u-eyebrow rg-k">2023 · Fable contemporaine</p>
             <!-- LE TITRE, D'UN SEUL TENANT POUR QUI NE LE VOIT PAS. Les lettres
                  tombent une à une et sont donc cachées aux lecteurs d'écran
                  (voir splitChars) ; aria-label leur donne le mot entier.
@@ -204,25 +243,20 @@
                  Sur une page autonome c'est le titre de la page, de premier
                  niveau ; dans le panneau de l'accueil, qui a déjà le sien, de
                  second niveau. -->
-            <h1 class="u-title" id="u-titre" aria-label="Fulguré.e.s" style="--u-title-chars:11;--u-title-len:11"><span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:0">F</span><span class="u-ch" style="--i:1">u</span><span class="u-ch" style="--i:2">l</span><span class="u-ch" style="--i:3">g</span><span class="u-ch" style="--i:4">u</span><span class="u-ch" style="--i:5">r</span><span class="u-ch" style="--i:6">é</span><span class="u-ch" style="--i:7">.</span><span class="u-ch" style="--i:8">e</span><span class="u-ch" style="--i:9">.</span><span class="u-ch" style="--i:10">s</span></span></h1>
-            <p class="u-author">Jérémie Fabre</p>
-            <p class="u-synopsis"><span class="u-line"><span class="u-wd" style="--i:0">Une</span> <span class="u-wd" style="--i:1">fratrie.</span> <span class="u-wd" style="--i:2">Un</span> <span class="u-wd" style="--i:3">village.</span> <span class="u-wd" style="--i:4">Perdu.</span></span><span class="u-line"><span class="u-wd" style="--i:5">La</span> <span class="u-wd" style="--i:6">foudre</span> <span class="u-wd" style="--i:7">y</span> <span class="u-wd" style="--i:8">a</span> <span class="u-wd" style="--i:9">frappé</span> <span class="u-wd" style="--i:10">il</span> <span class="u-wd" style="--i:11">y</span> <span class="u-wd" style="--i:12">a</span> <span class="u-wd" style="--i:13">quelques</span> <span class="u-wd" style="--i:14">années</span> <span class="u-wd" style="--i:15">et</span> <span class="u-wd" style="--i:16">y</span> <span class="u-wd" style="--i:17">a</span> <span class="u-wd" style="--i:18">laissé</span> <span class="u-wd" style="--i:19">des</span> <span class="u-wd" style="--i:20">survivant.e.s :</span> <span class="u-wd" style="--i:21">les</span> <span class="u-wd" style="--i:22">fulguré.e.s.</span> <span class="u-wd" style="--i:23">À</span> <span class="u-wd" style="--i:24">l’occasion</span> <span class="u-wd" style="--i:25">d’un</span> <span class="u-wd" style="--i:26">nouvel</span> <span class="u-wd" style="--i:27">an,</span> <span class="u-wd" style="--i:28">la</span> <span class="u-wd" style="--i:29">fratrie</span> <span class="u-wd" style="--i:30">s’y</span> <span class="u-wd" style="--i:31">perd</span> <span class="u-wd" style="--i:32">et</span> <span class="u-wd" style="--i:33">rencontre</span> <span class="u-wd" style="--i:34">ses</span> <span class="u-wd" style="--i:35">habitants.</span> <span class="u-wd" style="--i:36">Alors</span> <span class="u-wd" style="--i:37">que</span> <span class="u-wd" style="--i:38">« tout</span> <span class="u-wd" style="--i:39">est</span> <span class="u-wd" style="--i:40">chaos »,</span> <span class="u-wd" style="--i:41">la</span> <span class="u-wd" style="--i:42">foudre</span> <span class="u-wd" style="--i:43">frappe</span> <span class="u-wd" style="--i:44">à</span> <span class="u-wd" style="--i:45">nouveau.</span></span></p>
-            <p class="u-meta">Rôle · Adrien / Le jeune mec / Jerem<br>Compagnie Alchimie — Amélie Chalmey</p>
+            <h1 class="u-title rg-k" id="u-titre" aria-label="Fulguré.e.s" style="--u-title-chars:11;--u-title-len:11"><span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:0">F</span><span class="u-ch" style="--i:1">u</span><span class="u-ch" style="--i:2">l</span><span class="u-ch" style="--i:3">g</span><span class="u-ch" style="--i:4">u</span><span class="u-ch" style="--i:5">r</span><span class="u-ch" style="--i:6">é</span><span class="u-ch" style="--i:7">.</span><span class="u-ch" style="--i:8">e</span><span class="u-ch" style="--i:9">.</span><span class="u-ch" style="--i:10">s</span></span></h1>
+            <div class="u-couche u-couche-auteur rg-k"><p class="u-author">Jérémie Fabre</p></div>
+            <p class="u-synopsis rg-k"><span class="u-line"><span class="u-wd" style="--i:0">Une</span> <span class="u-wd" style="--i:1">fratrie.</span> <span class="u-wd" style="--i:2">Un</span> <span class="u-wd" style="--i:3">village.</span> <span class="u-wd" style="--i:4">Perdu.</span></span><span class="u-line"><span class="u-wd" style="--i:5">La</span> <span class="u-wd" style="--i:6">foudre</span> <span class="u-wd" style="--i:7">y</span> <span class="u-wd" style="--i:8">a</span> <span class="u-wd" style="--i:9">frappé</span> <span class="u-wd" style="--i:10">il</span> <span class="u-wd" style="--i:11">y</span> <span class="u-wd" style="--i:12">a</span> <span class="u-wd" style="--i:13">quelques</span> <span class="u-wd" style="--i:14">années</span> <span class="u-wd" style="--i:15">et</span> <span class="u-wd" style="--i:16">y</span> <span class="u-wd" style="--i:17">a</span> <span class="u-wd" style="--i:18">laissé</span> <span class="u-wd" style="--i:19">des</span> <span class="u-wd" style="--i:20">survivant.e.s :</span> <span class="u-wd" style="--i:21">les</span> <span class="u-wd" style="--i:22">fulguré.e.s.</span> <span class="u-wd" style="--i:23">À</span> <span class="u-wd" style="--i:24">l’occasion</span> <span class="u-wd" style="--i:25">d’un</span> <span class="u-wd" style="--i:26">nouvel</span> <span class="u-wd" style="--i:27">an,</span> <span class="u-wd" style="--i:28">la</span> <span class="u-wd" style="--i:29">fratrie</span> <span class="u-wd" style="--i:30">s’y</span> <span class="u-wd" style="--i:31">perd</span> <span class="u-wd" style="--i:32">et</span> <span class="u-wd" style="--i:33">rencontre</span> <span class="u-wd" style="--i:34">ses</span> <span class="u-wd" style="--i:35">habitants.</span> <span class="u-wd" style="--i:36">Alors</span> <span class="u-wd" style="--i:37">que</span> <span class="u-wd" style="--i:38">« tout</span> <span class="u-wd" style="--i:39">est</span> <span class="u-wd" style="--i:40">chaos »,</span> <span class="u-wd" style="--i:41">la</span> <span class="u-wd" style="--i:42">foudre</span> <span class="u-wd" style="--i:43">frappe</span> <span class="u-wd" style="--i:44">à</span> <span class="u-wd" style="--i:45">nouveau.</span></span></p>
+            <div class="u-couche u-couche-meta rg-k"><p class="u-meta">Rôle · Adrien / Le jeune mec / Jerem<br>Compagnie Alchimie — Amélie Chalmey</p></div>
 
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
                  traverser tout le défilé de photos pour savoir quand voir le
                  spectacle — or c'est souvent la seule raison de la visite.
                  Ce que les dates y changent est dans heroActionsHtml. -->
-            <div class="u-hero-actions">
+            <div class="u-couche u-couche-actions rg-k"><div class="u-hero-actions">
                 <p class="u-hero-note">Ce spectacle n’est plus à l’affiche</p>
-            </div>
+            </div></div>
 
-            <span class="u-scroll" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span>
-            <!-- Le masque neutre : l'objet du plateau, pas le rouage du
-                 navigateur. Un ovoïde lisse, deux yeux, l'arête du nez, pas
-                 de bouche — rien qui exprime, tout qui attend. Tracé ici
-                 plutôt qu'en CSS : une forme se dessine, elle ne se bricole
-                 pas en bordures et rayons. -->
+            <span class="u-couche u-couche-fleche rg-k" aria-hidden="true"><span class="u-scroll"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span></span>
             <span class="u-loader" role="status" aria-label="Chargement des visuels">
                 <svg viewBox="0 0 100 128" aria-hidden="true" focusable="false">
                     <path fill-rule="evenodd" d="M50 8C71 8 85 25 85 49c0 33-15 71-35 71S15 82 15 49C15 25 29 8 50 8z
@@ -234,160 +268,213 @@
         </header>
         </div>
 
-        <div class="u-figs"><div class="u-chapter u-reveal">
-                    <span class="u-chapter-num">1h15</span>
-                    <h2><span class="u-line"><span class="u-rw">Spectacle</span> <span class="u-rw">tout</span> <span class="u-rw">public</span> <span class="u-rw">à</span> <span class="u-rw">partir</span> <span class="u-rw">de</span> <span class="u-rw">14</span> <span class="u-rw">ans.</span></span></h2>
-                </div><figure class="u-fig u-fig--plein" style="--i:0">
-            <button type="button" class="u-fig-media" data-u-zoom="0"
-                    aria-label="Agrandir : Cette pièce réjouira les amateurs de musique électro, de relations familiales compliquées, et de phénomènes naturels extrêmes.">
-                <picture>
+        <div class="u-figs"><section class="u-ouverture rg-scene" aria-label="Ouverture">
+            <div class="u-of-scene">
+                <span class="u-of-fond" aria-hidden="true"></span>
+                <span class="u-of-plans" aria-hidden="true"><span class="u-of-photo rg-k" style="--x:-22cqw;--y:-9cqh;--s:-0.18;--e:0.4">
+                    <img src="../../ressources/images/univers/fulgurees/3-640.webp" srcset="../../ressources/images/univers/fulgurees/3-640.webp 640w, ../../ressources/images/univers/fulgurees/3-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:21cqw;--y:9cqh;--s:0.06;--e:0.52">
+                    <img src="../../ressources/images/univers/fulgurees/23-640.webp" srcset="../../ressources/images/univers/fulgurees/23-640.webp 640w, ../../ressources/images/univers/fulgurees/23-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:-19cqw;--y:11cqh;--s:0.18;--e:0.64">
+                    <img src="../../ressources/images/univers/fulgurees/7-640.webp" srcset="../../ressources/images/univers/fulgurees/7-640.webp 640w, ../../ressources/images/univers/fulgurees/7-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:23cqw;--y:-8cqh;--s:0.3;--e:0.74">
+                    <img src="../../ressources/images/univers/fulgurees/2-640.webp" srcset="../../ressources/images/univers/fulgurees/2-640.webp 640w, ../../ressources/images/univers/fulgurees/2-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span></span>
+                <div class="u-of-carton rg-k">
+                <span class="u-chapter-num">1h15</span>
+                <h2 class="u-ecrit" data-ecrire="scene" data-de="0.6" data-a="0.8"><span class="u-line"><span class="u-rw">Spectacle</span> <span class="u-rw">tout</span> <span class="u-rw">public</span> <span class="u-rw">à</span> <span class="u-rw">partir</span> <span class="u-rw">de</span> <span class="u-rw">14</span> <span class="u-rw">ans.</span></span></h2>
+            </div>
+                <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
+                <span class="u-of-noir rg-k" aria-hidden="true"></span>
+            </div>
+        </section><figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="foudre" style="--i:0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="0"
+                    aria-label="Agrandir : Cette pièce réjouira les amateurs de musique électro, de relations familiales compliquées, et de phénomènes naturels extrêmes.">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/10-640.webp 640w, ../../ressources/images/univers/fulgurees/10-1280.webp 1280w, ../../ressources/images/univers/fulgurees/10-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/fulgurees/10.jpg" alt="Cette pièce réjouira les amateurs de musique électro, de relations familiales compliquées, et de phénomènes naturels extrêmes." style="object-position:47% 35%"
-                     loading="eager" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/10.jpg" class="u-fig-img rg-k" alt="Cette pièce réjouira les amateurs de musique électro, de relations familiales compliquées, et de phénomènes naturels extrêmes." style="object-position:47% 35%"
+                         loading="eager" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/10-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:47% 35%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
+            <span class="u-voile" aria-hidden="true"></span><span class="u-eclat" aria-hidden="true"></span>
             
-            <figcaption class="u-cap"><span>Cette pièce réjouira les amateurs de musique électro, de relations familiales compliquées, et de phénomènes naturels extrêmes.</span></figcaption>
-        </figure><blockquote class="u-quote u-reveal">
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Cette pièce réjouira les amateurs de musique électro, de relations familiales compliquées, et de phénomènes naturels extrêmes.</span></figcaption>
+        </figure><blockquote class="u-quote u-ecrit rg-vue">
                     <p class="u-fit" style="--chars:25"><span class="u-line"><span class="u-rw">« Il</span> <span class="u-rw">n’est</span> <span class="u-rw">pas</span> <span class="u-rw">mort.</span></span><span class="u-line"><span class="u-rw">Il</span> <span class="u-rw">s’est</span> <span class="u-rw">fait</span> <span class="u-rw">FULGURER. »</span></span></p>
                     
-                </blockquote><div class="u-group u-trio"><figure class="u-fig u-fig--trio" style="--i:1">
-            <button type="button" class="u-fig-media" data-u-zoom="1"
-                    aria-label="Agrandir : Fulguré.e.s, photo 2">
-                <picture>
+                </blockquote><div class="u-group u-trio"><figure class="u-fig u-fig--trio rg-vue" style="--i:1;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="1"
+                    aria-label="Agrandir : Fulguré.e.s, photo 2">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/3-640.webp 640w, ../../ressources/images/univers/fulgurees/3-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/fulgurees/3.jpg" alt="Fulguré.e.s, photo 2" style="object-position:80% 25%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/3.jpg" class="u-fig-img rg-k" alt="Fulguré.e.s, photo 2" style="object-position:80% 25%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/3-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:80% 25%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--trio" style="--i:2">
-            <button type="button" class="u-fig-media" data-u-zoom="2"
-                    aria-label="Agrandir : Fulguré.e.s, photo 3">
-                <picture>
+        </figure><figure class="u-fig u-fig--trio rg-vue" style="--i:2;--prof:1.9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="2"
+                    aria-label="Agrandir : Fulguré.e.s, photo 3">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/1-640.webp 640w, ../../ressources/images/univers/fulgurees/1-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/fulgurees/1.jpg" alt="Fulguré.e.s, photo 3" style="object-position:33% 25%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/1.jpg" class="u-fig-img rg-k" alt="Fulguré.e.s, photo 3" style="object-position:33% 25%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/1-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:33% 25%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--trio" style="--i:3">
-            <button type="button" class="u-fig-media" data-u-zoom="3"
-                    aria-label="Agrandir : Fulguré.e.s, photo 4">
-                <picture>
+        </figure><figure class="u-fig u-fig--trio rg-vue" style="--i:3;--prof:2.8">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="3"
+                    aria-label="Agrandir : Fulguré.e.s, photo 4">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/4-640.webp 640w, ../../ressources/images/univers/fulgurees/4-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/fulgurees/4.jpg" alt="Fulguré.e.s, photo 4" style="object-position:12% 35%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/4.jpg" class="u-fig-img rg-k" alt="Fulguré.e.s, photo 4" style="object-position:12% 35%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/4-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:12% 35%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><p class="u-aside u-reveal"><span class="u-line"><span class="u-rw">« Quand</span> <span class="u-rw">la</span> <span class="u-rw">foudre</span> <span class="u-rw">frappe,</span></span><span class="u-line"><span class="u-rw">elle</span> <span class="u-rw">entre</span> <span class="u-rw">en</span> <span class="u-rw">toi</span> <span class="u-rw">en</span> <span class="u-rw">faisant</span> <span class="u-rw">un</span> <span class="u-rw">trou… »</span></span></p></div><figure class="u-fig u-fig--plein" style="--i:4">
-            <button type="button" class="u-fig-media" data-u-zoom="4"
-                    aria-label="Agrandir : La cellule familiale, subterfuge qui permet de passer l’humain au microscope.">
-                <picture>
+        </figure><p class="u-aside u-ecrit rg-vue"><span class="u-line"><span class="u-rw">« Quand</span> <span class="u-rw">la</span> <span class="u-rw">foudre</span> <span class="u-rw">frappe,</span></span><span class="u-line"><span class="u-rw">elle</span> <span class="u-rw">entre</span> <span class="u-rw">en</span> <span class="u-rw">toi</span> <span class="u-rw">en</span> <span class="u-rw">faisant</span> <span class="u-rw">un</span> <span class="u-rw">trou… »</span></span></p></div><figure class="u-fig u-fig--plein rg-vue" style="--i:4">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="4"
+                    aria-label="Agrandir : La cellule familiale, subterfuge qui permet de passer l’humain au microscope.">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/23-640.webp 640w, ../../ressources/images/univers/fulgurees/23-1280.webp 1280w, ../../ressources/images/univers/fulgurees/23-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/fulgurees/23.jpg" alt="La cellule familiale, subterfuge qui permet de passer l’humain au microscope." style="object-position:25% 40%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/23.jpg" class="u-fig-img rg-k" alt="La cellule familiale, subterfuge qui permet de passer l’humain au microscope." style="object-position:25% 40%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/23-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:25% 40%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
-            <figcaption class="u-cap"><span>La cellule familiale, subterfuge qui permet de passer l’humain au microscope.</span></figcaption>
-        </figure><div class="u-group u-trio"><figure class="u-fig u-fig--trio" style="--i:5">
-            <button type="button" class="u-fig-media" data-u-zoom="5"
-                    aria-label="Agrandir : Fulguré.e.s, photo 6">
-                <picture>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">La cellule familiale, subterfuge qui permet de passer l’humain au microscope.</span></figcaption>
+        </figure><div class="u-group u-trio"><figure class="u-fig u-fig--trio rg-vue" style="--i:5;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="5"
+                    aria-label="Agrandir : Fulguré.e.s, photo 6">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/27-640.webp 640w, ../../ressources/images/univers/fulgurees/27-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/fulgurees/27.jpg" alt="Fulguré.e.s, photo 6" style="object-position:52% 30%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/27.jpg" class="u-fig-img rg-k" alt="Fulguré.e.s, photo 6" style="object-position:52% 30%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/27-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:52% 30%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--trio" style="--i:6">
-            <button type="button" class="u-fig-media" data-u-zoom="6"
-                    aria-label="Agrandir : Fulguré.e.s, photo 7">
-                <picture>
+        </figure><figure class="u-fig u-fig--trio rg-vue" style="--i:6;--prof:1.9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="6"
+                    aria-label="Agrandir : Fulguré.e.s, photo 7">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/5-640.webp 640w, ../../ressources/images/univers/fulgurees/5-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/fulgurees/5.jpg" alt="Fulguré.e.s, photo 7" style="object-position:62% 35%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/5.jpg" class="u-fig-img rg-k" alt="Fulguré.e.s, photo 7" style="object-position:62% 35%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/5-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:62% 35%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--trio" style="--i:7">
-            <button type="button" class="u-fig-media" data-u-zoom="7"
-                    aria-label="Agrandir : Fulguré.e.s, photo 8">
-                <picture>
+        </figure><figure class="u-fig u-fig--trio rg-vue" style="--i:7;--prof:2.8">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="7"
+                    aria-label="Agrandir : Fulguré.e.s, photo 8">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/19-640.webp 640w, ../../ressources/images/univers/fulgurees/19-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/fulgurees/19.jpg" alt="Fulguré.e.s, photo 8" style="object-position:33% 25%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/19.jpg" class="u-fig-img rg-k" alt="Fulguré.e.s, photo 8" style="object-position:33% 25%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/19-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:33% 25%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><p class="u-aside u-reveal"><span class="u-line"><span class="u-rw">« Si</span> <span class="u-rw">tu</span> <span class="u-rw">ne</span> <span class="u-rw">trouves</span> <span class="u-rw">pas</span> <span class="u-rw">de</span> <span class="u-rw">deuxième</span> <span class="u-rw">trou,</span> <span class="u-rw">celui</span> <span class="u-rw">de</span> <span class="u-rw">la</span> <span class="u-rw">sortie,</span> <span class="u-rw">la</span> <span class="u-rw">charge</span> <span class="u-rw">est</span> <span class="u-rw">restée</span> <span class="u-rw">dans</span> <span class="u-rw">ton</span> <span class="u-rw">corps.</span> <span class="u-rw">Tu</span> <span class="u-rw">n’es</span> <span class="u-rw">plus</span> <span class="u-rw">fulguré·e,</span> <span class="u-rw">tu</span> <span class="u-rw">es</span> <span class="u-rw">FOUDROYÉ·E. »</span></span></p></div><figure class="u-fig u-fig--plein" style="--i:8">
-            <button type="button" class="u-fig-media" data-u-zoom="8"
-                    aria-label="Agrandir : Fulguré.e.s, photo 9">
-                <picture>
+        </figure><p class="u-aside u-ecrit rg-vue"><span class="u-line"><span class="u-rw">« Si</span> <span class="u-rw">tu</span> <span class="u-rw">ne</span> <span class="u-rw">trouves</span> <span class="u-rw">pas</span> <span class="u-rw">de</span> <span class="u-rw">deuxième</span> <span class="u-rw">trou,</span> <span class="u-rw">celui</span> <span class="u-rw">de</span> <span class="u-rw">la</span> <span class="u-rw">sortie,</span> <span class="u-rw">la</span> <span class="u-rw">charge</span> <span class="u-rw">est</span> <span class="u-rw">restée</span> <span class="u-rw">dans</span> <span class="u-rw">ton</span> <span class="u-rw">corps.</span> <span class="u-rw">Tu</span> <span class="u-rw">n’es</span> <span class="u-rw">plus</span> <span class="u-rw">fulguré·e,</span> <span class="u-rw">tu</span> <span class="u-rw">es</span> <span class="u-rw">FOUDROYÉ·E. »</span></span></p></div><figure class="u-fig u-fig--plein rg-vue" style="--i:8">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="8"
+                    aria-label="Agrandir : Fulguré.e.s, photo 9">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/7-640.webp 640w, ../../ressources/images/univers/fulgurees/7-1280.webp 1280w, ../../ressources/images/univers/fulgurees/7-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/fulgurees/7.jpg" alt="Fulguré.e.s, photo 9" style="object-position:70% 15%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/7.jpg" class="u-fig-img rg-k" alt="Fulguré.e.s, photo 9" style="object-position:70% 15%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/7-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:70% 15%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
-            <div class="u-over u-reveal u-over--droite">
+            <div class="u-over u-ecrit rg-vue u-over--droite">
             <p class="u-fit" style="--chars:32"><span class="u-line"><span class="u-rw">« La</span> <span class="u-rw">foudre</span> <span class="u-rw">frappe</span> <span class="u-rw">n’importe</span> <span class="u-rw">où,</span></span><span class="u-line"><span class="u-rw">n’importe</span> <span class="u-rw">qui,</span> <span class="u-rw">n’importe</span> <span class="u-rw">quand :</span></span><span class="u-line"><span class="u-rw">il</span> <span class="u-rw">n’y</span> <span class="u-rw">a</span> <span class="u-rw">aucun</span> <span class="u-rw">sens</span> <span class="u-rw">à</span> <span class="u-rw">ça. »</span></span></p>
             
         </div>
             
-        </figure><div class="u-group u-duo"><figure class="u-fig u-fig--duo" style="--i:9">
-            <button type="button" class="u-fig-media" data-u-zoom="9"
-                    aria-label="Agrandir : Fulguré.e.s, photo 10">
-                <picture>
+        </figure><div class="u-group u-duo"><figure class="u-fig u-fig--duo rg-vue" style="--i:9;--prof:1.0">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="9"
+                    aria-label="Agrandir : Fulguré.e.s, photo 10">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/8-640.webp 640w, ../../ressources/images/univers/fulgurees/8-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/fulgurees/8.jpg" alt="Fulguré.e.s, photo 10" style="object-position:32% 25%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/8.jpg" class="u-fig-img rg-k" alt="Fulguré.e.s, photo 10" style="object-position:32% 25%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/8-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:32% 25%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure><figure class="u-fig u-fig--duo" style="--i:10">
-            <button type="button" class="u-fig-media" data-u-zoom="10"
-                    aria-label="Agrandir : Fulguré.e.s, photo 11">
-                <picture>
+        </figure><figure class="u-fig u-fig--duo rg-vue" style="--i:10;--prof:1.9">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="10"
+                    aria-label="Agrandir : Fulguré.e.s, photo 11">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/26-640.webp 640w, ../../ressources/images/univers/fulgurees/26-1280.webp 1280w" sizes="(orientation: portrait) 60vh, 50vw">
-                    <img src="../../ressources/images/univers/fulgurees/26.jpg" alt="Fulguré.e.s, photo 11" style="object-position:72% 28%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/26.jpg" class="u-fig-img rg-k" alt="Fulguré.e.s, photo 11" style="object-position:72% 28%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/26-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:72% 28%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
             
-        </figure></div><figure class="u-fig u-fig--plein" style="--i:11">
-            <button type="button" class="u-fig-media" data-u-zoom="11"
-                    aria-label="Agrandir : Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure.">
-                <picture>
+        </figure></div><figure class="u-fig u-fig--plein rg-vue" style="--i:11">
+            <button type="button" class="u-fig-media rg-k" data-u-zoom="11"
+                    aria-label="Agrandir : Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure.">
+                <span class="u-fig-point rg-k">
+                    <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/fulgurees/2-640.webp 640w, ../../ressources/images/univers/fulgurees/2-1280.webp 1280w, ../../ressources/images/univers/fulgurees/2-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
-                    <img src="../../ressources/images/univers/fulgurees/2.jpg" alt="Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure." style="object-position:72% 30%"
-                     loading="lazy" decoding="async">
+                    <img src="../../ressources/images/univers/fulgurees/2.jpg" class="u-fig-img rg-k" alt="Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure." style="object-position:72% 30%"
+                         loading="lazy" decoding="async">
                 </picture>
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/fulgurees/2-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:72% 30%">
+                </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
             
-            <figcaption class="u-cap"><span>Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure.</span></figcaption>
-        </figure><div class="u-text u-reveal">
+            <figcaption class="u-cap rg-vue"><span class="rg-k">Envisager le fait de vivre comme une succession de coups de foudre dont on réchappe en boitant, chargé.e.s à bloc, déformé.e.s, sublimé.e.s par la brûlure.</span></figcaption>
+        </figure><div class="u-text u-ecrit rg-vue">
                     <p><span class="u-line"><span class="u-rw">Fulguré.e.s</span> <span class="u-rw">est</span> <span class="u-rw">un</span> <span class="u-rw">spectacle</span> <span class="u-rw">qui</span> <span class="u-rw">met</span> <span class="u-rw">à</span> <span class="u-rw">l’épreuve</span> <span class="u-rw">l’humain</span> <span class="u-rw">dans</span> <span class="u-rw">sa</span> <span class="u-rw">capacité</span> <span class="u-rw">à</span> <span class="u-rw">se</span> <span class="u-rw">débattre</span> <span class="u-rw">et</span> <span class="u-rw">à</span> <span class="u-rw">trouver</span> <span class="u-rw">des</span> <span class="u-rw">réponses</span> <span class="u-rw">face</span> <span class="u-rw">à</span> <span class="u-rw">la</span> <span class="u-rw">peur,</span> <span class="u-rw">à</span> <span class="u-rw">l’incompréhensible</span> <span class="u-rw">et</span> <span class="u-rw">à</span> <span class="u-rw">l’injustice.</span></span></p>
                 </div></div>
 
@@ -443,9 +530,12 @@
     <script src="../../dates.js"></script>
     <script src="../../dates-live.js"></script>
 
-    <!-- Le moteur, dans l'ordre : le montage d'abord (univers.js s'en sert),
-         puis univers.js, qui reconnaît la classe du <body> et anime le
-         panneau déjà en place. Aucun des deux n'est propre à cette page. -->
+    <!-- Le moteur, dans l'ordre : la régie (le défilement qui mène les
+         scènes, là où le navigateur ne le fait pas lui-même), le montage
+         (univers.js s'en sert), puis univers.js, qui reconnaît la classe du
+         <body> et anime le panneau déjà en place. Aucun n'est propre à
+         cette page. -->
+    <script src="../../regie.js"></script>
     <script src="../../univers-montage.js"></script>
     <script src="../../univers.js"></script>
 </body>
