@@ -1164,9 +1164,10 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 }
 
 /* ── LA LUMIÈRE QUI MONTE ──
-   Après le noir de l'ouverture, la première photo plein cadre attend dans
-   le noir (le voile). Quand elle arrive à mi-écran, univers.js donne le
-   top (.est-allume) et la lumière monte — avec la signature de l'univers
+   Après l'ouverture et le titre, la première photo plein cadre attend dans
+   le noir (le voile). Quand elle entre dans le quart inférieur de l'écran,
+   univers.js donne le top (.est-allume) et la lumière monte — avec la
+   signature de l'univers
    (data-lumiere, voir voileHtml dans univers-montage.js). Joué une fois,
    dans le temps et non au défilement : un top lumière ne se rembobine pas.
 
@@ -1900,8 +1901,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     opacity: .82;
 }
 
-.u-chapter :is(h2, h3),
-.u-of-carton :is(h2, h3) {
+.u-chapter :is(h2, h3) {
     margin: 0;
     max-width: 40ch;
     font-family: 'Montserrat', sans-serif;
@@ -2561,14 +2561,20 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     transition-duration: var(--dur-press);
 }
 
-/* ══ L'OUVERTURE : DU LOINTAIN À LA FACE ══
-   Une scène TENUE entre le titre et la première photo (voir ouvertureHtml
-   dans univers-montage.js). Le décor reste à l'écran pendant trois
-   écrans de défilement ; des photos du spectacle arrivent du fond du
-   plateau, passent de part et d'autre, et le carton du chapitre vient se
-   poser à la face. Puis le noir.
+/* ══ L'OUVERTURE : UN TRAVELLING AVANT, JUSQU'AU TITRE ══
+   La première chose qu'on voit (voir ouvertureHtml dans
+   univers-montage.js) : une scène TENUE, le décor à l'écran pendant trois
+   écrans de défilement. Des photos du spectacle arrivent du fond du
+   plateau et passent de part et d'autre ; au fond de la scène, le haut de
+   la page — le titre, sa photo, son auteur, son rôle, son bouton — avance
+   avec elles et vient se poser à la face, plein écran. La scène repart
+   alors vers le haut, le titre avec elle, et la page reprend son cours.
 
-   LE MOUVEMENT EST CELUI D'UNE CAMÉRA : chaque photo avance en profondeur
+   Il n'y a plus de noir à la fin : la scène finissait sur un écran noir,
+   avant que la lumière remonte sur la première photo, et ce noir-là
+   passait pour une page cassée.
+
+   LE MOUVEMENT EST CELUI D'UNE CAMÉRA : chaque plan avance en profondeur
    (translateZ) à vitesse constante — et, par la perspective, semble
    accélérer en approchant, comme en vrai. Rien que des déplacements et des
    opacités : la carte graphique s'en charge seule. */
@@ -2577,28 +2583,81 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     height: 330svh;
 }
 
+/* `clip` et non `hidden` : rogner ne fait pas de la scène une boîte de
+   défilement. Le titre qu'elle porte a ses propres animations au
+   défilement, qui doivent suivre le panneau, pas ce cadre immobile (voir
+   « Ce que suit une animation au défilement » dans README-build.md). */
 .u-of-scene {
     position: sticky;
     top: 0;
     height: 100svh;
     overflow: hidden;
+    overflow: clip;
     perspective: 900px;
     perspective-origin: 50% 50%;
     container-type: size;
 }
 
-/* La lumière basse du plateau, dans la couleur du spectacle. */
+/* La lumière basse du plateau, dans la couleur du spectacle. Le décor, les
+   photos et l'invitation laissent passer le doigt et la souris : le titre,
+   dessous, porte un bouton. */
 .u-of-fond {
     position: absolute;
     inset: 0;
     background: radial-gradient(ellipse 62% 58% at 50% 54%,
             color-mix(in srgb, var(--u-accent) 20%, var(--u-bg)) 0%, var(--u-bg) 72%);
+    pointer-events: none;
 }
 
 .u-of-plans {
     position: absolute;
     inset: 0;
     transform-style: preserve-3d;
+    pointer-events: none;
+}
+
+/* LE TITRE AU BOUT DU TRAVELLING. Invisible au premier écran — le
+   travelling est la première chose qu'on voit —, il paraît au fond de la
+   scène dès le premier geste, avance avec les photos et se pose à la face
+   aux neuf dixièmes de la scène, plein écran : le haut de la page tel
+   qu'on l'avait sans ouverture. Il ne répond au doigt qu'une fois posé —
+   minuscule au fond, son bouton aurait été une cible invisible. */
+.u-of-titre {
+    position: absolute;
+    inset: 0;
+    --rg-anim: u-of-titre;
+    --s: 0;
+    --e: .92;
+}
+
+@keyframes u-of-titre {
+    0% {
+        transform: translateZ(-2800px);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    30% {
+        opacity: 1;
+    }
+
+    99% {
+        pointer-events: none;
+    }
+
+    100% {
+        transform: none;
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+/* Posé, le titre ne se défait pas par couches comme en tête de page (voir
+   « Le héros s'en va ») : il repart d'un bloc avec la scène. Ses
+   animations de sortie suivraient ici la course de la scène entière, et
+   l'effaceraient en plein travelling. */
+.u-of-titre .rg-k {
+    animation: none;
 }
 
 /* Sur un écran haut (téléphone), la largeur seule donnerait des photos
@@ -2643,46 +2702,6 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     }
 }
 
-/* Le carton arrive du fond, se pose à la face, puis part dans le noir. */
-.u-of-carton {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    gap: 22px;
-    padding: 8svh 8vw;
-    --rg-anim: u-of-carton;
-    --s: .44;
-    --e: 1;
-}
-
-@keyframes u-of-carton {
-    0% {
-        transform: translateZ(-2800px);
-        opacity: 0;
-    }
-
-    12% {
-        opacity: 1;
-    }
-
-    64% {
-        transform: none;
-    }
-
-    84% {
-        opacity: 1;
-    }
-
-    100% {
-        transform: none;
-        opacity: 0;
-    }
-}
-
 /* L'INVITATION À AVANCER. Au premier écran de la scène, une photo déjà
    posée au loin, et au bas de l'écran « Avancer », qui s'efface dès le
    premier geste : le noir du plateau ne passe jamais pour une page vide.
@@ -2705,6 +2724,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     letter-spacing: .32em;
     text-transform: uppercase;
     color: var(--u-accent-ink);
+    pointer-events: none;
     --rg-anim: u-of-invite;
     --s: 0;
     --e: .06;
@@ -2745,27 +2765,6 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     to {
         opacity: 0;
         transform: translateY(-12px);
-    }
-}
-
-.u-of-noir {
-    position: absolute;
-    inset: 0;
-    background: #000;
-    opacity: 0;
-    pointer-events: none;
-    --rg-anim: u-of-noir;
-    --s: .9;
-    --e: 1;
-}
-
-@keyframes u-of-noir {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
     }
 }
 
@@ -3211,8 +3210,9 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     }
 
     /* LES SCÈNES TENUES NE SE TIENNENT PLUS : chacune montre un état fixe
-       qui a du sens. L'ouverture se réduit à son carton, la poursuite à
-       sa photo en plein feux, la première photo est allumée d'emblée. */
+       qui a du sens. L'ouverture se réduit au titre, posé à la face, la
+       poursuite à sa photo en plein feux, la première photo est allumée
+       d'emblée. */
     .u-ouverture,
     .u-poursuite {
         height: auto;
@@ -3232,16 +3232,16 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 
     .u-of-plans,
     .u-of-invite,
-    .u-of-noir,
     .u-pa-faisceau,
     .u-voile,
     .u-eclat {
         display: none;
     }
 
-    .u-of-carton {
+    .u-of-titre {
         position: relative;
         inset: auto;
+        width: 100%;
     }
 
     .u-pa-scene {

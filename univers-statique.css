@@ -78,8 +78,9 @@ figcaption,
 
 /* Le mouvement mené par le défilement (la régie, voir regie.js) : sans
    script, la page est immobile et lisible. Ni lumière qui écrit, ni mise
-   au point, ni scène tenue — l'ouverture se réduit à son carton, la
-   poursuite à sa photo en plein feux, comme en mouvement réduit. */
+   au point, ni scène tenue — l'ouverture se réduit au titre, posé à la
+   face, la poursuite à sa photo en plein feux, comme en mouvement
+   réduit. */
 .rg-k {
     animation: none !important;
 }
@@ -107,7 +108,6 @@ figcaption,
 
 .u-of-plans,
 .u-of-invite,
-.u-of-noir,
 .u-pa-faisceau,
 .u-voile,
 .u-eclat,
@@ -116,7 +116,10 @@ figcaption,
     display: none !important;
 }
 
-.u-of-carton {
+.u-of-titre {
     position: relative !important;
     inset: auto !important;
+    width: 100%;
+    opacity: 1 !important;
+    transform: none !important;
 }

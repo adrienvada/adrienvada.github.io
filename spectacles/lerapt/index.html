@@ -223,14 +223,12 @@
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
-        <!-- LE HÉROS SE DÉFAIT PAR COUCHES, chacune sur sa propre course au
-             défilement (voir « Le héros s'en va » dans univers.css) : le
-             surtitre part d'abord, le titre en dernier. L'auteur, la ligne
-             du rôle, le bouton et la flèche sont enveloppés d'une couche : ils
-             ont déjà leur propre fondu d'arrivée, et deux animations ne se
-             partagent pas une même opacité. -->
-        <div class="u-hero-wrap rg-vue">
+        <section class="u-ouverture rg-scene">
+            <div class="u-of-scene">
+                <span class="u-of-fond" aria-hidden="true"></span>
+                <div class="u-of-titre rg-k"><div class="u-hero-wrap">
         <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/lerapt/1-1280.webp" srcset="../../ressources/images/univers/lerapt/1-640.webp 640w, ../../ressources/images/univers/lerapt/1-1280.webp 1280w" sizes="100vw" alt="" decoding="async" style="object-position:66% 40%"></div>
+
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
                  que la date et l'état de la tournée : c'est la ligne d'une
@@ -273,7 +271,19 @@
                 </svg>
             </span>
         </header>
-        </div>
+        </div></div>
+                <span class="u-of-plans" aria-hidden="true"><span class="u-of-photo rg-k" style="--x:-22cqw;--y:-9cqh;--s:-0.18;--e:0.4">
+                    <img src="../../ressources/images/univers/lerapt/2-640.webp" srcset="../../ressources/images/univers/lerapt/2-640.webp 640w, ../../ressources/images/univers/lerapt/2-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:21cqw;--y:9cqh;--s:0.06;--e:0.52">
+                    <img src="../../ressources/images/univers/lerapt/5-640.webp" srcset="../../ressources/images/univers/lerapt/5-640.webp 640w, ../../ressources/images/univers/lerapt/5-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:-19cqw;--y:11cqh;--s:0.18;--e:0.64">
+                    <img src="../../ressources/images/univers/lerapt/7-640.webp" srcset="../../ressources/images/univers/lerapt/7-640.webp 640w, ../../ressources/images/univers/lerapt/7-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span><span class="u-of-photo rg-k" style="--x:23cqw;--y:-8cqh;--s:0.3;--e:0.74">
+                    <img src="../../ressources/images/univers/lerapt/10-640.webp" srcset="../../ressources/images/univers/lerapt/10-640.webp 640w, ../../ressources/images/univers/lerapt/10-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                </span></span>
+                <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
+            </div>
+        </section>
 
         <div class="u-figs"><figure class="u-fig u-affiche" style="--i:0">
             <button type="button" class="u-fig-media" data-u-zoom="0"
@@ -284,26 +294,10 @@
                 </picture>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
-        </figure><section class="u-ouverture rg-scene" aria-label="Ouverture">
-            <div class="u-of-scene">
-                <span class="u-of-fond" aria-hidden="true"></span>
-                <span class="u-of-plans" aria-hidden="true"><span class="u-of-photo rg-k" style="--x:-22cqw;--y:-9cqh;--s:-0.18;--e:0.4">
-                    <img src="../../ressources/images/univers/lerapt/2-640.webp" srcset="../../ressources/images/univers/lerapt/2-640.webp 640w, ../../ressources/images/univers/lerapt/2-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
-                </span><span class="u-of-photo rg-k" style="--x:21cqw;--y:9cqh;--s:0.06;--e:0.52">
-                    <img src="../../ressources/images/univers/lerapt/5-640.webp" srcset="../../ressources/images/univers/lerapt/5-640.webp 640w, ../../ressources/images/univers/lerapt/5-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
-                </span><span class="u-of-photo rg-k" style="--x:-19cqw;--y:11cqh;--s:0.18;--e:0.64">
-                    <img src="../../ressources/images/univers/lerapt/7-640.webp" srcset="../../ressources/images/univers/lerapt/7-640.webp 640w, ../../ressources/images/univers/lerapt/7-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
-                </span><span class="u-of-photo rg-k" style="--x:23cqw;--y:-8cqh;--s:0.3;--e:0.74">
-                    <img src="../../ressources/images/univers/lerapt/10-640.webp" srcset="../../ressources/images/univers/lerapt/10-640.webp 640w, ../../ressources/images/univers/lerapt/10-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
-                </span></span>
-                <div class="u-of-carton rg-k">
-                <span class="u-chapter-num">25 min</span>
-                <h2 class="u-ecrit" data-ecrire="scene" data-de="0.6" data-a="0.8"><span class="u-line"><span class="u-rw">Une</span> <span class="u-rw">comédie</span> <span class="u-rw">de</span> <span class="u-rw">Cécile</span> <span class="u-rw">Dessillons</span> <span class="u-rw">et</span> <span class="u-rw">Ladane</span> <span class="u-rw">Dehdar,</span> <span class="u-rw">des</span> <span class="u-rw">routes</span> <span class="u-rw">de</span> <span class="u-rw">campagne</span> <span class="u-rw">aux</span> <span class="u-rw">plages</span> <span class="u-rw">du</span> <span class="u-rw">Nord.</span></span></h2>
-            </div>
-                <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
-                <span class="u-of-noir rg-k" aria-hidden="true"></span>
-            </div>
-        </section><figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="projecteur" style="--i:0">
+        </figure><div class="u-chapter u-ecrit rg-vue">
+                    <span class="u-chapter-num">25 min</span>
+                    <h2><span class="u-line"><span class="u-rw">Une</span> <span class="u-rw">comédie</span> <span class="u-rw">de</span> <span class="u-rw">Cécile</span> <span class="u-rw">Dessillons</span> <span class="u-rw">et</span> <span class="u-rw">Ladane</span> <span class="u-rw">Dehdar,</span> <span class="u-rw">des</span> <span class="u-rw">routes</span> <span class="u-rw">de</span> <span class="u-rw">campagne</span> <span class="u-rw">aux</span> <span class="u-rw">plages</span> <span class="u-rw">du</span> <span class="u-rw">Nord.</span></span></h2>
+                </div><figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="projecteur" style="--i:0">
             <button type="button" class="u-fig-media rg-k" data-u-zoom="0"
                     aria-label="Agrandir : Une petite ville du Nord, à l’aube. Deux ouvrières, une Fiat rouge, un plan sans faille.">
                 <span class="u-fig-point rg-k">

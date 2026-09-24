@@ -293,14 +293,12 @@
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
-        <!-- LE HÉROS SE DÉFAIT PAR COUCHES, chacune sur sa propre course au
-             défilement (voir « Le héros s'en va » dans univers.css) : le
-             surtitre part d'abord, le titre en dernier. L'auteur, la ligne
-             du rôle, le bouton et la flèche sont enveloppés d'une couche : ils
-             ont déjà leur propre fondu d'arrivée, et deux animations ne se
-             partagent pas une même opacité. -->
-        <div class="u-hero-wrap rg-vue">
+        <section class="u-ouverture rg-scene">
+            <div class="u-of-scene">
+                <span class="u-of-fond" aria-hidden="true"></span>
+                <div class="u-of-titre rg-k"><div class="u-hero-wrap">
         <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/berenice/2-1280.webp" srcset="../../ressources/images/univers/berenice/2-640.webp 640w, ../../ressources/images/univers/berenice/2-1280.webp 1280w" sizes="100vw" alt="" decoding="async" style="object-position:55% 55%"></div>
+
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
                  que la date et l'état de la tournée : c'est la ligne d'une
@@ -343,11 +341,7 @@
                 </svg>
             </span>
         </header>
-        </div>
-
-        <div class="u-figs"><section class="u-ouverture rg-scene" aria-label="Ouverture">
-            <div class="u-of-scene">
-                <span class="u-of-fond" aria-hidden="true"></span>
+        </div></div>
                 <span class="u-of-plans" aria-hidden="true"><span class="u-of-photo rg-k" style="--x:-22cqw;--y:-9cqh;--s:-0.18;--e:0.4">
                     <img src="../../ressources/images/univers/berenice/18-640.webp" srcset="../../ressources/images/univers/berenice/18-640.webp 640w, ../../ressources/images/univers/berenice/18-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
                 </span><span class="u-of-photo rg-k" style="--x:21cqw;--y:9cqh;--s:0.06;--e:0.52">
@@ -357,14 +351,14 @@
                 </span><span class="u-of-photo rg-k" style="--x:23cqw;--y:-8cqh;--s:0.3;--e:0.74">
                     <img src="../../ressources/images/univers/berenice/19-640.webp" srcset="../../ressources/images/univers/berenice/19-640.webp 640w, ../../ressources/images/univers/berenice/19-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
                 </span></span>
-                <div class="u-of-carton rg-k">
-                <span class="u-chapter-num">1h25</span>
-                <h2 class="u-ecrit" data-ecrire="scene" data-de="0.6" data-a="0.8"><span class="u-line"><span class="u-rw">Une</span> <span class="u-rw">mise</span> <span class="u-rw">en</span> <span class="u-rw">scène</span> <span class="u-rw">resserrée,</span> <span class="u-rw">accessible</span> <span class="u-rw">et</span> <span class="u-rw">exigeante,</span> <span class="u-rw">au</span> <span class="u-rw">service</span> <span class="u-rw">d’un</span> <span class="u-rw">des</span> <span class="u-rw">plus</span> <span class="u-rw">beaux</span> <span class="u-rw">poèmes</span> <span class="u-rw">en</span> <span class="u-rw">alexandrin</span></span></h2>
-            </div>
                 <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
-                <span class="u-of-noir rg-k" aria-hidden="true"></span>
             </div>
-        </section><figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="crue" style="--i:0">
+        </section>
+
+        <div class="u-figs"><div class="u-chapter u-ecrit rg-vue">
+                    <span class="u-chapter-num">1h25</span>
+                    <h2><span class="u-line"><span class="u-rw">Une</span> <span class="u-rw">mise</span> <span class="u-rw">en</span> <span class="u-rw">scène</span> <span class="u-rw">resserrée,</span> <span class="u-rw">accessible</span> <span class="u-rw">et</span> <span class="u-rw">exigeante,</span> <span class="u-rw">au</span> <span class="u-rw">service</span> <span class="u-rw">d’un</span> <span class="u-rw">des</span> <span class="u-rw">plus</span> <span class="u-rw">beaux</span> <span class="u-rw">poèmes</span> <span class="u-rw">en</span> <span class="u-rw">alexandrin</span></span></h2>
+                </div><figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="crue" style="--i:0">
             <button type="button" class="u-fig-media rg-k" data-u-zoom="0"
                     aria-label="Agrandir : Un triangle amoureux élevé au rang de la tragédie.">
                 <span class="u-fig-point rg-k">

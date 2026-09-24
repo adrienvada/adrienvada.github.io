@@ -858,7 +858,7 @@ function exige(condition, message) {
                 const ELEMENTS = ['.u-ch', '.u-wd', '.u-rw', '.u-reveal', '.u-fig', '.u-fig img', '.u-fig-media',
                     '.u-group .u-fig-media', '.u-cap span', '.u-quote', '.u-chapter', '.u-text', '.u-foot', '.u-meta',
                     '.u-hero-actions', '.u-scroll', '.u-author', '.u-synopsis', '.u-progress span',
-                    '.u-hero-fond', '.u-fig-point', '.u-flou', '.u-of-photo', '.u-of-carton', '.u-of-invite',
+                    '.u-hero-fond', '.u-fig-point', '.u-flou', '.u-of-photo', '.u-of-titre', '.u-of-invite',
                     '.u-pa-faisceau', '.u-pa-plein', '.u-lum', '.u-voile'];
                 const out = {};
                 for (const s of ELEMENTS) {
@@ -932,7 +932,7 @@ function exige(condition, message) {
                     });
                     const out = { classe: document.documentElement.className, points: [] };
                     for (const [scene, fractions, sels] of [
-                        ['.u-ouverture', [0.2, 0.5, 0.8, 0.95], ['.u-of-photo', '.u-of-carton', '.u-of-noir', '.u-of-invite']],
+                        ['.u-ouverture', [0.2, 0.5, 0.8, 0.95], ['.u-of-photo', '.u-of-titre', '.u-of-invite']],
                         ['.u-poursuite', [0.1, 0.4, 0.62, 0.85], ['.u-pa-a', '.u-pa-b', '.u-pa-plein', '.u-pa-leg2']],
                     ]) {
                         const el = S.querySelector(scene);
@@ -1015,6 +1015,68 @@ function exige(condition, message) {
             await c.close();
         });
 
+        // LE TRAVELLING OUVRE LA PAGE. La première chose qu'on voit, c'est la
+        // scène : des photos qui arrivent du fond, et le titre au bout, qui
+        // avance jusqu'à la face. Plus de noir ensuite : le carton du
+        // chapitre suit le titre, et la première photo s'allume dès qu'elle
+        // entre dans le quart inférieur de l'écran.
+        await verifie('les pages spectacle s’ouvrent sur le travelling : le titre au bout, qui arrive à la face ; plus de noir après — la première photo s’allume dès le quart inférieur de l’écran', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            for (const slug of ['alabarre', 'berenice', 'cleophene']) {
+                await p.goto(`${base}/spectacles/${slug}/`, { waitUntil: 'load' });
+                await p.waitForTimeout(700);
+                const etat = await p.evaluate(async () => {
+                    const S = document.getElementById('show-universe');
+                    const dort = (ms) => new Promise((f) => setTimeout(f, ms));
+                    const scene = S.querySelector('.u-ouverture');
+                    const titre = scene && scene.querySelector('.u-of-titre');
+                    const figs = S.querySelector('.u-figs');
+                    const identite = (t) => t === 'none' || /^matrix(3d)?\((1, 0, 0, 1, 0, 0|1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)\)$/.test(t);
+                    const out = {
+                        enTete: !!scene && !!titre && !!titre.querySelector('h1.u-title')
+                            && !!(scene.compareDocumentPosition(figs) & Node.DOCUMENT_POSITION_FOLLOWING),
+                        noir: !!S.querySelector('.u-of-noir, .u-of-carton'),
+                        carton: figs.firstElementChild?.classList.contains('u-chapter') || false
+                    };
+                    // Le premier écran : le travelling, sans le titre.
+                    S.scrollTop = 0;
+                    await dort(300);
+                    out.debut = {
+                        titre: +getComputedStyle(titre).opacity,
+                        photo: Math.max(...[...scene.querySelectorAll('.u-of-photo')].map((e) => +getComputedStyle(e).opacity))
+                    };
+                    // Au bout de la scène : le titre posé à la face.
+                    S.scrollTop = scene.offsetTop + (scene.offsetHeight - S.clientHeight) * 0.96;
+                    await dort(300);
+                    const cs = getComputedStyle(titre);
+                    out.fin = { opacite: +cs.opacity, face: identite(cs.transform), clic: cs.pointerEvents };
+                    // La première photo : encore dans le noir au bas de l'écran,
+                    // allumée dès qu'elle entre dans son quart inférieur.
+                    const fig = S.querySelector('.u-allumage');
+                    const placer = async (f) => {
+                        S.scrollTop += fig.getBoundingClientRect().top - S.clientHeight * f;
+                        await dort(350);
+                        return fig.classList.contains('est-allume');
+                    };
+                    out.allumage = fig ? [await placer(0.92), await placer(0.7)] : null;
+                    return out;
+                });
+                exige(etat.enTete, `${slug} : la page ne s’ouvre pas sur le travelling, le titre au bout`);
+                exige(!etat.noir, `${slug} : le carton ou le noir est resté dans le travelling`);
+                exige(etat.carton, `${slug} : le carton du chapitre ne suit pas le titre`);
+                exige(etat.debut.titre < 0.05 && etat.debut.photo > 0.5,
+                    `${slug} : au premier écran, le titre devance le travelling (${JSON.stringify(etat.debut)})`);
+                exige(etat.fin.opacite === 1 && etat.fin.face && etat.fin.clic === 'auto',
+                    `${slug} : au bout du travelling, le titre n’est pas posé à la face (${JSON.stringify(etat.fin)})`);
+                exige(etat.allumage && !etat.allumage[0] && etat.allumage[1],
+                    `${slug} : la première photo ne s’allume pas à l’entrée du quart inférieur (${JSON.stringify(etat.allumage)})`);
+            }
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
         await verifie('en mouvement réduit, chaque scène a un état fixe qui a du sens', async () => {
             const c = await visiteur({ viewport: { width: 1280, height: 860 }, reducedMotion: 'reduce' });
             const p = await c.newPage();
@@ -1028,7 +1090,7 @@ function exige(condition, message) {
                 return {
                     ouverture: S.querySelector('.u-ouverture')?.offsetHeight / h,
                     plans: cs('.u-of-plans')?.display,
-                    carton: cs('.u-of-carton') && +cs('.u-of-carton').opacity,
+                    titre: cs('.u-of-titre') && +cs('.u-of-titre').opacity === 1 && cs('.u-of-titre').transform === 'none',
                     faisceaux: cs('.u-pa-faisceau')?.display,
                     plein: cs('.u-pa-plein') && +cs('.u-pa-plein').opacity,
                     poursuite: S.querySelector('.u-poursuite')?.offsetHeight / h,
@@ -1039,7 +1101,7 @@ function exige(condition, message) {
                 };
             });
             exige(etat.ouverture < 1.2, `l’ouverture reste une scène tenue (${etat.ouverture?.toFixed(2)} écran)`);
-            exige(etat.plans === 'none' && etat.carton === 1, 'l’ouverture ne se réduit pas à son carton');
+            exige(etat.plans === 'none' && etat.titre, 'l’ouverture ne se réduit pas au titre, posé à la face');
             exige(etat.poursuite < 1.2 && etat.faisceaux === 'none' && etat.plein === 1, 'la poursuite ne montre pas sa photo en plein feux');
             exige(etat.voile === 'none', 'la première photo attend un allumage qui ne viendra pas');
             exige(!etat.lumieres && !etat.mots, 'le texte attend une lumière qui ne viendra pas');

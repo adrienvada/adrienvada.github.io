@@ -401,18 +401,25 @@ const UniversMontage = (function () {
         </figure>`;
     }
 
-    // ── L'OUVERTURE : DU LOINTAIN À LA FACE ───────────────────────────
-    //  Entre le titre et la première photo, une scène tenue. Des photos du
-    //  spectacle arrivent du fond du plateau, passent de part et d'autre du
-    //  spectateur, et le carton du chapitre — la durée, une phrase — vient
-    //  se poser à la face. Puis le noir, et la lumière remonte sur la
-    //  première photo (voir .u-allumage).
+    // ── L'OUVERTURE : UN TRAVELLING AVANT, JUSQU'AU TITRE ─────────────
+    //  La première chose qu'on voit, avant le titre : une scène tenue. Des
+    //  photos du spectacle arrivent du fond du plateau et passent de part
+    //  et d'autre du spectateur ; au bout du travelling, au fond de la
+    //  scène, le titre — tout le haut de la page, sa photo, son auteur, son
+    //  rôle, son bouton — avance jusqu'à la face et remplit l'écran. La
+    //  page reprend alors son cours, le titre en tête.
+    //
+    //  Il était ENTRE le titre et la première photo, et finissait sur le
+    //  carton du chapitre, puis sur le noir, avant que la lumière remonte
+    //  sur la première photo : un écran entier de noir au milieu du
+    //  défilement, qu'on prenait pour une page cassée. Le noir est parti ;
+    //  le carton a repris sa place dans le montage, sous le titre.
     //
     //  LES PHOTOS : quatre, prises dans le reste du montage — la première
-    //  est réservée, c'est celle qui s'allumera juste après, et la vignette
-    //  du CV. Un univers peut les choisir lui-même (`ouverture: [5, 21]`).
-    //  Moins de deux photos disponibles : pas d'ouverture, le carton garde
-    //  sa place dans le montage.
+    //  est réservée, c'est celle qui s'allume après le titre, et la
+    //  vignette du CV. Un univers peut les choisir lui-même
+    //  (`ouverture: [5, 21]`). Moins de deux photos disponibles : pas
+    //  d'ouverture, le titre ouvre la page comme avant.
     //
     //  ELLE INVITE À DESCENDRE. Une scène qui commence dans le noir, avec
     //  une photo minuscule au fond, peut passer pour une page vide : on y
@@ -438,7 +445,10 @@ const UniversMontage = (function () {
     const OUVERTURE_PLACES = [[-22, -9], [21, 9], [-19, 11], [23, -8]];
     const OUVERTURE_PLAGES = [[-0.18, 0.4], [0.06, 0.52], [0.18, 0.64], [0.3, 0.74]];
 
-    function ouvertureHtml(uni, chapitre) {
+    const aUneOuverture = (uni) => photosOuverture(uni).length >= 2;
+
+    // `titre` : le haut de la page (voir panelHtml), qui vient du fond.
+    function ouvertureHtml(uni, titre) {
         const photos = photosOuverture(uni);
         if (photos.length < 2) return '';
         const base = `ressources/images/univers/${uni.slug}`;
@@ -449,26 +459,23 @@ const UniversMontage = (function () {
                     <img src="${base}/${n}-640.webp" srcset="${base}/${n}-640.webp 640w, ${base}/${n}-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
                 </span>`;
         }).join('');
-        // Le carton du chapitre, tel que le montage l'aurait posé — c'est le
-        // même, simplement arrivé du fond. Son titre s'écrit à la lumière
-        // sur la progression de la scène (data-ecrire="scene").
-        const carton = (chapitre && (chapitre.chapter || chapitre.chapterTitle)) ? `<div class="u-of-carton rg-k">
-                ${chapitre.chapter ? `<span class="u-chapter-num">${escape(chapitre.chapter)}</span>` : ''}
-                ${chapitre.chapterTitle ? `<h3 class="u-ecrit" data-ecrire="scene" data-de="0.6" data-a="0.8">${revealWords(chapitre.chapterTitle)}</h3>` : ''}
-            </div>` : '';
-        return `<section class="u-ouverture rg-scene" aria-label="Ouverture">
+        // Le titre est AVANT les photos dans le document : elles passent
+        // devant lui tant qu'elles traversent la scène. Pas de nom de région
+        // sur la scène : c'est le haut de la page, son titre y est lu en
+        // premier ; les photos, décoratives, sont cachées aux lecteurs
+        // d'écran.
+        return `<section class="u-ouverture rg-scene">
             <div class="u-of-scene">
                 <span class="u-of-fond" aria-hidden="true"></span>
+                <div class="u-of-titre rg-k">${titre}</div>
                 <span class="u-of-plans" aria-hidden="true">${plans}</span>
-                ${carton}
                 <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
-                <span class="u-of-noir rg-k" aria-hidden="true"></span>
             </div>
         </section>`;
     }
 
     // ── LA LUMIÈRE QUI MONTE, ET SA SIGNATURE ───────────────────────────
-    //  Après le noir de l'ouverture, la première photo plein cadre s'allume
+    //  Après l'ouverture et le titre, la première photo plein cadre s'allume
     //  — pas en fondu anonyme : chaque univers a sa façon d'allumer le
     //  plateau (`lumiere` dans ses données). La foudre de Fulguré.e.s, les
     //  néons du tribunal d'À la barre, la guirlande d'As You Like It, la
@@ -545,20 +552,18 @@ const UniversMontage = (function () {
 
     function beatsHtml(uni, title) {
         let index = 0;
-        // Le premier temps est le carton du chapitre : avec une ouverture, il
-        // y part (il arrive du fond de la scène) et n'est pas répété ici.
+        // L'ouverture n'est plus ici : elle ouvre la page, avant le titre
+        // (voir panelHtml). Après elle, la première photo plein cadre
+        // s'allume.
         const seq = uni.sequence || [];
-        const chapitre = seq.find(b => b && (b.chapter || b.chapterTitle)) || null;
-        const ouverture = ouvertureHtml(uni, chapitre);
-        let allumage = !!ouverture;
+        let allumage = aUneOuverture(uni);
 
-        return afficheHtml(uni, title) + ouverture + seq.map(beat => {
+        return afficheHtml(uni, title) + seq.map(beat => {
 
             if (beat.video) return videoHtml(uni, beat, title);
 
             // ── Cartons de texte, sans photo ──
             if (beat.chapter || beat.chapterTitle) {
-                if (ouverture && beat === chapitre) return '';
                 return `<div class="u-chapter u-ecrit rg-vue">
                     ${beat.chapter ? `<span class="u-chapter-num">${escape(beat.chapter)}</span>` : ''}
                     ${beat.chapterTitle ? `<h3>${revealWords(beat.chapterTitle)}</h3>` : ''}
@@ -774,27 +779,20 @@ const UniversMontage = (function () {
         // quand Supabase aura répondu.
         const etat = { isFilm, dates, enCreation, statique, key: info.key };
         const niveau = statique ? 'h1' : 'h2';
+        const ouverture = aUneOuverture(uni);
 
-        const html = `
-        ${statique
-                ? `<a href="/spectacles/" class="u-close" aria-label="Retour au répertoire des spectacles">
-            <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
-        </a>`
-                : `<button type="button" class="u-close" aria-label="Fermer l’univers du spectacle">
-            <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
-        </button>`}
-        <!-- La barre de progression vaut aussi pour une page autonome : le
-             panneau y défile dans sa propre boîte, exactement comme ici. -->
-        <div class="u-progress" aria-hidden="true"><span></span></div>
-
-        <!-- LE HÉROS SE DÉFAIT PAR COUCHES, chacune sur sa propre course au
-             défilement (voir « Le héros s'en va » dans univers.css) : le
-             surtitre part d'abord, le titre en dernier. L'auteur, la ligne
-             du rôle, le bouton et la flèche sont enveloppés d'une couche : ils
-             ont déjà leur propre fondu d'arrivée, et deux animations ne se
-             partagent pas une même opacité. -->
-        <div class="u-hero-wrap rg-vue">
+        // LE HAUT DE LA PAGE : le titre et ce qui l'accompagne. Avec une
+        // ouverture, il est au bout du travelling — il arrive du fond de la
+        // scène (voir ouvertureHtml) et repart avec elle. Sans ouverture, il
+        // ouvre la page et SE DÉFAIT PAR COUCHES en s'en allant, chacune sur
+        // sa propre course au défilement (voir « Le héros s'en va » dans
+        // univers.css) : le surtitre part d'abord, le titre en dernier.
+        // L'auteur, la ligne du rôle, le bouton et la flèche sont enveloppés
+        // d'une couche : ils ont déjà leur propre fondu d'arrivée, et deux
+        // animations ne se partagent pas une même opacité.
+        const hero = `<div class="u-hero-wrap${ouverture ? '' : ' rg-vue'}">
         ${heroFondHtml(uni)}
+
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
                  que la date et l'état de la tournée : c'est la ligne d'une
@@ -834,7 +832,21 @@ const UniversMontage = (function () {
                 </svg>
             </span>
         </header>
-        </div>
+        </div>`;
+
+        const html = `
+        ${statique
+                ? `<a href="/spectacles/" class="u-close" aria-label="Retour au répertoire des spectacles">
+            <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
+        </a>`
+                : `<button type="button" class="u-close" aria-label="Fermer l’univers du spectacle">
+            <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
+        </button>`}
+        <!-- La barre de progression vaut aussi pour une page autonome : le
+             panneau y défile dans sa propre boîte, exactement comme ici. -->
+        <div class="u-progress" aria-hidden="true"><span></span></div>
+
+        ${ouverture ? ouvertureHtml(uni, hero) : hero}
 
         <div class="u-figs">${figures}</div>
 

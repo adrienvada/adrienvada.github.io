@@ -114,8 +114,13 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   l'univers — jamais un cadre rogné
   en `overflow: hidden`, qui ne défile pas (voir [Ce que suit une animation au
   défilement](#ce-que-suit-une-animation-au-défilement)) ;
-- en mouvement réduit, chaque scène a un état fixe : l'ouverture réduite à son
-  carton, la poursuite à sa photo en plein feux, la première photo allumée, le
+- les pages spectacle s'ouvrent sur le travelling : le titre (`h1`) au bout de
+  la scène, invisible au premier écran où une photo est déjà là, posé à la face
+  au bout de la scène et cliquable ; ni carton ni noir dans la scène, le carton
+  du chapitre en tête du montage ; la première photo encore éteinte au bas de
+  l'écran, allumée à l'entrée de son quart inférieur ;
+- en mouvement réduit, chaque scène a un état fixe : l'ouverture réduite au
+  titre posé à la face, la poursuite à sa photo en plein feux, la première photo allumée, le
   texte écrit, plus rien d'animé au défilement ;
 - les défauts réparés de l'audit du mouvement : le verrou de défilement posé
   sur `<html>` et la place de la barre réservée, le changement d'onglet et sa
@@ -1616,8 +1621,8 @@ panneau de l'univers.
 |---|---|---|
 | **L'écriture à la lumière** | chaque ligne d'une citation, d'un texte ou d'une incrustation s'écrit pendant qu'on la lit : une fenêtre de lumière la parcourt, avec un temps à la césure | `ecrireALaLumiere` (univers.js) |
 | **La mise au point** | chaque photo arrive floue, fait le point au milieu de l'écran, se refloute un peu en partant | `.u-flou`, `-flou.webp` |
-| **Du lointain à la face** | entre le titre et la première photo, des photos arrivent du fond du plateau et passent de part et d'autre ; le carton du chapitre vient se poser à la face ; puis le noir. « Avancer », et une lumière qui descend un rail, invitent à défiler | `ouvertureHtml` (univers-montage.js), `.u-ouverture` |
-| **Les noirs et la signature lumineuse** | après le noir, la première photo s'allume à la façon du spectacle : foudre, néon, guirlande, torche, lumière crue, projecteur | `voileHtml`, `.u-allumage` |
+| **Le travelling, jusqu'au titre** | la première chose qu'on voit : des photos arrivent du fond du plateau et passent de part et d'autre ; au fond de la scène, le haut de la page — titre, photo, auteur, rôle, bouton — avance avec elles et se pose à la face, plein écran, aux neuf dixièmes de la scène. Il n'y répond au doigt qu'une fois posé ; au clavier, Tab y mène d'un coup. « Avancer », et une lumière qui descend un rail, invitent à défiler. Plus de noir à la fin : le carton du chapitre suit le titre, dans le montage | `ouvertureHtml`, `panelHtml` (univers-montage.js), `.u-ouverture`, `.u-of-titre` |
+| **La signature lumineuse** | après le titre, la première photo s'allume à la façon du spectacle — foudre, néon, guirlande, torche, lumière crue, projecteur — dès qu'elle entre dans le quart inférieur de l'écran (elle attendait la moitié : un demi-écran de noir) | `voileHtml`, `.u-allumage`, `guetterAllumage` |
 | **La poursuite** | sur une photo de groupe choisie, la pénombre, une ou deux poursuites qui vont d'un comédien à l'autre, puis plein feux | `poursuiteHtml`, `.u-poursuite` |
 
 Ce que les données en disent (voir aussi l'en-tête de `univers.js`) :
@@ -1625,8 +1630,10 @@ Ce que les données en disent (voir aussi l'en-tête de `univers.js`) :
 ```js
 lumiere: 'foudre',            // foudre | neon | guirlande | torche | crue | projecteur
                               // sans mention : crue (spectacle), projecteur (film)
-ouverture: [5, 21, 20, 7],    // les photos du lointain — sans mention, quatre
-                              // photos réparties dans le montage, jamais la première
+ouverture: [5, 21, 20, 7],    // les photos du travelling — sans mention, quatre
+                              // photos réparties dans le montage, jamais la première ;
+                              // moins de deux photos : pas de travelling, le titre
+                              // ouvre la page
 { p: [9], poursuite: { etapes: [ [[20, 48], [83, 48]], [[51, 60]] ] } }
                               // chaque étape éclaire un ou deux points, en %
                               // de la photo (horizontal, vertical) ; `ratio`
@@ -1637,9 +1644,17 @@ Pour placer une poursuite : ouvrir la photo (`ressources/images/univers/<slug>/<
 relever la position des visages en pourcentage, écrire les étapes, régénérer
 les pages, et regarder la scène — la photo y est montrée entière.
 
-**En mouvement réduit** : l'ouverture se réduit à son carton, la poursuite à
-sa photo en plein feux, la première photo est allumée d'emblée, le texte est
-écrit. **Sans JavaScript** (`univers-statique.css`), même chose.
+**En mouvement réduit** : l'ouverture se réduit au titre, posé à la face, la
+poursuite à sa photo en plein feux, la première photo est allumée d'emblée, le
+texte est écrit. **Sans JavaScript** (`univers-statique.css`), même chose.
+
+**Le titre, dans le travelling, ne se défait pas par couches** comme en tête
+de page : il repart d'un bloc avec la scène. Ses animations de sortie
+suivraient ici la course de la scène entière et l'effaceraient en plein
+travelling — vérifié dans Chromium : un élément dans une scène collée
+(`sticky`) a une course étalée sur toute la scène. Et la scène rogne en
+`overflow: clip`, pas `hidden`, qui en ferait une boîte de défilement : tout
+ce qu'elle contient suivrait ce cadre immobile.
 
 ### L'écriture à la lumière
 
@@ -1649,15 +1664,16 @@ retrait ; la lumière est une copie décorative de chaque ligne, posée dessus
 texte glisse en sens inverse. Deux déplacements, rien à repeindre.
 
 Les lignes sont **mesurées dans la mise en page** (`offsetLeft`, `offsetTop`),
-pas à l'écran : le carton de l'ouverture est mesuré quand il est encore au fond
-de la scène, réduit par la perspective, et ses fenêtres ne couvraient qu'un coin
-du titre. Elles sont refaites quand la largeur change.
+pas à l'écran : un texte posé dans une scène en profondeur (le carton de
+l'ancienne ouverture, arrivé du fond) serait mesuré réduit par la perspective,
+et ses fenêtres ne couvriraient qu'un coin du texte. Elles sont refaites quand
+la largeur change.
 
 ### Les passages (View Transitions)
 
 | Passage | Ce qui voyage |
 |---|---|
-| une ligne du CV → son univers, et retour | la boîte de la ligne, sa vignette (qui devient le **fond du titre**, `heroFondHtml`), son titre — `open`/`close` dans univers.js |
+| une ligne du CV → son univers, et retour | la boîte de la ligne, sa vignette (qui devient le **fond du titre**, `heroFondHtml`), son titre — `open`/`close` dans univers.js. Quand l'univers s'ouvre sur son travelling, le titre est au fond de la scène, pas encore là : seule la boîte voyage, et le titre s'écrit lettre à lettre au fond (`titreAuFond`) |
 | le répertoire, l'onglet Dates → une page spectacle | la vignette → le fond du titre de la page (`fiche-<slug>`, entre documents) |
 | une vignette du book → la photo, et retour | la photo (`book-photo`) |
 | un onglet → un autre | la page, dans le sens de l'onglet ; la pastille glisse |
