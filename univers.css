@@ -1023,7 +1023,16 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     margin: 0;
     position: relative;
     height: 86svh;
+    /* `clip` et non `hidden`. `hidden` fait de la figure une boîte de
+       défilement, et ce qui y porte sa propre ligne de temps (.rg-vue : la
+       légende, la citation posée sur la photo) suivait alors le défilement
+       de la figure, qui ne défile jamais — la citation ne s'écrivait pas,
+       la légende restait figée à mi-fondu. `clip` rogne de la même façon
+       sans créer de boîte de défilement. `hidden` reste pour les
+       navigateurs qui ne connaissent pas `clip` : ils n'ont pas de ligne de
+       temps non plus, c'est le repli de regie.js qui les mène. */
     overflow: hidden;
+    overflow: clip;
     /* `contain: paint` suffit : le navigateur sait qu'aucun pixel de
        la figure ne déborde, donc il peut ignorer celles hors écran.
        Pas de `content-visibility: auto` ici — il faisait s'effondrer

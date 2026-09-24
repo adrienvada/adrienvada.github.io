@@ -2874,11 +2874,19 @@
                et reste allumé — ce qu'on a lu est éclairé (::before) ;
              · le lavis de couleur passe sur la ligne pendant qu'elle la
                traverse, puis s'éteint (::after) ; la pastille et le bandeau
-               de la vignette s'allument avec lui ;
-             · l'année monte sur la vignette en arrivant à l'écran.
+               de la vignette s'allument avec lui.
            Tout est lié au défilement : il n'y a plus d'horloge, donc rien
            à rejouer — un survol coupe l'animation, la rend, et elle
            reprend exactement où en est le défilement.
+
+           L'ANNÉE, ELLE, NE BOUGE PAS. Elle montait sur la vignette en
+           arrivant à l'écran, depuis le bas du cadre qui la rognait — et
+           toutes les années ont disparu : `overflow: hidden` fait du cadre
+           une boîte de défilement, view() s'y est accroché au lieu de
+           suivre la page, et ce cadre-là ne défile jamais. Même réparée,
+           la montée laissait sans année les vignettes du bas de l'écran
+           tant qu'on n'avait pas défilé. L'année est une information :
+           aucune animation ne doit pouvoir la cacher.
 
            DEUX RÉGIMES, comme dans les univers (voir regie.js). Le
            navigateur récent lit le défilement lui-même (view()) ; ailleurs
@@ -2955,12 +2963,6 @@
             }
         }
 
-        @keyframes cv-annee {
-            from {
-                translate: 0 100%;
-            }
-        }
-
         /* Le filet et le fil sont allumés au repos : ce sont les animations
            qui les éteignent en dessous de la ligne de lecture. */
         .cv-has-universe::before {
@@ -2973,8 +2975,7 @@
             :where(html:not(.regie-repli)) .cv-has-universe::before,
             :where(html:not(.regie-repli)) .cv-has-universe::after,
             :where(html:not(.regie-repli)) .cv-has-universe .cv-badge::after,
-            :where(html:not(.regie-repli)) .cv-vignette.a-etat::after,
-            :where(html:not(.regie-repli)) .cv-vignette-annee {
+            :where(html:not(.regie-repli)) .cv-vignette.a-etat::after {
                 animation-timeline: view();
                 animation-duration: auto;
                 animation-timing-function: linear;
@@ -3001,19 +3002,13 @@
                 animation-name: cv-lueur-passe;
                 animation-range: cover 38vh cover 62vh;
             }
-
-            :where(html:not(.regie-repli)) .cv-vignette-annee {
-                animation-name: cv-annee;
-                animation-range: cover 15vh cover 30vh;
-            }
         }
 
         :where(.regie-repli) .cv-frise::after,
         :where(.regie-repli) .cv-has-universe::before,
         :where(.regie-repli) .cv-has-universe::after,
         :where(.regie-repli) .cv-has-universe .cv-badge::after,
-        :where(.regie-repli) .cv-vignette.a-etat::after,
-        :where(.regie-repli) .cv-vignette-annee {
+        :where(.regie-repli) .cv-vignette.a-etat::after {
             animation-duration: 1s;
             animation-timing-function: linear;
             animation-fill-mode: both;
@@ -3041,19 +3036,13 @@
             animation-delay: calc((.62 - var(--ph, 0)) / .24 * -1s);
         }
 
-        :where(.regie-repli) .cv-vignette-annee {
-            animation-name: cv-annee;
-            animation-delay: calc((.85 - var(--ph, 0)) / .15 * -1s);
-        }
-
         @media (prefers-reduced-motion: reduce) {
 
             .cv-frise::after,
             .cv-has-universe::before,
             .cv-has-universe::after,
             .cv-has-universe .cv-badge::after,
-            .cv-vignette.a-etat::after,
-            .cv-vignette-annee {
+            .cv-vignette.a-etat::after {
                 animation: none !important;
             }
         }
@@ -3509,6 +3498,13 @@
                 clip: rect(0, 0, 0, 0);
                 white-space: nowrap;
                 border: 0;
+            }
+
+            /* Le halo est passé du badge à la vignette (plus bas) : le badge
+               caché n'en porte plus. Rogné en `hidden`, il était d'ailleurs
+               la boîte de défilement de ce halo, qui ne pouvait rien suivre. */
+            #page_cv li.a-vignette .cv-badge::after {
+                content: none;
             }
 
             /* Le titre en Cinzel, comme en tête de chaque spectacle dans

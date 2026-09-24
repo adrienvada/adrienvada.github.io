@@ -30,7 +30,8 @@
  *      sans en-têtes Range ;
  *    · l'impression sans les pastilles ▶ ;
  *    · la ligne à vignette du CV : l'année et l'état sur chaque vignette,
- *      des lignes de même hauteur, rien de tout cela sur papier ;
+ *      l'année lisible même au bas de l'écran, des lignes de même
+ *      hauteur, rien de tout cela sur papier ;
  *    · le site sans JavaScript ;
  *    · les pages spectacle (h1, <main>, données structurées, une image
  *      pour chaque représentation) ;
@@ -38,6 +39,8 @@
  *      univers ouvert depuis le CV ;
  *    · la régie (regie.js) : la même détection partout, et le repli qui
  *      rejoue les mêmes images que le navigateur, scène par scène ;
+ *    · chaque animation menée par le défilement suit la page ou le
+ *      panneau de l'univers, jamais un cadre rogné qui ne défile pas ;
  *    · un état fixe qui a du sens pour chaque scène, en mouvement réduit ;
  *    · les défauts réparés de l'audit du mouvement : verrou de
  *      défilement, changement d'onglet, « Passer » et les touches de
@@ -592,7 +595,7 @@ function exige(condition, message) {
         // vignette, qui dit la même année et le même état que la ligne ;
         // toutes les lignes d'une liste ont la même hauteur, et l'année y
         // tombe au même endroit ; le papier n'en voit rien.
-        await verifie('le CV : une vignette par spectacle et par film, l’année et l’état dessus, les lignes à la même hauteur et l’année au même endroit — au téléphone comme sur ordinateur ; ni image pour les formations, ni vignette sur papier', async () => {
+        await verifie('le CV : une vignette par spectacle et par film, l’année et l’état dessus — l’année lisible sur toute vignette à l’écran, même tout en bas —, les lignes à la même hauteur et l’année au même endroit — au téléphone comme sur ordinateur ; ni image pour les formations, ni vignette sur papier', async () => {
             for (const largeur of [390, 1280]) {
                 const c = await visiteur({ viewport: { width: largeur, height: 900 } });
                 const p = await c.newPage();
@@ -666,6 +669,25 @@ function exige(condition, message) {
                 });
                 exige(cv.formation >= 1, `${ici} : la liste des formations n’est plus marquée .cv-formation`);
                 exige(!cv.imagesFormation, `${ici} : une formation porte une image`);
+
+                // L'année se lit sur chaque vignette posée à l'écran, même
+                // tout en bas, au repos. Elle montait depuis le bas du cadre en
+                // arrivant — et un jour toutes les années sont restées dessous.
+                // C'est une information : on la cherche là où elle se cachait.
+                const sansAnnee = await p.evaluate(async () => {
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    const manquent = [];
+                    for (const li of document.querySelectorAll('#page_cv li.a-vignette')) {
+                        const cadre = li.querySelector('.cv-vignette-cadre');
+                        window.scrollTo(0, cadre.getBoundingClientRect().bottom + scrollY - innerHeight + 2);
+                        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+                        const a = li.querySelector('.cv-vignette-annee').getBoundingClientRect(), k = cadre.getBoundingClientRect();
+                        const vu = Math.min(a.bottom, k.bottom) - Math.max(a.top, k.top);
+                        if (vu < a.height - 0.5) manquent.push(`${li.dataset.cvShow} (${Math.max(0, vu).toFixed(0)} px sur ${a.height.toFixed(0)})`);
+                    }
+                    return manquent;
+                });
+                exige(!sansAnnee.length, `${ici} : l’année ne se voit pas sur la vignette au bas de l’écran — ${sansAnnee.join(', ')}`);
                 exige(!erreurs.length, erreurs.join(' | '));
 
                 // Sur papier : ni vignette ni genre, et l'année revient.
@@ -863,6 +885,49 @@ function exige(condition, message) {
                 }));
             });
             exige(!ecarts.length, `${ecarts.length} écart(s) entre les deux pilotes, dont ${ecarts.slice(0, 2).join(' ; ')}`);
+        });
+
+        // ── CE QUE SUIT UNE ANIMATION AU DÉFILEMENT ──
+        // view() suit la boîte de défilement la plus proche, et
+        // `overflow: hidden` en fait une. Sous un cadre ainsi rogné,
+        // l'animation suivait le cadre, qui ne défile jamais : l'année des
+        // vignettes restait sous la photo, les citations posées sur les
+        // photos ne s'écrivaient pas, les légendes restaient à mi-fondu — et
+        // seulement dans les navigateurs récents, le repli, lui, jouait
+        // juste. Aucune ne doit suivre autre chose que la page ou le
+        // panneau de l'univers.
+        await verifie('chaque animation menée par le défilement suit la page ou l’univers, jamais un cadre qui ne défile pas', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            const fautes = [];
+            let menees = 0;
+            for (const url of ['/', ...dossiers.map((d) => `/spectacles/${d}/`)]) {
+                await p.goto(base + url, { waitUntil: 'load' });
+                await p.waitForTimeout(500);
+                const r = await p.evaluate(async () => {
+                    const S = document.getElementById('show-universe');
+                    const defileur = S && S.scrollHeight > S.clientHeight ? S : document.scrollingElement;
+                    // Tout le montage passe à l'écran : chaque animation existe.
+                    for (let y = 0; y <= defileur.scrollHeight; y += defileur.clientHeight) {
+                        defileur.scrollTop = y;
+                        await new Promise((r) => requestAnimationFrame(r));
+                    }
+                    const nom = (e) => e.nodeName.toLowerCase() + [...e.classList].slice(0, 2).map((k) => '.' + k).join('');
+                    const liees = document.getAnimations().filter((a) => a.timeline && 'source' in a.timeline);
+                    return {
+                        n: liees.length,
+                        fautes: [...new Set(liees.filter((a) => a.timeline.source !== document.scrollingElement && a.timeline.source !== S)
+                            .map((a) => `${a.animationName} (${nom(a.effect.target)}${a.effect.pseudoElement || ''}) suit ${a.timeline.source ? nom(a.timeline.source) : 'rien'}`))]
+                    };
+                });
+                menees += r.n;
+                r.fautes.forEach((f) => fautes.push(`${url} ${f}`));
+            }
+            exige(menees > 100, `${menees} animation(s) menée(s) par le défilement en tout : le navigateur de vérification ne les mène plus ?`);
+            exige(!fautes.length, `${fautes.length} animation(s) accrochée(s) ailleurs, dont ${fautes.slice(0, 3).join(' ; ')}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
         });
 
         await verifie('en mouvement réduit, chaque scène a un état fixe qui a du sens', async () => {
