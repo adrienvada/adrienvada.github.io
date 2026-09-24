@@ -117,14 +117,19 @@
  *  ------------------------------
  *    lumiere: 'foudre'
  *        LA SIGNATURE LUMINEUSE de l'univers : la façon dont la première
- *        photo s'allume, après l'ouverture et le titre. foudre | neon |
- *        guirlande | torche | crue | projecteur. Sans mention : crue pour
- *        un spectacle, projecteur pour un film.
+ *        photo s'allume, après l'ouverture, le titre et le premier carton.
+ *        foudre | neon | guirlande | torche | crue | projecteur. Sans
+ *        mention : crue pour un spectacle, projecteur pour un film. Dans
+ *        une salle claire — un fond de palette clair —, la photo se révèle
+ *        dans le papier au lieu de sortir de la pénombre, et le premier
+ *        carton s'efface au lieu de finir dans le noir.
  *    ouverture: [5, 21, 20, 7]
  *        Les photos du travelling qui ouvre la page : elles arrivent du
- *        fond du plateau, et le titre avec elles, jusqu'à la face. Sans
+ *        fond du plateau, et le titre avec elles, jusqu'à la face ; le
+ *        reste du haut de la page s'écrit ensuite sur la scène. Sans
  *        mention, quatre photos réparties dans le montage — jamais la
- *        première, qui s'allume après le titre.
+ *        première, qui s'allume après le titre. Avec une ouverture, le
+ *        premier carton de chapitre tient l'écran entier.
  *    { p: [9], poursuite: { etapes: [ [[20, 48], [83, 48]], [[51, 60]] ] } }
  *        LA POURSUITE, sur une photo de groupe : le plateau reste dans la
  *        pénombre, une poursuite (deux au plus) va d'un point à l'autre au

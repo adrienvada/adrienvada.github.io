@@ -877,15 +877,32 @@ function exige(condition, message) {
                 out.haut = ['.u-eyebrow', '.u-title', '.u-author', '.u-meta'].map(texte).join(' | ');
                 return out;
             };
+            // LA MISE AU POINT ATTEND LA PHOTO NETTE (.est-nette) : tant
+            // qu'elle n'est pas arrivée, la copie floue n'a pas d'animation.
+            // La première photo floue est loin sous le haut de la page, et ne
+            // se charge qu'à l'approche : on l'approche, on attend qu'elle
+            // soit là, et l'on revient en haut — dans le panneau comme sur la
+            // page, sans quoi on comparerait deux chargements.
+            const nette = () => p.evaluate(async () => {
+                const S = document.getElementById('show-universe');
+                const fig = S && S.querySelector('.u-flou')?.closest('.u-fig');
+                if (!fig) return;
+                S.scrollTop = fig.offsetTop;
+                for (let i = 0; i < 60 && !fig.classList.contains('est-nette'); i++) await new Promise((f) => setTimeout(f, 100));
+                S.scrollTop = 0;
+                await new Promise((f) => setTimeout(f, 150));
+            });
             const ecarts = [];
             for (const slug of dossiers) {
                 await p.goto(`${base}/#/univers/${slug}`, { waitUntil: 'load' });
                 await p.waitForFunction(() => document.getElementById('show-universe')?.classList.contains('is-open'), null, { timeout: 8000 })
                     .catch(() => { throw new Error(`${slug} : l’univers ne s’ouvre pas à son adresse`); });
                 await p.waitForTimeout(400);
+                await nette();
                 const panneau = await p.evaluate(releve);
                 await p.goto(`${base}/spectacles/${slug}/`, { waitUntil: 'load' });
                 await p.waitForTimeout(400);
+                await nette();
                 const page = await p.evaluate(releve);
                 exige(page['.u-ch'] && !page['.u-ch'].startsWith('aucune'), `${slug} : les lettres du titre n’ont plus de transition sur la page`);
                 for (const k of new Set([...Object.keys(panneau), ...Object.keys(page)])) {
@@ -932,7 +949,10 @@ function exige(condition, message) {
                     });
                     const out = { classe: document.documentElement.className, points: [] };
                     for (const [scene, fractions, sels] of [
-                        ['.u-ouverture', [0.2, 0.5, 0.8, 0.95], ['.u-of-photo', '.u-of-titre .u-title', '.u-of-titre .u-hero-fond', '.u-of-titre .u-synopsis', '.u-of-invite']],
+                        ['.u-ouverture', [0.2, 0.5, 0.62, 0.8, 0.95], ['.u-of-photo', '.u-of-titre .u-title', '.u-of-titre .u-hero-fond',
+                            '.u-of-titre .u-eyebrow', '.u-of-titre .u-couche-auteur', '.u-of-titre .u-synopsis', '.u-of-titre .u-synopsis .u-lum',
+                            '.u-of-titre .u-couche-actions', '.u-of-invite']],
+                        ['.u-carton', [0.2, 0.5, 0.8, 0.97], ['.u-carton-texte', '.u-carton .u-lum', '.u-carton-noir']],
                         ['.u-poursuite', [0.1, 0.4, 0.62, 0.85], ['.u-pa-a', '.u-pa-b', '.u-pa-plein', '.u-pa-leg2']],
                     ]) {
                         const el = S.querySelector(scene);
@@ -1015,18 +1035,24 @@ function exige(condition, message) {
             await c.close();
         });
 
-        // LE TRAVELLING OUVRE LA PAGE. La première chose qu'on voit, c'est la
-        // scène : des photos qui arrivent du fond, et le titre, SEUL, qui
-        // avance jusqu'à sa place ; la photo du fond et les autres textes ne
-        // paraissent qu'une fois le titre posé — la page entière qui
-        // avançait faisait un grand rectangle. Plus de noir ensuite : le
-        // carton du chapitre suit le titre, et la première photo s'allume dès
-        // qu'elle entre dans le quart inférieur de l'écran.
-        await verifie('les pages spectacle s’ouvrent sur le travelling : le titre seul avance jusqu’à sa place, puis sa photo et ses textes paraissent ; plus de noir après — la première photo s’allume dès le quart inférieur de l’écran', async () => {
+        // LE TRAVELLING OUVRE LA PAGE, PUIS LE RÉCIT S'ÉCRIT. La première
+        // chose qu'on voit, c'est la scène : des photos qui arrivent du fond,
+        // et le titre, SEUL, qui avance jusqu'à sa place — la page entière
+        // qui avançait faisait un grand rectangle. Le titre posé, la scène
+        // se tient : le reste paraît sous le geste, et la lumière écrit le
+        // synopsis ligne à ligne — tout arrivait d'un bloc, déjà écrit. Le
+        // bouton ne vient, cliquable, qu'une fois le récit écrit. Puis le
+        // carton du chapitre tient l'écran, dans sa propre scène, et finit
+        // dans le noir si la salle est sombre, dans le papier si elle est
+        // claire : un écran noir sur le parchemin de L'Homme moderne passait
+        // pour une page cassée. La première photo s'allume — ou se révèle
+        // dans le papier — dès qu'elle entre dans le quart inférieur de
+        // l'écran.
+        await verifie('les pages spectacle s’ouvrent sur le travelling, puis le récit s’écrit sous le geste ; le carton du chapitre tient l’écran, et le noir ne vient que dans une salle sombre', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 } });
             const p = await c.newPage();
             const erreurs = guette(p);
-            for (const slug of ['alabarre', 'berenice', 'cleophene']) {
+            for (const [slug, attendue] of [['alabarre', 'sombre'], ['berenice', 'claire'], ['cleophene', 'sombre'], ['hommemoderne', 'claire']]) {
                 await p.goto(`${base}/spectacles/${slug}/`, { waitUntil: 'load' });
                 await p.waitForTimeout(700);
                 const etat = await p.evaluate(async () => {
@@ -1035,41 +1061,87 @@ function exige(condition, message) {
                     const scene = S.querySelector('.u-ouverture');
                     const zone = scene && scene.querySelector('.u-of-titre');
                     const figs = S.querySelector('.u-figs');
+                    const carton = S.querySelector('.u-carton');
                     const identite = (t) => t === 'none' || /^matrix(3d)?\((1, 0, 0, 1, 0, 0|1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)\)$/.test(t);
+                    const op = (e) => (e ? +getComputedStyle(e).opacity : null);
                     const out = {
                         enTete: !!scene && !!zone && !!zone.querySelector('h1.u-title')
                             && !!(scene.compareDocumentPosition(figs) & Node.DOCUMENT_POSITION_FOLLOWING),
-                        noir: !!S.querySelector('.u-of-noir, .u-of-carton'),
-                        carton: figs.firstElementChild?.classList.contains('u-chapter') || false
+                        dansLaScene: !!scene.querySelector('.u-of-noir, .u-of-carton, .u-carton'),
+                        // Le premier temps du montage, après l'affiche d'un film.
+                        carton: !!carton && [...figs.children].find((e) => !e.classList.contains('u-affiche')) === carton,
+                        salle: carton && carton.dataset.salle,
+                        ecrans: carton ? +(carton.offsetHeight / S.clientHeight).toFixed(2) : 0
                     };
                     const titre = zone.querySelector('.u-title');
-                    const reste = ['.u-hero-fond', '.u-eyebrow', '.u-synopsis', '.u-couche-meta', '.u-couche-actions']
+                    const syn = zone.querySelector('.u-synopsis');
+                    const bouton = zone.querySelector('.u-couche-actions');
+                    const reste = ['.u-hero-fond', '.u-eyebrow', '.u-couche-auteur', '.u-synopsis', '.u-couche-meta', '.u-couche-actions']
                         .map((sel) => zone.querySelector(sel)).filter(Boolean);
-                    const lire = () => ({
-                        titre: +getComputedStyle(titre).opacity,
-                        face: identite(getComputedStyle(titre).transform),
-                        // Le plus visible de ce qui accompagne le titre.
-                        reste: Math.max(...reste.map((e) => +getComputedStyle(e).opacity)),
-                        tout: Math.min(...reste.map((e) => +getComputedStyle(e).opacity)),
-                        clic: getComputedStyle(zone.querySelector('.u-couche-actions')).pointerEvents
-                    });
-                    const aller = async (f) => {
-                        S.scrollTop = scene.offsetTop + (scene.offsetHeight - S.clientHeight) * f;
+                    // Une ligne est écrite quand sa fenêtre de lumière est arrivée.
+                    const ecrites = (el) => [...el.querySelectorAll('.u-lum')].map((l) => identite(getComputedStyle(l).transform));
+                    const lire = () => {
+                        const l = ecrites(syn);
+                        return {
+                            titre: op(titre),
+                            face: identite(getComputedStyle(titre).transform),
+                            // Le plus visible, et le moins visible, de ce qui accompagne le titre.
+                            reste: Math.max(...reste.map(op)),
+                            tout: Math.min(...reste.map(op)),
+                            bouton: op(bouton),
+                            clic: getComputedStyle(bouton).pointerEvents,
+                            lignes: `${l.filter(Boolean).length}/${l.length}`
+                        };
+                    };
+                    const aller = async (el, f) => {
+                        S.scrollTop = el.offsetTop + (el.offsetHeight - S.clientHeight) * f;
                         await dort(300);
                     };
+                    // Les plages que le montage a calculées pour cette scène.
+                    const pose = parseFloat(getComputedStyle(scene).getPropertyValue('--of-titre'));
+                    const de = +syn.dataset.de, a = +syn.dataset.a;
+                    out.plages = { pose, de, a };
                     // Le premier écran : le travelling, sans le titre.
-                    await aller(0);
+                    await aller(scene, 0);
                     out.debut = lire();
-                    out.debut.photo = Math.max(...[...scene.querySelectorAll('.u-of-photo')].map((e) => +getComputedStyle(e).opacity));
+                    out.debut.photo = Math.max(...[...scene.querySelectorAll('.u-of-photo')].map(op));
                     // En route : le titre, seul, pas encore à sa place.
-                    await aller(0.6);
+                    await aller(scene, pose * 0.6);
                     out.milieu = lire();
-                    // Au bout : le titre posé, et tout le reste paru.
-                    await aller(1);
+                    // Posé — un pixel plus loin : le défilement s'arrondit au
+                    // pixel, et le titre serait encore à un millième du bout.
+                    // Rien d'autre encore.
+                    await aller(scene, pose + 0.002);
+                    out.pose = lire();
+                    // En pleine écriture : des lignes écrites, d'autres non,
+                    // et le bouton pas encore là.
+                    await aller(scene, (de + a) / 2);
+                    out.ecriture = lire();
+                    // Au bout : le synopsis écrit, tout paru, le bouton qui répond.
+                    await aller(scene, 1);
                     out.fin = lire();
-                    // La première photo : encore dans l'ombre au bas de l'écran,
-                    // allumée dès qu'elle entre dans son quart inférieur.
+                    // Le carton : l'écran entier, sa phrase écrite ; puis le noir,
+                    // ou le papier.
+                    if (carton) {
+                        const texte = carton.querySelector('.u-carton-texte');
+                        const noir = carton.querySelector('.u-carton-noir');
+                        await aller(carton, 0.5);
+                        const r = carton.querySelector('.u-carton-scene').getBoundingClientRect();
+                        const l = ecrites(carton);
+                        out.tenu = { ecran: Math.round(r.top) === 0 && Math.round(r.height) === S.clientHeight, ecrit: l.length > 0 && l.every(Boolean), texte: op(texte), noir: op(noir) };
+                        await aller(carton, 1);
+                        out.bout = { texte: op(texte), noir: op(noir) };
+                    }
+                    // La première photo : encore dans l'ombre — ou dans le papier —
+                    // au bas de l'écran, allumée dès qu'elle entre dans son quart
+                    // inférieur.
                     const fig = S.querySelector('.u-allumage');
+                    if (fig) {
+                        const bg = getComputedStyle(fig.querySelector('.u-voile')).backgroundColor;
+                        const n = (bg.match(/[\d.]+/g) || []).map(Number);
+                        const canaux = bg.startsWith('color(') ? n.slice(0, 3) : n.slice(0, 3).map((v) => v / 255);
+                        out.voile = { salle: fig.dataset.salle, clair: canaux.reduce((x, y) => x + y, 0) / 3 > 0.5, bg };
+                    }
                     const placer = async (f) => {
                         S.scrollTop += fig.getBoundingClientRect().top - S.clientHeight * f;
                         await dort(350);
@@ -1078,15 +1150,27 @@ function exige(condition, message) {
                     out.allumage = fig ? [await placer(0.92), await placer(0.7)] : null;
                     return out;
                 });
+                const sombre = attendue === 'sombre';
+                const [ecr, tot] = etat.ecriture.lignes.split('/').map(Number);
                 exige(etat.enTete, `${slug} : la page ne s’ouvre pas sur le travelling, le titre au bout`);
-                exige(!etat.noir, `${slug} : le carton ou le noir est resté dans le travelling`);
-                exige(etat.carton, `${slug} : le carton du chapitre ne suit pas le titre`);
+                exige(!etat.dansLaScene, `${slug} : un carton ou un noir est resté dans le travelling`);
                 exige(etat.debut.titre < 0.05 && etat.debut.reste < 0.05 && etat.debut.photo > 0.5,
                     `${slug} : au premier écran, le titre ou la page devance le travelling (${JSON.stringify(etat.debut)})`);
                 exige(etat.milieu.titre > 0.5 && !etat.milieu.face && etat.milieu.reste < 0.05,
                     `${slug} : en plein travelling, le titre n’avance pas seul (${JSON.stringify(etat.milieu)})`);
-                exige(etat.fin.titre === 1 && etat.fin.face && etat.fin.tout === 1 && etat.fin.clic === 'auto',
-                    `${slug} : au bout du travelling, le titre n’est pas posé ou le reste n’a pas paru (${JSON.stringify(etat.fin)})`);
+                exige(etat.pose.titre === 1 && etat.pose.face && etat.pose.reste < 0.05,
+                    `${slug} : le titre posé, le reste est déjà là — il arrive d’un bloc (${JSON.stringify(etat.pose)})`);
+                exige(tot > 1 && ecr > 0 && ecr < tot && etat.ecriture.bouton < 0.05 && etat.ecriture.clic === 'none',
+                    `${slug} : le synopsis ne s’écrit pas sous le geste, ou le bouton devance le récit (${JSON.stringify(etat.ecriture)} ; plages ${JSON.stringify(etat.plages)})`);
+                exige(etat.fin.titre === 1 && etat.fin.face && etat.fin.tout === 1 && etat.fin.clic === 'auto' && etat.fin.lignes === `${tot}/${tot}`,
+                    `${slug} : au bout de la scène, le récit n’est pas écrit ou le haut de la page n’a pas paru (${JSON.stringify(etat.fin)})`);
+                exige(etat.carton && etat.ecrans >= 2, `${slug} : le carton du chapitre ne tient pas l’écran après le titre (${etat.ecrans} écran)`);
+                exige(etat.salle === attendue && etat.voile && etat.voile.salle === attendue && etat.voile.clair === !sombre,
+                    `${slug} : la salle devrait être ${attendue} (carton ${etat.salle}, photo ${JSON.stringify(etat.voile)})`);
+                exige(etat.tenu && etat.tenu.ecran && etat.tenu.ecrit && etat.tenu.texte === 1 && (sombre ? etat.tenu.noir < 0.05 : etat.tenu.noir === null),
+                    `${slug} : le carton ne tient pas l’écran, sa phrase écrite (${JSON.stringify(etat.tenu)})`);
+                exige(sombre ? etat.bout.noir === 1 : (etat.bout.noir === null && etat.bout.texte < 0.05),
+                    `${slug} : au bout du carton, ${sombre ? 'le noir n’est pas venu' : 'le carton ne s’est pas effacé dans le papier, ou un noir est venu'} (${JSON.stringify(etat.bout)})`);
                 exige(etat.allumage && !etat.allumage[0] && etat.allumage[1],
                     `${slug} : la première photo ne s’allume pas à l’entrée du quart inférieur (${JSON.stringify(etat.allumage)})`);
             }
@@ -1107,8 +1191,11 @@ function exige(condition, message) {
                 return {
                     ouverture: S.querySelector('.u-ouverture')?.offsetHeight / h,
                     plans: cs('.u-of-plans')?.display,
-                    titre: ['.u-of-titre .u-title', '.u-of-titre .u-hero-fond', '.u-of-titre .u-synopsis']
-                        .every((sel) => cs(sel) && +cs(sel).opacity === 1 && cs(sel).transform === 'none'),
+                    titre: ['.u-of-titre .u-title', '.u-of-titre .u-hero-fond', '.u-of-titre .u-eyebrow', '.u-of-titre .u-couche-auteur', '.u-of-titre .u-synopsis', '.u-of-titre .u-couche-actions']
+                        .every((sel) => cs(sel) && +cs(sel).opacity === 1 && cs(sel).transform === 'none' && cs(sel).clipPath === 'none'),
+                    carton: S.querySelector('.u-carton')?.offsetHeight / h,
+                    cartonTexte: cs('.u-carton-texte') && +cs('.u-carton-texte').opacity === 1 && cs('.u-carton-texte').transform === 'none',
+                    noir: cs('.u-carton-noir')?.display,
                     faisceaux: cs('.u-pa-faisceau')?.display,
                     plein: cs('.u-pa-plein') && +cs('.u-pa-plein').opacity,
                     poursuite: S.querySelector('.u-poursuite')?.offsetHeight / h,
@@ -1120,6 +1207,7 @@ function exige(condition, message) {
             });
             exige(etat.ouverture < 1.2, `l’ouverture reste une scène tenue (${etat.ouverture?.toFixed(2)} écran)`);
             exige(etat.plans === 'none' && etat.titre, 'l’ouverture ne se réduit pas au titre, posé à la face');
+            exige(etat.carton < 1.2 && etat.cartonTexte && etat.noir === 'none', `le carton du chapitre reste une scène tenue, ou finit dans le noir (${etat.carton?.toFixed(2)} écran)`);
             exige(etat.poursuite < 1.2 && etat.faisceaux === 'none' && etat.plein === 1, 'la poursuite ne montre pas sa photo en plein feux');
             exige(etat.voile === 'none', 'la première photo attend un allumage qui ne viendra pas');
             exige(!etat.lumieres && !etat.mots, 'le texte attend une lumière qui ne viendra pas');

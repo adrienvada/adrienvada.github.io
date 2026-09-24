@@ -107,23 +107,31 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - la régie (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) :
   l'en-tête de l'accueil et des pages spectacle teste la même chose que
   `regie.js`, et le second pilote (`?repli`) rejoue les images du navigateur —
-  opacité et transformation des éléments de l'ouverture et de la poursuite,
-  relevées aux mêmes endroits du défilement ;
+  opacité et transformation des éléments de l'ouverture (photos, titre,
+  surtitre, auteur, synopsis et sa lumière, bouton), du carton du chapitre et
+  de la poursuite, relevées aux mêmes endroits du défilement ;
 - chaque animation menée par le défilement, sur l'accueil, dans l'onglet
   Dates et sur chaque page spectacle, suit la page ou le panneau de
   l'univers — jamais un cadre rogné
   en `overflow: hidden`, qui ne défile pas (voir [Ce que suit une animation au
   défilement](#ce-que-suit-une-animation-au-défilement)) ;
-- les pages spectacle s'ouvrent sur le travelling : le titre (`h1`) au bout de
-  la scène, invisible au premier écran où une photo est déjà là ; en plein
-  travelling il avance SEUL — sa photo et ses textes pas encore là — ; au bout,
-  il est posé, et la photo, les textes et le bouton (cliquable) ont paru ; ni
-  carton ni noir dans la scène, le carton du chapitre en tête du montage ; la
-  première photo encore éteinte au bas de l'écran, allumée à l'entrée de son
-  quart inférieur ;
+- les pages spectacle s'ouvrent sur le travelling, puis le récit s'écrit :
+  le titre (`h1`) au bout de la scène, invisible au premier écran où une
+  photo est déjà là ; en plein travelling il avance SEUL ; posé, rien d'autre
+  encore ; en pleine écriture, des lignes du synopsis écrites et d'autres
+  non, le bouton ni visible ni cliquable ; au bout de la scène, tout a paru,
+  le synopsis est écrit et le bouton répond. Puis le carton du chapitre, en
+  tête du montage, tient l'écran (deux écrans de défilement au moins), sa
+  phrase écrite ; il finit dans le noir si la salle est sombre (À la barre,
+  Cléophène), s'efface sans noir si elle est claire (Bérénice, L'Homme
+  moderne), et la première photo attend dans la pénombre ou dans le papier
+  selon la salle, éteinte au bas de l'écran, allumée à l'entrée de son quart
+  inférieur ;
 - en mouvement réduit, chaque scène a un état fixe : l'ouverture réduite au
-  haut de la page posé — titre, photo, textes —, la poursuite à sa photo en plein feux, la première photo allumée, le
-  texte écrit, plus rien d'animé au défilement ;
+  haut de la page posé — titre, photo, textes, bouton, sans coupe ni
+  déplacement —, le carton du chapitre à un carton, sans noir, la poursuite à
+  sa photo en plein feux, la première photo allumée, le texte écrit, plus
+  rien d'animé au défilement ;
 - les défauts réparés de l'audit du mouvement : le verrou de défilement posé
   sur `<html>` et la place de la barre réservée, le changement d'onglet et sa
   pastille, « Passer » qui répond avant l'arrivée d'`intro.js`, Maj seule qui
@@ -1472,7 +1480,14 @@ l'accord de l'autrice ou de l'auteur.
 Le hero fait **exactement un écran**. Le titre s'y pose lettre à lettre, vite
 (34 ms), puis le synopsis s'inscrit mot à mot, doucement (108 ms). **Défiler
 accélère l'écriture** : le premier geste écrit la page en même temps qu'il la
-quitte. Ouvert depuis le CV par le passage de la vignette (voir
+quitte.
+
+**Avec une ouverture** (voir [Les scènes d'un univers](#les-scènes-dun-univers)),
+le synopsis ne s'écrit plus au chronomètre : il s'écrivait dès l'ouverture de
+la page, caché au fond de la scène, et paraissait déjà écrit. Il est rendu
+en mots de lumière (`revealWords`, `data-ecrire="scene"`), et la lumière
+l'écrit ligne à ligne sur la course de la scène, le titre posé — sous le
+geste, comme les citations. Ouvert depuis le CV par le passage de la vignette (voir
 [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)), le titre
 arrive déjà écrit — c'est lui qui voyage depuis la ligne — et seul le synopsis
 s'inscrit.
@@ -1623,8 +1638,9 @@ panneau de l'univers.
 |---|---|---|
 | **L'écriture à la lumière** | chaque ligne d'une citation, d'un texte ou d'une incrustation s'écrit pendant qu'on la lit : une fenêtre de lumière la parcourt, avec un temps à la césure | `ecrireALaLumiere` (univers.js) |
 | **La mise au point** | chaque photo arrive floue, fait le point au milieu de l'écran, se refloute un peu en partant | `.u-flou`, `-flou.webp` |
-| **Le travelling, jusqu'au titre** | la première chose qu'on voit : des photos arrivent du fond du plateau et passent de part et d'autre ; au fond de la scène, le titre, **seul**, avance avec elles jusqu'à sa place, qu'il atteint aux neuf dixièmes de la scène. Alors seulement paraissent la photo du fond, puis le surtitre, l'auteur, le synopsis, le rôle, le bouton, la flèche, chacun à son tour — la page entière qui avançait faisait un grand rectangle. Le bouton ne répond au doigt qu'une fois paru ; au clavier, Tab mène d'un coup au bout de la scène. « Avancer », et une lumière qui descend un rail, invitent à défiler. Plus de noir à la fin : le carton du chapitre suit le titre, dans le montage | `ouvertureHtml`, `panelHtml` (univers-montage.js), `.u-ouverture`, `.u-of-titre` |
-| **La signature lumineuse** | après le titre, la première photo attend dans la pénombre — un cinquième de sa lumière, plus un rectangle noir — et s'allume à la façon du spectacle — foudre, néon, guirlande, torche, lumière crue, projecteur — dès qu'elle entre dans le quart inférieur de l'écran (elle attendait la moitié : un demi-écran de noir) | `voileHtml`, `.u-allumage`, `guetterAllumage` |
+| **Le travelling, puis le récit** | la première chose qu'on voit : des photos arrivent du fond du plateau et passent de part et d'autre ; le titre, **seul**, avance avec elles jusqu'à sa place — la page entière qui avançait faisait un grand rectangle. La scène se tient ensuite, le titre posé, et le reste paraît **sous le geste**, un temps après l'autre : la photo du fond se lève de l'ombre, le surtitre s'ouvre du milieu comme un rideau, l'auteur monte d'une trappe, le synopsis paraît en réserve et la lumière l'écrit ligne à ligne ; le rôle monte à son tour, puis le bouton et la flèche, une fois le récit écrit — tout arrivait d'un bloc, déjà écrit. Le bouton ne répond au doigt qu'une fois paru ; au clavier, Tab mène d'un coup au bout de la scène. « Avancer », et une lumière qui descend un rail, invitent à défiler. **La scène a la longueur de son synopsis** : deux écrans de travelling, puis un demi-écran pour cent signes (entre 60 et 140 svh), calculés par `tempoOuverture` et posés en ligne (`--of-hauteur`, `--of-*`) | `tempoOuverture`, `ouvertureHtml`, `panelHtml` (univers-montage.js), `.u-ouverture`, `.u-of-titre` |
+| **Le carton du chapitre** | le premier carton — la durée, une phrase — tient **l'écran entier**, dans sa propre scène tenue, entre le haut de la page et la première photo ; sa phrase s'écrit à la lumière pendant qu'on s'y arrête, et la caméra s'en approche imperceptiblement. Puis **le noir, dans une salle sombre** ; dans une salle claire, le carton s'efface dans le papier — un écran noir sur le parchemin de L'Homme moderne passait pour une page cassée. La salle est lue sur le fond de la palette (luminance relative sous 0,18 : sombre) | `cartonHtml`, `salleDe` (univers-montage.js), `.u-carton` |
+| **La signature lumineuse** | après le carton, la première photo attend dans la pénombre — un cinquième de sa lumière, plus un rectangle noir —, ou, dans une salle claire, dans le papier, comme une épreuve dans le révélateur ; elle s'allume — ou se révèle — à la façon du spectacle — foudre, néon, guirlande, torche, lumière crue, projecteur — dès qu'elle entre dans le quart inférieur de l'écran | `voileHtml`, `.u-allumage` (`--u-voile-teinte`), `guetterAllumage` |
 | **La poursuite** | sur une photo de groupe choisie, la pénombre, une ou deux poursuites qui vont d'un comédien à l'autre, puis plein feux | `poursuiteHtml`, `.u-poursuite` |
 
 Ce que les données en disent (voir aussi l'en-tête de `univers.js`) :
@@ -1646,9 +1662,10 @@ Pour placer une poursuite : ouvrir la photo (`ressources/images/univers/<slug>/<
 relever la position des visages en pourcentage, écrire les étapes, régénérer
 les pages, et regarder la scène — la photo y est montrée entière.
 
-**En mouvement réduit** : l'ouverture se réduit au titre, posé à la face, la
-poursuite à sa photo en plein feux, la première photo est allumée d'emblée, le
-texte est écrit. **Sans JavaScript** (`univers-statique.css`), même chose.
+**En mouvement réduit** : l'ouverture se réduit au haut de la page, posé, le
+carton du chapitre à un carton, sans noir, la poursuite à sa photo en plein
+feux, la première photo est allumée d'emblée, le texte est écrit. **Sans
+JavaScript** (`univers-statique.css`), même chose.
 
 **Le haut de la page, dans le travelling, ne se défait pas par couches** comme
 en tête de page : ses couches y ARRIVENT, sur la course de la scène, et
@@ -1659,7 +1676,11 @@ dans Chromium : un élément dans une scène collée (`sticky`) a une course
 qui en ferait une boîte de défilement : tout ce qu'elle contient suivrait ce
 cadre immobile. Le titre garde la perspective de la scène — chaque niveau
 entre les deux est en `preserve-3d`, sans rien qui groupe (opacité, rognage,
-filtre) : il part du point de fuite des photos, au milieu de l'écran.
+filtre) : il part du point de fuite des photos, au milieu de l'écran. Ce
+`preserve-3d` fait aussi du hero le repère de ce qu'il place en absolu : la
+flèche suivait sa boîte, un écran plus ses marges, et tombait sous l'écran ;
+marges comprises (`box-sizing: border-box`), il fait un écran. Sur un écran
+bas (moins de 700 px), la flèche tombait sur le bouton : elle n'y est pas.
 
 ### L'écriture à la lumière
 
@@ -1669,10 +1690,12 @@ retrait ; la lumière est une copie décorative de chaque ligne, posée dessus
 texte glisse en sens inverse. Deux déplacements, rien à repeindre.
 
 Les lignes sont **mesurées dans la mise en page** (`offsetLeft`, `offsetTop`),
-pas à l'écran : un texte posé dans une scène en profondeur (le carton de
-l'ancienne ouverture, arrivé du fond) serait mesuré réduit par la perspective,
-et ses fenêtres ne couvriraient qu'un coin du texte. Elles sont refaites quand
-la largeur change.
+pas à l'écran : un texte posé dans une scène en profondeur (le synopsis, dans
+l'ouverture) serait mesuré réduit par la perspective, et ses fenêtres ne
+couvriraient qu'un coin du texte. Elles sont refaites quand la largeur change.
+Dans une scène tenue (`data-ecrire="scene"`), le texte s'écrit sur la course
+de la scène, entre les deux fractions qu'il porte (`data-de`, `data-a`) :
+c'est le cas du synopsis dans l'ouverture et de la phrase du carton.
 
 ### Les passages (View Transitions)
 

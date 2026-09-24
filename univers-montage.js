@@ -401,19 +401,24 @@ const UniversMontage = (function () {
         </figure>`;
     }
 
-    // ── L'OUVERTURE : UN TRAVELLING AVANT, JUSQU'AU TITRE ─────────────
+    // ── L'OUVERTURE : UN TRAVELLING AVANT, PUIS LE RÉCIT S'ÉCRIT ───────
     //  La première chose qu'on voit, avant le titre : une scène tenue. Des
     //  photos du spectacle arrivent du fond du plateau et passent de part
-    //  et d'autre du spectateur ; au bout du travelling, au fond de la
-    //  scène, le titre — tout le haut de la page, sa photo, son auteur, son
-    //  rôle, son bouton — avance jusqu'à la face et remplit l'écran. La
-    //  page reprend alors son cours, le titre en tête.
+    //  et d'autre du spectateur ; au bout du travelling, le titre, SEUL,
+    //  avance du fond jusqu'à sa place. La scène se tient ensuite, le
+    //  titre posé, le temps que le reste du haut de la page paraisse, un
+    //  temps après l'autre, sous le geste : la photo du fond se lève, le
+    //  surtitre s'ouvre comme un rideau, l'auteur monte d'une trappe, puis
+    //  la lumière écrit le synopsis, ligne à ligne. Le rôle, le bouton et
+    //  la flèche viennent quand le récit est écrit ; alors seulement la
+    //  page reprend son cours.
     //
-    //  Il était ENTRE le titre et la première photo, et finissait sur le
-    //  carton du chapitre, puis sur le noir, avant que la lumière remonte
-    //  sur la première photo : un écran entier de noir au milieu du
-    //  défilement, qu'on prenait pour une page cassée. Le noir est parti ;
-    //  le carton a repris sa place dans le montage, sous le titre.
+    //  Tout arrivait d'un bloc, un instant après le titre : le synopsis
+    //  s'écrivait au chronomètre dès l'ouverture de la page, caché au fond
+    //  de la scène, et paraissait déjà écrit.
+    //
+    //  Le carton du chapitre ne vient qu'après, dans sa propre scène tenue
+    //  (voir cartonHtml).
     //
     //  LES PHOTOS : quatre, prises dans le reste du montage — la première
     //  est réservée, c'est celle qui s'allume après le titre, et la
@@ -439,32 +444,71 @@ const UniversMontage = (function () {
     }
 
     //  Chaque photo a sa place dans la profondeur (--x, --y, à gauche puis
-    //  à droite) et sa plage de passage dans la scène (--s, --e). La
-    //  première commence AVANT la scène (--s négatif) : au premier écran,
-    //  elle est déjà là, posée au loin.
+    //  à droite) et sa plage de passage dans la scène. La première commence
+    //  AVANT la scène (début négatif) : au premier écran, elle est déjà là,
+    //  posée au loin.
     const OUVERTURE_PLACES = [[-22, -9], [21, 9], [-19, 11], [23, -8]];
-    const OUVERTURE_PLAGES = [[-0.18, 0.4], [0.06, 0.52], [0.18, 0.64], [0.3, 0.74]];
+
+    //  LE TEMPO DE LA SCÈNE, en hauteurs d'écran de défilement (svh), depuis
+    //  le moment où la scène se tient. Le travelling a la longueur qu'il
+    //  avait ; ce qui suit dépend du synopsis : la lumière l'écrit à raison
+    //  d'un demi-écran pour cent signes — entre 60 et 140 svh, pour qu'un
+    //  seul coup de pouce ne l'écrive pas d'un trait, et qu'un long synopsis
+    //  ne retienne pas sans fin. La régie parle en fractions de la scène
+    //  (--s, --e) : on les calcule ici, sur sa longueur réelle.
+    const OUVERTURE_TITRE = 200;                 // le titre est posé
+    const OUVERTURE_PLAGES = [[-41, 92], [14, 120], [41, 147], [69, 170]];
+
+    function tempoOuverture(uni) {
+        const A = OUVERTURE_TITRE;
+        const signes = uni.synopsis ? toLines(uni.synopsis).join(' ').replace(/\s+/g, ' ').trim().length : 0;
+        const ecriture = signes ? Math.min(140, Math.max(60, signes * 0.5)) : 0;
+        const E = A + 50 + ecriture;             // le synopsis est écrit
+        const total = E + 60;                    // tout est là ; la page repart
+        const f = (v) => +(v / total).toFixed(4);
+        return {
+            hauteur: total + 100,
+            plages: OUVERTURE_PLAGES.map(([de, a]) => [f(de), f(a)]),
+            ecrit: [f(A + 50), f(E)],
+            // Les plages des couches du haut de la page (voir « Le récit
+            // s'écrit sur la scène » dans univers.css).
+            vars: {
+                invite: f(14), titre: f(A),
+                'fond-s': f(A), 'fond-e': f(A + 45),
+                'sur-s': f(A + 8), 'sur-e': f(A + 40),
+                'auteur-s': f(A + 22), 'auteur-e': f(A + 52),
+                'synopsis-s': f(A + 36), 'synopsis-e': f(A + 52),
+                'meta-s': f(E - 4), 'meta-e': f(E + 26),
+                'actions-s': f(E + 8), 'actions-e': f(E + 36),
+                'fleche-s': f(E + 24), 'fleche-e': f(E + 44)
+            }
+        };
+    }
 
     const aUneOuverture = (uni) => photosOuverture(uni).length >= 2;
 
-    // `titre` : le haut de la page (voir panelHtml), qui vient du fond.
-    function ouvertureHtml(uni, titre) {
+    // `titre` : le haut de la page (voir panelHtml), qui vient du fond ;
+    // `tempo` : tempoOuverture(uni), que panelHtml a déjà calculé pour y
+    // régler l'écriture du synopsis.
+    function ouvertureHtml(uni, titre, tempo) {
         const photos = photosOuverture(uni);
         if (photos.length < 2) return '';
         const base = `ressources/images/univers/${uni.slug}`;
         const plans = photos.map((n, i) => {
             const [x, y] = OUVERTURE_PLACES[i];
-            const [de, a] = OUVERTURE_PLAGES[i];
+            const [de, a] = tempo.plages[i];
             return `<span class="u-of-photo rg-k" style="--x:${x}cqw;--y:${y}cqh;--s:${de};--e:${a}">
                     <img src="${base}/${n}-640.webp" srcset="${base}/${n}-640.webp 640w, ${base}/${n}-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
                 </span>`;
         }).join('');
+        const reglage = `--of-hauteur:${tempo.hauteur}svh;` +
+            Object.entries(tempo.vars).map(([k, v]) => `--of-${k}:${v}`).join(';');
         // Le titre est AVANT les photos dans le document : elles passent
         // devant lui tant qu'elles traversent la scène. Pas de nom de région
         // sur la scène : c'est le haut de la page, son titre y est lu en
         // premier ; les photos, décoratives, sont cachées aux lecteurs
         // d'écran.
-        return `<section class="u-ouverture rg-scene">
+        return `<section class="u-ouverture rg-scene" style="${reglage}">
             <div class="u-of-scene">
                 <span class="u-of-fond" aria-hidden="true"></span>
                 <div class="u-of-titre rg-k">${titre}</div>
@@ -481,13 +525,56 @@ const UniversMontage = (function () {
     //  néons du tribunal d'À la barre, la guirlande d'As You Like It, la
     //  torche de Cléophène, la lumière crue de Bérénice, le projecteur des
     //  films. Le voile est posé ici ; le top est donné par univers.js quand
-    //  la photo arrive au milieu de l'écran, et le CSS joue la suite.
+    //  la photo passe la ligne de lecture, aux trois quarts de l'écran, et
+    //  le CSS joue la suite.
     const LUMIERES = ['foudre', 'neon', 'guirlande', 'torche', 'crue', 'projecteur'];
 
     function voileHtml(uni) {
         const l = LUMIERES.includes(uni.lumiere) ? uni.lumiere : (uni.kind === 'film' ? 'projecteur' : 'crue');
         const ampoules = l === 'guirlande' ? '<i></i><i></i><i></i><i></i><i></i><i></i>' : '';
         return { lumiere: l, html: `<span class="u-voile" aria-hidden="true">${ampoules}</span><span class="u-eclat" aria-hidden="true"></span>` };
+    }
+
+    // ── LA SALLE : SOMBRE OU CLAIRE ─────────────────────────────────
+    //  Le noir de théâtre n'a de sens que dans une salle sombre. Sur le
+    //  parchemin de L'Homme moderne, un écran tout noir arrivait comme une
+    //  panne. On lit donc la clarté du fond de la palette — sa luminance
+    //  relative, celle des contrastes du WCAG : sous 0,18, le gris moyen,
+    //  la salle est sombre. Aujourd'hui : À la barre, Cléophène,
+    //  Fulguré.e.s, As You Like It d'un côté ; Bérénice, Audiences et les
+    //  trois films de l'autre.
+    function salleDe(uni) {
+        const m = /^#([0-9a-f]{6})$/i.exec(String(uni.palette?.bg || '').trim());
+        if (!m) return 'sombre';
+        const n = parseInt(m[1], 16);
+        const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+        const L = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+        return L < 0.18 ? 'sombre' : 'claire';
+    }
+
+    // ── LE CARTON DU CHAPITRE, PLEIN ÉCRAN ──────────────────────────
+    //  Le premier carton — la durée, une phrase — tient l'écran entier, dans
+    //  sa propre scène tenue, entre le haut de la page et la première photo :
+    //  sa phrase s'écrit à la lumière pendant qu'on s'y arrête. Posé dans le
+    //  montage comme les autres cartons, il passait sous le pouce, et la
+    //  première photo arrivait dans la foulée.
+    //  Puis le noir, dans une salle sombre : la lumière remonte ensuite sur
+    //  la première photo. Dans une salle claire, pas de noir — le carton
+    //  s'efface dans le papier, et la photo qui suit s'y révèle (voir « La
+    //  lumière qui monte » dans univers.css).
+    //  Ses plages sont fixes : la scène a toujours la même longueur.
+    function cartonHtml(uni, beat) {
+        const salle = salleDe(uni);
+        return `<section class="u-carton rg-scene" data-salle="${salle}">
+            <div class="u-carton-scene">
+                <span class="u-carton-fond" aria-hidden="true"></span>
+                <div class="u-chapter u-carton-texte rg-k">
+                    ${beat.chapter ? `<span class="u-chapter-num">${escape(beat.chapter)}</span>` : ''}
+                    ${beat.chapterTitle ? `<h3 class="u-ecrit" data-ecrire="scene" data-de="0.04" data-a="0.46">${revealWords(beat.chapterTitle)}</h3>` : ''}
+                </div>
+                ${salle === 'sombre' ? '<span class="u-carton-noir rg-k" aria-hidden="true"></span>' : ''}
+            </div>
+        </section>`;
     }
 
     // ── LA POURSUITE ─────────────────────────────────────────────────
@@ -553,10 +640,11 @@ const UniversMontage = (function () {
     function beatsHtml(uni, title) {
         let index = 0;
         // L'ouverture n'est plus ici : elle ouvre la page, avant le titre
-        // (voir panelHtml). Après elle, la première photo plein cadre
-        // s'allume.
+        // (voir panelHtml). Après elle, le premier carton tient l'écran
+        // entier, puis la première photo plein cadre s'allume.
         const seq = uni.sequence || [];
         let allumage = aUneOuverture(uni);
+        const premierCarton = allumage ? seq.find(b => b && (b.chapter || b.chapterTitle)) : null;
 
         return afficheHtml(uni, title) + seq.map(beat => {
 
@@ -564,6 +652,7 @@ const UniversMontage = (function () {
 
             // ── Cartons de texte, sans photo ──
             if (beat.chapter || beat.chapterTitle) {
+                if (beat === premierCarton) return cartonHtml(uni, beat);
                 return `<div class="u-chapter u-ecrit rg-vue">
                     ${beat.chapter ? `<span class="u-chapter-num">${escape(beat.chapter)}</span>` : ''}
                     ${beat.chapterTitle ? `<h3>${revealWords(beat.chapterTitle)}</h3>` : ''}
@@ -608,12 +697,13 @@ const UniversMontage = (function () {
             )).join('');
 
             if (layout === 'plein') {
-                // La première photo plein cadre après l'ouverture s'allume.
+                // La première photo plein cadre après l'ouverture s'allume —
+                // dans une salle claire, elle se révèle dans le papier.
                 if (!allumage) return inner;
                 allumage = false;
                 const v = voileHtml(uni);
                 return inner.replace('<figure class="u-fig u-fig--plein rg-vue"',
-                    `<figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="${v.lumiere}"`)
+                    `<figure class="u-fig u-fig--plein rg-vue u-allumage" data-lumiere="${v.lumiere}" data-salle="${salleDe(uni)}"`)
                     .replace(/(<\/button>)/, `$1\n            ${v.html}`);
             }
 
@@ -779,11 +869,21 @@ const UniversMontage = (function () {
         // quand Supabase aura répondu.
         const etat = { isFilm, dates, enCreation, statique, key: info.key };
         const niveau = statique ? 'h1' : 'h2';
-        const ouverture = aUneOuverture(uni);
+        const tempo = aUneOuverture(uni) ? tempoOuverture(uni) : null;
+        const ouverture = !!tempo;
+        // LE SYNOPSIS. Dans l'ouverture, la lumière l'écrit ligne à ligne,
+        // sur la course de la scène (data-ecrire="scene", voir
+        // ecrireALaLumiere dans univers.js) : il s'écrit sous le geste, le
+        // titre posé. Sans ouverture, il s'inscrit mot à mot au chronomètre
+        // dès l'ouverture de la page, en tête (voir playWriting).
+        const synopsis = !uni.synopsis ? '' : ouverture
+            ? `<p class="u-synopsis u-ecrit rg-k" data-ecrire="scene" data-de="${tempo.ecrit[0]}" data-a="${tempo.ecrit[1]}">${revealWords(uni.synopsis)}</p>`
+            : `<p class="u-synopsis rg-k">${splitWords(uni.synopsis)}</p>`;
 
         // LE HAUT DE LA PAGE : le titre et ce qui l'accompagne. Avec une
-        // ouverture, il est au bout du travelling — il arrive du fond de la
-        // scène (voir ouvertureHtml) et repart avec elle. Sans ouverture, il
+        // ouverture, le titre est au bout du travelling — il arrive du fond
+        // de la scène, le reste paraît ensuite sous le geste (voir
+        // ouvertureHtml), et tout repart avec la scène. Sans ouverture, il
         // ouvre la page et SE DÉFAIT PAR COUCHES en s'en allant, chacune sur
         // sa propre course au défilement (voir « Le héros s'en va » dans
         // univers.css) : le surtitre part d'abord, le titre en dernier.
@@ -811,7 +911,7 @@ const UniversMontage = (function () {
                  second niveau. -->
             <${niveau} class="u-title rg-k" id="u-titre" aria-label="${escape(info.title)}" style="--u-title-chars:${tm.chars};--u-title-len:${tm.len}">${splitChars(info.title)}</${niveau}>
             ${info.author ? `<div class="u-couche u-couche-auteur rg-k"><p class="u-author">${escape(info.author)}</p></div>` : ''}
-            ${uni.synopsis ? `<p class="u-synopsis rg-k">${splitWords(uni.synopsis)}</p>` : ''}
+            ${synopsis}
             <div class="u-couche u-couche-meta rg-k"><p class="u-meta">${escape(info.role)}${info.company ? '<br>' + escape(info.company) : ''}</p></div>
 
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
@@ -846,7 +946,7 @@ const UniversMontage = (function () {
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
-        ${ouverture ? ouvertureHtml(uni, hero) : hero}
+        ${ouverture ? ouvertureHtml(uni, hero, tempo) : hero}
 
         <div class="u-figs">${figures}</div>
 

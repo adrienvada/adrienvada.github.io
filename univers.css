@@ -1164,8 +1164,9 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 }
 
 /* ── LA LUMIÈRE QUI MONTE ──
-   Après l'ouverture et le titre, la première photo plein cadre attend dans
-   le noir (le voile). Quand elle entre dans le quart inférieur de l'écran,
+   Après l'ouverture, le titre et le carton du chapitre, la première photo
+   plein cadre attend sous un voile — la pénombre, ou le papier dans une
+   salle claire. Quand elle entre dans le quart inférieur de l'écran,
    univers.js donne le top (.est-allume) et la lumière monte — avec la
    signature de l'univers
    (data-lumiere, voir voileHtml dans univers-montage.js). Joué une fois,
@@ -1186,11 +1187,25 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 }
 
 /* LA PÉNOMBRE, PAS LE NOIR. Le voile était noir plein : la photo arrivait
-   en rectangle noir sous le carton du chapitre, et ce noir-là passait pour
-   une page cassée. Il laisse désormais deviner la photo — un cinquième de
-   sa lumière —, et la signature en lève le reste. */
+   en rectangle noir, et ce noir-là passait pour une page cassée. Il laisse
+   désormais deviner la photo — un cinquième de sa lumière —, et la
+   signature en lève le reste.
+
+   DANS UNE SALLE CLAIRE, LE PAPIER (data-salle, voir salleDe dans
+   univers-montage.js). Même en pénombre, un voile sombre faisait un
+   rectangle noir sur le parchemin de L'Homme moderne : la photo y attend
+   dans le fond de la page, comme une épreuve dans le révélateur, et la
+   signature l'en fait monter. */
+.u-allumage {
+    --u-voile-teinte: rgb(0 0 0 / .8);
+}
+
+.u-allumage[data-salle="claire"] {
+    --u-voile-teinte: color-mix(in srgb, var(--u-bg) 86%, transparent);
+}
+
 .u-anime .u-allumage .u-voile {
-    background: rgb(0 0 0 / .8);
+    background: var(--u-voile-teinte);
     opacity: 1;
 }
 
@@ -1382,7 +1397,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 
 .u-allumage[data-lumiere="guirlande"] .u-voile i {
     flex: 1;
-    background: #000;
+    background: var(--u-voile-teinte);
 }
 
 .u-allumage.est-allume[data-lumiere="guirlande"] .u-voile {
@@ -2565,26 +2580,26 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     transition-duration: var(--dur-press);
 }
 
-/* ══ L'OUVERTURE : UN TRAVELLING AVANT, JUSQU'AU TITRE ══
+/* ══ L'OUVERTURE : UN TRAVELLING AVANT, PUIS LE RÉCIT S'ÉCRIT ══
    La première chose qu'on voit (voir ouvertureHtml dans
-   univers-montage.js) : une scène TENUE, le décor à l'écran pendant trois
-   écrans de défilement. Des photos du spectacle arrivent du fond du
-   plateau et passent de part et d'autre ; au fond de la scène, le haut de
-   la page — le titre, sa photo, son auteur, son rôle, son bouton — avance
-   avec elles et vient se poser à la face, plein écran. La scène repart
-   alors vers le haut, le titre avec elle, et la page reprend son cours.
+   univers-montage.js) : une scène TENUE, le décor à l'écran pendant qu'on
+   défile. Des photos du spectacle arrivent du fond du plateau et passent
+   de part et d'autre ; au bout du travelling, le titre, seul, avance du
+   fond jusqu'à sa place. La scène se tient encore le temps que le reste du
+   haut de la page paraisse, sous le geste, et que la lumière écrive le
+   synopsis (voir « Le récit s'écrit sur la scène »). Elle repart alors vers
+   le haut, et la page reprend son cours.
 
-   Il n'y a plus de noir à la fin : la scène finissait sur un écran noir,
-   avant que la lumière remonte sur la première photo, et ce noir-là
-   passait pour une page cassée.
+   SA LONGUEUR SUIT LE SYNOPSIS : ouvertureHtml la calcule et la pose en
+   ligne (--of-hauteur), avec les plages de chaque couche (--of-*).
 
    LE MOUVEMENT EST CELUI D'UNE CAMÉRA : chaque plan avance en profondeur
    (translateZ) à vitesse constante — et, par la perspective, semble
-   accélérer en approchant, comme en vrai. Rien que des déplacements et des
-   opacités : la carte graphique s'en charge seule. */
+   accélérer en approchant, comme en vrai. Rien que des déplacements, des
+   opacités et des coupes : la carte graphique s'en charge. */
 .u-ouverture {
     position: relative;
-    height: 330svh;
+    height: var(--of-hauteur, 330svh);
 }
 
 /* `clip` et non `hidden` : rogner ne fait pas de la scène une boîte de
@@ -2622,10 +2637,10 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 
 /* LE TITRE, SEUL, AU BOUT DU TRAVELLING. Invisible au premier écran — le
    travelling est la première chose qu'on voit —, il paraît au fond de la
-   scène dès le premier geste et avance avec les photos jusqu'à sa place,
-   qu'il atteint aux neuf dixièmes de la scène. Seul le titre voyage : la
-   page entière arrivait d'abord avec lui, sa photo et ses textes en un
-   grand rectangle qui avançait — peu élégant.
+   scène dès le premier geste et avance avec les photos jusqu'à sa place
+   (--of-titre). Seul le titre voyage : la page entière arrivait d'abord
+   avec lui, sa photo et ses textes en un grand rectangle qui avançait —
+   peu élégant.
 
    LA PERSPECTIVE EST CELLE DE LA SCÈNE. Le titre est quelques niveaux
    plus bas que la scène ; chaque niveau entre les deux garde la
@@ -2644,10 +2659,19 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     transform-style: preserve-3d;
 }
 
+/* LE HAUT DE LA PAGE TIENT DANS L'ÉCRAN. La profondeur (preserve-3d) fait
+   du hero le repère de ce qu'il place en absolu : la flèche, posée à 34 px
+   de son bas, suivait donc sa boîte — un écran PLUS ses marges, 160 px de
+   trop — et tombait sous l'écran, rognée par la scène. Marges comprises,
+   il fait un écran. */
+.u-of-titre .u-hero {
+    box-sizing: border-box;
+}
+
 .u-of-titre .u-title {
     --rg-anim: u-of-titre;
     --s: 0;
-    --e: .88;
+    --e: var(--of-titre, .88);
 }
 
 @keyframes u-of-titre {
@@ -2666,58 +2690,131 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     }
 }
 
-/* LE RESTE DU HAUT DE LA PAGE PARAÎT UNE FOIS LE TITRE POSÉ : la photo du
-   fond d'abord, puis le surtitre, l'auteur, le synopsis, le rôle, le
-   bouton et la flèche, chacun à son tour. Ce sont les couches qui, en tête
-   de page, partent une à une (voir « Le héros s'en va ») : dans le
-   travelling elles arrivent, et repartent ensuite d'un bloc avec la scène.
-   Le bouton ne répond au doigt qu'une fois là — invisible, il aurait été
-   une cible piège. Le halo du titre laisse la place à la lumière de la
+/* ── LE RÉCIT S'ÉCRIT SUR LA SCÈNE ──
+   Le titre posé, la scène se tient encore : le reste du haut de la page
+   paraît sous le geste, un temps après l'autre, chacun à sa manière. Tout
+   arrivait d'un bloc, un instant après le titre, et le synopsis était déjà
+   écrit.
+
+     la photo du fond   se lève : elle monte de l'ombre en reculant un peu,
+                        comme un plateau dont on remonte la lumière ;
+     le surtitre        s'ouvre du milieu, comme un rideau ;
+     l'auteur, le rôle  montent d'une trappe : chaque ligne sort d'un bord
+                        invisible, à sa place ;
+     le synopsis        paraît en réserve, puis la lumière l'écrit, ligne à
+                        ligne (voir « L'écriture à la lumière ») ;
+     le bouton          vient quand le récit est écrit, et ne répond au
+                        doigt qu'une fois là — invisible, il aurait été une
+                        cible piège ;
+     la flèche          en dernier : elle n'invite à descendre qu'une fois
+                        tout écrit.
+
+   Les plages viennent d'ouvertureHtml (--of-*), sur la longueur réelle de
+   la scène. Ce sont les couches qui, en tête de page, partent une à une
+   (voir « Le héros s'en va ») : ici elles arrivent, et repartent d'un bloc
+   avec la scène. Le halo du titre laisse la place à la lumière de la
    scène (.u-of-fond). */
 .u-of-titre .u-hero-fond {
-    --rg-anim: u-of-apres;
-    --s: .88;
-    --e: .94;
+    --rg-anim: u-of-leve;
+    --s: var(--of-fond-s, .88);
+    --e: var(--of-fond-e, .94);
 }
 
 .u-of-titre .u-eyebrow {
-    --rg-anim: u-of-apres;
-    --s: .89;
-    --e: .94;
+    --rg-anim: u-of-rideau;
+    --s: var(--of-sur-s, .89);
+    --e: var(--of-sur-e, .94);
 }
 
 .u-of-titre .u-couche-auteur {
-    --rg-anim: u-of-apres;
-    --s: .9;
-    --e: .95;
+    --rg-anim: u-of-trappe;
+    --s: var(--of-auteur-s, .9);
+    --e: var(--of-auteur-e, .95);
 }
 
 .u-of-titre .u-synopsis {
     --rg-anim: u-of-apres;
-    --s: .91;
-    --e: .96;
+    --s: var(--of-synopsis-s, .91);
+    --e: var(--of-synopsis-e, .96);
 }
 
 .u-of-titre .u-couche-meta {
-    --rg-anim: u-of-apres;
-    --s: .92;
-    --e: .97;
+    --rg-anim: u-of-trappe;
+    --s: var(--of-meta-s, .92);
+    --e: var(--of-meta-e, .97);
 }
 
 .u-of-titre .u-couche-actions {
-    --rg-anim: u-of-apres-clic;
-    --s: .93;
-    --e: .98;
+    --rg-anim: u-of-bouton;
+    --s: var(--of-actions-s, .93);
+    --e: var(--of-actions-e, .98);
 }
 
 .u-of-titre .u-couche-fleche {
     --rg-anim: u-of-apres;
-    --s: .94;
-    --e: .99;
+    --s: var(--of-fleche-s, .94);
+    --e: var(--of-fleche-e, .99);
+}
+
+/* Sur un écran bas, le haut de la page remplit l'écran : la flèche,
+   posée au bas, tombait sur le bouton. Le bouton suffit à dire la suite. */
+@media (max-height: 700px) {
+    .u-of-titre .u-couche-fleche {
+        display: none;
+    }
 }
 
 .u-of-titre .u-hero::before {
     display: none;
+}
+
+@keyframes u-of-leve {
+    from {
+        opacity: 0;
+        transform: scale(1.14);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes u-of-rideau {
+    from {
+        opacity: 0;
+        clip-path: inset(-.4em 50% -.4em 50%);
+    }
+
+    35% {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 1;
+        clip-path: inset(-.4em -.4em -.4em -.4em);
+    }
+}
+
+/* LA TRAPPE : la coupe recule du bas exactement autant que la ligne monte
+   — son bord bas reste immobile à l'écran, et la ligne en sort, en
+   s'éclairant. */
+@keyframes u-of-trappe {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+        clip-path: inset(-.3em -.5em 100% -.5em);
+    }
+
+    40% {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+        clip-path: inset(-.3em -.5em 0 -.5em);
+    }
 }
 
 @keyframes u-of-apres {
@@ -2730,9 +2827,10 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     }
 }
 
-@keyframes u-of-apres-clic {
+@keyframes u-of-bouton {
     0% {
         opacity: 0;
+        transform: translateY(18px) scale(.94);
         pointer-events: none;
     }
 
@@ -2742,12 +2840,13 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 
     100% {
         opacity: 1;
+        transform: none;
         pointer-events: auto;
     }
 }
 
 /* En tête de page, le bouton effacé devient invisible au clic (voir
-   u-sortie-clic) ; dans le travelling, il arrive : rien à cacher. */
+   u-sortie-clic) ; dans l'ouverture, il arrive : rien à cacher. */
 @supports (animation-timeline: view()) {
     .u-of-titre .u-couche-actions {
         animation-name: var(--rg-anim);
@@ -2821,7 +2920,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     pointer-events: none;
     --rg-anim: u-of-invite;
     --s: 0;
-    --e: .06;
+    --e: var(--of-invite, .06);
 }
 
 .u-of-rail {
@@ -2859,6 +2958,103 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     to {
         opacity: 0;
         transform: translateY(-12px);
+    }
+}
+
+/* ══ LE CARTON DU CHAPITRE, PLEIN ÉCRAN ══
+   Le premier carton — la durée, une phrase — dans sa propre scène tenue,
+   entre le haut de la page et la première photo (voir cartonHtml dans
+   univers-montage.js). Il arrive avec la scène, se tient un écran de
+   défilement, et sa phrase s'écrit à la lumière pendant qu'on s'y arrête.
+   Posé dans le montage comme les autres cartons, il passait sous le pouce
+   et la première photo arrivait dans la foulée.
+
+   Puis le noir, dans une salle sombre. Dans une salle claire, le carton
+   s'efface dans le papier : un écran noir sur le parchemin de L'Homme
+   moderne passait pour une page cassée. */
+.u-carton {
+    position: relative;
+    height: 220svh;
+}
+
+.u-carton-scene {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    overflow: clip;
+}
+
+/* La même lumière basse que le plateau de l'ouverture. */
+.u-carton-fond {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 62% 58% at 50% 50%,
+            color-mix(in srgb, var(--u-accent) 20%, var(--u-bg)) 0%, var(--u-bg) 72%);
+    pointer-events: none;
+}
+
+/* La typographie des cartons du montage (.u-chapter), au milieu de
+   l'écran. Il avance imperceptiblement pendant qu'on s'y arrête — la
+   caméra s'approche : immobile, c'était une diapositive. */
+.u-carton-texte {
+    position: absolute;
+    inset: 0;
+    --rg-anim: u-carton-approche;
+}
+
+@keyframes u-carton-approche {
+    from {
+        transform: scale(.94);
+    }
+
+    to {
+        transform: scale(1.04);
+    }
+}
+
+/* LE NOIR : il monte une fois la phrase écrite et lue ; la lumière
+   remontera sur la première photo. */
+.u-carton-noir {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    --rg-anim: u-carton-noir;
+    --s: .6;
+    --e: .94;
+}
+
+@keyframes u-carton-noir {
+    to {
+        opacity: 1;
+    }
+}
+
+/* LE PAPIER : pas de noir — le carton s'efface dans le fond, et la
+   première photo s'y révèle. */
+.u-carton[data-salle="claire"] .u-carton-texte {
+    --rg-anim: u-carton-efface;
+}
+
+@keyframes u-carton-efface {
+    0% {
+        opacity: 1;
+        transform: scale(.94);
+    }
+
+    60% {
+        opacity: 1;
+    }
+
+    92% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.04);
     }
 }
 
@@ -3304,21 +3500,24 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     }
 
     /* LES SCÈNES TENUES NE SE TIENNENT PLUS : chacune montre un état fixe
-       qui a du sens. L'ouverture se réduit au titre, posé à la face, la
-       poursuite à sa photo en plein feux, la première photo est allumée
-       d'emblée. */
+       qui a du sens. L'ouverture se réduit au titre, posé à la face, le
+       carton du chapitre à un carton, sans noir, la poursuite à sa photo
+       en plein feux, la première photo est allumée d'emblée. */
     .u-ouverture,
+    .u-carton,
     .u-poursuite {
         height: auto;
     }
 
     .u-of-scene,
+    .u-carton-scene,
     .u-pa-scene {
         position: relative;
         height: auto;
     }
 
-    .u-of-scene {
+    .u-of-scene,
+    .u-carton-scene {
         min-height: 60svh;
         display: grid;
         place-items: center;
@@ -3326,13 +3525,15 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 
     .u-of-plans,
     .u-of-invite,
+    .u-carton-noir,
     .u-pa-faisceau,
     .u-voile,
     .u-eclat {
         display: none;
     }
 
-    .u-of-titre {
+    .u-of-titre,
+    .u-carton-texte {
         position: relative;
         inset: auto;
         width: 100%;
