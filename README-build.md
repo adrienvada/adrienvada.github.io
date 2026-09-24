@@ -55,13 +55,22 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - « Ajouter au calendrier » ouvre sa fenêtre dans un univers ouvert depuis le
   CV (une représentation fictive est glissée dans les dates le temps du test :
   il ne dépend pas de la saison) ;
-- l'onglet Dates : feuilles d'éphéméride, intercalaires de mois et leur
-  liseré (à la couleur de son mois), séances en cases, une date seule comprise (et pas de « Réserver »
-  sur une séance scolaire), nom du spectacle qui mène à sa page (et aucun lien
-  pour un spectacle sans page, aucun lien mort), rangement par spectacle
-  retenu, sommaire qui mène à la bonne ligne, une image pour chaque
-  représentation annoncée aux moteurs ; la prochaine date en tête du CV, et
-  nulle part dans l'onglet Dates — sur une saison fictive, elle aussi ;
+- l'onglet Dates, à la densité du CV : une série de deux soirs tient en
+  80 px au plus au téléphone ; la feuille d'éphéméride posée sur la photo du
+  spectacle, les jours d'une série écrits avec un tiret ; la ville et la
+  salle ; une puce par séance, une date seule comprise (et pas de lien de
+  réservation sur une séance scolaire) ; un seul bouton d'agenda par ligne,
+  dont la fenêtre propose d'abord la séance publique d'une série, change de
+  date quand on en choisit une autre, et ne demande rien pour une date
+  seule ; pas de total dans les intercalaires ; la frise des mois (un liseré
+  à la couleur de son mois dans la marge de la carte, sa trace pâle, son
+  point posé dessus devant le nom du mois) ; nom du spectacle qui mène à sa
+  page (et aucun lien pour un spectacle sans page, aucun lien mort) ;
+  rangement par spectacle retenu, la feuille y redevient papier, la ligne ne
+  répète pas le titre et la frise prend la couleur du spectacle ; sommaire qui
+  mène à la bonne ligne ; une image pour chaque représentation annoncée aux
+  moteurs ; la prochaine date en tête du CV, et nulle part dans l'onglet
+  Dates — sur une saison fictive, elle aussi ;
 - la prochaine date du CV, une ligne de tableau de gare : titrée « Prochaine
   date », jamais « Départs » ; la date et elle seule (la ville abrégée sans
   trait d'union, l'heure du public plutôt que celle d'une séance scolaire,
@@ -100,8 +109,9 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   `regie.js`, et le second pilote (`?repli`) rejoue les images du navigateur —
   opacité et transformation des éléments de l'ouverture et de la poursuite,
   relevées aux mêmes endroits du défilement ;
-- chaque animation menée par le défilement, sur l'accueil et sur chaque page
-  spectacle, suit la page ou le panneau de l'univers — jamais un cadre rogné
+- chaque animation menée par le défilement, sur l'accueil, dans l'onglet
+  Dates et sur chaque page spectacle, suit la page ou le panneau de
+  l'univers — jamais un cadre rogné
   en `overflow: hidden`, qui ne défile pas (voir [Ce que suit une animation au
   défilement](#ce-que-suit-une-animation-au-défilement)) ;
 - en mouvement réduit, chaque scène a un état fixe : l'ouverture réduite à son
@@ -120,6 +130,11 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   réduit, et la guirlande à horloge n'est pas revenue ; au téléphone, une
   ligne touchée avant le fil (le survol que garde le navigateur) reste voilée,
   sans point ; à la souris et au clavier, elle est pleine ;
+- la frise des mois de l'onglet Dates, avec les deux pilotes, sur une saison
+  fictive de cinq mois : un espace entre deux mois ; le mois déjà lu est
+  tracé, son point posé ; celui qu'on lit est tracé jusqu'à la ligne de
+  lecture, pas plus ; celui qu'elle n'a pas atteint n'est pas tracé, sans
+  point ; tout est tracé en mouvement réduit ;
 - la page 404 : son titre, son retour, sa lampe, sans erreur ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
@@ -1064,22 +1079,44 @@ ne sert qu'aux saisons antérieures, conservées à la main dans `dates.js`.
 Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
 `dl…()` juste au-dessus dessinent tout, et leur en-tête explique pourquoi.
 
-- **La ligne.** Chaque entrée (une date seule, ou une série : même spectacle,
-  même lieu, soirées rapprochées) s'écrit de la même façon : une **feuille
-  d'éphéméride** (le mois dans un bandeau à la couleur du spectacle, le
-  quantième, le jour ; une série empile ses feuilles), la **date en toutes
-  lettres**, le titre et le lieu. Dessous, **une case par séance** — une date
-  seule a la sienne, comme chaque soir d'une série —, avec son heure,
-  « Réserver » et l'agenda. Une séance scolaire n'a jamais de « Réserver ».
+- **La ligne, à la densité du CV.** Chaque entrée (une date seule, ou une
+  série : même spectacle, même lieu, soirées rapprochées) tient en une ligne
+  de la hauteur d'une ligne du CV — 69 px au téléphone, contre près de 200
+  quand chaque séance avait sa case. À la place de la vignette du CV, une
+  **feuille d'éphéméride posée sur la photo du spectacle** (48 × 56) : le mois
+  dans le bandeau du haut, à la couleur du spectacle ; au centre le jour, ou
+  les jours d'une série avec un tiret (« 22–23 ») ; en bas le jour de la
+  semaine, là où le CV écrit l'année. Sans photo, la feuille prend la couleur
+  du spectacle. À côté, trois lignes : le titre, **la ville et la salle**
+  (`dlLieu()` retire la ville du libellé du lieu), puis **une puce par
+  séance** — son heure, et le jour de la semaine pour une série de plusieurs
+  jours. Une puce publique mène à la billetterie (↗) ; une séance scolaire,
+  ou dont la billetterie n'est pas ouverte, a sa puce en pointillé, sans lien.
+  **Un seul bouton d'agenda**, au bout de la rangée : pour une série, la
+  fenêtre « Ajouter à l'agenda » demande quelle séance ajouter
+  (`data-cal-serie`, voir `openCalendarModal()`), et propose d'abord la
+  première séance publique. La feuille est décorative : la date en toutes
+  lettres reste écrite pour les lecteurs d'écran.
 - **Deux rangements.** « Par date » range les lignes sous un intercalaire par
-  mois ; « Par spectacle », sous chaque pièce, avec sa photo. L'intercalaire
-  reste accroché sous la barre d'onglets pendant qu'on parcourt son mois ou
-  sa pièce. Le choix du visiteur est retenu (`localStorage`, clé
-  `av.datesVue`).
-- **Le liseré.** Chaque groupe porte un trait au bord gauche de la carte, du
-  haut de son intercalaire à sa dernière ligne, interrompu entre deux groupes :
-  on voit où finit un mois et où commence le suivant. **Chaque mois a sa
-  couleur, qui suit les saisons** (`--dl-mois-1` à `--dl-mois-12`) :
+  mois, sans total : la frise suffit à borner le mois, et le sommaire compte
+  déjà les représentations. « Par spectacle », sous chaque pièce, avec sa
+  photo : la feuille des lignes redevient alors papier, et la ligne ne répète
+  pas le titre. L'intercalaire reste accroché sous la barre d'onglets pendant
+  qu'on parcourt son mois ou sa pièce. Le choix du visiteur est retenu
+  (`localStorage`, clé `av.datesVue`).
+- **La frise des mois.** Comme le fil du CV, chaque groupe porte son liseré
+  dans la marge de la carte, du point posé devant le nom du mois jusqu'à sa
+  dernière ligne ; **un espace le sépare du suivant** : on voit où finit un
+  mois et où commence le suivant. Il **se trace à mesure qu'on lit** : sa
+  trace pâle est là d'emblée, le trait plein descend avec la ligne de
+  lecture (le milieu de l'écran), et le point du mois éclôt quand elle
+  atteint l'intercalaire — accroché avec lui en haut de l'écran, il dit quel
+  mois on lit. Les mêmes images que la frise du CV (`cv-fil`, `cv-point`),
+  les deux mêmes pilotes : `view()` dans les navigateurs récents, `regie.js`
+  ailleurs (le groupe et son intercalaire portent `.rg-ligne`, et
+  `renderDates()` les confie à la régie à chaque rendu). En mouvement réduit
+  et sur papier, tout est tracé d'emblée. **Chaque mois a sa couleur, qui
+  suit les saisons** (`--dl-mois-1` à `--dl-mois-12`) :
 
   | Saison | Mois |
   |---|---|
@@ -1090,8 +1127,8 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
 
   Les douze sont à la même clarté perçue (OKLCH, L = 0,63) : aucune ne domine,
   et chacune garde au moins 3,3:1 de contraste sur le fond clair comme sur le
-  fond sombre. Rangé par spectacle, le liseré prend la couleur de la pièce
-  (`--dl-lisere`). **Les initiales des mois, dans la saison d'un regard,
+  fond sombre. Rangé par spectacle, le liseré et son point prennent la
+  couleur de la pièce (`--dl-lisere`). **Les initiales des mois, dans la saison d'un regard,
   portent le même code couleur**, mêlé d'un quart de la couleur du texte : une
   lettre de 11 px doit garder 4,5:1, là où un trait se contente de 3:1 (5,1:1
   au pire, dans les deux thèmes).

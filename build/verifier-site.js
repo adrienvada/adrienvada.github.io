@@ -194,7 +194,7 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('l’onglet Dates : feuilles, liserés, séances en cases, liens vers les pages spectacle, rangement par spectacle, sommaire, une image par représentation — et la prochaine date, au CV seulement', async () => {
+        await verifie('l’onglet Dates à la densité du CV : la feuille sur la photo, le spectacle, la ville et la salle, une puce par séance, un agenda qui demande la séance ; la frise des mois, liens vers les pages spectacle, rangement par spectacle, sommaire, une image par représentation — et la prochaine date, au CV seulement', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 } });
             const p = await c.newPage();
             const erreurs = guette(p);
@@ -237,25 +237,41 @@ function exige(condition, message) {
             const parDate = await p.evaluate(() => {
                 const liste = document.getElementById('upcoming-dates-container');
                 const serie = liste.querySelector('.dl--serie');
+                const berenice = [...liste.querySelectorAll('.dl')].find((l) => /Bérénice/.test(l.querySelector('.dl-titre')?.textContent || ''));
                 return {
                     intercalaires: liste.querySelectorAll('.dl-intercalaire h4').length,
                     feuilles: liste.querySelectorAll('.dl-feuille .dl-num').length,
+                    // Les jours d'une série, au centre de la feuille, avec un tiret.
+                    jours: serie ? serie.querySelector('.dl-feuille .dl-num').textContent : '',
+                    photo: !!berenice && !!berenice.querySelector('.dl-feuille img'),
                     cases: serie ? serie.querySelectorAll('.dl-seance').length : 0,
                     scolaireSansReserver: serie ? !serie.querySelector('.dl-seance--scolaire .dl-reserver') : false,
                     reserver: liste.querySelectorAll('.dl-reserver').length,
+                    agendas: serie ? serie.querySelectorAll('.dl-agenda').length : 0,
+                    lieu: serie ? serie.querySelector('.dl-lieu').textContent : '',
+                    hauteur: serie ? serie.getBoundingClientRect().height : 0,
+                    totaux: [...liste.querySelectorAll('.dl-intercalaire')].filter((x) => /représentation/.test(x.textContent)).length,
                     sommaire: !document.getElementById('dates-sommaire').hidden
                         && !!document.querySelector('#dates-sommaire .dl-grille [data-dl-aller]')
                 };
             });
             exige(parDate.intercalaires >= 1, 'aucun intercalaire de mois');
             exige(parDate.feuilles === 3, `${parDate.feuilles} feuille(s) d’éphéméride pour trois lignes`);
-            exige(parDate.cases === 2, `la série montre ${parDate.cases} case(s) au lieu de deux`);
+            exige(/^\d{1,2}–\d{1,2}$/.test(parDate.jours), `la feuille d’une série n’écrit pas ses jours avec un tiret : « ${parDate.jours} »`);
+            exige(parDate.photo, 'la feuille de Bérénice n’est pas posée sur la photo du spectacle');
+            exige(parDate.cases === 2, `la série montre ${parDate.cases} puce(s) de séance au lieu de deux`);
             exige(parDate.scolaireSansReserver, 'une séance scolaire propose « Réserver »');
-            exige(parDate.reserver === 2, `${parDate.reserver} bouton(s) « Réserver » au lieu de deux`);
+            exige(parDate.reserver === 2, `${parDate.reserver} lien(s) de réservation au lieu de deux`);
+            exige(parDate.agendas === 1, `la série a ${parDate.agendas} bouton(s) d’agenda au lieu d’un`);
+            exige(parDate.lieu === 'Rouen · Salle de vérification (76)', `la ville et la salle : « ${parDate.lieu} »`);
+            // La densité du CV : une série de deux soirs tient dans la
+            // hauteur d'une ligne du CV, au téléphone (près de 200 px avant).
+            exige(parDate.hauteur > 0 && parDate.hauteur <= 80, `une série occupe ${Math.round(parDate.hauteur)} px au téléphone (80 au plus)`);
+            exige(!parDate.totaux, 'un intercalaire écrit encore un total de représentations');
             exige(parDate.sommaire, 'le sommaire de la saison n’est pas là');
 
-            // Une date seule a sa case, comme chaque soir d'une série : son
-            // heure et « Réserver » s'y lisent au même endroit.
+            // Une date seule a sa puce, comme chaque soir d'une série : son
+            // heure y mène à la billetterie.
             const seule = await p.evaluate(() => {
                 const l = [...document.querySelectorAll('#upcoming-dates-container .dl--seule')]
                     .find((x) => /Spectacle de vérification/.test(x.querySelector('.dl-titre')?.textContent || ''));
@@ -266,7 +282,7 @@ function exige(condition, message) {
                 } : null;
             });
             exige(seule && seule.cases === 1 && seule.heure === '20h00' && seule.reserver,
-                `une date seule n’a pas sa case (heure, « Réserver ») : ${JSON.stringify(seule)}`);
+                `une date seule n’a pas sa puce (heure, réservation) : ${JSON.stringify(seule)}`);
 
             // Les représentations annoncées aux moteurs ont toutes une image,
             // même celles d'un spectacle sans photo (la Search Console le
@@ -319,14 +335,18 @@ function exige(condition, message) {
                 return !!a && a.classList.contains('dl') && a.classList.contains('dl-eclaire') && /Bérénice/.test(a.textContent);
             }), 'la prochaine date du CV ne mène pas à sa ligne dans l’onglet Dates');
 
-            // Chaque mois porte son liseré, à sa couleur — douze couleurs, qui
-            // suivent les saisons, toutes différentes —, et son intercalaire
-            // le prolonge.
-            const lisere = await p.evaluate(() => {
+            // LA FRISE DES MOIS. Chaque mois a son liseré dans la marge de la
+            // carte, à sa couleur — douze couleurs, qui suivent les saisons,
+            // toutes différentes : une trace pâle, et le trait qui s'y trace
+            // au défilement (voir la vérification de la frise, plus bas). Son
+            // point est posé devant le nom du mois, centré sur le liseré.
+            const frise = await p.evaluate(() => {
                 const page = document.getElementById('page_dates');
                 const g = document.querySelector('#upcoming-dates-container .dl-groupe[data-mois]');
-                const avant = g && getComputedStyle(g, '::before');
-                const entete = g && g.querySelector('.dl-intercalaire');
+                const inter = g && g.querySelector('.dl-intercalaire');
+                const trace = g && getComputedStyle(g, '::before');
+                const trait = g && getComputedStyle(g, '::after');
+                const point = inter && getComputedStyle(inter, '::after');
                 const style = getComputedStyle(page);
                 const couleurs = Array.from({ length: 12 }, (_, i) => style.getPropertyValue(`--dl-mois-${i + 1}`).trim());
                 // La couleur attendue, telle que le navigateur la rend.
@@ -340,22 +360,56 @@ function exige(condition, message) {
                 const grise = getComputedStyle(sonde).color;
                 sonde.remove();
                 const initiales = [...document.querySelectorAll('#dates-sommaire .dl-grille-mois')].map((x) => getComputedStyle(x).color);
+                const px = (v) => parseFloat(v) || 0;
+                const bord = g ? g.getBoundingClientRect().left : 0;
                 return {
-                    trait: !!avant && avant.width === '3px' && avant.backgroundColor === attendue,
-                    entete: !!entete && /inset/.test(getComputedStyle(entete).boxShadow),
+                    trait: !!trait && trait.width === '3px' && trait.backgroundColor === attendue && px(trait.left) < 0,
+                    trace: !!trace && trace.width === '3px' && trace.left === trait.left
+                        && !['rgba(0, 0, 0, 0)', attendue].includes(trace.backgroundColor),
+                    point: !!point && point.backgroundColor === attendue && px(point.width) === 8 && px(point.height) === 8,
+                    // Le centre du point et celui du liseré, depuis le bord de la liste.
+                    ecart: point ? Math.abs((inter.getBoundingClientRect().left - bord + px(point.left) + px(point.width) / 2)
+                        - (px(trait.left) + px(trait.width) / 2)) : 99,
                     douze: couleurs.every(Boolean) && new Set(couleurs).size === 12,
                     initiales: initiales.length > 0 && !initiales.includes(grise) && new Set(initiales).size === initiales.length
                 };
             });
-            exige(lisere.trait && lisere.entete && lisere.douze,
-                `le liseré des mois manque ou n’a pas la couleur de son mois : ${JSON.stringify(lisere)}`);
-            exige(lisere.initiales, 'les initiales des mois, dans la saison d’un regard, n’ont pas leur couleur');
+            exige(frise.trait && frise.trace && frise.douze,
+                `le liseré des mois manque, n’est pas dans la marge ou n’a pas la couleur de son mois : ${JSON.stringify(frise)}`);
+            exige(frise.point && frise.ecart < 0.6, `le point du mois manque, ou n’est pas posé sur le liseré : ${JSON.stringify(frise)}`);
+            exige(frise.initiales, 'les initiales des mois, dans la saison d’un regard, n’ont pas leur couleur');
 
-            // L'agenda d'une case de série ouvre sa fenêtre.
-            await p.locator('#upcoming-dates-container .dl--serie .dl-seance .dl-agenda').first().click();
+            // L'agenda d'une série : un seul bouton ; la fenêtre demande
+            // quelle séance ajouter, et propose d'abord la séance publique.
+            await p.locator('#upcoming-dates-container .dl--serie .dl-agenda').first().click();
             await p.waitForTimeout(300);
-            exige(await p.evaluate(() => /vérification/.test(document.getElementById('cal-modal-title')?.textContent || '')),
-                'la fenêtre d’agenda ne s’ouvre pas depuis une case de séance');
+            const lireAgenda = () => p.evaluate(() => {
+                const choix = document.getElementById('cal-modal-seances');
+                const boutons = [...choix.querySelectorAll('button')];
+                return {
+                    titre: document.getElementById('cal-modal-title')?.textContent || '',
+                    visible: !choix.hidden,
+                    seances: boutons.map((b) => b.textContent),
+                    choisie: boutons.findIndex((b) => b.getAttribute('aria-pressed') === 'true'),
+                    sous: document.getElementById('cal-modal-subtitle')?.textContent || ''
+                };
+            });
+            const agenda = await lireAgenda();
+            exige(/vérification/.test(agenda.titre), 'la fenêtre d’agenda ne s’ouvre pas depuis une série');
+            exige(agenda.visible && agenda.seances.length === 2,
+                `la fenêtre d’agenda ne propose pas les deux séances de la série : ${JSON.stringify(agenda.seances)}`);
+            exige(agenda.choisie === 1 && /scolaire/.test(agenda.seances[0]) && /20h00/.test(agenda.seances[1]),
+                `la séance proposée d’abord n’est pas la séance publique : ${JSON.stringify(agenda)}`);
+            await p.locator('#cal-modal-seances button').first().click();
+            const autre = await lireAgenda();
+            exige(autre.choisie === 0 && autre.sous !== agenda.sous, 'choisir une autre séance ne change pas la date à ajouter');
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(300);
+            // Une date seule n'a rien à choisir.
+            await p.locator('#upcoming-dates-container .dl--seule .dl-agenda').first().click();
+            await p.waitForTimeout(300);
+            const seuleAgenda = await lireAgenda();
+            exige(/Bérénice/.test(seuleAgenda.titre) && !seuleAgenda.visible, 'la fenêtre d’agenda d’une date seule propose de choisir une séance');
             await p.keyboard.press('Escape');
             await p.waitForTimeout(300);
 
@@ -374,6 +428,26 @@ function exige(condition, message) {
             exige(parSpectacle.liens.join() === 'spectacles/berenice/,-',
                 `en-têtes par spectacle et leurs pages : ${JSON.stringify(parSpectacle.liens)}`);
             exige(parSpectacle.retenu === 'spectacle', 'le rangement choisi n’est pas retenu');
+            // La photo est en tête du groupe : la feuille redevient papier, la
+            // ligne ne répète pas le titre, et la frise prend la couleur du
+            // spectacle.
+            const groupeSpectacle = await p.evaluate(() => {
+                const g = document.querySelector('#upcoming-dates-container .dl-groupe--spectacle');
+                const sonde = document.createElement('span');
+                sonde.style.color = 'var(--dl-a)';
+                g.appendChild(sonde);
+                const attendue = getComputedStyle(sonde).color;
+                sonde.remove();
+                return {
+                    couleur: getComputedStyle(g, '::after').backgroundColor === attendue
+                        && getComputedStyle(g.querySelector('.dl-intercalaire'), '::after').backgroundColor === attendue,
+                    papier: !g.querySelector('.dl .dl-feuille img') && !!g.querySelector('.dl-feuille--papier'),
+                    titres: g.querySelectorAll('.dl-titre').length
+                };
+            });
+            exige(groupeSpectacle.couleur, 'rangé par spectacle, le liseré et le point n’ont pas la couleur du spectacle');
+            exige(groupeSpectacle.papier, 'rangé par spectacle, la feuille garde une photo, déjà en tête du groupe');
+            exige(!groupeSpectacle.titres, 'rangé par spectacle, la ligne répète le titre');
 
             // Un rond du sommaire ramène par date, jusqu'à sa ligne.
             await p.locator('#dates-sommaire [data-dl-aller]').first().click();
@@ -911,7 +985,9 @@ function exige(condition, message) {
             const erreurs = guette(p);
             const fautes = [];
             let menees = 0;
-            for (const url of ['/', ...dossiers.map((d) => `/spectacles/${d}/`)]) {
+            // L'onglet Dates d'abord : de « / » à « /#page_dates », le
+            // navigateur ne recharge pas la page, il suit l'ancre.
+            for (const url of ['/#page_dates', '/', ...dossiers.map((d) => `/spectacles/${d}/`)]) {
                 await p.goto(base + url, { waitUntil: 'load' });
                 await p.waitForTimeout(500);
                 const r = await p.evaluate(async () => {
@@ -1092,7 +1168,7 @@ function exige(condition, message) {
                     const echelle = (li) => { const t = point(li).transform; return t === 'none' ? 1 : +(t.match(/matrix\(([-\d.e]+)/) || [0, NaN])[1]; };
                     const voile = (li) => +getComputedStyle(li.querySelector('.cv-row-toggle')).opacity;
                     const p0 = point(lignes[0]);
-                    return {
+                    const etat = {
                         frise: liste.classList.contains('cv-frise'),
                         filGauche: px(fil.left),
                         // Le centre du point et celui du fil, depuis le bord gauche de la liste.
@@ -1104,6 +1180,18 @@ function exige(condition, message) {
                         horloge: [...document.styleSheets].some((f) => { try { return [...f.cssRules].some((r) => /cv-guirlande|cv-pastille-lueur\b/.test(r.cssText)); } catch (e) { return false; } }),
                         tout: lignes.every((li) => voile(li) > 0.99 && echelle(li) === 1)
                     };
+                    // LA POINTE DU FIL EST SUR LA LIGNE DE LECTURE : le haut du
+                    // fil, plus sa part tracée. Mesurée aux deux tiers de la
+                    // liste : view() sans encart retranchait de l'écran les
+                    // 84 px de scroll-padding-top, et le fil prenait de
+                    // l'avance à mesure qu'il descendait — jusqu'à 84 px.
+                    const r = liste.getBoundingClientRect();
+                    window.scrollTo(0, r.top + scrollY + r.height * 0.67 - innerHeight * 0.5);
+                    await new Promise((f) => setTimeout(f, 400));
+                    const f2 = getComputedStyle(liste, '::after');
+                    const trace = f2.transform === 'none' ? 1 : +(f2.transform.match(/matrix\(([^)]+)\)/) || [0, 'NaN'])[1].split(',')[3];
+                    etat.ecartPointe = Math.abs(liste.getBoundingClientRect().top + px(f2.top) + trace * px(f2.height) - innerHeight * 0.5);
+                    return etat;
                 });
                 const nom = reduit ? 'en mouvement réduit' : repli ? 'avec le repli' : 'en natif';
                 exige(etat.frise, 'la liste du CV ne porte pas la frise');
@@ -1117,6 +1205,7 @@ function exige(condition, message) {
                     exige(etat.pointsHaut === 1 && etat.pleineHaut > 0.99, `${nom}, une ligne déjà lue n’est pas pleine avec son point (${etat.pleineHaut}, point × ${etat.pointsHaut})`);
                     exige(etat.pointsBas === 0, `${nom}, le point d’une ligne pas encore atteinte est déjà là (× ${etat.pointsBas})`);
                     exige(etat.voileBas < 0.5, `${nom}, une ligne pas encore atteinte n’est pas voilée (${etat.voileBas})`);
+                    exige(etat.ecartPointe < 12, `${nom}, la pointe du fil est à ${Math.round(etat.ecartPointe)} px de la ligne de lecture`);
                 }
                 exige(!etat.horloge, 'la guirlande à horloge est revenue');
                 exige(!erreurs.length, erreurs.join(' | '));
@@ -1162,6 +1251,74 @@ function exige(condition, message) {
                 await p.waitForTimeout(250);
                 const clavier = await lire();
                 exige(clavier.voile > 0.99, `${appareil}, la ligne atteinte au clavier reste voilée (${clavier.voile})`);
+                await c.close();
+            }
+        });
+
+        // LA FRISE DES MOIS DE L'ONGLET DATES. Comme le fil du CV : chaque
+        // mois a son liseré dans la marge, qui se trace jusqu'à la ligne de
+        // lecture, au milieu de l'écran ; son point, devant le nom du mois,
+        // éclôt quand elle l'atteint. Un espace sépare deux mois.
+        await verifie('la frise des mois de l’onglet Dates : chaque mois son liseré, séparé du suivant par un espace, tracé jusqu’à la ligne de lecture, son point posé quand elle atteint le nom du mois — avec les deux pilotes, tout tracé en mouvement réduit', async () => {
+            // Une saison fictive : deux lignes par mois, cinq mois de suite,
+            // à partir du mois prochain.
+            const saison = () => {
+                const iso = (a, m, j) => `${a}-${String(m + 1).padStart(2, '0')}-${String(j).padStart(2, '0')}`;
+                const titres = ['Bérénice', 'Cléophène, d’après Rodogune'];
+                const t = new Date();
+                SHOW_DATA.upcoming = [];
+                for (let k = 1; k <= 5; k++) {
+                    const d = new Date(t.getFullYear(), t.getMonth() + k, 1);
+                    const a = d.getFullYear(), m = d.getMonth();
+                    const seance = (j) => ({ dateLabel: iso(a, m, j), icsDate: iso(a, m, j), time: '20h00', bookingUrl: 'https://example.org/billets', isSchool: false });
+                    SHOW_DATA.upcoming.push(
+                        Object.assign({ type: 'single', title: titres[k % 2], location: 'Scène de vérification (76)', city: 'Rouen' }, seance(5)),
+                        { type: 'series', id: `frise-${k}`, title: titres[(k + 1) % 2], location: 'Salle de vérification (76)', city: 'Rouen', dateLabel: iso(a, m, 20), shows: [seance(20), seance(21)] }
+                    );
+                }
+                renderDates();
+            };
+            for (const [repli, reduit] of [[false, false], [true, false], [false, true]]) {
+                const c = await visiteur({ viewport: { width: 390, height: 844 }, reducedMotion: reduit ? 'reduce' : 'no-preference' });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.goto(`${base}/${repli ? '?repli' : ''}#page_dates`, { waitUntil: 'load' });
+                await p.waitForTimeout(600);
+                await p.evaluate(saison);
+                const etat = await p.evaluate(async () => {
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    const groupes = [...document.querySelectorAll('#upcoming-dates-container .dl-groupe')];
+                    // La ligne de lecture au milieu du deuxième mois.
+                    const r = groupes[1].getBoundingClientRect();
+                    window.scrollTo(0, r.top + scrollY + r.height / 2 - innerHeight / 2);
+                    await new Promise((f) => setTimeout(f, 500));
+                    // matrix(a, b, c, d, e, f) : a, l'échelle du point ; d, la hauteur tracée du liseré.
+                    const echelle = (t, n) => (t === 'none' ? 1 : +((t.match(/matrix\(([^)]+)\)/) || [0, 'NaN'])[1].split(',')[n]));
+                    const lire = (g) => ({
+                        trait: echelle(getComputedStyle(g, '::after').transform, 3),
+                        point: echelle(getComputedStyle(g.querySelector('.dl-intercalaire'), '::after').transform, 0)
+                    });
+                    return {
+                        n: groupes.length,
+                        espace: groupes[1].getBoundingClientRect().top - groupes[0].getBoundingClientRect().bottom,
+                        lu: lire(groupes[0]), enCours: lire(groupes[1]), aVenir: lire(groupes[groupes.length - 1]),
+                        tous: groupes.map(lire)
+                    };
+                });
+                const nom = reduit ? 'en mouvement réduit' : repli ? 'avec le repli' : 'en natif';
+                exige(etat.n === 5, `${etat.n} mois au lieu de cinq`);
+                exige(etat.espace >= 8, `${nom}, pas d’espace entre deux mois (${etat.espace} px)`);
+                if (reduit) {
+                    exige(etat.tous.every((x) => x.trait === 1 && x.point === 1),
+                        `en mouvement réduit, un liseré n’est pas tracé ou un point pas posé : ${JSON.stringify(etat.tous)}`);
+                } else {
+                    exige(etat.lu.trait > 0.99 && etat.lu.point === 1, `${nom}, le mois déjà lu n’est pas tracé, son point posé : ${JSON.stringify(etat.lu)}`);
+                    exige(etat.enCours.point === 1 && etat.enCours.trait > 0.2 && etat.enCours.trait < 0.8,
+                        `${nom}, le liseré du mois en cours ne s’arrête pas à la ligne de lecture : ${JSON.stringify(etat.enCours)}`);
+                    exige(etat.aVenir.trait === 0 && etat.aVenir.point === 0,
+                        `${nom}, un mois que la ligne de lecture n’a pas atteint est déjà tracé : ${JSON.stringify(etat.aVenir)}`);
+                }
+                exige(!erreurs.length, erreurs.join(' | '));
                 await c.close();
             }
         });
