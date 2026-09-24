@@ -242,7 +242,7 @@ const SHOW_UNIVERSES = {
         sequence: [
             {
                 chapter: '1h05',
-                chapterTitle: 'Puis 45 minutes de débat — tout public dès 15 ans'
+                chapterTitle: 'Tout public dès 15 ans'
             },
             {
                 p: [19], cadre: { 19: '45% 25%' },

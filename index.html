@@ -10625,15 +10625,12 @@
                     const audio = document.getElementById(id);
                     if (!audio || !audio.duration) return;
                     const step = audio.duration / 20;
-                    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-                        audio.currentTime = Math.min(audio.duration, audio.currentTime + step);
-                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-                        audio.currentTime = Math.max(0, audio.currentTime - step);
-                    } else if (e.key === 'Home') { audio.currentTime = 0; }
-                    else if (e.key === 'End') { audio.currentTime = audio.duration; }
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') allerDansLaDemo(id, audio.currentTime + step);
+                    else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') allerDansLaDemo(id, audio.currentTime - step);
+                    else if (e.key === 'Home') allerDansLaDemo(id, 0);
+                    else if (e.key === 'End') allerDansLaDemo(id, audio.duration);
                     else return;
                     e.preventDefault();
-                    updateAudioProgress(id);
                 });
             });
         }
@@ -10753,14 +10750,58 @@
         }
 
         function seekAudio(e, audioId) {
-            const container = e.currentTarget;
             const audio = document.getElementById(audioId);
-            const rect = container.getBoundingClientRect();
-            const clickPercentage = (e.clientX - rect.left) / rect.width;
-            if (audio.duration) {
-                audio.currentTime = clickPercentage * audio.duration;
-                updateAudioProgress(audioId);
+            const rect = e.currentTarget.getBoundingClientRect();
+            if (audio && audio.duration) allerDansLaDemo(audioId, (e.clientX - rect.left) / rect.width * audio.duration);
+        }
+
+        // ── ALLER À UN POINT D'UNE DÉMO ──
+        //  Un navigateur ne saute au milieu d'un fichier que si le serveur
+        //  lui en sert des morceaux (l'en-tête Range). GitHub Pages le fait :
+        //  sur adrienvada.fr, `seekable` couvre toute la démo. L'aperçu de
+        //  branche sur Cloudflare, non : `seekable` y reste vide, et toucher
+        //  la barre ramenait au début de l'extrait (constaté sur téléphone,
+        //  puis reproduit). Quand le point visé n'est pas atteignable, on lit
+        //  donc le fichier entier en mémoire — il est d'ordinaire déjà dans
+        //  le cache, puisque la démo joue — et l'on saute dedans ; la lecture
+        //  reprend si elle jouait. Si même cela échoue, rien ne bouge : mieux
+        //  vaut rester où l'on est que repartir de zéro.
+        function atteignable(audio, t) {
+            for (let i = 0; i < audio.seekable.length; i++) {
+                if (t >= audio.seekable.start(i) && t <= audio.seekable.end(i)) return true;
             }
+            return false;
+        }
+
+        function demoEnMemoire(audio) {
+            if (!audio.__enMemoire) {
+                audio.__enMemoire = fetch(audio.currentSrc || audio.src)
+                    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
+                    .then(blob => new Promise((ok, ko) => {
+                        const jouait = !audio.paused;
+                        audio.addEventListener('loadedmetadata', () => ok(jouait), { once: true });
+                        audio.addEventListener('error', ko, { once: true });
+                        audio.src = URL.createObjectURL(blob);
+                    }));
+                audio.__enMemoire.catch(() => { audio.__enMemoire = null; });
+            }
+            return audio.__enMemoire;
+        }
+
+        function allerDansLaDemo(audioId, cible) {
+            const audio = document.getElementById(audioId);
+            if (!audio || !audio.duration || !isFinite(audio.duration)) return;
+            cible = Math.max(0, Math.min(audio.duration, cible));
+            if (atteignable(audio, cible)) {
+                audio.currentTime = cible;
+                updateAudioProgress(audioId);
+                return;
+            }
+            demoEnMemoire(audio).then((jouait) => {
+                audio.currentTime = cible;
+                updateAudioProgress(audioId);
+                if (jouait && activeAudioId === audioId) audio.play().catch(() => { });
+            }, () => { });
         }
 
         function formatDuration(seconds) {
