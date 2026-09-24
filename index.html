@@ -1477,21 +1477,20 @@
            Le CV lui-même doit être ce qu'on voit en premier.
 
            Il devient donc un lien discret : pas d'aplat, texte en gris de
-           service, l'or réservé au survol. Il existe en deux exemplaires —
-           la barre de navigation n'a pas de place pour lui sur écran
-           étroit — mais ils partagent cette seule classe, de sorte qu'ils
-           ne puissent plus diverger comme ils l'avaient fait (deux
-           libellés, deux tailles, deux fers).
+           service, l'or réservé au survol. Il n'existe plus qu'en un
+           exemplaire, sous le carton « Prochainement » à toutes les
+           largeurs : il était dans la barre d'onglets sur grand écran et
+           au-dessus du carton sur téléphone — d'abord l'action, ensuite
+           l'information. C'est l'inverse qu'on veut.
 
-           Ce sont désormais des <a download> et non plus des <button> : le
-           soulignement des liens ne revient pas (la préflight Tailwind pose
-           `text-decoration: inherit`), et l'un comme l'autre restent hors
-           du PDF — celui du haut par le `nav` en no-print, celui du bas par
-           sa propre classe.
+           C'est un <a download> et non plus un <button> : le soulignement
+           des liens ne revient pas (la préflight Tailwind pose
+           `text-decoration: inherit`), et il reste hors du PDF par sa
+           rangée en no-print.
 
-           Le `display` reste à Tailwind (`hidden md:inline-flex`) : ce bloc
-           est chargé APRÈS styles.css, y écrire un display écraserait
-           `hidden` et les deux exemplaires paraîtraient ensemble. */
+           Le `display` reste à Tailwind (`inline-flex`) : ce bloc est
+           chargé APRÈS styles.css, et y écrire un display l'emporterait
+           sur tout réglage posé en classe utilitaire. */
         .pdf-btn {
             align-items: center;
             gap: 6px;
@@ -1519,14 +1518,16 @@
             border-color: rgb(var(--c-s200));
         }
 
-        /* Le lien se range juste sous la barre d'onglets, du même côté que
-           sur grand écran. La marge est posée ici, et non en classe
-           utilitaire : `space-y-4` de la page l'emporterait en spécificité.
-           Le `display`, lui, reste à Tailwind — un display écrit ici
-           l'emporterait sur `md:hidden` et ferait apparaître l'exemplaire
-           mobile sur grand écran. */
+        /* Le lien se range juste sous le carton, à droite, pour s'y
+           rattacher : sa rangée commence à 2 px du carton, au lieu des
+           16 px qui séparent les blocs (le texte, centré dans sa zone de
+           clic, se lit une douzaine de pixels plus bas). Cette marge
+           REMPLACE celle de `space-y-4`, qu'elle l'emporte en spécificité —
+           une marge négative ferait donc chevaucher le carton. Sans date
+           à venir, le carton reste masqué et le lien se range sous la
+           barre d'onglets. */
         #page_cv>.pdf-btn-row {
-            margin-top: -8px;
+            margin-top: 2px;
         }
 
         @media (max-width: 767px) {
@@ -4485,9 +4486,9 @@
         }
 
         /* ── Le sommaire : la saison d'un regard ──
-           La prochaine représentation n'y est plus : elle a son carton en
-           tête du CV (voir renderNextDate), et la liste ci-dessous commence
-           par elle. */
+           La prochaine représentation n'y est pas : elle est au-dessus, sur
+           le tableau des départs (voir tableauDesDeparts), et la liste
+           ci-dessous commence par elle. */
         .dates-sommaire {
             margin-bottom: 1.1rem;
         }
@@ -4604,6 +4605,274 @@
             background: var(--dl-a);
             color: var(--dl-sa);
             font: 700 11px/1 Inter, sans-serif;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           LE TABLEAU DES DÉPARTS — en tête de l'onglet Dates
+           ──────────────────────────────────────────────────────────────
+           La prochaine date comme sur un tableau de gare : chaque lettre
+           est une palette qui bat jusqu'à la bonne, de gauche à droite, une
+           seule fois, quand le tableau arrive à l'écran — la tournée qui
+           part (voir tableauDesDeparts). Une seule ligne, qui mène à sa date
+           dans la liste. Ce n'est pas le carton « Prochainement » (ni
+           « Réserver » ni agenda), qui n'est qu'au CV.
+
+           Noir dans les deux thèmes : c'est un objet, un tableau
+           d'affichage, pas une carte du site.
+
+           UNE PALETTE (.fl), ce sont quatre moitiés : le haut et le bas
+           fixes (.fl-h, .fl-b) et les deux volets qui battent (.fl-v1, le
+           haut qui tombe ; .fl-v2, le bas qui se pose). Chaque moitié porte
+           la même lettre, centrée sur la palette entière et rognée à sa
+           moitié. Seuls les volets bougent (transform), et seulement le
+           temps du battement.
+
+           LA TAILLE vient de la largeur du tableau (cqw) : autant de
+           palettes que de lettres sur le rang le plus long, qui tiennent
+           toujours dans la largeur, 28 px au plus. `--fixe` est ce qui
+           n'est pas palette sur ce rang : le trait de couleur, les écarts
+           entre colonnes (10 px) et entre palettes (2 px), et un pixel de
+           marge pour les arrondis. */
+        .td {
+            --td-lettre: #ecd9ae;
+            --td-sourd: #9a8f7c;
+            --td-gc: 10px;
+            --td-barre: 3px;
+            position: relative;
+            padding: clamp(14px, 3.4vw, 26px);
+            border-radius: 0.75rem;
+            background: #0d0c0a;
+            color: #f2ece0;
+            border: 1px solid rgb(255 255 255 / 0.08);
+            box-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.6);
+            container-type: inline-size;
+        }
+
+        .td-tete {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .td-sur {
+            font: 600 11px/1.4 Montserrat, sans-serif;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: #cdb998;
+        }
+
+        .td-nom {
+            font: 600 clamp(18px, 3vw, 26px)/1 Cinzel, serif;
+            letter-spacing: 0.06em;
+            color: #f2ece0;
+        }
+
+        /* Sur un tableau étroit, « Départs » passe au-dessus, comme un
+           titre, et « La prochaine date » se lit dessous. */
+        @container (max-width: 419px) {
+            .td-tete {
+                flex-direction: column-reverse;
+                align-items: flex-start;
+                gap: 6px;
+            }
+        }
+
+        /* La ligne est un bouton : il déborde de 6 px de chaque côté, pour
+           que le survol et le focus l'entourent sans décaler les palettes. */
+        .td-dep {
+            display: block;
+            width: calc(100% + 12px);
+            margin: 0 -6px;
+            padding: 4px 6px;
+            border-radius: 8px;
+            text-align: left;
+            color: inherit;
+            transition: background-color var(--dur-base) var(--ease-out);
+        }
+
+        .td-dep:hover {
+            background: rgb(236 217 174 / 0.07);
+        }
+
+        .td-dep:focus-visible {
+            outline: 2px solid var(--td-lettre);
+            outline-offset: 1px;
+        }
+
+        /* SUR TÉLÉPHONE, UN PANNEAU DE TROIS RANGS : la date et l'heure, le
+           spectacle, la ville — douze palettes de large, pour des lettres de
+           28 px au plus au lieu de 14 sur une seule ligne. Chaque colonne
+           porte son intitulé au-dessus de ses palettes, alignés par
+           construction. Le trait de couleur court sur les trois rangs.
+           Largeur du rang le plus long (la date et l'heure) : 12 palettes,
+           le trait et deux écarts de colonne, et les 2 px entre palettes. */
+        .td-ligne {
+            --n: 12;
+            --fixe: 44px;
+            --w: min(28px, (100cqw - var(--fixe)) / var(--n));
+            display: grid;
+            grid-template-columns: var(--td-barre) max-content max-content;
+            grid-template-areas:
+                "barre date heure"
+                "barre titre titre"
+                "barre ville ville";
+            justify-content: start;
+            column-gap: var(--td-gc);
+            row-gap: 10px;
+        }
+
+        /* Le trait à la couleur du spectacle, celle de ses lignes plus bas. */
+        .td-ligne::before {
+            content: '';
+            grid-area: barre;
+            width: var(--td-barre);
+            border-radius: 2px;
+            background: var(--dl-a, var(--td-lettre));
+        }
+
+        .td-col {
+            display: grid;
+            gap: 4px;
+            justify-items: start;
+        }
+
+        .td-col.date { grid-area: date; }
+        .td-col.heure { grid-area: heure; }
+        .td-col.titre { grid-area: titre; }
+        .td-col.ville { grid-area: ville; }
+
+        .td-lib {
+            font: 600 10px/1.2 Montserrat, sans-serif;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #8b8272;
+        }
+
+        .td-fl {
+            display: flex;
+            gap: 2px;
+        }
+
+        /* SUR GRAND ÉCRAN, UNE LIGNE DE TABLEAU : la date, le spectacle, la
+           ville, l'heure, trente-six palettes côte à côte. */
+        @container (min-width: 720px) {
+            .td-ligne {
+                --n: 36;
+                --fixe: 108px;
+                display: flex;
+                align-items: flex-end;
+                gap: var(--td-gc);
+            }
+
+            .td-ligne::before {
+                flex: none;
+                height: calc(var(--w) * 1.5);
+            }
+        }
+
+        /* `contain: strict` : une lettre qui change ne fait recalculer que
+           sa palette, pas la page (trente-six palettes, qui changent de
+           lettre des dizaines de fois par seconde pendant le battement). */
+        .fl {
+            position: relative;
+            flex: none;
+            width: var(--w);
+            height: calc(var(--w) * 1.5);
+            contain: strict;
+            perspective: calc(var(--w) * 10);
+            font: 600 calc(var(--w) * 0.88)/calc(var(--w) * 1.5) Montserrat, sans-serif;
+            color: var(--td-lettre);
+            text-align: center;
+        }
+
+        .fl > span {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 50%;
+            overflow: hidden;
+        }
+
+        .fl > span > i {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 200%;
+            font-style: normal;
+        }
+
+        .fl-h,
+        .fl-v1 {
+            top: 0;
+            border-radius: 3px 3px 0 0;
+            background: linear-gradient(#2b261e, #1f1b15);
+        }
+
+        .fl-b,
+        .fl-v2 {
+            top: 50%;
+            border-radius: 0 0 3px 3px;
+            background: linear-gradient(#211d17, #16130f);
+        }
+
+        .fl-h > i,
+        .fl-v1 > i {
+            top: 0;
+        }
+
+        .fl-b > i,
+        .fl-v2 > i {
+            top: -100%;
+        }
+
+        .fl-v1,
+        .fl-v2 {
+            z-index: 2;
+            visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        .fl-v1 {
+            transform-origin: 50% 100%;
+        }
+
+        .fl-v2 {
+            transform-origin: 50% 0;
+        }
+
+        /* PENDANT LE BATTEMENT (.td-roule, posée par tdDerouler), les volets
+           restent visibles et sur leur calque, mais repliés au-delà de
+           l'équerre entre deux battements : on n'en voit que le dos, que
+           `backface-visibility` efface. Chaque battement n'a donc plus à
+           les montrer ni à les cacher, et le navigateur n'a pas à créer
+           puis défaire un calque à chaque fois — c'était l'essentiel du
+           coût, mesuré sur un téléphone lent. Le battement fini, la classe
+           part, et les calques avec. */
+        .td-roule .fl-v1 {
+            visibility: visible;
+            transform: rotateX(-91deg);
+            will-change: transform;
+        }
+
+        .td-roule .fl-v2 {
+            visibility: visible;
+            transform: rotateX(91deg);
+            will-change: transform;
+        }
+
+        /* La charnière : un trait sombre en travers de la palette. */
+        .fl::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 1px;
+            margin-top: -0.5px;
+            background: rgb(0 0 0 / 0.8);
+            z-index: 3;
         }
 
         /* ══════════════════════════════════════════════════════════════
@@ -5161,10 +5430,11 @@
 
            `linear` est délibéré : la moindre courbe de vitesse ramènerait
            l'accélération qu'on vient de corriger. */
-        /* ── LE TABLEAU DES DÉPARTS ──
+        /* ── LES VOLETS DU CARTON ──
            Le carton « Prochainement » s'affiche une fois comme un tableau
            de gare : chaque lettre bat jusqu'à la bonne, colonne après
-           colonne — la tournée qui part (voir tableauDesDeparts). Chaque
+           colonne (voir voletsDuCarton) — l'écho, au CV, du tableau des
+           départs de l'onglet Dates. Chaque
            lettre est un volet à la largeur de la lettre finale : les
            lettres de passage ne font pas bouger la ligne. Seul le volet
            bat (transform) ; rien d'autre ne se recalcule. */
@@ -5901,31 +6171,10 @@
                 </a>
             </div>
 
-            <!-- Télécharger le CV + bascule de thème, groupés à droite des
-                 onglets : sans ce groupe, le `justify-between` de la barre
-                 les aurait dispersés au lieu de les garder collés l'un à
-                 l'autre. -->
+            <!-- La bascule de thème, à droite des onglets. « Télécharger le
+                 CV » n'est plus ici : il vient après le carton
+                 « Prochainement », en tête du CV (voir .pdf-btn-row). -->
             <div class="flex items-center gap-2 flex-shrink-0">
-                <!-- Télécharger le CV (voir .pdf-btn).
-
-                     UN LIEN, ET NON UN BOUTON. Ce bouton appelait `window.print()` :
-                     le libellé était honnête, mais on repartait avec un fichier
-                     nommé d'après le domaine, au terme d'une boîte de dialogue —
-                     et de trois manipulations sur iPhone. Le métier d'Adrien fait
-                     circuler des CV en pièce jointe : ce que reçoit un directeur
-                     de casting doit s'appeler `cv-adrien-vada.pdf`.
-
-                     Le fichier est fabriqué par build/generer-cv-pdf.js, avec le
-                     moteur d'impression de Chromium et les MÊMES règles @media
-                     print que Ctrl+P. Il est versionné, et régénéré à chaque
-                     publication : il ne peut pas dater. -->
-                <a href="/ressources/cv-adrien-vada.pdf" download="cv-adrien-vada.pdf" id="pdf-download-btn"
-                    data-track="cv_pdf" data-track-detail="bureau" class="pdf-btn hidden md:inline-flex">
-                    <svg class="ico" aria-hidden="true">
-                        <use href="#i-solid-file-pdf"></use>
-                    </svg> Télécharger le CV
-                </a>
-
                 <!-- Bascule clair / sombre — visible mobile et desktop.
                      Remplace les deux boutons d'avant (près de l'avatar sur
                      mobile, en bout de ligne des liens sur desktop) : un seul
@@ -5947,20 +6196,6 @@
             <!-- PAGE 1: CV -->
             <div id="page_cv" class="page active space-y-4">
                 <h2 class="sr-only">Curriculum Vitae</h2>
-                <!-- Télécharger le CV, version mobile : la barre d'onglets prend
-                     toute la largeur sur écran étroit, le lien ne peut pas
-                     y tenir. Même classe, même allure — seule la place change.
-                     C'est ici que le vrai fichier compte le plus : sur iPhone,
-                     l'ancien `window.print()` passait par la feuille de partage. -->
-                <div class="pdf-btn-row flex justify-end md:hidden no-print">
-                    <a href="/ressources/cv-adrien-vada.pdf" download="cv-adrien-vada.pdf" data-track="cv_pdf"
-                        data-track-detail="mobile" class="pdf-btn inline-flex">
-                        <svg class="ico" aria-hidden="true">
-                            <use href="#i-solid-file-pdf"></use>
-                        </svg> Télécharger le CV
-                    </a>
-                </div>
-
                 <!-- ── BANDEAU « PROCHAINEMENT » ──
                      En tête du CV, juste avant le théâtre : la prochaine date
                      est la suite de la liste qu'on s'apprête à lire, pas une
@@ -5972,7 +6207,8 @@
                      Le bandeau lit la MÊME source que la page Dates (dates.js,
                      via splitUpcoming) : rien n'est saisi deux fois, et il ne
                      peut donc pas la contredire. L'onglet Dates, lui, n'a pas
-                     de carton : sa liste commence déjà par la prochaine date.
+                     de carton : la prochaine date y est sur le tableau des
+                     départs, et sa liste commence par elle.
 
                      Posé `hidden` : c'est renderNextDate() qui l'ouvre, et
                      seulement s'il reste une représentation à venir. Une saison
@@ -6068,8 +6304,9 @@
         }
 
         // ── LA PROCHAINE REPRÉSENTATION, EN TÊTE DU CV ──
-        //  Le carton n'est qu'au CV : l'onglet Dates n'en a pas, sa liste
-        //  commence déjà par la prochaine date. Le jour, l'heure et le lieu ;
+        //  Le carton n'est qu'au CV : l'onglet Dates n'en a pas — la
+        //  prochaine date y est sur le tableau des départs (voir
+        //  tableauDesDeparts), et sa liste commence par elle. Le jour, l'heure et le lieu ;
         //  la date mène à l'onglet Dates ; « Réserver » et l'agenda.
         //
         //  Le nom du spectacle mène à sa page, comme partout dans les dates.
@@ -6151,12 +6388,14 @@
             bandeau.__rendu = html;
             bandeau.innerHTML = html;
             bandeau.hidden = false;
-            tableauDesDeparts(bandeau);
+            voletsDuCarton(bandeau);
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  LE TABLEAU DES DÉPARTS
+        //  LES VOLETS DU CARTON
         //  ----------------------------------------------------------------
+        //  (Le tableau des départs, le vrai, est en tête de l'onglet Dates :
+        //  voir tableauDesDeparts. Ici, son écho sur le carton du CV.)
         //  UNE FOIS, quand le carton arrive à l'écran — et pas sous le rideau
         //  de l'ouverture : on attend qu'il soit levé. Le nom du spectacle et
         //  la ligne de la date battent comme les palettes d'un tableau de
@@ -6167,14 +6406,14 @@
         //  de lire des lettres de passage. Mouvement réduit : rien ne bat.
         //  Les données en direct qui réécrivent le carton en cours de route
         //  l'arrêtent proprement — le nouveau texte est déjà le bon.
-        let departsJoue = false;
-        function tableauDesDeparts(bandeau) {
-            if (departsJoue || !('IntersectionObserver' in window)) return;
+        let cartonBattu = false;
+        function voletsDuCarton(bandeau) {
+            if (cartonBattu || !('IntersectionObserver' in window)) return;
             if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             const io = new IntersectionObserver((entrees) => {
-                if (!entrees.some(e => e.isIntersecting) || departsJoue) return;
+                if (!entrees.some(e => e.isIntersecting) || cartonBattu) return;
                 if (document.body.classList.contains('modal-open')) return; // le rideau : on repassera
-                departsJoue = true;
+                cartonBattu = true;
                 io.disconnect();
                 clearInterval(guet);
                 // Les polices d'abord : les volets prennent la largeur des
@@ -6184,20 +6423,20 @@
                 const pret = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
                 pret.then(() => setTimeout(() => {
                     const b = document.getElementById('next-date-banner');
-                    if (b && !b.hidden) battre(b);
+                    if (b && !b.hidden) battreLeCarton(b);
                 }, 450));
             }, { threshold: 0.6 });
             io.observe(bandeau);
             // Le rideau levé ne fait pas défiler la page : l'observateur ne
             // se redéclencherait pas. On lui redemande, le temps qu'il tombe.
             const guet = setInterval(() => {
-                if (departsJoue) { clearInterval(guet); return; }
+                if (cartonBattu) { clearInterval(guet); return; }
                 if (!document.body.classList.contains('modal-open')) { io.unobserve(bandeau); io.observe(bandeau); }
             }, 400);
             setTimeout(() => clearInterval(guet), 30000);
         }
 
-        function battre(bandeau) {
+        function battreLeCarton(bandeau) {
             const cibles = [bandeau.querySelector('.next-date-quoi > :first-child'),
                 bandeau.querySelector('.next-date-quoi a[href="#page_dates"]')].filter(Boolean);
             if (!cibles.length) return;
@@ -6265,6 +6504,38 @@
         }
 
         renderNextDate();
+                </script>
+
+                <!-- ── TÉLÉCHARGER LE CV ──
+                     Après le carton « Prochainement », à toutes les largeurs :
+                     on lit d'abord où Adrien joue, puis on emporte le CV. Il
+                     était au-dessus du carton sur téléphone et dans la barre
+                     d'onglets sur grand écran ; il n'y a plus qu'un lien, au
+                     même endroit partout.
+
+                     `data-track-detail` (bureau / mobile) est posé par
+                     largeurDuLienCv(), plus bas : la mesure distingue toujours
+                     les deux usages, comme au temps des deux exemplaires. -->
+                <div class="pdf-btn-row flex justify-end no-print">
+                    <a href="/ressources/cv-adrien-vada.pdf" download="cv-adrien-vada.pdf" id="pdf-download-btn"
+                        data-track="cv_pdf" data-track-detail="mobile" class="pdf-btn inline-flex">
+                        <svg class="ico" aria-hidden="true">
+                            <use href="#i-solid-file-pdf"></use>
+                        </svg> Télécharger le CV
+                    </a>
+                </div>
+                <script>
+        // La mesure garde ses deux détails (voir `cv_pdf` dans
+        // README-build.md) : « bureau » au-delà de 768 px, « mobile » en deçà
+        // — la limite où le lien vivait autrefois dans la barre d'onglets.
+        (function largeurDuLienCv() {
+            const lien = document.getElementById('pdf-download-btn');
+            if (!lien || !window.matchMedia) return;
+            const large = window.matchMedia('(min-width: 768px)');
+            const poser = () => lien.setAttribute('data-track-detail', large.matches ? 'bureau' : 'mobile');
+            poser();
+            if (large.addEventListener) large.addEventListener('change', poser);
+        })();
                 </script>
 
                 <!-- SECTION 1.1: THÉÂTRE -->
@@ -6963,6 +7234,15 @@
             <!-- PAGE 2: DATES THEATRE -->
             <div id="page_dates" class="page space-y-4">
                 <h2 class="sr-only">Dates de Spectacles</h2>
+                <!-- ── LE TABLEAU DES DÉPARTS ──
+                     La prochaine date, en palettes de gare, écrite par
+                     tableauDesDeparts() (voir renderDates). Une seule ligne :
+                     le prochain départ de la tournée ; elle mène à sa date
+                     plus bas. Ce n'est pas le carton « Prochainement » (ni
+                     « Réserver » ni agenda), qui n'est qu'au CV.
+                     Masqué pendant une recherche, comme la saison d'un regard ;
+                     sans JavaScript, il reste masqué. -->
+                <section id="dates-departs" class="td no-print" aria-labelledby="td-titre" hidden></section>
                 <!-- FUTURE DATES (Compacted spacing, larger font) -->
                 <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
                     <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
@@ -8861,8 +9141,9 @@
         //  rond conduisent aux lignes qu'ils résument (voir dlAller).
         //  Filtrer aurait fait disparaître le reste de la page sous les
         //  doigts ; y conduire ne retire rien. (La prochaine représentation
-        //  n'est pas répétée ici : elle a son carton en tête du CV — voir
-        //  renderNextDate —, et la liste commence par elle.)
+        //  n'est pas répétée ici : elle est juste au-dessus, sur le tableau
+        //  des départs — voir tableauDesDeparts —, et la liste commence par
+        //  elle.)
         function dlSommaire(entrees) {
             const datees = entrees.filter(e => e.debut);
             if (!datees.length) return '';
@@ -8905,6 +9186,262 @@
                 });
             });
             return h + '</div></nav>';
+        }
+
+        // ── LE TABLEAU DES DÉPARTS ──────────────────────────────────────
+        //  En tête de l'onglet : la prochaine date sur un tableau de gare
+        //  (voir « LE TABLEAU DES DÉPARTS » dans les styles). Une seule
+        //  ligne — la première entrée de la liste, un soir ou une série au
+        //  même endroit : la date, le spectacle, la ville, l'heure. Elle
+        //  mène à la sienne plus bas (dlAller), comme la saison d'un regard.
+        //
+        //  Les lettres battent UNE fois, quand le tableau arrive à l'écran —
+        //  pas sous le rideau de l'ouverture. Le texte réel est dans chaque
+        //  bouton, en clair pour les lecteurs d'écran : les palettes sont
+        //  aria-hidden et ne disent jamais une lettre de passage. Mouvement
+        //  réduit, tableau déjà joué, ou données qui changent après coup :
+        //  les palettes sont posées d'emblée sur la bonne lettre.
+        const TD_LARGEURS = { date: 7, titre: 12, ville: 12, heure: 5 };
+        const TD_MOIS = ['JAN', 'FÉV', 'MARS', 'AVR', 'MAI', 'JUIN', 'JUIL', 'AOÛT', 'SEPT', 'OCT', 'NOV', 'DÉC'];
+        // Les jeux du tambour (voir tdPassage).
+        const TD_LETTRES = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', TD_CHIFFRES = '0123456789';
+        // Ce qu'on ne laisse pas pendre au bout d'un nom coupé : « Déville-lès ».
+        const TD_LIAISONS = /[\s-](?:LÈS|LES|LEZ|SUR|SOUS|EN|DE|DU|DES|LA|LE|ET|À|AU|AUX)$/;
+        let tdJoue = false, tdJeton = 0, tdCellules = [], tdIO = null;
+
+        const tdMaj = (t) => String(t || '').normalize('NFC').toLocaleUpperCase('fr-FR').replace(/\s+/g, ' ').trim();
+
+        // Tenir en n lettres : on coupe entre deux mots, jamais au milieu
+        // d'un mot, sans laisser pendre un « lès » ; un mot seul trop long
+        // perd sa fin derrière un point.
+        function tdCouper(texte, n) {
+            if (texte.length <= n) return texte;
+            let coupe = -1;
+            for (let i = n; i > 0; i--) if (texte[i] === ' ' || texte[i] === '-') { coupe = i; break; }
+            if (coupe < 1) return texte.slice(0, n - 1) + '.';
+            let t = texte.slice(0, coupe);
+            while (TD_LIAISONS.test(t)) t = t.replace(TD_LIAISONS, '');
+            return t;
+        }
+
+        // « Saint-Quentin » → « ST QUENTIN », seulement s'il le faut :
+        // « SAINT LÔ » tient en entier. Le trait d'union devient un blanc,
+        // comme sur les tableaux de gare : sur une palette, la charnière le
+        // coupait en deux et il se lisait « = ».
+        function tdVille(e) {
+            let v = tdMaj(placeOf(e.show));
+            if (v.length > TD_LARGEURS.ville) {
+                v = v.replace(/\bSAINTE-/g, 'STE-').replace(/\bSAINT-/g, 'ST-').replace(/\bGRAND-/g, 'GD-');
+            }
+            return tdCouper(v, TD_LARGEURS.ville).replace(/-/g, ' ');
+        }
+
+        // L'heure du premier soir, celle du public de préférence (une séance
+        // scolaire à 14h15 ne dit pas quand le public peut venir).
+        function tdSeance(e) {
+            const soir = e.perfs.filter(p => !e.debut || (p.jour && p.jour.iso === e.debut.iso));
+            return soir.find(p => !p.ecole && p.heure) || soir.find(p => p.heure) || null;
+        }
+
+        // « 19h00 » → « 19H00 ». Une heure qui n'en est pas une (« matin »)
+        // laisse la case vide : le texte en clair la dit.
+        function tdHeure(p) {
+            const m = p && String(p.heure).split('&')[0].trim().match(/^(\d{1,2})\s*h\s*(\d{2})?$/i);
+            return m ? `${m[1].padStart(2, '0')}H${m[2] || '00'}` : '';
+        }
+
+        // Ce que lit un lecteur d'écran, et ce qui fait le nom du bouton.
+        function tdEnClair(e) {
+            const quand = e.debut ? dlCap(dlDateEnLettres(e.jours)) : (e.perfs[0].dateLabel || 'Date à préciser');
+            const heures = [...new Set(e.perfs.map(p => String(p.heure || '').replace(/\s*&\s*/g, ' et ')).filter(Boolean))];
+            const scolaire = e.perfs.every(p => p.ecole)
+                ? (e.perfs.length > 1 ? ', séances scolaires' : ', séance scolaire') : '';
+            return `${quand}${heures.length ? `, ${heures.join(' et ')}` : ''} : ${e.titre}, ${e.show.location || placeOf(e.show)}${scolaire}`;
+        }
+
+        // Les palettes d'une colonne. `anime` : elles partent de blanc et
+        // portent leurs volets ; sinon elles sont posées sur leur lettre.
+        function tdPalettes(texte, n, anime) {
+            return [...texte.padEnd(n).slice(0, n)].map(ch => {
+                const vu = esc(anime ? ' ' : ch);
+                return `<span class="fl" data-c="${esc(ch)}"><span class="fl-h"><i>${vu}</i></span><span class="fl-b"><i>${vu}</i></span>`
+                    + (anime ? '<span class="fl-v1"><i></i></span><span class="fl-v2"><i></i></span>' : '')
+                    + '</span>';
+            }).join('');
+        }
+
+        function tdDonnees(e) {
+            const seance = tdSeance(e);
+            return {
+                k: e.k,
+                style: dlStyle(e.spectacle),
+                clair: tdEnClair(e),
+                cols: {
+                    date: e.debut ? `${String(e.debut.j).padStart(2, '0')} ${TD_MOIS[e.debut.m]}` : '',
+                    titre: tdCouper(tdMaj(e.spectacle.court || e.titre), TD_LARGEURS.titre).replace(/-/g, ' '),
+                    ville: tdVille(e),
+                    heure: tdHeure(seance)
+                }
+            };
+        }
+
+        const TD_INTITULES = { date: 'Date', titre: 'Spectacle', ville: 'Ville', heure: 'Heure' };
+        function tdLigne(d, anime) {
+            return `<button type="button" class="td-dep" data-dl-aller="${d.k}" style="${d.style}">`
+                + `<span class="sr-only">${esc(d.clair)}</span>`
+                + '<span class="td-ligne" aria-hidden="true">'
+                + Object.keys(TD_LARGEURS).map(c => `<span class="td-col ${c}"><span class="td-lib">${TD_INTITULES[c]}</span>`
+                    + `<span class="td-fl">${tdPalettes(d.cols[c], TD_LARGEURS[c], anime)}</span></span>`).join('')
+                + '</span></button>';
+        }
+
+        function tableauDesDeparts(entrees) {
+            const tableau = document.getElementById('dates-departs');
+            if (!tableau) return;
+            const lignes = entrees.slice(0, 1).map(tdDonnees);
+            if (!lignes.length) { tableau.hidden = true; return; }
+            // Rien n'a changé (un filtre retiré, un rangement changé, les
+            // données en direct identiques) : on rouvre le tableau tel quel,
+            // sans relancer les palettes.
+            const cle = JSON.stringify(lignes);
+            if (tableau.__cle === cle) { tableau.hidden = false; return; }
+            tableau.__cle = cle;
+            tdJeton++;   // un battement en cours s'arrête là
+            tableau.classList.remove('td-roule');
+
+            const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const anime = !tdJoue && !reduit && 'IntersectionObserver' in window
+                && typeof Element.prototype.animate === 'function';
+            tableau.innerHTML = '<div class="td-tete"><h3 class="td-sur" id="td-titre">La prochaine date</h3>'
+                + '<p class="td-nom" aria-hidden="true">Départs</p></div>'
+                + lignes.map(d => tdLigne(d, anime)).join('');
+            tableau.hidden = false;
+
+            tdCellules = [];
+            if (!anime) return;
+            tableau.querySelectorAll('.fl').forEach((el, k) => {
+                const [h, b, v1, v2] = el.children;
+                tdCellules.push({ el, h: h.firstChild, b: b.firstChild, v1, v2, cible: el.dataset.c, cur: ' ', k });
+            });
+            if (!tdIO) {
+                tdIO = new IntersectionObserver((vus) => {
+                    if (vus.some(v => v.isIntersecting)) tdLancer();
+                }, { threshold: 0.3 });
+                tdIO.observe(tableau);
+            }
+        }
+
+        const tdAlEcran = (el) => {
+            const r = el.getBoundingClientRect();
+            return r.height > 0 && r.bottom > 0 && r.top < window.innerHeight;
+        };
+
+        function tdLancer() {
+            if (tdJoue || !tdCellules.length) return;
+            // Sous le rideau de l'ouverture : on repassera quand il sera levé.
+            if (document.body.classList.contains('modal-open')) {
+                clearTimeout(tdLancer.attente);
+                tdLancer.attente = setTimeout(() => {
+                    const t = document.getElementById('dates-departs');
+                    if (t && tdAlEcran(t)) tdLancer();
+                }, 400);
+                return;
+            }
+            tdJoue = true;
+            if (tdIO) { tdIO.disconnect(); tdIO = null; }
+            const jeton = tdJeton;
+            // Les polices d'abord : une palette qui change de police en
+            // cours de route sauterait. Puis un temps pour que le regard se
+            // pose sur le tableau encore vide.
+            const pret = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+            pret.then(() => setTimeout(() => { if (jeton === tdJeton) tdDerouler(jeton); }, 250));
+        }
+
+        const tdPoser = (cl, ch) => { cl.cur = ch; cl.h.textContent = ch; cl.b.textContent = ch; };
+
+        // Un battement : le haut de l'ancienne lettre tombe, le bas de la
+        // nouvelle se pose. Derrière le volet qui tombe, le haut fixe montre
+        // déjà la nouvelle lettre ; le bas fixe garde l'ancienne jusqu'à ce
+        // que le second volet l'ait recouverte — ce volet reste posé
+        // (`fill`) le temps que le bas fixe change sous lui, sans quoi
+        // l'ancienne lettre reparaîtrait l'espace d'une image. Il reste donc
+        // à plat jusqu'au battement suivant, et ne reçoit la nouvelle lettre
+        // qu'au moment de se relever : écrite plus tôt, elle aurait paru sur
+        // la moitié basse avant que le haut ne soit tombé.
+        function tdBattre(cl, vers, jeton) {
+            const DUREE = 64;
+            cl.v1.firstChild.textContent = cl.cur;
+            cl.h.textContent = vers;
+            return cl.v1.animate([{ transform: 'rotateX(0deg)' }, { transform: 'rotateX(-90deg)' }],
+                { duration: DUREE, easing: 'ease-in' }).finished
+                .then(() => {
+                    if (jeton !== tdJeton) return;
+                    cl.v2.firstChild.textContent = vers;
+                    return cl.v2.animate([{ transform: 'rotateX(90deg)' }, { transform: 'rotateX(0deg)' }],
+                        { duration: DUREE, easing: 'ease-out', fill: 'forwards' }).finished;
+                })
+                .then(() => {
+                    if (jeton === tdJeton) { cl.cur = vers; cl.b.textContent = vers; }
+                });
+        }
+
+        // Les lettres de passage : trois à sept, prises dans le jeu de la
+        // palette juste avant la sienne — un chiffre roule parmi les
+        // chiffres, une lettre parmi les lettres, et une lettre accentuée
+        // passe par les lettres simples avant de se poser sur son accent
+        // (« É » : …C, D, É). La ponctuation tombe d'un coup.
+        function tdPassage(cible, k) {
+            const base = cible.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const jeu = /^\d$/.test(base) ? TD_CHIFFRES : (TD_LETTRES.includes(base) ? TD_LETTRES : '');
+            if (!jeu) return [cible];
+            const i = jeu.indexOf(base);
+            const suite = [];
+            for (let t = 3 + ((i * 7 + k) % 5); t >= 1; t--) suite.push(jeu[(i - t + jeu.length * 2) % jeu.length]);
+            suite.push(cible);
+            return suite;
+        }
+
+        async function tdRouler(cl, jeton) {
+            for (const ch of tdPassage(cl.cible, cl.k)) {
+                if (jeton !== tdJeton) return;
+                if (ch !== cl.cur) await tdBattre(cl, ch, jeton);
+            }
+        }
+
+        // Dans l'ordre de lecture, où que la mise en page ait rangé les
+        // colonnes : de gauche à droite, 22 ms d'une palette à l'autre, et
+        // d'un rang à l'autre du panneau de téléphone, environ 150 ms. Moins
+        // de deux secondes en tout. Une palette qu'on ne voit pas (le
+        // tableau caché par un autre onglet entre-temps) est posée sans
+        // battre. Quand la dernière
+        // palette est tombée — ou au bout de six secondes, quoi qu'il arrive
+        // (un onglet en arrière-plan ralentit les minuteries) —, tout est
+        // posé sur la bonne lettre et les volets rendent leurs calques.
+        function tdDerouler(jeton) {
+            const tableau = document.getElementById('dates-departs');
+            const battantes = [];
+            tdCellules.forEach(cl => {
+                if (!cl.el.offsetWidth) tdPoser(cl, cl.cible);
+                else if (cl.cible !== ' ') battantes.push(cl);
+            });
+            const finir = () => {
+                if (jeton !== tdJeton) return;
+                tdJeton++;
+                tableau.classList.remove('td-roule');
+                tdCellules.forEach(cl => {
+                    cl.v1.getAnimations().concat(cl.v2.getAnimations()).forEach(a => a.cancel());
+                    tdPoser(cl, cl.cible);
+                });
+            };
+            let restantes = battantes.length;
+            if (!restantes) { finir(); return; }
+            const boites = battantes.map(cl => cl.el.getBoundingClientRect());
+            const haut = Math.min(...boites.map(b => b.top)), gauche = Math.min(...boites.map(b => b.left));
+            tableau.classList.add('td-roule');
+            battantes.forEach((cl, i) => setTimeout(() => {
+                tdRouler(cl, jeton).catch(() => { }).then(() => { if (--restantes === 0) finir(); });
+            }, (boites[i].top - haut) * 3 + (boites[i].left - gauche) / (boites[i].width + 2) * 22));
+            setTimeout(finir, 6000);
         }
 
         // Le rangement choisi est retenu d'une visite à l'autre.
@@ -9011,6 +9548,7 @@
                 sommaire.innerHTML = html;
                 sommaire.hidden = !html;
             }
+            tableauDesDeparts(filtersActive() ? [] : entrees);
 
             // ── Archives : archives statiques + dates fraîchement passées ──
             const archivesContainer = document.getElementById('archived-seasons-container');
@@ -9938,9 +10476,6 @@
             placerPastille(activeTabButton, animate);
 
             if (TITRES_ONGLETS[pageId]) document.title = TITRES_ONGLETS[pageId];
-
-            const pdfBtn = document.getElementById('pdf-download-btn');
-            if (pdfBtn) pdfBtn.classList.toggle('invisible', pageId !== 'page_cv');
 
             // CADRAGE — la question se pose AVANT de replier l'en-tête, dont
             // le repli déplace le seuil d'une centaine de pixels.

@@ -374,6 +374,161 @@ function exige(condition, message) {
             await c.close();
         });
 
+        await verifie('le tableau des départs : la prochaine date seule, en palettes qui battent une fois puis se posent, et qui mènent à sa ligne — posé d’emblée en mouvement réduit', async () => {
+            // Une date fictive, choisie pour éprouver les règles du tableau :
+            // une ville trop longue (abrégée, coupée entre deux mots, sans
+            // trait d'union), et deux séances le même soir, dont la première
+            // est scolaire — l'heure affichée est celle du public.
+            const donnees = () => {
+                const d = new Date();
+                d.setDate(d.getDate() + 20);
+                const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                SHOW_DATA.upcoming = [{
+                    type: 'series', id: 'panel-verification-departs', title: 'Bérénice', city: 'Saint-Pierre-lès-Elbeuf',
+                    location: 'Théâtre de vérification, Saint-Pierre-lès-Elbeuf (76)', dateLabel: iso, shows: [
+                        { dateLabel: iso, icsDate: iso, time: '14h00', bookingUrl: '', isSchool: true },
+                        { dateLabel: iso, icsDate: iso, time: '20h30', bookingUrl: '', isSchool: false }
+                    ]
+                }, {
+                    type: 'single', title: 'Cléophène, d’après Rodogune', city: 'Falaise', location: 'Le Forum, Falaise (14)',
+                    dateLabel: 'plus tard', icsDate: '2099-01-01', time: '20h00', bookingUrl: '', isSchool: false
+                }];
+                renderDates();
+                return String(d.getDate()).padStart(2, '0');
+            };
+            const lire = (p) => p.evaluate(() => {
+                const t = document.getElementById('dates-departs');
+                const col = (c) => [...t.querySelectorAll(`.td-col.${c} .fl`)];
+                const vu = (c) => col(c).map((f) => f.querySelector('.fl-h i').textContent).join('');
+                const bas = (c) => col(c).map((f) => f.querySelector('.fl-b i').textContent).join('');
+                const cible = (c) => col(c).map((f) => f.dataset.c).join('');
+                const cols = ['date', 'titre', 'ville', 'heure'];
+                return {
+                    cache: t.hidden,
+                    lignes: t.querySelectorAll('.td-dep').length,
+                    cibles: cols.map(cible),
+                    vus: cols.map(vu),
+                    bas: cols.map(bas),
+                    roule: t.classList.contains('td-roule'),
+                    volets: t.querySelectorAll('.fl-v1').length,
+                    enVol: document.getAnimations().filter((a) => a.effect && a.effect.target && t.contains(a.effect.target)).length,
+                    clair: t.querySelector('.td-dep .sr-only')?.textContent || '',
+                    muet: t.querySelector('.td-ligne')?.getAttribute('aria-hidden'),
+                    carton: !!t.querySelector('.next-date-shine, [data-cal-prochaine], .next-date-reserver')
+                };
+            });
+
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForTimeout(300);
+            const jour = await p.evaluate(donnees);
+            // Tant que l'onglet Dates n'est pas ouvert, rien ne bat : les
+            // palettes attendent, blanches, d'être vues.
+            const avant = await lire(p);
+            exige(!avant.cache && avant.lignes === 1, `le tableau n’a pas une ligne et une seule : ${avant.lignes}`);
+            exige(avant.vus.join('').trim() === '' && !avant.roule, 'le tableau a battu avant d’être vu');
+            exige(avant.cibles[0].startsWith(jour + ' ') && /^\d\d [A-ZÉÛ]{3,4} ?$/.test(avant.cibles[0]),
+                `la date du tableau : « ${avant.cibles[0]} »`);
+            exige(avant.cibles.slice(1).join('|') === 'BÉRÉNICE    |ST PIERRE   |20H30',
+                `le spectacle, la ville abrégée ou l’heure du public : ${avant.cibles.slice(1).join('|')}`);
+            exige(/Bérénice/.test(avant.clair) && /14h00 et 20h30/.test(avant.clair) && /Saint-Pierre-lès-Elbeuf/.test(avant.clair)
+                && avant.muet === 'true', `le texte lu par un lecteur d’écran : « ${avant.clair} » (palettes aria-hidden : ${avant.muet})`);
+            exige(!avant.carton, 'le tableau porte le carton « Prochainement » (Réserver, agenda) : il ne doit être qu’au CV');
+
+            // L'onglet s'ouvre : les palettes passent par d'autres lettres,
+            // puis se posent toutes sur la bonne, et les volets s'arrêtent.
+            // À chaque image, tant que le volet du haut tombe, la moitié
+            // basse doit encore montrer l'ancienne lettre : la nouvelle n'y
+            // paraît qu'avec le volet du bas (ce qui voit se relire le volet
+            // resté à plat, écrit trop tôt, lettre nouvelle sous lettre
+            // ancienne).
+            await p.evaluate(() => {
+                const o = window.__tdImages = { images: 0, vues: 0, fautes: 0 };
+                const face = (el) => getComputedStyle(el).visibility === 'visible' && new DOMMatrix(getComputedStyle(el).transform).m22 > 0.02;
+                const image = () => {
+                    o.images++;
+                    document.querySelectorAll('#dates-departs .fl').forEach((f) => {
+                        if (f.children.length !== 4) return;
+                        const [, b, v1, v2] = f.children;
+                        if (!face(v1)) return;
+                        o.vues++;
+                        if ((face(v2) ? v2 : b).textContent !== v1.textContent) o.fautes++;
+                    });
+                    if (!o.fin) requestAnimationFrame(image);
+                };
+                requestAnimationFrame(image);
+            });
+            await p.click('#tab-page_dates');
+            let passage = false, roule = false, fin = null;
+            for (let i = 0; i < 160 && !fin; i++) {
+                await p.waitForTimeout(50);
+                const e = await lire(p);
+                roule = roule || e.roule;
+                passage = passage || e.vus.some((v, n) => v.trim() && v !== e.cibles[n]);
+                if (!e.roule && e.vus.join('|') === e.cibles.join('|')) fin = e;
+            }
+            exige(roule && passage, `le tableau n’a pas battu (volets : ${roule}, lettres de passage : ${passage})`);
+            exige(fin, 'les palettes ne se sont pas posées en huit secondes');
+            const images = await p.evaluate(() => { window.__tdImages.fin = true; return window.__tdImages; });
+            exige(images.vues > 0 && !images.fautes,
+                `la moitié basse change de lettre avant que le haut ne soit tombé : ${images.fautes} fois sur ${images.vues}`);
+            exige(fin.bas.join('|') === fin.cibles.join('|') && !fin.enVol,
+                `une palette reste à moitié tournée : ${fin.bas.join('|')} (${fin.enVol} animation(s) en cours)`);
+
+            // Il ne rejoue pas : une recherche le masque, l'effacer le rend tel quel.
+            await p.evaluate(() => { dateFilters.q = 'falaise'; renderDates(); dateFilters.q = ''; renderDates(); });
+            const rendu = await lire(p);
+            exige(!rendu.cache && !rendu.roule && rendu.vus.join('|') === rendu.cibles.join('|'), 'le tableau rejoue ou disparaît après une recherche');
+
+            // La ligne mène à sa date, plus bas.
+            await p.click('#dates-departs .td-dep');
+            await p.waitForTimeout(400);
+            exige(await p.evaluate(() => document.activeElement?.id === 'dl-e0' && document.getElementById('dl-e0').classList.contains('dl-eclaire')),
+                'la ligne du tableau ne mène pas à sa date');
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+
+            // Mouvement réduit : les palettes sont posées d'emblée, sans volets.
+            const r = await visiteur({ viewport: { width: 1280, height: 860 }, reducedMotion: 'reduce' });
+            const q = await r.newPage();
+            await q.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await q.waitForTimeout(300);
+            const calme = await lire(q);
+            exige(calme.lignes === 1 && calme.volets === 0 && !calme.roule && calme.vus.join('|') === calme.cibles.join('|')
+                && calme.cibles.join('').trim() !== '', 'en mouvement réduit, le tableau n’est pas posé d’emblée');
+            await r.close();
+        });
+
+        await verifie('« Télécharger le CV » : un seul lien, après le carton « Prochainement »', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            const p = await c.newPage();
+            await p.goto(base + '/', { waitUntil: 'load' });
+            const avant = async () => p.evaluate(() => {
+                const liens = document.querySelectorAll('a[href$="cv-adrien-vada.pdf"]');
+                const carton = document.getElementById('next-date-banner');
+                const lien = liens[0];
+                return {
+                    n: liens.length,
+                    apres: !!lien && !carton.hidden && !!(carton.compareDocumentPosition(lien) & Node.DOCUMENT_POSITION_FOLLOWING)
+                        && carton.getBoundingClientRect().bottom <= lien.getBoundingClientRect().top,
+                    visible: !!lien && lien.getBoundingClientRect().height > 0,
+                    detail: lien?.getAttribute('data-track-detail')
+                };
+            });
+            const tel = await avant();
+            exige(tel.n === 1, `${tel.n} lien(s) « Télécharger le CV » au lieu d’un`);
+            exige(tel.apres && tel.visible, 'sur téléphone, « Télécharger le CV » ne vient pas après le carton « Prochainement »');
+            exige(tel.detail === 'mobile', `la mesure ne dit pas « mobile » sur téléphone : ${tel.detail}`);
+            await p.setViewportSize({ width: 1280, height: 860 });
+            await p.waitForTimeout(200);
+            const bureau = await avant();
+            exige(bureau.apres && bureau.visible, 'sur ordinateur, « Télécharger le CV » ne vient pas après le carton « Prochainement »');
+            exige(bureau.detail === 'bureau', `la mesure ne dit pas « bureau » sur ordinateur : ${bureau.detail}`);
+            await c.close();
+        });
+
         await verifie('les pastilles ▶ des bandes-annonces ne sont pas imprimées', async () => {
             const c = await visiteur();
             const p = await c.newPage();

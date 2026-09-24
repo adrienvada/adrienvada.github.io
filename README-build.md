@@ -63,6 +63,19 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   représentation annoncée aux moteurs ; le carton « Prochainement » en tête
   du CV, avec son lien et son agenda, et nulle part dans l'onglet Dates — sur
   une saison fictive, elle aussi ;
+- le tableau des départs, en tête de l'onglet Dates : la prochaine date et
+  elle seule (la ville abrégée sans trait d'union, l'heure du public plutôt
+  que celle d'une séance scolaire), des palettes muettes pour les lecteurs
+  d'écran et le texte en clair dans le bouton ; rien ne bat avant que
+  l'onglet soit ouvert, puis les palettes passent par d'autres lettres et se
+  posent toutes sur la bonne, sans volet resté à mi-course — et, observé
+  image par image, la moitié basse ne prend jamais la nouvelle lettre avant
+  que le haut soit tombé ; une recherche ne
+  le fait pas rejouer ; la ligne mène à sa date ; en mouvement réduit, il est
+  posé d'emblée ;
+- « Télécharger le CV » : un seul lien, sous le carton « Prochainement », sur
+  téléphone comme sur ordinateur, et la mesure qui dit toujours `mobile` ou
+  `bureau` ;
 - les pastilles ▶ ne s'impriment pas ;
 - la ligne à vignette du CV : chaque spectacle et chaque film ont leur
   vignette, qui dit l'année et l'état de la ligne (cachée aux lecteurs
@@ -602,7 +615,7 @@ l'ordre (`async = false`) sans retenir la lecture de la page.
 
 Le même garde pose `modal-open` sur le `<body>` dès cet instant : la page
 ne défile pas sous le rideau (le verrou tient sur `<html>`, la boîte qui
-défile), et les animations du CV (phare et tableau des départs du bandeau)
+défile), et les animations du CV (phare et volets du carton « Prochainement »)
 attendent qu'il se lève pour jouer — elles ne jouent qu'une fois.
 
 Trois filets restent en place : sans JavaScript, un `<noscript>` escamote le
@@ -751,6 +764,10 @@ manipulations.
 Or le métier fait circuler des CV en pièce jointe. Ce que reçoit un directeur
 de casting doit s'appeler `cv-adrien-vada.pdf`, et s'obtenir d'un seul geste.
 Le bouton est donc devenu un `<a download>` qui pointe sur un vrai fichier.
+Il n'y en a qu'un, **sous le carton « Prochainement »**, sur téléphone comme
+sur ordinateur : on lit d'abord où Adrien joue, puis on emporte le CV (il
+était auparavant dans la barre d'onglets sur ordinateur, et au-dessus du
+carton sur téléphone).
 
 ```bash
 node build/generer-cv-pdf.js
@@ -1065,10 +1082,27 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   portent le même code couleur**, mêlé d'un quart de la couleur du texte : une
   lettre de 11 px doit garder 4,5:1, là où un trait se contente de 3:1 (5,1:1
   au pire, dans les deux thèmes).
+- **Le tableau des départs**, tout en haut (`tableauDesDeparts()`) : la
+  prochaine date comme sur un tableau de gare — la date, le spectacle, la
+  ville, l'heure, en palettes noires. **Une seule ligne**, la première entrée
+  de la liste ; elle mène à sa date plus bas. Sur ordinateur, une ligne de
+  trente-six palettes ; sur téléphone, un panneau de trois rangs (la date et
+  l'heure, le spectacle, la ville), pour des lettres deux fois plus grandes.
+  Ce qui ne tient pas est abrégé sans rien inventer : « Saint- » devient
+  « ST », un nom trop long est coupé entre deux mots (« ST PIERRE » pour
+  Saint-Pierre-lès-Elbeuf), le trait d'union devient un blanc — la charnière
+  d'une palette le coupait en deux. L'heure est celle du public quand une
+  séance scolaire la précède. Le texte complet (la date en lettres, toutes
+  les heures, le lieu exact) est dans le bouton, pour les lecteurs d'écran ;
+  les palettes leur sont cachées. Les lettres battent **une fois**, quand le
+  tableau arrive à l'écran (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) ;
+  en mouvement réduit, il est posé d'emblée. Il se retire pendant une
+  recherche, comme le sommaire.
 - **Pas de carton « Prochainement » ici.** Il n'est qu'en tête du CV
   (`renderNextDate()`) : le jour, l'heure et le lieu, le nom du spectacle qui
   mène à sa page, « Réserver » et l'agenda ; sa date mène à l'onglet Dates.
-  Dans l'onglet Dates, la liste commence déjà par la prochaine représentation.
+  Dans l'onglet Dates, la prochaine représentation est sur le tableau des
+  départs, et la liste commence par elle.
 - **Le sommaire**, en tête de la carte : la saison d'un regard — les
   spectacles en lignes, les mois en colonnes. Il ne filtre rien : un mois, un
   spectacle ou un rond **mènent** aux lignes qu'ils résument. Il se retire
@@ -1564,10 +1598,26 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
   la cible (`--ambiance-cible`) change une fois par geste, et seuls ses deux
   consommateurs — la lueur et la barre collée — glissent vers elle. Survoler
   une ligne recalculait les 2 276 éléments du document à chaque image.
-- **Le tableau des départs.** Le carton « Prochainement » bat une fois comme
-  un tableau de gare quand il arrive à l'écran (`tableauDesDeparts`) — après
-  le rideau, les polices chargées. Le texte d'origine est rendu tel quel
-  ensuite.
+- **Le tableau des départs** (onglet Dates, `tableauDesDeparts`). La
+  prochaine date, en palettes de gare : chaque palette est faite de quatre
+  moitiés — le haut et le bas fixes, et deux volets qui battent en `rotateX`
+  (Web Animations API) : le haut de l'ancienne lettre tombe, le bas de la
+  nouvelle se pose. Chaque palette passe par trois à sept lettres de son jeu
+  (un chiffre parmi les chiffres, une lettre parmi les lettres ; une lettre
+  accentuée se pose sur son accent en dernier), dans l'ordre de lecture,
+  22 ms d'une palette à l'autre : moins de deux secondes. Une seule fois, quand
+  le tableau arrive à l'écran, après le rideau et les polices. Pendant le
+  battement (classe `td-roule`), les volets restent sur leur calque, repliés
+  hors de vue entre deux battements, et chaque palette est isolée
+  (`contain: strict`) : mesuré sur un téléphone lent simulé (processeur
+  ralenti six fois), l'image médiane reste à 60 par seconde pendant le
+  battement. Des données
+  qui changent en cours de route (la base en direct) posent aussitôt les
+  bonnes lettres.
+- **Les volets du carton** (CV, `voletsDuCarton`). Le carton « Prochainement »
+  en fait l'écho, plus léger : une fois, quand il arrive à l'écran, le nom du
+  spectacle et la ligne de la date battent lettre à lettre, puis le texte
+  d'origine est rendu tel quel.
 - **La servante** (`404.html`). La page perdue est un plateau vide où la
   servante reste allumée ; l'ampoule hésite deux fois puis se tient, le
   pointeur éclaire la scène comme une lampe de poche. Thème clair compris.
@@ -1981,7 +2031,8 @@ Ce qu'on a **fait** — les gestes qui sortent du site, et les seuls qui disent
 qu'un directeur de casting a fini de regarder :
 
 `contact_mail` (`en-tête` ou `pied` — l'e-mail figure deux fois, et l'on veut
-savoir lequel travaille), `cv_pdf` (`bureau` ou `mobile`), `fiche_pro`
+savoir lequel travaille), `cv_pdf` (`bureau` ou `mobile` : un seul lien,
+dont le détail suit la largeur de l'écran, 768 px), `fiche_pro`
 (`agences-artistiques`, `filmmakers`), `reseau` (`instagram`, `linkedin`,
 `spotify`), `demo_youtube`, `date_agenda`, `date_booking`, `banner_next_date`.
 
