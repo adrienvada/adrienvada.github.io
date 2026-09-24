@@ -49,7 +49,8 @@
  *    · la frise du CV, comme le prototype de l'audit : le fil d'or à
  *      gauche, un point par spectacle posé dessus, les lignes voilées tant
  *      que le fil ne les a pas atteintes, rien de coloré à droite — avec
- *      les deux pilotes, et tout posé en mouvement réduit ;
+ *      les deux pilotes, et tout posé en mouvement réduit ; le doigt qui
+ *      fait défiler n'y dévoile rien, la souris et le clavier si ;
  *    · la page 404 ;
  *    · le sitemap, qui doit annoncer toutes les pages spectacle.
  *
@@ -1070,7 +1071,7 @@ function exige(condition, message) {
         // quand la ligne de lecture l'atteint ; les lignes que le fil n'a
         // pas encore atteintes sont voilées (transparence). Plus rien de
         // coloré ne court à droite : ni filet, ni lavis au passage.
-        await verifie('la frise du CV comme le prototype : le fil d’or à gauche, un point par spectacle posé dessus, les lignes voilées tant que le fil ne les a pas atteintes, rien de coloré à droite — avec les deux pilotes, sans horloge, tout posé en mouvement réduit', async () => {
+        await verifie('la frise du CV comme le prototype : le fil d’or à gauche, un point par spectacle posé dessus, les lignes voilées tant que le fil ne les a pas atteintes, rien de coloré à droite — avec les deux pilotes, sans horloge, tout posé en mouvement réduit ; le doigt qui fait défiler ne dévoile rien, la souris et le clavier si', async () => {
             for (const [repli, reduit] of [[false, false], [true, false], [false, true]]) {
                 const c = await visiteur({ viewport: { width: 1280, height: 860 }, reducedMotion: reduit ? 'reduce' : 'no-preference' });
                 const p = await c.newPage();
@@ -1119,6 +1120,48 @@ function exige(condition, message) {
                 }
                 exige(!etat.horloge, 'la guirlande à horloge est revenue');
                 exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+
+            // LE DOIGT QUI FAIT DÉFILER NE DÉVOILE RIEN. Au téléphone, on pose
+            // le doigt sur une ligne pour défiler, et le navigateur garde le
+            // survol de la dernière ligne touchée : elle restait pleine, son
+            // point posé, avant que le fil l'atteigne. À la souris, la ligne
+            // pointée est pleine ; au clavier aussi. Le point, lui, n'attend
+            // que le fil.
+            for (const [appareil, options] of [
+                ['au téléphone', { viewport: { width: 412, height: 839 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }],
+                ['à la souris', { viewport: { width: 1280, height: 860 } }]
+            ]) {
+                const c = await visiteur(options);
+                const p = await c.newPage();
+                await p.goto(base + '/', { waitUntil: 'load' });
+                await p.waitForTimeout(600);
+                // Le fil au milieu de la 2e ligne : la 6e est voilée, sans point.
+                await p.evaluate(() => {
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    const r = document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[1].getBoundingClientRect();
+                    window.scrollTo(0, r.top + r.height / 2 + scrollY - innerHeight * 0.5);
+                });
+                await p.waitForTimeout(300);
+                const lire = () => p.evaluate(() => {
+                    const li = document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[5];
+                    const t = getComputedStyle(li, '::before').transform;
+                    return { voile: +getComputedStyle(li.querySelector('.cv-row-toggle')).opacity, point: t === 'none' ? 1 : +(t.match(/matrix\(([-\d.e]+)/) || [0, NaN])[1] };
+                });
+                await p.locator('#cv-theatre-list > li.cv-has-universe').nth(5).locator('.cv-vignette').hover();
+                await p.waitForTimeout(250);
+                const survol = await lire();
+                if (options.isMobile) exige(survol.voile < 0.5, `${appareil}, une ligne touchée avant le fil s’allume (${survol.voile})`);
+                else exige(survol.voile > 0.99, `${appareil}, la ligne pointée reste voilée (${survol.voile})`);
+                exige(survol.point === 0, `${appareil}, le point d’une ligne désignée éclôt avant le fil (× ${survol.point})`);
+                // Au clavier : depuis la ligne d'après, Maj+Tab.
+                await p.mouse.move(1, 1);
+                await p.evaluate(() => document.querySelectorAll('#cv-theatre-list > li.cv-has-universe .cv-row-toggle')[6].focus({ preventScroll: true }));
+                await p.keyboard.press('Shift+Tab');
+                await p.waitForTimeout(250);
+                const clavier = await lire();
+                exige(clavier.voile > 0.99, `${appareil}, la ligne atteinte au clavier reste voilée (${clavier.voile})`);
                 await c.close();
             }
         });

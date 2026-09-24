@@ -117,7 +117,9 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   fil d'or à gauche de la liste, un point rond par spectacle centré dessus ;
   une ligne déjà lue est pleine avec son point, une ligne à venir voilée et
   sans point ; aucun lavis ne passe plus à droite ; tout est posé en mouvement
-  réduit, et la guirlande à horloge n'est pas revenue ;
+  réduit, et la guirlande à horloge n'est pas revenue ; au téléphone, une
+  ligne touchée avant le fil (le survol que garde le navigateur) reste voilée,
+  sans point ; à la souris et au clavier, elle est pleine ;
 - la page 404 : son titre, son retour, sa lampe, sans erreur ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
@@ -1648,8 +1650,11 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
   dans la couleur du spectacle éclôt quand elle l'atteint (× 1,3, puis il se
   pose) ; et le fil **découvre** les lignes : chacune reste voilée (opacité
   .38) tant qu'il ne l'a pas atteinte, et elle est pleine quand la pointe du
-  fil touche son haut. Voilée, jamais effacée : tout s'y lit, et le survol, le
-  doigt ou le clavier la rendent pleine à l'instant. Rien de coloré ne court
+  fil touche son haut. Voilée, jamais effacée : tout s'y lit, et la souris,
+  le clavier ou le murmure la rendent pleine à l'instant — **pas le doigt qui
+  fait défiler** : le téléphone garde le survol de la dernière ligne touchée,
+  qui restait pleine avant que le fil l'atteigne. Le point ne répond qu'au
+  fil. Rien de coloré ne court
   plus à droite — ni filet, ni lavis au passage (le lavis ne répond plus qu'à
   la souris et au doigt) ; le halo des vignettes « tournée » et « création »
   s'allume avec le point. Tout est lié au défilement — plus d'horloge, donc

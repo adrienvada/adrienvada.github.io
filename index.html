@@ -2637,20 +2637,14 @@
             pointer-events: none;
         }
 
-        .cv-has-universe:hover::before,
-        .cv-has-universe:focus-within::before {
-            animation: none;
-        }
+        /* Le point ne répond qu'au fil : ni au survol, ni au doigt, ni au
+           clavier. Il dit « le fil est passé ici », rien d'autre. */
 
         /*  3. L'ÉTAT PRESSÉ. Au doigt, il n'y a pas de survol : sans cette
                règle, une ligne touchée ne répondait rien jusqu'à l'ouverture
                du panneau. On reprend l'asymétrie du site — enfoncement quasi
                immédiat, relâchement qui s'étire — pour que la ligne réponde
                comme une matière. */
-        .cv-has-universe:has(.cv-row-toggle:active)::before {
-            animation: none;
-        }
-
         .cv-has-universe .cv-row-toggle:active .cv-chevron {
             transform: rotate(-45deg) translateX(3px);
             opacity: 1;
@@ -2875,8 +2869,8 @@
                sur les 15 % d'écran qui précèdent la ligne de lecture, et
                elle est pleine quand la pointe du fil touche son haut
                (.cv-row-toggle, cv-decouverte). Voilée, jamais effacée :
-               tout s'y lit encore, et le survol, le doigt ou le clavier la
-               rendent pleine à l'instant.
+               tout s'y lit encore, et la souris, le clavier ou le murmure la
+               rendent pleine à l'instant — pas le doigt qui fait défiler.
            Rien de coloré ne court plus à droite des lignes : ni filet, ni
            lavis au passage (il ne répond plus qu'à la souris et au doigt).
            C'est le prototype de l'audit, « La frise qui s'allume ».
@@ -3080,16 +3074,23 @@
             }
         }
 
-        /* DÉSIGNÉE, LA LIGNE EST PLEINE à l'instant : on ne survole, ne
-           touche, n'atteint au clavier ni n'ouvre le murmure d'une ligne
-           encore voilée. Rendue, l'animation reprend où en est le
+        /* DÉSIGNÉE, LA LIGNE EST PLEINE à l'instant — quand on la désigne
+           vraiment : atteinte au clavier, pointée à la souris, ou le
+           murmure ouvert par un appui long. PAS AU SIMPLE TOUCHER : au
+           téléphone, on pose le doigt sur une ligne pour faire défiler, et
+           le navigateur garde le survol de la dernière ligne touchée. Elle
+           s'allumait sous le doigt et restait pleine, son point posé, avant
+           que le fil l'atteigne. Rendue, l'animation reprend où en est le
            défilement. */
-        .cv-has-universe:hover .cv-row-toggle,
-        .cv-has-universe:focus-within .cv-row-toggle,
-        .cv-has-universe:has(.cv-row-toggle:active) .cv-row-toggle,
-        .cv-item.is-pressed .cv-row-toggle,
+        .cv-has-universe .cv-row-toggle:focus-visible,
         .cv-item.is-whispering .cv-row-toggle {
             animation: none;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .cv-has-universe:hover .cv-row-toggle {
+                animation: none;
+            }
         }
 
         /* Au doigt, la ligne touchée s'allume à la CRÊTE DU LAVIS — la
