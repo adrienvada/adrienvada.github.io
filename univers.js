@@ -1404,11 +1404,217 @@ const SHOW_UNIVERSES = {
         }
     }
 
+    // ── LA PHOTO DANS LA LETTRE ────────────────────────────────────────
+    //  Au bout du travelling, le titre se pose et DÉTOURE LA PHOTO du
+    //  spectacle : elle paraît dans ses lettres, en pleine lumière, sur la
+    //  salle. Le récit s'écrit dessous ; puis une lettre — la « porte » —
+    //  grandit jusqu'à ce que la photo remplisse l'écran, et l'on entre
+    //  dans le spectacle (plages --of-lettre-* et --of-zoom-*, voir
+    //  tempoOuverture dans univers-montage.js).
+    //
+    //  C'EST UN CALQUE SVG POSÉ SUR LE TITRE, pas le titre lui-même : la
+    //  photo (<image>) n'y paraît qu'à travers un masque fait des lettres
+    //  du titre, placées une à une là où la mise en page a posé chacune
+    //  (offsetLeft/offsetTop, qui ignorent la perspective de la scène —
+    //  voir position). Le vrai titre reste dessous, du texte, lu par les
+    //  lecteurs d'écran et les moteurs ; le calque est décoratif. Un trait
+    //  d'un pixel et demi autour de chaque lettre du masque couvre les
+    //  écarts d'arrondi entre les deux.
+    //
+    //  LA PORTE est la lettre au trait le plus épais près du milieu du
+    //  titre : on dessine chaque lettre dans un canevas et l'on cherche le
+    //  point de son encre le plus loin de tout bord (une transformée de
+    //  distance). Le zoom se fait autour de ce point, jusqu'à ce que
+    //  l'écran entier tienne dans l'encre de la lettre (--lettre-z) : au
+    //  bout, il n'y a plus que la photo.
+    //
+    //  Refait à chaque changement de largeur, comme l'écriture à la
+    //  lumière. Rien à chaque image : c'est la régie qui fait avancer la
+    //  lettre. En mouvement réduit, le titre détoure la photo, sans zoom.
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    let lettres = 0;
+
+    function porteDe(car, police) {
+        const F = 96, pad = 8;
+        const c = document.createElement('canvas');
+        const ctx = c.getContext('2d', { willReadFrequently: true });
+        ctx.font = `${police.style} ${police.weight} ${F}px ${police.family}`;
+        const m = ctx.measureText(car);
+        const w = Math.ceil(m.width) + pad * 2, h = Math.ceil(F * 1.4) + pad * 2;
+        if (w < 4 || h < 4) return null;
+        c.width = w; c.height = h;
+        ctx.font = `${police.style} ${police.weight} ${F}px ${police.family}`;
+        ctx.fillStyle = '#fff';
+        const base = pad + F * 1.05;
+        ctx.fillText(car, pad, base);
+        const px = ctx.getImageData(0, 0, w, h).data;
+        // Transformée de distance (chanfrein 3-4), en deux passes.
+        const d = new Float32Array(w * h);
+        const GRAND = 1e6;
+        for (let i = 0; i < w * h; i++) d[i] = px[i * 4 + 3] > 127 ? GRAND : 0;
+        for (let y = 1; y < h; y++) for (let x = 1; x < w - 1; x++) {
+            const i = y * w + x;
+            if (!d[i]) continue;
+            d[i] = Math.min(d[i], d[i - 1] + 3, d[i - w] + 3, d[i - w - 1] + 4, d[i - w + 1] + 4);
+        }
+        for (let y = h - 2; y >= 0; y--) for (let x = w - 2; x >= 1; x--) {
+            const i = y * w + x;
+            if (!d[i]) continue;
+            d[i] = Math.min(d[i], d[i + 1] + 3, d[i + w] + 3, d[i + w + 1] + 4, d[i + w - 1] + 4);
+        }
+        // UN POINT QUI RESTE DANS L'ENCRE MÊME DÉCALÉ. Le canevas et la page
+        // ne posent pas la lettre au pixel près (l'arrondi de la ligne de
+        // base, surtout) : un point pris à la jonction de deux traits
+        // tombait, sur la page, deux pixels à côté, au bord du trait — et la
+        // lettre ouverte laissait un pan d'écran sans photo. On retient donc
+        // le point dont le PIRE voisin, à k pixels autour, est encore le
+        // plus loin d'un bord.
+        const k = 4, tmp = new Float32Array(w * h);
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+            let m = Infinity;
+            for (let j = Math.max(0, x - k); j <= Math.min(w - 1, x + k); j++) m = Math.min(m, d[y * w + j]);
+            tmp[y * w + x] = m;
+        }
+        let best = 0, bx = 0, by = 0;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+            let m = Infinity;
+            for (let j = Math.max(0, y - k); j <= Math.min(h - 1, y + k); j++) m = Math.min(m, tmp[j * w + x]);
+            if (m > best) { best = m; bx = x; by = y; }
+        }
+        if (best <= 3) return null;
+        // En fractions de la taille de la police, depuis l'origine du glyphe
+        // (le bord gauche de la lettre, sur la ligne de base). Le rayon est
+        // celui qui reste sûr : le pire voisin, moins le décalage possible.
+        return { r: Math.max(1, best / 3 - k) / F, x: (bx - pad) / F, y: (by - base) / F };
+    }
+
+    function detourerLeTitre(zone) {
+        const scene = zone.querySelector('.u-ouverture');
+        const wrap = scene && scene.querySelector('.u-hero-wrap');
+        const titre = wrap && wrap.querySelector('.u-title');
+        const fond = wrap && wrap.querySelector('.u-hero-fond img');
+        if (!titre || !fond) return;   // sans photo de couverture, rien à détourer
+        if (!fond.complete || !fond.naturalWidth) {
+            fond.addEventListener('load', () => { if (isOpen) detourerLeTitre(zone); }, { once: true });
+            return;
+        }
+        wrap.querySelector(':scope > .u-lettre')?.remove();
+        const W = wrap.offsetWidth, H = wrap.offsetHeight;
+        const chars = [...titre.querySelectorAll('.u-ch')];
+        if (!W || !H || !chars.length || !titre.offsetWidth) return;
+
+        const [wx, wy] = position(wrap);
+        const cs = getComputedStyle(titre);
+        const taille = parseFloat(cs.fontSize) || 48;
+        const police = { family: cs.fontFamily, weight: cs.fontWeight, style: cs.fontStyle };
+
+        // La ligne de base, dans la boîte d'une lettre : une sonde posée
+        // dessus, sans taille.
+        const sonde = document.createElement('span');
+        sonde.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+        chars[0].appendChild(sonde);
+        const baseline = position(sonde)[1] - position(chars[0])[1];
+        sonde.remove();
+
+        const n = ++lettres;
+        const svg = document.createElementNS(SVGNS, 'svg');
+        svg.setAttribute('class', 'u-lettre rg-k');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+        svg.setAttribute('width', W);
+        svg.setAttribute('height', H);
+        const masque = document.createElementNS(SVGNS, 'mask');
+        masque.id = `u-lettre-${n}`;
+        masque.setAttribute('maskUnits', 'userSpaceOnUse');
+        masque.setAttribute('x', -W * 200); masque.setAttribute('y', -H * 200);
+        masque.setAttribute('width', W * 401); masque.setAttribute('height', H * 401);
+        const mot = document.createElementNS(SVGNS, 'g');
+        mot.setAttribute('class', 'u-lettre-mot rg-k');
+        mot.setAttribute('fill', '#fff');
+        mot.setAttribute('stroke', '#fff');
+        mot.setAttribute('stroke-width', '1.5');
+        mot.setAttribute('stroke-linejoin', 'round');
+
+        // Les lettres, et la porte.
+        const cx = W / 2, cy = H / 2;
+        let porte = null;
+        chars.forEach((ch) => {
+            const car = ch.textContent;
+            if (!car.trim()) return;
+            const [x, y] = position(ch);
+            const gx = x - wx, gy = y - wy + baseline;
+            const t = document.createElementNS(SVGNS, 'text');
+            t.setAttribute('x', gx.toFixed(2));
+            t.setAttribute('y', gy.toFixed(2));
+            t.setAttribute('font-family', police.family);
+            t.setAttribute('font-weight', police.weight);
+            t.setAttribute('font-size', taille);
+            t.textContent = car;
+            mot.appendChild(t);
+            const p = porteDe(car, police);
+            if (!p) return;
+            const px = gx + p.x * taille, py = gy + p.y * taille, r = p.r * taille;
+            // Un trait épais, près du milieu de l'écran.
+            const score = r / (1 + Math.hypot(px - cx, py - cy) / Math.max(W, H));
+            if (!porte || score > porte.score) porte = { x: px, y: py, r, score };
+        });
+        if (!porte) return;
+        // Jusqu'où grandir : que l'écran entier tienne dans l'encre de la
+        // porte, avec de la marge.
+        const loin = Math.max(Math.hypot(porte.x, porte.y), Math.hypot(W - porte.x, porte.y),
+            Math.hypot(porte.x, H - porte.y), Math.hypot(W - porte.x, H - porte.y));
+        // Au-delà de cent vingt fois, le navigateur cesse de dessiner la
+        // lettre (un glyphe de plusieurs milliers de pixels) : le zoom s'y
+        // arrête, et la photo entière prend le relais (voir plus bas).
+        const z = Math.min(120, Math.max(12, loin / (porte.r * 0.8)));
+        mot.style.transformOrigin = `${porte.x.toFixed(1)}px ${porte.y.toFixed(1)}px`;
+        svg.style.setProperty('--lettre-z', z.toFixed(1));
+        const fondNoir = document.createElementNS(SVGNS, 'rect');
+        fondNoir.setAttribute('x', -W * 200); fondNoir.setAttribute('y', -H * 200);
+        fondNoir.setAttribute('width', W * 401); fondNoir.setAttribute('height', H * 401);
+        fondNoir.setAttribute('fill', '#000');
+        masque.append(fondNoir, mot);
+
+        // La photo, cadrée comme le fond du titre (object-fit: cover et son
+        // object-position), sur tout l'écran de la scène.
+        const nw = fond.naturalWidth, nh = fond.naturalHeight;
+        const k = Math.max(W / nw, H / nh);
+        const iw = nw * k, ih = nh * k;
+        const op = getComputedStyle(fond).objectPosition.split(/\s+/);
+        const cadre = (v, libre) => (/%$/.test(v) ? parseFloat(v) / 100 : 0.5) * libre;
+        const image = document.createElementNS(SVGNS, 'image');
+        image.setAttribute('class', 'u-lettre-photo');
+        image.setAttribute('href', fond.currentSrc || fond.src);
+        image.setAttribute('x', cadre(op[0] || '50%', W - iw).toFixed(1));
+        image.setAttribute('y', cadre(op[1] || '50%', H - ih).toFixed(1));
+        image.setAttribute('width', iw.toFixed(1));
+        image.setAttribute('height', ih.toFixed(1));
+        image.setAttribute('preserveAspectRatio', 'none');
+        const g = document.createElementNS(SVGNS, 'g');
+        g.setAttribute('mask', `url(#${masque.id})`);
+        g.appendChild(image);
+        // LA PHOTO ENTIÈRE, au bout du zoom : quelle que soit la lettre, la
+        // scène finit sur la photo, plein écran — sans pan de salle oublié
+        // au bord d'un trait.
+        const plein = image.cloneNode();
+        plein.setAttribute('class', 'u-lettre-plein rg-k');
+        const defs = document.createElementNS(SVGNS, 'defs');
+        defs.appendChild(masque);
+        svg.append(defs, g, plein);
+        wrap.appendChild(svg);
+        scene.classList.add('a-lettre');
+    }
+
     // Les lignes dépendent de la largeur : on les refait quand elle change.
     let reecriture = 0;
     function reecrireALaLumiere() {
         clearTimeout(reecriture);
-        reecriture = setTimeout(() => { if (isOpen && overlay) ecrireALaLumiere(overlay); }, 180);
+        reecriture = setTimeout(() => {
+            if (!isOpen || !overlay) return;
+            ecrireALaLumiere(overlay);
+            detourerLeTitre(overlay);
+        }, 180);
     }
 
     // ── LE TOP LUMIÈRE ─────────────────────────────────────────────────
@@ -1462,7 +1668,11 @@ const SHOW_UNIVERSES = {
         guetterAllumage(overlay);
         // Les lignes se mesurent sur la mise en page finale : polices
         // arrivées, et une image plus tard, le temps que tout se pose.
-        const mesurer = () => requestAnimationFrame(() => { if (isOpen) ecrireALaLumiere(overlay); });
+        const mesurer = () => requestAnimationFrame(() => {
+            if (!isOpen) return;
+            ecrireALaLumiere(overlay);
+            detourerLeTitre(overlay);
+        });
         mesurer();
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(mesurer);
     }

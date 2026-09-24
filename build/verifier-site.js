@@ -62,6 +62,8 @@
  *
  *      cd build && npm ci && npm run navigateur   (une fois)
  *      npm --prefix build run verifier
+ *      SEUL=planche npm --prefix build run verifier   (celles dont le nom
+ *                                                  contient « planche »)
  *
  *  Il tourne aussi sur chaque demande de fusion (.github/workflows/
  *  verifier.yml). Code de sortie 1 au premier échec constaté.
@@ -88,7 +90,13 @@ function chargerPlaywright() {
 const echecs = [];
 let reussies = 0;
 
+// SEUL=mot : ne passer que les vérifications dont le nom contient ce mot
+// (« SEUL=planche node build/verifier-site.js ») — pour travailler sur une
+// épreuve sans attendre les autres. Sans lui, toutes passent.
+const SEUL = (process.env.SEUL || '').toLowerCase();
+
 async function verifie(nom, epreuve) {
+    if (SEUL && !nom.toLowerCase().includes(SEUL)) return;
     try {
         await epreuve();
         reussies++;
@@ -1501,6 +1509,296 @@ function exige(condition, message) {
                 exige(!erreurs.length, erreurs.join(' | '));
                 await c.close();
             }
+        });
+
+        // ════════════════════════════════════════════════════════════
+        //  LES CHANTIERS DU REGARD (septembre 2026) : les ondes de la voix,
+        //  la planche contact, le portrait d'affiche, la salle de
+        //  projection, la photo dans la lettre, la fiche de casting.
+        // ════════════════════════════════════════════════════════════
+
+        await verifie('les ondes de la voix : chaque démo montre la forme de son enregistrement, ce qui est lu d’une autre couleur que ce qui reste', async () => {
+            const c = await visiteur({ viewport: { width: 412, height: 915 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#demos_voix', { waitUntil: 'load' });
+            await p.waitForTimeout(1200);
+            const barres = await p.evaluate(() => [...document.querySelectorAll('[data-audio-seek]')].map((b) => {
+                const t = b.querySelector('canvas.onde-toile');
+                let peinte = false;
+                if (t && t.width) {
+                    const d = t.getContext('2d').getImageData(0, 0, t.width, t.height).data;
+                    for (let i = 3; i < d.length; i += 4) if (d[i]) { peinte = true; break; }
+                }
+                return {
+                    id: b.dataset.audioSeek, onde: /^[0-9a-z]{200}$/.test(b.dataset.onde || ''),
+                    duree: +b.dataset.duree, peinte, role: b.getAttribute('role'),
+                    temps: document.getElementById('time-' + b.dataset.audioSeek)?.textContent.trim()
+                };
+            }));
+            exige(barres.length >= 8, `${barres.length} démo(s) seulement`);
+            const sans = barres.filter((b) => !b.onde || !(b.duree > 0));
+            exige(!sans.length, `sans onde (build/ondes.js à relancer ?) : ${sans.map((b) => b.id).join(', ')}`);
+            const vides = barres.filter((b) => !b.peinte);
+            exige(!vides.length, `onde non dessinée : ${vides.map((b) => b.id).join(', ')}`);
+            exige(barres.every((b) => b.role === 'slider'), 'une barre a perdu son rôle de curseur');
+            exige(barres.every((b) => !/\/ 0:00$/.test(b.temps)), 'une démo annonce 0:00 de durée avant d’être chargée');
+            // À mi-parcours, la moitié gauche est dorée, la droite non.
+            await p.waitForFunction(() => document.getElementById('audio-nexity').duration > 0, null, { timeout: 10000 });
+            const couleurs = await p.evaluate(async () => {
+                // Par le chemin du site : le serveur local ne sert pas de
+                // morceaux de fichier (voir allerDansLaDemo).
+                const a = document.getElementById('audio-nexity');
+                allerDansLaDemo('audio-nexity', a.duration / 2);
+                for (let i = 0; i < 50 && a.currentTime < 1; i++) await new Promise((f) => setTimeout(f, 100));
+                a.dispatchEvent(new Event('timeupdate'));
+                await new Promise((f) => requestAnimationFrame(f));
+                const t = document.querySelector('[data-audio-seek="audio-nexity"] canvas');
+                const g = t.getContext('2d');
+                const teinte = (fx) => {
+                    const x = Math.floor(t.width * fx);
+                    for (let dx = 0; dx < 12; dx++) {
+                        const d = g.getImageData(x + dx, 0, 1, t.height).data;
+                        for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 200) return [d[i], d[i + 1], d[i + 2]].join(',');
+                    }
+                    return null;
+                };
+                return [teinte(0.2), teinte(0.8)];
+            });
+            exige(couleurs[0] && couleurs[1] && couleurs[0] !== couleurs[1], `lu et reste de la même couleur (${couleurs.join(' / ')})`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        await verifie('la planche contact : chaque photo à son cadre, les rangées d’une même hauteur et pleines, le crayon gras au survol', async () => {
+            for (const vue of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+                const c = await visiteur({ viewport: vue });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.goto(base + '/galerie/', { waitUntil: 'load' });
+                await p.waitForTimeout(600);
+                const etat = await p.evaluate(async () => {
+                    const cartes = [...document.querySelectorAll('.carte')];
+                    const grille = document.querySelector('.repertoire').getBoundingClientRect();
+                    const cases = cartes.map((c) => {
+                        const r = c.querySelector('.cadre').getBoundingClientRect();
+                        return { r: parseFloat(c.style.getPropertyValue('--r')), l: r.width, h: r.height, x: r.left, y: r.top, d: r.right };
+                    });
+                    // Le cadre de la vignette elle-même, lu dans le fichier.
+                    const vraies = await Promise.all(cartes.map(async (c) => {
+                        const src = c.querySelector('source').getAttribute('srcset').split(' ')[0];
+                        const im = new Image(); im.src = src; await im.decode();
+                        return im.naturalWidth / im.naturalHeight;
+                    }));
+                    const rangs = {};
+                    cases.forEach((k) => { (rangs[Math.round(k.y)] = rangs[Math.round(k.y)] || []).push(k); });
+                    const lignes = Object.values(rangs);
+                    const crayon = getComputedStyle(document.querySelector('.crayon path')).strokeDashoffset;
+                    return {
+                        n: cartes.length,
+                        recadrees: cases.filter((k, i) => Math.abs(k.l / k.h - vraies[i]) / vraies[i] > 0.03).length,
+                        faux: cases.filter((k, i) => Math.abs(k.r - vraies[i]) / vraies[i] > 0.01).length,
+                        inegales: lignes.filter((l) => Math.max(...l.map((k) => k.h)) - Math.min(...l.map((k) => k.h)) > 1.5).length,
+                        creuses: lignes.slice(0, -1).filter((l) => Math.abs(Math.max(...l.map((k) => k.d)) - grille.right) > 3).length,
+                        lignes: lignes.length,
+                        crayon
+                    };
+                });
+                exige(etat.n >= 10, `${etat.n} photo(s) seulement`);
+                exige(!etat.faux, `${etat.faux} case(s) dont --r ne dit pas le cadre de la vignette`);
+                exige(!etat.recadrees, `${etat.recadrees} photo(s) recadrée(s) à ${vue.width} px`);
+                exige(!etat.inegales, `${etat.inegales} rangée(s) aux hauteurs inégales à ${vue.width} px`);
+                exige(!etat.creuses, `${etat.creuses} rangée(s) qui ne vont pas au bout à ${vue.width} px`);
+                exige(parseFloat(etat.crayon) > 1, `le crayon est tracé au repos (${etat.crayon})`);
+                if (vue.width > 1000) {
+                    await p.hover('.carte-btn >> nth=2');
+                    await p.waitForTimeout(700);
+                    const trace = await p.evaluate(() => getComputedStyle(document.querySelectorAll('.crayon path')[2]).strokeDashoffset);
+                    exige(parseFloat(trace) < 0.05, `le crayon ne se trace pas au survol (${trace})`);
+                }
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+        });
+
+        await verifie('le portrait d’affiche : le visage en grand sur l’onglet CV, le nom en Cinzel, la fiche en six cases ; ailleurs, le médaillon — et le papier inchangé', async () => {
+            for (const vue of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+                const c = await visiteur({ viewport: vue });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.goto(base + '/', { waitUntil: 'load' });
+                await p.waitForTimeout(700);
+                const lire = () => p.evaluate(() => {
+                    const t = document.getElementById('en-tete');
+                    const r = t.querySelector('.affiche-cadre').getBoundingClientRect();
+                    const cases = [...t.querySelectorAll('.signature-casting [data-cle]')];
+                    return {
+                        replie: t.classList.contains('replie'),
+                        l: r.width, h: r.height, rond: getComputedStyle(t.querySelector('.affiche-cadre')).borderTopLeftRadius,
+                        entete: t.getBoundingClientRect().width,
+                        police: getComputedStyle(t.querySelector('h1')).fontFamily,
+                        etiquettes: cases.map((k) => getComputedStyle(k, '::before').content).filter((x) => x && x !== 'none').length
+                    };
+                });
+                const cv = await lire();
+                exige(!cv.replie, 'l’en-tête est replié sur l’onglet CV');
+                exige(/Cinzel/.test(cv.police), `le nom n’est pas en Cinzel (${cv.police})`);
+                exige(cv.etiquettes === 6, `la fiche de l’affiche a ${cv.etiquettes} case(s) étiquetée(s) sur 6`);
+                if (vue.width > 1000) exige(cv.l >= 300 && cv.h >= 360, `le portrait fait ${cv.l.toFixed(0)} × ${cv.h.toFixed(0)} px à l’écran`);
+                else exige(cv.l >= cv.entete - 2 && cv.h >= 300, `le portrait ne tient pas la largeur de l’en-tête au téléphone (${cv.l.toFixed(0)} px sur ${cv.entete.toFixed(0)})`);
+                await p.click('#tab-page_dates');
+                await p.waitForTimeout(900);
+                const dates = await lire();
+                exige(dates.replie && dates.l <= 100 && /50%|9\dpx|4\dpx/.test(dates.rond), `hors du CV, le portrait n’est pas redevenu un médaillon (${dates.l.toFixed(0)} px, ${dates.rond})`);
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+            // Arriver sur un autre onglet : le médaillon dès le premier rendu.
+            const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+            const p = await c.newPage();
+            await p.goto(base + '/#demos_voix', { waitUntil: 'domcontentloaded' });
+            const l = await p.evaluate(() => document.querySelector('#en-tete .affiche-cadre').getBoundingClientRect().width);
+            exige(l <= 100, `arrivée sur les démos voix : l’affiche est peinte avant de se replier (${l.toFixed(0)} px)`);
+            // Le papier garde son en-tête, réglé pour que le CV tienne sur une page.
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.emulateMedia({ media: 'print' });
+            const papier = await p.evaluate(() => ({
+                l: document.querySelector('#en-tete .affiche-cadre').getBoundingClientRect().width,
+                police: getComputedStyle(document.querySelector('#en-tete h1')).fontFamily
+            }));
+            exige(papier.l <= 72 && /Montserrat/.test(papier.police), `l’en-tête imprimé a changé (${papier.l.toFixed(0)} px, ${papier.police})`);
+            await c.close();
+        });
+
+        await verifie('la salle de projection : la bobine lance chaque extrait à son début, la salle s’éteint, le halo suit l’extrait', async () => {
+            const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#demos_camera', { waitUntil: 'load' });
+            await p.waitForTimeout(1200);
+            const salle = await p.evaluate(() => {
+                const peint = (t) => { const d = t.getContext('2d').getImageData(0, 0, t.width, t.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return true; return false; };
+                return {
+                    plans: [...document.querySelectorAll('#salle .bobine [data-salle-debut]')].map((b) => [b.querySelector('b').textContent, +b.dataset.salleDebut]),
+                    halo: [...document.querySelectorAll('#salle .salle-halo canvas')].some(peint)
+                };
+            });
+            exige(JSON.stringify(salle.plans) === JSON.stringify([['L’Homme moderne', 0], ['Le rapt', 81]]), `la bobine n’a pas les deux extraits à leur début (${JSON.stringify(salle.plans)})`);
+            exige(salle.halo, 'le halo de la salle n’est pas peint');
+            await p.click('#salle .bobine [data-salle-plan="1"]');
+            await p.waitForTimeout(1300);
+            const noire = await p.evaluate(() => {
+                const m = document.getElementById('video-modal');
+                const f = document.getElementById('video-iframe');
+                return {
+                    ouverte: !m.hidden && +getComputedStyle(m).opacity > 0.9,
+                    src: f.getAttribute('src'),
+                    courant: document.querySelector('#video-modal [data-salle-plan="1"]').getAttribute('aria-current')
+                };
+            });
+            exige(noire.ouverte, 'la salle ne s’éteint pas');
+            exige(/start=81/.test(noire.src) && /enablejsapi=1/.test(noire.src), `le lecteur ne part pas de 1:21 (${noire.src})`);
+            exige(noire.courant === 'true', 'la bobine de la salle noire ne montre pas le plan en cours');
+            // Le lecteur annonce qu'il en est à 0:05 : le plan en cours change.
+            const suit = await p.evaluate(async () => {
+                window.dispatchEvent(new MessageEvent('message', {
+                    origin: 'https://www.youtube-nocookie.com',
+                    data: JSON.stringify({ event: 'infoDelivery', info: { currentTime: 5 } })
+                }));
+                await new Promise((f) => setTimeout(f, 50));
+                return document.querySelector('#video-modal [data-salle-plan="0"]').getAttribute('aria-current');
+            });
+            exige(suit === 'true', 'le halo ne suit pas l’extrait que le lecteur annonce');
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(600);
+            exige(await p.evaluate(() => !document.getElementById('video-iframe').getAttribute('src')), 'le lecteur continue une fois la salle rallumée');
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        await verifie('la photo dans la lettre : le titre posé détoure la photo, le récit s’écrit, puis on entre dans la photo par une lettre — avec les deux pilotes ; posée d’emblée en mouvement réduit', async () => {
+            const cas = [['berenice', '', 390], ['alabarre', '', 390], ['cleophene', '', 1280], ['hommemoderne', '?repli', 390]];
+            for (const [slug, q, largeur] of cas) {
+                const c = await visiteur({ viewport: { width: largeur, height: largeur > 1000 ? 800 : 844 } });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.goto(`${base}/spectacles/${slug}/${q}`, { waitUntil: 'load' });
+                await p.waitForFunction(() => document.querySelector('.u-lettre'), null, { timeout: 8000 });
+                await p.waitForTimeout(400);
+                const etat = await p.evaluate(async () => {
+                    const S = document.getElementById('show-universe');
+                    const scene = S.querySelector('.u-ouverture');
+                    const svg = scene.querySelector('.u-lettre');
+                    const mot = svg.querySelector('.u-lettre-mot');
+                    const plein = svg.querySelector('.u-lettre-plein');
+                    const dort = (ms) => new Promise((f) => setTimeout(f, ms));
+                    const v = (k) => parseFloat(getComputedStyle(scene).getPropertyValue('--of-' + k));
+                    const aller = async (f) => { S.scrollTop = scene.offsetTop + (scene.offsetHeight - S.clientHeight) * f; await dort(350); };
+                    const echelle = () => { const m = getComputedStyle(mot).transform; return m === 'none' ? 1 : +m.slice(7).split(',')[0]; };
+                    const op = (e) => +getComputedStyle(e).opacity;
+                    const zone = scene.querySelector('.u-of-titre');
+                    const textes = ['.u-eyebrow', '.u-couche-auteur', '.u-synopsis', '.u-couche-actions'].map((s) => zone.querySelector(s)).filter(Boolean);
+                    // Chaque lettre du masque est posée sur sa lettre du titre.
+                    const titre = zone.querySelector('.u-title');
+                    const chars = [...titre.querySelectorAll('.u-ch')].filter((ch) => ch.textContent.trim());
+                    const pos = (el) => { let x = 0; for (let n = el; n; n = n.offsetParent) x += n.offsetLeft; return x; };
+                    const x0 = pos(zone.querySelector('.u-hero-wrap'));
+                    const ecarts = [...mot.querySelectorAll('text')].map((t, i) => Math.abs(+t.getAttribute('x') - (pos(chars[i]) - x0)));
+                    const out = { lettres: mot.querySelectorAll('text').length, chars: chars.length, ecart: Math.max(...ecarts), z: parseFloat(svg.style.getPropertyValue('--lettre-z')) };
+                    await aller(v('titre') * 0.5);
+                    out.avant = op(svg);
+                    await aller(v('lettre-e') + 0.005);
+                    out.pose = { calque: op(svg), echelle: echelle(), plein: op(plein) };
+                    await aller(v('fleche-e') + 0.005);
+                    out.recit = { echelle: echelle(), textes: Math.min(...textes.map(op)) };
+                    await aller(Math.min(0.999, v('zoom-e') + 0.01));
+                    const r = plein.getBoundingClientRect(), e = S.getBoundingClientRect();
+                    out.fin = { echelle: echelle(), plein: op(plein), couvre: r.left <= e.left + 1 && r.top <= e.top + 1 && r.right >= e.right - 1 && r.bottom >= e.bottom - 1 };
+                    return out;
+                });
+                const ou = `${slug}${q} à ${largeur} px`;
+                exige(etat.lettres === etat.chars && etat.ecart < 1, `${ou} : le masque ne suit pas les lettres du titre (${etat.lettres}/${etat.chars}, écart ${etat.ecart.toFixed(2)} px)`);
+                exige(etat.avant < 0.05, `${ou} : la photo paraît dans les lettres en plein travelling (${etat.avant})`);
+                exige(etat.pose.calque > 0.95 && Math.abs(etat.pose.echelle - 1) < 0.01 && etat.pose.plein < 0.05, `${ou} : le titre posé ne détoure pas la photo (${JSON.stringify(etat.pose)})`);
+                exige(Math.abs(etat.recit.echelle - 1) < 0.01 && etat.recit.textes > 0.95, `${ou} : le zoom commence avant que le récit soit écrit (${JSON.stringify(etat.recit)})`);
+                exige(Math.abs(etat.fin.echelle - etat.z) < 0.5 && etat.fin.plein > 0.95 && etat.fin.couvre, `${ou} : au bout, la photo ne remplit pas l’écran (${JSON.stringify(etat.fin)})`);
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+            const p = await c.newPage();
+            await p.goto(`${base}/spectacles/berenice/`, { waitUntil: 'load' });
+            await p.waitForFunction(() => document.querySelector('.u-lettre'), null, { timeout: 8000 });
+            const calme = await p.evaluate(() => {
+                const svg = document.querySelector('.u-lettre');
+                return { calque: +getComputedStyle(svg).opacity, mot: getComputedStyle(svg.querySelector('.u-lettre-mot')).transform, plein: +getComputedStyle(svg.querySelector('.u-lettre-plein')).opacity };
+            });
+            exige(calque(calme), `en mouvement réduit, le titre ne détoure pas la photo, posé (${JSON.stringify(calme)})`);
+            await c.close();
+            function calque(k) { return k.calque === 1 && k.mot === 'none' && k.plein === 0; }
+        });
+
+        await verifie('la fiche de casting : le profil en lignes étiquetées, le chant et le piano sur la même, moins haut au téléphone', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            const p = await c.newPage();
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForTimeout(500);
+            const etat = await p.evaluate(() => {
+                const f = document.querySelector('#page_cv dl.fiche.cv-fiche');
+                if (!f) return null;
+                const duo = [...f.querySelectorAll('.fiche-duo > span b')].map((b) => b.textContent);
+                return {
+                    rubriques: [...f.querySelectorAll(':scope > div > dt')].map((d) => d.textContent.trim()),
+                    duo,
+                    memeLigne: f.querySelector('.fiche-duo')?.closest('div')?.parentElement === f,
+                    hauteur: f.closest('section').getBoundingClientRect().height
+                };
+            });
+            exige(etat, 'la fiche du profil a disparu (dl.fiche.cv-fiche)');
+            exige(etat.rubriques.length === 6, `${etat.rubriques.length} rubrique(s) : ${etat.rubriques.join(', ')}`);
+            exige(etat.duo.join('|') === 'Chant|Piano' && etat.memeLigne, 'le chant et le piano ne sont plus sur la même ligne');
+            exige(etat.hauteur < 650, `le profil fait ${etat.hauteur.toFixed(0)} px au téléphone`);
+            await c.close();
         });
 
         await verifie('la page 404 : la servante, lisible, sans erreur', async () => {

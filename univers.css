@@ -2895,6 +2895,76 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     }
 }
 
+/* ── LA PHOTO DANS LA LETTRE ──
+   Le titre posé détoure la photo du spectacle : un calque SVG (voir
+   detourerLeTitre dans univers.js) montre la photo à travers les lettres,
+   exactement sur le titre. Il paraît pendant que le titre se pose
+   (--of-lettre-*). Le récit s'écrit ; puis la porte — une lettre au trait
+   épais — grandit autour d'un point de son encre jusqu'à ce que l'écran
+   entier y tienne (--lettre-z, calculé pour chaque titre) : on entre dans
+   la photo (--of-zoom-*). La photo, par-dessus le reste du haut de la
+   page, l'efface en grandissant : rien d'autre n'a à partir.
+
+   Le zoom va en s'accélérant, comme une caméra qui passe une porte : les
+   paliers sont des fractions de --lettre-z. Rien que des transformations
+   et une opacité ; le calque laisse passer le doigt et la souris. */
+.u-lettre {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: visible;
+    pointer-events: none;
+    --rg-anim: u-lettre-parait;
+    --s: var(--of-lettre-s, .5);
+    --e: var(--of-lettre-e, .6);
+}
+
+.u-lettre-mot {
+    transform-box: view-box;
+    --rg-anim: u-lettre-entre;
+    --s: var(--of-zoom-s, .8);
+    --e: var(--of-zoom-e, .95);
+}
+
+.u-lettre-plein {
+    opacity: 0;
+    --rg-anim: u-lettre-parait;
+    --s: calc(var(--of-zoom-e, .95) - (var(--of-zoom-e, .95) - var(--of-zoom-s, .8)) * .16);
+    --e: var(--of-zoom-e, .95);
+}
+
+@keyframes u-lettre-parait {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes u-lettre-entre {
+    0% {
+        transform: none;
+    }
+
+    45% {
+        transform: scale(calc(1 + (var(--lettre-z, 60) - 1) * .015));
+    }
+
+    70% {
+        transform: scale(calc(1 + (var(--lettre-z, 60) - 1) * .08));
+    }
+
+    88% {
+        transform: scale(calc(1 + (var(--lettre-z, 60) - 1) * .35));
+    }
+
+    100% {
+        transform: scale(var(--lettre-z, 60));
+    }
+}
+
 /* L'INVITATION À AVANCER. Au premier écran de la scène, une photo déjà
    posée au loin, et au bas de l'écran « Avancer », qui s'efface dès le
    premier geste : le noir du plateau ne passe jamais pour une page vide.

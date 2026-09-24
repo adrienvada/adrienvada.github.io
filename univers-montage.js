@@ -459,12 +459,22 @@ const UniversMontage = (function () {
     const OUVERTURE_TITRE = 200;                 // le titre est posé
     const OUVERTURE_PLAGES = [[-41, 92], [14, 120], [41, 147], [69, 170]];
 
+    //  PUIS ON ENTRE DANS LA PHOTO PAR LE TITRE. Posé, le titre détoure la
+    //  photo du spectacle : elle paraît dans ses lettres (voir
+    //  detourerLeTitre dans univers.js). Le récit s'écrit ; alors
+    //  seulement, une lettre grandit jusqu'à ce que la photo remplisse
+    //  l'écran — on y entre, et la page reprend son cours.
+    const OUVERTURE_PAUSE = 56;                  // du récit écrit au zoom
+    const OUVERTURE_ZOOM = 130;                  // la lettre s'ouvre
+    const OUVERTURE_TENUE = 30;                  // la photo, plein écran
+
     function tempoOuverture(uni) {
         const A = OUVERTURE_TITRE;
         const signes = uni.synopsis ? toLines(uni.synopsis).join(' ').replace(/\s+/g, ' ').trim().length : 0;
         const ecriture = signes ? Math.min(140, Math.max(60, signes * 0.5)) : 0;
         const E = A + 50 + ecriture;             // le synopsis est écrit
-        const total = E + 60;                    // tout est là ; la page repart
+        const Z = E + OUVERTURE_PAUSE;           // tout est là ; la lettre s'ouvre
+        const total = Z + OUVERTURE_ZOOM + OUVERTURE_TENUE;   // la page repart
         const f = (v) => +(v / total).toFixed(4);
         return {
             hauteur: total + 100,
@@ -480,7 +490,11 @@ const UniversMontage = (function () {
                 'synopsis-s': f(A + 36), 'synopsis-e': f(A + 52),
                 'meta-s': f(E - 4), 'meta-e': f(E + 26),
                 'actions-s': f(E + 8), 'actions-e': f(E + 36),
-                'fleche-s': f(E + 24), 'fleche-e': f(E + 44)
+                'fleche-s': f(E + 24), 'fleche-e': f(E + 44),
+                // La photo dans les lettres paraît pendant que le titre se
+                // pose ; la lettre s'ouvre une fois tout écrit.
+                'lettre-s': f(A - 6), 'lettre-e': f(A + 30),
+                'zoom-s': f(Z), 'zoom-e': f(Z + OUVERTURE_ZOOM)
             }
         };
     }

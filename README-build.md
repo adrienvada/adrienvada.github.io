@@ -34,6 +34,7 @@ Ensuite, depuis la racine du dépôt :
 | `npm --prefix build run pages` | régénère la galerie **puis** les pages spectacle et le sitemap (dans cet ordre) |
 | `npm --prefix build run pdf` | refait le CV en PDF |
 | `npm --prefix build run dates` | recopie les dates de Supabase dans `dates.js` |
+| `npm --prefix build run ondes` | écrit [les ondes des démos voix](#démos-voix--les-ondes) dans `index.html` |
 | `npm --prefix build run verifier` | [vérifie le site](#vérifier-le-site) dans un vrai navigateur |
 
 Les commandes `node build/…` citées plus bas marchent toujours telles quelles ;
@@ -152,8 +153,39 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   tracé, son point posé ; celui qu'on lit est tracé jusqu'à la ligne de
   lecture, pas plus ; celui qu'elle n'a pas atteint n'est pas tracé, sans
   point ; tout est tracé en mouvement réduit ;
+- les ondes de la voix : chaque démo a ses 200 niveaux (`data-onde`) et sa
+  durée (`data-duree`), son onde est dessinée, elle ne dit jamais « 0:00 » de
+  durée avant d'être chargée, et à mi-lecture la moitié lue n'a pas la couleur
+  de ce qui reste ;
+- la planche contact, au téléphone et sur ordinateur : chaque case a les
+  proportions de sa vignette (lues dans le fichier), aucune photo n'est
+  recadrée, les photos d'une rangée ont la même hauteur, chaque rangée sauf
+  la dernière va au bout ; le crayon gras n'est pas tracé au repos, il l'est
+  au survol ;
+- le portrait d'affiche : sur l'onglet CV, le portrait fait au moins
+  300 × 360 px à l'écran et toute la largeur de l'en-tête au téléphone, le nom
+  est en Cinzel, la fiche a ses six cases étiquetées ; sur un autre onglet,
+  le médaillon rond d'avant — dès le premier rendu quand on arrive sur un
+  autre onglet ; sur papier, l'en-tête d'avant (médaillon de 68 px, nom en
+  Montserrat) ;
+- la salle de projection : la bobine a ses deux extraits à leur début
+  (L'Homme moderne à 0:00, Le rapt à 1:21), le halo est peint, « Le rapt »
+  éteint la salle et lance le lecteur à 1:21 avec son API de messages, la
+  bobine de la salle noire montre l'extrait en cours et suit ce que le lecteur
+  annonce, Échap rallume et arrête le lecteur ;
+- la photo dans la lettre, avec les deux pilotes, au téléphone et sur
+  ordinateur, dans une salle claire et une salle sombre : le masque a une
+  lettre par lettre du titre, posée dessus au pixel près ; rien dans les
+  lettres en plein travelling ; le titre posé détoure la photo ; le zoom ne
+  commence qu'une fois le récit écrit ; au bout, la photo remplit l'écran. En
+  mouvement réduit, le titre détoure la photo, posé, sans zoom ;
+- la fiche de casting : six rubriques étiquetées, le chant et le piano sur la
+  même ligne, moins de 650 px de haut au téléphone ;
 - la page 404 : son titre, son retour, sa lampe, sans erreur ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
+
+Pour ne passer que quelques vérifications — celles dont le nom contient un
+mot : `SEUL=planche npm --prefix build run verifier`.
 
 Il tourne sur **chaque demande de fusion** (`.github/workflows/verifier.yml`) :
 une coche verte ou rouge sur la demande, avant que rien ne touche `main`. À la
@@ -173,6 +205,8 @@ ici : c'est ce qui l'empêche de revenir.
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
 | le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées et copies floues (`-flou.webp`) comprises |
 | une **scène** d'un univers — `lumiere`, `ouverture`, `poursuite`, une césure ` \| ` | `node build/generer-pages-spectacles.js` | `/spectacles/…` (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) |
+| une **démo voix** ajoutée ou remplacée (`<audio>` de l'onglet Démos voix) | `node build/ondes.js` | les ondes (`data-onde`, `data-duree`) dans `index.html` — voir [Les ondes](#démos-voix--les-ondes) |
+| le **portrait** de l'en-tête (la première photo de `galerie.js`) | `python3 build/variantes-images.py --tout`, ou effacer `portrait-affiche-*` puis le relancer | `ressources/images/portrait-affiche-*` |
 | une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
 | la **signature** — un nouvel export reMarkable | `python3 build/signature-vers-svg.py <export.pdf>` | `signature.webp` + le bloc SVG à coller |
 
@@ -917,19 +951,30 @@ compte.
 > pas `:has()` ignore la règle et retombe sur deux lignes : le CV déborde d'un
 > cheveu, il ne casse pas.
 
-### « Profil » : une grille à l'écran, une fiche sur le papier
+### « Profil » : la fiche de casting, à l'écran comme sur le papier
 
-À l'écran, chaque rubrique du profil est une carte — un cadre, un lavis, une
-ombre — et la grille les range. À l'impression, la règle `.glass-panel` retire le
-cadre, le lavis et l'ombre : il ne restait que la grille, c'est-à-dire des textes
-posés à des fers différents sans rien pour dire où commence une rubrique. Sept
-cartes devenaient une bouillie sur trois colonnes.
+Le profil était une grille de sept cadres, dont plusieurs à moitié vides
+(« 187 cm » seul dans une boîte) : on le lisait case après case. C'est
+désormais **une fiche de casting** — une liste de définitions (`dl.fiche`),
+une ligne par rubrique, l'intitulé en regard de la valeur, comme une fiche
+d'agence. Deux colonnes sur ordinateur, la musique et les sports sur toute la
+largeur ; au téléphone, 559 px au lieu de 787, sans rien retirer.
 
-Le papier abandonne donc la grille (`.cv-fiche` passe en `display: block`). Une
-rubrique par ligne, l'intitulé dans une gouttière, la valeur en regard — la mise
-en page d'une fiche de renseignements. Les cadres qui séparaient les valeurs
-multiples sont remplacés par des points médians, et les couples
-employeur/lieu ou langue/niveau par des parenthèses.
+- **Taille**, **Langues** (« Français *langue maternelle* · Russe, anglais
+  *bilingue, accent français* »), **Musique**, **Combat & sport**,
+  **Expériences**, **Permis**.
+- **Le chant et le piano restent au même rang** : une seule ligne, « Musique »,
+  qui les pose côte à côte (l'un sous l'autre au téléphone).
+- **Les combats viennent en tête des sports**, parce que ce sont eux qu'on
+  cherche pour un rôle.
+- Les précisions (le niveau d'une langue, le lieu d'un employeur) sont dans
+  un `<em>`, en gris de service à l'écran.
+
+Le papier avait déjà cette mise en page (`.cv-fiche` en `display: block`) :
+une rubrique par ligne, l'intitulé dans une gouttière, la valeur en regard.
+Les valeurs multiples sont séparées par des points médians dans le texte même ;
+sur papier, chaque `<em>` prend des parenthèses, et la ligne « Musique » se lit
+« Chant : baryton-basse · Piano : … ».
 
 **L'intitulé flotte à gauche**, tiré hors de la gouttière par une marge négative.
 Un retrait négatif (`text-indent`) aurait donné le même effet à l'œil, à trois
@@ -938,15 +983,15 @@ la première ligne, et elle seule. Contre un flottant, cette espace tombe en dé
 de ligne et disparaît. Mesuré dans le PDF : intitulés à x = 75,38, valeurs à
 x = 196,88 — **toutes** les lignes, continuations comprises.
 
-> ⚠️ **La gouttière fait 162 px parce que le plus long intitulé — « Expériences
-> professionnelles » — en mesure 155.** Un intitulé plus long passerait à la
-> ligne, et sa valeur descendrait avec lui : l'alignement de toute la fiche se
-> romprait, sans que rien ne le signale. Renommer une rubrique du profil, c'est
-> donc remesurer.
+> ⚠️ **La gouttière fait 162 px** : c'était la mesure du plus long intitulé
+> d'avant, « Expériences professionnelles » (155 px). Les intitulés sont plus
+> courts depuis la fiche (« Combat & sport », le plus long) ; la gouttière
+> reste, pour que le papier ne bouge pas. Un intitulé plus long que 162 px
+> passerait à la ligne, et sa valeur descendrait avec lui : renommer une
+> rubrique du profil, c'est donc remesurer.
 
-`cv-fiche` et `cv-fiche-cle` n'existent que pour ces règles-là : aucun style
-d'écran ne s'y accroche. Elles évitent aux sélecteurs d'impression de descendre
-dans la structure des cadres, qui n'est pas la même d'une rubrique à l'autre.
+`cv-fiche` et `cv-fiche-cle` servent aux règles d'impression ; l'écran
+s'accroche à `.fiche`.
 
 ### Le piano au même rang que le chant
 
@@ -958,12 +1003,14 @@ Deux endroits le disaient autrement, et tous deux sont dans `index.html` :
   encre. Le piano a désormais la sienne, juste après « Baryton-basse ».
 - **La fiche Profil** donnait au piano une case double, en deuxième rangée, sous
   les trois « vraies » cases : plus large, mais plus bas, et donc lu comme un
-  complément. Il est remonté à côté du chant, dans une case de même taille
-  (`md:col-span-2 lg:col-span-1` retiré).
+  complément. Il était remonté à côté du chant, dans une case de même taille ;
+  depuis la fiche de casting, les deux partagent la ligne « Musique ».
 
 Ce sont deux musiques, et un rôle qui demande l'une demande souvent l'autre.
-Même rang, même place, même case — c'est la seule façon qu'a une grille de dire
-que deux choses comptent autant.
+Même rang, même place — c'est la seule façon qu'a une fiche de dire que deux
+choses comptent autant. Dans le [portrait d'affiche](#le-portrait-daffiche), la
+signature casting devient six cases étiquetées ; le piano y a la sienne
+(« Instrument »), à côté du chant.
 
 ---
 
@@ -1639,6 +1686,7 @@ panneau de l'univers.
 | **L'écriture à la lumière** | chaque ligne d'une citation, d'un texte ou d'une incrustation s'écrit pendant qu'on la lit : une fenêtre de lumière la parcourt, avec un temps à la césure | `ecrireALaLumiere` (univers.js) |
 | **La mise au point** | chaque photo arrive floue, fait le point au milieu de l'écran, se refloute un peu en partant | `.u-flou`, `-flou.webp` |
 | **Le travelling, puis le récit** | la première chose qu'on voit : des photos arrivent du fond du plateau et passent de part et d'autre ; le titre, **seul**, avance avec elles jusqu'à sa place — la page entière qui avançait faisait un grand rectangle. La scène se tient ensuite, le titre posé, et le reste paraît **sous le geste**, un temps après l'autre : la photo du fond se lève de l'ombre, le surtitre s'ouvre du milieu comme un rideau, l'auteur monte d'une trappe, le synopsis paraît en réserve et la lumière l'écrit ligne à ligne ; le rôle monte à son tour, puis le bouton et la flèche, une fois le récit écrit — tout arrivait d'un bloc, déjà écrit. Le bouton ne répond au doigt qu'une fois paru ; au clavier, Tab mène d'un coup au bout de la scène. « Avancer », et une lumière qui descend un rail, invitent à défiler. **La scène a la longueur de son synopsis** : deux écrans de travelling, puis un demi-écran pour cent signes (entre 60 et 140 svh), calculés par `tempoOuverture` et posés en ligne (`--of-hauteur`, `--of-*`) | `tempoOuverture`, `ouvertureHtml`, `panelHtml` (univers-montage.js), `.u-ouverture`, `.u-of-titre` |
+| **La photo dans la lettre** | au bout du travelling, le titre posé **détoure la photo** du spectacle : elle paraît dans ses lettres, en pleine lumière. Le récit s'écrit ; alors seulement, une lettre — la porte — grandit jusqu'à ce que l'écran entier y tienne, et l'on entre dans la photo, plein écran ; la page reprend son cours. Voir [La photo dans la lettre](#la-photo-dans-la-lettre) | `detourerLeTitre` (univers.js), `tempoOuverture` (univers-montage.js), `.u-lettre` |
 | **Le carton du chapitre** | le premier carton — la durée, une phrase — tient **l'écran entier**, dans sa propre scène tenue, entre le haut de la page et la première photo ; sa phrase s'écrit à la lumière pendant qu'on s'y arrête, et la caméra s'en approche imperceptiblement. Puis **le noir, dans une salle sombre** ; dans une salle claire, le carton s'efface dans le papier — un écran noir sur le parchemin de L'Homme moderne passait pour une page cassée. La salle est lue sur le fond de la palette (luminance relative sous 0,18 : sombre) | `cartonHtml`, `salleDe` (univers-montage.js), `.u-carton` |
 | **La signature lumineuse** | après le carton, la première photo attend dans la pénombre — un cinquième de sa lumière, plus un rectangle noir —, ou, dans une salle claire, dans le papier, comme une épreuve dans le révélateur ; elle s'allume — ou se révèle — à la façon du spectacle — foudre, néon, guirlande, torche, lumière crue, projecteur — dès qu'elle entre dans le quart inférieur de l'écran | `voileHtml`, `.u-allumage` (`--u-voile-teinte`), `guetterAllumage` |
 | **La poursuite** | sur une photo de groupe choisie, la pénombre, une ou deux poursuites qui vont d'un comédien à l'autre, puis plein feux | `poursuiteHtml`, `.u-poursuite` |
@@ -1681,6 +1729,49 @@ filtre) : il part du point de fuite des photos, au milieu de l'écran. Ce
 flèche suivait sa boîte, un écran plus ses marges, et tombait sous l'écran ;
 marges comprises (`box-sizing: border-box`), il fait un écran. Sur un écran
 bas (moins de 700 px), la flèche tombait sur le bouton : elle n'y est pas.
+
+### La photo dans la lettre
+
+Demandé ainsi : « après le travelling avant, on arrive sur le titre qui
+détoure la photo de fond ; quand on défile, ça fait apparaître tous les textes
+(synopsis, auteur…), et ensuite seulement on zoome dans le titre sur la
+photo ». La scène de l'ouverture a donc un temps de plus :
+
+1. **le travelling**, le titre qui avance seul (inchangé) ;
+2. **le titre posé détoure la photo** (`--of-lettre-*`, autour de la pose) ;
+3. **le récit s'écrit** (inchangé) ;
+4. **une pause**, puis **la lettre s'ouvre** (`--of-zoom-*`, 130 svh), et la
+   photo tient l'écran 30 svh avant que la page reprenne.
+
+`tempoOuverture` compte ces temps en svh (`OUVERTURE_PAUSE`, `OUVERTURE_ZOOM`,
+`OUVERTURE_TENUE`) ; la scène s'allonge d'autant.
+
+**C'est un calque SVG posé sur le titre** (`detourerLeTitre`, dans
+`univers.js`), pas le titre lui-même : la photo de couverture (`<image>`, cadrée
+comme `.u-hero-fond`) n'y paraît qu'à travers un masque fait des lettres du
+titre, placées une à une là où la mise en page a posé chacune
+(`offsetLeft`/`offsetTop`, qui ignorent la perspective de la scène), sur leur
+ligne de base (mesurée par une sonde). Le vrai `h1` reste dessous, du texte,
+lu par les lecteurs d'écran et les moteurs ; le calque est décoratif. Un trait
+d'un pixel et demi autour de chaque lettre du masque couvre les écarts
+d'arrondi. Refait quand la largeur change, comme l'écriture à la lumière.
+
+**La porte** est la lettre au trait le plus épais près du milieu de l'écran :
+chaque lettre est dessinée dans un canevas, et une transformée de distance y
+trouve le point le plus loin de tout bord — celui dont même le pire voisin, à
+quatre pixels, reste loin d'un bord : le canevas et la page ne posent pas la
+lettre au pixel près, et un point pris à la jonction de deux traits tombait,
+sur la page, au bord du trait. Le zoom se fait autour de ce point, jusqu'à
+`--lettre-z` (l'écran entier dans l'encre de la lettre, 120 fois au plus : au
+delà, le navigateur cesse de dessiner le glyphe). Il s'accélère, comme une
+caméra qui passe une porte. Sur le dernier sixième du zoom, **la photo entière**
+(`.u-lettre-plein`) prend le relais : la scène finit toujours sur la photo,
+plein écran, quelle que soit la lettre.
+
+La photo, par-dessus le reste du haut de la page, efface le récit en
+grandissant : rien d'autre n'a à partir. En mouvement réduit, le titre détoure
+la photo, posé, sans zoom. Sans photo de couverture, pas de calque : le titre
+d'avant.
 
 ### L'écriture à la lumière
 
@@ -1798,12 +1889,36 @@ node build/generer-page-galerie.js
 node build/generer-pages-spectacles.js   # pour la date du sitemap
 ```
 
-Les vignettes sont recadrées en 3:4 (le format de la grille) en trois
-largeurs — 320, 640 et 960 px — dans `ressources/images/galerie/vignettes/`.
-La page en annonce la taille affichée (`sizes`) et le navigateur prend la
-plus petite qui suffit ; les boutons − et + de la page la réécrivent quand la
-grille change. Les anciennes vignettes de 176 px (`thumbs/`) étaient étirées
-sur 300 à 500 pixels d'écran : floues, justement là où l'on juge un visage.
+Les vignettes gardent **le cadre de la photo**, en trois largeurs — 320, 640
+et 960 px — dans `ressources/images/galerie/vignettes/`. La page en annonce la
+taille affichée (`sizes`) et le navigateur prend la plus petite qui suffit ;
+les boutons − et + de la page la réécrivent quand la planche change. Les
+anciennes vignettes de 176 px (`thumbs/`) étaient étirées sur 300 à 500 pixels
+d'écran : floues, justement là où l'on juge un visage.
+
+### La planche contact
+
+La galerie coupait chaque photo en 3:4, le format de sa grille : douze photos
+sur dix-neuf sont plus larges que hautes, et y perdaient en moyenne la moitié
+de leur image — le décor, le partenaire, la salle —, jusqu'à 58 % pour les
+images de film en 16:9. C'est désormais une **planche contact** : chaque photo
+garde le cadre du photographe, et chaque rangée a la même hauteur.
+
+**Sans une ligne de script pour la mise en page.** Le générateur lit les
+proportions de chaque vignette dans l'en-tête du fichier WebP
+(`dimensionsWebp`) et les écrit sur la case (`--r`, largeur sur hauteur). Une
+case part de la largeur qu'aurait sa photo à la hauteur visée
+(`flex-basis: --r × --h`), et grandit à proportion de `--r`
+(`flex-grow: --r`) pour remplir la rangée : deux cases qui grandissent à
+proportion de leur largeur gardent la même hauteur. La dernière rangée ne
+s'étire pas (`::after`, qui prend le reste). La hauteur visée `--h` suit la
+densité — la largeur de la planche divisée par `--colonnes`, le nombre de
+colonnes qu'avait la grille à ce cran : les boutons − et + gardent leur sens.
+
+Sous chaque photo, son numéro de vue (`01A`, `02A`…), orangé comme les
+marques d'un film ; au survol ou au clavier, **le crayon gras** — un cercle
+rouge un peu tremblé, tracé d'un geste, comme on entoure sur une vraie planche
+la vue qu'on garde. Posé d'un coup en mouvement réduit.
 
 Les photos en pleine résolution ne sont téléchargées qu'à l'ouverture de la
 visionneuse, une par une : inutile de les compresser à l'extrême, mais rester
@@ -1815,7 +1930,9 @@ sous ~300 Ko.
 
 | Fichier | Rôle |
 |---|---|
-| `ressources/images/profil-192.{jpg,webp}` / `profil-384.*` | avatar de l'en-tête |
+| `ressources/images/portrait-affiche-{480,720,960}.webp` et `-720.jpg` | le [portrait d'affiche](#le-portrait-daffiche) de l'en-tête — `python3 build/variantes-images.py`, depuis la première photo du book |
+| `ressources/images/profil-192.webp` | le médaillon de l'en-tête **imprimé** (le CV en PDF) ; `profil-192.jpg` et `profil-384.*` ne servent plus |
+| `ressources/images/miniatures/bande-demo-{hommemoderne,lerapt}-640.webp` | les deux plans de la [bobine](#la-salle-de-projection) : les images que YouTube tire lui-même de la vidéo (`maxres2.jpg`, `maxres3.jpg`), bandes noires ôtées — à refaire à la main si la bande démo change |
 | `ressources/images/og-adrien-vada.jpg` | vignette de partage (réseaux sociaux, 1200×630) |
 | `ressources/images/miniatures/bande-demo-camera.{jpg,webp}` | miniature de la bande démo |
 | `ressources/images/galerie/vignettes/<nom>-{320,640,960}.webp` | vignettes du book — `python3 build/variantes-images.py` |
@@ -2101,6 +2218,94 @@ doit être ajoutée à la liste `SUPPLEMENT` du script, sinon elle manquera au
 sprite — c'est le cas de la lune de la bascule de thème.
 
 ---
+
+## Le portrait d'affiche
+
+Pour un comédien, le visage est la première information. L'en-tête le
+montrait dans un médaillon de 90 px : 0,7 % du premier écran d'un ordinateur
+(1280 × 900), 1,6 % d'un téléphone. Sur l'onglet CV, **l'en-tête devient une
+affiche** : le portrait sur toute sa hauteur à gauche (340 × 425 px, 12 % de
+l'écran), toute la largeur au téléphone (37 %), le nom posé sur le bas de la
+photo ; en regard, le nom en Cinzel, la fiche de casting en six cases
+étiquetées (taille, chant, instrument, langues, armes, conduite), le mail et
+les liens. Le nom mêlait Montserrat et Cinzel ; il est en Cinzel, comme au
+répertoire, à la galerie et à la 404.
+
+- **Une seule image pour l'affiche et le médaillon** : la photo de
+  présentation du book (la première de `galerie.js`), à son cadre, en trois
+  largeurs (`portrait-affiche-*`, faites par `variantes-images.py`). `sizes`
+  annonce la taille de l'affiche, la plus grande.
+- **Hors de l'onglet CV**, l'en-tête redevient la carte compacte d'avant,
+  portrait en médaillon (`.replie`, posé par `showPage`, à côté du repli de la
+  bio). Arriver sur un autre onglet (`#page_dates`, `#demos_camera`,
+  `#demos_voix`) pose `arrivee-hors-cv` sur `<html>` avant le premier rendu :
+  l'affiche n'est jamais peinte pour être repliée.
+- **La poursuite** : sur le portrait, la salle autour du visage est dans
+  l'ombre ; à la souris, la lumière suit le pointeur (`suivrePoursuite`).
+  Fixe au doigt et en mouvement réduit.
+- **Le papier ne bouge pas.** Toute la mise en page de l'affiche est en
+  `@media screen` ; les classes Tailwind du balisage et les règles d'impression
+  sont celles d'avant, et le médaillon imprimé est `profil-192.webp` (une
+  `<source media="print">`) — le PDF garde son poids (259 Ko) et sa page.
+  Quelques règles de l'affiche portent `!important` : elles répondent à celles
+  de la mise à l'échelle du téléphone (« Global text scale-down »).
+
+## La salle de projection
+
+La bande démo était une vignette dans une carte, et rien ne disait ce
+qu'elle contenait. Elle est posée dans **une salle** (`#salle`, noire dans
+les deux thèmes) : l'écran au milieu, sa lumière qui déborde autour, et
+dessous **la bobine** — un plan par extrait, qui lance le film à ce moment-là :
+
+| Extrait | Début (`data-salle-debut`) |
+|---|---|
+| L'Homme moderne | 0 s |
+| Le rapt | 81 s (1:21) |
+
+- **Le halo** : le plan réduit à 32 × 14 points dans un canevas, agrandi et
+  flouté une fois pour toutes par la feuille (`.salle-halo`) — le flou n'est
+  jamais animé, seule l'opacité l'est, en passant d'un canevas à l'autre. Sur
+  la page, il peint l'affiche au repos et l'extrait survolé sur la bobine.
+- **La salle noire** : lancer la projection ouvre `#video-modal`, dont la
+  lumière baisse lentement (1 s) ; l'écran y garde son halo, et une bobine
+  mène d'un extrait à l'autre sans quitter la salle. Le lecteur YouTube est
+  chargé avec `enablejsapi=1` : on lui parle par messages (`seekTo`,
+  `playVideo`) et il annonce son temps écoulé, sans charger son script. Le
+  halo suit ainsi **l'extrait en cours** — pas chaque image : YouTube ne
+  laisse pas lire les siennes.
+- Les deux plans de la bobine sont des images que YouTube tire lui-même de la
+  vidéo, bandes noires ôtées. **Si la bande démo change**, les refaire
+  (`https://i.ytimg.com/vi/<id>/maxres1.jpg` à `maxres3.jpg`, au quart, à la
+  moitié et aux trois quarts), et remettre les débuts des extraits dans la
+  bobine et dans `DEBUTS` (`index.html`, « LA SALLE DE PROJECTION »).
+
+## Démos voix — les ondes
+
+Chaque barre de lecture montre **la forme de son enregistrement** : on voit
+la voix monter, respirer, se poser, avant même d'écouter, et on touche l'onde
+là où l'on veut entendre. Les huit démos avaient toutes la même barre plate.
+
+La forme n'est pas calculée chez le visiteur — il faudrait télécharger et
+décoder chaque fichier (jusqu'à 3 Mo) pour dessiner une barre. Elle l'est une
+fois pour toutes par **`build/ondes.js`**, qui décode chaque MP3 dans le
+Chromium des vérifications et écrit sur sa barre :
+
+- `data-onde` : 200 niveaux, un caractère chacun (`0`–`9` puis `a`–`z`) —
+  l'énergie de la voix tranche par tranche, adoucie (puissance 0,8) pour que
+  les passages murmurés restent visibles. 200 octets par démo ;
+- `data-duree` : la durée, en secondes — la bulle du survol dit le temps visé
+  avant même que le fichier soit chargé (`preload="none"`).
+
+```bash
+node build/ondes.js     # après avoir ajouté ou remplacé une démo
+```
+
+Le dessin (`dessinerOnde`, dans `index.html`) est un canevas par barre,
+redessiné quand la lecture avance, au survol, quand la largeur change et quand
+le thème bascule — ses couleurs sont lues dans les jetons (`--c-gold` pour ce
+qui est lu, `--c-s300` pour ce qui reste). La barre garde son rôle de curseur,
+son clic, ses flèches et le repli sans en-têtes Range. Sans script, la piste
+d'avant.
 
 ## Démos voix — poids des fichiers
 

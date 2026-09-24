@@ -27,6 +27,10 @@ html.vt-theme::view-transition-new(root) { z-index: 2; }
     --ombre: rgba(0, 0, 0, .8);
     --vignette: rgba(0, 0, 0, .28);
     --or-defaut: #bfa98a;
+    /* La planche : le numéro de vue, orangé comme les marques du film ; le
+       crayon gras, rouge. */
+    --num: #d69a3c;
+    --crayon: #ff4d5e;
 }
 
 :root[data-theme="light"] {
@@ -41,6 +45,8 @@ html.vt-theme::view-transition-new(root) { z-index: 2; }
     --ombre: rgba(41, 37, 36, .28);
     --vignette: rgba(41, 37, 36, .10);
     --or-defaut: #967e5b;
+    --num: #9a5b0e;
+    --crayon: #c8102e;
 }
 
 body {
@@ -237,23 +243,91 @@ h1 {
     color: var(--muted);
 }
 
-/* ── Grille de photographies ── */
+/* ── La planche ──
+   Une planche contact, pas une grille : chaque photo garde le cadre du
+   photographe. La grille coupait tout en 3:4 — douze photos sur dix-neuf,
+   plus larges que hautes, y perdaient la moitié de leur image (le décor,
+   le partenaire, la salle), jusqu'à 58 % pour les images de film en 16:9.
+
+   Chaque rangée a la même hauteur, sans une ligne de script : une case
+   part de la largeur qu'aurait sa photo à la hauteur visée
+   (--r × --h), et grandit à proportion de --r pour remplir la rangée.
+   Deux cases qui grandissent à proportion de leur largeur gardent la même
+   hauteur. La dernière rangée ne s'étire pas (::after, qui prend le reste).
+
+   --h, la hauteur visée, suit la densité (boutons − et +) : la largeur de
+   la planche divisée par --colonnes, le nombre de colonnes qu'avait la
+   grille à ce cran — les boutons gardent le sens qu'ils avaient. */
+.planche {
+    container-type: inline-size;
+}
+
 .repertoire {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-    gap: 1.5rem 1.2rem;
+    --h: calc(100cqi / var(--colonnes, 5) * 1.12);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.9rem 1rem;
     margin: 0;
     padding: 1.8rem 0 .6rem;
     list-style: none;
-    align-items: start;
+}
+
+.repertoire::after {
+    content: '';
+    flex: 100000 1 0;
 }
 
 .carte {
     position: relative;
     list-style: none;
+    flex: var(--r, .75) 1 calc(var(--r, .75) * var(--h));
+    min-width: 0;
+}
+
+/* Le numéro de la vue, en marge de la planche, comme sur le film. */
+.carte-num {
+    display: block;
+    margin-top: .45rem;
+    font: 600 .6rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .1em;
+    color: var(--num);
+}
+
+/* LE CRAYON GRAS. Sur une planche, on entoure la vue qu'on garde : au
+   survol ou au clavier, un cercle rouge se trace autour de la photo, d'un
+   seul geste, un peu tremblé et fermé en dépassant, comme à la main. */
+.crayon {
+    position: absolute;
+    inset: -.55rem -.5rem -.45rem -.55rem;
+    width: calc(100% + 1.05rem);
+    height: calc(100% + 1rem);
+    overflow: visible;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.crayon path {
+    fill: none;
+    stroke: var(--crayon);
+    stroke-width: 3.2;
+    stroke-linecap: round;
+    /* Un trait de la longueur du chemin, suivi d'un blanc plus long :
+       décalé de 1,2, il ne reste rien — pas même le point qu'une
+       extrémité arrondie laisserait d'un trait de longueur nulle. */
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 1.2;
+    opacity: .9;
+    transition: stroke-dashoffset .45s cubic-bezier(.3, .6, .2, 1);
+}
+
+.carte-btn:hover .crayon path,
+.carte-btn:focus-visible .crayon path,
+.carte.regarde .crayon path {
+    stroke-dashoffset: 0;
 }
 
 .carte-btn {
+    position: relative;
     display: block;
     width: 100%;
     background: none;
@@ -276,7 +350,7 @@ h1 {
 .cadre {
     position: relative;
     display: block;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: var(--r, .75);
     overflow: hidden;
     overflow: clip;
     border-radius: .65rem;
@@ -298,7 +372,6 @@ h1 {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 50% 30%;
     transition: transform .6s cubic-bezier(.2, .6, .2, 1);
 }
 
@@ -365,10 +438,7 @@ h1 {
     transition: transform 1.3s cubic-bezier(.2, .6, .2, 1);
 }
 
-/* ── La densité de la planche (boutons − et +) ── */
-html[data-zoom] .repertoire {
-    grid-template-columns: repeat(var(--colonnes, 3), 1fr);
-}
+/* ── La densité de la planche (boutons − et +) : voir --h ── */
 html[data-zoom="1"] { --colonnes: 1; }
 html[data-zoom="2"] { --colonnes: 2; }
 html[data-zoom="3"] { --colonnes: 3; }
@@ -377,8 +447,8 @@ html[data-zoom="5"] { --colonnes: 5; }
 html[data-zoom="6"] { --colonnes: 6; }
 
 @media (max-width: 640px) {
-    html[data-zoom="3"] .repertoire { gap: .8rem .5rem; }
-    html[data-zoom="4"] .repertoire { gap: .45rem .35rem; }
+    html[data-zoom="3"] .repertoire { gap: 1.3rem .5rem; }
+    html[data-zoom="4"] .repertoire { gap: 1.1rem .35rem; }
 }
 
 /* ── Visionneuse plein écran (Lightbox) ── */
@@ -575,7 +645,8 @@ html.vt-book .zoom-img {
     .tete { padding: 2.3rem 0 1.6rem; }
     .sur-titre { font-size: .69rem; letter-spacing: .2em; margin-bottom: .8rem; }
     .ornement { margin-top: 1.1rem; width: 8.5rem; }
-    .repertoire { grid-template-columns: repeat(2, 1fr); gap: 1rem .65rem; padding: 1.2rem 0 .4rem; }
+    .repertoire { gap: 1.5rem .65rem; padding: 1.2rem 0 .4rem; }
+    .carte-num { font-size: .55rem; margin-top: .35rem; }
     .barre { top: .55rem; margin-top: .5rem; }
     .bascule, .densite-btn { width: 2.1rem; height: 2.1rem; }
     .zoom-close { top: .8rem; right: .8rem; width: 2.3rem; height: 2.3rem; }

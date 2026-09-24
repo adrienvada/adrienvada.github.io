@@ -15,8 +15,9 @@
  *  décrire la scène suffit, et ne se trompe pas.
  *
  *  IMPORTANT — vignettes :
- *    Chaque photo a trois vignettes WebP recadrées en 3:4 (320, 640 et
- *    960 px de large) dans ressources/images/galerie/vignettes/. Après un
+ *    Chaque photo a trois vignettes WebP à son cadre (320, 640 et 960 px
+ *    de large) dans ressources/images/galerie/vignettes/ : la galerie est
+ *    une planche contact, où chaque photo garde ses proportions. Après un
  *    ajout, les fabriquer à la racine du site :
  *      python3 build/variantes-images.py
  *    puis régénérer la page : node build/generer-page-galerie.js

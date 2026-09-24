@@ -46,8 +46,20 @@ CE QUE LE SCRIPT PRODUIT, à côté des originaux servis :
       tel flou ne se distinguent pas de l'original flouté, pour 3 Ko.
 
   ressources/images/galerie/vignettes/<nom>-{320,640,960}.webp
-      Les vignettes du book, recadrées en 3:4 (le format de la grille),
-      en visant le haut du cadre — là où sont les visages.
+      Les vignettes du book, AU CADRE DE LA PHOTO : la galerie est une
+      planche contact, où chaque photo garde sa largeur naturelle (voir
+      build/generer-page-galerie.js). Elles étaient recadrées en 3:4, le
+      format de l'ancienne grille : douze photos sur dix-neuf, plus larges
+      que hautes, y perdaient la moitié de leur image — le décor, le
+      partenaire, la salle. La largeur donnée est celle de la vignette ;
+      la page lit ses proportions dans le fichier.
+
+  ressources/images/portrait-affiche-{480,720,960}.webp (+ -720.jpg)
+      Le portrait d'affiche de l'en-tête de l'accueil : la photo de
+      présentation du book (vignette_principale.jpeg), à son cadre, en
+      trois largeurs — l'en-tête la montre sur toute la largeur d'un
+      téléphone, sur 340 px à l'écran. Le JPEG est le repli des
+      navigateurs sans WebP.
 
 Il ne REFAIT RIEN de ce qui existe déjà : seules les versions manquantes
 sont fabriquées, pour ne pas réécrire à l'octet près des fichiers inchangés
@@ -85,18 +97,14 @@ LARGEUR_COUVERTURE = 240
 LARGEUR_FLOU = 200
 RAYON_FLOU = 4
 QUALITE_FLOU = 75
-# Trois pour la galerie : sa grille passe de quatre colonnes à une seule
-# (boutons − / +), et la vignette doit rester nette à chaque cran.
+# Trois pour la galerie : sa planche passe de rangées serrées à une photo
+# par rangée (boutons − / +), et la vignette doit rester nette à chaque cran.
 LARGEURS_GALERIE = (320, 640, 960)
 # 78 : le seuil où la compression cesse de se voir dans les fonds sombres
 # des photos de plateau, mesuré sur Bérénice et Fulguré.e.s. Plus bas, les
 # aplats noirs se pommèlent.
 QUALITE = 78
 
-# Le format de la grille du book, et le point visé en recadrant : le même
-# que l'ancienne commande des vignettes (35 % depuis le haut).
-RAPPORT_GALERIE = 3 / 4
-VISEE_GALERIE = (0.5, 0.35)
 
 
 def ouvrir(chemin):
@@ -226,13 +234,39 @@ def vignettes_galerie(source, forcer):
             continue
         if im is None:
             im = ouvrir(source)
-        taille = (largeur, round(largeur / RAPPORT_GALERIE))
-        # Une photo plus petite que la vignette voulue n'est pas agrandie :
-        # on la recadre à ses propres dimensions, au même rapport.
-        if im.size[0] < taille[0] or im.size[1] < taille[1]:
-            k = min(im.size[0] / taille[0], im.size[1] / taille[1])
-            taille = (int(taille[0] * k), int(taille[1] * k))
-        ecrire_webp(ImageOps.fit(im, taille, Image.LANCZOS, centering=VISEE_GALERIE), cible)
+        # Le cadre de la photo, réduit — jamais agrandi : une photo plus
+        # étroite que la vignette voulue est écrite à sa propre taille.
+        w, h = im.size
+        taille = (largeur, round(h * largeur / w)) if w > largeur else (w, h)
+        ecrire_webp(im.resize(taille, Image.LANCZOS), cible)
+        faites.append(cible)
+    return faites
+
+
+# Le portrait d'affiche : la photo de présentation du book (la première de
+# galerie.js), celle que l'en-tête montrait déjà en médaillon.
+PORTRAIT = os.path.join(GALERIE, "vignette_principale.jpeg")
+LARGEURS_PORTRAIT = (480, 720, 960)
+
+
+def portrait_affiche(forcer):
+    faites = []
+    im = None
+    cibles = [(l, "webp") for l in LARGEURS_PORTRAIT] + [(720, "jpg")]
+    for largeur, fmt in cibles:
+        cible = os.path.join(ROOT, "ressources", "images", f"portrait-affiche-{largeur}.{fmt}")
+        if os.path.exists(cible) and not forcer:
+            continue
+        if im is None:
+            im = ouvrir(PORTRAIT)
+        w, h = im.size
+        r = im.resize((largeur, round(h * largeur / w)), Image.LANCZOS) if w > largeur else im
+        if fmt == "webp":
+            ecrire_webp(r, cible)
+        else:
+            tmp = cible + ".tmp"
+            r.save(tmp, "JPEG", quality=82, optimize=True, progressive=True)
+            os.replace(tmp, cible)
         faites.append(cible)
     return faites
 
@@ -276,6 +310,7 @@ def main(arguments):
             print(f"  ⚠ introuvable : {os.path.relpath(source, ROOT)} (galerie.js)")
             continue
         faites += vignettes_galerie(source, forcer)
+    faites += portrait_affiche(forcer)
 
     for f in faites:
         print(f"  {os.path.relpath(f, ROOT)}  {os.path.getsize(f) // 1024} Ko")
