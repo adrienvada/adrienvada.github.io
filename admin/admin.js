@@ -3,10 +3,11 @@
  * ------------------------------------------------------------------
  *  Cette page écrit dans la table Supabase `representations`, celle que
  *  l'accueil lit en direct (dates-live.js). Elle en reprend l'allure :
- *  les soirées sont affichées EXACTEMENT comme sur la page des dates
- *  (mêmes pastilles dorées, mêmes séries dépliables, même vocabulaire),
- *  avec en plus, sur chaque soirée, trois gestes : modifier, dupliquer,
- *  supprimer.
+ *  les soirées sont affichées comme dans l'onglet Dates (intercalaire
+ *  par mois et sa frise, feuille d'éphéméride sur la photo du spectacle,
+ *  une puce par séance, même vocabulaire). Ici, toucher une puce ouvre la
+ *  fiche de sa séance ; le « + » en fin de rangée ajoute une soirée à la
+ *  suite ; dupliquer et supprimer sont dans la fiche.
  *
  *  LE CHOIX DU SPECTACLE. La liste proposée vient du CV lui-même
  *  (index.html) : les spectacles marqués « En tournée » ou « En
@@ -37,7 +38,6 @@
     let spectaclesCV = [];      // [{ titre, statut, url }] relevés dans le CV
     let passeesOuvertes = false;
     let spectacleChoisi = '';   // valeur courante de la puce sélectionnée
-    let seriesRepliees = new Set();   // dépliées par défaut : on administre soirée par soirée
 
     const isoLocal = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const aujourdhui = isoLocal(new Date());
@@ -162,7 +162,9 @@
 
     // ── Lecture ────────────────────────────────────────────────────
     async function chargerTout() {
-        await Promise.all([charger(), chargerSpectaclesDuCV()]);
+        // La liste s'affiche dès que la base répond ; les couleurs et les
+        // photos des spectacles la rejoignent quand univers.js est lu.
+        await Promise.all([charger(), chargerSpectaclesDuCV(), chargerUnivers().then(() => { if (lignes.length) rendre(); })]);
     }
 
     async function charger() {
@@ -176,7 +178,7 @@
                 direConnexion('La session avait expiré : reconnecte-toi.', 'erreur');
                 return;
             }
-            $('liste-a-venir').innerHTML = `<p class="text-xs text-red-400 italic p-2">Lecture impossible : ${esc(error.message)}</p>`;
+            $('liste-a-venir').innerHTML = `<p class="dl-vide adm-erreur">Lecture impossible : ${esc(error.message)}</p>`;
             toast('Lecture impossible : ' + error.message, true);
             return;
         }
@@ -185,7 +187,7 @@
         catch (e) {
             // Ne devrait pas arriver ; si ça arrive (fichier du site plus
             // ancien que celui-ci, juste après une publication), on le dit.
-            $('liste-a-venir').innerHTML = `<p class="text-xs text-red-400 italic p-2">Affichage impossible (${esc(e.message)}). Recharge la page dans une minute.</p>`;
+            $('liste-a-venir').innerHTML = `<p class="dl-vide adm-erreur">Affichage impossible (${esc(e.message)}). Recharge la page dans une minute.</p>`;
         }
     }
 
@@ -216,111 +218,132 @@
         }
     }
 
-    // ── Rendu de la liste, à l'image de la page des dates ──────────
-    const amberBadge = `<span class="text-[12px] text-luxury-warn font-normal mt-0.5 flex items-center gap-1"><svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-circle-info"></use></svg> Les réservations ne sont pas encore ouvertes</span>`;
-    const schoolBadge = `<span class="text-[12px] text-stone-600 italic block"><svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-lock"></use></svg> Séance scolaire</span>`;
-    // Même tri que sur le site (L.lienSur, dans dates-live.js) : une adresse
-    // qui ne mène pas à une page web ne devient pas un lien, ici non plus.
-    const bookingLink = url => L.lienSur(url)
-        ? `<a href="${esc(L.lienSur(url))}" target="_blank" rel="noopener" class="text-[11px] font-bold uppercase tracking-wider text-luxury-goldInk hover:underline inline-flex items-center gap-1 mt-0.5">Réservation ouverte <svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
-        : '';
-    const pastille = (texte, doux) => `<span class="font-mono font-bold ${doux ? 'text-luxury-goldInk bg-stone-100 border border-stone-200' : 'text-luxury-onGold bg-luxury-goldInk border border-luxury-goldInk'} px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap shadow-sm">${esc(texte)}</span>`;
-    // Le nom de la soirée accompagne chaque « Modifier » pour les lecteurs
-    // d'écran : sans lui, c'est vingt-quatre fois le même bouton.
-    const actions = l => {
-        const id = l.id, nom = esc(`${l.spectacle}, ${etiquetteSoiree(l)}`);
-        return `
-        <div class="adm-actions" role="group" aria-label="Actions">
-            <button type="button" class="adm-btn adm-btn-modifier" data-action="modifier" data-id="${id}" aria-label="Modifier : ${nom}"><svg class="ico" aria-hidden="true"><use href="#i-adm-pen"></use></svg><span>Modifier</span></button>
-            <button type="button" class="adm-btn" data-action="dupliquer" data-id="${id}"><svg class="ico" aria-hidden="true"><use href="#i-adm-copy"></use></svg><span>Dupliquer</span></button>
-            <button type="button" class="adm-btn danger" data-action="supprimer" data-id="${id}"><svg class="ico" aria-hidden="true"><use href="#i-adm-trash"></use></svg><span>Supprimer</span></button>
-        </div>`;
-    };
-
-    function etiquetteSoiree(l) {
-        const j = `${jourSemaine(l.jour)}${NB}${L.jourCourt(l.jour)}`;
-        return l.heure ? `${j} • ${l.heure}` : j;
+    /**
+     * LA COULEUR ET LA PHOTO DE CHAQUE SPECTACLE, lues dans univers.js —
+     * là où l'onglet Dates les prend. On n'exécute pas univers.js (c'est
+     * le moteur des univers, il lui faut l'accueil) : on en découpe la
+     * seule déclaration SHOW_UNIVERSES, avec les deux mêmes repères que
+     * build/generer-pages-spectacles.js. Si le fichier changeait de
+     * structure, la liste resterait lisible, dans l'or du site.
+     */
+    let univers = [];   // [{ cles: Set, accent, surAccent, couverture }]
+    async function chargerUnivers() {
+        try {
+            const src = await fetch('../univers.js', { cache: 'force-cache' }).then(r => r.text());
+            const debut = src.indexOf('const SHOW_UNIVERSES = {');
+            const fin = src.indexOf('\n(function () {', debut);
+            if (debut === -1 || fin === -1) return;
+            const tous = new Function(src.slice(debut, fin) + '\nreturn SHOW_UNIVERSES;')();
+            univers = Object.keys(tous).map(k => {
+                const u = tous[k], pal = u.palette || {};
+                // UniversMontage est une constante globale, pas une propriété de window.
+                const c = !u.affiche && typeof UniversMontage !== 'undefined' ? UniversMontage.couverture(u) : null;
+                return {
+                    cles: new Set([k, ...(u.autresTitres || [])].map(cleTitre)),
+                    accent: pal.accent || '', surAccent: pal.onAccent || '',
+                    couverture: c ? { src: '../' + c.src, repli: '../' + c.repli, pos: c.pos } : null
+                };
+            });
+        } catch (e) { univers = []; }
     }
-    const horaireAConfirmer = l => l.heure ? '' : `<span class="text-[11px] text-luxury-textMuted italic font-mono mt-0.5 pl-0.5">Horaire à confirmer</span>`;
-    const etatSoiree = l => l.scolaire ? schoolBadge : (l.reservation_url ? bookingLink(l.reservation_url) : amberBadge);
+    const universDe = titre => { const k = cleTitre(titre); return univers.find(u => u.cles.has(k)) || null; };
+    // Une couverture de 240 px manque : la version de 640 px, qui existe toujours.
+    document.addEventListener('error', e => {
+        const img = e.target;
+        if (img && img.tagName === 'IMG' && img.dataset && img.dataset.repli) { img.src = img.dataset.repli; delete img.dataset.repli; }
+    }, true);
 
-    function ligneSimple(l, passee) {
-        return `
-            <div class="adm-soiree glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 gap-x-3 ${passee ? 'adm-passee' : ''}" data-id="${l.id}">
-                <div class="adm-soiree-corps">
-                    <div class="adm-col-date">
-                        ${pastille(etiquetteSoiree(l), passee)}
-                        ${horaireAConfirmer(l)}
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <h4 class="font-bold text-luxury-textMain text-xs leading-tight">${esc(l.spectacle)}</h4>
-                        <span class="text-[12px] text-luxury-textMuted block"><svg class="ico text-luxury-goldInk text-[8px]" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg> ${esc(l.lieu)}</span>
-                        ${etatSoiree(l)}
-                    </div>
-                </div>
-                ${actions(l)}
-            </div>`;
-    }
+    // ── La liste, à l'image de l'onglet Dates ──────────────────────
+    //  Mêmes intercalaires de mois et même frise dans la marge, même
+    //  feuille d'éphéméride posée sur la photo du spectacle, même titre en
+    //  Cinzel, même « Ville · salle ». Une différence, et c'est tout
+    //  l'outil : chaque PUCE DE SÉANCE est un bouton qui ouvre sa fiche, et
+    //  le « + » qui ferme la rangée (là où le site met l'agenda) ajoute une
+    //  soirée à la suite.
+    const DL_JOURS_COURTS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+    const DL_MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    const DL_MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    const DL_MOIS_BREFS = ['janv', 'févr', 'mars', 'avr', 'mai', 'juin', 'juil', 'août', 'sept', 'oct', 'nov', 'déc'];
+    const jourDe = iso => { const [a, m, j] = iso.split('-').map(Number); const d = new Date(a, m - 1, j); return { iso, t: d.getTime(), a, m: m - 1, j, js: d.getDay() }; };
 
-    function serie(entree, soirees, passee) {
-        const id = entree.id;
-        const ouverte = !seriesRepliees.has(id);
-        const lignesHtml = soirees.map(l => `
-            <div class="adm-soiree glass-panel rounded px-2.5 py-2 border border-stone-200/20 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 gap-x-2" data-id="${l.id}">
-                <div class="adm-soiree-corps">
-                    <div class="adm-col-date">
-                        ${pastille(etiquetteSoiree(l), passee)}
-                        ${horaireAConfirmer(l)}
-                    </div>
-                    <div class="flex flex-col min-w-0 flex-1">${etatSoiree(l)}</div>
-                </div>
-                ${actions(l)}
-            </div>`).join('');
-        const dernier = soirees[soirees.length - 1];
-        return `
-            <div class="date-multi-wrapper ${passee ? 'adm-passee' : ''}">
-                <button type="button" data-toggle-serie="${esc(id)}" aria-expanded="${ouverte}"
-                    class="w-full text-left glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 date-row-clickable">
-                    <span class="adm-soiree-corps">
-                        <span class="adm-col-date">
-                            ${pastille(entree.dateLabel, passee)}
-                            <span class="text-[11px] text-luxury-textMuted font-mono mt-0.5 pl-0.5">${soirees.length} soirées</span>
-                        </span>
-                        <span class="min-w-0 flex-1">
-                            <span class="font-bold text-luxury-textMain text-xs leading-tight block">${esc(entree.title)}</span>
-                            <span class="text-[12px] text-luxury-textMuted block"><svg class="ico text-luxury-goldInk text-[8px]" aria-hidden="true"><use href="#i-solid-location-dot"></use></svg> ${esc(entree.location)}</span>
-                        </span>
-                    </span>
-                    <span class="text-[12px] text-luxury-textMuted flex items-center gap-2 flex-shrink-0 pl-0.5 md:pl-0">
-                        <span class="uppercase font-bold tracking-wider">${ouverte ? 'Replier' : 'Voir les soirées'}</span>
-                        <svg class="ico text-[10px] text-stone-500 date-toggle-chevron ${ouverte ? 'rotated' : ''}" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>
-                    </span>
-                </button>
-                <div class="date-expand-panel ${ouverte ? 'expanded' : ''}">
-                    <div class="date-expand-inner">
-                        <div class="mt-1 ml-3 border-l-2 border-luxury-gold/20 pl-3 space-y-1.5 pb-1">
-                            ${lignesHtml}
-                            <button type="button" class="adm-ajout-serie" data-action="dupliquer" data-id="${dernier.id}">
-                                <svg class="ico" aria-hidden="true"><use href="#i-adm-plus"></use></svg> Ajouter une soirée à cette série
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
+    function feuille(e) {
+        const d = e.jours[0], z = e.jours[e.jours.length - 1];
+        const plusieurs = z.iso !== d.iso, deuxMois = plusieurs && (z.m !== d.m || z.a !== d.a);
+        const c = e.u && e.u.couverture;
+        const photo = c ? `<img src="${esc(c.src)}" data-repli="${esc(c.repli)}" alt="" width="48" height="56" loading="lazy" decoding="async"${c.pos ? ` style="object-position:${esc(c.pos)}"` : ''}>` : '';
+        return `<span class="dl-feuille${plusieurs ? ' dl-feuille--2' : ''}${c ? ' dl-feuille--photo' : ' dl-feuille--sans-photo'}" aria-hidden="true">${photo}`
+            + `<span class="dl-bande${deuxMois ? ' dl-bande--2' : ''}">${deuxMois ? `${DL_MOIS_BREFS[d.m]}–${DL_MOIS_BREFS[z.m]}` : DL_MOIS_COURTS[d.m]}</span>`
+            + `<span class="dl-num">${plusieurs ? `${d.j}–${z.j}` : d.j}</span>`
+            + `<span class="dl-jour">${plusieurs ? `${DL_JOURS_COURTS[d.js]}–${DL_JOURS_COURTS[z.js]}` : DL_JOURS_COURTS[d.js]}</span></span>`;
     }
 
+    // « Rouen · Tribunal judiciaire (76) » : la ville, puis la salle sans sa ville.
+    function lieuHtml(l) {
+        const ville = l.ville || '';
+        let salle = String(l.lieu || '').trim();
+        const dep = salle.match(/\s*\((\d{2,3}[AB]?)\)$/i);
+        if (dep) salle = salle.slice(0, dep.index).trim();
+        if (ville) {
+            const bas = salle.toLowerCase();
+            const lien = [', ', ' de ', ' du ', ' d’', " d'", ' à '].find(x => bas.endsWith((x + ville).toLowerCase()));
+            if (lien) salle = salle.slice(0, salle.length - (lien + ville).length).trim();
+            else if (bas === ville.toLowerCase()) salle = '';
+        }
+        return (ville ? `<span class="dl-ville">${esc(ville)}</span>` : '') + (ville && salle ? ' · ' : '') + esc(salle) + (dep ? ` (${esc(dep[1])})` : '');
+    }
+
+    // Une puce par séance, écrite comme sur le site (« jeu. 19h00 »,
+    // « 14h15 scolaire », « billetterie à venir »), mais qui s'ouvre.
+    function puceSeance(l, e) {
+        const j = jourDe(l.jour);
+        const longue = e.jours.length > 1 && e.jours[e.jours.length - 1].t - e.jours[0].t > 6.5 * 864e5;
+        const jour = e.jours.length > 1 ? `<span class="dl-s-jour">${DL_JOURS_COURTS[j.js]}${longue ? ` ${j.j}` : ''}</span> ` : '';
+        const heure = l.heure ? `<span class="dl-s-heure">${esc(l.heure)}</span>` : '<span class="dl-s-heure dl-s-heure--flou">horaire à confirmer</span>';
+        const etat = l.scolaire ? `${l.heure ? heure + ' ' : ''}<i>scolaire</i>`
+            : L.lienSur(l.reservation_url) ? heure
+                : `${l.heure ? heure + ' · ' : ''}<i>billetterie à venir</i>`;
+        const muette = l.scolaire || !L.lienSur(l.reservation_url);
+        const nom = `${l.spectacle}, ${DL_JOURS_COURTS[j.js]} ${L.jourCourt(l.jour)}${l.heure ? ' à ' + l.heure : ''}`;
+        return `<li><button type="button" class="dl-puce adm-seance${muette ? ' dl-puce--muette' : ''}" data-action="modifier" data-id="${l.id}" aria-label="Modifier : ${esc(nom)}">`
+            + `${jour}${etat}<svg class="ico" aria-hidden="true"><use href="#i-adm-pen"></use></svg></button></li>`;
+    }
+
+    function ligneHtml(e, passee) {
+        const d = e.soirees[e.soirees.length - 1];
+        const style = e.u && e.u.accent ? ` style="--dl-a:${esc(e.u.accent)};--dl-sa:${esc(e.u.surAccent || '#ffffff')}"` : '';
+        return `<article class="dl${passee ? ' adm-passee' : ''}"${style}>` + feuille(e)
+            + `<div class="dl-corps"><h5 class="dl-titre">${esc(e.titre)}</h5><p class="dl-lieu">${lieuHtml(e.soirees[0])}</p>`
+            + `<ul class="dl-seances" role="list">${e.soirees.map(l => puceSeance(l, e)).join('')}`
+            + `<li class="dl-seances-agenda"><button type="button" class="adm-plus" data-action="dupliquer" data-id="${d.id}" aria-label="Ajouter une soirée à la suite : ${esc(e.titre)}"><svg class="ico" aria-hidden="true"><use href="#i-adm-plus"></use></svg></button></li>`
+            + `</ul></div></article>`;
+    }
+
+    // Les entrées de l'onglet Dates (dates-live.js les calcule : une date
+    // seule, ou une série au même lieu), rangées sous leur mois.
     function rendreBloc(sousEnsemble, passee) {
         if (!sousEnsemble.length) return '';
         const parId = new Map(sousEnsemble.map(l => [l.id, l]));
-        const entrees = L.versShowData(sousEnsemble);
-        if (!entrees.every(e => e.type === 'series' ? e.shows.every(s => parId.has(s.id)) : parId.has(e.id))) {
+        const brutes = L.versShowData(sousEnsemble);
+        if (!brutes.every(e => e.type === 'series' ? e.shows.every(s => parId.has(s.id)) : parId.has(e.id))) {
             throw new Error('dates-live.js est plus ancien que cette page');
         }
+        const entrees = brutes.map(e => {
+            const soirees = (e.type === 'series' ? e.shows.map(s => parId.get(s.id)) : [parId.get(e.id)])
+                .sort((x, y) => (x.jour + x.heure).localeCompare(y.jour + y.heure));
+            const jours = [...new Set(soirees.map(l => l.jour))].sort().map(jourDe);
+            return { titre: soirees[0].spectacle, soirees, jours, u: universDe(soirees[0].spectacle) };
+        }).sort((x, y) => x.jours[0].t - y.jours[0].t);
         if (passee) entrees.reverse(); // les plus récentes en tête, comme dans les archives
-        return entrees.map(e => {
-            if (e.type === 'series') return serie(e, e.shows.map(s => parId.get(s.id)), passee);
-            return ligneSimple(parId.get(e.id), passee);
-        }).join('');
+        const mois = [];
+        entrees.forEach(e => {
+            const cle = `${e.jours[0].a}-${e.jours[0].m + 1}`;
+            let g = mois.find(x => x.cle === cle);
+            if (!g) mois.push(g = { cle, a: e.jours[0].a, m: e.jours[0].m, entrees: [] });
+            g.entrees.push(e);
+        });
+        return mois.map(g => `<section class="dl-groupe" style="--dl-lisere:var(--dl-mois-${g.m + 1})" aria-label="${esc(DL_MOIS[g.m])} ${g.a}">`
+            + `<div class="dl-intercalaire"><h4>${esc(DL_MOIS[g.m].charAt(0).toUpperCase() + DL_MOIS[g.m].slice(1))} <span>${g.a}</span></h4></div>`
+            + g.entrees.map(e => ligneHtml(e, passee)).join('') + '</section>').join('');
     }
 
     function rendre() {
@@ -331,28 +354,20 @@
             : `${aVenir.length} représentation${aVenir.length > 1 ? 's' : ''} à venir`;
         $('liste-a-venir').innerHTML = aVenir.length
             ? rendreBloc(aVenir, false)
-            : `<p class="text-xs text-luxury-textMuted italic p-2">Aucune date à venir pour le moment. Ajoute la première avec le bouton doré.</p>`;
+            : `<p class="dl-vide">Aucune date à venir pour le moment. Ajoute la première avec le bouton doré.</p>`;
 
         $('compteur-passees').textContent = passees.length ? `${passees.length}` : '';
         $('liste-passees').innerHTML = passees.length
             ? rendreBloc(passees, true)
-            : `<p class="text-xs text-luxury-textMuted italic p-2">Aucune date passée dans la base.</p>`;
+            : `<p class="dl-vide">Aucune date passée dans la base.</p>`;
         $('panneau-passees').classList.toggle('expanded', passeesOuvertes);
         $('chevron-passees').classList.toggle('rotated', passeesOuvertes);
         $('btn-passees').setAttribute('aria-expanded', String(passeesOuvertes));
     }
 
-    // Une série se déplie ou se replie, comme sur l'accueil.
-    document.addEventListener('click', e => {
-        const t = e.target.closest('[data-toggle-serie]');
-        if (!t) return;
-        const id = t.dataset.toggleSerie;
-        if (seriesRepliees.has(id)) seriesRepliees.delete(id); else seriesRepliees.add(id);
-        rendre();
-    });
     $('btn-passees').addEventListener('click', () => { passeesOuvertes = !passeesOuvertes; rendre(); });
 
-    // ── Les trois gestes ───────────────────────────────────────────
+    // ── Les gestes : une puce modifie sa séance, le « + » en ajoute une ──
     document.addEventListener('click', async e => {
         const btn = e.target.closest('button[data-action][data-id]');
         if (!btn) return;
@@ -360,7 +375,6 @@
         if (!l) return;
         if (btn.dataset.action === 'modifier') ouvrirFiche(l, 'modifier');
         if (btn.dataset.action === 'dupliquer') ouvrirFiche(Object.assign({}, l, { id: null, jour: lendemain(l.jour) }), 'copie');
-        if (btn.dataset.action === 'supprimer') supprimer(l);
     });
 
     async function supprimer(l) {

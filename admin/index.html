@@ -126,7 +126,10 @@
                     Ajouter une date
                 </button>
 
-                <div class="space-y-1.5 text-sm md:text-[15px] leading-tight" id="liste-a-venir"></div>
+                <!-- Rendu par admin.js, à l'image de l'onglet Dates : un
+                     intercalaire par mois, la frise dans la marge, une puce
+                     par séance — qui ouvre sa fiche. -->
+                <div class="adm-dates" id="liste-a-venir"></div>
             </section>
 
             <!-- Dates passées : repliées, comme les archives -->
@@ -142,7 +145,7 @@
                 </button>
                 <div class="date-expand-panel" id="panneau-passees">
                     <div class="date-expand-inner">
-                        <div class="space-y-1.5 text-sm md:text-[15px] leading-tight pt-3 mt-3 border-t border-stone-200/60" id="liste-passees"></div>
+                        <div class="adm-dates pt-3 mt-3 border-t border-stone-200/60" id="liste-passees"></div>
                         <p class="text-[12px] text-luxury-textMuted mt-3 leading-relaxed">Les saisons antérieures ne sont pas ici : elles restent écrites dans <code>dates.js</code>.</p>
                     </div>
                 </div>
@@ -294,6 +297,10 @@
         integrity="sha384-JBR+x8blGwjDRO63aHCGiZMD4VNiTR4ZUGA+N6ZKLf3zNt1fK8IBpcgPaMrxqWBp"
         crossorigin="anonymous"></script>
     <script src="../dates-live.js"></script>
+    <!-- La photo de couverture de chaque spectacle, par la même règle que
+         l'onglet Dates (UniversMontage.couverture). Bibliothèque sans effet :
+         elle ne dessine rien tant qu'on ne l'appelle pas. -->
+    <script src="../univers-montage.js"></script>
     <script src="admin.js"></script>
 </body>
 
