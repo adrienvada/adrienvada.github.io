@@ -132,12 +132,6 @@ body {
 }
 .date-expand-panel.expanded { grid-template-rows: 1fr; opacity: 1; }
 .date-expand-panel > .date-expand-inner { overflow: hidden; }
-.date-row-clickable { cursor: pointer; }
-.date-row-clickable:hover {
-    border-color: rgb(var(--c-gold) / 0.45) !important;
-    box-shadow: 0 0 0 1px rgb(var(--c-gold) / 0.14);
-    background: var(--row-hover);
-}
 .date-toggle-chevron { transition: transform var(--dur-panel) var(--ease-panel); }
 .date-toggle-chevron.rotated { transform: rotate(180deg); }
 
@@ -149,29 +143,130 @@ body {
     color: rgb(var(--c-on-gold)) !important;
 }
 
-/* ── Boutons d'action sur une soirée ──
-   Trois gestes, toujours dans le même ordre : modifier, dupliquer,
-   supprimer. Sur téléphone, ils prennent une ligne entière sous la
-   soirée, avec leur nom ; sur grand écran, ils se rangent à droite. */
-.adm-actions { display: flex; gap: 4px; flex-shrink: 0; }
-.adm-btn {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-    padding: 6px 9px; border-radius: 6px;
-    border: 1px solid rgb(var(--c-s200));
-    background: rgb(var(--c-s100) / 0.6);
-    color: rgb(var(--c-muted));
-    transition: color var(--dur-quick), border-color var(--dur-quick), background var(--dur-quick);
-    cursor: pointer;
+/* ══════════════════════════════════════════════════════════════
+   LA LISTE, À L'IMAGE DE L'ONGLET DATES
+   ══════════════════════════════════════════════════════════════
+   Les règles ci-dessous sont RECOPIÉES du <style> d'index.html
+   (« LA LIGNE, À LA DENSITÉ DU CV », « LA FEUILLE D'ÉPHÉMÉRIDE »,
+   « LA FRISE DES MOIS », « LES SÉANCES, EN PUCES ») : même raison que
+   les jetons plus haut, la page n'a pas accès au <style> de l'accueil.
+   Si l'onglet Dates change d'allure, reporter ici. Deux écarts voulus :
+   la frise est tracée d'emblée (pas de ligne de lecture à suivre : on
+   administre, on ne parcourt pas), et les puces sont des boutons, plus
+   hauts, qui ouvrent la fiche. */
+.adm-dates {
+    --dl-a: rgb(var(--c-gold-ink));
+    --dl-sa: rgb(var(--c-on-gold));
+    --dl-mois-1: #6684db; --dl-mois-2: #1593d1; --dl-mois-3: #169d97; --dl-mois-4: #469f58;
+    --dl-mois-5: #759731; --dl-mois-6: #978c0d; --dl-mois-7: #a48610; --dl-mois-8: #b27f02;
+    --dl-mois-9: #bc7806; --dl-mois-10: #c86e31; --dl-mois-11: #ce6653; --dl-mois-12: #b668b0;
+}
+
+/* Un mois : son intercalaire, sa frise dans la marge de la carte. */
+.dl-groupe { position: relative; --dl-lisere: rgb(var(--c-gold-ink)); --dl-depart: 16px; }
+.dl-groupe + .dl-groupe { margin-top: 0.75rem; }
+.dl-groupe::before {
+    content: ""; position: absolute; left: -9.5px; top: var(--dl-depart); bottom: 0;
+    width: 3px; border-radius: 2px; pointer-events: none; background: var(--dl-lisere);
+}
+.dl-intercalaire {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    min-height: 32px; margin: 0 -1rem 0.15rem 0; padding: 0 1rem 0 0.6rem;
+    background: rgb(var(--c-surface));
+    box-shadow: inset 0 -1px 0 rgb(var(--c-s200) / 0.7);
+}
+.dl-intercalaire::after {
+    content: ""; position: absolute; left: -12px; top: 50%; width: 8px; height: 8px; margin-top: -4px;
+    border-radius: 50%; background: var(--dl-lisere);
+    box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--dl-lisere) 22%, transparent);
+}
+.dl-intercalaire h4 {
+    font: 700 12px/1.25 Montserrat, sans-serif; letter-spacing: 0.16em; text-transform: uppercase;
+    color: rgb(var(--c-gold-ink));
+}
+.dl-intercalaire h4 span { color: rgb(var(--c-muted)); font-weight: 600; letter-spacing: 0.1em; }
+
+/* La ligne : la feuille, puis le spectacle, le lieu, les séances. */
+.dl {
+    display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 11px; align-items: center;
+    margin-right: -1rem; padding: 6px 0.75rem 6px 0.5rem;
+    border-top: 1px solid rgb(var(--c-s200) / 0.55);
+}
+.dl-intercalaire + .dl { border-top: 0; }
+.dl:nth-of-type(even) { background: var(--c-stripe); }
+
+.dl-feuille {
+    position: relative; display: grid; place-items: center; width: 48px; height: 56px;
+    overflow: hidden; overflow: clip; border-radius: 6px;
+    background: var(--dl-a); color: var(--dl-sa); box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+}
+.dl-feuille img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6); }
+.dl-feuille--photo::after { content: ""; position: absolute; inset: 0; background: radial-gradient(closest-side, rgb(0 0 0 / 0.5), rgb(0 0 0 / 0)); }
+.dl-bande {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 1; height: 13px;
+    background: var(--dl-a); color: var(--dl-sa);
+    font: 700 8px/13px Montserrat, sans-serif; letter-spacing: 0.06em; text-transform: uppercase;
+    text-align: center; white-space: nowrap;
+}
+.dl-bande--2 { font-size: 7px; letter-spacing: 0; }
+.dl-num {
+    position: relative; z-index: 1; margin-top: 1px;
+    font: 700 19px/1 Inter, sans-serif; font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+    color: #fff; text-shadow: 0 1px 3px rgb(0 0 0 / 0.55); white-space: nowrap;
+}
+.dl-feuille--2 .dl-num { font-size: 14px; letter-spacing: -0.02em; }
+.dl-jour {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 7px 0 3px;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.7), rgb(0 0 0 / 0)); color: #fff;
+    font: 700 8px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.02em; text-transform: uppercase; text-align: center; white-space: nowrap;
+}
+.dl-feuille--sans-photo .dl-bande { background: rgb(0 0 0 / 0.28); color: #fff; }
+.dl-feuille--sans-photo .dl-num, .dl-feuille--sans-photo .dl-jour { background: none; color: var(--dl-sa); text-shadow: none; }
+
+.dl-corps { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.dl-titre, .dl-lieu { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.dl-titre { font: 600 13px/17px Cinzel, serif; letter-spacing: 0.01em; text-transform: uppercase; color: rgb(var(--c-text)); }
+.dl-lieu { font-size: 11.5px; line-height: 15px; color: rgb(var(--c-muted)); }
+.dl-ville { font-weight: 600; color: rgb(var(--c-gold-ink)); }
+.dl-vide { padding: 0.5rem; font-size: 12px; font-style: italic; color: rgb(var(--c-muted)); }
+
+/* LES SÉANCES, EN PUCES — ici, des boutons. Même dessin que sur le site
+   (plein : billetterie ouverte ; pointillé : scolaire ou billetterie à
+   venir), un crayon à la place de la flèche, et 32 px de haut au doigt. */
+.dl-seances { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 4px; }
+.dl-puce {
+    display: inline-flex; align-items: center; gap: 4px; min-height: 28px; padding: 0 9px;
+    border: 1px solid rgb(var(--c-gold) / 0.55); border-radius: 999px; background: transparent;
+    font: 600 11px/1.2 Inter, sans-serif; font-variant-numeric: tabular-nums;
+    color: rgb(var(--c-text)); white-space: nowrap; cursor: pointer;
+    transition: border-color var(--dur-quick), background var(--dur-quick);
     -webkit-tap-highlight-color: transparent;
 }
-.adm-btn:hover, .adm-btn:focus-visible { color: rgb(var(--c-gold-ink)); border-color: rgb(var(--c-gold) / 0.6); outline: none; }
-.adm-btn.danger:hover, .adm-btn.danger:focus-visible { color: rgb(220 90 70); border-color: rgb(220 90 70 / 0.5); }
-.adm-btn .ico { font-size: 11px; }
-@media (max-width: 767px) {
-    .adm-actions { width: 100%; min-width: 0; justify-content: stretch; margin-top: 4px; }
-    .adm-actions .adm-btn { flex: 1 1 0; min-width: 0; justify-content: center; padding: 8px 2px; font-size: 9px; letter-spacing: .02em; gap: 4px; }
+.dl-puce:hover, .dl-puce:focus-visible { border-color: rgb(var(--c-gold)); background: rgb(var(--c-gold) / 0.1); outline: none; }
+.dl-puce:active { background: rgb(var(--c-gold) / 0.18); }
+.dl-puce .ico { font-size: 11px; color: rgb(var(--c-gold-ink)); }
+.dl-s-jour { font-weight: 500; color: rgb(var(--c-muted)); }
+.dl-puce i, .dl-s-heure--flou { font-style: italic; font-weight: 500; }
+.dl-puce--muette { border-style: dashed; border-color: rgb(var(--c-s300)); color: rgb(var(--c-muted)); font-weight: 500; }
+
+/* Le « + » ferme la rangée, là où le site met l'agenda : une soirée de
+   plus, à la suite (le lendemain, même spectacle, même lieu). */
+.dl-seances-agenda { margin-left: auto; margin-right: -4px; }
+@media (min-width: 768px) { .dl-seances-agenda { margin: 0 0 0 2px; } }
+.adm-plus {
+    display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px;
+    border: 1px dashed rgb(var(--c-gold) / 0.6); color: rgb(var(--c-gold-ink)); background: transparent; cursor: pointer;
 }
+.adm-plus:hover, .adm-plus:focus-visible { background: rgb(var(--c-gold) / 0.1); border-style: solid; outline: none; }
+.adm-plus .ico { font-size: 13px; }
+
+@media (pointer: coarse), (max-width: 767px) {
+    .dl-puce { min-height: 32px; padding: 0 9px; font-size: 12px; }
+    .adm-plus { width: 32px; height: 32px; }
+}
+
 
 /* ── Le grand bouton doré « Ajouter une date » ── */
 .adm-cta {
@@ -206,7 +301,13 @@ body {
 }
 .adm-champ::placeholder { color: rgb(var(--c-muted) / 0.7); }
 .adm-champ:focus { outline: none; border-color: rgb(var(--c-gold)); box-shadow: 0 0 0 3px rgb(var(--c-gold) / 0.15); }
-input[type="date"].adm-champ { min-height: 42px; }
+input[type="date"].adm-champ, input[type="time"].adm-champ { min-height: 42px; }
+/* 16 PX AU MOINS SUR TÉLÉPHONE. En dessous, Safari sur iPhone zoome la
+   page à chaque champ touché, et il faut dézoomer à la main pour voir
+   le bouton Enregistrer. */
+@media (max-width: 767px), (pointer: coarse) {
+    .adm-champ { font-size: 16px; min-height: 46px; }
+}
 .adm-etiquette {
     display: block; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
     font-family: 'Montserrat', sans-serif; color: rgb(var(--c-muted)); margin-bottom: 6px;
@@ -275,19 +376,69 @@ dialog.adm-fiche::backdrop { background: rgba(0, 0, 0, 0.55); backdrop-filter: b
     font-size: 12px; font-weight: 600; padding: 9px 14px; border-radius: 999px;
     box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
     opacity: 0; pointer-events: none; transition: opacity var(--dur-base), transform var(--dur-base) var(--ease-out);
-    z-index: 60; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+    z-index: 60; display: inline-flex; align-items: center; gap: 8px;
+    /* Un message d'erreur est long : il revient à la ligne au lieu de
+       sortir de l'écran d'un téléphone. */
+    width: max-content; max-width: calc(100vw - 32px); text-align: center; line-height: 1.35;
 }
+.adm-toast:not(.erreur) { white-space: nowrap; }
+.adm-toast.erreur { border-radius: 14px; }
+@media (max-width: 767px) { .adm-toast { bottom: calc(84px + env(safe-area-inset-bottom)); } }
 .adm-toast.visible { opacity: 1; transform: translate(-50%, 0); }
 .adm-toast.erreur { background: rgb(180 60 45); color: #fff; }
 
 /* Une soirée passée s'efface un peu, comme dans les archives */
-.adm-passee { opacity: .6; }
-.adm-passee:hover { opacity: 1; }
+.adm-passee { opacity: .65; }
+.adm-passee:hover, .adm-passee:focus-within { opacity: 1; }
 
-/* Ligne « ajouter une soirée à cette série », au pied d'une série */
-.adm-ajout-serie {
-    display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700;
-    letter-spacing: .06em; text-transform: uppercase; color: rgb(var(--c-gold-ink));
-    padding: 6px 4px; background: none; border: 0; cursor: pointer;
+/* ── Puces rapides : lieux déjà joués, heures habituelles ──
+   Un toucher au lieu de dix frappes au clavier. */
+.adm-puces-rapides { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+#puces-heures { margin-top: 10px; }
+#puces-heures:empty { display: none; }
+.adm-puce-rapide {
+    font-size: 12px; line-height: 1.2; padding: 7px 11px; border-radius: 999px; text-align: left;
+    border: 1px dashed rgb(var(--c-s300)); background: transparent; color: rgb(var(--c-muted));
+    cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.adm-ajout-serie:hover { text-decoration: underline; }
+.adm-puce-rapide:hover, .adm-puce-rapide:focus-visible { color: rgb(var(--c-gold-ink)); border-color: rgb(var(--c-gold) / 0.6); outline: none; }
+.adm-puce-rapide[aria-pressed="true"] { border-style: solid; border-color: rgb(var(--c-gold-ink)); color: rgb(var(--c-gold-ink)); }
+
+/* ── Pied de fiche collé en bas ── */
+.adm-fiche-pied {
+    display: flex; align-items: center; gap: 8px;
+    position: sticky; bottom: calc(-18px - env(safe-area-inset-bottom)); z-index: 2;
+    margin: 20px -16px calc(-18px - env(safe-area-inset-bottom));
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: rgb(var(--c-surface)); border-top: 1px solid var(--glass-border);
+}
+#gestes-fiche + .adm-fiche-pied { margin-top: 12px; }
+@media (min-width: 640px) {
+    .adm-fiche-pied { bottom: -22px; margin: 20px -22px -22px; padding: 14px 22px 22px; }
+}
+
+/* ── Bouton flottant « ajouter », téléphone seulement ── */
+.adm-flottant {
+    position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 50;
+    width: 56px; height: 56px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+    background: rgb(var(--c-gold-ink)); color: rgb(var(--c-on-gold)); font-size: 22px;
+    box-shadow: 0 10px 28px -8px rgba(0, 0, 0, 0.55); border: 0; cursor: pointer;
+}
+.adm-flottant:active { transform: scale(0.95); }
+@media (min-width: 768px) { .adm-flottant { display: none !important; } }
+/* La dernière carte ne reste pas cachée sous le bouton flottant. */
+@media (max-width: 767px) { main { padding-bottom: 96px !important; } }
+
+/* ── Cibles tactiles : 44 px, la mesure d'un pouce ──
+   Les boutons d'en-tête, la croix des fiches, les puces, les bascules
+   de série faisaient entre 15 et 32 px de haut. */
+@media (pointer: coarse), (max-width: 767px) {
+    .adm-lien-compte { min-height: 44px; padding: 0 4px; }
+    .adm-fermer { width: 44px !important; height: 44px !important; }
+    .filter-chip { min-height: 40px; }
+    .adm-puce-rapide { min-height: 38px; }
+    #btn-passees { min-height: 44px; }
+    .adm-cta, .adm-secondaire { min-height: 46px; }
+    .adm-interrupteur { min-height: 46px; }
+}
+

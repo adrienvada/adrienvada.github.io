@@ -67,9 +67,9 @@
             <div id="compte" class="text-[11px] text-luxury-textMuted flex items-center gap-3 font-mono" hidden>
                 <span id="compte-mail"></span>
                 <button type="button" id="btn-mdp"
-                    class="uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">Mot de passe</button>
+                    class="adm-lien-compte uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">Mot de passe</button>
                 <button type="button" id="btn-sortir"
-                    class="uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">Se déconnecter</button>
+                    class="adm-lien-compte uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">Se déconnecter</button>
             </div>
         </header>
 
@@ -90,9 +90,9 @@
                  mot de passe est oublié. -->
             <form id="form-connexion" novalidate>
                 <label class="adm-etiquette" for="mail">Adresse mail</label>
-                <input class="adm-champ" type="email" id="mail" value="adrien.vada@gmail.com" autocomplete="username" required>
+                <input class="adm-champ" type="email" id="mail" value="adrien.vada@gmail.com" autocomplete="username" autocapitalize="off" spellcheck="false" required>
                 <label class="adm-etiquette mt-3" for="mdp">Mot de passe</label>
-                <input class="adm-champ" type="password" id="mdp" autocomplete="current-password" placeholder="••••••••">
+                <input class="adm-champ" type="password" id="mdp" autocomplete="current-password" enterkeyhint="go" placeholder="••••••••">
                 <button class="adm-cta w-full mt-4" type="submit" id="btn-entrer">Se connecter</button>
                 <p id="msg-connexion" class="text-xs text-luxury-textMuted mt-3" aria-live="polite" hidden></p>
                 <div class="flex items-center gap-3 my-4 text-[11px] uppercase tracking-widest text-luxury-textMuted">
@@ -126,7 +126,10 @@
                     Ajouter une date
                 </button>
 
-                <div class="space-y-1.5 text-sm md:text-[15px] leading-tight" id="liste-a-venir"></div>
+                <!-- Rendu par admin.js, à l'image de l'onglet Dates : un
+                     intercalaire par mois, la frise dans la marge, une puce
+                     par séance — qui ouvre sa fiche. -->
+                <div class="adm-dates" id="liste-a-venir"></div>
             </section>
 
             <!-- Dates passées : repliées, comme les archives -->
@@ -142,7 +145,7 @@
                 </button>
                 <div class="date-expand-panel" id="panneau-passees">
                     <div class="date-expand-inner">
-                        <div class="space-y-1.5 text-sm md:text-[15px] leading-tight pt-3 mt-3 border-t border-stone-200/60" id="liste-passees"></div>
+                        <div class="adm-dates pt-3 mt-3 border-t border-stone-200/60" id="liste-passees"></div>
                         <p class="text-[12px] text-luxury-textMuted mt-3 leading-relaxed">Les saisons antérieures ne sont pas ici : elles restent écrites dans <code>dates.js</code>.</p>
                     </div>
                 </div>
@@ -157,6 +160,12 @@
         </div>
     </main>
 
+    <!-- Sur téléphone, la liste est longue : « Ajouter » reste à portée de
+         pouce quand le bouton doré du haut est sorti de l'écran. -->
+    <button type="button" id="btn-ajouter-flottant" class="adm-flottant" aria-label="Ajouter une date" hidden>
+        <svg class="ico" aria-hidden="true"><use href="#i-adm-plus"></use></svg>
+    </button>
+
     <!-- ── La fiche d'une soirée : ajout, copie, modification ── -->
     <dialog id="fiche" class="adm-fiche" aria-labelledby="fiche-titre">
         <form id="form-date" class="adm-fiche-corps" autocomplete="off" novalidate>
@@ -167,7 +176,7 @@
                     <p id="fiche-sous-titre" class="text-[12px] text-luxury-textMuted mt-0.5"></p>
                 </div>
                 <button type="button" id="btn-fermer-fiche" aria-label="Fermer"
-                    class="w-8 h-8 rounded-full flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk border border-stone-200 flex-shrink-0">
+                    class="adm-fermer w-8 h-8 rounded-full flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk border border-stone-200 flex-shrink-0">
                     <svg class="ico text-[12px]" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
                 </button>
             </div>
@@ -176,19 +185,22 @@
                 <div>
                     <span class="adm-etiquette">Spectacle <em>— le titre du CV, au caractère près</em></span>
                     <div id="puces-spectacles" class="flex flex-wrap gap-1.5" role="group" aria-label="Choisir le spectacle"></div>
-                    <input class="adm-champ mt-2" type="text" id="f-spectacle-autre" placeholder="Titre du spectacle" hidden>
+                    <input class="adm-champ mt-2" type="text" id="f-spectacle-autre" placeholder="Titre du spectacle" autocapitalize="sentences" enterkeyhint="next" hidden>
                 </div>
 
                 <div>
                     <label class="adm-etiquette" for="f-lieu">Lieu <em>— tel qu'il s'affichera</em></label>
-                    <input class="adm-champ" type="text" id="f-lieu" list="l-lieux" placeholder="Le Forum, Falaise (14)" required>
+                    <input class="adm-champ" type="text" id="f-lieu" list="l-lieux" placeholder="Le Forum, Falaise (14)" autocapitalize="words" enterkeyhint="next" required>
                     <datalist id="l-lieux"></datalist>
+                    <!-- Les lieux déjà joués par ce spectacle : un toucher remplit
+                         lieu et ville, sans clavier. -->
+                    <div id="puces-lieux" class="adm-puces-rapides" role="group" aria-label="Lieux déjà utilisés" hidden></div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="adm-etiquette" for="f-ville">Ville</label>
-                        <input class="adm-champ" type="text" id="f-ville" list="l-villes" placeholder="Falaise" required>
+                        <input class="adm-champ" type="text" id="f-ville" list="l-villes" placeholder="Falaise" autocapitalize="words" enterkeyhint="next" required>
                         <datalist id="l-villes"></datalist>
                     </div>
                     <div>
@@ -197,9 +209,12 @@
                     </div>
                     <div>
                         <label class="adm-etiquette" for="f-heure">Heure <em>— ou vide</em></label>
-                        <input class="adm-champ" type="text" id="f-heure" placeholder="19h00" inputmode="numeric">
+                        <!-- type="time" : Android ouvre son horloge à cadran,
+                             l'iPhone ses molettes. « matin », « après-midi » se
+                             choisissent par les puces en dessous. -->
+                        <input class="adm-champ" type="time" id="f-heure">
                     </div>
-                    <div class="flex items-end pb-1">
+                    <div class="flex items-end">
                         <label class="adm-interrupteur">
                             <input type="checkbox" id="f-scolaire">
                             <span class="glissiere" aria-hidden="true"></span>
@@ -207,21 +222,33 @@
                         </label>
                     </div>
                 </div>
+                <div id="puces-heures" class="adm-puces-rapides" role="group" aria-label="Heures habituelles"></div>
 
                 <div>
                     <label class="adm-etiquette" for="f-url">Lien de réservation <em>— vide tant que la billetterie n'est pas ouverte</em></label>
-                    <input class="adm-champ" type="url" id="f-url" placeholder="https://…" inputmode="url">
+                    <input class="adm-champ" type="url" id="f-url" placeholder="https://…" inputmode="url" autocapitalize="off" spellcheck="false" enterkeyhint="done">
                 </div>
             </div>
 
             <p id="msg-fiche" class="text-xs adm-erreur mt-4" role="alert" hidden></p>
 
-            <div class="flex flex-wrap items-center gap-2 mt-5">
-                <button class="adm-cta flex-1" type="submit" id="btn-enregistrer">Enregistrer</button>
-                <button class="adm-secondaire" type="button" id="btn-annuler">Annuler</button>
-                <button class="adm-secondaire adm-erreur ml-auto" type="button" id="btn-supprimer-fiche" hidden>
+            <!-- Les autres gestes sur une soirée existante : sur téléphone, la
+                 liste n'affiche plus que « modifier » (toute la carte se
+                 touche) ; dupliquer et supprimer sont ici. -->
+            <div id="gestes-fiche" class="flex items-center gap-2 mt-5" hidden>
+                <button class="adm-secondaire flex-1" type="button" id="btn-dupliquer-fiche">
+                    <svg class="ico" aria-hidden="true"><use href="#i-adm-copy"></use></svg> Dupliquer
+                </button>
+                <button class="adm-secondaire adm-erreur flex-1" type="button" id="btn-supprimer-fiche">
                     <svg class="ico" aria-hidden="true"><use href="#i-adm-trash"></use></svg> Supprimer
                 </button>
+            </div>
+
+            <!-- Enregistrer reste collé au bas de la fiche : clavier ouvert,
+                 on n'a pas à le chercher en faisant défiler. -->
+            <div class="adm-fiche-pied">
+                <button class="adm-cta flex-1" type="submit" id="btn-enregistrer">Enregistrer</button>
+                <button class="adm-secondaire" type="button" id="btn-annuler">Annuler</button>
             </div>
         </form>
     </dialog>
@@ -235,7 +262,7 @@
                     <p class="text-[12px] text-luxury-textMuted mt-0.5">Pour entrer sans attendre de mail. Ton téléphone pourra le retenir.</p>
                 </div>
                 <button type="button" id="btn-fermer-mdp" aria-label="Fermer"
-                    class="w-8 h-8 rounded-full flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk border border-stone-200 flex-shrink-0">
+                    class="adm-fermer w-8 h-8 rounded-full flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk border border-stone-200 flex-shrink-0">
                     <svg class="ico text-[12px]" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
                 </button>
             </div>
@@ -247,11 +274,11 @@
                 </div>
                 <div>
                     <label class="adm-etiquette" for="mdp-confirme">Le même, une seconde fois</label>
-                    <input class="adm-champ" type="password" id="mdp-confirme" autocomplete="new-password" minlength="8" required>
+                    <input class="adm-champ" type="password" id="mdp-confirme" autocomplete="new-password" minlength="8" enterkeyhint="done" required>
                 </div>
             </div>
             <p id="msg-mdp" class="text-xs adm-erreur mt-4" role="alert" hidden></p>
-            <div class="flex items-center gap-2 mt-5">
+            <div class="adm-fiche-pied">
                 <button class="adm-cta flex-1" type="submit" id="btn-enregistrer-mdp">Enregistrer le mot de passe</button>
                 <button class="adm-secondaire" type="button" id="btn-annuler-mdp">Annuler</button>
             </div>
@@ -270,6 +297,10 @@
         integrity="sha384-JBR+x8blGwjDRO63aHCGiZMD4VNiTR4ZUGA+N6ZKLf3zNt1fK8IBpcgPaMrxqWBp"
         crossorigin="anonymous"></script>
     <script src="../dates-live.js"></script>
+    <!-- La photo de couverture de chaque spectacle, par la même règle que
+         l'onglet Dates (UniversMontage.couverture). Bibliothèque sans effet :
+         elle ne dessine rien tant qu'on ne l'appelle pas. -->
+    <script src="../univers-montage.js"></script>
     <script src="admin.js"></script>
 </body>
 
