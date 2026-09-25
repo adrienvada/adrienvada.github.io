@@ -2900,10 +2900,11 @@ html.vt-univers-retour::view-transition-new(u-titre) {
    detourerLeTitre dans univers.js) montre la photo à travers les lettres,
    exactement sur le titre. Il paraît pendant que le titre se pose
    (--of-lettre-*). Le récit s'écrit ; puis la porte — une lettre au trait
-   épais — grandit autour d'un point de son encre jusqu'à ce que l'écran
-   entier y tienne (--lettre-z, calculé pour chaque titre) : on entre dans
-   la photo (--of-zoom-*). Autour de la porte, la salle s'éteint : quand
-   la photo entière prend le relais, rien ne transparaît dessous.
+   épais — grandit autour d'un point de son encre (--lettre-z, calculé
+   pour chaque titre, borné à ce qu'un téléphone sait dessiner) : on entre
+   dans la photo (--of-zoom-*). Autour de la porte, la salle s'éteint ;
+   sur la fin, le trait de la lettre s'épaissit jusqu'aux bords de
+   l'écran : la porte s'ouvre, et l'on est dans la photo.
 
    Le zoom va en s'accélérant, comme une caméra qui passe une porte : les
    paliers sont des fractions de --lettre-z. Rien que des transformations
@@ -2924,7 +2925,26 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     transform-box: view-box;
     --rg-anim: u-lettre-entre;
     --s: var(--of-zoom-s, .8);
-    --e: var(--of-zoom-e, .95);
+    --e: calc(var(--of-zoom-s, .8) + (var(--of-zoom-e, .95) - var(--of-zoom-s, .8)) * .85);
+}
+
+/* La porte s'ouvre : le trait des lettres du masque s'épaissit jusqu'à
+   ce que l'écran entier tienne dans l'encre de la porte (voir
+   detourerLeTitre). */
+.u-lettre-gonfle {
+    --rg-anim: u-lettre-gonfle;
+    --s: calc(var(--of-zoom-s, .8) + (var(--of-zoom-e, .95) - var(--of-zoom-s, .8)) * .7);
+    --e: calc(var(--of-zoom-s, .8) + (var(--of-zoom-e, .95) - var(--of-zoom-s, .8)) * .95);
+}
+
+@keyframes u-lettre-gonfle {
+    from {
+        stroke-width: 1.5;
+    }
+
+    to {
+        stroke-width: var(--lettre-gonfle, 1.5);
+    }
 }
 
 /* Le vrai titre, sous ses lettres de photo : il s'efface pendant qu'elles
@@ -2977,7 +2997,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 .u-lettre-plein {
     opacity: 0;
     --rg-anim: u-lettre-parait;
-    --s: calc(var(--of-zoom-e, .95) - (var(--of-zoom-e, .95) - var(--of-zoom-s, .8)) * .16);
+    --s: calc(var(--of-zoom-s, .8) + (var(--of-zoom-e, .95) - var(--of-zoom-s, .8)) * .96);
     --e: var(--of-zoom-e, .95);
 }
 

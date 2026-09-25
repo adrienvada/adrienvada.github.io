@@ -1798,25 +1798,33 @@ chaque lettre est dessinée dans un canevas, et une transformée de distance y
 trouve le point le plus loin de tout bord — celui dont même le pire voisin, à
 quatre pixels, reste loin d'un bord : le canevas et la page ne posent pas la
 lettre au pixel près, et un point pris à la jonction de deux traits tombait,
-sur la page, au bord du trait. Le zoom se fait autour de ce point, jusqu'à
-`--lettre-z` (l'écran entier dans l'encre de la lettre, 120 fois au plus : au
-delà, le navigateur cesse de dessiner le glyphe). Il s'accélère, comme une
-caméra qui passe une porte. Sur le dernier sixième du zoom, **la photo entière**
-(`.u-lettre-plein`) prend le relais : la scène finit toujours sur la photo,
-plein écran, quelle que soit la lettre.
+sur la page, au bord du trait. Le zoom se fait autour de ce point,
+jusqu'à `--lettre-z` : l'écran entier dans l'encre de la lettre, mais **pas
+plus de 2 400 px de corps sur un écran tactile** (12 000 ailleurs) — au-delà,
+un téléphone renonce à dessiner la lettre en masque, et la photo s'en allait
+par carreaux. Il s'accélère, comme une caméra qui passe une porte, et se
+termine aux 85 % du zoom.
 
-**Le disque de la porte** : dans le masque, sous la lettre, un disque blanc de
-son rayon sûr. Invisible tant que la lettre se dessine (il est dans son
-encre), il reste net à toute taille : des téléphones renoncent à dessiner en
-masque une lettre de milliers de pixels, et la photo disparaissait avec elle.
+**La porte s'ouvre** : de 70 % à 95 % du zoom, le trait des lettres du masque
+s'épaissit (`--lettre-gonfle`, en unités de la lettre, calculé sans compter
+sur l'encre autour du point de la porte, qui peut être à deux pixels de sa
+place) jusqu'à ce que l'écran entier y tienne. Les bords de la lettre partent
+vers ceux de l'écran ; la photo déjà dans la lettre ne bouge pas. Rien ne
+monte en fondu sur une photo déjà là.
 
 **La salle s'éteint** autour de la porte (`.u-lettre-nuit`, un aplat de la
-couleur de la salle sous la photo), du milieu du zoom jusqu'avant le relais de
-la photo entière : quand celle-ci paraît en fondu, il n'y a plus de textes
-dessous à voir transparaître. La vérification exige la salle éteinte, et la
-photo entière pas encore là, aux 83 % du zoom. En mouvement réduit, le titre détoure
-la photo, posé, sans zoom. Sans photo de couverture, pas de calque : le titre
-d'avant.
+couleur de la salle sous la photo), de 40 % à 80 % du zoom : les textes ne
+transparaissent jamais. **La photo entière** (`.u-lettre-plein`), la même au
+même endroit, ne paraît qu'après, sur les 4 derniers pour cent : invisible à
+l'œil, elle garantit la fin sur la photo si un navigateur dessinait mal la
+lettre.
+
+La vérification exige la salle éteinte aux 83 % du zoom ; la lettre sous
+2 400 px sur écran tactile ; et, aux 95,5 %, la salle repeinte en magenta
+invisible sur une capture — la porte ouverte couvre l'écran à elle seule.
+
+En mouvement réduit, le titre détoure la photo, posé, sans zoom. Sans photo de
+couverture, pas de calque : le titre d'avant.
 
 ### L'écriture à la lumière
 

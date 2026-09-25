@@ -1485,8 +1485,9 @@ const SHOW_UNIVERSES = {
         if (best <= 3) return null;
         // En fractions de la taille de la police, depuis l'origine du glyphe
         // (le bord gauche de la lettre, sur la ligne de base). Le rayon est
-        // celui qui reste sûr : le pire voisin, moins le décalage possible.
-        return { r: Math.max(1, best / 3 - k) / F, x: (bx - pad) / F, y: (by - base) / F };
+        // celui qui reste sûr : le pire voisin, moins le décalage possible ;
+        // l'épaisseur, la demi-largeur du trait en ce point.
+        return { r: Math.max(1, best / 3 - k) / F, e: best / 3 / F, x: (bx - pad) / F, y: (by - base) / F };
     }
 
     function detourerLeTitre(zone) {
@@ -1549,8 +1550,8 @@ const SHOW_UNIVERSES = {
         const masque = document.createElementNS(SVGNS, 'mask');
         masque.id = `u-lettre-${n}`;
         masque.setAttribute('maskUnits', 'userSpaceOnUse');
-        masque.setAttribute('x', -W * 200); masque.setAttribute('y', -H * 200);
-        masque.setAttribute('width', W * 401); masque.setAttribute('height', H * 401);
+        masque.setAttribute('x', -W); masque.setAttribute('y', -H);
+        masque.setAttribute('width', W * 3); masque.setAttribute('height', H * 3);
         const mot = document.createElementNS(SVGNS, 'g');
         mot.setAttribute('class', 'u-lettre-mot rg-k');
         mot.setAttribute('fill', '#fff');
@@ -1579,22 +1580,36 @@ const SHOW_UNIVERSES = {
             const px = gx + p.x * taille, py = gy + p.y * taille, r = p.r * taille;
             // Un trait épais, près du milieu de l'écran.
             const score = r / (1 + Math.hypot(px - cx, py - cy) / Math.max(W, H));
-            if (!porte || score > porte.score) porte = { x: px, y: py, r, score };
+            if (!porte || score > porte.score) porte = { x: px, y: py, r, e: p.e * taille, score };
         });
         if (!porte) return;
         // Jusqu'où grandir : que l'écran entier tienne dans l'encre de la
-        // porte, avec de la marge.
+        // porte — mais pas au-delà de ce que l'écran sait dessiner. Une
+        // lettre de plus de quelques milliers de pixels, un téléphone renonce
+        // à en faire un masque : la photo s'en allait par carreaux, puis ne
+        // revenait qu'en fondu, voilée. La lettre s'arrête donc à 2 400 px
+        // de corps sur un écran tactile (12 000 ailleurs).
+        //
+        // LA PORTE S'OUVRE. Ce qu'il reste d'écran hors de la lettre, c'est
+        // elle qui le prend : sur la fin du zoom, son trait s'épaissit
+        // (--lettre-gonfle, en unités de la lettre) jusqu'à ce que l'écran
+        // entier tienne dans son encre. Les bords de la lettre partent vers
+        // ceux de l'écran ; la photo déjà dans la lettre ne bouge pas.
         const loin = Math.max(Math.hypot(porte.x, porte.y), Math.hypot(W - porte.x, porte.y),
             Math.hypot(porte.x, H - porte.y), Math.hypot(W - porte.x, H - porte.y));
-        // Au-delà de cent vingt fois, le navigateur cesse de dessiner la
-        // lettre (un glyphe de plusieurs milliers de pixels) : le zoom s'y
-        // arrête, et la photo entière prend le relais (voir plus bas).
-        const z = Math.min(120, Math.max(12, loin / (porte.r * 0.8)));
+        const corps = matchMedia('(pointer: coarse)').matches ? 2400 : 12000;
+        const z = Math.max(4, Math.min(loin / (porte.e * 0.9), corps / taille));
+        // Le trait gagne tout ce qu'il faut depuis le point de la porte, sans
+        // compter sur l'encre autour de lui : le point peut être à deux
+        // pixels de sa place, et, cent fois grossis, ils laissaient un pan
+        // d'écran vide.
+        const gonfle = 2 * (loin / z + 2) * 1.05;
+        svg.style.setProperty('--lettre-gonfle', gonfle.toFixed(1));
         mot.style.transformOrigin = `${porte.x.toFixed(1)}px ${porte.y.toFixed(1)}px`;
         svg.style.setProperty('--lettre-z', z.toFixed(1));
         const fondNoir = document.createElementNS(SVGNS, 'rect');
-        fondNoir.setAttribute('x', -W * 200); fondNoir.setAttribute('y', -H * 200);
-        fondNoir.setAttribute('width', W * 401); fondNoir.setAttribute('height', H * 401);
+        fondNoir.setAttribute('x', -W); fondNoir.setAttribute('y', -H);
+        fondNoir.setAttribute('width', W * 3); fondNoir.setAttribute('height', H * 3);
         fondNoir.setAttribute('fill', '#000');
         masque.append(fondNoir, mot);
 
@@ -1640,19 +1655,7 @@ const SHOW_UNIVERSES = {
         traitMot.setAttribute('stroke-opacity', '0.6');
         traitMot.querySelectorAll('text').forEach((t) => t.setAttribute('vector-effect', 'non-scaling-stroke'));
         trait.appendChild(traitMot);
-        // LE DISQUE DE LA PORTE. Tout au bout du zoom, la lettre fait des
-        // milliers de pixels : des téléphones renoncent alors à la dessiner
-        // en masque, et la photo disparaissait avec elle — les textes
-        // repassaient au travers. Un disque, dans l'encre de la porte (son
-        // rayon sûr, voir porteDe) : invisible tant que la lettre se
-        // dessine, puisqu'il est dedans ; net à toute taille, lui, et c'est
-        // par lui qu'on entre quand elle ne se dessine plus.
-        const disque = document.createElementNS(SVGNS, 'circle');
-        disque.setAttribute('cx', porte.x.toFixed(1));
-        disque.setAttribute('cy', porte.y.toFixed(1));
-        disque.setAttribute('r', (porte.r * 0.8).toFixed(2));
-        disque.setAttribute('stroke', 'none');
-        mot.appendChild(disque);
+        mot.querySelectorAll('text').forEach((t) => t.classList.add('u-lettre-gonfle', 'rg-k'));
         // LA SALLE S'ÉTEINT autour de la porte : pendant le zoom, un aplat
         // de la couleur de la salle monte sur tout le haut de la page, sous
         // la photo. Quand la photo entière prend le relais, dessous, il n'y
@@ -1661,9 +1664,10 @@ const SHOW_UNIVERSES = {
         nuit.setAttribute('class', 'u-lettre-nuit rg-k');
         nuit.setAttribute('x', -W); nuit.setAttribute('y', -H);
         nuit.setAttribute('width', W * 3); nuit.setAttribute('height', H * 3);
-        // LA PHOTO ENTIÈRE, au bout du zoom : quelle que soit la lettre, la
-        // scène finit sur la photo, plein écran — sans pan de salle oublié
-        // au bord d'un trait.
+        // LA PHOTO ENTIÈRE, tout au bout, la porte ouverte : la même photo,
+        // au même endroit, sous l'encre qui couvre déjà l'écran — rien n'y
+        // change à l'œil. Elle garantit la fin sur la photo, plein écran,
+        // si un navigateur dessinait mal la lettre.
         const plein = image.cloneNode();
         plein.setAttribute('class', 'u-lettre-plein rg-k');
         const defs = document.createElementNS(SVGNS, 'defs');

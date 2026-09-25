@@ -1719,7 +1719,7 @@ function exige(condition, message) {
         await verifie('la photo dans la lettre : le titre posé détoure la photo, le récit s’écrit, puis on entre dans la photo par une lettre — avec les deux pilotes ; posée d’emblée en mouvement réduit', async () => {
             const cas = [['berenice', '', 390], ['alabarre', '', 390], ['cleophene', '', 1280], ['hommemoderne', '?repli', 390]];
             for (const [slug, q, largeur] of cas) {
-                const c = await visiteur({ viewport: { width: largeur, height: largeur > 1000 ? 800 : 844 } });
+                const c = await visiteur({ viewport: { width: largeur, height: largeur > 1000 ? 800 : 844 }, hasTouch: largeur < 1000 });
                 const p = await c.newPage();
                 const erreurs = guette(p);
                 await p.goto(`${base}/spectacles/${slug}/${q}`, { waitUntil: 'load' });
@@ -1767,13 +1767,14 @@ function exige(condition, message) {
                     await aller(v('zoom-s') + (v('zoom-e') - v('zoom-s')) * 0.5);
                     out.titreZoom = mots();
                     // La salle s'est éteinte sous la photo avant que la photo
-                    // entière prenne le relais : si un téléphone renonce à
-                    // dessiner la lettre géante, rien ne transparaît. Et la
-                    // porte a son disque, net à toute taille.
+                    // entière prenne le relais : rien ne transparaît. Et la
+                    // lettre reste d'une taille qu'un téléphone sait
+                    // dessiner en masque : au-delà, la photo s'y en allait
+                    // par carreaux.
                     const nuit = svg.querySelector('.u-lettre-nuit');
-                    const disque = mot.querySelector('circle');
                     await aller(v('zoom-s') + (v('zoom-e') - v('zoom-s')) * 0.83);
-                    out.eteinte = { nuit: nuit ? op(nuit) : 0, plein: op(plein), disque: disque ? +disque.getAttribute('r') : 0 };
+                    const corps = +mot.querySelector('text').getAttribute('font-size') * out.z;
+                    out.eteinte = { nuit: nuit ? op(nuit) : 0, plein: op(plein), corps: Math.round(corps), tactile: matchMedia('(pointer: coarse)').matches };
                     await aller(v('fleche-e') + 0.005);
                     out.recit = { echelle: echelle(), textes: Math.min(...textes.map(op)), nuit: nuit ? op(nuit) : 1 };
                     await aller(Math.min(0.999, v('zoom-e') + 0.01));
@@ -1782,6 +1783,34 @@ function exige(condition, message) {
                     return out;
                 });
                 const ou = `${slug}${q} à ${largeur} px`;
+                // La porte ouverte couvre l'écran avant que la photo entière
+                // la double : la salle, repeinte en magenta, ne se voit
+                // nulle part sur une capture.
+                const salle = await p.evaluate(async () => {
+                    const S = document.getElementById('show-universe');
+                    const scene = S.querySelector('.u-ouverture');
+                    const v = (k) => parseFloat(getComputedStyle(scene).getPropertyValue('--of-' + k));
+                    S.scrollTop = scene.offsetTop + (scene.offsetHeight - S.clientHeight) * (v('zoom-s') + (v('zoom-e') - v('zoom-s')) * 0.955);
+                    await new Promise((f) => setTimeout(f, 350));
+                    scene.querySelector('.u-lettre-nuit').style.fill = '#f0f';
+                    await new Promise((f) => requestAnimationFrame(() => requestAnimationFrame(f)));
+                    return +getComputedStyle(scene.querySelector('.u-lettre-plein')).opacity;
+                });
+                const capture = (await p.screenshot()).toString('base64');
+                const magenta = await p.evaluate(async (b64) => {
+                    const img = new Image();
+                    img.src = 'data:image/png;base64,' + b64;
+                    await img.decode();
+                    const cv = document.createElement('canvas');
+                    cv.width = img.width; cv.height = img.height;
+                    const ctx = cv.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+                    let n = 0;
+                    for (let i = 0; i < d.length; i += 4) if (d[i] > 200 && d[i + 1] < 60 && d[i + 2] > 200) n++;
+                    return n / (d.length / 4);
+                }, capture);
+                exige(salle < 0.05 && magenta < 0.002, `${ou} : la porte ouverte ne couvre pas l'écran avant la photo entière — des pans de salle restent (${(magenta * 100).toFixed(2)} % de l'écran, photo entière à ${salle})`);
                 exige(etat.lettres === etat.chars && etat.ecart < 1, `${ou} : le masque ne suit pas les lettres du titre (${etat.lettres}/${etat.chars}, écart ${etat.ecart.toFixed(2)} px)`);
                 exige(etat.photos[0] && etat.photos[0] !== etat.photos[1], `${ou} : on entre par la lettre dans la première photo du montage — vue deux fois de suite (${etat.photos.join(' / ')})`);
                 exige(etat.avant < 0.05, `${ou} : la photo paraît dans les lettres en plein travelling (${etat.avant})`);
@@ -1791,7 +1820,8 @@ function exige(condition, message) {
                 exige(etat.pose.aides > 0.95, `${ou} : le titre posé n'a pas son voile et son filet de lecture (${etat.pose.aides})`);
                 exige(etat.horsProfondeur, `${ou} : le calque de la lettre est dans la profondeur du haut de la page — les textes peuvent repasser par-dessus la photo`);
                 exige(etat.fin.aides < 0.05, `${ou} : le voile et le filet restent sur la photo au bout du zoom (${etat.fin.aides})`);
-                exige(etat.eteinte.nuit > 0.95 && etat.eteinte.plein < 0.05 && etat.eteinte.disque > 0, `${ou} : la salle n'est pas éteinte sous la photo avant le relais de la photo entière, ou la porte n'a pas son disque — les textes peuvent transparaître au bout du zoom (${JSON.stringify(etat.eteinte)})`);
+                exige(etat.eteinte.nuit > 0.95 && etat.eteinte.plein < 0.05, `${ou} : la salle n'est pas éteinte sous la photo avant le relais de la photo entière — les textes peuvent transparaître au bout du zoom (${JSON.stringify(etat.eteinte)})`);
+                exige(largeur > 1000 || (etat.eteinte.tactile && etat.eteinte.corps <= 2410), `${ou} : sur un écran tactile, la lettre grandit au-delà de ce qu'un téléphone sait dessiner en masque (${JSON.stringify(etat.eteinte)})`);
                 exige(etat.recit.nuit < 0.05, `${ou} : la salle s'éteint avant que la lettre s'ouvre (${etat.recit.nuit})`);
                 exige(Math.abs(etat.recit.echelle - 1) < 0.01 && etat.recit.textes > 0.95, `${ou} : le zoom commence avant que le récit soit écrit (${JSON.stringify(etat.recit)})`);
                 exige(Math.abs(etat.fin.echelle - etat.z) < 0.5 && etat.fin.plein > 0.95 && etat.fin.couvre, `${ou} : au bout, la photo ne remplit pas l’écran (${JSON.stringify(etat.fin)})`);
