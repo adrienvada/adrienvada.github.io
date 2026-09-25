@@ -476,55 +476,53 @@
     });
 
     /**
+     * L'HEURE SE CHOISIT SUR LE CADRAN DU TÉLÉPHONE. Le champ est un
+     * <input type="time"> : Android ouvre son horloge (l'heure, puis les
+     * minutes, sur un cadran), l'iPhone ses molettes. Il rend « 19:30 » ;
+     * le site écrit « 19h30 ». Les deux fonctions ci-dessous traduisent.
+     *
+     * Un mot (« matin », « après-midi ») ne tient pas dans un cadran : la
+     * table en contient déjà. Il est gardé à part, dans `heureMot`, et se
+     * choisit par sa puce ; toucher le cadran l'efface.
+     */
+    let heureMot = '';
+    const versCadran = h => { const m = /^(\d{1,2})h(\d{2})$/.exec(h || ''); return m ? `${m[1].padStart(2, '0')}:${m[2]}` : ''; };
+    const depuisCadran = v => { const m = /^(\d{2}):(\d{2})/.exec(v || ''); return m ? `${Number(m[1])}h${m[2]}` : ''; };
+    const heureChoisie = () => heureMot || depuisCadran($('f-heure').value);
+    function poserHeure(h) {
+        const cadran = versCadran(h);
+        heureMot = h && !cadran ? h : '';
+        $('f-heure').value = cadran;
+        $('f-heure').removeAttribute('aria-invalid');
+        rendrePucesHeures();
+    }
+
+    /**
      * LES HEURES HABITUELLES, EN PUCES : celles que la table emploie le
-     * plus (19h00, 20h00, matin…), plus « Sans heure ». Un toucher, pas de
-     * clavier.
+     * plus (19h00, 20h00, matin…), plus « Sans heure ». Un toucher, sans
+     * même ouvrir le cadran.
      */
     function rendrePucesHeures() {
         const compte = new Map();
         lignes.forEach(l => { if (l.heure) compte.set(l.heure, (compte.get(l.heure) || 0) + 1); });
         const heures = [...compte].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([h]) => h)
             .sort((a, b) => (/^\d/.test(a) ? a.padStart(5, '0') : 'z' + a).localeCompare(/^\d/.test(b) ? b.padStart(5, '0') : 'z' + b));
-        const courant = $('f-heure').value.trim();
+        const courant = heureChoisie();
         $('puces-heures').innerHTML = heures.map(h =>
             `<button type="button" class="adm-puce-rapide" data-heure="${esc(h)}" aria-pressed="${h === courant}">${esc(h)}</button>`).join('')
             + (heures.length ? `<button type="button" class="adm-puce-rapide" data-heure="" aria-pressed="${!courant}">Sans heure</button>` : '');
     }
     $('puces-heures').addEventListener('click', e => {
         const b = e.target.closest('button[data-heure]');
-        if (!b) return;
-        $('f-heure').value = b.dataset.heure;
-        $('f-heure').removeAttribute('aria-invalid');
-        rendrePucesHeures();
+        if (b) poserHeure(b.dataset.heure);
     });
-    $('f-heure').addEventListener('input', rendrePucesHeures);
-
-    /**
-     * L'heure saisie, écrite comme sur le site. Au clavier d'un téléphone,
-     * le « h » est sur un autre écran que les chiffres : « 1930 »,
-     * « 19:30 », « 19.30 », « 19 h », « 19 » sont donc compris et deviennent
-     * « 19h30 », « 19h00 ». Un mot (« matin », « après-midi ») passe tel
-     * quel : la table en contient déjà, et le site l'affiche comme il est.
-     * Renvoie null si ce n'est ni l'un ni l'autre.
-     */
-    function normaliserHeure(brut) {
-        const t = brut.trim();
-        if (!t) return '';
-        const m = t.match(/^(\d{1,2})(?:\s*[h:.]\s*|(?=\d{2}$))?(\d{2})?\s*h?$/i);
-        if (m) {
-            const h = Number(m[1]), mn = m[2] || '00';
-            if (h > 23 || Number(mn) > 59) return null;
-            return `${h}h${mn}`;
-        }
-        if (/^[a-zà-ÿ][a-zà-ÿ' -]*$/i.test(t)) return t.toLowerCase();
-        return null;
-    }
+    $('f-heure').addEventListener('input', () => { heureMot = ''; rendrePucesHeures(); });
 
     // Ce que la fiche contenait à l'ouverture : on ne ferme pas sans
     // prévenir une fiche remplie à moitié (un toucher à côté, sur
     // téléphone, suffisait à tout perdre).
     let ficheInitiale = '';
-    const etatFiche = () => JSON.stringify([spectacleChoisi, $('f-spectacle-autre').value, ...['f-lieu', 'f-ville', 'f-jour', 'f-heure', 'f-url'].map(id => $(id).value), $('f-scolaire').checked]);
+    const etatFiche = () => JSON.stringify([spectacleChoisi, $('f-spectacle-autre').value, ...['f-lieu', 'f-ville', 'f-jour', 'f-url'].map(id => $(id).value), heureChoisie(), $('f-scolaire').checked]);
     let ligneOuverte = null;    // la soirée en cours de modification
 
     function ouvrirFiche(l, mode) {
@@ -535,7 +533,7 @@
         $('f-lieu').value = l.lieu || '';
         $('f-ville').value = l.ville || '';
         $('f-jour').value = l.jour || '';
-        $('f-heure').value = l.heure || '';
+        poserHeure(l.heure || '');
         $('f-url').value = l.reservation_url || '';
         $('f-scolaire').checked = !!l.scolaire;
         $('fiche-titre').textContent = mode === 'modifier' ? 'Modifier la soirée' : mode === 'copie' ? 'Nouvelle soirée, copiée' : 'Nouvelle soirée';
@@ -618,8 +616,10 @@
             return;
         }
 
-        const heure = normaliserHeure($('f-heure').value);
-        if (heure === null) { erreur('L\'heure s\'écrit comme sur le site : 19h00, 14h15, « matin »… ou reste vide.', 'f-heure'); return; }
+        // Une heure à moitié saisie au clavier (ordinateur) laisse le champ
+        // vide mais « invalide » : on le dit plutôt que d'enregistrer sans heure.
+        if ($('f-heure').validity.badInput) { erreur('L\'heure est incomplète : choisis l\'heure et les minutes, ou « Sans heure ».', 'f-heure'); return; }
+        const heure = heureChoisie();
 
         const ligne = {
             spectacle,

@@ -206,10 +206,10 @@
                     </div>
                     <div>
                         <label class="adm-etiquette" for="f-heure">Heure <em>— ou vide</em></label>
-                        <!-- Pas de clavier numérique : il n'a pas de « h », et
-                             l'heure peut aussi être « matin ». « 1930 » ou
-                             « 19:30 » sont compris et écrits « 19h30 ». -->
-                        <input class="adm-champ" type="text" id="f-heure" placeholder="19h00" autocapitalize="off" enterkeyhint="next">
+                        <!-- type="time" : Android ouvre son horloge à cadran,
+                             l'iPhone ses molettes. « matin », « après-midi » se
+                             choisissent par les puces en dessous. -->
+                        <input class="adm-champ" type="time" id="f-heure">
                     </div>
                     <div class="flex items-end">
                         <label class="adm-interrupteur">

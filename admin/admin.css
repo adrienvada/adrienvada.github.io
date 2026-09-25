@@ -246,7 +246,7 @@ body {
 }
 .adm-champ::placeholder { color: rgb(var(--c-muted) / 0.7); }
 .adm-champ:focus { outline: none; border-color: rgb(var(--c-gold)); box-shadow: 0 0 0 3px rgb(var(--c-gold) / 0.15); }
-input[type="date"].adm-champ { min-height: 42px; }
+input[type="date"].adm-champ, input[type="time"].adm-champ { min-height: 42px; }
 /* 16 PX AU MOINS SUR TÉLÉPHONE. En dessous, Safari sur iPhone zoome la
    page à chaque champ touché, et il faut dézoomer à la main pour voir
    le bouton Enregistrer. */
