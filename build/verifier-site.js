@@ -1745,10 +1745,17 @@ function exige(condition, message) {
                     const x0 = pos(zone.querySelector('.u-hero-wrap'));
                     const ecarts = [...mot.querySelectorAll('text')].map((t, i) => Math.abs(+t.getAttribute('x') - (pos(chars[i]) - x0)));
                     const out = { lettres: mot.querySelectorAll('text').length, chars: chars.length, ecart: Math.max(...ecarts), z: parseFloat(svg.style.getPropertyValue('--lettre-z')) };
+                    // Le vrai titre, sous ses lettres de photo : visible en
+                    // plein travelling, effacé une fois qu'elles l'ont
+                    // remplacé — sinon la porte qui s'ouvre le découvre.
+                    const mots = () => Math.max(...[...titre.querySelectorAll('.u-word')].map(op));
                     await aller(v('titre') * 0.5);
                     out.avant = op(svg);
+                    out.titreAvant = mots();
                     await aller(v('lettre-e') + 0.005);
-                    out.pose = { calque: op(svg), echelle: echelle(), plein: op(plein) };
+                    out.pose = { calque: op(svg), echelle: echelle(), plein: op(plein), titre: mots() };
+                    await aller(v('zoom-s') + (v('zoom-e') - v('zoom-s')) * 0.5);
+                    out.titreZoom = mots();
                     await aller(v('fleche-e') + 0.005);
                     out.recit = { echelle: echelle(), textes: Math.min(...textes.map(op)) };
                     await aller(Math.min(0.999, v('zoom-e') + 0.01));
@@ -1759,6 +1766,8 @@ function exige(condition, message) {
                 const ou = `${slug}${q} à ${largeur} px`;
                 exige(etat.lettres === etat.chars && etat.ecart < 1, `${ou} : le masque ne suit pas les lettres du titre (${etat.lettres}/${etat.chars}, écart ${etat.ecart.toFixed(2)} px)`);
                 exige(etat.avant < 0.05, `${ou} : la photo paraît dans les lettres en plein travelling (${etat.avant})`);
+                exige(etat.titreAvant > 0.95, `${ou} : le titre ne se voit pas en plein travelling (${etat.titreAvant})`);
+                exige(etat.pose.titre < 0.05 && etat.titreZoom < 0.05, `${ou} : le vrai titre reste visible sous ses lettres de photo — un second titre derrière la photo quand la lettre s'ouvre (${etat.pose.titre} posé, ${etat.titreZoom} en plein zoom)`);
                 exige(etat.pose.calque > 0.95 && Math.abs(etat.pose.echelle - 1) < 0.01 && etat.pose.plein < 0.05, `${ou} : le titre posé ne détoure pas la photo (${JSON.stringify(etat.pose)})`);
                 exige(Math.abs(etat.recit.echelle - 1) < 0.01 && etat.recit.textes > 0.95, `${ou} : le zoom commence avant que le récit soit écrit (${JSON.stringify(etat.recit)})`);
                 exige(Math.abs(etat.fin.echelle - etat.z) < 0.5 && etat.fin.plein > 0.95 && etat.fin.couvre, `${ou} : au bout, la photo ne remplit pas l’écran (${JSON.stringify(etat.fin)})`);

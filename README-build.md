@@ -176,7 +176,9 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - la photo dans la lettre, avec les deux pilotes, au téléphone et sur
   ordinateur, dans une salle claire et une salle sombre : le masque a une
   lettre par lettre du titre, posée dessus au pixel près ; rien dans les
-  lettres en plein travelling ; le titre posé détoure la photo ; le zoom ne
+  lettres en plein travelling, où le titre se voit ; le titre posé détoure la
+  photo, et le vrai titre s'est effacé dessous (il ne reparaît pas quand la
+  lettre s'ouvre) ; le zoom ne
   commence qu'une fois le récit écrit ; au bout, la photo remplit l'écran. En
   mouvement réduit, le titre détoure la photo, posé, sans zoom ;
 - la fiche de casting : six rubriques étiquetées, le chant et le piano sur la
@@ -1755,6 +1757,12 @@ ligne de base (mesurée par une sonde). Le vrai `h1` reste dessous, du texte,
 lu par les lecteurs d'écran et les moteurs ; le calque est décoratif. Un trait
 d'un pixel et demi autour de chaque lettre du masque couvre les écarts
 d'arrondi. Refait quand la largeur change, comme l'écriture à la lumière.
+
+**Les mots du vrai titre s'effacent** pendant que leurs lettres de photo
+paraissent (`.u-lettre-sous`, sur la même plage) : posées exactement dessus,
+elles le couvraient au repos, mais la porte qui s'ouvre le découvrait — un
+second titre, blanc, derrière la photo (vu sur téléphone, sur *À la barre*).
+Ce sont les mots qui s'effacent, pas le `h1`, qui garde sa propre course.
 
 **La porte** est la lettre au trait le plus épais près du milieu de l'écran :
 chaque lettre est dessinée dans un canevas, et une transformée de distance y

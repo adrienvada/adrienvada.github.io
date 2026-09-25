@@ -2926,6 +2926,26 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     --e: var(--of-zoom-e, .95);
 }
 
+/* Le vrai titre, sous ses lettres de photo : il s'efface pendant qu'elles
+   paraissent (voir detourerLeTitre). Sans cela, la porte qui s'ouvre le
+   découvrait, blanc, derrière la photo. En mouvement réduit, rien ne
+   s'efface : les lettres de photo, au repos, le couvrent exactement. */
+.u-lettre-sous {
+    --rg-anim: u-lettre-efface;
+    --s: var(--of-lettre-s, .5);
+    --e: var(--of-lettre-e, .6);
+}
+
+@keyframes u-lettre-efface {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
 .u-lettre-plein {
     opacity: 0;
     --rg-anim: u-lettre-parait;

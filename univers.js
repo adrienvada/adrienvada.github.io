@@ -1604,6 +1604,13 @@ const SHOW_UNIVERSES = {
         svg.append(defs, g, plein);
         wrap.appendChild(svg);
         scene.classList.add('a-lettre');
+        // LE VRAI TITRE S'EFFACE sous ses lettres de photo, pendant qu'elles
+        // paraissent : posées exactement dessus, elles le couvraient au
+        // repos, mais la porte qui s'ouvre le découvrait — un second titre,
+        // blanc, derrière la photo. Ce sont ses mots qui s'effacent, pas le
+        // h1 : il reste du texte, lu par les lecteurs d'écran et les
+        // moteurs, et garde sa propre course (le travelling).
+        titre.querySelectorAll('.u-word').forEach((mot) => mot.classList.add('u-lettre-sous', 'rg-k'));
     }
 
     // Les lignes dépendent de la largeur : on les refait quand elle change.
