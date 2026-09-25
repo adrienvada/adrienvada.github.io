@@ -225,12 +225,17 @@
         ? `<a href="${esc(L.lienSur(url))}" target="_blank" rel="noopener" class="text-[11px] font-bold uppercase tracking-wider text-luxury-goldInk hover:underline inline-flex items-center gap-1 mt-0.5">Réservation ouverte <svg class="ico text-[10px]" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>`
         : '';
     const pastille = (texte, doux) => `<span class="font-mono font-bold ${doux ? 'text-luxury-goldInk bg-stone-100 border border-stone-200' : 'text-luxury-onGold bg-luxury-goldInk border border-luxury-goldInk'} px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap shadow-sm">${esc(texte)}</span>`;
-    const actions = id => `
+    // Le nom de la soirée accompagne chaque « Modifier » pour les lecteurs
+    // d'écran : sans lui, c'est vingt-quatre fois le même bouton.
+    const actions = l => {
+        const id = l.id, nom = esc(`${l.spectacle}, ${etiquetteSoiree(l)}`);
+        return `
         <div class="adm-actions" role="group" aria-label="Actions">
-            <button type="button" class="adm-btn" data-action="modifier" data-id="${id}"><svg class="ico" aria-hidden="true"><use href="#i-adm-pen"></use></svg><span>Modifier</span></button>
+            <button type="button" class="adm-btn adm-btn-modifier" data-action="modifier" data-id="${id}" aria-label="Modifier : ${nom}"><svg class="ico" aria-hidden="true"><use href="#i-adm-pen"></use></svg><span>Modifier</span></button>
             <button type="button" class="adm-btn" data-action="dupliquer" data-id="${id}"><svg class="ico" aria-hidden="true"><use href="#i-adm-copy"></use></svg><span>Dupliquer</span></button>
             <button type="button" class="adm-btn danger" data-action="supprimer" data-id="${id}"><svg class="ico" aria-hidden="true"><use href="#i-adm-trash"></use></svg><span>Supprimer</span></button>
         </div>`;
+    };
 
     function etiquetteSoiree(l) {
         const j = `${jourSemaine(l.jour)}${NB}${L.jourCourt(l.jour)}`;
@@ -241,9 +246,9 @@
 
     function ligneSimple(l, passee) {
         return `
-            <div class="glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 gap-x-3 ${passee ? 'adm-passee' : ''}" data-id="${l.id}">
-                <div class="flex items-center gap-3 min-w-0 flex-1">
-                    <div class="flex flex-col items-start flex-shrink-0 w-[165px]">
+            <div class="adm-soiree glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 gap-x-3 ${passee ? 'adm-passee' : ''}" data-id="${l.id}">
+                <div class="adm-soiree-corps">
+                    <div class="adm-col-date">
                         ${pastille(etiquetteSoiree(l), passee)}
                         ${horaireAConfirmer(l)}
                     </div>
@@ -253,7 +258,7 @@
                         ${etatSoiree(l)}
                     </div>
                 </div>
-                ${actions(l.id)}
+                ${actions(l)}
             </div>`;
     }
 
@@ -261,23 +266,23 @@
         const id = entree.id;
         const ouverte = !seriesRepliees.has(id);
         const lignesHtml = soirees.map(l => `
-            <div class="glass-panel rounded px-2.5 py-2 border border-stone-200/20 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 gap-x-2" data-id="${l.id}">
-                <div class="flex items-center gap-3 min-w-0 flex-1">
-                    <div class="flex flex-col items-start flex-shrink-0 w-[165px]">
+            <div class="adm-soiree glass-panel rounded px-2.5 py-2 border border-stone-200/20 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 gap-x-2" data-id="${l.id}">
+                <div class="adm-soiree-corps">
+                    <div class="adm-col-date">
                         ${pastille(etiquetteSoiree(l), passee)}
                         ${horaireAConfirmer(l)}
                     </div>
                     <div class="flex flex-col min-w-0 flex-1">${etatSoiree(l)}</div>
                 </div>
-                ${actions(l.id)}
+                ${actions(l)}
             </div>`).join('');
         const dernier = soirees[soirees.length - 1];
         return `
             <div class="date-multi-wrapper ${passee ? 'adm-passee' : ''}">
                 <button type="button" data-toggle-serie="${esc(id)}" aria-expanded="${ouverte}"
                     class="w-full text-left glass-panel rounded-md px-2.5 py-2.5 border border-stone-200/30 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 date-row-clickable">
-                    <span class="flex items-center gap-3 min-w-0 flex-1">
-                        <span class="flex flex-col items-start flex-shrink-0 w-[165px]">
+                    <span class="adm-soiree-corps">
+                        <span class="adm-col-date">
                             ${pastille(entree.dateLabel, passee)}
                             <span class="text-[11px] text-luxury-textMuted font-mono mt-0.5 pl-0.5">${soirees.length} soirées</span>
                         </span>
@@ -423,7 +428,9 @@
             return;
         }
         rendrePuces(b.dataset.spectacle);
-        $('f-lieu').focus();
+        rendrePucesLieux();
+        // Le clavier ne s'ouvre que s'il n'y a pas de lieu à toucher.
+        if ($('puces-lieux').hidden) $('f-lieu').focus();
     });
 
     function rendreListesLieux() {
@@ -436,9 +443,92 @@
     $('f-lieu').addEventListener('change', () => {
         const l = lignes.find(x => x.lieu === $('f-lieu').value.trim());
         if (l && !$('f-ville').value.trim()) $('f-ville').value = l.ville;
+        rendrePucesLieux();
     });
 
+    /**
+     * LES LIEUX DÉJÀ JOUÉS PAR CE SPECTACLE, EN PUCES. Sur téléphone, la
+     * liste <datalist> est à peine visible (Safari la range au-dessus du
+     * clavier, une suggestion à la fois) ; ici, un toucher remplit le lieu
+     * ET la ville. Les plus récents d'abord, trois au plus.
+     */
+    function rendrePucesLieux() {
+        const titre = cleTitre(spectacleChoisi || $('f-spectacle-autre').value || '');
+        const vus = new Map();
+        [...lignes].sort((a, b) => (a.jour < b.jour ? 1 : -1))
+            .filter(l => titre && cleTitre(l.spectacle) === titre)
+            .forEach(l => { if (!vus.has(l.lieu)) vus.set(l.lieu, l.ville); });
+        // Le lieu déjà dans le champ n'est pas reproposé.
+        const courant = $('f-lieu').value.trim();
+        const lieux = [...vus].filter(([lieu]) => lieu !== courant).slice(0, 3);
+        $('puces-lieux').innerHTML = lieux.map(([lieu, ville]) =>
+            `<button type="button" class="adm-puce-rapide" data-lieu="${esc(lieu)}" data-ville="${esc(ville)}">${esc(lieu)}</button>`).join('');
+        $('puces-lieux').hidden = !lieux.length;
+    }
+    $('f-spectacle-autre').addEventListener('input', rendrePucesLieux);
+    $('puces-lieux').addEventListener('click', e => {
+        const b = e.target.closest('button[data-lieu]');
+        if (!b) return;
+        $('f-lieu').value = b.dataset.lieu;
+        $('f-ville').value = b.dataset.ville;
+        ['f-lieu', 'f-ville'].forEach(id => $(id).removeAttribute('aria-invalid'));
+        rendrePucesLieux();
+    });
+
+    /**
+     * LES HEURES HABITUELLES, EN PUCES : celles que la table emploie le
+     * plus (19h00, 20h00, matin…), plus « Sans heure ». Un toucher, pas de
+     * clavier.
+     */
+    function rendrePucesHeures() {
+        const compte = new Map();
+        lignes.forEach(l => { if (l.heure) compte.set(l.heure, (compte.get(l.heure) || 0) + 1); });
+        const heures = [...compte].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([h]) => h)
+            .sort((a, b) => (/^\d/.test(a) ? a.padStart(5, '0') : 'z' + a).localeCompare(/^\d/.test(b) ? b.padStart(5, '0') : 'z' + b));
+        const courant = $('f-heure').value.trim();
+        $('puces-heures').innerHTML = heures.map(h =>
+            `<button type="button" class="adm-puce-rapide" data-heure="${esc(h)}" aria-pressed="${h === courant}">${esc(h)}</button>`).join('')
+            + (heures.length ? `<button type="button" class="adm-puce-rapide" data-heure="" aria-pressed="${!courant}">Sans heure</button>` : '');
+    }
+    $('puces-heures').addEventListener('click', e => {
+        const b = e.target.closest('button[data-heure]');
+        if (!b) return;
+        $('f-heure').value = b.dataset.heure;
+        $('f-heure').removeAttribute('aria-invalid');
+        rendrePucesHeures();
+    });
+    $('f-heure').addEventListener('input', rendrePucesHeures);
+
+    /**
+     * L'heure saisie, écrite comme sur le site. Au clavier d'un téléphone,
+     * le « h » est sur un autre écran que les chiffres : « 1930 »,
+     * « 19:30 », « 19.30 », « 19 h », « 19 » sont donc compris et deviennent
+     * « 19h30 », « 19h00 ». Un mot (« matin », « après-midi ») passe tel
+     * quel : la table en contient déjà, et le site l'affiche comme il est.
+     * Renvoie null si ce n'est ni l'un ni l'autre.
+     */
+    function normaliserHeure(brut) {
+        const t = brut.trim();
+        if (!t) return '';
+        const m = t.match(/^(\d{1,2})(?:\s*[h:.]\s*|(?=\d{2}$))?(\d{2})?\s*h?$/i);
+        if (m) {
+            const h = Number(m[1]), mn = m[2] || '00';
+            if (h > 23 || Number(mn) > 59) return null;
+            return `${h}h${mn}`;
+        }
+        if (/^[a-zà-ÿ][a-zà-ÿ' -]*$/i.test(t)) return t.toLowerCase();
+        return null;
+    }
+
+    // Ce que la fiche contenait à l'ouverture : on ne ferme pas sans
+    // prévenir une fiche remplie à moitié (un toucher à côté, sur
+    // téléphone, suffisait à tout perdre).
+    let ficheInitiale = '';
+    const etatFiche = () => JSON.stringify([spectacleChoisi, $('f-spectacle-autre').value, ...['f-lieu', 'f-ville', 'f-jour', 'f-heure', 'f-url'].map(id => $(id).value), $('f-scolaire').checked]);
+    let ligneOuverte = null;    // la soirée en cours de modification
+
     function ouvrirFiche(l, mode) {
+        ligneOuverte = mode === 'modifier' ? l : null;
         rendreListesLieux();
         rendrePuces(l.spectacle || '');
         $('f-id').value = l.id || '';
@@ -452,22 +542,50 @@
         $('fiche-sous-titre').textContent = mode === 'copie'
             ? 'Même spectacle, même lieu, le lendemain. Change ce qui doit l\'être.'
             : mode === 'modifier' ? 'La modification est en ligne dès l\'enregistrement.' : 'Elle sera en ligne dès l\'enregistrement.';
-        $('btn-supprimer-fiche').hidden = mode !== 'modifier';
+        $('gestes-fiche').hidden = mode !== 'modifier';
+        ['f-lieu', 'f-ville', 'f-jour', 'f-url', 'f-heure'].forEach(id => $(id).removeAttribute('aria-invalid'));
+        rendrePucesLieux();
+        rendrePucesHeures();
         $('msg-fiche').hidden = true;
+        ficheInitiale = etatFiche();
         if (!fiche.open) fiche.showModal();
         fiche.querySelector('.adm-fiche-corps').scrollTop = 0;
-        setTimeout(() => (l.spectacle ? $('f-jour') : $('puces-spectacles').querySelector('button'))?.focus(), 50);
+        // Sur téléphone, pas de focus automatique dans un champ : il
+        // ouvrirait le clavier (ou le calendrier) par-dessus la fiche
+        // avant qu'on l'ait lue. Sur ordinateur, on garde le raccourci.
+        const tactile = window.matchMedia('(pointer: coarse)').matches;
+        setTimeout(() => (l.spectacle && !tactile ? $('f-jour') : $('puces-spectacles').querySelector('button'))?.focus({ preventScroll: true }), 50);
     }
-    function fermerFiche() { if (fiche.open) fiche.close(); }
+    function fermerFiche(force) {
+        if (!fiche.open) return true;
+        if (force !== true && etatFiche() !== ficheInitiale && !confirm('Fermer sans enregistrer ? Les changements seront perdus.')) return false;
+        fiche.close();
+        return true;
+    }
 
-    $('btn-ajouter').addEventListener('click', () => ouvrirFiche({}, 'nouvelle'));
+    const nouvelleDate = () => ouvrirFiche({}, 'nouvelle');
+    $('btn-ajouter').addEventListener('click', nouvelleDate);
+    $('btn-ajouter-flottant').addEventListener('click', nouvelleDate);
     $('btn-annuler').addEventListener('click', fermerFiche);
     $('btn-fermer-fiche').addEventListener('click', fermerFiche);
     fiche.addEventListener('click', e => { if (e.target === fiche) fermerFiche(); });
+    // Échap, ou le geste « retour » d'Android, ferment la fiche : même garde.
+    fiche.addEventListener('cancel', e => { e.preventDefault(); fermerFiche(); });
     $('btn-supprimer-fiche').addEventListener('click', () => {
-        const l = lignes.find(x => x.id === Number($('f-id').value));
-        if (l) { fermerFiche(); supprimer(l); }
+        if (ligneOuverte && fermerFiche()) supprimer(ligneOuverte);
     });
+    $('btn-dupliquer-fiche').addEventListener('click', () => {
+        const l = ligneOuverte;
+        if (l && fermerFiche()) ouvrirFiche(Object.assign({}, l, { id: null, jour: lendemain(l.jour) }), 'copie');
+    });
+
+    // Le bouton flottant n'apparaît que quand le bouton doré du haut est
+    // sorti de l'écran — et seulement sur téléphone (voir admin.css).
+    if ('IntersectionObserver' in window) {
+        new IntersectionObserver(([e]) => {
+            $('btn-ajouter-flottant').hidden = e.isIntersecting || $('etat-edition').hidden;
+        }).observe($('btn-ajouter'));
+    }
 
     $('form-date').addEventListener('submit', async e => {
         e.preventDefault();
@@ -500,8 +618,8 @@
             return;
         }
 
-        const heure = $('f-heure').value.trim().replace(/^(\d{1,2})\s*[h:.]\s*(\d{2})$/i, (_, h, m) => `${h}h${m}`);
-        if (heure && !/^\d{1,2}h\d{2}$/.test(heure)) { erreur('L\'heure s\'écrit comme sur le site : 19h00, 14h15… ou reste vide.', 'f-heure'); return; }
+        const heure = normaliserHeure($('f-heure').value);
+        if (heure === null) { erreur('L\'heure s\'écrit comme sur le site : 19h00, 14h15, « matin »… ou reste vide.', 'f-heure'); return; }
 
         const ligne = {
             spectacle,
@@ -524,7 +642,7 @@
                     : 'Enregistrement impossible : ' + error.message);
             return;
         }
-        fermerFiche();
+        fermerFiche(true);
         toast(id ? 'Modifiée · le site est à jour' : 'Ajoutée · en ligne sur le site');
         charger();
     });
