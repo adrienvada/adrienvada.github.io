@@ -2912,6 +2912,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     position: absolute;
     left: 0;
     top: 0;
+    z-index: 3;
     overflow: visible;
     pointer-events: none;
     --rg-anim: u-lettre-parait;
@@ -2944,6 +2945,22 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     to {
         opacity: 0;
     }
+}
+
+/* Les aides à la lecture : un voile sur la photo des lettres et un filet
+   autour de chacune, dans la couleur du texte de la salle. Elles
+   s'effacent sur le premier tiers du zoom. En mouvement réduit, elles
+   restent : le titre posé doit se lire. */
+.u-lettre-aide {
+    fill: var(--u-text, #f2ece0);
+    --rg-anim: u-lettre-efface;
+    --s: var(--of-zoom-s, .8);
+    --e: calc(var(--of-zoom-s, .8) + (var(--of-zoom-e, .95) - var(--of-zoom-s, .8)) * .3);
+}
+
+.u-lettre-trait .u-lettre-mot {
+    fill: none;
+    stroke: var(--u-text, #f2ece0);
 }
 
 .u-lettre-plein {

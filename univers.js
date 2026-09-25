@@ -1498,12 +1498,20 @@ const SHOW_UNIVERSES = {
             fond.addEventListener('load', () => { if (isOpen) detourerLeTitre(zone); }, { once: true });
             return;
         }
-        wrap.querySelector(':scope > .u-lettre')?.remove();
-        const W = wrap.offsetWidth, H = wrap.offsetHeight;
+        // LE CALQUE EST POSÉ SUR LA SCÈNE, HORS DE SA PROFONDEUR. Posé à côté
+        // du titre, dans le haut de la page en perspective (preserve-3d), il
+        // était à la même profondeur que les textes, et c'est le navigateur
+        // qui décidait qui passait devant : sur téléphone, les textes
+        // repassaient par-dessus la photo au bout du zoom. Enfant direct de
+        // la scène (.u-of-scene, qui n'est pas en 3D), il est peint après
+        // tout le haut de la page, sans ambiguïté.
+        const plateau = scene.querySelector('.u-of-scene') || wrap;
+        plateau.querySelector(':scope > .u-lettre')?.remove();
+        const W = plateau.offsetWidth, H = plateau.offsetHeight;
         const chars = [...titre.querySelectorAll('.u-ch')];
         if (!W || !H || !chars.length || !titre.offsetWidth) return;
 
-        const [wx, wy] = position(wrap);
+        const [wx, wy] = position(plateau);
         const cs = getComputedStyle(titre);
         const taille = parseFloat(cs.fontSize) || 48;
         const police = { family: cs.fontFamily, weight: cs.fontWeight, style: cs.fontStyle };
@@ -1594,6 +1602,30 @@ const SHOW_UNIVERSES = {
         const g = document.createElementNS(SVGNS, 'g');
         g.setAttribute('mask', `url(#${masque.id})`);
         g.appendChild(image);
+        // LIRE LE TITRE QUELLE QUE SOIT LA PHOTO. Une photo sombre dans les
+        // lettres, sur une salle sombre, les rendait illisibles par
+        // endroits (le noir d'une robe sur le noir du plateau) ; une photo
+        // pâle sur une salle claire, de même. Deux aides, dans la couleur du
+        // texte de la salle (claire dans une salle sombre, sombre dans une
+        // salle claire) : un voile léger sur la photo des lettres, qui la
+        // tire vers cette couleur, et un filet autour de chaque lettre, qui
+        // en dessine la forme. Les deux s'effacent dès que la porte
+        // s'ouvre : dans la photo, il n'y a plus de titre à lire.
+        const voile = document.createElementNS(SVGNS, 'rect');
+        voile.setAttribute('class', 'u-lettre-aide rg-k');
+        voile.setAttribute('x', 0); voile.setAttribute('y', 0);
+        voile.setAttribute('width', W); voile.setAttribute('height', H);
+        voile.setAttribute('fill-opacity', '0.3');
+        g.appendChild(voile);
+        const trait = document.createElementNS(SVGNS, 'g');
+        trait.setAttribute('class', 'u-lettre-aide u-lettre-trait rg-k');
+        const traitMot = mot.cloneNode(true);
+        traitMot.removeAttribute('fill');
+        traitMot.setAttribute('fill', 'none');
+        traitMot.setAttribute('stroke-width', '1.2');
+        traitMot.setAttribute('stroke-opacity', '0.6');
+        traitMot.querySelectorAll('text').forEach((t) => t.setAttribute('vector-effect', 'non-scaling-stroke'));
+        trait.appendChild(traitMot);
         // LA PHOTO ENTIÈRE, au bout du zoom : quelle que soit la lettre, la
         // scène finit sur la photo, plein écran — sans pan de salle oublié
         // au bord d'un trait.
@@ -1601,8 +1633,8 @@ const SHOW_UNIVERSES = {
         plein.setAttribute('class', 'u-lettre-plein rg-k');
         const defs = document.createElementNS(SVGNS, 'defs');
         defs.appendChild(masque);
-        svg.append(defs, g, plein);
-        wrap.appendChild(svg);
+        svg.append(defs, g, trait, plein);
+        plateau.appendChild(svg);
         scene.classList.add('a-lettre');
         // LE VRAI TITRE S'EFFACE sous ses lettres de photo, pendant qu'elles
         // paraissent : posées exactement dessus, elles le couvraient au

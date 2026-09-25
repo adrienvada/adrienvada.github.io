@@ -1753,14 +1753,19 @@ function exige(condition, message) {
                     out.avant = op(svg);
                     out.titreAvant = mots();
                     await aller(v('lettre-e') + 0.005);
-                    out.pose = { calque: op(svg), echelle: echelle(), plein: op(plein), titre: mots() };
+                    const aides = () => Math.min(...[...svg.querySelectorAll('.u-lettre-aide')].map(op));
+                    out.pose = { calque: op(svg), echelle: echelle(), plein: op(plein), titre: mots(), aides: aides() };
+                    // Le calque est peint après tout le haut de la page, hors
+                    // de sa profondeur : sinon, sur téléphone, les textes
+                    // repassaient par-dessus la photo au bout du zoom.
+                    out.horsProfondeur = svg.parentElement.classList.contains('u-of-scene') && +getComputedStyle(svg).zIndex > 0;
                     await aller(v('zoom-s') + (v('zoom-e') - v('zoom-s')) * 0.5);
                     out.titreZoom = mots();
                     await aller(v('fleche-e') + 0.005);
                     out.recit = { echelle: echelle(), textes: Math.min(...textes.map(op)) };
                     await aller(Math.min(0.999, v('zoom-e') + 0.01));
                     const r = plein.getBoundingClientRect(), e = S.getBoundingClientRect();
-                    out.fin = { echelle: echelle(), plein: op(plein), couvre: r.left <= e.left + 1 && r.top <= e.top + 1 && r.right >= e.right - 1 && r.bottom >= e.bottom - 1 };
+                    out.fin = { aides: Math.max(...[...svg.querySelectorAll('.u-lettre-aide')].map(op)), echelle: echelle(), plein: op(plein), couvre: r.left <= e.left + 1 && r.top <= e.top + 1 && r.right >= e.right - 1 && r.bottom >= e.bottom - 1 };
                     return out;
                 });
                 const ou = `${slug}${q} à ${largeur} px`;
@@ -1769,6 +1774,9 @@ function exige(condition, message) {
                 exige(etat.titreAvant > 0.95, `${ou} : le titre ne se voit pas en plein travelling (${etat.titreAvant})`);
                 exige(etat.pose.titre < 0.05 && etat.titreZoom < 0.05, `${ou} : le vrai titre reste visible sous ses lettres de photo — un second titre derrière la photo quand la lettre s'ouvre (${etat.pose.titre} posé, ${etat.titreZoom} en plein zoom)`);
                 exige(etat.pose.calque > 0.95 && Math.abs(etat.pose.echelle - 1) < 0.01 && etat.pose.plein < 0.05, `${ou} : le titre posé ne détoure pas la photo (${JSON.stringify(etat.pose)})`);
+                exige(etat.pose.aides > 0.95, `${ou} : le titre posé n'a pas son voile et son filet de lecture (${etat.pose.aides})`);
+                exige(etat.horsProfondeur, `${ou} : le calque de la lettre est dans la profondeur du haut de la page — les textes peuvent repasser par-dessus la photo`);
+                exige(etat.fin.aides < 0.05, `${ou} : le voile et le filet restent sur la photo au bout du zoom (${etat.fin.aides})`);
                 exige(Math.abs(etat.recit.echelle - 1) < 0.01 && etat.recit.textes > 0.95, `${ou} : le zoom commence avant que le récit soit écrit (${JSON.stringify(etat.recit)})`);
                 exige(Math.abs(etat.fin.echelle - etat.z) < 0.5 && etat.fin.plein > 0.95 && etat.fin.couvre, `${ou} : au bout, la photo ne remplit pas l’écran (${JSON.stringify(etat.fin)})`);
                 exige(!erreurs.length, erreurs.join(' | '));

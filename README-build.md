@@ -1758,6 +1758,20 @@ lu par les lecteurs d'écran et les moteurs ; le calque est décoratif. Un trait
 d'un pixel et demi autour de chaque lettre du masque couvre les écarts
 d'arrondi. Refait quand la largeur change, comme l'écriture à la lumière.
 
+**Le calque est peint sur la scène, hors de sa profondeur** : enfant direct
+de `.u-of-scene`, qui n'est pas en 3D, avec un `z-index`. Posé à côté du titre,
+dans le haut de la page en perspective, il était à la même profondeur que les
+textes, et le navigateur décidait qui passait devant : sur téléphone, les
+textes repassaient par-dessus la photo au bout du zoom.
+
+**Lire le titre quelle que soit la photo.** Une photo sombre dans les lettres,
+sur une salle sombre, les rendait illisibles par endroits (le noir d'une robe
+sur le noir du plateau). Deux aides, dans la couleur du texte de la salle
+(`--u-text` : claire dans une salle sombre, sombre dans une salle claire) : un
+voile à 30 % sur la photo des lettres, et un filet d'1,2 px autour de chacune
+(`.u-lettre-aide`). Elles s'effacent sur le premier tiers du zoom — dans la
+photo, il n'y a plus de titre à lire — et restent en mouvement réduit.
+
 **Les mots du vrai titre s'effacent** pendant que leurs lettres de photo
 paraissent (`.u-lettre-sous`, sur la même plage) : posées exactement dessus,
 elles le couvraient au repos, mais la porte qui s'ouvre le découvrait — un
