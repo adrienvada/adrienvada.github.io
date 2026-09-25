@@ -1766,8 +1766,16 @@ function exige(condition, message) {
                     out.horsProfondeur = svg.parentElement.classList.contains('u-of-scene') && +getComputedStyle(svg).zIndex > 0;
                     await aller(v('zoom-s') + (v('zoom-e') - v('zoom-s')) * 0.5);
                     out.titreZoom = mots();
+                    // La salle s'est éteinte sous la photo avant que la photo
+                    // entière prenne le relais : si un téléphone renonce à
+                    // dessiner la lettre géante, rien ne transparaît. Et la
+                    // porte a son disque, net à toute taille.
+                    const nuit = svg.querySelector('.u-lettre-nuit');
+                    const disque = mot.querySelector('circle');
+                    await aller(v('zoom-s') + (v('zoom-e') - v('zoom-s')) * 0.83);
+                    out.eteinte = { nuit: nuit ? op(nuit) : 0, plein: op(plein), disque: disque ? +disque.getAttribute('r') : 0 };
                     await aller(v('fleche-e') + 0.005);
-                    out.recit = { echelle: echelle(), textes: Math.min(...textes.map(op)) };
+                    out.recit = { echelle: echelle(), textes: Math.min(...textes.map(op)), nuit: nuit ? op(nuit) : 1 };
                     await aller(Math.min(0.999, v('zoom-e') + 0.01));
                     const r = plein.getBoundingClientRect(), e = S.getBoundingClientRect();
                     out.fin = { aides: Math.max(...[...svg.querySelectorAll('.u-lettre-aide')].map(op)), echelle: echelle(), plein: op(plein), couvre: r.left <= e.left + 1 && r.top <= e.top + 1 && r.right >= e.right - 1 && r.bottom >= e.bottom - 1 };
@@ -1783,6 +1791,8 @@ function exige(condition, message) {
                 exige(etat.pose.aides > 0.95, `${ou} : le titre posé n'a pas son voile et son filet de lecture (${etat.pose.aides})`);
                 exige(etat.horsProfondeur, `${ou} : le calque de la lettre est dans la profondeur du haut de la page — les textes peuvent repasser par-dessus la photo`);
                 exige(etat.fin.aides < 0.05, `${ou} : le voile et le filet restent sur la photo au bout du zoom (${etat.fin.aides})`);
+                exige(etat.eteinte.nuit > 0.95 && etat.eteinte.plein < 0.05 && etat.eteinte.disque > 0, `${ou} : la salle n'est pas éteinte sous la photo avant le relais de la photo entière, ou la porte n'a pas son disque — les textes peuvent transparaître au bout du zoom (${JSON.stringify(etat.eteinte)})`);
+                exige(etat.recit.nuit < 0.05, `${ou} : la salle s'éteint avant que la lettre s'ouvre (${etat.recit.nuit})`);
                 exige(Math.abs(etat.recit.echelle - 1) < 0.01 && etat.recit.textes > 0.95, `${ou} : le zoom commence avant que le récit soit écrit (${JSON.stringify(etat.recit)})`);
                 exige(Math.abs(etat.fin.echelle - etat.z) < 0.5 && etat.fin.plein > 0.95 && etat.fin.couvre, `${ou} : au bout, la photo ne remplit pas l’écran (${JSON.stringify(etat.fin)})`);
                 exige(!erreurs.length, erreurs.join(' | '));
@@ -1794,11 +1804,11 @@ function exige(condition, message) {
             await p.waitForFunction(() => document.querySelector('.u-lettre'), null, { timeout: 8000 });
             const calme = await p.evaluate(() => {
                 const svg = document.querySelector('.u-lettre');
-                return { calque: +getComputedStyle(svg).opacity, mot: getComputedStyle(svg.querySelector('.u-lettre-mot')).transform, plein: +getComputedStyle(svg.querySelector('.u-lettre-plein')).opacity };
+                return { calque: +getComputedStyle(svg).opacity, mot: getComputedStyle(svg.querySelector('.u-lettre-mot')).transform, plein: +getComputedStyle(svg.querySelector('.u-lettre-plein')).opacity, nuit: +getComputedStyle(svg.querySelector('.u-lettre-nuit')).opacity };
             });
             exige(calque(calme), `en mouvement réduit, le titre ne détoure pas la photo, posé (${JSON.stringify(calme)})`);
             await c.close();
-            function calque(k) { return k.calque === 1 && k.mot === 'none' && k.plein === 0; }
+            function calque(k) { return k.calque === 1 && k.mot === 'none' && k.plein === 0 && k.nuit === 0; }
         });
 
         await verifie('la fiche de casting : le profil en lignes étiquetées, le chant et le piano sur la même, moins haut au téléphone', async () => {

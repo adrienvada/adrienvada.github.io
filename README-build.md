@@ -1805,8 +1805,16 @@ caméra qui passe une porte. Sur le dernier sixième du zoom, **la photo entièr
 (`.u-lettre-plein`) prend le relais : la scène finit toujours sur la photo,
 plein écran, quelle que soit la lettre.
 
-La photo, par-dessus le reste du haut de la page, efface le récit en
-grandissant : rien d'autre n'a à partir. En mouvement réduit, le titre détoure
+**Le disque de la porte** : dans le masque, sous la lettre, un disque blanc de
+son rayon sûr. Invisible tant que la lettre se dessine (il est dans son
+encre), il reste net à toute taille : des téléphones renoncent à dessiner en
+masque une lettre de milliers de pixels, et la photo disparaissait avec elle.
+
+**La salle s'éteint** autour de la porte (`.u-lettre-nuit`, un aplat de la
+couleur de la salle sous la photo), du milieu du zoom jusqu'avant le relais de
+la photo entière : quand celle-ci paraît en fondu, il n'y a plus de textes
+dessous à voir transparaître. La vérification exige la salle éteinte, et la
+photo entière pas encore là, aux 83 % du zoom. En mouvement réduit, le titre détoure
 la photo, posé, sans zoom. Sans photo de couverture, pas de calque : le titre
 d'avant.
 

@@ -1640,6 +1640,27 @@ const SHOW_UNIVERSES = {
         traitMot.setAttribute('stroke-opacity', '0.6');
         traitMot.querySelectorAll('text').forEach((t) => t.setAttribute('vector-effect', 'non-scaling-stroke'));
         trait.appendChild(traitMot);
+        // LE DISQUE DE LA PORTE. Tout au bout du zoom, la lettre fait des
+        // milliers de pixels : des téléphones renoncent alors à la dessiner
+        // en masque, et la photo disparaissait avec elle — les textes
+        // repassaient au travers. Un disque, dans l'encre de la porte (son
+        // rayon sûr, voir porteDe) : invisible tant que la lettre se
+        // dessine, puisqu'il est dedans ; net à toute taille, lui, et c'est
+        // par lui qu'on entre quand elle ne se dessine plus.
+        const disque = document.createElementNS(SVGNS, 'circle');
+        disque.setAttribute('cx', porte.x.toFixed(1));
+        disque.setAttribute('cy', porte.y.toFixed(1));
+        disque.setAttribute('r', (porte.r * 0.8).toFixed(2));
+        disque.setAttribute('stroke', 'none');
+        mot.appendChild(disque);
+        // LA SALLE S'ÉTEINT autour de la porte : pendant le zoom, un aplat
+        // de la couleur de la salle monte sur tout le haut de la page, sous
+        // la photo. Quand la photo entière prend le relais, dessous, il n'y
+        // a plus rien à voir transparaître.
+        const nuit = document.createElementNS(SVGNS, 'rect');
+        nuit.setAttribute('class', 'u-lettre-nuit rg-k');
+        nuit.setAttribute('x', -W); nuit.setAttribute('y', -H);
+        nuit.setAttribute('width', W * 3); nuit.setAttribute('height', H * 3);
         // LA PHOTO ENTIÈRE, au bout du zoom : quelle que soit la lettre, la
         // scène finit sur la photo, plein écran — sans pan de salle oublié
         // au bord d'un trait.
@@ -1647,7 +1668,7 @@ const SHOW_UNIVERSES = {
         plein.setAttribute('class', 'u-lettre-plein rg-k');
         const defs = document.createElementNS(SVGNS, 'defs');
         defs.appendChild(masque);
-        svg.append(defs, g, trait, plein);
+        svg.append(defs, nuit, g, trait, plein);
         plateau.appendChild(svg);
         scene.classList.add('a-lettre');
         // LE VRAI TITRE S'EFFACE sous ses lettres de photo, pendant qu'elles

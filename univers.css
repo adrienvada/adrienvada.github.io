@@ -2902,8 +2902,8 @@ html.vt-univers-retour::view-transition-new(u-titre) {
    (--of-lettre-*). Le récit s'écrit ; puis la porte — une lettre au trait
    épais — grandit autour d'un point de son encre jusqu'à ce que l'écran
    entier y tienne (--lettre-z, calculé pour chaque titre) : on entre dans
-   la photo (--of-zoom-*). La photo, par-dessus le reste du haut de la
-   page, l'efface en grandissant : rien d'autre n'a à partir.
+   la photo (--of-zoom-*). Autour de la porte, la salle s'éteint : quand
+   la photo entière prend le relais, rien ne transparaît dessous.
 
    Le zoom va en s'accélérant, comme une caméra qui passe une porte : les
    paliers sont des fractions de --lettre-z. Rien que des transformations
@@ -2961,6 +2961,17 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 .u-lettre-trait .u-lettre-mot {
     fill: none;
     stroke: var(--u-text, #f2ece0);
+}
+
+/* La salle s'éteint autour de la porte, du milieu du zoom jusqu'avant
+   le relais de la photo entière (voir detourerLeTitre). En mouvement
+   réduit, rien ne s'éteint : il n'y a pas de zoom. */
+.u-lettre-nuit {
+    fill: var(--u-bg, #0b0b0b);
+    opacity: 0;
+    --rg-anim: u-lettre-parait;
+    --s: calc(var(--of-zoom-s, .8) + (var(--of-zoom-e, .95) - var(--of-zoom-s, .8)) * .4);
+    --e: calc(var(--of-zoom-s, .8) + (var(--of-zoom-e, .95) - var(--of-zoom-s, .8)) * .8);
 }
 
 .u-lettre-plein {
