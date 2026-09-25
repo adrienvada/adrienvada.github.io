@@ -1670,6 +1670,50 @@ function exige(condition, message) {
             await c.close();
         });
 
+        await verifie('les bandes-annonces du CV : la pastille ▶ joue la vidéo dans la salle noire, sur la page, sans la bobine de la bande démo', async () => {
+            const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForFunction(() => document.querySelectorAll('.cv-trailer-lien').length >= 2, null, { timeout: 8000 });
+            const liens = await p.evaluate(() => [...document.querySelectorAll('.cv-trailer-lien')].map((a) => a.href));
+            exige(liens.some((h) => /youtube\.com\/watch\?v=/.test(h)) && liens.some((h) => /vimeo\.com\/\d+/.test(h)), `les pastilles ne gardent pas leur lien vers la vidéo (${liens.join(' ')})`);
+            const salle = () => p.evaluate(() => {
+                const m = document.getElementById('video-modal');
+                const peint = (t) => { const d = t.getContext('2d').getImageData(0, 0, t.width, t.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return true; return false; };
+                return {
+                    ouverte: !m.hidden && +getComputedStyle(m).opacity > 0.9,
+                    src: document.getElementById('video-iframe').getAttribute('src'),
+                    bande: m.classList.contains('bande-annonce'),
+                    bobine: getComputedStyle(m.querySelector('.bobine--noire')).display !== 'none',
+                    titre: document.getElementById('video-modal-titre').textContent,
+                    nom: m.getAttribute('aria-label'),
+                    halo: [...m.querySelectorAll('.salle-halo canvas')].some(peint)
+                };
+            });
+            for (const [plateforme, lecteur] of [['youtube.com', /^https:\/\/www\.youtube-nocookie\.com\/embed\/[\w-]{11}\?autoplay=1/], ['vimeo.com', /^https:\/\/player\.vimeo\.com\/video\/\d+\?autoplay=1&dnt=1$/]]) {
+                const i = liens.findIndex((h) => h.includes(plateforme));
+                const avant = c.pages().length;
+                await p.locator('.cv-trailer-lien').nth(i).click();
+                await p.waitForTimeout(1300);
+                const e = await salle();
+                exige(c.pages().length === avant, `${plateforme} : la bande-annonce s'ouvre encore dans un nouvel onglet`);
+                exige(e.ouverte && lecteur.test(e.src || ''), `${plateforme} : la bande-annonce ne se joue pas dans la salle noire (${JSON.stringify(e)})`);
+                exige(e.bande && !e.bobine && /^BANDE-ANNONCE · .+/.test(e.titre) && /bande-annonce — .+/.test(e.nom), `${plateforme} : la salle n'est pas habillée pour une bande-annonce (${JSON.stringify(e)})`);
+                exige(e.halo, `${plateforme} : l'écran de la bande-annonce n'a pas son halo`);
+                await p.keyboard.press('Escape');
+                await p.waitForTimeout(700);
+                exige(await p.evaluate(() => !document.getElementById('video-iframe').getAttribute('src')), `${plateforme} : la bande-annonce continue une fois la salle rallumée`);
+            }
+            // La bande démo retrouve sa salle : sa bobine, son titre.
+            await p.evaluate(() => openVideoModal('GOeL5AMGb_s', 0));
+            await p.waitForTimeout(1300);
+            const demo = await salle();
+            exige(!demo.bande && demo.bobine && demo.titre === 'LECTURE VIDÉO' && demo.nom === 'Lecture de la bande démo', `la bande démo ne retrouve pas sa salle après une bande-annonce (${JSON.stringify(demo)})`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
         await verifie('la salle de projection : la bobine lance chaque extrait à son début, la salle s’éteint, le halo suit l’extrait', async () => {
             const c = await visiteur({ viewport: { width: 1280, height: 900 } });
             const p = await c.newPage();

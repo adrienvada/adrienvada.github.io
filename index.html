@@ -4086,6 +4086,17 @@
             margin: 14px auto 0;
         }
 
+        /* UNE BANDE-ANNONCE DU CV dans la même salle : pas de bobine (elle
+           est celle de la bande démo), et le halo, qui n'a plus de bobine
+           sous l'écran à laisser libre, l'entoure de partout. */
+        #video-modal.bande-annonce .bobine--noire {
+            display: none;
+        }
+
+        #video-modal.bande-annonce .salle-scene>.salle-halo {
+            inset: 4%;
+        }
+
         @media (prefers-reduced-motion: reduce) {
 
             .salle-halo canvas,
@@ -8582,7 +8593,7 @@
                 <span class="text-[11px] font-mono font-bold text-luxury-goldInk tracking-wider uppercase"><svg
                         class="ico mr-2 text-luxury-goldInk" aria-hidden="true">
                         <use href="#i-solid-play"></use>
-                    </svg> LECTURE VIDÉO</span>
+                    </svg> <span id="video-modal-titre">LECTURE VIDÉO</span></span>
                 <button type="button" onclick="closeVideoModal()" aria-label="Fermer la vidéo"
                     class="text-luxury-textMuted hover:text-luxury-textMain transition duration-300">
                     <svg class="ico text-sm" aria-hidden="true">
@@ -11144,7 +11155,18 @@
         const BANDE_DEMO = 'GOeL5AMGb_s';
         const YOUTUBE = 'https://www.youtube-nocookie.com';
 
+        // La salle noire, affichée pour la bande démo (sa bobine, son halo
+        // qui suit l'extrait) ou pour une bande-annonce du CV.
+        function habillerSalle(bande, titre) {
+            const modal = document.getElementById('video-modal');
+            modal.classList.toggle('bande-annonce', bande);
+            modal.setAttribute('aria-label', bande ? `Lecture de la bande-annonce — ${titre}` : 'Lecture de la bande démo');
+            document.getElementById('video-iframe').title = bande ? `Bande-annonce — ${titre}` : 'Bande démo caméra d’Adrien Vada';
+            document.getElementById('video-modal-titre').textContent = bande ? `BANDE-ANNONCE · ${titre}` : 'LECTURE VIDÉO';
+        }
+
         function openVideoModal(videoId, debut) {
+            habillerSalle(false);
             // enablejsapi : le lecteur accepte qu'on lui parle (aller à un
             // extrait) et dit où il en est (le halo suit l'extrait).
             document.getElementById('video-iframe').src =
@@ -11152,6 +11174,25 @@
             salle.plan(salle.planA(debut || 0), true);
             openModal('video-modal', 'video-modal-card');
         }
+
+        // LES BANDES-ANNONCES DU CV, dans la même salle noire que la bande
+        // démo, plutôt qu'un nouvel onglet : on regarde sans quitter le CV.
+        // `ref` est celle de videoRef (univers-montage.js) : « yt:… » ou
+        // « vimeo:… » ; `image`, la photo du spectacle qui donne son halo à
+        // l'écran. Posée par la pastille ▶ de chaque ligne (addTrailerPill,
+        // univers.js), qui garde son lien vers la vidéo : clic du milieu,
+        // Ctrl-clic et « copier le lien » ouvrent toujours la plateforme.
+        window.ouvrirBandeAnnonce = function ({ ref, titre, image }) {
+            const m = /^(yt|vimeo):([\w-]+)$/.exec(ref || '');
+            if (!m) return false;
+            habillerSalle(true, titre || '');
+            document.getElementById('video-iframe').src = m[1] === 'yt'
+                ? `${YOUTUBE}/embed/${m[2]}?autoplay=1&rel=0`
+                : `https://player.vimeo.com/video/${m[2]}?autoplay=1&dnt=1`;
+            salle.eclairer(image);
+            openModal('video-modal', 'video-modal-card');
+            return true;
+        };
 
         function closeVideoModal() {
             closeModal('video-modal', 'video-modal-card');
@@ -11210,9 +11251,19 @@
             }
 
             // Le halo de la page : l'affiche au repos, le plan survolé sur la
-            // bobine. Celui de la salle noire : le plan en cours.
+            // bobine. Celui de la salle noire : le plan en cours — ou, pour
+            // une bande-annonce, la photo du spectacle (eclairer), que les
+            // messages du lecteur ne doivent pas remplacer.
+            let bande = false;
+            function eclairer(src) {
+                bande = true;
+                courant = -1;
+                if (halos[1] && src) peindreHalo(halos[1], src);
+            }
+
             function plan(p, force) {
-                if (p === courant && !force) return;
+                if (force) bande = false;
+                if (bande || (p === courant && !force)) return;
                 courant = p;
                 if (halos[1]) peindreHalo(halos[1], images[p]);
                 document.querySelectorAll('#video-modal [data-salle-plan]').forEach((b) =>
@@ -11261,7 +11312,7 @@
                 if (typeof t === 'number') plan(planA(t));
             });
 
-            return { plan, planA };
+            return { plan, planA, eclairer };
         })();
 
         // ════════════════════════════════════════════════════════════════
