@@ -10,6 +10,7 @@
     "pdf": "node generer-cv-pdf.js",
     "dates": "node exporter-dates.js",
     "navigateur": "playwright install chromium",
+    "ondes": "node ondes.js",
     "verifier": "node verifier-site.js"
   },
   "devDependencies": {

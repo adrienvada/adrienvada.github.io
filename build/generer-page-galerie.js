@@ -12,9 +12,12 @@
  *    · Visionneuse plein écran haute définition (navigation, swipe, clavier)
  *    · Barre d'en-tête collante, retour accueil et bascule de thème
  *
- *  Les vignettes sont les versions WebP recadrées en 3:4 que fabrique
- *  build/variantes-images.py (320, 640, 960 px) : à relancer d'abord après
- *  un ajout au book.
+ *  C'est une PLANCHE CONTACT : chaque photo garde le cadre du
+ *  photographe, et chaque rangée a la même hauteur (voir « La planche »
+ *  dans la feuille). Les vignettes sont les versions WebP que fabrique
+ *  build/variantes-images.py (320, 640, 960 px de large, au cadre de la
+ *  photo) : à relancer d'abord après un ajout au book — ce script lit
+ *  leurs proportions dans les fichiers.
  *
  *  QUAND LE RELANCER
  *  -----------------
@@ -66,6 +69,24 @@ function chargerGalerie() {
     return ctx.GALLERY_IMAGES;
 }
 
+// LES PROPORTIONS D'UNE VIGNETTE, lues dans l'en-tête du WebP : la page
+// les écrit sur chaque case (--r), et la planche se compose avant que la
+// moindre image soit chargée — pas de rangée qui se recompose sous les yeux.
+function dimensionsWebp(fichier) {
+    const b = fs.readFileSync(fichier);
+    if (b.toString('ascii', 0, 4) !== 'RIFF' || b.toString('ascii', 8, 12) !== 'WEBP') {
+        throw new Error(`${fichier} : ce n'est pas un WebP`);
+    }
+    const bloc = b.toString('ascii', 12, 16);
+    if (bloc === 'VP8 ') return { l: b.readUInt16LE(26) & 0x3fff, h: b.readUInt16LE(28) & 0x3fff };
+    if (bloc === 'VP8L') {
+        const v = b.readUInt32LE(21);
+        return { l: (v & 0x3fff) + 1, h: ((v >> 14) & 0x3fff) + 1 };
+    }
+    if (bloc === 'VP8X') return { l: b.readUIntLE(24, 3) + 1, h: b.readUIntLE(27, 3) + 1 };
+    throw new Error(`${fichier} : WebP de type ${bloc} inconnu`);
+}
+
 const SPRITE = chargerSprite();
 const IMAGES = chargerGalerie();
 
@@ -99,6 +120,10 @@ html.vt-theme::view-transition-new(root) { z-index: 2; }
     --ombre: rgba(0, 0, 0, .8);
     --vignette: rgba(0, 0, 0, .28);
     --or-defaut: #bfa98a;
+    /* La planche : le numéro de vue, orangé comme les marques du film ; le
+       crayon gras, rouge. */
+    --num: #d69a3c;
+    --crayon: #ff4d5e;
 }
 
 :root[data-theme="light"] {
@@ -113,6 +138,8 @@ html.vt-theme::view-transition-new(root) { z-index: 2; }
     --ombre: rgba(41, 37, 36, .28);
     --vignette: rgba(41, 37, 36, .10);
     --or-defaut: #967e5b;
+    --num: #9a5b0e;
+    --crayon: #c8102e;
 }
 
 body {
@@ -309,23 +336,91 @@ h1 {
     color: var(--muted);
 }
 
-/* ── Grille de photographies ── */
+/* ── La planche ──
+   Une planche contact, pas une grille : chaque photo garde le cadre du
+   photographe. La grille coupait tout en 3:4 — douze photos sur dix-neuf,
+   plus larges que hautes, y perdaient la moitié de leur image (le décor,
+   le partenaire, la salle), jusqu'à 58 % pour les images de film en 16:9.
+
+   Chaque rangée a la même hauteur, sans une ligne de script : une case
+   part de la largeur qu'aurait sa photo à la hauteur visée
+   (--r × --h), et grandit à proportion de --r pour remplir la rangée.
+   Deux cases qui grandissent à proportion de leur largeur gardent la même
+   hauteur. La dernière rangée ne s'étire pas (::after, qui prend le reste).
+
+   --h, la hauteur visée, suit la densité (boutons − et +) : la largeur de
+   la planche divisée par --colonnes, le nombre de colonnes qu'avait la
+   grille à ce cran — les boutons gardent le sens qu'ils avaient. */
+.planche {
+    container-type: inline-size;
+}
+
 .repertoire {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-    gap: 1.5rem 1.2rem;
+    --h: calc(100cqi / var(--colonnes, 5) * 1.12);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.9rem 1rem;
     margin: 0;
     padding: 1.8rem 0 .6rem;
     list-style: none;
-    align-items: start;
+}
+
+.repertoire::after {
+    content: '';
+    flex: 100000 1 0;
 }
 
 .carte {
     position: relative;
     list-style: none;
+    flex: var(--r, .75) 1 calc(var(--r, .75) * var(--h));
+    min-width: 0;
+}
+
+/* Le numéro de la vue, en marge de la planche, comme sur le film. */
+.carte-num {
+    display: block;
+    margin-top: .45rem;
+    font: 600 .6rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .1em;
+    color: var(--num);
+}
+
+/* LE CRAYON GRAS. Sur une planche, on entoure la vue qu'on garde : au
+   survol ou au clavier, un cercle rouge se trace autour de la photo, d'un
+   seul geste, un peu tremblé et fermé en dépassant, comme à la main. */
+.crayon {
+    position: absolute;
+    inset: -.55rem -.5rem -.45rem -.55rem;
+    width: calc(100% + 1.05rem);
+    height: calc(100% + 1rem);
+    overflow: visible;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.crayon path {
+    fill: none;
+    stroke: var(--crayon);
+    stroke-width: 3.2;
+    stroke-linecap: round;
+    /* Un trait de la longueur du chemin, suivi d'un blanc plus long :
+       décalé de 1,2, il ne reste rien — pas même le point qu'une
+       extrémité arrondie laisserait d'un trait de longueur nulle. */
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 1.2;
+    opacity: .9;
+    transition: stroke-dashoffset .45s cubic-bezier(.3, .6, .2, 1);
+}
+
+.carte-btn:hover .crayon path,
+.carte-btn:focus-visible .crayon path,
+.carte.regarde .crayon path {
+    stroke-dashoffset: 0;
 }
 
 .carte-btn {
+    position: relative;
     display: block;
     width: 100%;
     background: none;
@@ -348,7 +443,7 @@ h1 {
 .cadre {
     position: relative;
     display: block;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: var(--r, .75);
     overflow: hidden;
     overflow: clip;
     border-radius: .65rem;
@@ -370,7 +465,6 @@ h1 {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 50% 30%;
     transition: transform .6s cubic-bezier(.2, .6, .2, 1);
 }
 
@@ -437,10 +531,7 @@ h1 {
     transition: transform 1.3s cubic-bezier(.2, .6, .2, 1);
 }
 
-/* ── La densité de la planche (boutons − et +) ── */
-html[data-zoom] .repertoire {
-    grid-template-columns: repeat(var(--colonnes, 3), 1fr);
-}
+/* ── La densité de la planche (boutons − et +) : voir --h ── */
 html[data-zoom="1"] { --colonnes: 1; }
 html[data-zoom="2"] { --colonnes: 2; }
 html[data-zoom="3"] { --colonnes: 3; }
@@ -449,8 +540,8 @@ html[data-zoom="5"] { --colonnes: 5; }
 html[data-zoom="6"] { --colonnes: 6; }
 
 @media (max-width: 640px) {
-    html[data-zoom="3"] .repertoire { gap: .8rem .5rem; }
-    html[data-zoom="4"] .repertoire { gap: .45rem .35rem; }
+    html[data-zoom="3"] .repertoire { gap: 1.3rem .5rem; }
+    html[data-zoom="4"] .repertoire { gap: 1.1rem .35rem; }
 }
 
 /* ── Visionneuse plein écran (Lightbox) ── */
@@ -647,7 +738,8 @@ html.vt-book .zoom-img {
     .tete { padding: 2.3rem 0 1.6rem; }
     .sur-titre { font-size: .69rem; letter-spacing: .2em; margin-bottom: .8rem; }
     .ornement { margin-top: 1.1rem; width: 8.5rem; }
-    .repertoire { grid-template-columns: repeat(2, 1fr); gap: 1rem .65rem; padding: 1.2rem 0 .4rem; }
+    .repertoire { gap: 1.5rem .65rem; padding: 1.2rem 0 .4rem; }
+    .carte-num { font-size: .55rem; margin-top: .35rem; }
     .barre { top: .55rem; margin-top: .5rem; }
     .bascule, .densite-btn { width: 2.1rem; height: 2.1rem; }
     .zoom-close { top: .8rem; right: .8rem; width: 2.3rem; height: 2.3rem; }
@@ -667,6 +759,15 @@ html.vt-book .zoom-img {
 `;
 }
 
+// La largeur d'une case, pour que le navigateur choisisse la bonne
+// vignette : sa photo à la hauteur visée (--h), un peu plus pour ce que la
+// rangée lui ajoute en se remplissant. Même calcul que la feuille ; le
+// script le refait quand la densité change (majTailles).
+function taillesVignette(r, colonnes) {
+    const k = (r * 1.12 * 1.25 / colonnes).toFixed(3);
+    return `calc(min(100vw, 68rem) * ${k})`;
+}
+
 function genererHtml() {
     const url = `${SITE}/galerie/`;
     const titre = 'Galerie photo — Adrien Vada';
@@ -682,6 +783,8 @@ function genererHtml() {
     const vignette = (img, largeur) =>
         `../ressources/images/galerie/vignettes/${img.file.replace(/\.[^.]+$/, '')}-${largeur}.webp`;
     const photosJson = IMAGES.map((img, i) => {
+        const d = dimensionsWebp(path.join(RACINE, 'ressources/images/galerie/vignettes',
+            `${img.file.replace(/\.[^.]+$/, '')}-640.webp`));
         const full = img.folder === 'profil'
             ? `../ressources/images/${img.file}`
             : `../ressources/images/galerie/${img.file}`;
@@ -689,6 +792,9 @@ function genererHtml() {
             full,
             srcset: [320, 640, 960].map(l => `${vignette(img, l)} ${l}w`).join(', '),
             thumb: vignette(img, 640),
+            // Largeur sur hauteur, trois décimales : de quoi composer les
+            // rangées au pixel près.
+            r: +(d.l / d.h).toFixed(3),
             // Le texte alternatif vient de galerie.js ; à défaut, le rang.
             alt: img.alt || `Photo ${i + 1} du book d’Adrien Vada`,
             index: i
@@ -696,18 +802,20 @@ function genererHtml() {
     });
 
     const cartes = photosJson.map((p, i) => `
-        <li class="carte" style="--ac:#bfa98a;--i:${i}" data-index="${i}">
+        <li class="carte" style="--ac:#bfa98a;--i:${i};--r:${p.r}" data-index="${i}">
             <button type="button" class="carte-btn" data-zoom-photo="${i}" aria-label="Agrandir : ${esc(p.alt)}">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="${esc(p.srcset)}" sizes="(max-width: 640px) 25vw, 218px"><img src="${esc(p.full)}" alt="${esc(p.alt)}" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="${esc(p.srcset)}" sizes="${taillesVignette(p.r, 5)}"><img src="${esc(p.full)}" alt="${esc(p.alt)}" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
                         <svg class="ico"><use href="#i-solid-expand"></use></svg>
                     </span>
                 </span>
+                <svg class="crayon" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M52 3 C80 2 98 20 97 49 C96 80 76 98 48 97 C19 96 2 78 3 50 C4 22 22 5 47 4 C60 3.5 70 7 76 11"/></svg>
             </button>
+            <span class="carte-num" aria-hidden="true">${String(i + 1).padStart(2, '0')}A</span>
         </li>`).join('');
 
     const schemaJson = {
@@ -834,7 +942,7 @@ ${JSON.stringify(schemaJson, null, 2)}
             <p class="sous-titre-galerie">${photosJson.length} photographies</p>
         </header>
 
-        <section>
+        <section class="planche">
             <ul class="repertoire" id="galerie-grille">${cartes}
             </ul>
         </section>
@@ -1356,8 +1464,11 @@ ${JSON.stringify(schemaJson, null, 2)}
         // Chaque vignette annonce la largeur de sa case : le navigateur va
         // chercher la version plus grande quand elle grandit.
         function majTailles(colonnes) {
-            var s = '(max-width: 640px) ' + Math.ceil(100 / colonnes) + 'vw, ' + Math.ceil(1088 / colonnes) + 'px';
-            document.querySelectorAll('.carte source').forEach(function (el) { el.setAttribute('sizes', s); });
+            cartes.forEach(function (c) {
+                var r = parseFloat(c.style.getPropertyValue('--r')) || .75;
+                var el = c.querySelector('source');
+                if (el) el.setAttribute('sizes', 'calc(min(100vw, 68rem) * ' + (r * 1.12 * 1.25 / colonnes).toFixed(3) + ')');
+            });
         }
 
         function poseNiveau(v) {
