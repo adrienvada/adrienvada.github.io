@@ -1745,6 +1745,11 @@ function exige(condition, message) {
                     const x0 = pos(zone.querySelector('.u-hero-wrap'));
                     const ecarts = [...mot.querySelectorAll('text')].map((t, i) => Math.abs(+t.getAttribute('x') - (pos(chars[i]) - x0)));
                     const out = { lettres: mot.querySelectorAll('text').length, chars: chars.length, ecart: Math.max(...ecarts), z: parseFloat(svg.style.getPropertyValue('--lettre-z')) };
+                    // La photo où l'on entre n'est pas la première du montage
+                    // (celle qui s'allume juste après le carton) : on l'aurait
+                    // vue deux fois de suite.
+                    const numero = (u) => (/\/(\d+)-[^/]*$/.exec(u || '') || [])[1];
+                    out.photos = [numero(svg.querySelector('image').getAttribute('href')), numero(S.querySelector('.u-figs img')?.getAttribute('src'))];
                     // Le vrai titre, sous ses lettres de photo : visible en
                     // plein travelling, effacé une fois qu'elles l'ont
                     // remplacé — sinon la porte qui s'ouvre le découvre.
@@ -1770,6 +1775,7 @@ function exige(condition, message) {
                 });
                 const ou = `${slug}${q} à ${largeur} px`;
                 exige(etat.lettres === etat.chars && etat.ecart < 1, `${ou} : le masque ne suit pas les lettres du titre (${etat.lettres}/${etat.chars}, écart ${etat.ecart.toFixed(2)} px)`);
+                exige(etat.photos[0] && etat.photos[0] !== etat.photos[1], `${ou} : on entre par la lettre dans la première photo du montage — vue deux fois de suite (${etat.photos.join(' / ')})`);
                 exige(etat.avant < 0.05, `${ou} : la photo paraît dans les lettres en plein travelling (${etat.avant})`);
                 exige(etat.titreAvant > 0.95, `${ou} : le titre ne se voit pas en plein travelling (${etat.titreAvant})`);
                 exige(etat.pose.titre < 0.05 && etat.titreZoom < 0.05, `${ou} : le vrai titre reste visible sous ses lettres de photo — un second titre derrière la photo quand la lettre s'ouvre (${etat.pose.titre} posé, ${etat.titreZoom} en plein zoom)`);

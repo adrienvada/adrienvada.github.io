@@ -1433,6 +1433,7 @@ const SHOW_UNIVERSES = {
     //  lettre. En mouvement réduit, le titre détoure la photo, sans zoom.
     const SVGNS = 'http://www.w3.org/2000/svg';
     let lettres = 0;
+    const photosLettre = new Map();
 
     function porteDe(car, police) {
         const F = 96, pad = 8;
@@ -1492,12 +1493,25 @@ const SHOW_UNIVERSES = {
         const scene = zone.querySelector('.u-ouverture');
         const wrap = scene && scene.querySelector('.u-hero-wrap');
         const titre = wrap && wrap.querySelector('.u-title');
-        const fond = wrap && wrap.querySelector('.u-hero-fond img');
-        if (!titre || !fond) return;   // sans photo de couverture, rien à détourer
-        if (!fond.complete || !fond.naturalWidth) {
+        // LA PHOTO DE LA LETTRE n'est pas la couverture — elle ouvre le
+        // montage juste après le carton, on l'aurait vue deux fois de suite :
+        // c'est une photo plein cadre prise plus loin (voir photoLettre dans
+        // univers-montage.js). Il faut ses proportions : on attend qu'elle
+        // soit chargée.
+        // L'image est gardée (photosLettre) : une image que rien ne retient
+        // peut être ramassée par le navigateur avant d'avoir fini de charger,
+        // et son « load » ne vient jamais — le titre restait sans photo.
+        const src = scene && scene.dataset.uSrc;
+        if (!titre || !src) return;
+        let fond = photosLettre.get(src);
+        if (!fond) {
+            fond = new Image();
+            fond.decoding = 'async';
+            photosLettre.set(src, fond);
             fond.addEventListener('load', () => { if (isOpen) detourerLeTitre(zone); }, { once: true });
-            return;
+            fond.src = src;
         }
+        if (!fond.complete || !fond.naturalWidth) return;
         // LE CALQUE EST POSÉ SUR LA SCÈNE, HORS DE SA PROFONDEUR. Posé à côté
         // du titre, dans le haut de la page en perspective (preserve-3d), il
         // était à la même profondeur que les textes, et c'est le navigateur
@@ -1584,16 +1598,16 @@ const SHOW_UNIVERSES = {
         fondNoir.setAttribute('fill', '#000');
         masque.append(fondNoir, mot);
 
-        // La photo, cadrée comme le fond du titre (object-fit: cover et son
-        // object-position), sur tout l'écran de la scène.
+        // La photo, cadrée comme dans le montage (object-fit: cover et son
+        // cadre, data-lettre-pos), sur tout l'écran de la scène.
         const nw = fond.naturalWidth, nh = fond.naturalHeight;
         const k = Math.max(W / nw, H / nh);
         const iw = nw * k, ih = nh * k;
-        const op = getComputedStyle(fond).objectPosition.split(/\s+/);
+        const op = (scene.dataset.lettrePos || '50% 50%').split(/\s+/);
         const cadre = (v, libre) => (/%$/.test(v) ? parseFloat(v) / 100 : 0.5) * libre;
         const image = document.createElementNS(SVGNS, 'image');
         image.setAttribute('class', 'u-lettre-photo');
-        image.setAttribute('href', fond.currentSrc || fond.src);
+        image.setAttribute('href', fond.src);
         image.setAttribute('x', cadre(op[0] || '50%', W - iw).toFixed(1));
         image.setAttribute('y', cadre(op[1] || '50%', H - ih).toFixed(1));
         image.setAttribute('width', iw.toFixed(1));

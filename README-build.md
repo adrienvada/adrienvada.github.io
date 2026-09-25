@@ -174,7 +174,8 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   bobine de la salle noire montre l'extrait en cours et suit ce que le lecteur
   annonce, Échap rallume et arrête le lecteur ;
 - la photo dans la lettre, avec les deux pilotes, au téléphone et sur
-  ordinateur, dans une salle claire et une salle sombre : le masque a une
+  ordinateur, dans une salle claire et une salle sombre : la photo où l'on
+  entre n'est pas la première du montage ; le masque a une
   lettre par lettre du titre, posée dessus au pixel près ; rien dans les
   lettres en plein travelling, où le titre se voit ; le titre posé détoure la
   photo, et le vrai titre s'est effacé dessous (il ne reparaît pas quand la
@@ -1744,6 +1745,20 @@ photo ». La scène de l'ouverture a donc un temps de plus :
 3. **le récit s'écrit** (inchangé) ;
 4. **une pause**, puis **la lettre s'ouvre** (`--of-zoom-*`, 130 svh), et la
    photo tient l'écran 30 svh avant que la page reprenne.
+
+**La photo où l'on entre n'est pas la couverture.** La couverture reste le fond
+du titre (c'est elle que devient la vignette du CV), mais c'est aussi la
+première photo du montage, celle qui s'allume juste après le carton : on
+l'aurait vue deux fois de suite. `photoLettre` (univers-montage.js) prend une
+photo plein cadre — elle a sa version 1920, faite pour remplir un écran —,
+la plus loin dans le montage, qui n'est pas passée dans le travelling ; elle
+est cadrée comme dans le montage (`data-lettre-pos`). Un univers peut la
+choisir lui-même :
+
+```js
+lettre: 12,      // la photo où l'on entre par le titre (sans mention :
+                 // la dernière photo plein cadre hors du travelling)
+```
 
 `tempoOuverture` compte ces temps en svh (`OUVERTURE_PAUSE`, `OUVERTURE_ZOOM`,
 `OUVERTURE_TENUE`) ; la scène s'allonge d'autant.

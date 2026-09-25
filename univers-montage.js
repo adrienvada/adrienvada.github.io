@@ -501,6 +501,31 @@ const UniversMontage = (function () {
 
     const aUneOuverture = (uni) => photosOuverture(uni).length >= 2;
 
+    //  LA PHOTO OÙ L'ON ENTRE PAR LA LETTRE. Pas la couverture : c'est la
+    //  première photo du montage, celle qui s'allume juste après le carton
+    //  — on l'aurait vue deux fois de suite. Une photo plein cadre (elle a
+    //  sa version 1920, faite pour remplir un écran), prise loin dans le
+    //  montage, et qui n'est pas passée dans le travelling. Un univers peut
+    //  la choisir lui-même : `lettre: 12`.
+    function photoLettre(uni) {
+        const blocs = (uni.sequence || []).filter(b => b && Array.isArray(b.p) && b.p.length);
+        if (!blocs.length) return null;
+        const couv = blocs[0].p[0];
+        const vues = photosOuverture(uni);
+        const trouve = (n) => blocs.find(b => b.p.includes(n));
+        let n = uni.lettre;
+        if (n == null || !trouve(n)) {
+            const seules = blocs.filter(b => b.p.length === 1).map(b => b.p[0])
+                .filter(x => x !== couv && !vues.includes(x));
+            const autres = blocs.flatMap(b => b.p).filter(x => x !== couv);
+            n = seules.length ? seules[seules.length - 1] : autres[autres.length - 1];
+        }
+        if (n == null) return null;
+        const bloc = trouve(n);
+        const base = `ressources/images/univers/${uni.slug}/${n}`;
+        return { n, src: `${base}-${bloc.p.length === 1 ? 1920 : 1280}.webp`, pos: framePos(uni, bloc, n) || '' };
+    }
+
     // `titre` : le haut de la page (voir panelHtml), qui vient du fond ;
     // `tempo` : tempoOuverture(uni), que panelHtml a déjà calculé pour y
     // régler l'écriture du synopsis.
@@ -522,7 +547,10 @@ const UniversMontage = (function () {
         // sur la scène : c'est le haut de la page, son titre y est lu en
         // premier ; les photos, décoratives, sont cachées aux lecteurs
         // d'écran.
-        return `<section class="u-ouverture rg-scene" style="${reglage}">
+        // La photo de la lettre, lue par detourerLeTitre (univers.js).
+        const lettre = photoLettre(uni);
+        const attrLettre = lettre ? ` data-u-src="${escape(lettre.src)}"${lettre.pos ? ` data-lettre-pos="${escape(lettre.pos)}"` : ''}` : '';
+        return `<section class="u-ouverture rg-scene" style="${reglage}"${attrLettre}>
             <div class="u-of-scene">
                 <span class="u-of-fond" aria-hidden="true"></span>
                 <div class="u-of-titre rg-k">${titre}</div>
