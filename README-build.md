@@ -173,6 +173,11 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   éteint la salle et lance le lecteur à 1:21 avec son API de messages, la
   bobine de la salle noire montre l'extrait en cours et suit ce que le lecteur
   annonce, Échap rallume et arrête le lecteur ;
+- les bandes-annonces du CV : la pastille ▶ garde son lien vers YouTube ou
+  Vimeo, mais son clic joue la vidéo dans la salle noire, sur la page (pas
+  de nouvel onglet), sans la bobine de la bande démo, avec un halo et le
+  titre du spectacle ; Échap arrête le lecteur ; la bande démo retrouve
+  ensuite sa bobine et son titre ;
 - la photo dans la lettre, avec les deux pilotes, au téléphone et sur
   ordinateur, dans une salle claire et une salle sombre : la photo où l'on
   entre n'est pas la première du montage ; le masque a une
@@ -2331,6 +2336,15 @@ dessous **la bobine** — un plan par extrait, qui lance le film à ce moment-l�
   (`https://i.ytimg.com/vi/<id>/maxres1.jpg` à `maxres3.jpg`, au quart, à la
   moitié et aux trois quarts), et remettre les débuts des extraits dans la
   bobine et dans `DEBUTS` (`index.html`, « LA SALLE DE PROJECTION »).
+
+**Les bandes-annonces du CV** passent dans la même salle noire. La pastille ▶
+d'une ligne (`addTrailerPill`, `univers.js`) appelle `ouvrirBandeAnnonce`
+(`index.html`) avec la première vidéo du montage du spectacle : YouTube
+(`youtube-nocookie.com`) ou Vimeo (`player.vimeo.com`, `dnt=1`). La salle
+prend alors la classe `.bande-annonce` : pas de bobine, le halo pris à la
+photo de couverture du spectacle (celle de sa vignette), et « Bande-annonce ·
+titre » en tête. La pastille reste un vrai lien : clic du milieu, Ctrl-clic
+ou « ouvrir dans un nouvel onglet » mènent toujours à la plateforme.
 
 ## Démos voix — les ondes
 

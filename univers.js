@@ -3039,11 +3039,17 @@ const SHOW_UNIVERSES = {
     }
 
     // ── La bande-annonce, en pastille sous le badge ────────────────────
-    //  Un lien DIRECT vers la vidéo, pas un raccourci vers le panneau :
+    //  Un accès DIRECT à la vidéo, pas un raccourci vers le panneau :
     //  le geste demandé est d'y accéder tout de suite, pas de rouvrir
     //  l'univers pour aller la chercher dans son défilé. On prend la
     //  première vidéo du montage — c'est la bande-annonce sur les fiches
     //  qui en posent une, et il n'y en a jamais deux.
+    //
+    //  Elle se joue dans la salle noire de la bande démo, sur la page
+    //  (ouvrirBandeAnnonce, index.html), le halo pris à la photo du
+    //  spectacle. La pastille reste un lien vers la vidéo : clic du milieu,
+    //  Ctrl-clic, « ouvrir dans un nouvel onglet » mènent à la plateforme,
+    //  et sans salle sur la page, le clic aussi.
     function addTrailerPill(li, uni) {
         const beat = (uni.sequence || []).find(b => b && b.video);
         if (!beat) return;
@@ -3074,13 +3080,17 @@ const SHOW_UNIVERSES = {
         pill.target = '_blank';
         pill.rel = 'noopener';
         pill.className = 'cv-trailer cv-trailer-lien';
-        pill.setAttribute('aria-label', `Voir la bande-annonce — ${titre} (nouvel onglet)`);
+        pill.setAttribute('aria-label', `Voir la bande-annonce — ${titre}`);
         pill.setAttribute('data-track', 'cv_trailer');
         pill.setAttribute('data-track-detail', titre);
         pill.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg>';
         // La ligne entière écoute les clics (repli des tiroirs, appui
         // maintenu) : celui-ci ne la concerne pas.
-        pill.addEventListener('click', (e) => e.stopPropagation());
+        pill.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            if (window.ouvrirBandeAnnonce && window.ouvrirBandeAnnonce({ ref, titre, image: couverture(uni)?.src })) e.preventDefault();
+        });
 
         badges.classList.remove('items-center');
         if (badge) {
