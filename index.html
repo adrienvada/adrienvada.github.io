@@ -5902,6 +5902,36 @@
             margin: 12px 0 20px;
         }
 
+        /* VISIBLE SUR LE CV SEULEMENT — comme la bio et les liens externes,
+           via la classe `bio-collapse` posée sur l'élément lui-même. Repliée,
+           la marge BASSE part déjà à zéro (règle générale de .bio-hidden) ;
+           celle du HAUT lui est propre (12px, ci-dessus) et doit l'être
+           aussi, sinon elle resterait un espace fantôme entre l'en-tête et
+           la barre d'onglets une fois le bandeau invisible.
+
+           AILLEURS, `.bio-collapse` est un simple conteneur sans style
+           propre : réduire sa ligne de grille à zéro suffit à annuler sa
+           boîte. Ici, `.td` porte aussi le padding et la bordure de la
+           carte — deux épaisseurs qu'une ligne de grille à zéro ne touche
+           pas — et qui, sans ceci, resteraient une bande vide (le repos du
+           cadre) entre l'en-tête et la barre d'onglets. */
+        #next-date-banner.bio-hidden {
+            margin-top: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-width: 0;
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                margin-top var(--dur-panel) var(--ease-panel), margin-bottom var(--dur-panel) var(--ease-panel),
+                padding-top var(--dur-panel) var(--ease-panel), padding-bottom var(--dur-panel) var(--ease-panel),
+                border-width var(--dur-panel) var(--ease-panel), visibility 0s linear var(--dur-panel);
+        }
+        #next-date-banner.bio-collapse:not(.bio-hidden) {
+            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
+                margin-top var(--dur-panel) var(--ease-panel), margin-bottom var(--dur-panel) var(--ease-panel),
+                padding-top var(--dur-panel) var(--ease-panel), padding-bottom var(--dur-panel) var(--ease-panel),
+                border-width var(--dur-panel) var(--ease-panel), visibility 0s;
+        }
+
         .td-sur {
             display: flex;
             align-items: center;
@@ -6789,13 +6819,15 @@
             </div>
         </header>
                 <!-- ── LA PROCHAINE DATE ──
-                     Au-dessus de la barre de navigation, donc visible quel
-                     que soit l'onglet actif — pas seulement le CV. Savoir
-                     qu'Adrien joue le 22 octobre ne demande toujours pas
-                     d'aller voir l'onglet Dates. Une ligne de tableau de
-                     gare, en palettes noires : la date, l'heure, le
-                     spectacle, la ville (voir renderNextDate). Elle mène à
-                     sa date dans l'onglet Dates, où l'on réserve.
+                     Au-dessus de la barre de navigation, mais visible sur le
+                     CV seulement (`bio-collapse`, comme la bio et les liens
+                     externes) : ailleurs, ce n'est plus la suite d'une liste
+                     qu'on s'apprête à lire. Savoir qu'Adrien joue le 22
+                     octobre ne demande toujours pas d'aller voir l'onglet
+                     Dates. Une ligne de tableau de gare, en palettes noires :
+                     la date, l'heure, le spectacle, la ville (voir
+                     renderNextDate). Elle mène à sa date dans l'onglet Dates,
+                     où l'on réserve.
 
                      Le bandeau lit la MÊME source que la page Dates (dates.js,
                      via splitUpcoming) : rien n'est saisi deux fois, et il ne
@@ -6809,7 +6841,7 @@
 
                      `no-print` : la version imprimée est un CV, pas une
                      affiche. -->
-                <section id="next-date-banner" class="td no-print" aria-labelledby="td-titre" hidden></section>
+                <section id="next-date-banner" class="td no-print bio-collapse" aria-labelledby="td-titre" hidden><div class="bio-collapse-inner"></div></section>
                 <!-- LE BANDEAU EST RENDU ICI, PENDANT LA LECTURE DE LA PAGE, et non
                      plus au chargement complet. Posé après coup, il poussait
                      vers le bas un CV déjà affiché — la première ligne, que
@@ -7070,10 +7102,15 @@
         function renderNextDate() {
             const tableau = document.getElementById('next-date-banner');
             if (!tableau) return;
+            // Le contenu se pose dans `.bio-collapse-inner`, jamais sur la
+            // section elle-même : c'est cet enrobage (`overflow: hidden`)
+            // qui permet au repli CV-seulement (`bio-collapse`) de réduire
+            // la ligne de grille à zéro — voir la règle dans le <style>.
+            const dedans = tableau.querySelector('.bio-collapse-inner');
             const e = prochaineEntree();
             if (!e) {
                 tableau.hidden = true;
-                tableau.innerHTML = '';
+                dedans.innerHTML = '';
                 tdCle = null;
                 return;
             }
@@ -7085,7 +7122,7 @@
             const cle = JSON.stringify(d);
             if (tdCle === cle) {
                 tableau.hidden = false;
-                const ligne = tableau.querySelector('.td-dep');
+                const ligne = dedans.querySelector('.td-dep');
                 if (ligne && ligne.getAttribute('style') !== style) ligne.setAttribute('style', style);
                 return;
             }
@@ -7100,7 +7137,7 @@
             // quand elle prend sa colonne sur un tableau plus large.
             const sous = (d.heure ? `<span class="s-heure">${esc(d.heure)}${d.ville ? '<span class="s-sep"> · </span>' : ''}</span>` : '')
                 + (d.ville ? `<span class="s-ville">${esc(d.ville)}</span>` : '');
-            tableau.innerHTML = '<h3 class="td-sur" id="td-titre"><span class="td-voyant" aria-hidden="true"></span>Prochaine date</h3>'
+            dedans.innerHTML = '<h3 class="td-sur" id="td-titre"><span class="td-voyant" aria-hidden="true"></span>Prochaine date</h3>'
                 + `<button type="button" class="td-dep" data-depart="${esc(d.cle)}" data-track="banner_next_date"`
                 + ` data-track-detail="${esc(d.titre)}" style="${style}">`
                 + `<span class="sr-only">${esc(d.clair)}</span>`
