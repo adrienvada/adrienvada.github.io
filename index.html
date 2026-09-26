@@ -4106,6 +4106,22 @@
             </div>
         </header>
 
+        <!-- ── BANDEAU « PROCHAINEMENT » ──
+             Au-dessus de la barre de navigation, donc visible quel que soit
+             l'onglet actif — pas seulement sur le CV. Savoir qu'Adrien joue
+             le 22 octobre ne demande pas d'aller voir l'onglet Dates.
+
+             Le bandeau lit la MÊME source que la page Dates (dates.js, via
+             splitUpcoming) : rien n'est saisi deux fois, et il ne peut donc
+             pas la contredire.
+
+             Posé `hidden` : c'est renderNextDate() qui l'ouvre, et seulement
+             s'il reste une représentation à venir. Une saison qui se termine
+             le fait disparaître toute seule, sans intervention.
+
+             `no-print` : la version imprimée est un CV, pas une affiche. -->
+        <div id="next-date-banner" hidden class="no-print mb-5"></div>
+
         <!-- NAVIGATION TABS (Splitted buttons) -->
         <!-- Sentinelle : un trait de rien du tout, juste au-dessus de la barre.
              Tant qu'on le voit, la barre est à sa place ; dès qu'il sort par le
@@ -4202,35 +4218,6 @@
                         </svg> Télécharger le CV
                     </a>
                 </div>
-
-                <!-- ── BANDEAU « PROCHAINEMENT » ──
-                     En tête du CV, juste avant le théâtre : la prochaine date
-                     est la suite de la liste qu'on s'apprête à lire, pas une
-                     annonce posée sur la page. Elle se lit donc dans la foulée
-                     du titre du spectacle qu'elle concerne, et non à côté du
-                     portrait. Savoir qu'Adrien joue le 22 octobre ne demande
-                     toujours pas d'aller voir l'onglet Dates.
-
-                     Le bandeau lit la MÊME source que la page Dates (dates.js,
-                     via splitUpcoming) : rien n'est saisi deux fois, et il ne
-                     peut donc pas la contredire.
-
-                     Posé `hidden` : c'est renderNextDate() qui l'ouvre, et
-                     seulement s'il reste une représentation à venir. Une saison
-                     qui se termine le fait disparaître toute seule, sans
-                     intervention — et `space-y-4` du parent ne compte pas les
-                     éléments `hidden`, donc il ne laisse pas de blanc derrière
-                     lui.
-
-                     Ni `bio-collapse` ni marge propre, contrairement à sa
-                     version d'avant : il vivait alors hors des pages et devait
-                     se replier lui-même dès qu'on quittait le CV. Ici, la page
-                     qui le contient s'en charge, et l'espacement vient de la
-                     liste.
-
-                     `no-print` : la version imprimée est un CV, pas une
-                     affiche. -->
-                <div id="next-date-banner" hidden class="no-print"></div>
 
                 <!-- SECTION 1.1: THÉÂTRE -->
                 <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
