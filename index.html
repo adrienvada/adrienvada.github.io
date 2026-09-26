@@ -6780,6 +6780,22 @@
             </div>
         </header>
 
+        <!-- ── BANDEAU « PROCHAINEMENT » ──
+             Au-dessus de la barre de navigation, donc visible quel que soit
+             l'onglet actif — pas seulement sur le CV. Savoir qu'Adrien joue
+             le 22 octobre ne demande pas d'aller voir l'onglet Dates.
+
+             Le bandeau lit la MÊME source que la page Dates (dates.js, via
+             splitUpcoming) : rien n'est saisi deux fois, et il ne peut donc
+             pas la contredire.
+
+             Posé `hidden` : c'est renderNextDate() qui l'ouvre, et seulement
+             s'il reste une représentation à venir. Une saison qui se termine
+             le fait disparaître toute seule, sans intervention.
+
+             `no-print` : la version imprimée est un CV, pas une affiche. -->
+        <div id="next-date-banner" hidden class="no-print mb-5"></div>
+
         <!-- NAVIGATION TABS (Splitted buttons) -->
         <!-- Sentinelle : un trait de rien du tout, juste au-dessus de la barre.
              Tant qu'on le voit, la barre est à sa place ; dès qu'il sort par le
