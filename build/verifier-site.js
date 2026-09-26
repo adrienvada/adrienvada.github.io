@@ -280,6 +280,40 @@ function exige(condition, message) {
             exige(parDate.hauteur > 0 && parDate.hauteur <= 80, `une série occupe ${Math.round(parDate.hauteur)} px au téléphone (80 au plus)`);
             exige(!parDate.totaux, 'un intercalaire écrit encore un total de représentations');
             exige(parDate.sommaire, 'le sommaire de la saison n’est pas là');
+            // Chaque spectacle à sa couleur, sur sa ligne : le titre à son
+            // encre (lisible : contraste de 4,5 au moins sur la ligne), le
+            // souligné, les puces et le cadre de la feuille à sa couleur.
+            const couleurs = await p.evaluate(() => {
+                const sonde = document.createElement('span');
+                document.body.appendChild(sonde);
+                const rgb = (c) => { sonde.style.color = ''; sonde.style.color = c; return getComputedStyle(sonde).color; };
+                const lum = (c) => { const v = c.match(/[\d.]+/g).slice(0, 3).map((x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+                const fond = lum('rgb(244, 242, 237)');
+                const lignes = [...document.querySelectorAll('#upcoming-dates-container .dl')].filter((l) => l.style.getPropertyValue('--dl-a'));
+                const res = lignes.map((l) => {
+                    const a = rgb(l.style.getPropertyValue('--dl-a'));
+                    const t = l.querySelector('.dl-titre');
+                    const lien = l.querySelector('.dl-vers-page');
+                    const puce = l.querySelector('a.dl-puce');
+                    const encre = getComputedStyle(t).color;
+                    const x = lum(encre);
+                    return {
+                        titre: t.textContent.trim().slice(0, 20),
+                        contraste: (Math.max(x, fond) + 0.05) / (Math.min(x, fond) + 0.05),
+                        encre: encre !== getComputedStyle(document.body).color,
+                        souligne: !lien || getComputedStyle(lien).textDecorationColor === a,
+                        puce: !puce || getComputedStyle(puce).borderTopColor !== rgb('rgb(var(--c-gold) / 0.55)'),
+                        feuille: getComputedStyle(l.querySelector('.dl-feuille')).boxShadow.includes(a)
+                    };
+                });
+                sonde.remove();
+                return res;
+            });
+            exige(couleurs.length >= 1, `${couleurs.length} ligne(s) à la couleur d’un spectacle`);
+            couleurs.forEach((c) => {
+                exige(c.encre && c.contraste >= 4.5, `${c.titre} : le titre n’est pas à l’encre lisible de son spectacle (contraste ${c.contraste.toFixed(2)})`);
+                exige(c.souligne && c.puce && c.feuille, `${c.titre} : le souligné, les puces ou le cadre de la feuille ne sont pas à la couleur du spectacle (${JSON.stringify(c)})`);
+            });
             exige(parDate.replie, 'la saison d’un regard est ouverte d’emblée : elle ne doit paraître qu’au toucher des années de la saison');
             // Les années de la saison l'ouvrent, et la referment.
             const saisonVue = () => p.evaluate(() => ({

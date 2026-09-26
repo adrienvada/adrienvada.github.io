@@ -1210,6 +1210,15 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   la liste de l'onglet Dates commence déjà par elle, et c'est là que mène sa
   ligne — chaque ligne de la liste porte une clé (`data-dl-cle` : le premier
   jour et le titre) qui la retrouve quels que soient les filtres.
+- **Chaque spectacle à sa couleur, sur sa ligne** : le titre à l'**encre du
+  spectacle** — sa couleur (`palette.accent`), mêlée au noir sur la salle
+  claire et au blanc sur la salle sombre juste ce qu'il faut pour un
+  contraste de 4,5 au moins (`dlEncre`, qui pose `--dl-encre-c` et
+  `--dl-encre-s` avec `dlStyle`) : l'or de Cléophène, tel quel, se perdait
+  sur le papier clair ; le souligné du titre, 2 px, à sa couleur franche ;
+  les puces des séances cernées d'elle ; la feuille d'éphéméride dans un
+  cadre de sa couleur. Sans couleur de spectacle : l'encre du texte et l'or
+  du site. La vérification exige tout cela, et le contraste.
 - **Le sommaire**, en tête de la carte : la saison d'un regard — les
   spectacles en lignes, les mois en colonnes. Il ne filtre rien : un mois, un
   spectacle ou un rond **mènent** aux lignes qu'ils résument. **Il est

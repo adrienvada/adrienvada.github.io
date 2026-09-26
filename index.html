@@ -4993,6 +4993,56 @@
             text-decoration-thickness: 2px;
         }
 
+        /* ── CHAQUE SPECTACLE À SA COULEUR, sur sa ligne ──
+           Le titre à l'encre du spectacle (--dl-encre : sa couleur, rendue
+           lisible sur la salle, voir dlEncre), souligné de sa couleur
+           franche ; les puces des séances cernées d'elle ; la feuille
+           d'éphéméride dans un cadre de sa couleur. D'un coup d'œil, trois
+           Cléophène à la suite, puis une Bérénice. Sans couleur de
+           spectacle, l'encre du texte et l'or du site. */
+        .dl {
+            --dl-encre: var(--dl-encre-c, rgb(var(--c-text)));
+        }
+
+        :root[data-theme="dark"] .dl {
+            --dl-encre: var(--dl-encre-s, rgb(var(--c-text)));
+        }
+
+        .dl .dl-titre {
+            color: var(--dl-encre);
+        }
+
+        .dl .dl-vers-page {
+            text-decoration-color: var(--dl-a, rgb(var(--c-text) / 0.35));
+            text-decoration-thickness: 2px;
+            text-underline-offset: 0.24em;
+        }
+
+        .dl .dl-vers-page:hover {
+            text-decoration-thickness: 3px;
+        }
+
+        .dl .dl-puce {
+            border-color: color-mix(in srgb, var(--dl-a, rgb(var(--c-gold))) 70%, transparent);
+        }
+
+        .dl a.dl-puce:hover {
+            border-color: var(--dl-a, rgb(var(--c-gold)));
+            background: color-mix(in srgb, var(--dl-a, rgb(var(--c-gold))) 12%, transparent);
+        }
+
+        .dl .dl-puce .ico {
+            color: var(--dl-encre);
+        }
+
+        .dl .dl-puce--muette {
+            border-color: color-mix(in srgb, var(--dl-a, rgb(var(--c-s300))) 50%, transparent);
+        }
+
+        .dl .dl-feuille {
+            box-shadow: 0 0 0 2px var(--dl-a, rgb(var(--c-gold))), 0 1px 2px rgb(0 0 0 / 0.18);
+        }
+
         .dl-sous {
             font: italic 400 11.5px Inter, sans-serif;
             letter-spacing: 0;
@@ -9735,7 +9785,36 @@
             dlSpectacles.set(cle, info);
             return info;
         }
-        const dlStyle = (s) => (s.accent ? `--dl-a:${esc(s.accent)};--dl-sa:${esc(s.surAccent || '#ffffff')}` : '');
+        // L'ENCRE DU SPECTACLE : sa couleur, assez foncée sur la salle claire,
+        // assez claire sur la salle sombre, pour qu'un titre s'y lise
+        // (contraste de 4,5 au moins, celui du WCAG pour du texte). L'or de
+        // Cléophène, tel quel, se perdait sur le papier clair. On mêle la
+        // couleur au noir (ou au blanc) juste ce qu'il faut ; le fond est
+        // celui d'une ligne rayée, le plus exigeant des deux.
+        function dlEncre(hex, fond, vers) {
+            const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex).trim());
+            if (!m) return '';
+            const h = m[1].length === 3 ? m[1].replace(/./g, c => c + c) : m[1];
+            const c = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+            const lum = (x) => {
+                const [r, g, b] = x.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+                return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            };
+            const contraste = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((u, v) => v - u); return (x + 0.05) / (y + 0.05); };
+            for (let t = 0; t <= 1.001; t += 0.05) {
+                const x = c.map((v, i) => Math.round(v + (vers[i] - v) * t));
+                if (contraste(x, fond) >= 4.5) return `rgb(${x.join(' ')})`;
+            }
+            return `rgb(${vers.join(' ')})`;
+        }
+        const DL_FOND_CLAIR = [244, 242, 237], DL_FOND_SOMBRE = [36, 32, 27];
+        const dlStyle = (s) => {
+            if (!s.accent) return '';
+            const clair = dlEncre(s.accent, DL_FOND_CLAIR, [0, 0, 0]);
+            const sombre = dlEncre(s.accent, DL_FOND_SOMBRE, [255, 255, 255]);
+            return `--dl-a:${esc(s.accent)};--dl-sa:${esc(s.surAccent || '#ffffff')}`
+                + (clair ? `;--dl-encre-c:${clair};--dl-encre-s:${sombre}` : '');
+        };
 
         // Le nom d'un spectacle mène à sa page, partout où l'onglet l'écrit :
         // la ligne, l'en-tête du rangement par spectacle, la prochaine
