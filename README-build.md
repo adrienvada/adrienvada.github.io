@@ -68,8 +68,9 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   point posé dessus devant le nom du mois) ; nom du spectacle qui mène à sa
   page (et aucun lien pour un spectacle sans page, aucun lien mort) ;
   rangement par spectacle retenu, la feuille y redevient papier, la ligne ne
-  répète pas le titre et la frise prend la couleur du spectacle ; sommaire qui
-  mène à la bonne ligne ; une image pour chaque représentation annoncée aux
+  répète pas le titre et la frise prend la couleur du spectacle ; sommaire
+  replié, que les années de la saison ouvrent et referment, et qui mène à la
+  bonne ligne ; une image pour chaque représentation annoncée aux
   moteurs ; la prochaine date en tête du CV, et nulle part dans l'onglet
   Dates — sur une saison fictive, elle aussi ;
 - la prochaine date du CV, une ligne de tableau de gare : titrée « Prochaine
@@ -1211,8 +1212,12 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   jour et le titre) qui la retrouve quels que soient les filtres.
 - **Le sommaire**, en tête de la carte : la saison d'un regard — les
   spectacles en lignes, les mois en colonnes. Il ne filtre rien : un mois, un
-  spectacle ou un rond **mènent** aux lignes qu'ils résument. Il se retire
-  pendant une recherche, où seule la liste compte.
+  spectacle ou un rond **mènent** aux lignes qu'ils résument. **Il est
+  replié** : les années de la saison (« Saison 2026 - 2027 », en tête de la
+  carte, un bouton `#dates-saison-bouton` qui garde l'allure du titre, sa
+  flèche en plus) l'ouvrent et le referment (`dlSaisonOuvrir`). Il se retire
+  pendant une recherche, où seule la liste compte : le titre redevient alors
+  un simple titre.
 - **Le nom d'un spectacle mène à sa page** (`spectacles/<slug>/`), partout où
   l'onglet l'écrit : la ligne, l'en-tête du rangement par spectacle, les
   archives (`dlVersPage()`). Chaque univers a sa

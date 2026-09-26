@@ -1827,7 +1827,13 @@
            le haut. Son repli n'a alors aucun spectateur, et le laisser courir
            ses 400 ms ferait glisser le seuil de la barre pendant qu'on y
            emmène la page — une cible mouvante à poursuivre pour rien. */
-        .bio-collapse.bio-sans-transition {
+        .bio-collapse.bio-sans-transition,
+        #next-date-banner.bio-collapse.bio-sans-transition {
+            /* Le bandeau « Prochaine date » a ses propres transitions (voir
+               #next-date-banner.bio-hidden), plus précises que la règle
+               générale : sans son nom ici, il se repliait encore en douceur
+               quand sa ligne mène à l'onglet Dates, et la ligne visée
+               finissait 19 px sous l'intercalaire de son mois. */
             transition: none;
         }
 
@@ -5325,9 +5331,48 @@
 
         /* ── Le sommaire : la saison d'un regard ──
            La prochaine représentation n'y est pas : elle est en tête du CV
-           (voir renderNextDate), et la liste ci-dessous commence par elle. */
+           (voir renderNextDate), et la liste ci-dessous commence par elle.
+           Replié sous les années de la saison, qui l'ouvrent : un bouton
+           qui garde l'allure du titre, et une flèche qui se retourne. */
         .dates-sommaire {
             margin-bottom: 1.1rem;
+        }
+
+        .dates-saison-bouton {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font: inherit;
+            letter-spacing: inherit;
+            color: inherit;
+            text-align: left;
+            border-radius: 0.375rem;
+            transition: color var(--dur-base) var(--ease-out);
+        }
+
+        .dates-saison-bouton:not(:disabled):hover,
+        .dates-saison-bouton:focus-visible {
+            color: rgb(var(--c-gold-ink));
+        }
+
+        .dates-saison-chevron {
+            font-size: 10px;
+            color: rgb(var(--c-gold-ink));
+            transition: transform var(--dur-base) var(--ease-out);
+        }
+
+        .dates-saison-bouton[aria-expanded="true"] .dates-saison-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Rien à ouvrir (une recherche en cours, pas de date) : le titre
+           redevient un titre. */
+        .dates-saison-bouton:disabled {
+            cursor: default;
+        }
+
+        .dates-saison-bouton:disabled .dates-saison-chevron {
+            display: none;
         }
 
         .dl-saison-titre {
@@ -8020,9 +8065,15 @@
                                 <use href="#i-solid-calendar-check"></use>
                             </svg>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain"
-                            id="upcoming-season-title">Saison 2026 -
-                            2027</h3>
+                        <!-- Les années de la saison ouvrent et referment « la
+                             saison d'un regard » (voir dlSaisonOuvrir). -->
+                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">
+                            <button type="button" id="dates-saison-bouton" class="dates-saison-bouton"
+                                aria-expanded="false" aria-controls="dates-saison-panneau"
+                                data-track="dates_saison"><span id="upcoming-season-title">Saison 2026 -
+                                    2027</span><svg class="ico dates-saison-chevron" aria-hidden="true">
+                                    <use href="#i-solid-chevron-down"></use>
+                                </svg></button></h3>
                     </div>
 
                     <!-- ── Recherche : repliée derrière une loupe ──
@@ -8032,9 +8083,14 @@
                          formulaire. On n'affiche donc que ce dont l'utilisateur
                          a besoin à l'étape où il se trouve. -->
                     <!-- La saison d'un regard, écrite par renderDates() (voir
-                         dlSommaire). Masquée pendant une recherche : c'est
-                         alors la liste qui compte. -->
-                    <div id="dates-sommaire" class="dates-sommaire no-print" hidden></div>
+                         dlSommaire). Repliée tant qu'on n'a pas touché les
+                         années de la saison, au-dessus ; absente pendant une
+                         recherche : c'est alors la liste qui compte. -->
+                    <div class="filter-collapse no-print" id="dates-saison-panneau">
+                        <div class="filter-collapse-inner">
+                            <div id="dates-sommaire" class="dates-sommaire" hidden></div>
+                        </div>
+                    </div>
 
                     <div class="no-print" id="dates-filters">
                         <div class="dates-outils">
@@ -9997,6 +10053,20 @@
             return h + '</div></nav>';
         }
 
+        // LA SAISON D'UN REGARD NE S'OUVRE QU'À LA DEMANDE : les années de
+        // la saison, en tête de la carte, la déplient et la replient. Un
+        // rendu (recherche, rangement) ne la referme pas ; une recherche,
+        // qui la vide, si.
+        function dlSaisonOuvrir(ouvert) {
+            const bouton = document.getElementById('dates-saison-bouton');
+            const panneau = document.getElementById('dates-saison-panneau');
+            if (!bouton || !panneau) return;
+            bouton.setAttribute('aria-expanded', String(ouvert));
+            panneau.classList.toggle('is-open', ouvert);
+        }
+        document.getElementById('dates-saison-bouton')?.addEventListener('click', (e) =>
+            dlSaisonOuvrir(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
+
         // Le rangement choisi est retenu d'une visite à l'autre.
         let dlVue = 'date';
         try { if (localStorage.getItem('av.datesVue') === 'spectacle') dlVue = 'spectacle'; } catch (e) { /* stockage indisponible */ }
@@ -10145,6 +10215,11 @@
                 const html = filtersActive() ? '' : dlSommaire(entrees);
                 sommaire.innerHTML = html;
                 sommaire.hidden = !html;
+                const bouton = document.getElementById('dates-saison-bouton');
+                if (bouton) {
+                    bouton.disabled = !html;
+                    if (!html) dlSaisonOuvrir(false);
+                }
             }
 
             // ── Archives : archives statiques + dates fraîchement passées ──

@@ -260,7 +260,10 @@ function exige(condition, message) {
                     hauteur: serie ? serie.getBoundingClientRect().height : 0,
                     totaux: [...liste.querySelectorAll('.dl-intercalaire')].filter((x) => /représentation/.test(x.textContent)).length,
                     sommaire: !document.getElementById('dates-sommaire').hidden
-                        && !!document.querySelector('#dates-sommaire .dl-grille [data-dl-aller]')
+                        && !!document.querySelector('#dates-sommaire .dl-grille [data-dl-aller]'),
+                    // Repliée tant qu'on n'a pas touché les années de la saison.
+                    replie: document.getElementById('dates-saison-bouton').getAttribute('aria-expanded') === 'false'
+                        && getComputedStyle(document.getElementById('dates-saison-panneau')).visibility === 'hidden'
                 };
             });
             exige(parDate.intercalaires >= 1, 'aucun intercalaire de mois');
@@ -277,6 +280,23 @@ function exige(condition, message) {
             exige(parDate.hauteur > 0 && parDate.hauteur <= 80, `une série occupe ${Math.round(parDate.hauteur)} px au téléphone (80 au plus)`);
             exige(!parDate.totaux, 'un intercalaire écrit encore un total de représentations');
             exige(parDate.sommaire, 'le sommaire de la saison n’est pas là');
+            exige(parDate.replie, 'la saison d’un regard est ouverte d’emblée : elle ne doit paraître qu’au toucher des années de la saison');
+            // Les années de la saison l'ouvrent, et la referment.
+            const saisonVue = () => p.evaluate(() => ({
+                ouvert: document.getElementById('dates-saison-bouton').getAttribute('aria-expanded'),
+                haut: document.getElementById('dates-sommaire').getBoundingClientRect().height,
+                visible: getComputedStyle(document.getElementById('dates-saison-panneau')).visibility
+            }));
+            await p.click('#dates-saison-bouton');
+            await p.waitForTimeout(700);
+            const ouverte = await saisonVue();
+            exige(ouverte.ouvert === 'true' && ouverte.visible === 'visible' && ouverte.haut > 40, `toucher les années de la saison n’ouvre pas la saison d’un regard (${JSON.stringify(ouverte)})`);
+            await p.click('#dates-saison-bouton');
+            await p.waitForTimeout(700);
+            const refermee = await saisonVue();
+            exige(refermee.ouvert === 'false' && refermee.visible === 'hidden', `les années de la saison ne referment pas la saison d’un regard (${JSON.stringify(refermee)})`);
+            await p.click('#dates-saison-bouton');
+            await p.waitForTimeout(700);
 
             // Une date seule a sa puce, comme chaque soir d'une série : son
             // heure y mène à la billetterie.
