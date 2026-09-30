@@ -1879,7 +1879,19 @@ function exige(condition, message) {
             exige(verrou.pendant === 'hidden', 'une fenêtre ouverte ne bloque pas le défilement de la page');
             // L'onglet change, la pastille rejoint l'onglet choisi.
             await p.click('#tab-page_dates');
-            await p.waitForTimeout(900);
+            // On attend que le passage ait posé la page et que la pastille soit
+            // arrivée, plutôt qu'un délai fixe. Le clic rend la main plus tôt
+            // depuis le chantier de fluidité, et 900 ms après lui ne suffisaient
+            // plus sur la machine lente des demandes de fusion : la page s'y
+            // pose vers 1,5 s après le geste, comme avant le chantier. Au-delà
+            // de cinq secondes, c'est un vrai défaut, et les exigences
+            // ci-dessous disent lequel.
+            await p.waitForFunction(() => {
+                const t = document.getElementById('tab-page_dates').getBoundingClientRect();
+                const pa = document.querySelector('.onglet-pastille').getBoundingClientRect();
+                return document.querySelector('.page.active')?.id === 'page_dates'
+                    && Math.abs(t.left - pa.left) + Math.abs(t.width - pa.width) < 2;
+            }, null, { timeout: 5000 }).catch(() => { /* voir les exigences */ });
             const onglet = await p.evaluate(() => {
                 const t = document.getElementById('tab-page_dates').getBoundingClientRect();
                 const pa = document.querySelector('.onglet-pastille').getBoundingClientRect();
