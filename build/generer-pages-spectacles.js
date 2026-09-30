@@ -113,6 +113,34 @@ const MESURE = `    <!-- Mesure d'audience — Umami, sans cookie ni identifiant
 `;
 
 // ════════════════════════════════════════════════════════════════
+//  LE SERVICE WORKER — les polices et les images, et rien d'autre
+//  Le même bloc que dans le <head> de l'accueil, où tout est expliqué
+//  (voir aussi /sw.js et README-build.md, « Le service worker ») :
+//  inscrit après le chargement, il garde les polices et les images du
+//  site pour les revisites au-delà des dix minutes de GitHub Pages. Placé
+//  avec la mesure, avant les feuilles de style.
+// ════════════════════════════════════════════════════════════════
+const SERVICE_WORKER = `    <script>
+        // Le service worker des polices et des images, inscrit après le
+        // chargement — le même bloc que l'accueil (voir son <head>).
+        (function () {
+            if (!('serviceWorker' in navigator)) return;
+            addEventListener('load', function () {
+                var servie = !!navigator.serviceWorker.controller;
+                navigator.serviceWorker.register('/sw.js').then(function () {
+                    return navigator.serviceWorker.ready;
+                }).then(function (reg) {
+                    if (servie || !reg.active) return;
+                    var urls = performance.getEntriesByType('resource').map(function (r) { return r.name; })
+                        .filter(function (u) { return /\\/ressources\\/(polices|images)\\//.test(u); });
+                    reg.active.postMessage({ type: 'garder', urls: urls });
+                }).catch(function () { });
+            });
+        })();
+    </script>
+`;
+
+// ════════════════════════════════════════════════════════════════
 //  LES PAGES VOISINES, PRÉPARÉES AU SURVOL
 //  Les mêmes règles de spéculation que l'accueil (voir son <head>, et
 //  README-build.md, « Préparées au survol ») : d'une fiche ou du
@@ -614,7 +642,7 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     <link rel="canonical" href="${urlPage}">
     <meta name="theme-color" content="${esc(p.bg || '#0a0907')}">
 
-${MESURE}${SPECULATION}
+${MESURE}${SERVICE_WORKER}${SPECULATION}
     <meta property="og:type" content="article">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">
@@ -1038,7 +1066,7 @@ function pageRepertoire(fiches, misAJour) {
     </script>
     <meta name="theme-color" content="#0a0907">
 
-${MESURE}${SPECULATION}
+${MESURE}${SERVICE_WORKER}${SPECULATION}
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">

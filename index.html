@@ -265,6 +265,37 @@
             else charger();
         })();
 
+        // ════════════════════════════════════════════════════════════════
+        //  LE SERVICE WORKER — les polices et les images, et rien d'autre
+        //  ----------------------------------------------------------------
+        //  GitHub Pages ne garde rien plus de dix minutes : au-delà, chaque
+        //  revisite redemande chaque fichier, et les polices attendent leur
+        //  aller-retour avant le premier affichage. /sw.js garde les polices
+        //  et les images du site, les sert tout de suite et demande au
+        //  serveur, derrière, s'il y a plus neuf. Rien d'autre : ni les
+        //  pages, ni les scripts, ni les dates, ni la mesure (voir sw.js, et
+        //  README-build.md, « Le service worker » — l'interrupteur qui le
+        //  retire y est décrit).
+        //
+        //  Inscrit APRÈS le chargement : rien de ce que la page demande ne
+        //  l'attend. Ce qu'elle a chargé avant lui, il ne l'a pas vu passer :
+        //  s'il n'était pas déjà là, on lui en envoie la liste, et il le
+        //  garde depuis le cache du navigateur. Le même bloc sur chaque page
+        //  publique (l'accueil, la 404, les pages générées) ; pas /admin/.
+        (function () {
+            if (!('serviceWorker' in navigator)) return;
+            addEventListener('load', function () {
+                var servie = !!navigator.serviceWorker.controller;
+                navigator.serviceWorker.register('/sw.js').then(function () {
+                    return navigator.serviceWorker.ready;
+                }).then(function (reg) {
+                    if (servie || !reg.active) return;
+                    var urls = performance.getEntriesByType('resource').map(function (r) { return r.name; })
+                        .filter(function (u) { return /\/ressources\/(polices|images)\//.test(u); });
+                    reg.active.postMessage({ type: 'garder', urls: urls });
+                }).catch(function () { });
+            });
+        })();
 
         // LE PORTRAIT REVIENT DE LA GALERIE. Au départ vers la galerie, la
         // photo de l'affiche prend le nom `book-portrait` (voir le pageswap,

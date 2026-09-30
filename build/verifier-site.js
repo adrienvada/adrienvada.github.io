@@ -63,6 +63,7 @@
  *      (la première photo du travelling, la première vue de la planche) ;
  *    · la galerie : le premier écran part avec la page, à la bonne taille
  *      et une seule fois, allumé en fondu, visible sans JavaScript ;
+ *    · le service worker, qui ne garde que les polices et les images ;
  *    · le sitemap, qui doit annoncer toutes les pages spectacle.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
@@ -2931,6 +2932,45 @@ function exige(condition, message) {
             const cachees = await ps.evaluate(() => [...document.querySelectorAll('.carte .media img')].filter((i) => getComputedStyle(i).opacity !== '1').length);
             exige(!cachees, `sans JavaScript, ${cachees} vue(s) de la planche sont invisibles`);
             await s.close();
+        });
+
+        await verifie('le service worker ne garde que les polices et les images : ni page, ni script, ni feuille, ni dates ; inscrit par chaque page publique, pas par /admin/, et il sait se retirer', async () => {
+            const sw = fs.readFileSync(path.join(RACINE, 'sw.js'), 'utf8');
+            exige(/const RETIRE = false;/.test(sw) && /self\.registration\.unregister\(\)/.test(sw), 'sw.js : l’interrupteur (RETIRE, et la désinscription) a disparu — ou il est baissé');
+            const publiques = ['index.html', '404.html', 'galerie/index.html', 'spectacles/index.html']
+                .concat(dossiers.map((d) => `spectacles/${d}/index.html`));
+            for (const f of publiques) {
+                exige(/navigator\.serviceWorker\.register\('\/sw\.js'\)/.test(fs.readFileSync(path.join(RACINE, f), 'utf8')), `${f} : n’inscrit pas le service worker`);
+            }
+            exige(!/serviceWorker/.test(fs.readFileSync(path.join(RACINE, 'admin/index.html'), 'utf8')), '/admin/ inscrit le service worker');
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/?direct', { waitUntil: 'load' });
+            await p.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller, null, { timeout: 8000 });
+            await p.waitForTimeout(800);
+            await p.goto(`${base}/spectacles/${dossiers[0]}/`, { waitUntil: 'load' });
+            await p.waitForTimeout(1200);
+            const etat = await p.evaluate(async () => {
+                const noms = await caches.keys();
+                const gardees = [];
+                for (const n of noms) (await (await caches.open(n)).keys()).forEach((r) => gardees.push(new URL(r.url).pathname));
+                const nav = performance.getEntriesByType('navigation')[0];
+                const parLui = performance.getEntriesByType('resource')
+                    .filter((r) => r.workerStart > 0 && r.workerMatchedSourceType !== 'network')
+                    .map((r) => new URL(r.name).pathname);
+                return { noms, gardees, nav: nav.workerStart > 0 && nav.workerMatchedSourceType !== 'network', parLui };
+            });
+            const permis = /^\/ressources\/(polices|images)\/[^?#]*\.(woff2|webp|jpe?g|png|avif|gif|svg)$/;
+            exige(etat.noms.length === 1 && /^av-statique-v\d+$/.test(etat.noms[0]), `caches : ${etat.noms.join(', ')}`);
+            exige(etat.gardees.length >= 4, `le service worker n’a presque rien gardé (${etat.gardees.length})`);
+            const intrus = etat.gardees.filter((u) => !permis.test(u));
+            exige(!intrus.length, `le service worker garde ${intrus.join(', ')}`);
+            exige(!etat.nav, 'la page elle-même est passée par le service worker');
+            const detournes = etat.parLui.filter((u) => !/^\/ressources\/(polices|images)\//.test(u));
+            exige(!detournes.length, `passés par le service worker : ${detournes.join(', ')}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
         });
 
         await verifie('le sitemap annonce toutes les pages spectacle, et elles seules', async () => {

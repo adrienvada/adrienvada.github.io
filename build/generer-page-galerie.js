@@ -1136,6 +1136,24 @@ function genererHtml() {
             if (document.prerendering) document.addEventListener('prerenderingchange', charger, { once: true });
             else charger();
         })();
+
+        // Le service worker des polices et des images, inscrit après le
+        // chargement — le même bloc que l'accueil (voir son <head>, et
+        // SERVICE_WORKER dans build/generer-pages-spectacles.js).
+        (function () {
+            if (!('serviceWorker' in navigator)) return;
+            addEventListener('load', function () {
+                var servie = !!navigator.serviceWorker.controller;
+                navigator.serviceWorker.register('/sw.js').then(function () {
+                    return navigator.serviceWorker.ready;
+                }).then(function (reg) {
+                    if (servie || !reg.active) return;
+                    var urls = performance.getEntriesByType('resource').map(function (r) { return r.name; })
+                        .filter(function (u) { return /\\/ressources\\/(polices|images)\\//.test(u); });
+                    reg.active.postMessage({ type: 'garder', urls: urls });
+                }).catch(function () { });
+            });
+        })();
     </script>
 
     <!-- Les pages voisines, préparées au survol : les mêmes règles que les

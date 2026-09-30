@@ -259,6 +259,10 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   (quatre colonnes au téléphone, cinq au-delà) ; à 390 px (×3), 412 px
   (×1,75) et 1 440 px, aucune vignette téléchargée deux fois, et les vues du
   premier écran allumées ; sans JavaScript, aucune n'est cachée ;
+- le service worker : inscrit par chaque page publique et pas par `/admin/`,
+  il ne garde que des polices et des images de `/ressources/`, ni la page ni
+  un script n'est passé par lui, et son interrupteur est là, levé (voir [Le
+  service worker](#le-service-worker-swjs--les-polices-et-les-images-rien-dautre)) ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
 Pour ne passer que quelques vérifications — celles dont le nom contient un
@@ -2797,6 +2801,68 @@ Pour changer de version : voir `LISEZMOI.txt`.
   répertoire et à la galerie aussi**, recopié cette fois par leurs
   générateurs (`policesEnLigne`), commentaires ôtés et adresses réécrites :
   relancer `npm --prefix build run pages` après avoir changé `polices.css`.
+
+---
+
+## Le service worker (`sw.js`) — les polices et les images, rien d'autre
+
+GitHub Pages sert **tout** avec `cache-control: max-age=600` — les polices et
+le portrait comme la page —, et on ne règle pas ces en-têtes depuis le
+dépôt. Au-delà de dix minutes, chaque revisite redemandait chaque fichier au
+serveur (« a-t-il changé ? », 25 fois « non » sur l'accueil) et les polices
+attendaient leur aller-retour. `/sw.js` garde les **polices** et les
+**images** du site, les sert tout de suite, et demande au serveur, derrière,
+s'il y a plus neuf pour la fois suivante (*stale-while-revalidate*).
+
+Revisite de l'accueil publié après expiration du cache, au téléphone en 4G
+lente (×4), le service worker arrêté avant la visite — le cas réel au-delà
+de dix minutes —, cinq passes alternées : premier affichage 416 → 348 ms,
+plus grand affichage 432 → 348 ms, 25 → 6 questions au serveur (la page,
+ses scripts, ses feuilles). Rien pour une première visite ; le public est
+celui qui revient sur le même appareil — Adrien d'abord, et Safari efface
+tout d'un site non visité depuis sept jours.
+
+**Prudent par construction.** Un service worker persiste chez le visiteur,
+et un service worker trop zélé sert un site périmé sans que personne ne
+sache pourquoi. Celui-ci :
+
+- ne garde que `/ressources/polices/*.woff2` et les images de
+  `/ressources/images/`, du même domaine, en réponse entière (200) ;
+- ne touche **à rien d'autre** : ni les pages, ni les scripts, ni les
+  feuilles, ni les dates (`dates.js`, `dates-live.js`, Supabase), ni
+  `/admin/`, ni Umami. Dans Chrome (123 et plus), ces requêtes ne le
+  réveillent même pas : il déclare à son installation des routes qui les
+  envoient droit au réseau (`addRoutes`) ; ailleurs, son gestionnaire les
+  laisse filer sans y répondre ;
+- garde, dès son installation, les quatre polices du premier écran, et ce
+  que la première page a déjà chargé avant lui (elle lui en envoie la liste ;
+  il le reprend du cache du navigateur, rien ne repart sur le réseau) ;
+- plafonne son stockage à 400 fichiers, les plus anciens partant d'abord ;
+- n'empêche pas le cache avant/arrière (vérifié : accueil, répertoire, fiche,
+  galerie restaurés).
+
+Une image **remplacée sous le même nom** est servie ancienne une fois, puis
+la nouvelle la remplace. Pour qu'elle paraisse partout tout de suite :
+augmenter `VERSION` dans `sw.js` — le nouveau worker efface les caches des
+versions précédentes en s'activant.
+
+**Inscrit après le chargement**, par un petit bloc identique sur chaque page
+publique — l'accueil et la 404 (dans le premier script du `<head>`), les
+pages spectacle et le répertoire (`SERVICE_WORKER`, dans
+`generer-pages-spectacles.js`), la galerie (`generer-page-galerie.js`) —,
+pas par `/admin/` : rien de ce que la page demande ne l'attend.
+
+**L'interrupteur.** Pour le retirer : passer `RETIRE` à `true` dans `sw.js`
+et publier. À sa visite suivante, chaque visiteur reçoit ce fichier, qui vide
+ses caches et se désinscrit : le site redevient exactement celui d'avant.
+Puis retirer le bloc d'inscription des pages (les quatre endroits ci-dessus,
+régénérer les pages) — tant qu'il y reste, chaque visite réinscrit le
+fichier, qui se désinscrit aussitôt : inoffensif, mais inutile. Vérifié :
+bascule faite, la visite suivante n'a plus ni worker ni cache.
+
+`alleger-publication.js` allège `sw.js` comme les autres scripts ; le
+contrôle automatique vérifie qu'il ne garde que des polices et des images,
+que ni la page ni un script ne passent par lui, et que l'interrupteur est là.
 
 ---
 

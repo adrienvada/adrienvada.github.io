@@ -117,7 +117,7 @@ function fichiersDuSite() {
             .concat(lister('galerie', '.html')),
         js: existants([
             'regie.js', 'univers.js', 'univers-montage.js', 'intro.js', 'mask-points.js',
-            'dates.js', 'dates-live.js',
+            'dates.js', 'dates-live.js', 'sw.js',
         ]),
         // Le répertoire et la galerie n'ont plus de feuille à eux : leurs
         // générateurs l'écrivent dans la page, allégée avec elle.
