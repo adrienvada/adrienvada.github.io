@@ -1260,10 +1260,14 @@ function exige(condition, message) {
             const etat = await p.evaluate(() => ({
                 rideau: getComputedStyle(document.getElementById('intro-overlay')).display,
                 cachees: [...document.querySelectorAll('section')]
-                    .filter((s) => getComputedStyle(s).opacity !== '1').length
+                    .filter((s) => getComputedStyle(s).opacity !== '1').length,
+                // La plume de l'aperçu, que le script pose après le
+                // chargement : sans lui, le <noscript> la donne d'emblée.
+                plume: getComputedStyle(document.querySelector('.bio-handwritten')).fontFamily
             }));
             exige(etat.rideau === 'none', 'le rideau d’ouverture couvre la page');
             exige(etat.cachees === 0, `${etat.cachees} section(s) restent invisibles`);
+            exige(/^"?Caveat/.test(etat.plume), `l’aperçu de la lettre s’écrit sans Caveat (${etat.plume})`);
             await c.close();
         });
 
@@ -1832,6 +1836,28 @@ function exige(condition, message) {
             exige(!etat.animees, `${etat.animees} élément(s) encore animé(s) au défilement`);
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
+
+            // LE TITRE POSÉ TIENT DANS SA SCÈNE, qui rogne : sous son
+            // confinement de taille, elle retombait sur ses 60svh et coupait
+            // le synopsis, le rôle et « Accéder aux dates » — le Tab menait à
+            // un bouton invisible. « À la barre », au synopsis le plus long,
+            // au téléphone ; en mouvement réduit et sans JavaScript.
+            for (const [mode, options] of [['mouvement réduit', { reducedMotion: 'reduce' }], ['sans JavaScript', { javaScriptEnabled: false }]]) {
+                const t = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, ...options });
+                const q = await t.newPage();
+                await q.goto(`${base}/spectacles/alabarre/`, { waitUntil: 'load' });
+                await q.waitForTimeout(600);
+                const coupes = await q.evaluate(() => {
+                    const scene = document.querySelector('.u-of-scene')?.getBoundingClientRect();
+                    if (!scene) return ['pas de scène d’ouverture'];
+                    return [...document.querySelectorAll('.u-of-titre .u-synopsis, .u-of-titre .u-meta, .u-of-titre .u-hero-actions')]
+                        .map((e) => [e.className.split(' ')[0], e.getBoundingClientRect()])
+                        .filter(([, r]) => r.height && (r.bottom > scene.bottom + 1 || r.top < scene.top - 1))
+                        .map(([nom, r]) => `${nom} (${Math.round(r.bottom - scene.bottom)} px)`);
+                });
+                exige(!coupes.length, `${mode}, « À la barre » au téléphone : la scène coupe ${coupes.join(', ')}`);
+                await t.close();
+            }
         });
 
         await verifie('les défauts réparés tiennent : verrou, onglets, « Passer », touches, zoom de l’avatar, phrase sur un groupe', async () => {

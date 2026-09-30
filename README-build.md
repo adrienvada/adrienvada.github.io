@@ -110,7 +110,7 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   hauteur, l'année y tombe au même endroit, et le texte tient dans la hauteur
   de la vignette — au téléphone comme sur ordinateur ; les formations n'ont
   pas d'image ; rien de tout cela sur papier, où aucune ligne n'est voilée ;
-- sans JavaScript, le site reste lisible ;
+- sans JavaScript, le site reste lisible, et l'aperçu de la lettre écrit en Caveat ;
 - chaque page spectacle a son `h1`, son `<main>` et des données structurées
   lisibles, où chaque représentation a son image ;
 - chaque page spectacle s'anime et s'ouvre comme son univers ouvert depuis le
@@ -158,9 +158,11 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   survol (voir [Fluidité](#fluidité--ce-qui-a-été-fait-et-pourquoi-ne-pas-le-défaire)) ;
 - en mouvement réduit, chaque scène a un état fixe : l'ouverture réduite au
   haut de la page posé — titre, photo, textes, bouton, sans coupe ni
-  déplacement —, le carton du chapitre à un carton, sans noir, la poursuite à
-  sa photo en plein feux, la première photo allumée, le texte écrit, plus
-  rien d'animé au défilement ;
+  déplacement, et tout entier dans sa scène (synopsis, rôle et bouton de
+  « À la barre » au téléphone, en mouvement réduit comme sans JavaScript) —,
+  le carton du chapitre à un carton, sans noir, la poursuite à sa photo en
+  plein feux, la première photo allumée, le texte écrit, plus rien d'animé
+  au défilement ;
 - les défauts réparés de l'audit du mouvement : le verrou de défilement posé
   sur `<html>` et la place de la barre réservée, le changement d'onglet et sa
   pastille — son sens n'est pas écrit en ligne sur `<html>` —, le fragment
@@ -2143,7 +2145,13 @@ les pages, et regarder la scène — la photo y est montrée entière.
 **En mouvement réduit** : l'ouverture se réduit au haut de la page, posé, le
 carton du chapitre à un carton, sans noir, la poursuite à sa photo en plein
 feux, la première photo est allumée d'emblée, le texte est écrit. **Sans
-JavaScript** (`univers-statique.css`), même chose.
+JavaScript** (`univers-statique.css`), même chose. La scène d'ouverture y
+quitte son confinement de taille (`container-type: normal`) : tenue, elle
+mesure ses photos (les `cq*` de `.u-of-photo`) ; posée, sa hauteur ignorait
+alors son contenu, retombait sur ses 60svh, et la scène, qui rogne, coupait
+le synopsis, le rôle et « Accéder aux dates » sur les 9 fiches à ouverture
+(jusqu'à 239 px sur « À la barre » au téléphone) — le Tab menait à un
+bouton invisible.
 
 **Le haut de la page, dans le travelling, ne se défait pas par couches** comme
 en tête de page : ses couches y ARRIVENT, sur la course de la scène, et
@@ -2987,7 +2995,9 @@ Pour changer de version : voir `LISEZMOI.txt`.
   moment de calme après le chargement, ou à l'ouverture de la lettre. Elle
   reste déclarée dans `polices.css` : la déclarer plus tard par l'API
   FontFace faisait recalculer le style de tout le document (76 à 126 ms à
-  ×4).
+  ×4). Sans JavaScript, le `<noscript>` du `<head>` la donne d'emblée — sous
+  `:root .bio-handwritten`, pour passer devant la règle de base, qui vient
+  après lui dans la page et l'emportait à poids égal.
 - **Sur l'accueil publié, `polices.css` est dans la page** (voir [Ce qui part
   en ligne](#ce-qui-part-en-ligne-perd-ses-commentaires--pas-le-dépôt)) : le
   fichier reste la déclaration de référence, recopié à la publication. **Au

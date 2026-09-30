@@ -485,8 +485,12 @@
             #intro-overlay { display: none !important; }
             .page { display: block !important; opacity: 1 !important; transform: none !important; }
             /* L'aperçu de la lettre attend sa plume d'un script (voir
-               .bio-handwritten.plume) : sans lui, il la reçoit d'emblée. */
-            .bio-handwritten { font-family: 'Caveat', 'Kalam', cursive; }
+               .bio-handwritten.plume) : sans lui, il la reçoit d'emblée.
+               `:root` devant, parce que cette règle vient AVANT la feuille
+               de la page : à poids égal, la règle de base de
+               .bio-handwritten (Kalam), plus bas, l'emportait, et l'aperçu
+               s'écrivait sans Caveat. */
+            :root .bio-handwritten { font-family: 'Caveat', 'Kalam', cursive; }
         </style>
     </noscript>
 

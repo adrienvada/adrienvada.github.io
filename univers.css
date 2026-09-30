@@ -3872,6 +3872,18 @@ html.vt-univers-retour::view-transition-new(u-titre) {
         place-items: center;
     }
 
+    /* LA SCÈNE PREND LA HAUTEUR DU TITRE. Tenue, elle mesure ses photos
+       (container-type: size, pour les cq* de .u-of-photo) ; mais sous ce
+       confinement, sa hauteur ignore son contenu : height: auto retombait
+       sur les 60svh, et la scène, qui rogne, coupait le synopsis, le rôle
+       et « Accéder aux dates » — sur les 9 fiches à ouverture, au
+       téléphone (jusqu'à 239 px coupés sur « À la barre ») comme sur
+       ordinateur ; le Tab menait à un bouton invisible. Les photos ne sont
+       plus là pour s'y mesurer. */
+    .u-of-scene {
+        container-type: normal;
+    }
+
     .u-of-plans,
     .u-of-invite,
     .u-carton-noir,

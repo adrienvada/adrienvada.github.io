@@ -106,6 +106,14 @@ figcaption,
     place-items: center;
 }
 
+/* Sans ses photos, la scène prend la hauteur du titre : sous son
+   confinement de taille, elle retombait sur les 60svh et coupait le
+   synopsis, le rôle et « Accéder aux dates » (voir univers.css, en
+   mouvement réduit). */
+.u-of-scene {
+    container-type: normal !important;
+}
+
 .u-pa-scene {
     padding: 10svh 0;
 }
