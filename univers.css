@@ -3042,7 +3042,16 @@ html.vt-univers-retour::view-transition-new(u-titre) {
    comprise — une opacité, rien à repeindre. Seulement si ce qui l'allume
    est là (.u-allume-plans, posé par univers.js et par l'en-tête d'une page
    spectacle) : une page ou un script d'une version précédente, encore en
-   cache, la laisse visible, sans fondu, plutôt que cachée pour toujours. */
+   cache, la laisse visible, sans fondu, plutôt que cachée pour toujours.
+
+   Le fondu part d'UN CENTIÈME, pas de zéro — comme les vues de la galerie
+   (voir build/generer-page-galerie.js). Cette photo est le plus grand
+   affichage (LCP) d'une page spectacle, et Chrome ne compte pas une image
+   peinte à opacité nulle : partie de zéro, elle n'était retenue qu'à la
+   FIN de son fondu, 360 à 460 ms après son arrivée (Le rapt 2,60 → 2,24 s,
+   Cléophène 3,03 → 2,57, Bérénice 3,00 → 2,51 ; téléphone, 4G lente, ×4,
+   trois passes). Un centième ne se voit pas, ni l'ombre à un centième :
+   c'est l'instant où le fondu commence qui est compté, à juste titre. */
 .u-of-photo img {
     display: block;
     width: 100%;
@@ -3054,7 +3063,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 }
 
 .u-allume-plans .u-of-photo img:not(.est-decodee) {
-    opacity: 0;
+    opacity: .01;
 }
 
 @keyframes u-of-passe {

@@ -1620,9 +1620,25 @@ function exige(condition, message) {
                 exige(await allumee(), `${slug} : la première photo du travelling reste cachée`);
             }
 
+            // Le fondu de la photo du travelling part d'un centième, pas de
+            // zéro : à opacité nulle, Chrome ne la compterait comme plus
+            // grand affichage qu'à la fin du fondu (voir .u-of-photo img dans
+            // univers.css).
+            await p.goto(`${base}/spectacles/cleophene/`, { waitUntil: 'load' });
+            const depart = await p.evaluate(() => {
+                const img = document.querySelector('#show-universe .u-of-photo img');
+                const decodee = img.classList.contains('est-decodee');
+                img.style.transition = 'none';
+                img.classList.remove('est-decodee');
+                const o = getComputedStyle(img).opacity;
+                img.classList.toggle('est-decodee', decodee);
+                img.style.transition = '';
+                return o;
+            });
+            exige(depart === '0.01', `la photo du travelling part d’une opacité ${depart}, et non d’un centième`);
+
             // L'affiche de la vidéo : le WebP d'abord ; ici, rien ne sort
             // vers YouTube, le WebP échoue donc — la petite affiche le remplace.
-            await p.goto(`${base}/spectacles/cleophene/`, { waitUntil: 'load' });
             const affiche = await p.evaluate(async () => {
                 const img = document.querySelector('.u-video-play img');
                 const source = img.parentElement.querySelector('source[type="image/webp"]');
@@ -1659,6 +1675,39 @@ function exige(condition, message) {
             await pr.waitForFunction(() => document.getElementById('show-universe')?.classList.contains('is-open'), null, { timeout: 8000 });
             const reduits = await plansDuPanneau(pr);
             exige(reduits === 'lazy/- lazy/- lazy/- lazy/-', `panneau, mouvement réduit : le travelling, qui n’est pas montré, part quand même (${reduits})`);
+
+            // Viser une ligne du CV prépare ce que le passage montrera
+            // d'abord (prechaufferCouverture) : la première photo du
+            // travelling — pas la couverture, que ce passage ne montre pas
+            // et qui passait devant elle. En mouvement réduit, où la
+            // couverture ouvre la page, la couverture.
+            const viser = async (ctx) => {
+                const q = await ctx.newPage();
+                const parties = [];
+                q.on('request', (x) => {
+                    const m = /\/ressources\/images\/univers\/cleophene\/(\d+)-(?:640|1280)\.webp$/.exec(x.url());
+                    if (m) parties.push(m[1]);
+                });
+                await q.goto(`${base}/?direct`, { waitUntil: 'load' });
+                const attendu = await q.evaluate(() => {
+                    const uni = Object.values(SHOW_UNIVERSES).find((u) => u.slug === 'cleophene');
+                    const li = [...document.querySelectorAll('.cv-item.cv-has-universe')].find((l) => /Cléophène/.test(l.textContent));
+                    li.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' }));
+                    return {
+                        plan: String(UniversMontage.photosOuverture(uni)[0]),
+                        couverture: UniversMontage.couverture(uni).src.replace(/^.*\/|-240\.webp$/g, '')
+                    };
+                });
+                await q.waitForTimeout(1500);
+                await q.close();
+                return { parties, ...attendu };
+            };
+            const vise = await viser(c);
+            exige(vise.parties.includes(vise.plan) && !vise.parties.includes(vise.couverture),
+                `viser Cléophène prépare ${vise.parties.join(', ') || 'rien'} — la photo ${vise.plan} du travelling attendue, pas la couverture ${vise.couverture}`);
+            const viseReduit = await viser(r);
+            exige(viseReduit.parties.includes(viseReduit.couverture) && !viseReduit.parties.includes(viseReduit.plan),
+                `mouvement réduit : viser Cléophène prépare ${viseReduit.parties.join(', ') || 'rien'} — la couverture ${viseReduit.couverture} attendue`);
             await r.close();
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();

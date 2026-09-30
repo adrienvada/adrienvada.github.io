@@ -846,7 +846,7 @@ const SHOW_UNIVERSES = {
         panelHtml, datesHtml, escape, toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
         longestLine, photoSrc, framePos, figureHtml, overHtml, videoRef,
-        videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock, couverture,
+        videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock, couverture, photosOuverture, imagesDuPlan,
         FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT
     } = UniversMontage;
 
@@ -2211,18 +2211,39 @@ const SHOW_UNIVERSES = {
     // univers, gardée avec son image — une image que rien ne retient peut
     // être ramassée avant d'avoir fini (voir photosLettre) — : une
     // réouverture ne refait rien.
+    //
+    // CE QUE LE PASSAGE MONTRERA D'ABORD, PAS TOUJOURS LA COUVERTURE. Un
+    // univers qui s'ouvre sur son travelling — aujourd'hui, tous ceux qui
+    // ont des photos — n'en montre que la première, au point de fuite : la couverture n'y devient
+    // le fond du titre qu'au bout de la scène (voir nomsDuPanneau), et le
+    // panneau la demande lui-même, en priorité basse (heroFondHtml). La
+    // décoder d'avance, c'était la faire passer devant la seule image du
+    // premier écran — 323 Ko pour Audiences, en 4G lente — et attendre
+    // jusqu'à 350 ms, avant le passage, une image qu'il ne montrait pas.
+    // C'est donc cette première photo qu'on prépare, aux tailles mêmes où
+    // le panneau la demandera (imagesDuPlan) : il la trouve prête. En
+    // mouvement réduit, pas de travelling : la couverture, qui ouvre alors
+    // la page (voir awaitFirstPhoto).
     const couvertures = new Map();
+
+    function imageDAbord(uni) {
+        const plans = REDUCED ? [] : photosOuverture(uni);
+        if (plans.length >= 2) return imagesDuPlan(uni, plans[0]);
+        const c = couverture(uni);
+        if (!c) return null;
+        const base = c.src.replace(/-240\.webp$/, '');
+        return { src: `${base}-1280.webp`, srcset: `${base}-640.webp 640w, ${base}-1280.webp 1280w`, sizes: '100vw' };
+    }
 
     function prechaufferCouverture(uni) {
         let prete = couvertures.get(uni.slug);
         if (!prete) {
-            const c = couverture(uni);
-            const img = c ? new Image() : null;
+            const im = imageDAbord(uni);
+            const img = im ? new Image() : null;
             if (img) {
-                const base = c.src.replace(/-240\.webp$/, '');
-                img.sizes = '100vw';
-                img.srcset = `${base}-640.webp 640w, ${base}-1280.webp 1280w`;
-                img.src = `${base}-1280.webp`;
+                img.sizes = im.sizes;
+                img.srcset = im.srcset;
+                img.src = im.src;
             }
             prete = { img, decodee: img && img.decode ? img.decode().catch(() => { }) : Promise.resolve() };
             couvertures.set(uni.slug, prete);
@@ -3796,12 +3817,12 @@ const SHOW_UNIVERSES = {
         }, { passive: true });
     }
 
-    //  LA COUVERTURE AVANT LE CLIC (voir prechaufferCouverture). Au doigt,
-    //  dès l'appui — en capture, avant que quiconque ne l'arrête ; le clic
-    //  suit de 100 à 250 ms. À la souris, après une pause de 90 ms sur la
-    //  ligne : le survol précède le clic de bien plus, et une ligne
-    //  seulement traversée ne télécharge pas sa couverture (30 à 70 Ko
-    //  chacune).
+    //  LA PREMIÈRE IMAGE AVANT LE CLIC (voir prechaufferCouverture) : la
+    //  couverture, ou la première photo du travelling. Au doigt, dès
+    //  l'appui — en capture, avant que quiconque ne l'arrête ; le clic suit
+    //  de 100 à 250 ms. À la souris, après une pause de 90 ms sur la ligne :
+    //  le survol précède le clic de bien plus, et une ligne seulement
+    //  traversée ne télécharge pas son image.
     const PAUSE_PRECHAUFFE = 90;
 
     function bindPrechauffage() {

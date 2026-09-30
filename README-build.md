@@ -145,9 +145,12 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   téléphone : la première photo du travelling est demandée d'avance par
   l'en-tête, exactement comme l'image la demandera, hors mouvement réduit ;
   aucune image du montage ne part d'emblée ; le fond du titre passe après ;
-  la photo paraît, et ne reste jamais cachée. Dans le panneau ouvert depuis
-  le CV, les deux premières photos du travelling partent d'emblée, la
-  première en tête — aucune en mouvement réduit. L'affiche d'une vidéo
+  la photo paraît, et ne reste jamais cachée ; son fondu part d'un
+  centième, pas de zéro. Dans le panneau ouvert depuis le CV, les deux
+  premières photos du travelling partent d'emblée, la première en tête —
+  aucune en mouvement réduit ; viser une ligne du CV prépare la première
+  photo de son travelling, et non la couverture, qui ne l'est qu'en
+  mouvement réduit. L'affiche d'une vidéo
   YouTube est son WebP, et la petite affiche le remplace, source retirée,
   quand il manque ; la connexion au lecteur s'ouvre à l'appui, pas au
   survol (voir [Fluidité](#fluidité--ce-qui-a-été-fait-et-pourquoi-ne-pas-le-défaire)) ;
@@ -1954,8 +1957,13 @@ en place ; le renseigner pour toute série qui en demande un.
   est portée par la photo (`allumerLesPlans`, `.est-decodee`). Une image déjà
   là est posée d'emblée. Sur une page spectacle, c'est l'en-tête qui les
   allume, dès leur arrivée : attendre le moteur, qui n'arrive qu'après
-  elles, retenait la première 2,5 à 3,2 s de plus (4G lente, ×4). En
-  mouvement réduit, pas de fondu ; sans JavaScript, rien n'est caché.
+  elles, retenait la première 2,5 à 3,2 s de plus (4G lente, ×4). Le fondu
+  part d'**un centième**, comme celui des vues de la galerie (voir [La
+  planche contact](#la-planche-contact)) : la première photo est le plus
+  grand affichage (LCP) de la page, et Chrome ne compte pas une image peinte
+  à opacité nulle — partie de zéro, elle n'était retenue qu'à la fin de son
+  fondu, 0,36 à 0,46 s après son arrivée. En mouvement réduit, pas de
+  fondu ; sans JavaScript, rien n'est caché.
 - La **croix et le bouton « Accéder aux dates » restent actifs** pendant ce
   chargement : on doit toujours pouvoir renoncer.
 - Pas de `backdrop-filter` sur les légendes, qui défilent (il reste sur la
@@ -2340,10 +2348,20 @@ construction et les mesures du panneau tombaient dedans, la vignette mettait
 finissait 4 s après le toucher (téléphone, processeur ralenti ×4).
 Désormais :
 
-- **la couverture est décodée avant** — dès l'appui au doigt, après 90 ms de
-  survol à la souris (`prechaufferCouverture`), une fois par univers : le clic
-  la trouve prête (3 à 6 ms entre le clic et le passage sur ordinateur, contre
-  40 à 65), toujours plafonné à 350 ms ;
+- **la première image est décodée avant** — dès l'appui au doigt, après 90 ms
+  de survol à la souris (`prechaufferCouverture`), une fois par univers : le
+  clic la trouve prête (3 à 6 ms entre le clic et le passage sur ordinateur,
+  contre 40 à 65), toujours plafonné à 350 ms. Ce n'est la couverture, qui
+  devient le fond du titre, que pour un univers sans travelling, ou en
+  mouvement réduit : un univers qui s'ouvre sur son travelling — aujourd'hui,
+  tous ceux qui ont des photos — ne montre d'abord que sa première photo, et
+  c'est elle qu'on prépare, aux tailles où le panneau la demandera.
+  Préparer la couverture, que ce passage ne montre pas, la faisait passer
+  devant la seule image visible : au téléphone en 4G lente (×4, trois
+  passes, cache comme en ligne), la première photo s'allume désormais à
+  0,9 s de l'appui au lieu de 2,2 sur Cléophène, 0,8 au lieu de 2,5 sur
+  Bérénice, 3,1 au lieu de 5,7 sur Audiences — le passage partant au plus
+  0,2 s plus tard, le temps qu'elle arrive ;
 - **la page couverte cesse d'être rendue** : le rappel du passage verrouille la
   page et pose `html.u-page-cachee` avant de construire le panneau —
   `content-visibility: hidden` sur `#site`, sa hauteur retenue par
