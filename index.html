@@ -4724,13 +4724,23 @@
             }
         }
 
-        /* ── Recherche des dates : panneau repliable + révélation par étapes ── */
+        /* ── Recherche des dates : panneau repliable + révélation par étapes ──
+           LA HAUTEUR NE S'ANIME PAS. Les deux panneaux du haut de la carte
+           (la saison d'un regard, la recherche) se dépliaient en animant
+           grid-template-rows : chaque image déplaçait toute la liste
+           dessous, dont les liserés et les points de mois suivent leur
+           place à l'écran (view()) — le navigateur les recalculait et
+           repeignait la liste à chaque image. Au téléphone à ×4, une image
+           sur trois était perdue pendant le dépliement. La hauteur est
+           désormais posée d'un coup ; c'est la liste qui glisse, en
+           translate, de son ancienne place à la nouvelle (dlDeplier), et
+           le contenu du panneau paraît en fondu. Le repli garde sa
+           bascule de visibilité — voir .bio-collapse. */
         .filter-collapse {
             display: grid;
             grid-template-rows: 0fr;
             opacity: 0;
-            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
-                visibility 0s linear var(--dur-panel);
+            transition: opacity var(--dur-base) var(--ease-out), visibility 0s linear var(--dur-panel);
             /* Replié, hors du parcours au clavier — voir .bio-collapse. */
             visibility: hidden;
         }
@@ -4739,8 +4749,7 @@
             grid-template-rows: 1fr;
             opacity: 1;
             visibility: visible;
-            transition: grid-template-rows var(--dur-panel) var(--ease-panel), opacity var(--dur-base) var(--ease-out),
-                visibility 0s;
+            transition: opacity var(--dur-base) var(--ease-out), visibility 0s;
         }
 
         .filter-collapse>.filter-collapse-inner {
@@ -4807,6 +4816,40 @@
 
         .drawer-panel>.drawer-inner {
             overflow: hidden;
+        }
+
+        /* UN TIROIR REPLIÉ N'EST PLUS CALCULÉ. Invisible (visibility:
+           hidden), il restait dans chaque calcul de style et chaque mise
+           en page : les saisons d'archives, les tiroirs du CV et les
+           panneaux du haut de l'onglet Dates, à chaque changement d'onglet.
+           content-visibility: hidden les en retire — sans rien changer pour
+           qui les cherche : ils étaient déjà hors de la recherche dans la
+           page, du parcours au clavier et de l'arbre d'accessibilité
+           (vérifié : mêmes arrêts de tabulation, même arbre, même texte
+           introuvable replié et trouvé déplié). Comme la visibilité, il ne
+           bascule qu'à la fin du repli (un changement discret, retardé de
+           sa durée), et revient aussitôt à l'ouverture. Au téléphone à ×4,
+           le passage part 20 à 40 ms plus tôt vers l'onglet Dates et depuis
+           le bandeau « Prochaine date ». Seulement là où ce changement
+           discret existe : ailleurs, le contenu disparaîtrait d'un coup au
+           début du repli. */
+        @supports (transition-behavior: allow-discrete) {
+
+            .cv-expand-panel>.cv-expand-inner,
+            .drawer-panel>.drawer-inner,
+            .filter-collapse>.filter-collapse-inner {
+                content-visibility: hidden;
+                transition: content-visibility 0s linear var(--dur-panel);
+                transition-behavior: allow-discrete;
+            }
+
+            .cv-expand-panel.expanded>.cv-expand-inner,
+            .drawer-panel.expanded>.drawer-inner,
+            .filter-collapse.is-open>.filter-collapse-inner {
+                content-visibility: visible;
+                transition: content-visibility 0s;
+                transition-behavior: allow-discrete;
+            }
         }
 
         .drawer-chevron {
@@ -10077,12 +10120,110 @@
             });
         }
 
+        // ── UN PANNEAU DU HAUT DE LA CARTE S'OUVRE, LA LISTE GLISSE ──
+        //  (Voir « La hauteur ne s'anime pas », au .filter-collapse du
+        //  <style>.) La hauteur du panneau change d'un coup, en une seule
+        //  mise en page ; ce qui le suit — la liste, la carte des archives —
+        //  est replacé là où il était, puis glisse jusqu'à sa nouvelle place
+        //  en `translate`, que joue le compositeur. Le panneau se découvre
+        //  par le haut au même pas (clip-path) : sans cela, la liste qui
+        //  descend encore passerait sur son contenu déjà là. Au repli, le
+        //  geste inverse : la liste remonte sur le panneau qui s'efface, et
+        //  la hauteur tombe à la fin, quand elle est arrivée — il la garde
+        //  jusque-là (grid-template-rows en ligne). Au téléphone à ×4, les
+        //  images au-delà de 20 ms pendant le dépliement ou le repli tombent
+        //  de 7 à 12 sur 30 à 0, 1 ou 2.
+        //  LE GLISSEMENT PART APRÈS L'IMAGE DU GESTE, qui ne montre que la
+        //  flèche ou le libellé du bouton : la mise en page et les calques
+        //  du glissement, faits dans le geste, le faisaient répondre en
+        //  96 ms au lieu de 64-72 ; une image plus tard, en 56-64.
+        //  Page cachée, mouvement réduit, navigateur sans Web Animations :
+        //  la bascule seule. Un second geste sur le même panneau le fait
+        //  rebrousser chemin, d'où qu'il en soit ; sur l'autre, il termine
+        //  d'abord le premier.
+        const DL_IMMOBILE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+        let dlGlissement = null;
+
+        function dlDeplier(panneau, ouvert) {
+            const enCours = dlGlissement;
+            if (enCours && enCours.panneau === panneau) {
+                if (enCours.ouvert === ouvert) return;
+                enCours.ouvert = ouvert;
+                // Pas encore parti : il partira dans le bon sens, ou pas du tout.
+                if (!enCours.anims) return;
+                panneau.style.gridTemplateRows = ouvert ? '' : '1fr';
+                panneau.classList.toggle('is-open', ouvert);
+                enCours.anims.forEach((a) => a.reverse());
+                return;
+            }
+            if (enCours) enCours.fin();
+            if (panneau.classList.contains('is-open') === ouvert) return;
+            if (typeof panneau.animate !== 'function' || (DL_IMMOBILE && DL_IMMOBILE.matches)
+                || !panneau.closest('.page.active')) {
+                panneau.classList.toggle('is-open', ouvert);
+                return;
+            }
+            const glissement = { panneau, ouvert, anims: null };
+            // Dans la même tâche : la hauteur tombe au moment où la liste
+            // quitte sa translation, sans une image entre les deux. Pas
+            // encore parti, il se pose d'un coup.
+            glissement.fin = () => {
+                if (dlGlissement !== glissement) return;
+                dlGlissement = null;
+                panneau.style.gridTemplateRows = '';
+                if (glissement.anims) glissement.anims.forEach((a) => a.cancel());
+                else panneau.classList.toggle('is-open', glissement.ouvert);
+            };
+            dlGlissement = glissement;
+            requestAnimationFrame(() => setTimeout(() => dlGlisser(glissement), 0));
+        }
+
+        function dlGlisser(glissement) {
+            if (dlGlissement !== glissement) return;
+            const { panneau, ouvert } = glissement;
+            const page = panneau.closest('.page.active');
+            if (!page || panneau.classList.contains('is-open') === ouvert) { glissement.fin(); return; }
+            // Ce qui suit le panneau, jusqu'au bas de la page.
+            const suivants = [];
+            for (let el = panneau; el && el !== page.parentElement; el = el.parentElement) {
+                for (let s = el.nextElementSibling; s; s = s.nextElementSibling) suivants.push(s);
+            }
+            if (ouvert) panneau.classList.add('is-open');
+            // La seule mise en page du geste : elle donne la hauteur, et où
+            // est chacun.
+            const h = panneau.getBoundingClientRect().height;
+            // Seulement ce qui est à l'écran, ou y passe : le reste n'a
+            // personne pour le voir glisser.
+            const vus = h < 1 ? [] : suivants.filter((el) => {
+                const r = el.getBoundingClientRect();
+                return r.height > 0 && r.top - h < innerHeight && r.bottom > 0;
+            });
+            if (!ouvert) {
+                panneau.style.gridTemplateRows = '1fr';
+                panneau.classList.remove('is-open');
+            }
+            if (h < 1) { glissement.fin(); return; }
+            const style = getComputedStyle(panneau);
+            const temps = {
+                duration: parseFloat(style.getPropertyValue('--dur-panel')) || 400,
+                easing: style.getPropertyValue('--ease-panel').trim() || 'ease',
+                fill: 'both'
+            };
+            const loin = `0 ${-h}px`, ici = '0 0';
+            const anims = vus.map((el) => el.animate({ translate: ouvert ? [loin, ici] : [ici, loin] }, temps));
+            anims.push(panneau.animate({
+                clipPath: ouvert ? [`inset(0 0 ${h}px 0)`, 'inset(0 0 0 0)'] : ['inset(0 0 0 0)', `inset(0 0 ${h}px 0)`]
+            }, temps));
+            glissement.anims = anims;
+            anims[0].finished.then(glissement.fin, () => { });
+        }
+
         function openDateSearch(open) {
             const panel = document.getElementById('dates-search-panel');
             const btn = document.getElementById('dates-search-open');
             const label = document.getElementById('dates-search-open-label');
             if (!panel) return;
-            panel.classList.toggle('is-open', open);
+            dlDeplier(panel, open);
             btn.setAttribute('aria-expanded', open ? 'true' : 'false');
             if (label) label.textContent = open ? 'Masquer la recherche' : 'Rechercher une représentation';
             if (open) {
@@ -10558,7 +10699,7 @@
             const panneau = document.getElementById('dates-saison-panneau');
             if (!bouton || !panneau) return;
             bouton.setAttribute('aria-expanded', String(ouvert));
-            panneau.classList.toggle('is-open', ouvert);
+            dlDeplier(panneau, ouvert);
         }
         document.getElementById('dates-saison-bouton')?.addEventListener('click', (e) =>
             dlSaisonOuvrir(e.currentTarget.getAttribute('aria-expanded') !== 'true'));

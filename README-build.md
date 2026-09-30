@@ -74,9 +74,10 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   page (et aucun lien pour un spectacle sans page, aucun lien mort) ;
   rangement par spectacle retenu, la feuille y redevient papier, la ligne ne
   répète pas le titre et la frise prend la couleur du spectacle ; sommaire
-  replié, que les années de la saison ouvrent et referment, et qui mène à la
-  bonne ligne ; une image pour chaque représentation annoncée aux
-  moteurs ; la prochaine date en tête du CV, et nulle part dans l'onglet
+  replié, que les années de la saison ouvrent et referment sans en animer
+  la hauteur — la liste glisse en `translate`, et rien ne traîne une fois
+  arrivée —, et qui mène à la bonne ligne ; une image pour chaque
+  représentation annoncée aux moteurs ; la prochaine date en tête du CV, et nulle part dans l'onglet
   Dates — sur une saison fictive, elle aussi ;
 - la prochaine date du CV, une ligne de tableau de gare : titrée « Prochaine
   date », jamais « Départs » ; la date et elle seule (la ville abrégée sans
@@ -1300,7 +1301,16 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   carte, un bouton `#dates-saison-bouton` qui garde l'allure du titre, sa
   flèche en plus) l'ouvrent et le referment (`dlSaisonOuvrir`). Il se retire
   pendant une recherche, où seule la liste compte : le titre redevient alors
-  un simple titre.
+  un simple titre. **Il ne pousse pas la liste image par image** : lui et le
+  panneau de recherche se dépliaient en animant leur hauteur, et chaque
+  image déplaçait la liste, dont la frise suit la place à l'écran — une
+  image sur trois perdue au téléphone à ×4. Leur hauteur est posée d'un
+  coup ; la liste et la carte des archives glissent de leur ancienne place à
+  la nouvelle en `translate`, le panneau se découvre au même pas
+  (`clip-path`) et son contenu paraît en fondu ; au repli, la hauteur ne
+  tombe qu'à l'arrivée (`dlDeplier`). Le glissement part après l'image du
+  geste, qui montre déjà la flèche ou le libellé du bouton. Images au-delà
+  de 20 ms pendant le dépliement ou le repli : 7 à 12 sur 30 → 0 à 2.
 - **Le nom d'un spectacle mène à sa page** (`spectacles/<slug>/`), partout où
   l'onglet l'écrit : la ligne, l'en-tête du rangement par spectacle, les
   archives (`dlVersPage()`). Chaque univers a sa
@@ -2651,7 +2661,13 @@ galerie et l'administration. À garder en tête en modifiant le site :
   images après le départ de leur fondu (`openModal`, `closeModal`).
 - **Un panneau replié est hors d'atteinte** : `visibility: hidden` en plus de
   la hauteur nulle (tiroirs du CV, séries de dates, filtres, archives). Sans
-  cela, le clavier parcourait des liens invisibles.
+  cela, le clavier parcourait des liens invisibles. Il est aussi **hors du
+  calcul** : `content-visibility: hidden`, qui bascule comme la visibilité, à
+  la fin du repli — là où ce changement discret existe
+  (`transition-behavior: allow-discrete`). Rien ne change pour le lecteur
+  d'écran, le clavier ni la recherche dans la page (mêmes arrêts de
+  tabulation, même arbre d'accessibilité, texte introuvable replié et trouvé
+  déplié), et un changement d'onglet part 20 à 40 ms plus tôt à ×4.
 - **Un texte animé lettre à lettre reste un mot** : lettres en
   `aria-hidden`, mot entier en `aria-label` (titre des univers). Pas de
   copie masquée du texte : un moteur la lirait collée aux lettres.

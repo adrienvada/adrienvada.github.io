@@ -398,20 +398,36 @@ function exige(condition, message) {
                 exige(c.souligne && c.puce && c.feuille, `${c.titre} : le souligné, les puces ou le cadre de la feuille ne sont pas à la couleur du spectacle (${JSON.stringify(c)})`);
             });
             exige(parDate.replie, 'la saison d’un regard est ouverte d’emblée : elle ne doit paraître qu’au toucher des années de la saison');
-            // Les années de la saison l'ouvrent, et la referment.
-            const saisonVue = () => p.evaluate(() => ({
-                ouvert: document.getElementById('dates-saison-bouton').getAttribute('aria-expanded'),
-                haut: document.getElementById('dates-sommaire').getBoundingClientRect().height,
-                visible: getComputedStyle(document.getElementById('dates-saison-panneau')).visibility
-            }));
+            // Les années de la saison l'ouvrent, et la referment. La hauteur
+            // du panneau ne s'anime pas : elle est posée d'un coup, et c'est
+            // la liste dessous qui glisse, en translate (voir dlDeplier) —
+            // rien ne traîne une fois arrivé.
+            const saisonVue = () => p.evaluate(() => {
+                const liste = document.getElementById('upcoming-dates-container');
+                const panneau = document.getElementById('dates-saison-panneau');
+                return {
+                    ouvert: document.getElementById('dates-saison-bouton').getAttribute('aria-expanded'),
+                    haut: document.getElementById('dates-sommaire').getBoundingClientRect().height,
+                    visible: getComputedStyle(panneau).visibility,
+                    hauteurAnimee: getComputedStyle(panneau).transitionProperty.includes('grid-template-rows'),
+                    glisse: liste.getAnimations().some((a) => a.effect && a.effect.getKeyframes().some((k) => k.translate)),
+                    reste: panneau.style.cssText + getComputedStyle(liste).translate
+                };
+            });
             await p.click('#dates-saison-bouton');
+            // Le glissement part après l'image du geste : on le prend en route.
+            await p.waitForTimeout(120);
+            const enRoute = await saisonVue();
+            exige(!enRoute.hauteurAnimee && enRoute.glisse, `la saison d’un regard pousse la liste en animant sa hauteur, au lieu de la faire glisser (${JSON.stringify(enRoute)})`);
             await p.waitForTimeout(700);
             const ouverte = await saisonVue();
             exige(ouverte.ouvert === 'true' && ouverte.visible === 'visible' && ouverte.haut > 40, `toucher les années de la saison n’ouvre pas la saison d’un regard (${JSON.stringify(ouverte)})`);
+            exige(!ouverte.glisse && ouverte.reste === 'none', `la liste n’a pas fini de glisser, ou le panneau garde un style posé en route (${ouverte.reste})`);
             await p.click('#dates-saison-bouton');
             await p.waitForTimeout(700);
             const refermee = await saisonVue();
             exige(refermee.ouvert === 'false' && refermee.visible === 'hidden', `les années de la saison ne referment pas la saison d’un regard (${JSON.stringify(refermee)})`);
+            exige(!refermee.glisse && refermee.reste === 'none', `la liste n’a pas fini de remonter, ou le panneau garde sa hauteur (${refermee.reste})`);
             await p.click('#dates-saison-bouton');
             await p.waitForTimeout(700);
 
