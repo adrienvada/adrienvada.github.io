@@ -800,6 +800,12 @@ ${MESURE}${SERVICE_WORKER}${SPECULATION}
         ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
         ::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
         ::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
+        /* La photo couvre la boîte qui voyage, sans en sortir : une
+           image de passage ne rogne pas ce qui déborde de son cadrage, et
+           la première photo du travelling, en paysage, s'étalait hors de
+           la carte en portrait — hors de l'écran à gauche, sur la carte
+           voisine à droite (même règle que le portrait de l'accueil). */
+        ::view-transition-image-pair(*.fiche) { overflow: clip; }
         ::view-transition-old(*.fiche) { animation: vt-fiche-sort calc(var(--dur-morph) * .35) ease-out both; }
         ::view-transition-new(*.fiche) { animation: vt-fiche-entre calc(var(--dur-morph) * .4) ease-out both; }
         @keyframes vt-fiche-sort { to { opacity: 0; } }
@@ -1889,6 +1895,9 @@ html.retour-vt .carte .cadre::after { animation: none !important; }
 .carte .cadre { view-transition-class: fiche; }
 ::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
 ::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
+/* Rognée à la boîte qui voyage : la photo de la fiche, en paysage,
+   débordait de la carte en portrait (voir la fiche). */
+::view-transition-image-pair(*.fiche) { overflow: clip; }
 ::view-transition-old(*.fiche) { animation: vt-fiche-sort .19s ease-in .12s both; }
 ::view-transition-new(*.fiche) { animation: vt-fiche-entre .19s ease-out .22s both; }
 @keyframes vt-fiche-sort { to { opacity: 0; } }

@@ -3164,7 +3164,11 @@ function exige(condition, message) {
                         const n = getComputedStyle(el).viewTransitionName;
                         return n && n !== 'none' && el !== document.documentElement;
                     }).map((el) => `${getComputedStyle(el).viewTransitionName}@${el.matches('.u-of-photo') ? 'photo' : el.matches('.u-hero-fond') ? 'fond' : el.matches('.carte .media img') ? 'vignette' : el.matches('.affiche-cadre img') ? 'affiche' : el.tagName}`);
-                    try { sessionStorage.setItem('__vt-' + type, JSON.stringify({ vt: !!e.viewTransition, noms, page: location.pathname })); } catch (x) { }
+                    // La paire d'images de chaque nom rogne-t-elle à sa boîte ?
+                    // Une image de passage ne rogne pas ce qui déborde de son
+                    // cadrage (object-fit: cover).
+                    const rognes = noms.map((n) => e.viewTransition ? getComputedStyle(document.documentElement, `::view-transition-image-pair(${n.split('@')[0]})`).overflow : '');
+                    try { sessionStorage.setItem('__vt-' + type, JSON.stringify({ vt: !!e.viewTransition, noms, rognes, page: location.pathname })); } catch (x) { }
                 };
                 addEventListener('pagereveal', (e) => { if (e.viewTransition) e.viewTransition.ready.then(() => relever('reveal', e), () => relever('reveal', e)); else relever('reveal', e); });
             };
@@ -3181,6 +3185,7 @@ function exige(condition, message) {
             const fiche = await lire(p);
             exige(fiche && fiche.vt, 'répertoire → fiche : pas de passage');
             exige(fiche.noms.join() === 'fiche-lerapt@photo', `répertoire → fiche : ${fiche.noms.join(', ') || 'rien'} nommé, au lieu de la première photo du travelling`);
+            exige(fiche.rognes.join() === 'clip', `répertoire → fiche : la photo, en paysage, déborde de la carte en portrait (overflow ${fiche.rognes.join()})`);
             await p.goto(`${base}/?direct`, { waitUntil: 'load' });
             await p.waitForTimeout(800);
             await p.click('a.affiche-portrait');
