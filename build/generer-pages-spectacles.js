@@ -256,7 +256,11 @@ function policesEnLigne(versPolices) {
     const css = lire('ressources/polices/polices.css')
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/url\((['"]?)(?![a-z]+:|\/)([^'")]+)\1\)/gi, (m, q, u) => `url(${q}${versPolices}${u}${q})`)
-        .replace(/\n{3,}/g, '\n\n').trim();
+        .replace(/\n{3,}/g, '\n\n').trim()
+        // Cinzel en `block`, comme la galerie (voir policesEnLigne dans
+        // build/generer-page-galerie.js) : le titre « Répertoire » paraissait
+        // en serif du système 45 à 65 ms avant elle (4G lente, ×4).
+        .replace(/(font-family: 'Cinzel';[^}]*?)font-display: swap/g, '$1font-display: block');
     if (/<\/style/i.test(css)) throw new Error('polices.css contient « </style » : impossible de la recopier dans une page.');
     return css;
 }

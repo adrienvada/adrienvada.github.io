@@ -258,7 +258,8 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   ouverte (`is-open`), et, son moteur retenu 2,5 s, elle est déjà peinte et
   Chrome a vu son premier affichage ; le répertoire et la galerie n'ont
   aucune feuille en `<link>` (polices dans la page, adresses menant au
-  dossier), et leurs anciennes feuilles n'existent plus ; aucune page
+  dossier, Cinzel seule en `font-display: block`), et leurs anciennes
+  feuilles n'existent plus ; aucune page
   publique ne déclare `favicon.svg`, toutes les PNG de 32 et 96 px ; les
   fiches, le répertoire et la galerie pré-rendent les fiches et la galerie,
   préchargent l'accueil et le répertoire, en `moderate` (voir [Préparées au
@@ -3019,6 +3020,14 @@ Pour changer de version : voir `LISEZMOI.txt`.
   répertoire et à la galerie aussi**, recopié cette fois par leurs
   générateurs (`policesEnLigne`), commentaires ôtés et adresses réécrites :
   relancer `npm --prefix build run pages` après avoir changé `polices.css`.
+  Sur cette copie, **Cinzel passe en `font-display: block`** : la feuille
+  écrite dans la page ne retient plus le premier affichage, qui précède
+  désormais Cinzel, et le titre (« Galerie photo », « Répertoire ») paraissait
+  en serif du système, en casse mixte, puis sautait aux petites capitales de
+  Cinzel 130 à 170 ms plus tard sur la galerie, 45 à 65 ms sur le répertoire
+  (4G lente, ×4). Il attend désormais ces quelques dizaines de
+  millisecondes, invisible, et paraît dans sa police — au plus 3 s si elle
+  ne vient pas. L'accueil garde `swap` : son repli est calé sur Cinzel.
 
 ---
 

@@ -122,7 +122,17 @@ function policesEnLigne(versPolices) {
     const css = lire('ressources/polices/polices.css')
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/url\((['"]?)(?![a-z]+:|\/)([^'")]+)\1\)/gi, (m, q, u) => `url(${q}${versPolices}${u}${q})`)
-        .replace(/\n{3,}/g, '\n\n').trim();
+        .replace(/\n{3,}/g, '\n\n').trim()
+        // CINZEL ATTEND, AU LIEU DE PARAÎTRE EN REPLI. Écrite dans la page,
+        // la feuille ne retient plus le premier affichage, qui précède
+        // désormais Cinzel : le titre paraissait en serif du système, en
+        // casse mixte (« Galerie photo »), puis sautait aux petites
+        // capitales de Cinzel, d'une autre largeur, 130 à 170 ms plus tard
+        // (4G lente, ×4, trois passes). En `block`, il attend ces quelques
+        // dizaines de millisecondes, invisible, et paraît dans sa police —
+        // au plus 3 s si la police ne vient pas. Sur cette copie seulement :
+        // l'accueil garde `swap`, son repli est calé sur Cinzel.
+        .replace(/(font-family: 'Cinzel';[^}]*?)font-display: swap/g, '$1font-display: block');
     if (/<\/style/i.test(css)) throw new Error('polices.css contient « </style » : impossible de la recopier dans une page.');
     return css;
 }

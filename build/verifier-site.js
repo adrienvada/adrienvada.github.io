@@ -3141,6 +3141,12 @@ function exige(condition, message) {
                 const h = fs.readFileSync(path.join(RACINE, f), 'utf8');
                 exige(!/<link rel="stylesheet"/.test(h), `${f} : une feuille est restée en <link>, à attendre avant le premier affichage`);
                 exige(/url\(\.\.\/ressources\/polices\/cinzel-latin\.woff2\)/.test(h), `${f} : les polices ne sont pas dans la page, ou leurs adresses ne mènent pas au dossier`);
+                // Le titre attend Cinzel au lieu de paraître en repli, puis
+                // de sauter aux petites capitales ; les autres polices, non.
+                const faces = [...h.matchAll(/@font-face\s*\{([^}]*)\}/g)].map((m) => m[1]);
+                const cinzel = faces.filter((x) => /'Cinzel'/.test(x));
+                exige(cinzel.length && cinzel.every((x) => /font-display: block/.test(x)) && faces.filter((x) => !/'Cinzel'/.test(x)).every((x) => /font-display: swap/.test(x)),
+                    `${f} : Cinzel n’est pas en font-display: block (ou une autre police l’est)`);
             }
             for (const f of ['spectacles/spectacle.css', 'galerie/galerie.css']) {
                 exige(!fs.existsSync(path.join(RACINE, f)), `${f} existe encore : plus rien ne la lit`);
