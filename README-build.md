@@ -1425,8 +1425,14 @@ la page se rabat sur la version de 640 px.
 
 Quelle que soit la taille de l'écran, la barre se colle en haut au moment où
 elle allait sortir de l'écran. En haut de page, elle garde exactement son
-aspect habituel ; collée, elle prend un fond presque opaque et une ombre
-(`#nav-barre.est-collee`).
+aspect habituel ; collée, elle prend un fond opaque et une ombre
+(`#nav-barre.est-collee`). **Opaque, et sans flou** : elle a été presque
+opaque (98,5 %) sur un flou de 16 px, recalculé à chaque image puisque le
+texte défile dessous, pour cacher un pour cent et demi de transparence — le
+verre ne s'y voyait plus. Le fond plein empêche seul le texte de fantômer
+derrière les onglets, au même rendu (au plus 8/255, sur 0,04 % des pixels),
+et le compositeur travaille moins (0,43 → 0,31 s en défilant le CV au
+téléphone à ×4). Moins opaque sans le flou, le texte réapparaît.
 
 ⚠️ **Ne pas remettre `overflow-x: hidden` sur le `<body>`.** C'est ce qui
 empêchait `position: sticky` de fonctionner : `hidden` fait du `<body>` une
@@ -1439,7 +1445,18 @@ ils gardent le rognage et n'auront simplement pas la barre collante.
 L'état « collée » est détecté par une **sentinelle** placée juste au-dessus de
 la barre et surveillée par un `IntersectionObserver` (`suivreBarreCollante`) :
 aucun calcul à chaque pixel parcouru, et c'est le navigateur qui prévient au
-bon instant.
+bon instant. **Collée seulement si la sentinelle est sortie par le haut** :
+une sentinelle sous l'écran n'est pas à l'écran non plus, et sur un téléphone
+où la barre est sous la ligne de flottaison au chargement (390 × 664, la
+surface d'un iPhone sous Safari ; 360 × 640 ; 412 × 823), elle se croyait
+collée, se « décollait » en entrant dans l'écran puis se recollait en haut —
+douze transitions de fond, de bordure et d'ombre au lieu de six. La zone
+observée descend donc loin sous l'écran (`rootMargin`, 10 000 px) : la
+sentinelle n'en sort que par le haut. Lire sa position dans le rappel ne
+suffisait pas — l'observateur ne prévient que d'une entrée ou d'une sortie,
+et un saut d'en dessous de l'écran à au-dessus (la prochaine date qui mène à
+sa ligne dans l'onglet Dates) laissait la barre décollée, translucide sur le
+texte.
 
 **Changer d'onglet a un sens.** La nouvelle page arrive du côté de l'onglet
 choisi — de la droite vers « Démos voix », de la gauche en revenant au CV —,
@@ -1447,7 +1464,13 @@ par une View Transition (`showPage` → `poserPage`) : l'ancienne s'efface d'un
 côté pendant que la nouvelle arrive de l'autre ; l'en-tête et la barre ne
 bougent pas. Le fond et le filet de l'onglet actif sont une **pastille** qui
 glisse d'un onglet à l'autre sur un ressort (`placerPastille`, et
-`--ease-ressort`). Sans View Transitions, une animation d'entrée fait arriver
+`--ease-ressort`) ; l'onglet ne garde que sa couleur, et sa bordure reste
+transparente (l'onglet actif prenait le gris par défaut de Tailwind, hors
+thème). **Les onglets naissent dans leur couleur** : le balisage porte celle
+du CV actif et des trois autres au repos — posées au démarrage, après le
+premier rendu, elles glissaient 300 ms à chaque arrivée —, et ils n'ont plus
+de `transition-all` : la règle commune des liens (couleurs, enfoncement) leur
+suffit. Sans View Transitions, une animation d'entrée fait arriver
 la nouvelle page ; en mouvement réduit, le changement est net. `showPage` rend
 une promesse : qui veut poser le focus dans la nouvelle page doit l'attendre
 (voir `goToDatesForShow`).
@@ -1812,6 +1835,32 @@ en place ; le renseigner pour toute série qui en demande un.
   chargement : on doit toujours pouvoir renoncer.
 - Pas de `backdrop-filter` sur les légendes, qui défilent (il reste sur la
   croix, immobile).
+- **Pas de `backdrop-filter` sur ce qui défile au-dessus d'un fond fixe**,
+  sur l'accueil non plus. Les cartes (`.glass-card` : l'en-tête, les sections
+  du CV et des Dates, le pied de page) portaient un flou de 8 px ; leur
+  arrière-plan changeant à chaque image du défilement, chaque carte à l'écran
+  coûtait à chaque image une passe de rendu, une relecture et un flou — pour
+  ne rien flouter : une carte blanche à 3,5 % sur des dégradés lisses en
+  sombre, opaque à 85 % en clair. Retiré, l'écran est le même (au plus
+  0,02 % de pixels changés de plus de 3/255). Mesuré en défilant le CV
+  (trois passes, médianes) : sur ordinateur, 34 % d'images perdues → aucune,
+  2,0 → 0,57 s de travail du compositeur — en composition logicielle, sans
+  carte graphique, où l'écart sera moindre ; au téléphone à ×4, 1,57 → 0,31 s
+  de compositeur. Sur les Dates, avec le reste de ce lot : 36 % → 0 sur
+  ordinateur, 1,2 → 0,17 s de compositeur au téléphone. La barre
+  collée n'a plus le sien (voir [La barre d'onglets](#la-barre-donglets-reste-en-haut-mobile-et-desktop)) ;
+  seules les fenêtres posées sur une page immobile gardent le leur —
+  l'agenda de l'accueil, celui d'un univers ; la carte du lecteur vidéo,
+  noire et opaque, n'en montrait rien (12/255 au plus, sur 0,05 % des
+  pixels).
+- **Un seul fond plein écran.** La radiale du thème (`--page-glow`) était
+  peinte par le `<body>` en `background-attachment: fixed` — un calque de la
+  taille de l'écran (11 Mo en DPR 3) — sous la lueur de salle (`body::before`,
+  fixe, un second calque). Elle est passée dans `body::before`, sous la
+  lueur. Même rendu (2/255 au plus) ; en défilant le CV sur ordinateur,
+  212 → 80 peintures et 0,79 → 0,57 s de compositeur, au téléphone à ×4
+  0,38 → 0,31 s. Et Safari sur iPhone, qui ignore `fixed`, étirait
+  la radiale sur toute la hauteur du document.
 - `contain: paint` sur les figures, mais **pas** `content-visibility: auto` :
   celui-ci faisait s'effondrer leur hauteur. (La page du CV, elle, passe en
   `content-visibility: hidden` sous le panneau ouvert, sa hauteur retenue :
@@ -2272,8 +2321,9 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
   accentuée se pose sur son accent en dernier), dans l'ordre de lecture,
   22 ms d'une palette à l'autre : moins de deux secondes. Une seule fois, quand
   le tableau est à l'écran, après le rideau et les polices — et s'il ne l'est
-  plus au moment de battre (une adresse qui vise l'onglet Dates montre le CV
-  un instant), il attend qu'on revienne. Pendant le
+  pas au moment de battre (une adresse qui vise l'onglet Dates : le CV n'y
+  paraît plus, voir [Le portrait d'affiche](#le-portrait-daffiche)), il
+  attend qu'on revienne. Pendant le
   battement (classe `td-roule`), les volets restent sur leur calque, repliés
   hors de vue entre deux battements, et chaque palette est isolée
   (`contain: strict`) : mesuré sur un téléphone lent simulé (processeur
@@ -2752,9 +2802,17 @@ répertoire, à la galerie et à la 404.
   annonce la taille de l'affiche, la plus grande.
 - **Hors de l'onglet CV**, l'en-tête redevient la carte compacte d'avant,
   portrait en médaillon (`.replie`, posé par `showPage`, à côté du repli de la
-  bio). Arriver sur un autre onglet (`#page_dates`, `#demos_camera`,
-  `#demos_voix`) pose `arrivee-hors-cv` sur `<html>` avant le premier rendu :
-  l'affiche n'est jamais peinte pour être repliée.
+  bio).
+- **Arriver sur un autre onglet** (`#page_dates`, `#demos_camera`,
+  `#demos_voix`) pose `arrivee-hors-cv` et `data-arrivee` sur `<html>` avant
+  le premier rendu : l'affiche n'est jamais peinte pour être repliée, et la
+  page visée paraît d'emblée, son onglet allumé, la bio et la prochaine date
+  déjà repliées, sans transition, aux valeurs de `.bio-hidden`. Le premier
+  `poserPage` retire les deux drapeaux dans le même calcul que les vraies
+  classes : rien ne change de valeur, rien ne glisse. Le lien qu'on envoie à
+  un théâtre, `adrienvada.fr/#page_dates`, montrait le CV 0,1 s au
+  téléphone (0,5 à 0,7 s à ×4), puis repliait la bio et la prochaine date
+  sous les yeux : la barre d'onglets remontait de 263 px.
 - **La poursuite** : sur le portrait, la salle autour du visage est dans
   l'ombre ; à la souris, la lumière suit le pointeur (`suivrePoursuite`).
   Fixe au doigt et en mouvement réduit.

@@ -2334,6 +2334,84 @@ function exige(condition, message) {
             await c.close();
         });
 
+        // ── L'ARRIVÉE, LA BARRE, LES ONGLETS, LE VERRE ──
+        // Le lien qu'on envoie à un théâtre (/#page_dates) montrait le CV,
+        // puis repliait la bio sous les yeux : la page visée doit être là
+        // avant que le script ne tourne (relevé à « interactive », juste
+        // avant DOMContentLoaded), et rien ne doit glisser quand il pose les
+        // vraies classes. Sur un écran où la barre est sous la ligne de
+        // flottaison (390 × 664), elle se croyait collée au chargement — et
+        // un saut d'en dessous de l'écran à au-dessus doit, lui, la coller ;
+        // les onglets glissaient de la crème à leur couleur. Et rien de ce
+        // qui défile au-dessus du fond fixe ne floute ce qui est derrière.
+        await verifie('arriver par un lien vers un onglet le montre dès le premier rendu, sans CV ni repli qui glisse ; la barre ne se dit collée que sortie par le haut, les onglets naissent dans leur couleur, et rien de ce qui défile ne floute son arrière-plan', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 664 } });
+            await c.addInitScript(() => {
+                if (window.top !== window) return;   // la page, pas ses cadres
+                window.__glisse = [];
+                addEventListener('transitionrun', (e) => {
+                    const t = e.target;
+                    if (!t.closest) return;
+                    const barre = t.closest('#nav-barre');
+                    // Le repli lui-même (hauteur, visibilité) : l'opacité du
+                    // bandeau suit aussi l'apparition des sections, sous
+                    // `visibility: hidden` — elle ne se voit pas.
+                    const repli = t.classList.contains('bio-collapse') && /grid-template-rows|visibility|margin|padding|border/.test(e.propertyName);
+                    if (barre || repli) window.__glisse.push(`${t.id || t.className} ${e.propertyName}`);
+                }, true);
+                document.addEventListener('readystatechange', () => {
+                    if (document.readyState !== 'interactive') return;
+                    const vu = (id) => getComputedStyle(document.getElementById(id)).display !== 'none';
+                    window.__avantScript = {
+                        cv: vu('page_cv'), dates: vu('page_dates'),
+                        bio: [...document.querySelectorAll('.bio-collapse')].filter((e) => getComputedStyle(e).visibility !== 'hidden').length,
+                        onglets: [...document.querySelectorAll('#nav-tabs-container a')].map((a) => getComputedStyle(a).color)
+                    };
+                });
+            });
+            const lire = () => p.evaluate(() => ({
+                avant: window.__avantScript, glisse: window.__glisse,
+                onglets: [...document.querySelectorAll('#nav-tabs-container a')].map((a) => getComputedStyle(a).color),
+                actif: document.querySelector('.page.active')?.id,
+                drapeaux: document.documentElement.hasAttribute('data-arrivee') || document.documentElement.classList.contains('arrivee-hors-cv'),
+                collee: document.getElementById('nav-barre').classList.contains('est-collee')
+            }));
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await p.waitForTimeout(700);
+            const dates = await lire();
+            exige(dates.avant && !dates.avant.cv && dates.avant.dates, `arrivée sur /#page_dates : avant le script, le CV ${dates.avant?.cv ? 'est affiché' : 'est caché'}, les Dates ${dates.avant?.dates ? 'aussi' : 'non'}`);
+            exige(dates.avant.bio === 0, `arrivée sur /#page_dates : ${dates.avant.bio} repli(s) de la bio encore ouvert(s) avant le script`);
+            exige(dates.actif === 'page_dates' && !dates.drapeaux, `arrivée sur /#page_dates : page ${dates.actif}, drapeaux d’arrivée ${dates.drapeaux ? 'restés' : 'retirés'}`);
+            exige(dates.avant.onglets.join() === dates.onglets.join(), `arrivée sur /#page_dates : les onglets changent de couleur au démarrage (${dates.avant.onglets.join(' / ')} → ${dates.onglets.join(' / ')})`);
+            exige(!dates.glisse.length, `arrivée sur /#page_dates : ${dates.glisse.length} transition(s) au démarrage, dont ${dates.glisse.slice(0, 3).join(', ')}`);
+            exige(!dates.collee, 'arrivée sur /#page_dates : la barre se dit collée');
+
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForTimeout(700);
+            const cv = await lire();
+            exige(!cv.collee, 'au chargement, la barre sous la ligne de flottaison se dit collée');
+            exige(cv.avant.onglets.join() === cv.onglets.join(), `les onglets changent de couleur au démarrage (${cv.avant.onglets.join(' / ')} → ${cv.onglets.join(' / ')})`);
+            exige(!cv.glisse.length, `${cv.glisse.length} transition(s) de la barre ou de la bio au chargement, dont ${cv.glisse.slice(0, 3).join(', ')}`);
+            const verre = await p.evaluate(async () => {
+                const floues = [...document.querySelectorAll('.glass-card')]
+                    .filter((e) => !e.closest('[role="dialog"]') && getComputedStyle(e).backdropFilter !== 'none').map((e) => e.id || e.tagName.toLowerCase());
+                const fixe = getComputedStyle(document.body).backgroundAttachment;
+                document.documentElement.style.scrollBehavior = 'auto';
+                scrollTo(0, 1500);
+                await new Promise((r) => setTimeout(r, 300));
+                const barre = document.getElementById('nav-barre'), cs = getComputedStyle(barre);
+                const fond = cs.backgroundColor.match(/[\d.]+/g).map(Number);
+                return { floues, fixe, collee: barre.classList.contains('est-collee'), flouBarre: cs.backdropFilter, opaque: fond.length === 3 || fond[3] === 1 };
+            });
+            exige(!verre.floues.length, `${verre.floues.length} carte(s) qui défilent floutent leur arrière-plan : ${verre.floues.slice(0, 3).join(', ')}`);
+            exige(!/fixed/.test(verre.fixe), 'le fond du <body> est redevenu fixe : un second calque plein écran');
+            exige(verre.collee && verre.flouBarre === 'none' && verre.opaque, `la barre collée : ${verre.collee ? '' : 'pas collée, '}flou ${verre.flouBarre}, fond ${verre.opaque ? 'opaque' : 'translucide'}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
         await verifie('les bandes-annonces du CV : la pastille ▶ joue la vidéo dans la salle noire, sur la page, sans la bobine de la bande démo', async () => {
             const c = await visiteur({ viewport: { width: 1280, height: 900 } });
             const p = await c.newPage();

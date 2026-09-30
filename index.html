@@ -285,8 +285,12 @@
         // L'en-tête n'est une affiche que sur l'onglet CV (voir « Le portrait
         // d'affiche ») : arriver sur un autre onglet le pose replié dès le
         // premier rendu, plutôt que de peindre l'affiche pour la replier.
+        // Et la page visée paraît d'emblée, la bio déjà repliée : le CV ne
+        // passe plus devant (voir « L'arrivée sur un autre onglet »). Le
+        // premier poserPage retire les deux drapeaux.
         if (/^(page_dates|demos_camera|demos_voix)$/.test(window.__ancreArrivee)) {
             document.documentElement.classList.add('arrivee-hors-cv');
+            document.documentElement.setAttribute('data-arrivee', window.__ancreArrivee);
         }
         if (window.__ancreArrivee) {
             history.replaceState(null, '', location.pathname + location.search);
@@ -621,10 +625,10 @@
             z-index: 2;
         }
 
+        /* Le fond plat seulement : la radiale du thème (--page-glow) est
+           peinte par body::before, avec la lueur de salle (voir plus bas). */
         body {
             background-color: rgb(var(--c-bg));
-            background-image: var(--page-glow);
-            background-attachment: fixed;
         }
 
         /* ══════════════════════════════════════════════════════════════
@@ -732,22 +736,35 @@
            consigne à recopier.
 
            Elle reste haute et large : la couleur entre par le haut de
-           l'écran, là où elle ne passe sous aucun texte. */
+           l'écran, là où elle ne passe sous aucun texte.
+
+           UN SEUL FOND PLEIN ÉCRAN. La radiale du thème (--page-glow) était
+           peinte par le <body> en `background-attachment: fixed`, un
+           second calque de la taille de l'écran (11 Mo en DPR 3) sous
+           celui-ci, pour deux dégradés. Elle vient ici, sous la lueur — la
+           première image listée est peinte dessus. Même rendu (2/255 au
+           plus), un calque de moins : en défilant le CV sur ordinateur, 212
+           → 80 peintures et 0,79 → 0,57 s de compositeur ; au téléphone à
+           ×4, 0,38 → 0,31 s. Et Safari sur iPhone, qui
+           ignore `fixed`, étirait la radiale sur toute la hauteur du
+           document : il la voit désormais comme partout ailleurs. En
+           clair, --page-glow vaut `none`, ce qui reste une image valide. */
         body::before {
             content: '';
             position: fixed;
             inset: 0;
-            /* ZÉRO, ET NON −1. Le répertoire met sa lueur en négatif, mais
-               son `body` n'a qu'un fond plat ; ici `--page-glow` y peint une
-               radiale OPAQUE, et une lueur en négatif passe dessous —
-               invisible, essayé. À zéro elle se pose au-dessus du fond, et
-               le contenu reste devant sans qu'on touche à rien : le
-               conteneur du site porte déjà `z-index: 10`, et les voiles
-               plein écran montent à 90 et au-delà. */
+            /* ZÉRO, ET NON −1. Une lueur en négatif passerait sous le fond
+               du <body> — invisible, essayé quand la radiale y était
+               peinte. À zéro elle se pose au-dessus du fond, et le contenu
+               reste devant sans qu'on touche à rien : le conteneur du site
+               porte déjà `z-index: 10`, et les voiles plein écran montent à
+               90 et au-delà. La radiale étant OPAQUE en sombre, rien d'autre
+               ne doit se peindre dans le <body> hors de ces couches. */
             z-index: 0;
             pointer-events: none;
-            background: radial-gradient(62rem 34rem at 50% -8rem,
-                    color-mix(in srgb, var(--ambiance) 22%, transparent), transparent 72%);
+            background-image: radial-gradient(62rem 34rem at 50% -8rem,
+                    color-mix(in srgb, var(--ambiance) 22%, transparent), transparent 72%),
+                var(--page-glow);
         }
 
         /* LE GRAIN DE LA SALLE. Une couleur seule reste une couleur ; ce
@@ -800,10 +817,23 @@
             }
         }
 
+        /* PAS DE VERRE DÉPOLI SUR CE QUI DÉFILE. Les cartes portaient un
+           flou d'arrière-plan (8 px) : elles défilent au-dessus d'un fond
+           FIXE, leur arrière-plan change donc à chaque image, et chaque
+           carte à l'écran coûtait à chaque image une passe de rendu, une
+           relecture et un flou — ce que « .recit-fond » décrit déjà. Pour
+           ne rien flouter : en sombre, la carte est blanche à 3,5 % sur des
+           dégradés lisses ; en clair, opaque à 85 %. Retiré, l'écran est le
+           même au pixel près (au plus 0,02 % de pixels changés de plus de
+           3/255). Mesuré en défilant le CV, trois passes : sur ordinateur,
+           34 % d'images perdues → aucune (composition logicielle : sur une
+           vraie carte graphique l'écart sera moindre) ; au téléphone à ×4,
+           1,57 → 0,31 s de travail du compositeur.
+           La carte du lecteur vidéo en est une aussi : noire et opaque dans
+           la salle, elle n'en montrait rien. Les fenêtres posées sur une
+           page immobile gardent le leur (l'agenda, celui d'un univers). */
         .glass-card {
             background: var(--glass-bg);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
             border: 1px solid var(--glass-border);
             box-shadow: var(--glass-shadow);
         }
@@ -978,6 +1008,58 @@
                transformation : ce qui s'y superpose reste sous la barre
                d'onglets collée. */
             isolation: isolate;
+        }
+
+        /* ── L'ARRIVÉE SUR UN AUTRE ONGLET ──
+           Le lien qu'on envoie à un théâtre, adrienvada.fr/#page_dates,
+           montrait d'abord le CV — le balisage le dit actif, la bio et la
+           prochaine date dépliées — jusqu'à ce que le démarrage pose la
+           bonne page, puis repliait la bio et la prochaine date sous les
+           yeux. Mesuré au téléphone : le CV visible 0,1 s (0,5 à 0,7 s à
+           ×4), puis 0,4 s de repli, la barre d'onglets remontant de 263 px.
+           Le garde du <head> pose donc `data-arrivee` (l'onglet visé) avec
+           `arrivee-hors-cv`, avant le premier rendu : la bonne page et le
+           bon onglet paraissent d'emblée, et ce qui n'a de sens qu'en
+           regard du CV est déjà replié, SANS TRANSITION, aux valeurs mêmes
+           de .bio-hidden. Le premier poserPage pose les vraies classes et
+           retire les deux drapeaux dans le même geste : rien ne change de
+           valeur, rien ne glisse. Sans JavaScript, ni l'un ni l'autre :
+           toutes les pages à la suite, comme toujours. */
+        html[data-arrivee] #page_cv.page.active {
+            display: none;
+        }
+
+        html[data-arrivee="page_dates"] #page_dates,
+        html[data-arrivee="demos_camera"] #demos_camera,
+        html[data-arrivee="demos_voix"] #demos_voix {
+            display: block;
+            isolation: isolate;
+        }
+
+        html[data-arrivee] #tab-page_cv {
+            color: rgb(var(--c-s500));
+        }
+
+        html[data-arrivee="page_dates"] #tab-page_dates,
+        html[data-arrivee="demos_camera"] #tab-demos_camera,
+        html[data-arrivee="demos_voix"] #tab-demos_voix {
+            color: rgb(var(--c-gold-ink));
+        }
+
+        html.arrivee-hors-cv .bio-collapse {
+            grid-template-rows: 0fr;
+            opacity: 0;
+            margin-bottom: 0;
+            visibility: hidden;
+            transition: none;
+        }
+
+        html.arrivee-hors-cv #next-date-banner.bio-collapse {
+            margin-top: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-width: 0;
+            transition: none;
         }
 
         /* Une animation d'entrée, et non @starting-style : elle se rejoue
@@ -6250,14 +6332,18 @@
            porte, et une ombre qui dise qu'elle est décollée de la page.
            Au repos, aucune de ces deux règles ne s'applique. */
         #nav-barre.est-collee {
-            /* Presque opaque, et non « translucide comme le reste » : sous
-               la barre défile du TEXTE, et six pour cent de transparence
-               suffisaient à le laisser fantômer derrière les onglets. Le
-               flou renforcé fait le reste — l'effet de verre demeure, la
-               lecture ne souffre plus. */
-            background: rgb(var(--c-surface) / 0.985);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            /* OPAQUE, et non « translucide comme le reste » : sous la barre
+               défile du TEXTE, et six pour cent de transparence suffisaient
+               à le laisser fantômer derrière les onglets. Elle a été presque
+               opaque (98,5 %) sur un flou de 16 px : un flou recalculé à
+               chaque image du défilement, puisque le texte bouge dessous,
+               pour cacher un pour cent et demi — le verre ne s'y voyait
+               plus (0,02/255 d'écart moyen). Le fond plein fait seul ce
+               travail, au même rendu (8/255 au plus, sur 0,04 % des
+               pixels) ; sans le flou, à 98,5 %, le texte refantômait. Au
+               téléphone à ×4, en défilant le CV : 0,43 → 0,31 s de
+               compositeur. */
+            background: rgb(var(--c-surface));
             /* LE FILET ET LE HALO SUIVENT LA SALLE : regarder Bérénice
                rosit aussi la barre. Le FOND, lui, ne bouge pas — du
                texte défile dessous, et une barre teintée le rendrait
@@ -7780,25 +7866,25 @@
             <div class="flex items-center gap-0.5 flex-1 min-w-0 md:flex-none md:w-auto relative" id="nav-tabs-container">
                 <span class="onglet-pastille sans-transition" aria-hidden="true"></span>
                 <a href="#page_cv" id="tab-page_cv"
-                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase transition-all duration-300 flex items-center justify-center gap-1.5 border border-transparent">
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase text-luxury-goldInk flex items-center justify-center gap-1.5 border border-transparent">
                     <svg class="ico text-[10px]" aria-hidden="true">
                         <use href="#i-solid-user-tie"></use>
                     </svg> <span>CV</span>
                 </a>
                 <a href="#page_dates" id="tab-page_dates"
-                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase transition-all duration-300 flex items-center justify-center gap-1.5 border border-transparent">
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase text-stone-500 flex items-center justify-center gap-1.5 border border-transparent">
                     <svg class="ico text-[10px]" aria-hidden="true">
                         <use href="#i-solid-calendar-days"></use>
                     </svg> <span>Dates théâtres</span>
                 </a>
                 <a href="#demos_camera" id="tab-demos_camera"
-                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase transition-all duration-300 flex items-center justify-center gap-1.5 border border-transparent">
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase text-stone-500 flex items-center justify-center gap-1.5 border border-transparent">
                     <svg class="ico text-[10px]" aria-hidden="true">
                         <use href="#i-solid-film"></use>
                     </svg> <span>Démos caméra</span>
                 </a>
                 <a href="#demos_voix" id="tab-demos_voix"
-                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase transition-all duration-300 flex items-center justify-center gap-1.5 border border-transparent">
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase text-stone-500 flex items-center justify-center gap-1.5 border border-transparent">
                     <svg class="ico text-[10px]" aria-hidden="true">
                         <use href="#i-solid-microphone"></use>
                     </svg> <span>Démos voix</span>
@@ -9790,6 +9876,25 @@
         //  d'écouter le défilement : pas de calcul à chaque pixel parcouru, et
         //  aucune coordonnée à comparer — le navigateur nous prévient quand le
         //  repère sort de l'écran, ce qui est exactement l'instant cherché.
+        //
+        //  SORTIE PAR LE HAUT SEULEMENT. Une sentinelle SOUS l'écran n'est pas
+        //  à l'écran non plus : sur un téléphone où la barre est sous la ligne
+        //  de flottaison au chargement (390 × 664, la surface d'un iPhone sous
+        //  Safari ; 360 × 640), elle se croyait collée — fond plein, ombre —,
+        //  se « décollait » en entrant dans l'écran, puis se recollait en
+        //  haut : douze transitions de couleur et d'ombre pour rien, que
+        //  Lighthouse relevait. On ne la dit collée que si la sentinelle est
+        //  passée au-dessus du haut de l'écran.
+        //
+        //  PAR LA RACINE, PAS PAR UNE COORDONNÉE. Lire, dans le rappel, si la
+        //  sentinelle est au-dessus ne suffit pas : l'observateur ne prévient
+        //  que quand elle entre ou sort, et un saut d'en dessous de l'écran à
+        //  au-dessus — la prochaine date qui mène à sa ligne dans l'onglet
+        //  Dates, une touche Fin — ne la fait jamais entrer : la barre restait
+        //  décollée, translucide sur le texte. La zone observée descend donc
+        //  loin sous l'écran (10 000 px, bien plus que tout ce qui précède la
+        //  barre) : la sentinelle n'en sort que par le haut, et chaque passage
+        //  du haut de l'écran, dans un sens ou dans l'autre, est signalé.
         // ════════════════════════════════════════════════════════════════
         function suivreBarreCollante() {
             const barre = document.getElementById('nav-barre');
@@ -9798,7 +9903,7 @@
 
             new IntersectionObserver(
                 ([e]) => barre.classList.toggle('est-collee', !e.isIntersecting),
-                { threshold: 0 }
+                { threshold: 0, rootMargin: '0px 0px 10000px 0px' }
             ).observe(sentinelle);
         }
 
@@ -11849,9 +11954,19 @@
         // ════════════════════════════════════════════════════════════════
         // Le fond et le filet de l'onglet actif sont ceux de la pastille, qui
         // glisse de l'un à l'autre (voir .onglet-pastille) : l'onglet ne
-        // garde que sa couleur.
+        // garde que sa couleur. Sa bordure reste transparente — l'onglet
+        // actif la perdait, et prenait le gris par défaut de Tailwind, hors
+        // thème, sous la pastille.
+        //
+        // LES ONGLETS NAISSENT DANS LEUR COULEUR. Le balisage porte déjà
+        // celle du CV actif et des trois autres au repos : posées ici au
+        // démarrage, après le premier rendu, elles glissaient pendant 300 ms
+        // de la crème du texte vers la bonne, à chaque arrivée (huit
+        // transitions, relevées par Lighthouse). Et plus de
+        // `transition-all` : la règle commune des liens (couleurs, et
+        // l'enfoncement sous le doigt) leur suffit.
         const TAB_ACTIVE = ['text-luxury-goldInk'];
-        const TAB_IDLE = ['text-stone-500', 'border-transparent'];
+        const TAB_IDLE = ['text-stone-500'];
         // LE TITRE DE LA FENÊTRE SUIT L'ONGLET. C'est lui qu'un lecteur
         // d'écran annonce au changement, et lui que montrent l'historique et
         // la barre d'onglets du navigateur : « Adrien Vada — Comédien » sur
@@ -12049,7 +12164,10 @@
             // L'affiche, elle, devient la carte compacte : le portrait en
             // médaillon, le nom sur une ligne (voir « Le portrait d'affiche »).
             document.getElementById('en-tete')?.classList.toggle('replie', pageId !== 'page_cv');
+            // Les drapeaux de l'arrivée (voir « L'arrivée sur un autre
+            // onglet ») tombent dans le même calcul que les vraies classes.
             document.documentElement.classList.remove('arrivee-hors-cv');
+            document.documentElement.removeAttribute('data-arrivee');
             if (recadrer) {
                 document.body.offsetHeight;   // le repli est acquis avant qu'on rende sa transition
                 replis.forEach(el => el.classList.remove('bio-sans-transition'));
