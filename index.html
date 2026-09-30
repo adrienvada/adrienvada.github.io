@@ -3079,8 +3079,40 @@
             animation-delay: calc((var(--ligne-lecture) - var(--ph, 1)) / var(--pt, 1) * -1s);
         }
 
-        /* --ph et --pt sont écrits sur la ligne ; le bouton et le point en
-           héritent. Le point est au milieu de la ligne : --ph + --pt / 2. */
+        /* --ph ET --pt N'HÉRITENT PAS. Écrits à chaque image sur la liste
+           et sur chaque ligne à l'écran, ils descendaient à tous leurs
+           descendants — jusqu'à 723 éléments recalculés d'un coup —, pour
+           cinq lecteurs en tout : le fil, le point, le halo, le voile du
+           bouton. Le repli perdait 8 % de ses images au défilement du CV
+           (téléphone, ×4), avec 19 tâches longues ; 0,5 % et aucune ainsi.
+           Chaque lecteur les reçoit donc en main propre : les
+           pseudo-éléments en héritent explicitement de leur élément, et
+           regie.js écrit aussi sur les relais de la ligne (.rg-relais : le
+           bouton, la vignette). Même démarche que --s et --e dans
+           univers.css.
+
+           UNE LIGNE PAS ENCORE MESURÉE (loin de l'écran) n'emprunte plus
+           la place de sa liste : elle prend le repli ci-dessus, lisible.
+           Sans @property, ils héritent comme avant : juste, plus lent.
+
+           Le point est au milieu de la ligne : --ph + --pt / 2. */
+        @property --ph {
+            syntax: '*';
+            inherits: false;
+        }
+
+        @property --pt {
+            syntax: '*';
+            inherits: false;
+        }
+
+        :where(.regie-repli) .cv-frise::after,
+        :where(.regie-repli) .cv-has-universe::before,
+        :where(.regie-repli) .cv-vignette.a-etat::after {
+            --ph: inherit;
+            --pt: inherit;
+        }
+
         :where(.regie-repli) .cv-has-universe .cv-row-toggle {
             animation-name: cv-decouverte;
             animation-delay: calc((var(--ligne-lecture) + .15 - var(--ph, 0)) / .15 * -1s);
@@ -4715,9 +4747,13 @@
         /* Le repli : regie.js écrit sur le groupe et sur l'intercalaire
            (.rg-ligne) où est leur haut (--ph) et leur hauteur (--pt), en
            hauteurs d'écran. Pas encore mesurés, ils sont supposés sous
-           l'écran, comme au CV : rien de tracé d'avance. */
+           l'écran, comme au CV : rien de tracé d'avance. Ils n'héritent
+           pas (voir « --ph et --pt n'héritent pas », au CV) : le liseré et
+           le point, seuls à les lire, les prennent à leur élément. */
         :where(.regie-repli) .dl-groupe::after,
         :where(.regie-repli) .dl-intercalaire::after {
+            --ph: inherit;
+            --pt: inherit;
             animation-duration: 1s;
             animation-timing-function: linear;
             animation-fill-mode: both;

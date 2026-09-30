@@ -3195,6 +3195,13 @@ const SHOW_UNIVERSES = {
             addGenre(li, uni);
             addWhisper(li, uni);
             addTrailerPill(li, uni);
+            // LES RELAIS DE LA RÉGIE (voir « La frise » dans index.html et
+            // regie.js) : en repli, --ph et --pt n'héritent plus, et ce qui
+            // les lit dans la ligne les reçoit en main propre — le bouton,
+            // voilé tant que le fil ne l'a pas atteint, et la vignette dont
+            // le halo s'allume avec le point.
+            li.querySelectorAll('.cv-row-toggle, .cv-vignette.a-etat')
+                .forEach(el => el.classList.add('rg-relais'));
         });
         calerLesCretes();
         suivreLeTheme();

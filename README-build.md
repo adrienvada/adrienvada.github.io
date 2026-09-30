@@ -1743,9 +1743,13 @@ scène **tenue** (un conteneur haut dont le décor reste collé), et `.rg-vue`, 
 Le bloc est entre `/* régie:début */` et `/* régie:fin */` dans `univers.css`.
 `--s` et `--e` **n'héritent pas** (`@property`) : une vignette de groupe entre
 entre 2 et 26 % de sa course, et cette plage, héritée, devenait celle de sa
-photo, qui se refloutait sous les yeux. Le drapeau du repli est posé **avant
-le premier rendu**, dans l'en-tête de l'accueil et des pages spectacle, avec
-le même test que `regie.js` (le contrôle automatique compare les deux).
+photo, qui se refloutait sous les yeux. `--ph` et `--pt`, la place des lignes
+de la frise (`.rg-ligne`), non plus : ce qui les lit dans une ligne porte
+`.rg-relais` et reçoit les mêmes valeurs qu'elle (voir
+[Le CV, le bandeau](#le-cv-le-bandeau-la-page-404)). Le drapeau du repli est
+posé **avant le premier rendu**, dans l'en-tête de l'accueil et des pages
+spectacle, avec le même test que `regie.js` (le contrôle automatique compare
+les deux).
 
 **Pour regarder le second pilote dans un navigateur qui a le premier :**
 ajouter `?repli` à l'adresse (`/spectacles/cleophene/?repli`). Le contrôle
@@ -2082,7 +2086,18 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
   courait jusqu'à 84 px devant la ligne de lecture ; `--ph` et `--pt` (la
   place de la ligne, en hauteurs d'écran) écrits par `regie.js` ailleurs
   (`.rg-ligne`) — tant qu'ils manquent, le fil et les points supposent la
-  ligne sous l'écran, le voile la suppose lue.
+  ligne sous l'écran, le voile la suppose lue. **Ils n'héritent pas**
+  (`@property`) : écrits à chaque image sur une liste de 500 éléments et sur
+  chaque ligne, ils les faisaient tous recalculer pour cinq lecteurs — le
+  fil, le point, le halo, le voile du bouton. Les pseudo-éléments les
+  prennent à leur élément (`inherit`), et `regie.js` les écrit aussi sur les
+  relais de la ligne (`.rg-relais` : le bouton et la vignette, marqués par
+  `markCvRows`). Mesuré au téléphone à ×4 avec `?repli` (trois passes) :
+  8 % d'images perdues au défilement du CV → 0,5 %, 19 tâches longues → 0,
+  calcul de style 1,8 → 0,96 s ; sur les Dates, 12 tâches longues → 0,
+  0,94 → 0,53 s. Une ligne loin
+  de l'écran, pas encore mesurée, n'emprunte plus la place de sa liste :
+  elle prend le repli ci-dessus.
   Voir « La frise » dans `index.html`. **L'année, elle, ne bouge pas** : elle
   montait sur la vignette depuis le bas du cadre, et toutes les années ont un
   jour disparu (voir ci-dessous) ; même réparée, la montée laissait sans année

@@ -40,7 +40,9 @@
  *               hauteurs d'écran (« quand son haut passe au milieu ») :
  *               on lui écrit donc où est son haut (--ph) et sa hauteur
  *               (--pt), en hauteurs d'écran, et ses règles de repli font
- *               le calcul (voir « La frise » dans index.html).
+ *               le calcul (voir « La frise » dans index.html). Les deux
+ *               n'héritent pas : ce qui les lit dans la ligne porte
+ *               .rg-relais, et reçoit les mêmes valeurs qu'elle.
  *
  *  Les éléments animés portent .rg-k et le nom de leur animation dans
  *  --rg-anim ; ils suivent la scène la plus proche qui les contient —
@@ -95,13 +97,14 @@
             const haut = r.top - origine;
             if (el._rgLigne) {
                 const ph = haut / h, pt = r.height / h;
+                const cibles = el._rgRelais || [el];
                 if (el._rgPh === undefined || Math.abs(el._rgPh - ph) > 0.0004) {
                     el._rgPh = ph;
-                    el.style.setProperty('--ph', ph.toFixed(4));
+                    for (const c of cibles) c.style.setProperty('--ph', ph.toFixed(4));
                 }
                 if (el._rgPt === undefined || Math.abs(el._rgPt - pt) > 0.0004) {
                     el._rgPt = pt;
-                    el.style.setProperty('--pt', pt.toFixed(4));
+                    for (const c of cibles) c.style.setProperty('--pt', pt.toFixed(4));
                 }
                 continue;
             }
@@ -117,11 +120,25 @@
         }
     }
 
+    // LES RELAIS D'UNE LIGNE. --ph et --pt n'héritent pas (@property,
+    // dans index.html) : écrits sur une liste de 500 éléments, ils les
+    // faisaient tous recalculer à chaque image, pour cinq lecteurs. Ce qui
+    // les lit dans la ligne porte donc .rg-relais et les reçoit aussi —
+    // les siens seulement, pas ceux d'une ligne qu'elle contient. Relevés
+    // à son arrivée près de l'écran : la ligne est alors finie.
+    function relayer(el) {
+        el._rgRelais = [el, ...[...el.querySelectorAll('.rg-relais')]
+            .filter(r => r.closest('.rg-ligne') === el)];
+    }
+
     function guetteur() {
         if (guet) return guet;
         guet = new IntersectionObserver((entrees) => {
             for (const e of entrees) {
-                if (e.isIntersecting) visibles.add(e.target);
+                if (e.isIntersecting) {
+                    visibles.add(e.target);
+                    if (e.target._rgLigne && !e.target._rgRelais) relayer(e.target);
+                }
                 else visibles.delete(e.target);
                 // Signalé dans les deux régimes : c'est ce qui permet
                 // d'arrêter ce qui tourne tout seul quand on ne le voit pas.
