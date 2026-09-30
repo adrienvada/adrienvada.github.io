@@ -899,7 +899,7 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('les démos voix : toucher la barre de lecture mène au point touché, même quand le serveur ne sert pas de morceaux de fichier', async () => {
+        await verifie('les démos voix : l’onglet n’amorce que la première démo ; toucher la barre d’une autre mène au point touché, avant même qu’elle soit chargée, et même quand le serveur ne sert pas de morceaux de fichier', async () => {
             // Le serveur local, comme l'aperçu de branche sur Cloudflare, ne
             // répond pas aux requêtes Range : sans le repli en mémoire (voir
             // allerDansLaDemo), le navigateur ne saute nulle part et l'extrait
@@ -908,13 +908,19 @@ function exige(condition, message) {
             const p = await c.newPage();
             const erreurs = guette(p);
             await p.goto(base + '/#demos_voix', { waitUntil: 'load' });
-            await p.waitForFunction(() => document.getElementById('audio-nexity').duration > 0, null, { timeout: 10000 });
             // L'onglet arrive en glissant, ses cartes en montant (0,6 s) : on
             // touche la barre une fois la page posée, comme un visiteur.
             await p.waitForTimeout(1200);
+            // Seule la première démo est demandée à l'ouverture ; les autres
+            // attendent qu'on s'en approche (voir amorcerDemo).
+            const amorcees = await p.evaluate(() => [...document.querySelectorAll('#demos_voix audio')]
+                .map((a) => a.preload !== 'none' || a.readyState > 0));
+            exige(amorcees[0] && amorcees.slice(1).every((x) => !x),
+                `l’ouverture de l’onglet Voix doit amorcer la première démo, et elle seule : ${JSON.stringify(amorcees)}`);
             const barre = await p.locator('[data-audio-seek="audio-nexity"]').boundingBox();
             await p.touchscreen.tap(barre.x + barre.width * 0.5, barre.y + barre.height / 2);
-            await p.waitForTimeout(1000);
+            await p.waitForFunction(() => document.getElementById('audio-nexity').currentTime > 0, null, { timeout: 10000 }).catch(() => { });
+            await p.waitForTimeout(300);
             const r = await p.evaluate(() => {
                 const a = document.getElementById('audio-nexity');
                 return { t: a.currentTime, d: a.duration, largeur: parseFloat(document.getElementById('progress-audio-nexity').style.width) };
@@ -2081,12 +2087,13 @@ function exige(condition, message) {
             exige(barres.every((b) => b.role === 'slider'), 'une barre a perdu son rôle de curseur');
             exige(barres.every((b) => !/\/ 0:00$/.test(b.temps)), 'une démo annonce 0:00 de durée avant d’être chargée');
             // À mi-parcours, la moitié gauche est dorée, la droite non.
-            await p.waitForFunction(() => document.getElementById('audio-nexity').duration > 0, null, { timeout: 10000 });
             const couleurs = await p.evaluate(async () => {
-                // Par le chemin du site : le serveur local ne sert pas de
+                // Par le chemin du site : la démo n'est pas encore chargée
+                // (seule la première l'est à l'ouverture), on vise avec la
+                // durée connue d'avance ; et le serveur local ne sert pas de
                 // morceaux de fichier (voir allerDansLaDemo).
                 const a = document.getElementById('audio-nexity');
-                allerDansLaDemo('audio-nexity', a.duration / 2);
+                allerDansLaDemo('audio-nexity', dureeDemo('audio-nexity') / 2);
                 for (let i = 0; i < 50 && a.currentTime < 1; i++) await new Promise((f) => setTimeout(f, 100));
                 a.dispatchEvent(new Event('timeupdate'));
                 await new Promise((f) => requestAnimationFrame(f));

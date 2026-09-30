@@ -2667,9 +2667,10 @@ node build/ondes.js     # après avoir ajouté ou remplacé une démo
 Le dessin (`dessinerOnde`, dans `index.html`) est un canevas par barre,
 redessiné quand la lecture avance, au survol, quand la largeur change et quand
 le thème bascule — ses couleurs sont lues dans les jetons (`--c-gold` pour ce
-qui est lu, `--c-s300` pour ce qui reste). La barre garde son rôle de curseur,
-son clic, ses flèches et le repli sans en-têtes Range. Sans script, la piste
-d'avant.
+qui est lu, `--c-s300` pour ce qui reste), à la densité de l'écran, sans
+plafond (plafonnées à 2, les barres bavaient à DPR 3). La barre garde son rôle
+de curseur, son clic, ses flèches et le repli sans en-têtes Range. Sans
+script, la piste d'avant.
 
 ## Démos voix — poids des fichiers
 
@@ -2694,7 +2695,20 @@ ne saute au milieu d'un fichier que si le serveur lui en sert des morceaux
 non — toucher la barre y ramenait au début de l'extrait. Quand le point visé
 n'est pas atteignable, le fichier est lu en mémoire (il vient d'ordinaire du
 cache, puisque la démo joue) et l'on saute dedans ; la lecture reprend si elle
-jouait. Clic, toucher et clavier passent par le même chemin.
+jouait. Clic, toucher et clavier passent par le même chemin — y compris sur
+une démo pas encore chargée : on vise avec `data-duree`, et le point est posé
+dès que le fichier répond.
+
+**Une démo n'est demandée que quand on s'en approche** (`amorcerDemo`).
+L'onglet Voix amorçait les huit à son ouverture : 821 Ko en seize requêtes,
+pour des durées que `data-duree` donne déjà, et un toucher précoce sur la
+quatrième démo attendait derrière les sept autres. Seule la première est
+amorcée à l'ouverture ; les autres au doigt qui se pose (une centaine de
+millisecondes avant le clic), à la souris qui entre sur la carte, au
+clavier qui y arrive. Mesuré en 4G lente simulée (trois passes) :
+l'ouverture tire 127 Ko au lieu de 821 ; toucher la quatrième démo 0,3 s
+après l'ouverture fait entendre la voix en 0,47 s au lieu de 0,69 ; le
+revers — une démo jamais approchée, touchée tard — 0,35 s au lieu de 0,15.
 
 ---
 

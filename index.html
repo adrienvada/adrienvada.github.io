@@ -11548,7 +11548,8 @@
             // Un tiroir resté ouvert n'aurait plus de contexte hors du CV
             closeAllCvDrawers(null);
 
-            // Les durées des démos ne sont chargées qu'à l'ouverture de l'onglet Voix
+            // La première démo s'amorce à l'ouverture de l'onglet Voix ; les
+            // autres, quand on s'en approche (voir amorcerDemo).
             if (pageId === 'demos_voix') primeAudioMetadata();
 
             // `animate=false` ne sert QU'AU TOUT PREMIER CHARGEMENT (le seul
@@ -11785,6 +11786,12 @@
                 // qu'un second appui mettra en pause.
                 btn.setAttribute('aria-pressed', 'false');
                 btn.addEventListener('click', () => toggleAudio(id));
+                // On s'approche de la démo : son début est demandé (voir
+                // amorcerDemo). `pointerenter` ne remonte pas : il est posé
+                // sur la carte elle-même.
+                const carte = btn.closest('.glass-panel');
+                if (carte) ['pointerdown', 'pointerenter', 'focusin'].forEach(type =>
+                    carte.addEventListener(type, () => amorcerDemo(audio), { passive: true }));
 
                 audio.addEventListener('loadedmetadata', () => initAudioMetadata(id));
                 audio.addEventListener('timeupdate', () => {
@@ -11812,12 +11819,16 @@
                 bar.addEventListener('click', (e) => seekAudio(e, id));
                 bar.addEventListener('keydown', (e) => {
                     const audio = document.getElementById(id);
-                    if (!audio || !audio.duration) return;
-                    const step = audio.duration / 20;
-                    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') allerDansLaDemo(id, audio.currentTime + step);
-                    else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') allerDansLaDemo(id, audio.currentTime - step);
+                    const duree = dureeDemo(id);
+                    if (!audio || !duree) return;
+                    const step = duree / 20;
+                    // Avant ses métadonnées, la démo n'a pas bougé : on part
+                    // du point déjà visé.
+                    const ici = audio.__visee != null ? audio.__visee : audio.currentTime;
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') allerDansLaDemo(id, ici + step);
+                    else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') allerDansLaDemo(id, ici - step);
                     else if (e.key === 'Home') allerDansLaDemo(id, 0);
-                    else if (e.key === 'End') allerDansLaDemo(id, audio.duration);
+                    else if (e.key === 'End') allerDansLaDemo(id, duree);
                     else return;
                     e.preventDefault();
                 });
@@ -11901,7 +11912,10 @@
             if (!o) return;
             const r = o.toile.getBoundingClientRect();
             if (!r.width) return;
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            // À la densité de l'écran, sans plafond : plafonnées à 2, les
+            // barres bavaient sur les téléphones à DPR 3 — pour quelques
+            // dizaines de rectangles de plus.
+            const dpr = window.devicePixelRatio || 1;
             const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
             if (o.toile.width !== W || o.toile.height !== H) { o.toile.width = W; o.toile.height = H; }
             const c = o.toile.getContext('2d');
@@ -11958,18 +11972,39 @@
             });
         }
 
-        // preload="none" évite 8 requêtes au chargement du site ; on ne charge
-        // les métadonnées (donc les durées) qu'à l'ouverture de l'onglet Voix.
+        // AMORCER UNE DÉMO, C'EST DEMANDER SON DÉBUT — que la lecture parte
+        // sans attendre. preload="none" évite huit requêtes au chargement du
+        // site. L'onglet Voix les amorçait toutes à son ouverture : 846 Ko
+        // en huit requêtes, pour des durées que data-duree donne déjà (voir
+        // preparerOnde) ; et un clic précoce sur la quatrième démo attendait
+        // derrière les sept autres, qui se partageaient le réseau (1,4 s
+        // jusqu'au son en 4G lente, contre 0,6 sans amorçage). Désormais la
+        // première démo s'amorce à l'ouverture de l'onglet, les autres quand
+        // on s'en approche : le doigt qui se pose (une centaine de
+        // millisecondes avant le clic), la souris qui entre, le clavier qui
+        // arrive. Une démo déjà demandée (lecture lancée) n'est pas relancée.
+        function amorcerDemo(audio) {
+            if (!audio || audio.__amorcee) return;
+            audio.__amorcee = true;
+            if (!audio.paused || audio.readyState > 0 || audio.networkState === audio.NETWORK_LOADING) return;
+            audio.preload = 'metadata';
+            audio.load();
+        }
+
         let audioMetadataPrimed = false;
         function primeAudioMetadata() {
             if (audioMetadataPrimed) return;
             audioMetadataPrimed = true;
-            document.querySelectorAll('#demos_voix audio').forEach(audio => {
-                if (audio.preload !== 'metadata') {
-                    audio.preload = 'metadata';
-                    audio.load();
-                }
-            });
+            amorcerDemo(document.querySelector('#demos_voix audio'));
+        }
+
+        // La durée d'une démo : celle du fichier dès qu'il la connaît, sinon
+        // celle écrite au build sur son onde (data-duree).
+        function dureeDemo(audioId) {
+            const audio = document.getElementById(audioId);
+            if (audio && audio.duration && isFinite(audio.duration)) return audio.duration;
+            const bar = document.querySelector(`[data-audio-seek="${audioId}"]`);
+            return (bar && bar.__onde && bar.__onde.duree) || 0;
         }
 
         function toggleAudio(audioId) {
@@ -12045,9 +12080,9 @@
         }
 
         function seekAudio(e, audioId) {
-            const audio = document.getElementById(audioId);
             const rect = e.currentTarget.getBoundingClientRect();
-            if (audio && audio.duration) allerDansLaDemo(audioId, (e.clientX - rect.left) / rect.width * audio.duration);
+            const duree = dureeDemo(audioId);
+            if (duree) allerDansLaDemo(audioId, (e.clientX - rect.left) / rect.width * duree);
         }
 
         // ── ALLER À UN POINT D'UNE DÉMO ──
@@ -12085,7 +12120,28 @@
 
         function allerDansLaDemo(audioId, cible) {
             const audio = document.getElementById(audioId);
-            if (!audio || !audio.duration || !isFinite(audio.duration)) return;
+            if (!audio) return;
+            // PAS ENCORE DE MÉTADONNÉES — une démo qu'on touche sans s'en être
+            // approché (au clavier, sur l'onde d'une carte jamais survolée) :
+            // on vise avec la durée connue d'avance, on demande le fichier, et
+            // le point est posé dès qu'il répond. Un second geste d'ici là
+            // remplace le premier.
+            if (!audio.duration || !isFinite(audio.duration)) {
+                const duree = dureeDemo(audioId);
+                if (!duree) return;
+                audio.__visee = Math.max(0, Math.min(duree, cible));
+                if (!audio.__guetteVisee) {
+                    audio.__guetteVisee = true;
+                    audio.addEventListener('loadedmetadata', () => {
+                        audio.__guetteVisee = false;
+                        const visee = audio.__visee;
+                        audio.__visee = null;
+                        if (visee != null) allerDansLaDemo(audioId, visee);
+                    }, { once: true });
+                }
+                amorcerDemo(audio);
+                return;
+            }
             cible = Math.max(0, Math.min(audio.duration, cible));
             if (atteignable(audio, cible)) {
                 audio.currentTime = cible;
