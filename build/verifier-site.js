@@ -643,7 +643,7 @@ function exige(condition, message) {
                     bas: cols.map(bas),
                     roule: t.classList.contains('td-roule'),
                     volets: t.querySelectorAll('.fl-v1').length,
-                    // Les volets seulement : le voyant de l'en-tête bat sept secondes.
+                    // Les volets seulement : le voyant du titre frappe ses deux coups à part.
                     enVol: document.getAnimations().filter((a) => a.effect && a.effect.target
                         && a.effect.target.closest && a.effect.target.closest('#next-date-banner .fl')).length,
                     clair: t.querySelector('.td-dep .sr-only')?.textContent || '',

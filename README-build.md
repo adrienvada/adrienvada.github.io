@@ -2177,6 +2177,15 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
   ralenti six fois), l'image médiane reste à 60 par seconde pendant le
   battement. Des données qui changent pendant le battement (la base en
   direct) posent aussitôt les bonnes lettres ; avant, elles le relancent.
+  À la fin, les palettes sont toutes lues, puis toutes posées : lues une à
+  une entre deux écritures, elles forçaient 50 recalculs — une tâche de 55 à
+  85 ms à ×4. **Le voyant** du titre frappe ses deux coups en `transform` et
+  en opacité : l'anneau est un disque derrière le point (`::after`), qui
+  grandit et s'efface, après 3,43 s d'attente sans battre. Il était une
+  ombre (`box-shadow`) animée sur sept secondes, et chaque image des sept
+  secondes repassait par le fil principal : au téléphone à ×4, 368 images
+  du fil principal dans les 8,6 premières secondes, 117 désormais, et
+  517 ms de travail en moins — à chaque retour sur le CV.
 - **La servante** (`404.html`). La page perdue est un plateau vide où la
   servante reste allumée ; l'ampoule hésite deux fois puis se tient, le
   pointeur éclaire la scène comme une lampe de poche. Thème clair compris.

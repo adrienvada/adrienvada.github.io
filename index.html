@@ -1746,7 +1746,7 @@
         body.modal-open .cv-has-universe::after,
         body.modal-open .cv-has-universe .cv-badge::after,
         body.modal-open .cv-vignette.a-etat::after,
-        body.modal-open .td-voyant {
+        body.modal-open .td-voyant::after {
             animation-play-state: paused;
         }
 
@@ -6093,40 +6093,72 @@
         }
 
         /* LE VOYANT : la donnée est vivante. Deux coups rapprochés, puis il
-           se tient (une seule mesure de sept secondes : voir « Ce qui
-           bouge s'arrête ») — un pouls, pas un clignotant. L'anneau se
-           dilate et s'efface ; le point lui-même ne clignote jamais. */
+           se tient (une seule fois : voir « Ce qui bouge s'arrête ») — un
+           pouls, pas un clignotant. L'anneau se dilate et s'efface ; le
+           point lui-même ne clignote jamais.
+
+           L'ANNEAU EST UN DISQUE, PAS UNE OMBRE. Il était une seconde ombre
+           (`box-shadow`) animée sur une mesure de sept secondes, dont seule
+           la plage 49 → 64 % bougeait : une ombre ne se compose pas, et
+           chaque image des sept secondes repassait par le fil principal —
+           style, peinture, calques. Mesuré au téléphone à ×4 (quatre
+           passes alternées, les 8,6 premières secondes) : 368 images du fil
+           principal, 117 avec le disque, et 517 ms de travail en moins
+           (3 383 → 2 867 ms) — à chaque retour sur le CV, puisque
+           l'animation rejoue. Le disque (`::after`, 19 px, la taille de
+           l'anneau le plus grand) grandit depuis la taille du point en
+           `transform` et s'efface en opacité : la carte graphique seule. Il
+           attend sans battre les 3,43 s où l'anneau partait (49 % de sept
+           secondes), puis joue les deux coups sur 1,05 s, aux mêmes
+           instants et aux mêmes rayons (3,5 → 9,5 px). Même jaune que le
+           point : dessous ou dessus, l'œil ne voit aucune différence. Sans remplissage (ni `backwards`, ni
+           `both`) : il n'existe pas pendant l'attente, et fini, il rend son
+           calque. Le halo, lui, ne bouge pas. */
         .td-voyant {
+            position: relative;
             flex: none;
             width: 7px;
             height: 7px;
             border-radius: 50%;
             background: var(--td-jaune);
             box-shadow: 0 0 6px rgb(242 193 78 / 0.55);
-            animation: td-voyant 7s ease-out 1;
         }
 
+        .td-voyant::after {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: -6px;
+            width: 19px;
+            height: 19px;
+            border-radius: 50%;
+            background: var(--td-jaune);
+            opacity: 0;
+            transform: scale(0.368);
+            animation: td-voyant 1.05s ease-out 3.43s 1;
+        }
+
+        /* Les étapes de la mesure d'origine, ramenées à sa plage utile :
+           49 → 56 % puis 57 → 64 % de sept secondes. */
         @keyframes td-voyant {
-            0%,
-            48% {
-                box-shadow: 0 0 6px rgb(242 193 78 / 0.55), 0 0 0 0 rgb(242 193 78 / 0);
+            0% {
+                opacity: 0.5;
+                transform: scale(0.368);
             }
 
-            49% {
-                box-shadow: 0 0 6px rgb(242 193 78 / 0.55), 0 0 0 0 rgb(242 193 78 / 0.5);
+            46.667% {
+                opacity: 0;
+                transform: scale(1);
             }
 
-            56% {
-                box-shadow: 0 0 6px rgb(242 193 78 / 0.55), 0 0 0 6px rgb(242 193 78 / 0);
+            53.333% {
+                opacity: 0.35;
+                transform: scale(0.368);
             }
 
-            57% {
-                box-shadow: 0 0 6px rgb(242 193 78 / 0.55), 0 0 0 0 rgb(242 193 78 / 0.35);
-            }
-
-            64%,
             100% {
-                box-shadow: 0 0 6px rgb(242 193 78 / 0.55), 0 0 0 6px rgb(242 193 78 / 0);
+                opacity: 0;
+                transform: scale(1);
             }
         }
 
@@ -6361,7 +6393,7 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .td-voyant {
+            .td-voyant::after {
                 animation: none;
             }
         }
@@ -7426,25 +7458,28 @@
         // secondes, quoi qu'il arrive (un onglet en arrière-plan ralentit les
         // minuteries) —, tout est posé sur la bonne lettre et les volets
         // rendent leurs calques.
+        //
+        // TOUT LIRE, PUIS TOUT ÉCRIRE. Chaque palette lisait sa largeur (ou
+        // ses animations, à la fin) juste après que la précédente avait
+        // changé de lettre : 25 palettes, 50 recalculs forcés — une tâche
+        // de 55 à 85 ms à ×4 à la fin du battement. Les mesures sont donc
+        // prises toutes ensemble, avant la première écriture.
         function tdDerouler(jeton) {
             const tableau = document.getElementById('next-date-banner');
-            const battantes = [];
-            tdCellules.forEach(cl => {
-                if (!cl.el.offsetWidth) tdPoser(cl, cl.cible);
-                else if (cl.cible !== ' ') battantes.push(cl);
-            });
+            const larges = tdCellules.map(cl => cl.el.offsetWidth);
+            const battantes = tdCellules.filter((cl, i) => larges[i] && cl.cible !== ' ');
+            const boites = battantes.map(cl => cl.el.getBoundingClientRect());
+            tdCellules.forEach((cl, i) => { if (!larges[i]) tdPoser(cl, cl.cible); });
             const finir = () => {
                 if (jeton !== tdJeton) return;
                 tdJeton++;
                 tableau.classList.remove('td-roule');
-                tdCellules.forEach(cl => {
-                    cl.v1.getAnimations().concat(cl.v2.getAnimations()).forEach(a => a.cancel());
-                    tdPoser(cl, cl.cible);
-                });
+                const volets = tdCellules.flatMap(cl => cl.v1.getAnimations().concat(cl.v2.getAnimations()));
+                volets.forEach(a => a.cancel());
+                tdCellules.forEach(cl => tdPoser(cl, cl.cible));
             };
             let restantes = battantes.length;
             if (!restantes) { finir(); return; }
-            const boites = battantes.map(cl => cl.el.getBoundingClientRect());
             const gauche = Math.min(...boites.map(b => b.left));
             tableau.classList.add('td-roule');
             battantes.forEach((cl, i) => setTimeout(() => {
