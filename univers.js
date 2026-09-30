@@ -1154,14 +1154,26 @@ const SHOW_UNIVERSES = {
     // dans le balisage, et l'attribut retiré interdit toute boucle.
     const YT_PLACEHOLDER = 120;
 
+    // L'affiche est un <picture> : son WebP passe avant le JPEG (voir
+    // videoHtml). Le repli retire la source d'abord — tant qu'elle est là,
+    // c'est elle que le navigateur retient, et changer le `src` de l'image
+    // ne changerait rien.
+    //
+    // Posé aussi sur une page spectacle, où l'affiche est déjà dans la
+    // page : si elle est arrivée avant, on la juge tout de suite.
     function wireVideoPosters(zone) {
         (zone || overlay).querySelectorAll('img[data-u-poster]').forEach(img => {
             const secours = () => {
                 const id = img.dataset.uPoster;
                 if (!id || !YT_ID.test(id)) return;
                 img.removeAttribute('data-u-poster');
+                img.parentElement?.querySelectorAll('source').forEach(s => s.remove());
                 img.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
             };
+            if (img.complete && img.naturalWidth) {
+                if (img.naturalWidth <= YT_PLACEHOLDER) secours();
+                return;
+            }
             img.addEventListener('error', secours);
             img.addEventListener('load', () => {
                 if (img.naturalWidth > YT_PLACEHOLDER) return;
@@ -1186,7 +1198,10 @@ const SHOW_UNIVERSES = {
             // créé : le badge de la ligne du CV est ce qui les distingue.
             enCreation: window.cvShowIsEnCreation?.(li) || false,
             // Dans le passage, le montage vient après (voir monterLeMontage).
-            montage: !parPassage
+            montage: !parPassage,
+            // Le travelling ouvre la page, sauf en mouvement réduit : ses
+            // premières photos partent alors d'emblée (voir ouvertureHtml).
+            travellingVu: !REDUCED
         });
         montageAPoser = parPassage ? beatsHtml(uni, info.title) : '';
         // innerHTML vient d'effacer la fenêtre « ajouter à l'agenda », qui
@@ -1988,10 +2003,17 @@ const SHOW_UNIVERSES = {
         // (<picture>, voir univers-montage.js), une copie faite d'après le
         // `src` aurait téléchargé l'original de 2400 px EN PLUS de la version
         // affichée : le double du poids, pour attendre la mauvaise image.
-        // Un film s'ouvre sur son affiche : c'est elle, la première image.
-        // La première photo DU MONTAGE (ou l'affiche d'un film) : celles de
-        // l'ouverture sont de petites copies, qui arrivent d'elles-mêmes.
-        const first = overlay.querySelector('.u-figs .u-affiche img, .u-figs .u-fig-img');
+        // CELLE QU'ON VOIT D'ABORD. Avec une ouverture, c'est la première
+        // photo du travelling : c'est elle qui se peint pendant que le
+        // panneau se déplie. On attendait la première photo du montage, six
+        // à dix écrans plus bas — qui n'est plus demandée d'emblée (voir
+        // beatsHtml), et aurait fait attendre le filet de 2,5 s. En
+        // mouvement réduit, le travelling n'est pas montré : c'est la
+        // couverture, le fond du titre posé. Sans ouverture, la première
+        // photo du montage, ou l'affiche qui ouvre un film.
+        const first = !overlay.querySelector('.u-ouverture')
+            ? overlay.querySelector('.u-figs .u-affiche img, .u-figs .u-fig-img')
+            : overlay.querySelector(REDUCED ? '.u-hero-fond img' : '.u-of-photo img');
         if (!first) return Promise.resolve();
         return Promise.race([
             new Promise(resolve => {
@@ -2004,6 +2026,25 @@ const SHOW_UNIVERSES = {
             // jamais laisser le panneau bloqué sur son voile de chargement.
             new Promise(resolve => setTimeout(resolve, MAX_WAIT_MS))
         ]);
+    }
+
+    // LES PHOTOS DU TRAVELLING S'ALLUMENT, ELLES NE CLAQUENT PAS. Tant
+    // qu'elle n'est pas décodée, une photo attend invisible — sa carte
+    // aussi, dont l'ombre dessinait un cadre vide au point de fuite — puis
+    // paraît en fondu (voir .u-of-photo img dans univers.css). Une image
+    // déjà décodée — rouverte, venue du cache — est posée d'emblée : on
+    // ne la fait pas repartir du noir. Une image cassée reste cachée.
+    // Sur une page spectacle, l'en-tête les allume déjà à leur arrivée (voir
+    // build/generer-pages-spectacles.js) ; l'appel de demarrerStatique est
+    // un filet, pour une page d'une version précédente restée en cache.
+    function allumerLesPlans(zone) {
+        zone.querySelectorAll('.u-of-photo img').forEach((img) => {
+            const prete = () => { if (img.naturalWidth) img.classList.add('est-decodee'); };
+            if (img.complete && img.naturalWidth) { prete(); return; }
+            const repli = () => (img.complete && img.naturalWidth ? prete() : img.addEventListener('load', prete, { once: true }));
+            if (img.decode) img.decode().then(prete, repli);
+            else repli();
+        });
     }
 
     // ── Ouverture : le panneau se déplie depuis la ligne cliquée ─────
@@ -2225,6 +2266,7 @@ const SHOW_UNIVERSES = {
         const token = ++openToken;
         lastFocus = document.activeElement;
         render(li, uni, parPassage);
+        allumerLesPlans(overlay);
         wireVideoPosters();
         applyPalette(uni.palette);
         overlay.dataset.slug = uni.slug;
@@ -2746,6 +2788,9 @@ const SHOW_UNIVERSES = {
         // Le moteur a démarré : la page spectacle peut garder ses mots en
         // attente (voir .u-anime dans univers.css et le garde de l'en-tête).
         window.__universPret = true;
+        // Et les photos du travelling, jusqu'à ce qu'elles soient là (voir
+        // allumerLesPlans).
+        document.documentElement.classList.add('u-allume-plans');
 
         // Une seule fenêtre pour tout le panneau : le CV comme les pages
         // /spectacles/ passent par ce même #show-universe (voir demarrerStatique).
@@ -2873,6 +2918,7 @@ const SHOW_UNIVERSES = {
         bindLongPress();
         bindAmbianceSurvol();
         bindPrechauffage();
+        bindPreconnexion();
         // Après markCvRows et addWhisper : le murmure ajoute son balisage
         // dans la ligne, et la mesure doit porter sur la ligne finie.
         suivreLesHauteurs();
@@ -2937,6 +2983,8 @@ const SHOW_UNIVERSES = {
         overlay.classList.add('is-open');
         overlay.addEventListener('scroll', onScroll, { passive: true });
         window.addEventListener('resize', reecrireALaLumiere);
+        allumerLesPlans(overlay);
+        wireVideoPosters();
         animerLeMontage(overlay);
         mesurerLesLignes();
         lastScrollTop = 0;
@@ -3552,6 +3600,28 @@ const SHOW_UNIVERSES = {
             clearTimeout(attente);
             if (li) attente = setTimeout(() => prechauffer(li), PAUSE_PRECHAUFFE);
         }, { passive: true });
+    }
+
+    //  LE LECTEUR YOUTUBE, DÈS L'APPUI. Une vidéo ne se fabrique qu'au clic
+    //  (voir data-u-video et addTrailerPill) ; il faut alors encore ouvrir
+    //  une connexion vers youtube-nocookie.com, une poignée de main de deux
+    //  à trois allers-retours sur un réseau mobile. On l'ouvre à l'appui,
+    //  qui précède le clic de 100 à 250 ms (l'audit a mesuré, en 4G lente,
+    //  8,2 → 7,8 s du clic au lecteur). À l'appui seulement, JAMAIS au
+    //  survol : ce serait ouvrir une connexion vers Google avant tout geste,
+    //  ce que la façade de la vidéo est là pour éviter. Une fois par page.
+    const LECTEUR_YOUTUBE = 'https://www.youtube-nocookie.com';
+
+    function bindPreconnexion() {
+        let fait = false;
+        document.addEventListener('pointerdown', (e) => {
+            if (fait || !e.target.closest?.('[data-u-video^="yt:"], .cv-trailer-lien[href^="https://www.youtube.com/"]')) return;
+            fait = true;
+            const lien = document.createElement('link');
+            lien.rel = 'preconnect';
+            lien.href = LECTEUR_YOUTUBE;
+            document.head.appendChild(lien);
+        }, { capture: true, passive: true });
     }
 
     //  LE MURMURE S'ÉPINGLE UNE FOIS PARU. Tant qu'il fallait garder le

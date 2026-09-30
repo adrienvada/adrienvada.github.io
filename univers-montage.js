@@ -270,6 +270,10 @@ const UniversMontage = (function () {
     //  univers.css) : le navigateur ne calcule plus de flou à chaque image,
     //  il mélange deux photos. Et comme la copie pèse cent fois moins que
     //  l'original, c'est elle qu'on voit d'abord pendant qu'il arrive.
+    //  Elle attend comme sa photo (loading) : partie d'emblée, chacune des
+    //  dix copies d'une page passait devant la première photo du
+    //  travelling, et sans script ou en mouvement réduit, où elle n'est
+    //  jamais montrée, elle se téléchargeait pour rien.
     function flouSrc(src) {
         return String(src).replace(/\.jpg$/, '-flou.webp');
     }
@@ -291,7 +295,7 @@ const UniversMontage = (function () {
                     ${pictureHtml(ph.src, layout === 'plein' ? 'plein' : 'groupe',
                         `class="u-fig-img rg-k" alt="${escape(nom)}" ${ph.pos ? `style="object-position:${ph.pos}"` : ''}
                          loading="${eager ? 'eager' : 'lazy'}" decoding="async"`)}
-                    <img class="u-flou rg-k" src="${escape(flouSrc(ph.src))}" alt="" aria-hidden="true" decoding="async"${ph.pos ? ` style="object-position:${ph.pos}"` : ''}>
+                    <img class="u-flou rg-k" src="${escape(flouSrc(ph.src))}" alt="" aria-hidden="true"${eager ? '' : ' loading="lazy"'} decoding="async"${ph.pos ? ` style="object-position:${ph.pos}"` : ''}>
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -356,12 +360,18 @@ const UniversMontage = (function () {
         // se refuse à faire avant le clic. Une vidéo Vimeo demande donc sa
         // jaquette locale (champ `jaquette`, fichier du dossier de
         // l'univers, préparé par le script comme l'affiche).
-        let poster = '', repli = '';
+        let poster = '', repli = '', webp = '';
         if (beat.jaquette && JAQUETTE_OK.test(String(beat.jaquette))) {
             poster = `ressources/images/univers/${uni.slug}/${beat.jaquette}`;
         } else if (ref.startsWith('yt:')) {
             const id = ref.slice(3);
             poster = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+            // La même affiche, que YouTube sert aussi en WebP : 34 à 92 Ko
+            // au lieu de 76 à 137 selon la vidéo. Le JPEG reste l'image, pour
+            // le navigateur qui ne lit pas le WebP, et le repli sur la petite
+            // affiche retire la source avant de s'en servir (voir
+            // wireVideoPosters dans univers.js).
+            webp = `https://i.ytimg.com/vi_webp/${id}/maxresdefault.webp`;
             repli = ` data-u-poster="${id}"`;
         } else {
             console.warn(`[univers] ${uni.slug} : une vidéo Vimeo demande une ` +
@@ -369,12 +379,13 @@ const UniversMontage = (function () {
             return '';
         }
         // La jaquette locale (Vimeo) a ses versions allégées ; l'affiche de
-        // YouTube, servie par YouTube, n'en a pas chez nous.
+        // YouTube, servie par YouTube, n'en a pas chez nous — seulement son
+        // WebP, chez YouTube.
         const imgAttrs = `alt="" loading="lazy" decoding="async"`;
         return `<figure class="u-video u-reveal">
             <button type="button" class="u-video-play" data-u-video="${ref}"
                     aria-label="Lire la vidéo : ${escape(cap || title)}">
-                ${repli ? `<img src="${escape(poster)}"${repli} ${imgAttrs}>` : pictureHtml(poster, 'video', imgAttrs)}
+                ${repli ? `<picture><source type="image/webp" srcset="${escape(webp)}"><img src="${escape(poster)}"${repli} ${imgAttrs}></picture>` : pictureHtml(poster, 'video', imgAttrs)}
                 <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
             </button>
             ${cap ? `<figcaption class="u-cap rg-vue"><span class="rg-k">${escape(cap)}</span></figcaption>` : ''}
@@ -389,13 +400,15 @@ const UniversMontage = (function () {
     //  la lumière de la palette, et agrandissable comme le reste.
     //  Le fichier : ressources/images/univers/<slug>/affiche.jpg, préparé
     //  par le script depuis « affiche.jpg » du dossier source.
+    //  Elle part d'emblée quand elle ouvre la page ; après un travelling,
+    //  elle est six écrans plus bas, et attend d'approcher (voir beatsHtml).
     function afficheHtml(uni, title) {
         if (!uni.affiche) return '';
         return `<figure class="u-fig u-affiche" style="--i:0">
             <button type="button" class="u-fig-media" data-u-zoom="0"
                     aria-label="Agrandir l’affiche du film">
                 ${pictureHtml(`ressources/images/univers/${uni.slug}/affiche.jpg`, 'affiche',
-                    `alt="Affiche — ${escape(title)}" loading="eager" decoding="async"`)}
+                    `alt="Affiche — ${escape(title)}" loading="${aUneOuverture(uni) ? 'lazy' : 'eager'}" decoding="async"`)}
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
         </figure>`;
@@ -526,18 +539,44 @@ const UniversMontage = (function () {
         return { n, src: `${base}-${bloc.p.length === 1 ? 1920 : 1280}.webp`, pos: framePos(uni, bloc, n) || '' };
     }
 
+    //  Les images d'un plan du travelling. La page générée précharge la
+    //  première (voir build/generer-pages-spectacles.js) : un préchargement
+    //  ne sert que s'il demande exactement ce que l'image demandera, d'où
+    //  une seule écriture pour les deux.
+    function imagesDuPlan(uni, n) {
+        const base = `ressources/images/univers/${uni.slug}/${n}`;
+        return {
+            src: `${base}-640.webp`,
+            srcset: `${base}-640.webp 640w, ${base}-1280.webp 1280w`,
+            sizes: '(orientation: portrait) 70vw, 40vw'
+        };
+    }
+
     // `titre` : le haut de la page (voir panelHtml), qui vient du fond ;
     // `tempo` : tempoOuverture(uni), que panelHtml a déjà calculé pour y
-    // régler l'écriture du synopsis.
-    function ouvertureHtml(uni, titre, tempo) {
+    // régler l'écriture du synopsis ; `vu` : le travelling sera vu d'emblée
+    // (voir panelHtml).
+    //
+    // CE QU'ON VOIT D'ABORD PART D'ABORD. La première photo du travelling
+    // est la seule image du premier écran — celle que le navigateur retient
+    // comme la plus grande peinte —, et elle attendait, en priorité basse,
+    // derrière des photos qu'on ne voit que six écrans plus bas. Quand le
+    // travelling sera vu, les deux premières partent d'emblée, la première
+    // avant tout le reste ; les deux suivantes ne paraissent qu'au premier
+    // geste. En mouvement réduit, le travelling n'est pas montré : elles
+    // attendent, et ne partent jamais. La page générée ne peut pas le
+    // savoir en s'écrivant : ses photos attendent, et son en-tête précharge
+    // la première, seulement si le mouvement n'est pas réduit.
+    function ouvertureHtml(uni, titre, tempo, vu) {
         const photos = photosOuverture(uni);
         if (photos.length < 2) return '';
-        const base = `ressources/images/univers/${uni.slug}`;
         const plans = photos.map((n, i) => {
             const [x, y] = OUVERTURE_PLACES[i];
             const [de, a] = tempo.plages[i];
+            const im = imagesDuPlan(uni, n);
+            const priorite = !vu || i > 1 ? ' loading="lazy"' : i === 0 ? ' fetchpriority="high"' : '';
             return `<span class="u-of-photo rg-k" style="--x:${x}cqw;--y:${y}cqh;--s:${de};--e:${a}">
-                    <img src="${base}/${n}-640.webp" srcset="${base}/${n}-640.webp 640w, ${base}/${n}-1280.webp 1280w" sizes="(orientation: portrait) 70vw, 40vw" alt="" loading="lazy" decoding="async">
+                    <img src="${im.src}" srcset="${im.srcset}" sizes="${im.sizes}" alt=""${priorite} decoding="async">
                 </span>`;
         }).join('');
         const reglage = `--of-hauteur:${tempo.hauteur}svh;` +
@@ -685,7 +724,8 @@ const UniversMontage = (function () {
         // (voir panelHtml). Après elle, le premier carton tient l'écran
         // entier, puis la première photo plein cadre s'allume.
         const seq = uni.sequence || [];
-        let allumage = aUneOuverture(uni);
+        const ouvre = aUneOuverture(uni);
+        let allumage = ouvre;
         const premierCarton = allumage ? seq.find(b => b && (b.chapter || b.chapterTitle)) : null;
 
         return afficheHtml(uni, title) + seq.map(beat => {
@@ -729,12 +769,19 @@ const UniversMontage = (function () {
                     src: photoSrc(uni, n), caption: (beat.c && beat.c[i]) || '',
                     pos: framePos(uni, beat, n)
                 },
-                // Seule la première photo part d'emblée : c'est elle que le
-                // panneau attend avant de se dévoiler (awaitFirstPhoto, dans
-                // univers.js). Les autres attendent d'approcher de l'écran —
-                // elles ne concurrencent plus les scripts ni la police du
-                // titre. Un film ouvre sur son affiche, déjà partie, elle.
-                layout, index, title, index++ === 0 && !uni.affiche,
+                // Seule la première photo part d'emblée, quand elle ouvre la
+                // page : c'est elle que le panneau attend avant de se
+                // dévoiler (awaitFirstPhoto, dans univers.js). Les autres
+                // attendent d'approcher de l'écran — elles ne concurrencent
+                // plus les scripts ni la police du titre. Un film ouvre sur
+                // son affiche, déjà partie, elle. Après un travelling, la
+                // première photo du montage est six à dix écrans plus bas :
+                // elle attend comme les autres. Partie d'emblée, elle passait
+                // devant la photo du travelling, la seule qu'on voit, et
+                // devant les scripts — 285 à 650 Ko selon la page, au
+                // téléphone. C'est la photo du travelling qu'on attend
+                // désormais, et qui part d'abord (voir ouvertureHtml).
+                layout, index, title, index++ === 0 && !uni.affiche && !ouvre,
                 (layout === 'plein' && i === 0) ? overHtml(beat) : '', i
             )).join('');
 
@@ -891,19 +938,28 @@ const UniversMontage = (function () {
     //  petite photo, elle grandit jusqu'à faire le fond de la scène.
     //  Sans photo — un spectacle pas encore créé —, pas de fond : le halo
     //  de la couleur du spectacle suffit, comme avant.
+    //  Au bout d'un travelling, il ne paraît qu'avec le titre posé, un bon
+    //  tiers de la scène plus bas : il part toujours d'emblée — il doit être
+    //  là quand le titre se pose —, mais en priorité basse, derrière la
+    //  photo du premier écran et les scripts. En mouvement réduit, c'est lui
+    //  qu'on voit en premier : rien d'autre ne lui dispute la place.
     function heroFondHtml(uni) {
         const c = couverture(uni);
         if (!c) return '';
         const base = c.src.replace(/-240\.webp$/, '');
-        return `<div class="u-hero-fond rg-k" aria-hidden="true"><img src="${escape(base)}-1280.webp" srcset="${escape(base)}-640.webp 640w, ${escape(base)}-1280.webp 1280w" sizes="100vw" alt="" decoding="async"${c.pos ? ` style="object-position:${escape(c.pos)}"` : ''}></div>`;
+        const priorite = aUneOuverture(uni) ? ' fetchpriority="low"' : '';
+        return `<div class="u-hero-fond rg-k" aria-hidden="true"><img src="${escape(base)}-1280.webp" srcset="${escape(base)}-640.webp 640w, ${escape(base)}-1280.webp 1280w" sizes="100vw" alt=""${priorite} decoding="async"${c.pos ? ` style="object-position:${escape(c.pos)}"` : ''}></div>`;
     }
 
     function panelHtml(info, uni, opts) {
-        const { dates = '', enCreation = false, statique = false, montage = true } = opts || {};
+        const { dates = '', enCreation = false, statique = false, montage = true, travellingVu = false } = opts || {};
         // `montage: false` laisse le montage vide : le panneau ouvert par un
         // passage le reçoit ensuite, une fois la vignette devenue la page
         // (voir monterLeMontage dans univers.js). Une page autonome l'a
         // toujours, écrit en dur.
+        // `travellingVu` : le panneau sait, lui, que le mouvement n'est pas
+        // réduit — les premières photos du travelling partent alors d'emblée
+        // (voir ouvertureHtml).
         const figures = montage ? beatsHtml(uni, info.title) : '';
         // Un film n'est pas « à l'affiche » et n'a pas de tournée : le
         // vocabulaire du plateau ne lui va pas. `kind` le dit une fois, et
@@ -1000,7 +1056,7 @@ const UniversMontage = (function () {
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
 
-        ${ouverture ? ouvertureHtml(uni, hero, tempo) : hero}
+        ${ouverture ? ouvertureHtml(uni, hero, tempo, travellingVu) : hero}
 
         <div class="u-figs">${figures}</div>
 
@@ -1281,7 +1337,7 @@ const UniversMontage = (function () {
         toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
         longestLine, photoSrc, pictureHtml, framePos, figureHtml, overHtml, videoRef, flouSrc,
-        photosOuverture, ouvertureHtml, poursuiteHtml, LUMIERES,
+        photosOuverture, imagesDuPlan, ouvertureHtml, poursuiteHtml, LUMIERES,
         videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock,
         FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT
     };

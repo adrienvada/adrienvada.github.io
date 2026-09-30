@@ -42,6 +42,7 @@
     <link rel="preload" href="../../ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../ressources/polices/polices.css">
     <link rel="stylesheet" href="../../univers.css">
+    <link rel="preload" as="image" imagesrcset="../../ressources/images/univers/cleophene/9-640.webp 640w, ../../ressources/images/univers/cleophene/9-1280.webp 1280w" imagesizes="(orientation: portrait) 70vw, 40vw" fetchpriority="high" media="(prefers-reduced-motion: no-preference)">
 
     <!-- Le repli quand le script ne charge pas. Les mots du montage attendent
          à opacity 0 : sans JavaScript, la page serait un écran vide, et son
@@ -77,6 +78,18 @@
                     if (!window.Regie) racine.classList.remove('regie-repli');
                 }, 0);
             });
+            // Une photo du travelling paraît en fondu dès qu'elle arrive (voir
+            // .u-of-photo img dans univers.css) — sans attendre le moteur :
+            // la première arrive bien avant lui, et l'attendre la retenait
+            // 2,5 à 3,2 s de plus (téléphone, 4G lente, ×4). L'arrivée
+            // d'une image ne remonte pas jusqu'à la fenêtre : on l'écoute
+            // sur le document, à la descente. u-allume-plans les cache
+            // jusque-là.
+            racine.classList.add('u-allume-plans');
+            document.addEventListener('load', function (e) {
+                var img = e.target;
+                if (img.matches && img.matches('.u-of-photo img')) img.classList.add('est-decodee');
+            }, true);
         })();
     </script>
 
@@ -423,7 +436,7 @@
             <div class="u-of-scene">
                 <span class="u-of-fond" aria-hidden="true"></span>
                 <div class="u-of-titre rg-k"><div class="u-hero-wrap">
-        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/cleophene/5-1280.webp" srcset="../../ressources/images/univers/cleophene/5-640.webp 640w, ../../ressources/images/univers/cleophene/5-1280.webp 1280w" sizes="100vw" alt="" decoding="async" style="object-position:15% 25%"></div>
+        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/cleophene/5-1280.webp" srcset="../../ressources/images/univers/cleophene/5-640.webp 640w, ../../ressources/images/univers/cleophene/5-1280.webp 1280w" sizes="100vw" alt="" fetchpriority="low" decoding="async" style="object-position:15% 25%"></div>
 
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
@@ -500,9 +513,9 @@
                     <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/cleophene/5-640.webp 640w, ../../ressources/images/univers/cleophene/5-1280.webp 1280w, ../../ressources/images/univers/cleophene/5-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
                     <img src="../../ressources/images/univers/cleophene/5.jpg" class="u-fig-img rg-k" alt="Les Crescite poursuivent le travail de l’alexandrin entrepris sur Bérénice. Dans Cléophène, les personnages sont sanguinaires, vils, assoiffés de pouvoir." style="object-position:15% 25%"
-                         loading="eager" decoding="async">
+                         loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/5-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:15% 25%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/5-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:15% 25%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -536,7 +549,7 @@
                     <img src="../../ressources/images/univers/cleophene/20.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 3" style="object-position:42% 30%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/20-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:42% 30%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/20-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:42% 30%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -551,7 +564,7 @@
                     <img src="../../ressources/images/univers/cleophene/15.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 4" style="object-position:48% 15%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/15-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:48% 15%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/15-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:48% 15%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -566,7 +579,7 @@
                     <img src="../../ressources/images/univers/cleophene/17.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 5" style="object-position:46% 22%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/17-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:46% 22%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/17-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:46% 22%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -584,7 +597,7 @@
                     <img src="../../ressources/images/univers/cleophene/21.jpg" class="u-fig-img rg-k" alt="La mise en scène, volontairement spectaculaire, dépayse le spectateur dans un univers où sons et lumières soutiennent l’immersion dans un drame antique épique." style="object-position:38% 32%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/21-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:38% 32%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/21-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:38% 32%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -599,7 +612,7 @@
                     <img src="../../ressources/images/univers/cleophene/10.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 7" style="object-position:50% 65%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/10-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:50% 65%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/10-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:50% 65%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -614,7 +627,7 @@
                     <img src="../../ressources/images/univers/cleophene/13.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 8" style="object-position:42% 45%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/13-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:42% 45%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/13-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:42% 45%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -629,7 +642,7 @@
                     <img src="../../ressources/images/univers/cleophene/7.jpg" class="u-fig-img rg-k" alt="La rigueur sur le travail du vers sera la même que sur Bérénice." style="object-position:78% 50%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/7-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:78% 50%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/7-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:78% 50%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -647,7 +660,7 @@
                     <img src="../../ressources/images/univers/cleophene/23.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 10" style="object-position:42% 30%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/23-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:42% 30%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/23-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:42% 30%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -662,7 +675,7 @@
                     <img src="../../ressources/images/univers/cleophene/16.jpg" class="u-fig-img rg-k" alt="Cléophène, photo 11" style="object-position:48% 55%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/16-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:48% 55%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/cleophene/16-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:48% 55%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -676,7 +689,7 @@
                 </div><figure class="u-video u-reveal">
             <button type="button" class="u-video-play" data-u-video="yt:bTr685C1YL8"
                     aria-label="Lire la vidéo : Bande annonce — Théâtre l’Étincelle, Ville de Rouen">
-                <img src="https://i.ytimg.com/vi/bTr685C1YL8/maxresdefault.jpg" data-u-poster="bTr685C1YL8" alt="" loading="lazy" decoding="async">
+                <picture><source type="image/webp" srcset="https://i.ytimg.com/vi_webp/bTr685C1YL8/maxresdefault.webp"><img src="https://i.ytimg.com/vi/bTr685C1YL8/maxresdefault.jpg" data-u-poster="bTr685C1YL8" alt="" loading="lazy" decoding="async"></picture>
                 <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
             </button>
             <figcaption class="u-cap rg-vue"><span class="rg-k">Bande annonce — Théâtre l’Étincelle, Ville de Rouen</span></figcaption>

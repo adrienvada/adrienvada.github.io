@@ -42,6 +42,7 @@
     <link rel="preload" href="../../ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../ressources/polices/polices.css">
     <link rel="stylesheet" href="../../univers.css">
+    <link rel="preload" as="image" imagesrcset="../../ressources/images/univers/hommemoderne/2-640.webp 640w, ../../ressources/images/univers/hommemoderne/2-1280.webp 1280w" imagesizes="(orientation: portrait) 70vw, 40vw" fetchpriority="high" media="(prefers-reduced-motion: no-preference)">
 
     <!-- Le repli quand le script ne charge pas. Les mots du montage attendent
          à opacity 0 : sans JavaScript, la page serait un écran vide, et son
@@ -77,6 +78,18 @@
                     if (!window.Regie) racine.classList.remove('regie-repli');
                 }, 0);
             });
+            // Une photo du travelling paraît en fondu dès qu'elle arrive (voir
+            // .u-of-photo img dans univers.css) — sans attendre le moteur :
+            // la première arrive bien avant lui, et l'attendre la retenait
+            // 2,5 à 3,2 s de plus (téléphone, 4G lente, ×4). L'arrivée
+            // d'une image ne remonte pas jusqu'à la fenêtre : on l'écoute
+            // sur le document, à la descente. u-allume-plans les cache
+            // jusque-là.
+            racine.classList.add('u-allume-plans');
+            document.addEventListener('load', function (e) {
+                var img = e.target;
+                if (img.matches && img.matches('.u-of-photo img')) img.classList.add('est-decodee');
+            }, true);
         })();
     </script>
 
@@ -217,7 +230,7 @@
             <div class="u-of-scene">
                 <span class="u-of-fond" aria-hidden="true"></span>
                 <div class="u-of-titre rg-k"><div class="u-hero-wrap">
-        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/hommemoderne/1-1280.webp" srcset="../../ressources/images/univers/hommemoderne/1-640.webp 640w, ../../ressources/images/univers/hommemoderne/1-1280.webp 1280w" sizes="100vw" alt="" decoding="async" style="object-position:74% 36%"></div>
+        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/hommemoderne/1-1280.webp" srcset="../../ressources/images/univers/hommemoderne/1-640.webp 640w, ../../ressources/images/univers/hommemoderne/1-1280.webp 1280w" sizes="100vw" alt="" fetchpriority="low" decoding="async" style="object-position:74% 36%"></div>
 
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
@@ -280,7 +293,7 @@
                     aria-label="Agrandir l’affiche du film">
                 <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/hommemoderne/affiche-640.webp 640w, ../../ressources/images/univers/hommemoderne/affiche-1280.webp 1280w" sizes="90vw">
-                    <img src="../../ressources/images/univers/hommemoderne/affiche.jpg" alt="Affiche — L’Homme moderne" loading="eager" decoding="async">
+                    <img src="../../ressources/images/univers/hommemoderne/affiche.jpg" alt="Affiche — L’Homme moderne" loading="lazy" decoding="async">
                 </picture>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -302,7 +315,7 @@
                     <img src="../../ressources/images/univers/hommemoderne/1.jpg" class="u-fig-img rg-k" alt="L’Homme moderne, photo 1" style="object-position:74% 36%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/1-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:74% 36%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/1-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:74% 36%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -321,7 +334,7 @@
                     <img src="../../ressources/images/univers/hommemoderne/2.jpg" class="u-fig-img rg-k" alt="Le souvenir de Magali" style="object-position:50% 40%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/2-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:50% 40%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/2-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:50% 40%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -336,7 +349,7 @@
                     <img src="../../ressources/images/univers/hommemoderne/3.jpg" class="u-fig-img rg-k" alt="L’accueil de Melvin — épisode 1, Le date." style="object-position:43% 31%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/3-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:43% 31%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/3-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:43% 31%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -354,7 +367,7 @@
                     <img src="../../ressources/images/univers/hommemoderne/4.jpg" class="u-fig-img rg-k" alt="« Donc… je suis moderne. »" style="object-position:80% 30%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/4-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:80% 30%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/4-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:80% 30%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -369,7 +382,7 @@
                     <img src="../../ressources/images/univers/hommemoderne/5.jpg" class="u-fig-img rg-k" alt="La séance se termine en chanson." style="object-position:42% 20%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/5-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:42% 20%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/5-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:42% 20%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -384,7 +397,7 @@
                     <img src="../../ressources/images/univers/hommemoderne/6.jpg" class="u-fig-img rg-k" alt="L’Homme moderne, photo 6" style="object-position:33% 55%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/6-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:33% 55%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/6-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:33% 55%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -405,7 +418,7 @@
                     <img src="../../ressources/images/univers/hommemoderne/7.jpg" class="u-fig-img rg-k" alt="Le cabinet, à la nuit tombée." style="object-position:20% 25%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/7-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:20% 25%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/7-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:20% 25%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -420,7 +433,7 @@
                     <img src="../../ressources/images/univers/hommemoderne/8.jpg" class="u-fig-img rg-k" alt="Épisode 4, Le carnet — l’argile avant l’épreuve." style="object-position:58% 28%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/8-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:58% 28%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/8-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:58% 28%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -437,7 +450,7 @@
                     <img src="../../ressources/images/univers/hommemoderne/9.jpg" class="u-fig-img rg-k" alt="Les concombres de la méthode." style="object-position:30% 33%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/9-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:30% 33%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/9-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:30% 33%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -452,7 +465,7 @@
                     <img src="../../ressources/images/univers/hommemoderne/10.jpg" class="u-fig-img rg-k" alt="Minuit : la cérémonie du carnet." style="object-position:78% 22%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/10-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:78% 22%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/hommemoderne/10-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:78% 22%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -461,7 +474,7 @@
         </figure></div><figure class="u-video u-reveal">
             <button type="button" class="u-video-play" data-u-video="yt:OT85GdKWsaM"
                     aria-label="Lire la vidéo : Épisode 1, Le date — la série commence ici.">
-                <img src="https://i.ytimg.com/vi/OT85GdKWsaM/maxresdefault.jpg" data-u-poster="OT85GdKWsaM" alt="" loading="lazy" decoding="async">
+                <picture><source type="image/webp" srcset="https://i.ytimg.com/vi_webp/OT85GdKWsaM/maxresdefault.webp"><img src="https://i.ytimg.com/vi/OT85GdKWsaM/maxresdefault.jpg" data-u-poster="OT85GdKWsaM" alt="" loading="lazy" decoding="async"></picture>
                 <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
             </button>
             <figcaption class="u-cap rg-vue"><span class="rg-k">Épisode 1, Le date — la série commence ici.</span></figcaption>

@@ -77,6 +77,18 @@
                     if (!window.Regie) racine.classList.remove('regie-repli');
                 }, 0);
             });
+            // Une photo du travelling paraît en fondu dès qu'elle arrive (voir
+            // .u-of-photo img dans univers.css) — sans attendre le moteur :
+            // la première arrive bien avant lui, et l'attendre la retenait
+            // 2,5 à 3,2 s de plus (téléphone, 4G lente, ×4). L'arrivée
+            // d'une image ne remonte pas jusqu'à la fenêtre : on l'écoute
+            // sur le document, à la descente. u-allume-plans les cache
+            // jusque-là.
+            racine.classList.add('u-allume-plans');
+            document.addEventListener('load', function (e) {
+                var img = e.target;
+                if (img.matches && img.matches('.u-of-photo img')) img.classList.add('est-decodee');
+            }, true);
         })();
     </script>
 

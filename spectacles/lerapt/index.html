@@ -42,6 +42,7 @@
     <link rel="preload" href="../../ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../ressources/polices/polices.css">
     <link rel="stylesheet" href="../../univers.css">
+    <link rel="preload" as="image" imagesrcset="../../ressources/images/univers/lerapt/2-640.webp 640w, ../../ressources/images/univers/lerapt/2-1280.webp 1280w" imagesizes="(orientation: portrait) 70vw, 40vw" fetchpriority="high" media="(prefers-reduced-motion: no-preference)">
 
     <!-- Le repli quand le script ne charge pas. Les mots du montage attendent
          à opacity 0 : sans JavaScript, la page serait un écran vide, et son
@@ -77,6 +78,18 @@
                     if (!window.Regie) racine.classList.remove('regie-repli');
                 }, 0);
             });
+            // Une photo du travelling paraît en fondu dès qu'elle arrive (voir
+            // .u-of-photo img dans univers.css) — sans attendre le moteur :
+            // la première arrive bien avant lui, et l'attendre la retenait
+            // 2,5 à 3,2 s de plus (téléphone, 4G lente, ×4). L'arrivée
+            // d'une image ne remonte pas jusqu'à la fenêtre : on l'écoute
+            // sur le document, à la descente. u-allume-plans les cache
+            // jusque-là.
+            racine.classList.add('u-allume-plans');
+            document.addEventListener('load', function (e) {
+                var img = e.target;
+                if (img.matches && img.matches('.u-of-photo img')) img.classList.add('est-decodee');
+            }, true);
         })();
     </script>
 
@@ -227,7 +240,7 @@
             <div class="u-of-scene">
                 <span class="u-of-fond" aria-hidden="true"></span>
                 <div class="u-of-titre rg-k"><div class="u-hero-wrap">
-        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/lerapt/1-1280.webp" srcset="../../ressources/images/univers/lerapt/1-640.webp 640w, ../../ressources/images/univers/lerapt/1-1280.webp 1280w" sizes="100vw" alt="" decoding="async" style="object-position:66% 40%"></div>
+        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/lerapt/1-1280.webp" srcset="../../ressources/images/univers/lerapt/1-640.webp 640w, ../../ressources/images/univers/lerapt/1-1280.webp 1280w" sizes="100vw" alt="" fetchpriority="low" decoding="async" style="object-position:66% 40%"></div>
 
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
@@ -290,7 +303,7 @@
                     aria-label="Agrandir l’affiche du film">
                 <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/lerapt/affiche-640.webp 640w, ../../ressources/images/univers/lerapt/affiche-1280.webp 1280w" sizes="90vw">
-                    <img src="../../ressources/images/univers/lerapt/affiche.jpg" alt="Affiche — Le rapt" loading="eager" decoding="async">
+                    <img src="../../ressources/images/univers/lerapt/affiche.jpg" alt="Affiche — Le rapt" loading="lazy" decoding="async">
                 </picture>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -312,7 +325,7 @@
                     <img src="../../ressources/images/univers/lerapt/1.jpg" class="u-fig-img rg-k" alt="Une petite ville du Nord, à l’aube. Deux ouvrières, une Fiat rouge, un plan sans faille." style="object-position:66% 40%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/1-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:66% 40%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/1-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:66% 40%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -331,7 +344,7 @@
                     <img src="../../ressources/images/univers/lerapt/2.jpg" class="u-fig-img rg-k" alt="L’otage. Encore engourdi." style="object-position:58% 30%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/2-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:58% 30%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/2-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:58% 30%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -346,7 +359,7 @@
                     <img src="../../ressources/images/univers/lerapt/3.jpg" class="u-fig-img rg-k" alt="« Dis bonjour à Papa ! »" style="object-position:50% 50%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/3-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:50% 50%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/3-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:50% 50%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -361,7 +374,7 @@
                     <img src="../../ressources/images/univers/lerapt/4.jpg" class="u-fig-img rg-k" alt="Le rapt, photo 4" style="object-position:68% 45%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/4-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:68% 45%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/4-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:68% 45%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -382,7 +395,7 @@
                     <img src="../../ressources/images/univers/lerapt/5.jpg" class="u-fig-img rg-k" alt="« Je vais pisser. »" style="object-position:45% 30%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/5-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:45% 30%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/5-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:45% 30%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -397,7 +410,7 @@
                     <img src="../../ressources/images/univers/lerapt/6.jpg" class="u-fig-img rg-k" alt="Le muret des confidences." style="object-position:46% 25%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/6-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:46% 25%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/6-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:46% 25%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -412,7 +425,7 @@
                     <img src="../../ressources/images/univers/lerapt/7.jpg" class="u-fig-img rg-k" alt="« Mangeons, mangeons ! On sait pas qui nous mangera demain… »" style="object-position:62% 35%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/7-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:62% 35%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/7-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:62% 35%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -430,7 +443,7 @@
                     <img src="../../ressources/images/univers/lerapt/8.jpg" class="u-fig-img rg-k" alt="Arsen, sa radio, la nuit qui monte." style="object-position:65% 30%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/8-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:65% 30%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/8-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:65% 30%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -445,7 +458,7 @@
                     <img src="../../ressources/images/univers/lerapt/9.jpg" class="u-fig-img rg-k" alt="Le lendemain, à l’aube." style="object-position:48% 50%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/9-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:48% 50%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/9-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:48% 50%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -460,7 +473,7 @@
                     <img src="../../ressources/images/univers/lerapt/10.jpg" class="u-fig-img rg-k" alt="Le rapt, photo 10" style="object-position:49% 60%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/10-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:49% 60%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/lerapt/10-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:49% 60%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -474,7 +487,7 @@
                 </div><figure class="u-video u-reveal">
             <button type="button" class="u-video-play" data-u-video="yt:I_sibdqLJJQ"
                     aria-label="Lire la vidéo : Le film intégral — 25 minutes">
-                <img src="https://i.ytimg.com/vi/I_sibdqLJJQ/maxresdefault.jpg" data-u-poster="I_sibdqLJJQ" alt="" loading="lazy" decoding="async">
+                <picture><source type="image/webp" srcset="https://i.ytimg.com/vi_webp/I_sibdqLJJQ/maxresdefault.webp"><img src="https://i.ytimg.com/vi/I_sibdqLJJQ/maxresdefault.jpg" data-u-poster="I_sibdqLJJQ" alt="" loading="lazy" decoding="async"></picture>
                 <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
             </button>
             <figcaption class="u-cap rg-vue"><span class="rg-k">Le film intégral — 25 minutes</span></figcaption>

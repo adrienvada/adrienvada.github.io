@@ -42,6 +42,7 @@
     <link rel="preload" href="../../ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../ressources/polices/polices.css">
     <link rel="stylesheet" href="../../univers.css">
+    <link rel="preload" as="image" imagesrcset="../../ressources/images/univers/asyoulikeit/16-640.webp 640w, ../../ressources/images/univers/asyoulikeit/16-1280.webp 1280w" imagesizes="(orientation: portrait) 70vw, 40vw" fetchpriority="high" media="(prefers-reduced-motion: no-preference)">
 
     <!-- Le repli quand le script ne charge pas. Les mots du montage attendent
          à opacity 0 : sans JavaScript, la page serait un écran vide, et son
@@ -77,6 +78,18 @@
                     if (!window.Regie) racine.classList.remove('regie-repli');
                 }, 0);
             });
+            // Une photo du travelling paraît en fondu dès qu'elle arrive (voir
+            // .u-of-photo img dans univers.css) — sans attendre le moteur :
+            // la première arrive bien avant lui, et l'attendre la retenait
+            // 2,5 à 3,2 s de plus (téléphone, 4G lente, ×4). L'arrivée
+            // d'une image ne remonte pas jusqu'à la fenêtre : on l'écoute
+            // sur le document, à la descente. u-allume-plans les cache
+            // jusque-là.
+            racine.classList.add('u-allume-plans');
+            document.addEventListener('load', function (e) {
+                var img = e.target;
+                if (img.matches && img.matches('.u-of-photo img')) img.classList.add('est-decodee');
+            }, true);
         })();
     </script>
 
@@ -223,7 +236,7 @@
             <div class="u-of-scene">
                 <span class="u-of-fond" aria-hidden="true"></span>
                 <div class="u-of-titre rg-k"><div class="u-hero-wrap">
-        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/asyoulikeit/3-1280.webp" srcset="../../ressources/images/univers/asyoulikeit/3-640.webp 640w, ../../ressources/images/univers/asyoulikeit/3-1280.webp 1280w" sizes="100vw" alt="" decoding="async"></div>
+        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/asyoulikeit/3-1280.webp" srcset="../../ressources/images/univers/asyoulikeit/3-640.webp 640w, ../../ressources/images/univers/asyoulikeit/3-1280.webp 1280w" sizes="100vw" alt="" fetchpriority="low" decoding="async"></div>
 
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
@@ -294,9 +307,9 @@
                     <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/asyoulikeit/3-640.webp 640w, ../../ressources/images/univers/asyoulikeit/3-1280.webp 1280w, ../../ressources/images/univers/asyoulikeit/3-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
                     <img src="../../ressources/images/univers/asyoulikeit/3.jpg" class="u-fig-img rg-k" alt="As You Like It, photo 1" 
-                         loading="eager" decoding="async">
+                         loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/3-flou.webp" alt="" aria-hidden="true" decoding="async">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/3-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -318,7 +331,7 @@
                     <img src="../../ressources/images/univers/asyoulikeit/16.jpg" class="u-fig-img rg-k" alt="Extérieur, ACTE I" style="object-position:45% 50%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/16-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:45% 50%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/16-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:45% 50%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -333,7 +346,7 @@
                     <img src="../../ressources/images/univers/asyoulikeit/14.jpg" class="u-fig-img rg-k" alt="Extérieur, ACTE V" style="object-position:50% 65%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/14-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:50% 65%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/14-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:50% 65%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -348,7 +361,7 @@
                     <img src="../../ressources/images/univers/asyoulikeit/9.jpg" class="u-fig-img rg-k" alt="Intérieur, ACTE V" style="object-position:60% 45%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/9-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:60% 45%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/9-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:60% 45%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -363,7 +376,7 @@
                     <img src="../../ressources/images/univers/asyoulikeit/8.jpg" class="u-fig-img rg-k" alt="Dans As you like it, le rythme surprend et change à chaque instant. C’est lui qui doit nous emporter." style="object-position:38% 40%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/8-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:38% 40%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/8-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:38% 40%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -381,7 +394,7 @@
                     <img src="../../ressources/images/univers/asyoulikeit/11.jpg" class="u-fig-img rg-k" alt="Audrey, Touchstone, ACTE V" style="object-position:48% 32%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/11-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:48% 32%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/11-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:48% 32%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -396,7 +409,7 @@
                     <img src="../../ressources/images/univers/asyoulikeit/1.jpg" class="u-fig-img rg-k" alt="Rosalind, Duke Frederick, Celia, ACTE I" style="object-position:47% 30%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/1-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:47% 30%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/1-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:47% 30%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -411,7 +424,7 @@
                     <img src="../../ressources/images/univers/asyoulikeit/4.jpg" class="u-fig-img rg-k" alt="Celia, Rosalind, ACTE II" style="object-position:42% 35%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/4-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:42% 35%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/4-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:42% 35%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -428,7 +441,7 @@
                     <img src="../../ressources/images/univers/asyoulikeit/15.jpg" class="u-fig-img rg-k" alt="Château de Villerville" style="object-position:50% 70%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/15-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:50% 70%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/15-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:50% 70%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -443,7 +456,7 @@
                     <img src="../../ressources/images/univers/asyoulikeit/13.jpg" class="u-fig-img rg-k" alt="Le Studio d’Asnières" style="object-position:40% 35%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/13-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:40% 35%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/asyoulikeit/13-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:40% 35%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>

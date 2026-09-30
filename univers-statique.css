@@ -36,7 +36,8 @@
 .u-over cite,
 figcaption,
 .u-aside,
-.u-cap {
+.u-cap,
+.u-of-photo img {
     opacity: 1 !important;
     filter: none !important;
     transform: none !important;

@@ -137,6 +137,16 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   moderne), et la première photo attend dans la pénombre ou dans le papier
   selon la salle, éteinte au bas de l'écran, allumée à l'entrée de son quart
   inférieur ;
+- ce qu'on voit d'abord part d'abord, sur chaque page spectacle au
+  téléphone : la première photo du travelling est demandée d'avance par
+  l'en-tête, exactement comme l'image la demandera, hors mouvement réduit ;
+  aucune image du montage ne part d'emblée ; le fond du titre passe après ;
+  la photo paraît, et ne reste jamais cachée. Dans le panneau ouvert depuis
+  le CV, les deux premières photos du travelling partent d'emblée, la
+  première en tête — aucune en mouvement réduit. L'affiche d'une vidéo
+  YouTube est son WebP, et la petite affiche le remplace, source retirée,
+  quand il manque ; la connexion au lecteur s'ouvre à l'appui, pas au
+  survol (voir [Fluidité](#fluidité--ce-qui-a-été-fait-et-pourquoi-ne-pas-le-défaire)) ;
 - en mouvement réduit, chaque scène a un état fixe : l'ouverture réduite au
   haut de la page posé — titre, photo, textes, bouton, sans coupe ni
   déplacement —, le carton du chapitre à un carton, sans noir, la poursuite à
@@ -1471,6 +1481,22 @@ YouTube fournit sa jaquette tout seul ; **Vimeo non** : une vidéo Vimeo demande
 `jaquette: 'teaser.jpg'` — déposer le fichier dans le dossier source de
 l'univers, le script le prépare comme l'affiche.
 
+La jaquette YouTube est servie **en WebP** (`vi_webp/…/maxresdefault.webp`,
+34 à 92 Ko au lieu de 76 à 137 en JPEG pour les quatre vidéos des pages), le
+JPEG en repli dans le même `<picture>`. Quand YouTube n'a pas de grande
+jaquette, il renvoie un timbre-poste de 120 px : `wireVideoPosters` le
+reconnaît, **retire la source WebP** — tant qu'elle est là, changer le `src`
+de l'image ne change rien — et prend la petite (`hqdefault.jpg`). Il veille
+aussi sur les pages spectacle, où il ne veillait pas.
+
+**La connexion vers le lecteur s'ouvre à l'appui** sur la jaquette ou sur une
+pastille ▶ du CV (`bindPreconnexion`), une fois par page : le doigt précède
+le clic de 100 à 250 ms, autant de pris sur la poignée de main avec
+`youtube-nocookie.com` (l'audit a mesuré −0,36 s sur 8,2 du clic au
+lecteur, en 4G lente : peu, mais pour rien).
+**Jamais au survol** : ce serait ouvrir une connexion vers Google avant tout
+geste, ce que la jaquette est là pour éviter.
+
 Une valeur non reconnue est **signalée dans la console** et le bloc est ignoré :
 jamais de lecteur monté sur une adresse qu'on n'a pas comprise.
 
@@ -1636,7 +1662,36 @@ en place ; le renseigner pour toute série qui en demande un.
 - Le titre s'affiche **immédiatement** ; les photos n'apparaissent qu'une fois
   la première *décodée* (`img.decode()`), avec un minuteur de secours de 2,5 s.
   C'est le décodage, pas le téléchargement, qui faisait tomber l'animation
-  d'ouverture.
+  d'ouverture. **La première, c'est celle qu'on voit d'abord**
+  (`awaitFirstPhoto`) : la première photo du travelling ; en mouvement
+  réduit, où le travelling n'est pas montré, la couverture ; sans ouverture,
+  la première photo du montage, ou l'affiche d'un film. On attendait la
+  première du montage, six à dix écrans sous le travelling.
+- **Ce qu'on voit d'abord part d'abord.** Ouvert depuis le CV, les deux
+  premières photos du travelling partent d'emblée, la première en priorité
+  haute ; en mouvement réduit, aucune (`travellingVu`, voir `ouvertureHtml`).
+  Une page spectacle ne sait pas, en s'écrivant, si le mouvement sera
+  réduit : ses photos attendent (`loading="lazy"`), et son en-tête précharge
+  la première, hors mouvement réduit, exactement comme l'image la demandera
+  (`imagesDuPlan`, partagé avec le générateur). Après un travelling, rien du
+  montage ne part avant d'approcher — ni sa première photo, ni l'affiche
+  d'un film, ni les copies floues —, et le fond du titre, qui ne paraît
+  qu'au bout du travelling, passe en priorité basse. Mesuré au téléphone,
+  en 4G lente à ×4 (trois passes, médianes) : la première photo arrive à
+  2,3 s au lieu de 4,9 sur Cléophène, 2,0 au lieu de 5,5 sur Bérénice, 0,7
+  au lieu de 3,0 sur Le rapt, sans plus rien devant elle (290 Ko sur
+  Cléophène) ; le moteur est prêt 0,6 à 2,7 s plus tôt ; les images parties
+  dans les cinq premières secondes pèsent 20 à 50 % de moins. Ouvert depuis
+  le CV, la photo est prête 0,4 à 0,9 s plus tôt.
+- **Les photos du travelling s'allument, elles ne claquent pas.** Tant
+  qu'elles ne sont pas arrivées, elles attendent invisibles, carte comprise —
+  son ombre dessinait un cadre vide au point de fuite, un rectangle clair
+  dans une salle claire —, puis paraissent en fondu, ombre comprise : elle
+  est portée par la photo (`allumerLesPlans`, `.est-decodee`). Une image déjà
+  là est posée d'emblée. Sur une page spectacle, c'est l'en-tête qui les
+  allume, dès leur arrivée : attendre le moteur, qui n'arrive qu'après
+  elles, retenait la première 2,5 à 3,2 s de plus (4G lente, ×4). En
+  mouvement réduit, pas de fondu ; sans JavaScript, rien n'est caché.
 - La **croix et le bouton « Accéder aux dates » restent actifs** pendant ce
   chargement : on doit toujours pouvoir renoncer.
 - Pas de `backdrop-filter` sur les légendes, qui défilent (il reste sur la

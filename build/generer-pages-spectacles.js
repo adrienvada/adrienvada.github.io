@@ -493,10 +493,26 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     // TOUS les candidats d'un srcset, et pas seulement le premier : les
     // versions allégées des photos (640, 1280, 1920) s'y suivent, séparées
     // par des virgules — seule la première gardait son chemin.
+    const rebase = (v) => String(v).replace(/(^|,\s*)ressources\//g, '$1../../ressources/');
     const corps = panneau
         .replace(/(src|data-u-src)="ressources\//g, '$1="../../ressources/')
-        .replace(/srcset="([^"]*)"/g, (_, v) => `srcset="${v.replace(/(^|,\s*)ressources\//g, '$1../../ressources/')}"`)
+        .replace(/srcset="([^"]*)"/g, (_, v) => `srcset="${rebase(v)}"`)
         .replace(/url\((['"]?)ressources\//g, 'url($1../../ressources/');
+
+    // LA PREMIÈRE PHOTO DU TRAVELLING, DEMANDÉE D'AVANCE. C'est la seule
+    // image du premier écran, et la plus grande peinte ; ses photos
+    // attendent pourtant dans le balisage (loading="lazy", voir
+    // ouvertureHtml) : en mouvement réduit, et sans script, le travelling
+    // n'est pas montré, et elles ne doivent pas partir pour rien. Le
+    // préchargement, lui, ne vaut que si le mouvement n'est pas réduit, et
+    // demande EXACTEMENT ce que l'image demandera — mêmes tailles, même
+    // règle de choix — pour qu'elle le trouve prêt. Sans `href` : un
+    // navigateur qui ne lirait pas imagesrcset irait chercher la petite
+    // version, que l'image ne prendra pas sur un écran dense.
+    const plans = MONTAGE.photosOuverture(uni);
+    const plan = plans.length >= 2 ? MONTAGE.imagesDuPlan(uni, plans[0]) : null;
+    const prechargePlan = !plan ? '' : `
+    <link rel="preload" as="image" imagesrcset="${esc(rebase(plan.srcset))}" imagesizes="${esc(plan.sizes)}" fetchpriority="high" media="(prefers-reduced-motion: no-preference)">`;
 
     const jsonld = donneesStructurees(uni, titre, desc, dates, urlPage, photoOg, cv)
         .map(o => `<script type="application/ld+json">\n${MONTAGE.jsonLd(o)}\n</script>`)
@@ -539,7 +555,7 @@ ${MESURE}
     <link rel="preload" href="../../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../../ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../ressources/polices/polices.css">
-    <link rel="stylesheet" href="../../univers.css">
+    <link rel="stylesheet" href="../../univers.css">${prechargePlan}
 
     <!-- Le repli quand le script ne charge pas. Les mots du montage attendent
          à opacity 0 : sans JavaScript, la page serait un écran vide, et son
@@ -575,6 +591,18 @@ ${MESURE}
                     if (!window.Regie) racine.classList.remove('regie-repli');
                 }, 0);
             });
+            // Une photo du travelling paraît en fondu dès qu'elle arrive (voir
+            // .u-of-photo img dans univers.css) — sans attendre le moteur :
+            // la première arrive bien avant lui, et l'attendre la retenait
+            // 2,5 à 3,2 s de plus (téléphone, 4G lente, ×4). L'arrivée
+            // d'une image ne remonte pas jusqu'à la fenêtre : on l'écoute
+            // sur le document, à la descente. u-allume-plans les cache
+            // jusque-là.
+            racine.classList.add('u-allume-plans');
+            document.addEventListener('load', function (e) {
+                var img = e.target;
+                if (img.matches && img.matches('.u-of-photo img')) img.classList.add('est-decodee');
+            }, true);
         })();
     </script>
 

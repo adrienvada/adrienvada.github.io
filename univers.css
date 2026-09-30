@@ -3024,19 +3024,33 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     width: var(--w);
     aspect-ratio: 3 / 2;
     margin: calc(var(--w) / -3) 0 0 calc(var(--w) / -2);
-    overflow: hidden;
-    border-radius: 2px;
-    box-shadow: 0 30px 60px -22px rgba(0, 0, 0, .75);
     opacity: 0;
     transform: translate3d(var(--x), var(--y), 0);
     --rg-anim: u-of-passe;
 }
 
+/* LA PHOTO S'ALLUME, ELLE NE CLAQUE PAS. Tant qu'elle n'est pas décodée,
+   la carte était un cadre vide au point de fuite — un rectangle clair
+   sous son ombre, dans une salle claire —, puis la photo y claquait d'une
+   image à l'autre. L'ombre et l'arrondi sont donc portés par la photo
+   elle-même : invisible, elle ne laisse rien ; décodée (.est-decodee,
+   voir allumerLesPlans dans univers.js), elle paraît en fondu, ombre
+   comprise — une opacité, rien à repeindre. Seulement si ce qui l'allume
+   est là (.u-allume-plans, posé par univers.js et par l'en-tête d'une page
+   spectacle) : une page ou un script d'une version précédente, encore en
+   cache, la laisse visible, sans fondu, plutôt que cachée pour toujours. */
 .u-of-photo img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 30px 60px -22px rgba(0, 0, 0, .75);
+    transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.u-allume-plans .u-of-photo img:not(.est-decodee) {
+    opacity: 0;
 }
 
 @keyframes u-of-passe {
@@ -3789,6 +3803,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     .u-scroll,
     .u-fig-media,
     .u-fig img,
+    .u-of-photo img,
     .u-cap span {
         transition: none !important;
         animation: none !important;

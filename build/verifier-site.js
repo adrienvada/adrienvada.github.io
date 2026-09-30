@@ -1002,7 +1002,7 @@ function exige(condition, message) {
                 const ELEMENTS = ['.u-ch', '.u-wd', '.u-rw', '.u-reveal', '.u-fig', '.u-fig img', '.u-fig-media',
                     '.u-group .u-fig-media', '.u-cap span', '.u-quote', '.u-chapter', '.u-text', '.u-foot', '.u-meta',
                     '.u-hero-actions', '.u-scroll', '.u-author', '.u-synopsis', '.u-progress span',
-                    '.u-hero-fond', '.u-fig-point', '.u-flou', '.u-of-photo', '.u-of-titre .u-title', '.u-of-invite',
+                    '.u-hero-fond', '.u-fig-point', '.u-flou', '.u-of-photo', '.u-of-photo img', '.u-of-titre .u-title', '.u-of-invite',
                     '.u-pa-faisceau', '.u-pa-plein', '.u-lum', '.u-voile'];
                 const out = {};
                 for (const s of ELEMENTS) {
@@ -1332,6 +1332,94 @@ function exige(condition, message) {
                 exige(etat.allumage && !etat.allumage[0] && etat.allumage[1],
                     `${slug} : la première photo ne s’allume pas à l’entrée du quart inférieur (${JSON.stringify(etat.allumage)})`);
             }
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        // ── CE QU'ON VOIT D'ABORD PART D'ABORD ──
+        // La première photo du travelling est la seule image du premier
+        // écran d'une page spectacle ; elle attendait derrière la première
+        // photo du montage et ses dix copies floues, six à dix écrans plus
+        // bas. Elle est désormais demandée d'avance (en-tête, hors mouvement
+        // réduit), rien du montage ne part avant d'approcher, et elle paraît
+        // en fondu une fois arrivée — sans jamais rester cachée. Dans le
+        // panneau ouvert depuis le CV, les deux premières partent d'emblée,
+        // sauf en mouvement réduit, où le travelling n'est pas montré.
+        // L'affiche d'une vidéo YouTube est son WebP ; s'il manque, la
+        // petite affiche prend le relais, la source retirée. Et la connexion
+        // vers le lecteur ne s'ouvre qu'à l'appui, jamais au survol.
+        await verifie('ce qu’on voit d’abord part d’abord : la photo du travelling demandée d’avance, rien du montage avant elle, allumée en fondu ; l’affiche d’une vidéo en WebP, qui retombe sur la petite ; le lecteur préparé à l’appui, pas au survol', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            const allumee = () => p.evaluate(async () => {
+                const img = document.querySelector('#show-universe .u-of-photo img');
+                for (let i = 0; i < 40 && !img.classList.contains('est-decodee'); i++) await new Promise((f) => setTimeout(f, 100));
+                await new Promise((f) => setTimeout(f, 500));
+                return img.classList.contains('est-decodee') && getComputedStyle(img).opacity === '1';
+            });
+            for (const slug of dossiers) {
+                await p.goto(`${base}/spectacles/${slug}/`, { waitUntil: 'load' });
+                const etat = await p.evaluate(() => {
+                    const S = document.getElementById('show-universe');
+                    const plans = [...S.querySelectorAll('.u-of-photo img')];
+                    if (!plans.length) return null;
+                    const pre = [...document.querySelectorAll('link[rel="preload"][as="image"]')];
+                    return {
+                        prechargee: pre.length === 1 && pre[0].getAttribute('imagesrcset') === plans[0].getAttribute('srcset')
+                            && pre[0].getAttribute('imagesizes') === plans[0].getAttribute('sizes')
+                            && pre[0].getAttribute('fetchpriority') === 'high' && pre[0].media === '(prefers-reduced-motion: no-preference)',
+                        partent: [...S.querySelectorAll('.u-figs img')].filter((i) => i.loading !== 'lazy').map((i) => i.getAttribute('src')),
+                        fond: S.querySelector('.u-hero-fond img')?.getAttribute('fetchpriority')
+                    };
+                });
+                if (!etat) continue;
+                exige(etat.prechargee, `${slug} : la première photo du travelling n’est pas demandée d’avance, telle que l’image la demandera`);
+                exige(!etat.partent.length, `${slug} : une image du montage part d’emblée, six écrans plus bas (${etat.partent[0]})`);
+                exige(etat.fond === 'low', `${slug} : le fond du titre passe devant la photo du travelling`);
+                exige(await allumee(), `${slug} : la première photo du travelling reste cachée`);
+            }
+
+            // L'affiche de la vidéo : le WebP d'abord ; ici, rien ne sort
+            // vers YouTube, le WebP échoue donc — la petite affiche le remplace.
+            await p.goto(`${base}/spectacles/cleophene/`, { waitUntil: 'load' });
+            const affiche = await p.evaluate(async () => {
+                const img = document.querySelector('.u-video-play img');
+                const source = img.parentElement.querySelector('source[type="image/webp"]');
+                const out = { webp: !!source && /\/vi_webp\/[\w-]{11}\/maxresdefault\.webp$/.test(source.srcset) };
+                img.scrollIntoView({ block: 'center' });
+                for (let i = 0; i < 30 && img.dataset.uPoster; i++) await new Promise((f) => setTimeout(f, 100));
+                out.repli = !img.parentElement.querySelector('source') && /\/hqdefault\.jpg$/.test(img.src);
+                const liens = () => document.querySelectorAll('link[rel="preconnect"][href^="https://www.youtube-nocookie.com"]').length;
+                const bouton = document.querySelector('.u-video-play');
+                bouton.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, pointerType: 'mouse' }));
+                bouton.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerType: 'mouse' }));
+                out.survol = liens();
+                bouton.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' }));
+                out.appui = liens();
+                return out;
+            });
+            exige(affiche.webp, 'l’affiche YouTube n’est plus servie en WebP');
+            exige(affiche.repli, 'le WebP manquant, la petite affiche ne prend pas le relais');
+            exige(affiche.survol === 0 && affiche.appui === 1, `la connexion au lecteur s’ouvre au survol, ou pas à l’appui (${JSON.stringify(affiche)})`);
+
+            // Le panneau ouvert depuis le CV : les deux premières photos
+            // partent d'emblée, la première avant tout — sauf en mouvement
+            // réduit.
+            const plansDuPanneau = (q) => q.evaluate(() => [...document.querySelectorAll('#show-universe .u-of-photo img')]
+                .map((i) => `${i.getAttribute('loading') || 'eager'}/${i.getAttribute('fetchpriority') || '-'}`).join(' '));
+            await p.goto(`${base}/#/univers/cleophene`, { waitUntil: 'load' });
+            await p.waitForFunction(() => document.getElementById('show-universe')?.classList.contains('is-open'), null, { timeout: 8000 });
+            const vus = await plansDuPanneau(p);
+            exige(vus === 'eager/high eager/- lazy/- lazy/-', `panneau : les premières photos du travelling ne partent pas d’emblée (${vus})`);
+            exige(await allumee(), 'panneau : la première photo du travelling reste cachée');
+            const r = await visiteur({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+            const pr = await r.newPage();
+            await pr.goto(`${base}/#/univers/cleophene`, { waitUntil: 'load' });
+            await pr.waitForFunction(() => document.getElementById('show-universe')?.classList.contains('is-open'), null, { timeout: 8000 });
+            const reduits = await plansDuPanneau(pr);
+            exige(reduits === 'lazy/- lazy/- lazy/- lazy/-', `panneau, mouvement réduit : le travelling, qui n’est pas montré, part quand même (${reduits})`);
+            await r.close();
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
         });

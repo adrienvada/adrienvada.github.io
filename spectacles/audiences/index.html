@@ -42,6 +42,7 @@
     <link rel="preload" href="../../ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../ressources/polices/polices.css">
     <link rel="stylesheet" href="../../univers.css">
+    <link rel="preload" as="image" imagesrcset="../../ressources/images/univers/audiences/6-640.webp 640w, ../../ressources/images/univers/audiences/6-1280.webp 1280w" imagesizes="(orientation: portrait) 70vw, 40vw" fetchpriority="high" media="(prefers-reduced-motion: no-preference)">
 
     <!-- Le repli quand le script ne charge pas. Les mots du montage attendent
          à opacity 0 : sans JavaScript, la page serait un écran vide, et son
@@ -77,6 +78,18 @@
                     if (!window.Regie) racine.classList.remove('regie-repli');
                 }, 0);
             });
+            // Une photo du travelling paraît en fondu dès qu'elle arrive (voir
+            // .u-of-photo img dans univers.css) — sans attendre le moteur :
+            // la première arrive bien avant lui, et l'attendre la retenait
+            // 2,5 à 3,2 s de plus (téléphone, 4G lente, ×4). L'arrivée
+            // d'une image ne remonte pas jusqu'à la fenêtre : on l'écoute
+            // sur le document, à la descente. u-allume-plans les cache
+            // jusque-là.
+            racine.classList.add('u-allume-plans');
+            document.addEventListener('load', function (e) {
+                var img = e.target;
+                if (img.matches && img.matches('.u-of-photo img')) img.classList.add('est-decodee');
+            }, true);
         })();
     </script>
 
@@ -229,7 +242,7 @@
             <div class="u-of-scene">
                 <span class="u-of-fond" aria-hidden="true"></span>
                 <div class="u-of-titre rg-k"><div class="u-hero-wrap">
-        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/audiences/8-1280.webp" srcset="../../ressources/images/univers/audiences/8-640.webp 640w, ../../ressources/images/univers/audiences/8-1280.webp 1280w" sizes="100vw" alt="" decoding="async" style="object-position:45% 55%"></div>
+        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/audiences/8-1280.webp" srcset="../../ressources/images/univers/audiences/8-640.webp 640w, ../../ressources/images/univers/audiences/8-1280.webp 1280w" sizes="100vw" alt="" fetchpriority="low" decoding="async" style="object-position:45% 55%"></div>
 
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
@@ -300,9 +313,9 @@
                     <picture>
                     <source type="image/webp" media="(max-width: 900px)" srcset="../../ressources/images/univers/audiences/8-640.webp 640w, ../../ressources/images/univers/audiences/8-1280.webp 1280w, ../../ressources/images/univers/audiences/8-1920.webp 1920w" sizes="(orientation: portrait) 130vh, 100vw">
                     <img src="../../ressources/images/univers/audiences/8.jpg" class="u-fig-img rg-k" alt="Créé en résidence-jumelage au collège Boieldieu, à Rouen, avec tout le niveau de 4ᵉ." style="object-position:45% 55%"
-                         loading="eager" decoding="async">
+                         loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/8-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:45% 55%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/8-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:45% 55%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -321,7 +334,7 @@
                     <img src="../../ressources/images/univers/audiences/6.jpg" class="u-fig-img rg-k" alt="Audiences, photo 2" style="object-position:42% 20%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/6-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:42% 20%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/6-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:42% 20%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -336,7 +349,7 @@
                     <img src="../../ressources/images/univers/audiences/5.jpg" class="u-fig-img rg-k" alt="Audiences, photo 3" style="object-position:48% 18%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/5-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:48% 18%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/5-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:48% 18%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -351,7 +364,7 @@
                     <img src="../../ressources/images/univers/audiences/4.jpg" class="u-fig-img rg-k" alt="Très léger dans son installation, le spectacle se joue à une comédienne et deux comédiens, au sein des établissements scolaires comme dans les théâtres." style="object-position:62% 20%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/4-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:62% 20%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/4-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:62% 20%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -366,7 +379,7 @@
                     <img src="../../ressources/images/univers/audiences/1.jpg" class="u-fig-img rg-k" alt="Audiences, photo 5" style="object-position:48% 30%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/1-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:48% 30%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/1-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:48% 30%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -381,7 +394,7 @@
                     <img src="../../ressources/images/univers/audiences/2.jpg" class="u-fig-img rg-k" alt="Audiences, photo 6" style="object-position:35% 40%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/2-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:35% 40%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/2-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:35% 40%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
@@ -396,7 +409,7 @@
                     <img src="../../ressources/images/univers/audiences/3.jpg" class="u-fig-img rg-k" alt="Audiences, photo 7" style="object-position:60% 40%"
                          loading="lazy" decoding="async">
                 </picture>
-                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/3-flou.webp" alt="" aria-hidden="true" decoding="async" style="object-position:60% 40%">
+                    <img class="u-flou rg-k" src="../../ressources/images/univers/audiences/3-flou.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" style="object-position:60% 40%">
                 </span>
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>
             </button>
