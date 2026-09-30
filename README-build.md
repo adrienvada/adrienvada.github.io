@@ -3191,7 +3191,11 @@ répertoire, à la galerie et à la 404.
   classes : rien ne change de valeur, rien ne glisse. Le lien qu'on envoie à
   un théâtre, `adrienvada.fr/#page_dates`, montrait le CV 0,1 s au
   téléphone (0,5 à 0,7 s à ×4), puis repliait la bio et la prochaine date
-  sous les yeux : la barre d'onglets remontait de 263 px.
+  sous les yeux : la barre d'onglets remontait de 263 px. **Si le script de
+  la page n'a pas démarré** (Safari 12 ou 13, qui lit le garde du `<head>`
+  mais pas la syntaxe du reste ; une erreur avant le premier `showPage`), le
+  filet de `js-revele` retire aussi les deux drapeaux : on retombe sur le CV,
+  au lieu d'une page vide qui le cachait.
 - **La poursuite** : sur le portrait, la salle autour du visage est dans
   l'ombre ; à la souris, la lumière suit le pointeur (`suivrePoursuite`).
   Fixe au doigt et en mouvement réduit.
