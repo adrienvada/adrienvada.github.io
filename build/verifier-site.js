@@ -52,7 +52,10 @@
  *      les deux pilotes, et tout posé en mouvement réduit ; le doigt qui
  *      fait défiler n'y dévoile rien, la souris et le clavier si ;
  *    · la page 404 ;
- *    · le sitemap, qui doit annoncer toutes les pages spectacle.
+ *    · le sitemap, qui doit annoncer toutes les pages spectacle ;
+ *    · les variantes d'images qui suivent le montage : la vignette du CV
+ *      recadrée au cadre de sa couverture, la version écran large là où
+ *      variantes.json l'annonce, le portrait en AVIF.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
  *  dates sont coupées (le site sait s'en passer). Des représentations
@@ -2061,6 +2064,77 @@ function exige(condition, message) {
             const fantomes = annoncees.filter((a) => !dossiers.includes(a));
             exige(!manquantes.length, `absentes du sitemap : ${manquantes.join(', ')}`);
             exige(!fantomes.length, `annoncées sans exister : ${fantomes.join(', ')}`);
+        });
+
+        // LES VARIANTES QUI DÉPENDENT D'AUTRE CHOSE QUE DE LA PHOTO (voir
+        // build/variantes-images.py). La vignette du CV (<nom>-v.webp) est
+        // recadrée au `cadre` de la couverture : changer ce cadre sans
+        // relancer le script la laisserait cadrée ailleurs, sans un mot. La
+        // version écran large (<nom>-2400.webp) n'existe que pour les photos
+        // qui y gagnent : une page qui en demanderait une absente montrerait
+        // une image cassée sur ordinateur. variantes.json dit ce que le
+        // script a fait ; on le confronte à univers.js, aux JPEG et au disque.
+        await verifie('les variantes d’images suivent le montage : la vignette du CV recadrée au cadre de chaque couverture, en 144 × 192 ; une version écran large là où variantes.json l’annonce, et nulle part ailleurs ; le portrait en AVIF, plus léger que sa WebP', async () => {
+            const crypto = require('crypto');
+            const UNIVERS = path.join(RACINE, 'ressources/images/univers');
+            const memoire = JSON.parse(fs.readFileSync(path.join(UNIVERS, 'variantes.json'), 'utf8'));
+            const empreinte = (cle) => crypto.createHash('sha1')
+                .update(fs.readFileSync(path.join(UNIVERS, cle + '.jpg'))).digest('hex').slice(0, 12);
+
+            const c = await visiteur();
+            const p = await c.newPage();
+            await p.goto(base + '/', { waitUntil: 'load' });
+            const couvertures = await p.evaluate(async () => {
+                const out = [];
+                for (const uni of Object.values(SHOW_UNIVERSES)) {
+                    const cv = UniversMontage.couverture(uni);
+                    if (!cv) continue;
+                    const img = new Image();
+                    img.src = cv.src.replace(/-240\.webp$/, '-v.webp');
+                    const lue = await img.decode().then(() => true, () => false);
+                    out.push({
+                        cle: cv.src.replace(/^.*univers\//, '').replace(/-240\.webp$/, ''),
+                        cadre: cv.pos || '50% 50%', lue, l: img.naturalWidth, h: img.naturalHeight
+                    });
+                }
+                return out;
+            });
+            await c.close();
+            exige(couvertures.length >= 5, `${couvertures.length} couverture(s) seulement`);
+            for (const v of couvertures) {
+                const m = memoire.v[v.cle];
+                exige(v.lue && v.l === 144 && v.h === 192, `${v.cle}-v.webp manque ou n’est pas en 144 × 192 : python3 build/variantes-images.py`);
+                exige(m && m.cadre === v.cadre, `${v.cle}-v.webp est cadrée à « ${m && m.cadre} », la couverture à « ${v.cadre} » : python3 build/variantes-images.py`);
+                exige(m.empreinte === empreinte(v.cle), `${v.cle}.jpg a changé depuis sa vignette : python3 build/variantes-images.py`);
+            }
+
+            for (const [cle, m] of Object.entries(memoire['2400'])) {
+                const existe = fs.existsSync(path.join(UNIVERS, `${cle}-2400.webp`));
+                exige(existe === (m.qualite != null), `${cle}-2400.webp ${existe ? 'existe alors que variantes.json dit qu’elle n’a pas lieu d’être' : 'manque'}`);
+                exige(m.empreinte === empreinte(cle), `${cle}.jpg a changé depuis sa version écran large : python3 build/variantes-images.py`);
+            }
+            const inconnues = fs.readdirSync(UNIVERS, { withFileTypes: true }).filter((d) => d.isDirectory())
+                .flatMap((d) => fs.readdirSync(path.join(UNIVERS, d.name)).filter((f) => f.endsWith('-2400.webp'))
+                    .map((f) => `${d.name}/${f.replace(/-2400\.webp$/, '')}`))
+                .filter((cle) => !(memoire['2400'][cle] && memoire['2400'][cle].qualite != null));
+            exige(!inconnues.length, `version(s) écran large inconnue(s) de variantes.json : ${inconnues.join(', ')}`);
+
+            // Ce que citent les pages écrites en dur : aucune version écran
+            // large, aucune vignette recadrée, aucun AVIF qui n'existe pas.
+            const pages = ['index.html', 'galerie/index.html', ...dossiers.map((d) => `spectacles/${d}/index.html`)];
+            for (const page of pages) {
+                const html = fs.readFileSync(path.join(RACINE, page), 'utf8');
+                for (const [, cible] of html.matchAll(/((?:\.\.\/)*ressources\/images\/[^"'\s,]+(?:-2400\.webp|-v\.webp|\.avif))/g)) {
+                    exige(fs.existsSync(path.join(RACINE, cible.replace(/^(\.\.\/)+/, ''))), `${page} demande ${cible}, qui n’existe pas`);
+                }
+            }
+
+            for (const l of [480, 720, 960]) {
+                const avif = path.join(RACINE, `ressources/images/portrait-affiche-${l}.avif`);
+                exige(fs.existsSync(avif), `portrait-affiche-${l}.avif manque : python3 build/variantes-images.py`);
+                const webp = fs.statSync(path.join(RACINE, `ressources/images/portrait-affiche-${l}.webp`)).size;
+                exige(fs.statSync(avif).size < webp, `portrait-affiche-${l}.avif ne pèse pas moins que sa WebP`);
+            }
         });
     } finally {
         await navigateur.close();

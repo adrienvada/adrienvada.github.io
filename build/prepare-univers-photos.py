@@ -244,9 +244,12 @@ def main():
     print(f"\n{total} photos préparées depuis les originaux.")
 
     # LES VERSIONS ALLÉGÉES SUIVENT. Les pages proposent aux téléphones une
-    # copie en 640 et 1280 px de chaque photo (voir build/variantes-images.py) :
-    # une photo refaite ici sans elles laisserait le téléphone sur l'ancienne
-    # image. On les refait donc pour les seuls fichiers qu'on vient d'écrire.
+    # copie en 640 et 1280 px de chaque photo, à l'écran large une version
+    # WebP de 2400 px, au CV une vignette recadrée (voir
+    # build/variantes-images.py) : une photo refaite ici sans elles laisserait
+    # le visiteur sur l'ancienne image. On les refait donc pour les seuls
+    # fichiers qu'on vient d'écrire — la version écran large et la vignette
+    # seulement si le JPEG a vraiment changé.
     variantes = os.path.join(os.path.dirname(os.path.abspath(__file__)), "variantes-images.py")
     if ecrites:
         subprocess.run([sys.executable, variantes] + ecrites, check=True)
