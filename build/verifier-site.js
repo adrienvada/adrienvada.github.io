@@ -344,9 +344,29 @@ function exige(condition, message) {
                 }))).observe(document.getElementById('show-universe'), { childList: true, subtree: true });
                 return { y: scrollY, haut: document.querySelector(sel).getBoundingClientRect().top };
             }, sel);
+            // Un clic sur la ligne qui n'aboutit pas dit ce qui l'en empêche :
+            // vu une fois sur la machine des demandes de fusion (délai de 30 s
+            // dépassé), jamais ici, même au processeur ralenti huit fois.
+            const cliquerLigne = async (sel, etape) => {
+                try {
+                    await p.click(sel, { timeout: 15000 });
+                } catch (e) {
+                    const etat = await p.evaluate((sel) => {
+                        const el = document.querySelector(sel);
+                        const r = el && el.getBoundingClientRect();
+                        const dessus = r && document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+                        const o = document.getElementById('show-universe');
+                        return `panneau ${o.hidden ? 'caché' : 'affiché'}${o.classList.contains('is-open') ? ', ouvert' : ''}`
+                            + `, page ${document.getElementById('site')?.inert ? 'inerte' : 'active'}`
+                            + `, <html> « ${document.documentElement.className} »`
+                            + `, sous le pointeur ${dessus ? dessus.tagName.toLowerCase() + (dessus.id ? '#' + dessus.id : '') + '.' + String(dessus.className).split(' ')[0] : 'rien'}`;
+                    }, sel).catch(() => 'état illisible');
+                    throw new Error(`${etape} : la ligne ne se laisse pas cliquer (${etat})`);
+                }
+            };
             const finDuPassage = () => p.waitForFunction(() => document.getElementById('show-universe').classList.contains('is-open')
                 && !document.documentElement.classList.contains('vt-univers'), null, { timeout: 8000, polling: 5 });
-            await p.click(sel);
+            await cliquerLigne(sel, 'première ouverture');
             await finDuPassage();
             await p.waitForTimeout(2500);
             const ouvert = await p.evaluate(() => {
@@ -375,7 +395,7 @@ function exige(condition, message) {
             exige(ferme.focus, 'le focus n’est pas revenu sur la ligne');
             // Rouvert, et « Accéder aux dates » dès la fin du passage.
             await p.waitForTimeout(300);
-            await p.click(await viser());
+            await cliquerLigne(await viser(), 'réouverture');
             await finDuPassage();
             await p.evaluate(() => document.querySelector('#show-universe [data-u-jump]').click());
             await p.waitForTimeout(2000);
@@ -394,7 +414,7 @@ function exige(condition, message) {
             // une fois le passage fini et le pied part 10 000 px plus bas.
             await p.keyboard.press('Escape');
             await p.waitForTimeout(1500);
-            await p.click(await viser());
+            await cliquerLigne(await viser(), 'ouverture pour le saut pendant le passage');
             await p.waitForFunction(() => document.documentElement.classList.contains('vt-univers')
                 && document.querySelector('#show-universe.is-open [data-u-jump]'), null, { timeout: 8000, polling: 5 });
             const dansLePassage = await p.evaluate(() => {
