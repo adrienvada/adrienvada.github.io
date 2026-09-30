@@ -1895,10 +1895,18 @@ function exige(condition, message) {
             const onglet = await p.evaluate(() => {
                 const t = document.getElementById('tab-page_dates').getBoundingClientRect();
                 const pa = document.querySelector('.onglet-pastille').getBoundingClientRect();
-                return { page: document.querySelector('.page.active')?.id, ecart: Math.abs(t.left - pa.left) + Math.abs(t.width - pa.width) };
+                const pastille = document.querySelector('.onglet-pastille');
+                return {
+                    page: document.querySelector('.page.active')?.id,
+                    ecart: Math.abs(t.left - pa.left) + Math.abs(t.width - pa.width),
+                    // De quoi comprendre un écart vu ailleurs qu'ici.
+                    detail: `onglet ${t.left.toFixed(1)} + ${t.width.toFixed(1)}, pastille ${pa.left.toFixed(1)} + ${pa.width.toFixed(1)}`
+                        + ` (--x ${pastille.style.getPropertyValue('--x')}, --w ${pastille.style.getPropertyValue('--w')}, ${pastille.className}),`
+                        + ` polices ${document.fonts.status}, barre « ${document.getElementById('nav-barre')?.className || ''} », défilement ${Math.round(scrollY)}`
+                };
             });
             exige(onglet.page === 'page_dates', 'le changement d’onglet ne pose pas la page');
-            exige(onglet.ecart < 2, `la pastille n’a pas rejoint l’onglet (${onglet.ecart.toFixed(1)} px d’écart)`);
+            exige(onglet.ecart < 2, `la pastille n’a pas rejoint l’onglet (${onglet.ecart.toFixed(1)} px d’écart : ${onglet.detail})`);
             // Le sens du passage est une classe : écrit sur <html>, il
             // recalculait tout le document avant chaque changement d'onglet.
             exige(!(await p.evaluate(() => document.documentElement.style.getPropertyValue('--onglet-dx'))),

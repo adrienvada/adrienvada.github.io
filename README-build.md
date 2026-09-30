@@ -1593,7 +1593,12 @@ Le fond et le filet de l'onglet actif sont une **pastille** qui
 glisse d'un onglet à l'autre sur un ressort (`placerPastille`, et
 `--ease-ressort`) ; l'onglet ne garde que sa couleur, et sa bordure reste
 transparente (l'onglet actif prenait le gris par défaut de Tailwind, hors
-thème). **Les onglets naissent dans leur couleur** : le balisage porte celle
+thème). Elle se **recale** sans glisser (`recalerPastille`, seulement si elle
+n'est plus sous son onglet) quand la barre ou un onglet change de taille,
+quand une police arrive (`loadingdone` : `fonts.ready` peut se résoudre avant
+qu'elle soit demandée) et à la fin de chaque passage d'onglet. Sur une machine
+chargée, Montserrat arrivait après le clic et la pastille restait 4 px à côté
+de l'onglet Dates. **Les onglets naissent dans leur couleur** : le balisage porte celle
 du CV actif et des trois autres au repos — posées au démarrage, après le
 premier rendu, elles glissaient 300 ms à chaque arrivée —, et ils n'ont plus
 de `transition-all` : la règle commune des liens (couleurs, enfoncement) leur

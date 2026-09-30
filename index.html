@@ -12370,7 +12370,12 @@
             const passage = document.startViewTransition(() => poserPage(pageId, animate));
             passage.finished.finally(() => {
                 if (voyage) portrait.style.viewTransitionName = '';
-                if (jeton === passageOnglet) html.classList.remove('vt-onglet');
+                if (jeton === passageOnglet) {
+                    html.classList.remove('vt-onglet');
+                    // Ce qui a bougé pendant le passage (une police arrivée,
+                    // la page recadrée) : la pastille finit sous son onglet.
+                    recalerPastille();
+                }
             });
             return passage.updateCallbackDone.catch(() => { });
         }
@@ -12438,13 +12443,43 @@
             pastille.style.setProperty('--h', onglet.offsetHeight + 'px');
         }
 
+        // Recaler la pastille sous l'onglet actif, sans glisser — et seulement
+        // si elle n'y est plus : les onglets bougent quand la barre change de
+        // taille, quand une police arrive, et un onglet peut se déplacer sans
+        // changer de taille (son voisin s'est resserré). Vu sur une machine
+        // chargée : Montserrat arrivée après le clic, l'onglet CV plus étroit
+        // de 1,7 px, et la pastille restée 4 px à côté de l'onglet Dates.
+        function recalerPastille() {
+            const onglet = document.querySelector('#nav-tabs-container a[aria-current="page"]');
+            const pastille = document.querySelector('#nav-tabs-container .onglet-pastille');
+            if (!onglet || !pastille) return;
+            if (pastille.style.getPropertyValue('--x') === onglet.offsetLeft + 'px'
+                && pastille.style.getPropertyValue('--y') === onglet.offsetTop + 'px'
+                && pastille.style.getPropertyValue('--w') === onglet.offsetWidth + 'px'
+                && pastille.style.getPropertyValue('--h') === onglet.offsetHeight + 'px') return;
+            placerPastille(onglet, false);
+        }
+
         // Les onglets changent de largeur avec la barre, et quand la police
         // arrive : la pastille les suit, sans glisser.
         addEventListener('DOMContentLoaded', () => {
-            const replacer = () => placerPastille(document.querySelector('#nav-tabs-container a[aria-current="page"]'), false);
+            const replacer = recalerPastille;
             const barre = document.getElementById('nav-tabs-container');
-            if (barre && 'ResizeObserver' in window) new ResizeObserver(replacer).observe(barre);
+            if (barre && 'ResizeObserver' in window) {
+                const suivi = new ResizeObserver(replacer);
+                suivi.observe(barre);
+                // Et chaque onglet : sa largeur peut changer sans que la barre
+                // change de taille (une police qui arrive tard, un style de la
+                // barre). La pastille restait alors décalée de quelques pixels
+                // — 4 px vus sur la machine lente des demandes de fusion.
+                // Changer d'onglet ne change que la couleur : rien n'est
+                // observé pendant le glissement.
+                barre.querySelectorAll('a[id^="tab-"]').forEach(a => suivi.observe(a));
+            }
             if (document.fonts && document.fonts.ready) document.fonts.ready.then(replacer);
+            // fonts.ready peut se résoudre avant qu'une police ne soit même
+            // demandée : chaque police arrivée recale aussi.
+            if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', replacer);
         });
 
         function poserPage(pageId, animate) {
