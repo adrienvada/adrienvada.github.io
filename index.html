@@ -8145,9 +8145,9 @@
                     <div class="no-print" id="dates-filters">
                         <div class="dates-outils">
                             <div class="dates-vue" role="group" aria-label="Ranger les dates">
-                                <button type="button" data-dates-vue="date" aria-pressed="true"
+                                <button type="button" data-dates-vue="date" aria-pressed="false"
                                     data-track="dates_vue" data-track-detail="date">Par date</button>
-                                <button type="button" data-dates-vue="spectacle" aria-pressed="false"
+                                <button type="button" data-dates-vue="spectacle" aria-pressed="true"
                                     data-track="dates_vue" data-track-detail="spectacle">Par spectacle</button>
                             </div>
                             <button type="button" id="dates-search-open" aria-expanded="false"
@@ -10147,8 +10147,8 @@
             dlSaisonOuvrir(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
 
         // Le rangement choisi est retenu d'une visite à l'autre.
-        let dlVue = 'date';
-        try { if (localStorage.getItem('av.datesVue') === 'spectacle') dlVue = 'spectacle'; } catch (e) { /* stockage indisponible */ }
+        let dlVue = 'spectacle';
+        try { if (localStorage.getItem('av.datesVue') === 'date') dlVue = 'date'; } catch (e) { /* stockage indisponible */ }
 
         function dlChoisirVue(vue) {
             if ((vue !== 'date' && vue !== 'spectacle') || vue === dlVue) return;
