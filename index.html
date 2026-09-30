@@ -346,6 +346,16 @@
     <link rel="preload" href="/ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
 
+    <!-- LA BASE DES DATES, CONNECTÉE D'AVANCE. dates-live.js ne part
+         qu'en fin de page, 40 ko plus loin : la connexion à Supabase (DNS,
+         TCP, TLS — trois ou quatre allers-retours en 4G) s'ouvre ici,
+         pendant que la page arrive. `crossorigin` : la lecture est une
+         requête CORS sans identifiants, et une connexion ouverte sans cet
+         attribut ne lui servirait pas. Le gain ne se voit pas dans
+         l'émulation de DevTools, qui ne rejoue pas l'établissement d'une
+         connexion ; il est pour les vrais réseaux mobiles. -->
+    <link rel="preconnect" href="https://omekkqjinvppadsoinvj.supabase.co" crossorigin>
+
     <!-- LES PAGES SPECTACLE ET LA GALERIE, PRÉPARÉES AU SURVOL. Chaque clic
          vers une fiche (67 liens dans l'onglet Dates) refaisait tout :
          la page, ses feuilles, ses scripts, puis le démarrage du moteur.
@@ -401,8 +411,12 @@
          <body>, et build/construire-sprite-icones.py) : une quinzaine de
          kilo-octets, aucune requête, rien à demander à un tiers. -->
 
+    <!-- L'icône d'onglet en PNG, 32 et 96 px. favicon.svg n'était pas un
+         dessin : un PNG de 256 px en base64 dans un <svg>, 128 Ko (97
+         compressés), que Chrome et Firefox préféraient aux PNG déclarés —
+         14 % des octets de l'accueil pour une icône de 16 px. -->
+    <link rel="icon" type="image/png" href="/favicon_io/favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="/favicon_io/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon_io/favicon.svg" />
     <link rel="shortcut icon" href="favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Adrien Vada" />

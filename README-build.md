@@ -1373,6 +1373,14 @@ la page se rabat sur la version de 640 px.
   elle ne permet que ce que les règles d'accès autorisent aux anonymes,
   c'est-à-dire lire. La clé « secret » du projet ne doit jamais entrer dans
   ce dépôt.
+- **La lecture est une requête simple, préparée d'avance.** La clé passe
+  dans l'adresse (`&apikey=…`) et non dans un en-tête : un en-tête inventé
+  coûtait un pré-vol `OPTIONS`, un aller-retour de plus à la première
+  visite, pris sur les trois secondes. Elle ne demande que les colonnes que
+  le site lit (`COLONNES`, dans `dates-live.js`) — à compléter si
+  `versShowData` en lit un jour une nouvelle, sans quoi elle arrivera vide.
+  L'accueil ouvre la connexion dès son `<head>` (`preconnect`). `/admin/`
+  n'est pas concerné : il passe par supabase-js, avec son en-tête.
 - **Le projet Supabase gratuit se met en pause après une semaine sans
   requête.** Le workflow `.github/workflows/reveiller-supabase.yml` fait une
   lecture deux fois par semaine pour l'en empêcher. Si malgré tout le site

@@ -155,7 +155,15 @@
 
     // Toute la table, triée par jour : le site fait lui-même le partage
     // entre à-venir et passé (splitUpcoming), comme pour dates.js.
-    const ADRESSE_LECTURE = `${SUPABASE_URL}/rest/v1/${TABLE}?select=*&order=jour.asc,heure.asc`;
+    //
+    // LES COLONNES QUE LIT versShowData, ET ELLES SEULES — pas `select=*`.
+    // cree_le et modifie_le ne servent nulle part : un cinquième de la
+    // réponse en moins (1 383 → 1 111 octets compressés), et une colonne
+    // ajoutée un jour à la table ne partira pas chez chaque visiteur sans
+    // qu'on l'ait décidé. /admin/ passe par supabase-js et lit ce qu'il
+    // veut ; build/exporter-dates.js lit cette adresse-ci.
+    const COLONNES = 'id,spectacle,lieu,ville,jour,heure,reservation_url,scolaire';
+    const ADRESSE_LECTURE = `${SUPABASE_URL}/rest/v1/${TABLE}?select=${COLONNES}&order=jour.asc,heure.asc`;
 
     const api = { SUPABASE_URL, SUPABASE_CLE, TABLE, ADRESSE_LECTURE, versShowData, typographie, lienSur, jourCourt, jourLong };
 
@@ -169,7 +177,16 @@
     const garde = new AbortController();
     const minuteur = setTimeout(() => garde.abort(), DELAI_MS);
 
-    fetch(ADRESSE_LECTURE, { headers: { apikey: SUPABASE_CLE }, signal: garde.signal })
+    // LA CLÉ DANS L'ADRESSE, ET NON DANS UN EN-TÊTE. Un en-tête inventé
+    // (`apikey`) fait de la lecture une requête « non simple » : le
+    // navigateur envoie d'abord un pré-vol OPTIONS et attend sa réponse —
+    // un aller-retour de plus à la première visite, sur les trois secondes
+    // qu'on laisse à la base (DELAI_MS). Supabase accepte la même clé en
+    // paramètre (réponse identique, octet pour octet), et elle est
+    // publique par construction (voir plus haut) : la voir passer dans une
+    // adresse ne donne rien de plus. /admin/ garde l'en-tête : ses
+    // écritures portent de toute façon une session, donc un pré-vol.
+    fetch(`${ADRESSE_LECTURE}&apikey=${encodeURIComponent(SUPABASE_CLE)}`, { signal: garde.signal })
         .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
         .then(lignes => {
             if (!Array.isArray(lignes) || !lignes.length) return;
