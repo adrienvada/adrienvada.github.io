@@ -297,6 +297,22 @@
         //  publique (l'accueil, la 404, les pages générées) ; pas /admin/.
         (function () {
             if (!('serviceWorker' in navigator)) return;
+            // PAS SUR L'APERÇU CLOUDFLARE (les adresses en .workers.dev, voir
+            // README-build.md, « Regarder une branche ») : on l'y garde
+            // ouvert et on recharge après chaque poussée ; une photo
+            // remplacée sous le même nom y était servie ancienne au premier
+            // rechargement, et l'aperçu ne montrait plus ce qui sera publié.
+            // Celui qu'une visite passée y a inscrit est retiré, ses caches
+            // avec : le rechargement suivant va au réseau.
+            if (/\.workers\.dev$/.test(location.hostname)) {
+                navigator.serviceWorker.getRegistrations().then(function (rs) {
+                    rs.forEach(function (r) { r.unregister(); });
+                }).catch(function () { });
+                if (window.caches) caches.keys().then(function (ks) {
+                    ks.forEach(function (k) { if (k.indexOf('av-') === 0) caches.delete(k); });
+                }).catch(function () { });
+                return;
+            }
             addEventListener('load', function () {
                 var servie = !!navigator.serviceWorker.controller;
                 navigator.serviceWorker.register('/sw.js').then(function () {

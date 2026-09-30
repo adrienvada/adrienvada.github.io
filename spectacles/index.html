@@ -58,6 +58,16 @@
         // chargement — le même bloc que l'accueil (voir son <head>).
         (function () {
             if (!('serviceWorker' in navigator)) return;
+            // Pas sur l'aperçu Cloudflare : voir le même bloc dans l'accueil.
+            if (/\.workers\.dev$/.test(location.hostname)) {
+                navigator.serviceWorker.getRegistrations().then(function (rs) {
+                    rs.forEach(function (r) { r.unregister(); });
+                }).catch(function () { });
+                if (window.caches) caches.keys().then(function (ks) {
+                    ks.forEach(function (k) { if (k.indexOf('av-') === 0) caches.delete(k); });
+                }).catch(function () { });
+                return;
+            }
             addEventListener('load', function () {
                 var servie = !!navigator.serviceWorker.controller;
                 navigator.serviceWorker.register('/sw.js').then(function () {
