@@ -2693,6 +2693,29 @@ function exige(condition, message) {
             exige(!dates.glisse.length, `arrivée sur /#page_dates : ${dates.glisse.length} transition(s) au démarrage, dont ${dates.glisse.slice(0, 3).join(', ')}`);
             exige(!dates.collee, 'arrivée sur /#page_dates : la barre se dit collée');
 
+            // Contre-épreuve : le script de la page ne démarre pas (Safari 12
+            // ou 13 lit le garde du <head>, pas la syntaxe du reste). Les
+            // drapeaux d'arrivée cachaient alors le CV pour toujours ; le
+            // filet du <head> doit les retirer et rendre le CV.
+            const c2 = await visiteur({ viewport: { width: 390, height: 664 } });
+            await c2.route(/\/(univers|univers-montage|dates-live)\.js$/, (r) => r.fulfill({ contentType: 'text/javascript', body: '@' }));
+            await c2.route((u) => u.href === base + '/', async (r) => {
+                const rep = await r.fetch();
+                const h = await rep.text();
+                const blocs = [...h.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+                const principal = blocs.reduce((a, m) => (m[1].length > a[1].length ? m : a));
+                r.fulfill({ response: rep, body: h.slice(0, principal.index) + '<script>@' + h.slice(principal.index + 8) });
+            });
+            const p2 = await c2.newPage();
+            await p2.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await p2.waitForTimeout(300);
+            const panne = await p2.evaluate(() => ({
+                cv: getComputedStyle(document.getElementById('page_cv')).display !== 'none',
+                drapeaux: document.documentElement.hasAttribute('data-arrivee') || document.documentElement.classList.contains('arrivee-hors-cv')
+            }));
+            exige(panne.cv && !panne.drapeaux, `arrivée sur /#page_dates sans le script de la page : le CV ${panne.cv ? 'est là' : 'reste caché'}, drapeaux d’arrivée ${panne.drapeaux ? 'restés' : 'retirés'}`);
+            await c2.close();
+
             await p.goto(base + '/', { waitUntil: 'load' });
             await p.waitForTimeout(700);
             const cv = await lire();

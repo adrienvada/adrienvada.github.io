@@ -45,15 +45,20 @@
                 // Après les autres écouteurs du même événement : c'est l'un
                 // d'eux qui lève le drapeau __revelePret.
                 setTimeout(function () {
-                    if (window.__revelePret) return;
-                    racine.classList.remove('js-revele');
+                    if (!window.__revelePret) racine.classList.remove('js-revele');
                     // Même filet pour l'arrivée sur un autre onglet (voir
                     // « L'arrivée sur un autre onglet ») : data-arrivee cache
-                    // le CV en attendant que le script montre la page visée.
-                    // S'il n'a pas démarré — Safari 12 ou 13 lit ce garde-ci,
-                    // pas la syntaxe du reste —, on rend le CV et l'affiche.
-                    racine.removeAttribute('data-arrivee');
-                    racine.classList.remove('arrivee-hors-cv');
+                    // le CV en attendant que le premier poserPage montre la
+                    // page visée, et c'est lui qui le retire. Encore là, c'est
+                    // que le routage n'a pas eu lieu : un script qui n'a pas
+                    // démarré — Safari 12 ou 13 lit ce garde-ci, pas la
+                    // syntaxe du reste —, ou une erreur avant le premier
+                    // poserPage, le dessin des Dates compris. On rend le CV
+                    // et l'affiche, au lieu d'une page vide qui les cachait.
+                    if (racine.hasAttribute('data-arrivee')) {
+                        racine.removeAttribute('data-arrivee');
+                        racine.classList.remove('arrivee-hors-cv');
+                    }
                 }, 0);
             });
         })();
@@ -1113,7 +1118,10 @@
            de .bio-hidden. Le premier poserPage pose les vraies classes et
            retire les deux drapeaux dans le même geste : rien ne change de
            valeur, rien ne glisse. Sans JavaScript, ni l'un ni l'autre :
-           toutes les pages à la suite, comme toujours. */
+           toutes les pages à la suite, comme toujours. Et si le script
+           n'a pas démarré (Safari 12 ou 13) ou s'est arrêté avant le
+           premier poserPage, le filet du <head> (voir js-revele) retire
+           les deux drapeaux après DOMContentLoaded : le CV revient. */
         html[data-arrivee] #page_cv.page.active {
             display: none;
         }

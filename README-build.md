@@ -214,6 +214,9 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   le médaillon rond d'avant — dès le premier rendu quand on arrive sur un
   autre onglet ; sur papier, l'en-tête d'avant (médaillon de 68 px, nom en
   Montserrat) ;
+- arriver par un lien vers un onglet (`/#page_dates`) : la page visée dès le
+  premier rendu, sans CV ni repli qui glisse — et le CV revient si le script
+  de la page ne démarre pas (voir [Le portrait d'affiche](#le-portrait-daffiche)) ;
 - la salle de projection : la bobine a ses deux extraits à leur début
   (L'Homme moderne à 0:00, Le rapt à 1:21), le halo est peint, « Le rapt »
   éteint la salle et lance le lecteur à 1:21 avec son API de messages, la
@@ -3207,9 +3210,11 @@ répertoire, à la galerie et à la 404.
   téléphone (0,5 à 0,7 s à ×4), puis repliait la bio et la prochaine date
   sous les yeux : la barre d'onglets remontait de 263 px. **Si le script de
   la page n'a pas démarré** (Safari 12 ou 13, qui lit le garde du `<head>`
-  mais pas la syntaxe du reste ; une erreur avant le premier `showPage`), le
-  filet de `js-revele` retire aussi les deux drapeaux : on retombe sur le CV,
-  au lieu d'une page vide qui le cachait.
+  mais pas la syntaxe du reste ; une erreur avant le premier `poserPage`, le
+  dessin des Dates compris), le filet de `js-revele` retire aussi les deux
+  drapeaux, qu'il trouve encore posés après `DOMContentLoaded` : on retombe
+  sur le CV, au lieu d'une page vide qui le cachait. Le vérificateur le
+  rejoue, le script de la page rendu illisible.
 - **La poursuite** : sur le portrait, la salle autour du visage est dans
   l'ombre ; à la souris, la lumière suit le pointeur (`suivrePoursuite`).
   Fixe au doigt et en mouvement réduit.
