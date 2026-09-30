@@ -320,8 +320,9 @@ function exige(condition, message) {
                         ]
                     }
                 ];
-                buildFilterChips();
-                renderDates();
+                // Comme à l'arrivée des dates en direct : l'onglet, et les
+                // données structurées avec lui.
+                datesMisesAJour();
                 renderNextDate();
             });
             const parDate = await p.evaluate(() => {
@@ -601,6 +602,130 @@ function exige(condition, message) {
                 'le sommaire ne mène pas à la ligne visée');
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
+        });
+
+        await verifie('l’onglet Dates ne se dessine que quand il sert : rien au démarrage, tout au repos ou à l’ouverture — même d’un toucher précoce —, avec les dates du moment ; les données structurées disent toute la saison, même pendant une recherche ; la recherche compte à la frappe, le rangement ne refait que la liste ; des dates en direct identiques ne redessinent rien', async () => {
+            // Une saison fictive, posée à la fin du démarrage (un écouteur sur
+            // window passe après ceux du document) : le premier dessin, qui
+            // vient après, doit la montrer.
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            await c.addInitScript(() => window.addEventListener('DOMContentLoaded', () => {
+                if (typeof SHOW_DATA === 'undefined') return;   // un cadre de la page, pas l'accueil
+                window.__auDemarrage = {
+                    compte: document.getElementById('dates-count')?.textContent || '',
+                    ld: !!document.getElementById('events-jsonld')
+                };
+                const iso = (n) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + n);
+                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                };
+                const date = (n, titre) => ({ type: 'single', title: titre, location: 'Scène de vérification (76)', city: 'Rouen', dateLabel: iso(n), icsDate: iso(n), time: '20h00', bookingUrl: '', isSchool: false });
+                SHOW_DATA.upcoming = [date(20, 'Bérénice'), date(30, 'Spectacle de vérification')];
+            }));
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/', { waitUntil: 'load' });
+            const demarrage = await p.evaluate(() => window.__auDemarrage);
+            exige(demarrage && !demarrage.compte && !demarrage.ld, `l’onglet Dates, caché, est dessiné au démarrage : ${JSON.stringify(demarrage)}`);
+            await p.waitForFunction(() => !!document.getElementById('events-jsonld'), null, { timeout: 8000 }).catch(() => { });
+            const repos = await p.evaluate(() => ({
+                lignes: document.querySelectorAll('#upcoming-dates-container .dl').length,
+                ld: JSON.parse(document.getElementById('events-jsonld')?.textContent || '[]').map((e) => e.name).join(),
+                cache: !document.getElementById('page_dates').classList.contains('active')
+            }));
+            exige(repos.cache && repos.lignes === 2 && repos.ld === 'Bérénice,Spectacle de vérification',
+                `au repos, l’onglet Dates n’est pas dessiné avec les dates du moment, ou les données structurées manquent : ${JSON.stringify(repos)}`);
+
+            // La recherche : le compte (lu par les lecteurs d'écran) change à
+            // la frappe, la liste à l'image suivante ; les données
+            // structurées ne bougent pas.
+            await p.click('#tab-page_dates');
+            await p.waitForTimeout(700);
+            const recherche = await p.evaluate(() => new Promise((fin) => {
+                const ld = () => document.getElementById('events-jsonld')?.textContent || '';
+                const avant = ld();
+                const s = document.getElementById('dates-search');
+                s.value = 'zzzz';
+                s.dispatchEvent(new Event('input', { bubbles: true }));
+                const compte = document.getElementById('dates-count').textContent;
+                requestAnimationFrame(() => setTimeout(() => {
+                    const r = { compte, vide: !!document.querySelector('#upcoming-dates-container .dl-vide'), ld: !!avant && ld() === avant };
+                    s.value = '';
+                    s.dispatchEvent(new Event('input', { bubbles: true }));
+                    fin(r);
+                }, 50));
+            }));
+            exige(recherche.compte === 'Aucune représentation' && recherche.vide,
+                `la recherche ne compte pas à la frappe, ou ne vide pas la liste : ${JSON.stringify(recherche)}`);
+            exige(recherche.ld, 'les données structurées ont changé pendant une recherche : elles doivent dire toute la saison');
+            await p.waitForTimeout(300);
+            // Le rangement ne refait que la liste : le sommaire et les archives restent les mêmes nœuds.
+            const rangement = await p.evaluate(() => {
+                const sommaire = document.querySelector('#dates-sommaire nav');
+                const archives = document.getElementById('archived-seasons-container').firstElementChild;
+                document.querySelector('[data-dates-vue="spectacle"]').click();
+                const r = {
+                    liste: document.querySelectorAll('#upcoming-dates-container .dl-groupe--spectacle').length,
+                    sommaire: !!sommaire && sommaire === document.querySelector('#dates-sommaire nav'),
+                    archives: archives === document.getElementById('archived-seasons-container').firstElementChild
+                };
+                document.querySelector('[data-dates-vue="date"]').click();
+                return r;
+            });
+            exige(rangement.liste === 2 && rangement.sommaire && rangement.archives,
+                `changer de rangement refait plus que la liste : ${JSON.stringify(rangement)}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+
+            // Un toucher sur l'onglet dès le démarrage, avant le repos : tout est là.
+            const c2 = await visiteur({ viewport: { width: 390, height: 844 } });
+            const p2 = await c2.newPage();
+            const erreurs2 = guette(p2);
+            await p2.goto(base + '/', { waitUntil: 'domcontentloaded' });
+            await p2.click('#tab-page_dates');
+            await p2.waitForTimeout(700);
+            const tot = await p2.evaluate(() => ({
+                actif: document.getElementById('page_dates').classList.contains('active'),
+                compte: document.getElementById('dates-count').textContent,
+                puces: document.querySelectorAll('#filter-shows [data-filter-group]').length,
+                haut: document.getElementById('upcoming-dates-container').offsetHeight
+            }));
+            exige(tot.actif && tot.compte && tot.puces > 0 && tot.haut > 0, `un toucher précoce sur l’onglet Dates ouvre un onglet incomplet : ${JSON.stringify(tot)}`);
+            exige(!erreurs2.length, erreurs2.join(' | '));
+            await c2.close();
+
+            // Les dates en direct : la base répond ce que dates.js contient
+            // déjà (le lendemain d'un export) — rien n'est redessiné ; une
+            // heure change — l'onglet et le tableau de gare suivent.
+            const donnees = new Function(fs.readFileSync(path.join(RACINE, 'dates.js'), 'utf8') + '; return SHOW_DATA;')();
+            const lignes = [];
+            donnees.upcoming.forEach((e) => (e.type === 'series' ? e.shows : [e]).forEach((r) => lignes.push({
+                id: lignes.length + 1, jour: r.icsDate, heure: r.time, spectacle: e.title, lieu: e.location, ville: e.city,
+                reservation_url: r.bookingUrl, scolaire: r.isSchool
+            })));
+            for (const change of [false, true]) {
+                const c3 = await visiteur({ viewport: { width: 390, height: 844 } });
+                await c3.addInitScript(() => window.addEventListener('DOMContentLoaded', () => {
+                    if (typeof window.renderNextDate !== 'function') return;   // un cadre de la page
+                    const compte = window.__rendus = { tableau: 0, onglet: 0 };
+                    const tableau = window.renderNextDate, onglet = window.datesMisesAJour;
+                    window.renderNextDate = function () { compte.tableau++; return tableau.apply(this, arguments); };
+                    window.datesMisesAJour = function () { compte.onglet++; return onglet.apply(this, arguments); };
+                }));
+                const p3 = await c3.newPage();
+                const erreurs3 = guette(p3);
+                const corps = lignes.map((l, i) => (change && i === 0 ? Object.assign({}, l, { heure: '23h59' }) : l));
+                await p3.route(/supabase\.co/, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(corps), headers: { 'access-control-allow-origin': '*' } }));
+                await p3.goto(base + '/', { waitUntil: 'load' });
+                await p3.waitForTimeout(600);
+                const vu = await p3.evaluate(() => ({ source: SHOW_DATA.source, rendus: window.__rendus }));
+                exige(vu.source === 'supabase', 'les dates en direct simulées ne sont pas arrivées');
+                if (!change) exige(!vu.rendus.tableau && !vu.rendus.onglet, `des dates en direct identiques à dates.js redessinent la page : ${JSON.stringify(vu.rendus)}`);
+                else exige(vu.rendus.tableau === 1 && vu.rendus.onglet === 1, `des dates en direct qui diffèrent ne redessinent pas la page une fois : ${JSON.stringify(vu.rendus)}`);
+                exige(!erreurs3.length, erreurs3.join(' | '));
+                await c3.close();
+            }
         });
 
         await verifie('la prochaine date du CV : une ligne de tableau de gare, « Prochaine date » et jamais « Départs », des palettes qui battent une fois puis se posent, qui mènent à sa date — posée d’emblée en mouvement réduit', async () => {

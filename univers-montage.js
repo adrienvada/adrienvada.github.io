@@ -1243,13 +1243,26 @@ const UniversMontage = (function () {
     //  une heure flottante, que Google interprète comme il peut. Toutes les
     //  représentations sont en France métropolitaine : +01:00 en hiver,
     //  +02:00 en été, selon la date elle-même.
+    //
+    //  UN SEUL FORMATEUR, ET UN DÉCALAGE PAR JOUR, gardés. Il en naissait
+    //  un par représentation, à chaque calcul des données structurées :
+    //  30 formateurs coûtaient 12,5 ms à ×4, contre 0,7 ms avec celui-ci.
+    //  Le tout premier paie toujours le chargement des fuseaux (~40 ms à
+    //  froid) : c'est pourquoi l'accueil ne les calcule plus au chargement,
+    //  mais au repos ou à l'ouverture de l'onglet Dates.
+    let formatParis = null;
+    const decalagesParis = new Map();
     function decalageParis(jour) {
+        let d = decalagesParis.get(jour);
+        if (d) return d;
         try {
-            const f = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', timeZoneName: 'longOffset' });
-            const nom = f.formatToParts(new Date(`${jour}T12:00:00Z`)).find(x => x.type === 'timeZoneName');
+            formatParis = formatParis || new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', timeZoneName: 'longOffset' });
+            const nom = formatParis.formatToParts(new Date(`${jour}T12:00:00Z`)).find(x => x.type === 'timeZoneName');
             const m = nom && nom.value.match(/([+-]\d{2}:\d{2})/);
-            return m ? m[1] : '+01:00';
-        } catch (e) { return '+01:00'; }
+            d = m ? m[1] : '+01:00';
+        } catch (e) { d = '+01:00'; }
+        decalagesParis.set(jour, d);
+        return d;
     }
 
     /**

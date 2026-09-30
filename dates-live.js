@@ -178,13 +178,28 @@
         .catch(() => { /* repli silencieux : dates.js reste affiché */ })
         .finally(() => clearTimeout(minuteur));
 
+    // Ce que la page affiche d'une liste de dates, sans les identifiants de
+    // la base (dates.js n'en garde pas) : deux listes de même empreinte
+    // donnent le même site, au pixel près. Les champs viennent dans l'ordre
+    // où build/exporter-dates.js les écrit ; une copie retouchée à la main
+    // compterait pour différente, et serait redessinée — sans dommage.
+    function empreinte(liste) {
+        return JSON.stringify(liste, (cle, v) => cle === 'id' ? undefined : v);
+    }
+
     function appliquer(upcoming) {
         const rendre = () => {
             if (typeof SHOW_DATA === 'undefined') return;
+            // RIEN N'A CHANGÉ DEPUIS LE DERNIER EXPORT : on ne redessine rien.
+            // C'est le cas ordinaire au lendemain d'un export — et un tableau
+            // de gare redessiné repartirait de blanc sous les yeux.
+            const identiques = empreinte(SHOW_DATA.upcoming) === empreinte(upcoming);
             SHOW_DATA.upcoming = upcoming;
             SHOW_DATA.source = 'supabase';
-            if (typeof buildFilterChips === 'function') buildFilterChips();
-            if (typeof renderDates === 'function') renderDates();
+            if (identiques) return;
+            // L'onglet Dates de l'accueil : redessiné s'il l'est déjà, sinon
+            // il se dessinera avec elles (voir datesMisesAJour).
+            if (typeof datesMisesAJour === 'function') datesMisesAJour();
             if (typeof renderNextDate === 'function') renderNextDate();
             // Une page /spectacles/ : son pied a été écrit à la génération
             // et peut annoncer « les dates seront annoncées ici » alors que

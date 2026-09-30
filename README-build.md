@@ -1215,7 +1215,7 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   mois on lit. Les mêmes images que la frise du CV (`cv-fil`, `cv-point`),
   les deux mêmes pilotes : `view()` dans les navigateurs récents, `regie.js`
   ailleurs (le groupe et son intercalaire portent `.rg-ligne`, et
-  `renderDates()` les confie à la régie à chaque rendu). En mouvement réduit
+  `renderListe()` les confie à la régie à chaque rendu). En mouvement réduit
   et sur papier, tout est tracé d'emblée. **Chaque mois a sa couleur, qui
   suit les saisons** (`--dl-mois-1` à `--dl-mois-12`) :
 
@@ -1261,6 +1261,28 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   page ; un spectacle sans univers garde son nom en simple texte, jamais un
   lien mort. Le retour du navigateur ramène à l'onglet Dates : changer
   d'onglet inscrit `#page_dates` dans l'historique.
+- **Dessiné quand il sert, pas au chargement.** Caché, l'onglet pesait le
+  tiers de la page (861 éléments), et son dessin — puces, liste, sommaire,
+  archives, données structurées — 110 ms de la tâche de démarrage à ×4, pour
+  un onglet que la plupart des visiteurs n'ouvrent pas. Il se dessine à son
+  ouverture (dans `poserPage`, avant de paraître), à l'arrivée sur
+  `#page_dates` et par « Voir toutes les dates » d'un spectacle ; sinon **au
+  repos** après le chargement (`requestIdleCallback`, une seconde et demie
+  sous Safari), **en quatre tranches** de moins de 50 ms à ×4 — les puces,
+  la liste et le sommaire, les archives, les données structurées —, la page
+  reprenant la main entre deux (`scheduler.yield()` où il existe). Avant ce
+  premier dessin, `renderDates()` et `buildFilterChips()` ne font rien : il
+  lira l'état du moment, filtres et dates en direct compris. Démarrage à ×4
+  (quatre passes) : 190 → 52 ms pour le script de démarrage, 349 → 232 ms
+  pour sa tâche.
+- **Un geste ne refait que ce qu'il change.** Le rangement ne redessine que
+  la liste (`renderListe`) ; le sommaire (`renderSommaire`) ne l'est que
+  quand un filtre s'active ou se lève ; pendant la recherche, la liste suit
+  à l'image (plusieurs lettres tapées avant elle ne la redessinent qu'une
+  fois), les archives (`renderArchives`) une fois l'image peinte, et le
+  compte — que lisent les lecteurs d'écran — à la frappe. Au téléphone à ×4 :
+  bascule de rangement 220 → 164 ms (sous le seuil de 200), frappe 80 → 72
+  ms, première frappe 192 → 144 ms.
 
 ### La prochaine date, en tête du CV
 
@@ -1312,8 +1334,12 @@ la page se rabat sur la version de 640 px.
 
 - **`dates-live.js`** interroge la table au chargement de l'accueil. Si elle
   répond en moins de trois secondes, il remplace les dates et relance les
-  rendus. Sinon, rien ne se passe : `dates.js` reste affiché. Aucune erreur
-  visible dans les deux cas.
+  rendus — **seulement si elles diffèrent** de celles de `dates.js`
+  (identifiants de la base mis à part) : au lendemain d'un export, rien ne
+  se redessine, et le tableau de gare ne repart pas de blanc. L'onglet
+  Dates n'est redessiné que s'il l'a déjà été (`datesMisesAJour`) ; sinon
+  il se dessinera avec elles. Si la base ne répond pas, rien ne se passe :
+  `dates.js` reste affiché. Aucune erreur visible dans les deux cas.
 - **La clé dans le code est publique par construction** (« publishable ») :
   elle ne permet que ce que les règles d'accès autorisent aux anonymes,
   c'est-à-dire lire. La clé « secret » du projet ne doit jamais entrer dans
@@ -2278,7 +2304,12 @@ large, rien ne change : c'est l'original qui est servi.
   `robots.txt` ou `sitemap.xml`.
 - Les données structurées « fiche artiste » (`Person`) sont dans le `<head>` ;
   les représentations (`TheaterEvent`) sont générées automatiquement depuis
-  les dates au chargement — rien à maintenir à la main. Elles sont
+  les dates, au repos après le chargement ou à l'ouverture de l'onglet Dates
+  (voir [L'onglet Dates](#longlet-dates--une-ligne-deux-rangements-un-sommaire)),
+  puis à l'arrivée de dates en direct qui diffèrent — rien à maintenir à la
+  main. Toujours sur **toutes** les dates à venir, jamais sur la liste
+  filtrée : pendant une recherche, elles ne gardaient que les dates
+  trouvées. Elles sont
   fabriquées par **une seule fonction**, `evenementTheatre` dans
   `univers-montage.js`, que l'accueil appelle en direct et le générateur des
   pages spectacle à la génération : heure et fuseau de Paris, adresse

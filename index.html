@@ -9300,8 +9300,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             initThemeToggle();
             suivreBarreCollante();
-            setupDateFilters();   // avant renderDates : construit les puces
-            renderDates();
+            setupDateFilters();   // l'onglet Dates lui-même attend qu'on l'ouvre, ou le repos
             dlMesurerBarre();
             // La barre ne change de hauteur qu'avec la largeur, et son
             // observateur la suit. L'écouteur « resize » ne reste que là où
@@ -9546,9 +9545,13 @@
             if (search) search.value = '';
             const clear = document.getElementById('dates-search-clear');
             if (clear) clear.classList.add('hidden');
+            // Déjà dessiné, l'onglet se redessine avec ce filtre ; sinon, ces
+            // deux appels ne font rien, et c'est assurerDates qui le dessine,
+            // filtre compris — une seule fois.
             buildFilterChips();
             revealFilterRows(true);
             renderDates();
+            assurerDates();
             openDateSearch(true);
             // Un seul chemin vers un onglet, donc un seul défilement. Cette
             // ligne en enchaînait trois : showPage, puis `location.hash` (qui
@@ -9709,6 +9712,11 @@
         }
 
         function buildFilterChips() {
+            if (!datesDessin) return;   // pas encore dessiné : les puces viendront avec le premier dessin
+            dlPuces();
+        }
+
+        function dlPuces() {
             const perfs = upcomingPerformances();
             const shows = [...new Set(perfs.map(p => p.title))];
             const places = placesForShow(perfs, dateFilters.show).sort((a, b) => a.localeCompare(b, 'fr'));
@@ -9777,8 +9785,9 @@
             const openBtn = document.getElementById('dates-search-open');
             if (!search) return;
 
-            buildFilterChips();
-
+            // Les écouteurs seulement : les puces viennent avec le premier
+            // dessin de l'onglet (voir « L'onglet n'est dessiné que quand il
+            // sert »).
             openBtn.addEventListener('click', () => {
                 const isOpen = document.getElementById('dates-search-panel').classList.contains('is-open');
                 openDateSearch(!isOpen);
@@ -9788,7 +9797,7 @@
                 dateFilters.q = search.value.trim();
                 clear.classList.toggle('hidden', !dateFilters.q);
                 revealFilterRows(false);
-                renderDates();
+                datesFrappe();
             });
             clear.addEventListener('click', () => {
                 search.value = ''; dateFilters.q = '';
@@ -10250,7 +10259,9 @@
             if ((vue !== 'date' && vue !== 'spectacle') || vue === dlVue) return;
             dlVue = vue;
             try { localStorage.setItem('av.datesVue', vue); } catch (e) { /* stockage indisponible */ }
-            renderDates();
+            // Le rangement ne change que la liste : ni le sommaire, ni les
+            // archives, ni les données structurées (220 → 164 ms à ×4).
+            if (datesDessin >= 2) renderListe();
         }
 
         // Du sommaire aux dates : on bascule de rangement s'il le faut, on
@@ -10333,44 +10344,139 @@
 
         window.renderedEventsData = [];
 
+        // ── L'ONGLET N'EST DESSINÉ QUE QUAND IL SERT ─────────────────────
+        //  Il l'était au chargement, caché : 861 éléments — le tiers de la
+        //  page —, les puces (dont le premier tri charge la collation du
+        //  français) et les données structurées. Le script de démarrage y
+        //  passait 190 ms à ×4 (52 sans lui ; sa tâche, 349 → 232 ms), pour
+        //  un onglet que la plupart des visiteurs n'ouvrent pas. Puis
+        //  dates-live.js refaisait tout à l'arrivée de la base.
+        //
+        //  Il se dessine désormais :
+        //    · à l'ouverture de l'onglet (poserPage, AVANT qu'il devienne
+        //      visible : dans le passage animé, il est déjà prêt quand la
+        //      nouvelle page est capturée), à l'arrivée sur #page_dates et
+        //      pour « Voir toutes les dates » d'un spectacle (goToDatesForShow) ;
+        //    · sinon au repos après le chargement, pour les données
+        //      structurées — Google exécute la page et attend qu'elle se
+        //      taise. EN TRANCHES : d'un bloc, ce dessin faisait une nouvelle
+        //      tâche longue de 85 à 115 ms. Chaque étape ci-dessous en est
+        //      une (10 à 42 ms à ×4, la plus lourde étant le premier calcul
+        //      des fuseaux), et la page reprend la main entre deux.
+        //
+        //  renderDates() et buildFilterChips() restent les portes d'entrée
+        //  de ce qui redessine (puces, effacement de la recherche, dates en
+        //  direct, les vérifications) ; tant que rien n'est dessiné, elles ne
+        //  font rien : le premier dessin lira l'état du moment, filtres et
+        //  données compris. Rien ne lit l'onglet avant : les boutons d'agenda
+        //  (renderedEventsData) naissent avec la liste, et le passage vers
+        //  une page spectacle (pageswap) n'y cherche sa vignette qu'une fois
+        //  l'onglet dessiné.
+        let datesDessin = 0;   // étapes du premier dessin déjà faites
+        const DATES_ETAPES = [
+            () => dlPuces(),
+            () => { renderListe(); renderSommaire(true); },
+            () => renderArchives(),
+            () => datesDonneesStructurees()
+        ];
+
+        // Tout ce qui reste à dessiner, tout de suite : l'onglet va paraître.
+        function assurerDates() {
+            while (datesDessin < DATES_ETAPES.length) DATES_ETAPES[datesDessin++]();
+        }
+
+        // La page reprend la main entre deux tranches. scheduler.yield()
+        // garde la suite en tête de file (Chromium récent) ; ailleurs, une
+        // minuterie nulle.
+        const dlCeder = () => (window.scheduler && typeof window.scheduler.yield === 'function')
+            ? window.scheduler.yield() : new Promise(r => setTimeout(r, 0));
+
+        async function datesAuRepos() {
+            while (datesDessin < DATES_ETAPES.length) {
+                DATES_ETAPES[datesDessin++]();
+                await dlCeder();   // l'onglet ouvert entre-temps a tout fini : la boucle s'arrête
+            }
+        }
+        // Safari n'a pas requestIdleCallback : une seconde et demie après
+        // le chargement, la page s'est posée.
+        addEventListener('load', () => {
+            if ('requestIdleCallback' in window) requestIdleCallback(datesAuRepos, { timeout: 5000 });
+            else setTimeout(datesAuRepos, 1500);
+        }, { once: true });
+
+        // ── TROIS RENDUS, SELON CE QUI CHANGE ────────────────────────────
+        //  Tout refaire à chaque geste coûtait cher : la bascule « Par date /
+        //  Par spectacle » réécrivait aussi le sommaire, les archives (316
+        //  éléments, dans des tiroirs fermés) et les données structurées —
+        //  220 ms médians à ×4, au-dessus du seuil de 200 ms ; 164 désormais —,
+        //  et chaque lettre tapée dans la recherche en faisait autant (80 ms ;
+        //  72 désormais, et la première 192 → 144 ms).
+        //    · renderListe : les dates à venir — le seul rendu de la bascule ;
+        //    · renderSommaire : il ne dépend pas du rangement, et se vide dès
+        //      qu'un filtre est actif — il n'est refait que quand cela change ;
+        //    · renderArchives : sous la liste, repliées ; pendant la
+        //      recherche, elles suivent une fois l'image peinte.
+        //  Les données structurées ne sont plus refaites ici (voir
+        //  datesDonneesStructurees).
         function renderDates() {
-            window.renderedEventsData = [];
-            if (typeof SHOW_DATA === 'undefined') return;
+            if (datesDessin < 2) return;   // rien de dessiné : le premier dessin lira l'état du moment
+            dlAnnulerFrappe();
+            renderListe();
+            renderSommaire(true);
+            renderArchives();
+            datesDessin = Math.max(datesDessin, 3);
+        }
 
-            const split = splitUpcoming(SHOW_DATA.upcoming);
-            const past = split.past;
-            const upcomingTitle = document.getElementById('upcoming-season-title');
-            const upcomingContainer = document.getElementById('upcoming-dates-container');
-
-            if (upcomingTitle) upcomingTitle.textContent = SHOW_DATA.currentSeasonTitle || 'Saison en cours';
-
-            // Application des filtres. Pour une série, on ne garde que les
-            // représentations retenues ; la série disparaît si elle n'en a plus.
-            let matchCount = 0;
-            const upcoming = split.upcoming.map(show => {
+        // Les dates à venir retenues par les filtres. Pour une série, on ne
+        // garde que les représentations retenues ; la série disparaît si elle
+        // n'en a plus.
+        function datesFiltrees() {
+            let n = 0;
+            const upcoming = splitUpcoming(SHOW_DATA.upcoming).upcoming.map(show => {
                 if (show.type === 'series' && show.shows) {
                     const kept = show.shows.filter(r => matchesFilters(show.title, show.location, placeOf(show)));
-                    matchCount += kept.length;
+                    n += kept.length;
                     return kept.length ? Object.assign({}, show, { shows: kept }) : null;
                 }
                 const ok = matchesFilters(show.title, show.location, placeOf(show));
-                if (ok) matchCount++;
+                if (ok) n++;
                 return ok ? show : null;
             }).filter(Boolean);
+            return { upcoming, n };
+        }
 
+        // Le compte est lu par les lecteurs d'écran (aria-live) : il n'est
+        // écrit que s'il change, sans quoi chaque rendu le ferait répéter.
+        function datesCompter(n) {
             const countEl = document.getElementById('dates-count');
             const resetEl = document.getElementById('dates-reset');
             if (countEl) {
-                countEl.textContent = matchCount === 0
+                const texte = n === 0
                     ? 'Aucune représentation'
-                    : `${matchCount} représentation${matchCount > 1 ? 's' : ''}`
-                    + (filtersActive() ? ' correspondante' + (matchCount > 1 ? 's' : '') : ' à venir');
+                    : `${n} représentation${n > 1 ? 's' : ''}`
+                    + (filtersActive() ? ' correspondante' + (n > 1 ? 's' : '') : ' à venir');
+                if (countEl.textContent !== texte) countEl.textContent = texte;
             }
             if (resetEl) resetEl.classList.toggle('hidden', !filtersActive());
+        }
+
+        let dlEntreesVues = [];   // les entrées de la liste affichée, pour le sommaire
+
+        function renderListe() {
+            window.renderedEventsData = [];
+            if (typeof SHOW_DATA === 'undefined') return;
+
+            const upcomingTitle = document.getElementById('upcoming-season-title');
+            const upcomingContainer = document.getElementById('upcoming-dates-container');
+            if (upcomingTitle) upcomingTitle.textContent = SHOW_DATA.currentSeasonTitle || 'Saison en cours';
+
+            const { upcoming, n } = datesFiltrees();
+            datesCompter(n);
 
             // Une représentation, une ligne ; le détail est plus haut, avec
             // les fonctions dl…() qui la dessinent.
             const entrees = dlEntrees(upcoming);
+            dlEntreesVues = entrees;
             if (upcomingContainer) {
                 upcomingContainer.innerHTML = entrees.length
                     ? dlGroupesHtml(entrees, dlVue)
@@ -10385,19 +10491,31 @@
             }
             document.querySelectorAll('[data-dates-vue]').forEach(b =>
                 b.setAttribute('aria-pressed', String(b.dataset.datesVue === dlVue)));
-            const sommaire = document.getElementById('dates-sommaire');
-            if (sommaire) {
-                const html = filtersActive() ? '' : dlSommaire(entrees);
-                sommaire.innerHTML = html;
-                sommaire.hidden = !html;
-                const bouton = document.getElementById('dates-saison-bouton');
-                if (bouton) {
-                    bouton.disabled = !html;
-                    if (!html) dlSaisonOuvrir(false);
-                }
-            }
+        }
 
-            // ── Archives : archives statiques + dates fraîchement passées ──
+        // `force` : les données ont changé. Sinon, le sommaire n'est refait
+        // que si un filtre vient de s'activer ou de se lever.
+        let dlSommaireFiltre = null;
+        function renderSommaire(force) {
+            const filtre = filtersActive();
+            if (!force && filtre === dlSommaireFiltre) return;
+            dlSommaireFiltre = filtre;
+            const sommaire = document.getElementById('dates-sommaire');
+            if (!sommaire) return;
+            const html = filtre ? '' : dlSommaire(dlEntreesVues);
+            sommaire.innerHTML = html;
+            sommaire.hidden = !html;
+            const bouton = document.getElementById('dates-saison-bouton');
+            if (bouton) {
+                bouton.disabled = !html;
+                if (!html) dlSaisonOuvrir(false);
+            }
+        }
+
+        // ── Archives : archives statiques + dates fraîchement passées ──
+        function renderArchives() {
+            if (typeof SHOW_DATA === 'undefined') return;
+            const past = splitUpcoming(SHOW_DATA.upcoming).past;
             const archivesContainer = document.getElementById('archived-seasons-container');
             if (archivesContainer && SHOW_DATA.archives) {
                 const seasons = {};
@@ -10461,8 +10579,48 @@
                 archivesContainer.innerHTML = archivesHtml;
                 setupDrawers(archivesContainer);
             }
+        }
 
-            injectEventStructuredData(upcoming);
+        // LA RECHERCHE SUIT LE DOIGT SANS LE RETENIR. Le compte change à la
+        // frappe (le lecteur d'écran l'annonce) ; la liste, à l'image
+        // suivante — plusieurs lettres tapées avant elle ne la redessinent
+        // qu'une fois ; les archives, une fois l'image peinte.
+        let dlFrappe = 0, dlFrappeArchives = 0;
+        function datesFrappe() {
+            if (datesDessin < 2 || typeof SHOW_DATA === 'undefined') return;
+            datesCompter(datesFiltrees().n);
+            if (dlFrappe) return;
+            dlFrappe = requestAnimationFrame(() => {
+                dlFrappe = 0;
+                renderListe();
+                renderSommaire(false);
+                clearTimeout(dlFrappeArchives);
+                dlFrappeArchives = setTimeout(() => { dlFrappeArchives = 0; renderArchives(); }, 0);
+            });
+        }
+        function dlAnnulerFrappe() {
+            if (dlFrappe) { cancelAnimationFrame(dlFrappe); dlFrappe = 0; }
+            if (dlFrappeArchives) { clearTimeout(dlFrappeArchives); dlFrappeArchives = 0; }
+        }
+
+        // LES DONNÉES STRUCTURÉES DISENT TOUTE LA SAISON. Calculées sur la
+        // liste affichée, elles ne gardaient pendant une recherche que les
+        // dates trouvées (1 977 caractères au lieu de 15 026). Elles le sont
+        // sur toutes les dates à venir, une fois au premier dessin, puis à
+        // l'arrivée de dates nouvelles — jamais à un geste.
+        function datesDonneesStructurees() {
+            if (typeof SHOW_DATA === 'undefined') return;
+            injectEventStructuredData(splitUpcoming(SHOW_DATA.upcoming).upcoming);
+        }
+
+        // Les dates en direct sont arrivées, et diffèrent de celles affichées
+        // (voir dates-live.js). Rien de dessiné : le premier dessin les
+        // prendra. Sinon on redessine, puis les données structurées si leur
+        // tour est passé.
+        function datesMisesAJour() {
+            buildFilterChips();
+            renderDates();
+            if (datesDessin >= DATES_ETAPES.length) datesDonneesStructurees();
         }
 
         // Délégation : les boutons agenda des dates (le rendu les refait à
@@ -10999,9 +11157,11 @@
                 if (show.type === 'series' && show.shows) show.shows.forEach(r => push(show, r));
                 else push(show, show);
             });
-            if (!events.length) return;
+            // Toute la saison est passée en revue : sans représentation
+            // publique à venir, l'ancienne liste ne doit pas survivre.
             const old = document.getElementById('events-jsonld');
             if (old) old.remove();
+            if (!events.length) return;
             const el = document.createElement('script');
             el.type = 'application/ld+json';
             el.id = 'events-jsonld';
@@ -11283,7 +11443,7 @@
             if (!e.viewTransition || !e.activation || !e.activation.entry) return;
             const chemin = new URL(e.activation.entry.url).pathname;
             const m = chemin.match(/\/spectacles\/([^/]+)\/$/);
-            if (!m) return;
+            if (!m || datesDessin < 2) return;   // l'onglet Dates n'a jamais été dessiné : rien à y chercher
             const groupe = [...document.querySelectorAll('#page_dates .dl-groupe--spectacle')]
                 .find(g => [...g.querySelectorAll('a[href]')].some(a => new URL(a.href).pathname === chemin));
             const img = groupe && groupe.querySelector('.dl-vignette img');
@@ -11324,6 +11484,10 @@
                 activeAudioId = null;
             }
 
+            // L'onglet Dates se dessine avant de paraître (voir « L'onglet
+            // n'est dessiné que quand il sert ») ; dans le passage animé, nous
+            // sommes déjà dans son rappel : la page capturée est la bonne.
+            if (pageId === 'page_dates') assurerDates();
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             const activePage = document.getElementById(pageId);
             if (activePage) activePage.classList.add('active');
