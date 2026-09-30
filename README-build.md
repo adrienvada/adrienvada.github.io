@@ -62,8 +62,10 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
 - un univers ouvert depuis le CV : la page qu'il couvre cesse d'être rendue
   tant qu'il est ouvert, son montage est posé après le passage, sa lumière
   ne l'est qu'une fois ; la fermeture rend la page, la ligne à sa place et le
-  focus dessus ; « Accéder aux dates » touché dès la fin du passage arrive au
-  pied, le montage entier au-dessus (voir [Les passages](#les-passages-view-transitions)) ;
+  focus dessus ; « Accéder aux dates » touché pendant le passage ou dès sa
+  fin arrive au pied, le montage entier au-dessus (voir [Les passages](#les-passages-view-transitions)) ;
+- un univers fermé puis rouvert aussitôt, sans View Transitions : le panneau
+  rouvert n'est pas vidé par la fermeture d'avant ;
 - l'onglet Dates, à la densité du CV : une série de deux soirs tient en
   80 px au plus au téléphone ; la feuille d'éphéméride posée sur la photo du
   spectacle, les jours d'une série écrits avec un tiret ; la ville et la
@@ -2382,7 +2384,11 @@ Désormais :
 - **le rappel ne pose que l'ouverture et le pied** (« Accéder aux dates »
   répond tout de suite) ; le montage suit le passage, par tranches de quatre
   temps, une image entre chacune (`monterLeMontage`). Un saut aux dates avant
-  la fin pose d'un coup ce qui manque ;
+  la fin pose d'un coup ce qui manque — **pendant le passage aussi**, où les
+  tranches ne sont pas encore parties (`poserToutLeMontage`) : au clavier ou
+  d'un lecteur d'écran, le saut allait au pied posé sous l'ouverture, puis le
+  montage s'insérait au-dessus, et l'on restait au milieu des photos, le pied
+  10 000 à 13 000 px plus bas ;
 - **la lumière et la lettre ne se mesurent qu'ensuite**, une seule fois (voir
   [L'écriture à la lumière](#lécriture-à-la-lumière)).
 
@@ -2806,6 +2812,14 @@ La page, cachée sous le panneau pendant qu'il est ouvert (voir
 à la fermeture, avant la position à reposer et le focus à rendre : c'est
 elle qu'ils lisent. Sa hauteur étant retenue pendant qu'elle est cachée,
 rien ne bouge dessous.
+
+**Le panneau n'est vidé que si personne ne l'a rouvert.** Sans passage
+(navigateur sans View Transitions, ou Échap en plein passage), la fermeture
+vide le panneau 420 ms plus tard, le temps de son fondu. Une ligne rouverte
+dans ce délai se faisait vider et cacher sous ses pieds : plus rien à
+l'écran, la page inerte et verrouillée derrière jusqu'à Échap. Le vidage
+retient le jeton de sa fermeture, et ne fait rien si une ouverture l'a
+changé — la garde que `closeModal` a déjà dans `index.html`.
 
 ### Un seul moteur, un seul visage
 

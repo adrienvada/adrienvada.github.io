@@ -135,10 +135,25 @@ function exige(condition, message) {
     const { serveur, base } = await servir(RACINE);
     const navigateur = await chromium.launch();
 
-    // Un contexte = un visiteur neuf : stockage vide, rien de mémorisé.
+    // Un contexte = un visiteur : stockage vide, rien de mémorisé — à une
+    // exception près. L'onglet Dates s'ouvre « par spectacle » depuis la
+    // PR #16, et les vérifications écrites pour le rangement par date (la
+    // feuille sur la photo, la frise des mois, l'intercalaire du mois, la
+    // ligne qui porte le titre) le demandent comme un visiteur qui l'a choisi
+    // la fois d'avant : `av.datesVue` vaut « date » tant que la page ne l'a
+    // pas changé. Un visiteur `neuf` arrive vraiment sans rien : c'est lui
+    // qui vérifie le rangement par défaut.
     const visiteur = async (options) => {
-        const c = await navigateur.newContext(options || {});
+        const { neuf, ...reste } = options || {};
+        const c = await navigateur.newContext(reste);
         await c.route((u) => !u.href.startsWith(base), (r) => r.abort());
+        if (!neuf) {
+            await c.addInitScript(() => {
+                try {
+                    if (!localStorage.getItem('av.datesVue')) localStorage.setItem('av.datesVue', 'date');
+                } catch (e) { /* stockage indisponible */ }
+            });
+        }
         return c;
     };
     const guette = (page) => {
@@ -303,8 +318,8 @@ function exige(condition, message) {
         // cesse d'être rendue : html.u-page-cachee), pose son montage une
         // fois le passage fini et mesure la lumière UNE fois — elle l'était
         // deux, et le passage gelait. Toute fermeture rend la page, à sa
-        // place, le focus sur la ligne ; un saut aux dates dès la fin du
-        // passage arrive au pied, le montage posé au-dessus.
+        // place, le focus sur la ligne ; un saut aux dates pendant le
+        // passage ou dès sa fin arrive au pied, le montage posé au-dessus.
         await verifie('un univers ouvert depuis le CV : la page couverte n’est plus rendue, le montage suit le passage, la lumière est posée une fois — et la fermeture rend la page où elle était', async () => {
             const c = await visiteur({ viewport: { width: 1280, height: 900 } });
             const p = await c.newPage();
@@ -373,6 +388,34 @@ function exige(condition, message) {
             });
             exige(saut.temps === ouvert.temps, `le montage est incomplet après le saut : ${saut.temps} temps sur ${ouvert.temps}`);
             exige(Math.abs(saut.pied) <= 2 || (saut.pied > 0 && saut.auBout), `le saut aux dates n’arrive pas au pied (${Math.round(saut.pied)} px)`);
+            // Et PENDANT le passage — au clavier, ou d'un lecteur d'écran qui
+            // active sans viser : le montage n'est pas encore parti, il doit
+            // être posé avant d'aller au pied, sinon il s'insère au-dessus
+            // une fois le passage fini et le pied part 10 000 px plus bas.
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(1500);
+            await p.click(await viser());
+            await p.waitForFunction(() => document.documentElement.classList.contains('vt-univers')
+                && document.querySelector('#show-universe.is-open [data-u-jump]'), null, { timeout: 8000, polling: 5 });
+            const dansLePassage = await p.evaluate(() => {
+                const vt = document.documentElement.classList.contains('vt-univers');
+                document.querySelector('#show-universe [data-u-jump]').click();
+                return vt;
+            });
+            exige(dansLePassage, 'le saut n’a pas pu être essayé pendant le passage');
+            await finDuPassage();
+            await p.waitForTimeout(2000);
+            const sautPendant = await p.evaluate(() => {
+                const o = document.getElementById('show-universe');
+                const t = o.querySelector('.u-foot-title').getBoundingClientRect();
+                return {
+                    temps: o.querySelectorAll('.u-figs > *').length, titre: t.top,
+                    focus: document.activeElement === o.querySelector('.u-foot-title')
+                };
+            });
+            exige(sautPendant.temps === ouvert.temps, `un saut pendant le passage laisse le montage incomplet : ${sautPendant.temps} temps sur ${ouvert.temps}`);
+            exige(sautPendant.titre >= -2 && sautPendant.titre < 900 && sautPendant.focus,
+                `un saut pendant le passage n’arrive pas aux dates : leur titre est à ${Math.round(sautPendant.titre)} px`);
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
         });
@@ -835,6 +878,45 @@ function exige(condition, message) {
                 exige(!erreurs3.length, erreurs3.join(' | '));
                 await c3.close();
             }
+        });
+
+        await verifie('un visiteur neuf trouve les dates rangées par spectacle, et la prochaine date du CV le mène à sa ligne, éclairée, sous son spectacle', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, neuf: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForTimeout(500);
+            // Une date de Bérénice à trois semaines : la saison réelle peut
+            // être vide, la vérification ne doit pas en dépendre.
+            await p.evaluate(() => {
+                const d = new Date();
+                d.setDate(d.getDate() + 20);
+                const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                SHOW_DATA.upcoming = [{
+                    type: 'single', title: 'Bérénice', location: 'Scène de vérification (76)', city: 'Rouen',
+                    dateLabel: iso, icsDate: iso, time: '20h00', bookingUrl: '', isSchool: false
+                }];
+                datesMisesAJour();
+                renderNextDate();
+            });
+            await p.click('#next-date-banner .td-dep');
+            await p.waitForTimeout(1400);
+            const arrivee = await p.evaluate(() => {
+                const a = document.activeElement;
+                const groupe = a && a.closest('.dl-groupe');
+                return {
+                    vue: document.querySelector('[data-dates-vue][aria-pressed="true"]')?.dataset.datesVue,
+                    retenu: localStorage.getItem('av.datesVue'),
+                    ligne: !!a && a.classList.contains('dl') && a.classList.contains('dl-eclaire'),
+                    spectacle: groupe?.querySelector('.dl-intercalaire--spectacle h4')?.textContent || null
+                };
+            });
+            exige(arrivee.vue === 'spectacle', `un visiteur neuf trouve les dates rangées « ${arrivee.vue} »`);
+            exige(arrivee.retenu === null, 'le rangement par défaut est écrit dans le stockage sans que le visiteur l’ait choisi');
+            exige(arrivee.ligne && /Bérénice/.test(arrivee.spectacle || ''),
+                `la prochaine date ne mène pas à sa ligne sous son spectacle (ligne : ${arrivee.ligne}, spectacle : ${arrivee.spectacle})`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
         });
 
         await verifie('la prochaine date du CV : une ligne de tableau de gare, « Prochaine date » et jamais « Départs », des palettes qui battent une fois puis se posent, qui mènent à sa date — posée d’emblée en mouvement réduit', async () => {
@@ -1945,6 +2027,51 @@ function exige(condition, message) {
             await p.waitForTimeout(1000);
             const apres = await p.evaluate(() => [...document.body.children].filter((e) => e.inert).length);
             exige(!apres, `${apres} élément(s) restent inertes après la fermeture`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        // Même piège pour un univers, là où la fermeture vide le panneau
+        // 420 ms plus tard : sans View Transitions (Firefox avant 144), le
+        // rouvrir dans ce délai le laissait vide et caché, la page inerte et
+        // verrouillée derrière.
+        await verifie('un univers : fermer puis rouvrir aussitôt, sans View Transitions, ne laisse pas un panneau vide', async () => {
+            const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.addInitScript(() => { delete Document.prototype.startViewTransition; });
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForTimeout(800);
+            const sel = await p.evaluate(() => {
+                const li = [...document.querySelectorAll('#page_cv li.cv-has-universe[data-cv-show]')]
+                    .find((l) => window.spectacleParTitre?.(l.dataset.cvShow)?.uni.slug === 'cleophene');
+                if (!li) return null;
+                li.id = li.id || 'verif-cleophene';
+                li.scrollIntoView({ block: 'center', behavior: 'instant' });
+                return '#' + CSS.escape(li.id) + ' .cv-row-toggle';
+            });
+            exige(sel, 'la ligne de Cléophène n’ouvre pas d’univers');
+            await p.waitForTimeout(300);
+            await p.click(sel);
+            await p.waitForTimeout(1500);
+            await p.evaluate(() => document.querySelector('#show-universe .u-close').click());
+            await p.waitForTimeout(100);
+            await p.evaluate((sel) => document.querySelector(sel).click(), sel);
+            await p.waitForTimeout(1500);
+            const etat = await p.evaluate(() => {
+                const o = document.getElementById('show-universe');
+                return { cache: o.hidden, ouvert: o.classList.contains('is-open'), temps: o.querySelectorAll('.u-figs > *').length };
+            });
+            exige(etat.ouvert && !etat.cache && etat.temps > 0,
+                `l’univers rouvert a été vidé par la fermeture d’avant (caché : ${etat.cache}, ${etat.temps} temps)`);
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(1000);
+            const apres = await p.evaluate(() => ({
+                inerte: document.getElementById('site').inert,
+                verrou: document.documentElement.classList.contains('u-locked'),
+                cache: document.getElementById('show-universe').hidden
+            }));
+            exige(!apres.inerte && !apres.verrou && apres.cache, 'la page reste inerte ou verrouillée après la fermeture');
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
         });

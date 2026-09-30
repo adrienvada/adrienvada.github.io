@@ -1889,7 +1889,7 @@ const SHOW_UNIVERSES = {
     //  L'ORDRE COMPTE : les tranches, puis la régie, la mise au point et le
     //  top lumière sur ce qui vient d'arriver, puis la mesure des lignes,
     //  qui porte sur la page finie. Un saut vers les dates pendant ce
-    //  temps pose d'un coup ce qui manque (finirLeMontage) : la page ne
+    //  temps pose d'un coup ce qui manque (poserToutLeMontage) : la page ne
     //  doit plus grandir au-dessus du pied une fois qu'on y va.
     let montageAPoser = '';
     let finirLeMontage = null;
@@ -1934,6 +1934,25 @@ const SHOW_UNIVERSES = {
             animerLeMontage(figs);
         }
         mesurerLesLignes();
+    }
+
+    // LE SAUT AUX DATES N'ATTEND PAS LE MONTAGE. Pendant les tranches,
+    // finirLeMontage pose ce qui reste. Mais pendant le passage lui-même,
+    // les tranches ne sont pas parties : finirLeMontage n'existe pas
+    // encore, et « Accéder aux dates » — au clavier, ou d'un lecteur
+    // d'écran, qui active sans viser — allait au pied posé juste sous
+    // l'ouverture ; le passage fini, le montage s'insérait au-dessus, et
+    // l'on se retrouvait au milieu des photos, le pied 10 000 à 13 000 px
+    // plus bas. On pose alors tout, tout de suite : la fin du passage ne
+    // trouve plus rien à poser et ne fait que mesurer (monterLeMontage).
+    function poserToutLeMontage() {
+        if (finirLeMontage) { finirLeMontage(); return; }
+        const figs = overlay.querySelector('.u-figs');
+        if (!figs || !montageAPoser) return;
+        figs.insertAdjacentHTML('beforeend', montageAPoser);
+        montageAPoser = '';
+        wireVideoPosters(figs);
+        animerLeMontage(figs);
     }
 
     // ── Agrandissement d'une photo ───────────────────────────────────
@@ -2544,7 +2563,17 @@ const SHOW_UNIVERSES = {
             };
             insister();
         }
-        const done = () => { overlay.hidden = true; overlay.innerHTML = ''; };
+        // Le vidage différé appartient à CETTE fermeture : un univers rouvert
+        // dans les 420 ms (sans View Transitions, ou Échap en plein passage)
+        // se faisait vider et cacher sous les pieds de la réouverture — plus
+        // rien à l'écran, la page inerte et verrouillée derrière. Même garde
+        // que closeModal (index.html) : la réouverture a changé le jeton.
+        const jeton = openToken;
+        const done = () => {
+            if (isOpen || jeton !== openToken) return;
+            overlay.hidden = true;
+            overlay.innerHTML = '';
+        };
         // Dans le passage, le panneau doit avoir disparu de la capture
         // d'arrivée : c'est la ligne qui l'y remplace.
         if (REDUCED || direct) done(); else setTimeout(done, 420);
@@ -2919,9 +2948,10 @@ const SHOW_UNIVERSES = {
             // « Accéder aux dates » : on saute au pied du panneau. Les
             // photos restent au-dessus, on ne les a pas perdues.
             if (e.target.closest('[data-u-jump]')) {
-                // Le montage encore en route : posé d'un coup, sinon il
-                // pousserait le pied pendant qu'on y va.
-                finirLeMontage?.();
+                // Le montage encore en route, ou pas encore parti (dans le
+                // passage) : posé d'un coup, sinon il pousserait le pied
+                // pendant qu'on y va.
+                poserToutLeMontage();
                 const foot = overlay.querySelector('.u-foot');
                 if (!foot) return;
                 // Rien à préparer : ce qui se trouve en chemin s'anime au
