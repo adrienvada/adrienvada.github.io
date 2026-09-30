@@ -3186,7 +3186,12 @@ répertoire, à la galerie et à la 404.
   s'il la voit et hors mouvement réduit, et la rend à la fin du passage.
   Cette écoute (`pagereveal`) vit dans le premier script du `<head>` : le
   passage se prépare au premier rendu, pendant que la page se lit encore, et
-  le script principal arrivait trop tard pour nommer quoi que ce soit.
+  le script principal arrivait trop tard pour nommer quoi que ce soit. Au
+  retour de la galerie, le même script fait attendre ce premier rendu
+  jusqu'au portrait (`<link rel="expect" blocking="render">`, vers
+  `#portrait-affiche`) : il pouvait le précéder, et la vue revenait sans se
+  poser — trois retours sur dix-huit, avant comme après l'AVIF ; aucun
+  depuis. Ailleurs, rien n'attend.
 - **Le papier ne bouge pas.** Toute la mise en page de l'affiche est en
   `@media screen` ; les classes Tailwind du balisage et les règles d'impression
   sont celles d'avant, et le médaillon imprimé est `profil-192.webp` (une

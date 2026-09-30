@@ -319,6 +319,23 @@
             var rendre = function () { img.style.viewTransitionName = ''; };
             e.viewTransition.finished.then(rendre, rendre);
         });
+        // Le premier rendu peut précéder la lecture du portrait, aux deux
+        // tiers de la page : le passage n'a alors rien à nommer, et la vue
+        // de la galerie revient sans se poser — une fois sur six, mesuré au
+        // retour. Au retour de la galerie seulement, le premier rendu
+        // attend donc le portrait (rel=expect) : quelques millisecondes de
+        // lecture, pour un passage qui a toujours lieu. Inséré ici, dans
+        // le <head>, il retient bien le rendu ; plus tard, il ne le
+        // pourrait plus.
+        if (typeof navigation !== 'undefined' && navigation.activation && navigation.activation.from
+            && new URL(navigation.activation.from.url).pathname === '/galerie/'
+            && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            var attendre = document.createElement('link');
+            attendre.rel = 'expect';
+            attendre.href = '#portrait-affiche';
+            attendre.setAttribute('blocking', 'render');
+            document.head.appendChild(attendre);
+        }
 
         // L'ANCRE D'ARRIVÉE EST MISE DE CÔTÉ AVANT QUE LE NAVIGATEUR NE S'EN
         // SERVE. Arriver sur adrienvada.fr/#demos_voix lui demande de faire
@@ -7554,7 +7571,7 @@
                             <source
                                 srcset="ressources/images/portrait-affiche-480.webp 480w, ressources/images/portrait-affiche-720.webp 720w, ressources/images/portrait-affiche-960.webp 960w"
                                 sizes="(min-width: 768px) 340px, 100vw" type="image/webp">
-                            <img src="ressources/images/portrait-affiche-720.jpg"
+                            <img id="portrait-affiche" src="ressources/images/portrait-affiche-720.jpg"
                                 alt="Portrait d’Adrien Vada" width="720" height="965"
                                 class="w-full h-full object-cover rounded-full transition-transform duration-700 ease-out scale-100 group-hover:scale-103"
                                 fetchpriority="high">
