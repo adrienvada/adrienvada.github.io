@@ -215,6 +215,37 @@ html:is(.vt-univers, .vt-univers-retour) #show-universe {
     animation-duration: calc(var(--dur-morph, 620ms) * .6);
 }
 
+/* LA BOÎTE ROGNE CE QU'ELLE MONTRE. Son image nouvelle, le panneau entier
+   (390 × 844 au téléphone), était posée à pleine largeur, hauteur libre,
+   dans une boîte partie de la ligne (≈ 358 × 70) : au début du passage, le
+   surtitre, l'auteur, le rôle et « Le spectacle » flottaient sous la
+   boîte, par-dessus la liste du CV, et croisaient le double titre. La
+   boîte rogne ; le panneau s'y découvre par le haut à mesure qu'elle
+   grandit, comme un rideau qui monte, et la ligne y garde sa taille,
+   épinglée en haut, au lieu de s'étirer. Au retour, les rôles
+   s'échangent : l'image nouvelle est la ligne — tendue sur toute la
+   boîte, elle aurait été agrandie douze fois (la petite image ne se
+   montre jamais en grand). Pas de rayon fixe : il serait resté à 10 px
+   jusqu'à la dernière image, puis aurait claqué. */
+html.vt-univers::view-transition-group(u-boite),
+html.vt-univers-retour::view-transition-group(u-boite) {
+    overflow: clip;
+}
+
+html.vt-univers::view-transition-old(u-boite),
+html.vt-univers-retour::view-transition-new(u-boite) {
+    height: auto;
+    object-fit: none;
+    object-position: 50% 0;
+}
+
+html.vt-univers::view-transition-new(u-boite),
+html.vt-univers-retour::view-transition-old(u-boite) {
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 0;
+}
+
 ::view-transition-old(u-photo),
 ::view-transition-new(u-photo) {
     height: 100%;
@@ -1909,6 +1940,16 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     --fit-space: 84vw;
     --fit-min: 1rem;
     font-size: max(var(--fit-min), min(var(--fit-max), calc(var(--fit-space) / (var(--chars, 30) * 0.56))));
+    /* Quand une réplique se replie tout de même, le navigateur équilibre
+       ses dernières lignes au lieu de laisser un bout de phrase seul :
+       sur les trente citations des pages, au téléphone, cinq finissaient
+       sur un quart ou un tiers de ligne — leur dernière ligne en fait
+       désormais 26 à 50 % (« Peine perdue, alors ? », « Que le jour
+       recommence »…) ; les vingt-cinq autres, et les vers coupés à la
+       main, ne bougent pas. La lumière, qui mesure les lignes telles
+       qu'elles tombent, suit. Ignoré ailleurs que dans Chrome et
+       Safari 26 : rien n'y change. */
+    text-wrap: pretty;
 }
 
 .u-fit .u-line {
@@ -2748,8 +2789,26 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     --e: var(--of-sur-e, .94);
 }
 
+.u-of-titre .u-rideau {
+    --rg-anim: u-of-rideau-cadre;
+    --s: var(--of-sur-s, .89);
+    --e: var(--of-sur-e, .94);
+}
+
+.u-of-titre .u-rideau-texte {
+    --rg-anim: u-of-rideau-texte;
+    --s: var(--of-sur-s, .89);
+    --e: var(--of-sur-e, .94);
+}
+
 .u-of-titre .u-couche-auteur {
     --rg-anim: u-of-trappe;
+    --s: var(--of-auteur-s, .9);
+    --e: var(--of-auteur-e, .95);
+}
+
+.u-of-titre .u-couche-auteur>.u-author {
+    --rg-anim: u-of-trappe-ligne;
     --s: var(--of-auteur-s, .9);
     --e: var(--of-auteur-e, .95);
 }
@@ -2762,6 +2821,12 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 
 .u-of-titre .u-couche-meta {
     --rg-anim: u-of-trappe;
+    --s: var(--of-meta-s, .92);
+    --e: var(--of-meta-e, .97);
+}
+
+.u-of-titre .u-couche-meta>.u-meta {
+    --rg-anim: u-of-trappe-ligne;
     --s: var(--of-meta-s, .92);
     --e: var(--of-meta-e, .97);
 }
@@ -2802,10 +2867,38 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     }
 }
 
+/* LE RIDEAU ET LA TRAPPE NE ROGNENT RIEN À CHAQUE IMAGE. Ils animaient
+   clip-path, que le navigateur ne sait pas faire avancer seul : les
+   couches étaient repeintes à chaque image du récit, la phase la moins
+   fluide après le zoom (mesuré à ×4 au téléphone, sur Cléophène : 25 ms de
+   peinture par passage du récit, 3 ms désormais ; 6 % d'images lentes, 2 %
+   désormais). Le dessin est le même, obtenu par des cadres fixes qui
+   rognent (overflow: clip) et des déplacements.
+
+   LE RIDEAU : le surtitre et son cadre intérieur rognent chacun à leur
+   bord (une marge de .4em de chaque côté, comme l'ancienne coupe) et
+   glissent en sens contraire, d'une demi-largeur puis d'une largeur ;
+   leur recoupement est une fenêtre qui s'ouvre du milieu, exactement la
+   coupe d'avant, et le texte, qui glisse d'autant en retour, ne bouge
+   pas. Trois déplacements linéaires : aucun ne se calcule à chaque
+   image. */
+.u-of-titre .u-eyebrow,
+.u-of-titre .u-rideau {
+    overflow: hidden;
+    overflow: clip;
+    padding-inline: .4em;
+    margin-inline: -.4em;
+}
+
+.u-of-titre .u-rideau,
+.u-of-titre .u-rideau-texte {
+    display: block;
+}
+
 @keyframes u-of-rideau {
     from {
         opacity: 0;
-        clip-path: inset(-.4em 50% -.4em 50%);
+        transform: translateX(50%);
     }
 
     35% {
@@ -2814,18 +2907,56 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 
     to {
         opacity: 1;
-        clip-path: inset(-.4em -.4em -.4em -.4em);
+        transform: none;
     }
 }
 
-/* LA TRAPPE : la coupe recule du bas exactement autant que la ligne monte
-   — son bord bas reste immobile à l'écran, et la ligne en sort, en
-   s'éclairant. */
+@keyframes u-of-rideau-cadre {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: none;
+    }
+}
+
+@keyframes u-of-rideau-texte {
+    from {
+        transform: translateX(calc(50% + .4em));
+    }
+
+    to {
+        transform: none;
+    }
+}
+
+/* LA TRAPPE : la couche reste en place et rogne à son bord bas ; la
+   ligne y monte de toute la hauteur de la couche — sa marge devient un
+   retrait intérieur, pour qu'elle en fasse partie, comme quand la couche
+   montait elle-même. Le bord bas reste immobile à l'écran, et la ligne en
+   sort, en s'éclairant (l'opacité reste à la couche : la ligne a déjà son
+   propre fondu, qui attend le titre). */
+.u-of-titre :is(.u-couche-auteur, .u-couche-meta) {
+    overflow: hidden;
+    overflow: clip;
+    padding-inline: .5em;
+    margin-inline: -.5em;
+}
+
+.u-of-titre .u-couche-auteur>.u-author {
+    margin-top: 0;
+    padding-top: 14px;
+}
+
+.u-of-titre .u-couche-meta>.u-meta {
+    margin-top: 0;
+    padding-top: 34px;
+}
+
 @keyframes u-of-trappe {
     from {
         opacity: 0;
-        transform: translateY(100%);
-        clip-path: inset(-.3em -.5em 100% -.5em);
     }
 
     40% {
@@ -2834,8 +2965,16 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 
     to {
         opacity: 1;
+    }
+}
+
+@keyframes u-of-trappe-ligne {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
         transform: none;
-        clip-path: inset(-.3em -.5em 0 -.5em);
     }
 }
 
@@ -2998,6 +3137,28 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     --rg-anim: u-lettre-efface;
     --s: var(--of-zoom-s, .8);
     --e: calc(var(--of-zoom-s, .8) + (var(--of-zoom-e, .95) - var(--of-zoom-s, .8)) * .3);
+}
+
+/* LE FILET S'ÉTEINT POUR DE BON. C'est une copie des lettres du masque
+   (voir detourerLeTitre) : il en garde la classe, donc le zoom, et le
+   navigateur en fait un calque qui continuait de grandir, invisible, le
+   filet effacé — 14 273 × 10 840 px au bout du zoom de Cléophène, trente-
+   sept fois l'écran, dont il fallait gérer les tuiles. Caché au bout de
+   son fondu (visibility), le calque disparaît avec lui. En mouvement
+   réduit, rien ne s'anime : le filet reste, le titre posé se lit. */
+.u-lettre-trait {
+    --rg-anim: u-lettre-filet;
+}
+
+@keyframes u-lettre-filet {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
 }
 
 .u-lettre-trait .u-lettre-mot {

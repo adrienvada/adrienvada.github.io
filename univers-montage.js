@@ -926,6 +926,14 @@ const UniversMontage = (function () {
             ? `<p class="u-synopsis u-ecrit rg-k" data-ecrire="scene" data-de="${tempo.ecrit[0]}" data-a="${tempo.ecrit[1]}">${revealWords(uni.synopsis)}</p>`
             : `<p class="u-synopsis rg-k">${splitWords(uni.synopsis)}</p>`;
 
+        // LE RIDEAU ET LA TRAPPE, dans l'ouverture (voir « Le récit s'écrit
+        // sur la scène » dans univers.css) : le surtitre s'ouvre du milieu
+        // entre deux cadres qui glissent en sens contraire, l'auteur et le
+        // rôle montent chacun dans sa couche, qui les rogne. Rien n'y est
+        // rogné à nouveau à chaque image : trois déplacements, une opacité.
+        const surtitre = `${escape(info.year)}${uni.genre ? ' · ' + escape(uni.genre) : ''}${info.badge ? ' · ' + escape(info.badge) : ''}`;
+        const trappe = ouverture ? ' rg-k' : '';
+
         // LE HAUT DE LA PAGE : le titre et ce qui l'accompagne. Avec une
         // ouverture, le titre est au bout du travelling — il arrive du fond
         // de la scène, le reste paraît ensuite sous le geste (voir
@@ -945,7 +953,7 @@ const UniversMontage = (function () {
                  feuille de salle, et elle dit en trois mots ce qu'on va voir
                  avant même le titre. Il est pris sur l'univers et non sur la
                  ligne du CV, qui ne le porte pas. -->
-            <p class="u-eyebrow rg-k">${escape(info.year)}${uni.genre ? ' · ' + escape(uni.genre) : ''}${info.badge ? ' · ' + escape(info.badge) : ''}</p>
+            <p class="u-eyebrow rg-k">${ouverture ? `<span class="u-rideau rg-k"><span class="u-rideau-texte rg-k">${surtitre}</span></span>` : surtitre}</p>
             <!-- LE TITRE, D'UN SEUL TENANT POUR QUI NE LE VOIT PAS. Les lettres
                  tombent une à une et sont donc cachées aux lecteurs d'écran
                  (voir splitChars) ; aria-label leur donne le mot entier.
@@ -956,9 +964,9 @@ const UniversMontage = (function () {
                  niveau ; dans le panneau de l'accueil, qui a déjà le sien, de
                  second niveau. -->
             <${niveau} class="u-title rg-k" id="u-titre" aria-label="${escape(info.title)}" style="--u-title-chars:${tm.chars};--u-title-len:${tm.len}">${splitChars(info.title)}</${niveau}>
-            ${info.author ? `<div class="u-couche u-couche-auteur rg-k"><p class="u-author">${escape(info.author)}</p></div>` : ''}
+            ${info.author ? `<div class="u-couche u-couche-auteur rg-k"><p class="u-author${trappe}">${escape(info.author)}</p></div>` : ''}
             ${synopsis}
-            <div class="u-couche u-couche-meta rg-k"><p class="u-meta">${escape(info.role)}${info.company ? '<br>' + escape(info.company) : ''}</p></div>
+            <div class="u-couche u-couche-meta rg-k"><p class="u-meta${trappe}">${escape(info.role)}${info.company ? '<br>' + escape(info.company) : ''}</p></div>
 
             <!-- Raccourci vers les dates dès le titre : sans lui, il faut
                  traverser tout le défilé de photos pour savoir quand voir le

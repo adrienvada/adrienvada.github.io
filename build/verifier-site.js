@@ -1097,7 +1097,9 @@ function exige(condition, message) {
                     const out = { classe: document.documentElement.className, points: [] };
                     for (const [scene, fractions, sels] of [
                         ['.u-ouverture', [0.2, 0.5, 0.62, 0.8, 0.95], ['.u-of-photo', '.u-of-titre .u-title', '.u-of-titre .u-hero-fond',
-                            '.u-of-titre .u-eyebrow', '.u-of-titre .u-couche-auteur', '.u-of-titre .u-synopsis', '.u-of-titre .u-synopsis .u-lum',
+                            '.u-of-titre .u-eyebrow', '.u-of-titre .u-rideau', '.u-of-titre .u-rideau-texte',
+                            '.u-of-titre .u-couche-auteur', '.u-of-titre .u-author', '.u-of-titre .u-meta',
+                            '.u-of-titre .u-synopsis', '.u-of-titre .u-synopsis .u-lum',
                             '.u-of-titre .u-couche-actions', '.u-of-invite']],
                         ['.u-carton', [0.2, 0.5, 0.8, 0.97], ['.u-carton-texte', '.u-carton .u-lum', '.u-carton-noir']],
                         ['.u-poursuite', [0.1, 0.4, 0.62, 0.85], ['.u-pa-a', '.u-pa-b', '.u-pa-plein', '.u-pa-leg2']],
@@ -1248,6 +1250,14 @@ function exige(condition, message) {
                     const pose = parseFloat(getComputedStyle(scene).getPropertyValue('--of-titre'));
                     const de = +syn.dataset.de, a = +syn.dataset.a;
                     out.plages = { pose, de, a };
+                    // LE RÉCIT NE ROGNE RIEN À CHAQUE IMAGE : le rideau et la
+                    // trappe sont des déplacements sous des cadres fixes ;
+                    // une coupe (clip-path) animée repeignait leurs couches à
+                    // chaque image.
+                    out.rogne = document.getAnimations()
+                        .filter((an) => an.effect && an.effect.target && scene.contains(an.effect.target))
+                        .filter((an) => an.effect.getKeyframes().some((k) => 'clipPath' in k))
+                        .map((an) => an.effect.target.className.baseVal ?? an.effect.target.className);
                     // Le premier écran : le travelling, sans le titre.
                     await aller(scene, 0);
                     out.debut = lire();
@@ -1300,6 +1310,7 @@ function exige(condition, message) {
                 const sombre = attendue === 'sombre';
                 const [ecr, tot] = etat.ecriture.lignes.split('/').map(Number);
                 exige(etat.enTete, `${slug} : la page ne s’ouvre pas sur le travelling, le titre au bout`);
+                exige(!etat.rogne.length, `${slug} : une animation du récit fait encore varier clip-path (${etat.rogne.join(', ')})`);
                 exige(!etat.dansLaScene, `${slug} : un carton ou un noir est resté dans le travelling`);
                 exige(etat.debut.titre < 0.05 && etat.debut.reste < 0.05 && etat.debut.photo > 0.5,
                     `${slug} : au premier écran, le titre ou la page devance le travelling (${JSON.stringify(etat.debut)})`);
@@ -1338,7 +1349,8 @@ function exige(condition, message) {
                 return {
                     ouverture: S.querySelector('.u-ouverture')?.offsetHeight / h,
                     plans: cs('.u-of-plans')?.display,
-                    titre: ['.u-of-titre .u-title', '.u-of-titre .u-hero-fond', '.u-of-titre .u-eyebrow', '.u-of-titre .u-couche-auteur', '.u-of-titre .u-synopsis', '.u-of-titre .u-couche-actions']
+                    titre: ['.u-of-titre .u-title', '.u-of-titre .u-hero-fond', '.u-of-titre .u-eyebrow', '.u-of-titre .u-rideau', '.u-of-titre .u-rideau-texte',
+                        '.u-of-titre .u-couche-auteur', '.u-of-titre .u-author', '.u-of-titre .u-meta', '.u-of-titre .u-synopsis', '.u-of-titre .u-couche-actions']
                         .every((sel) => cs(sel) && +cs(sel).opacity === 1 && cs(sel).transform === 'none' && cs(sel).clipPath === 'none'),
                     carton: S.querySelector('.u-carton')?.offsetHeight / h,
                     cartonTexte: cs('.u-carton-texte') && +cs('.u-carton-texte').opacity === 1 && cs('.u-carton-texte').transform === 'none',

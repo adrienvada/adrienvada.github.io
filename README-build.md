@@ -115,8 +115,9 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   l'en-tête de l'accueil et des pages spectacle teste la même chose que
   `regie.js`, et le second pilote (`?repli`) rejoue les images du navigateur —
   opacité et transformation des éléments de l'ouverture (photos, titre,
-  surtitre, auteur, synopsis et sa lumière, bouton), du carton du chapitre et
-  de la poursuite, relevées aux mêmes endroits du défilement ;
+  surtitre et les deux cadres de son rideau, auteur et rôle et leurs lignes,
+  synopsis et sa lumière, bouton), du carton du chapitre et de la poursuite,
+  relevées aux mêmes endroits du défilement ;
 - chaque animation menée par le défilement, sur l'accueil, dans l'onglet
   Dates et sur chaque page spectacle, suit la page ou le panneau de
   l'univers — jamais un cadre rogné
@@ -127,7 +128,9 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   photo est déjà là ; en plein travelling il avance SEUL ; posé, rien d'autre
   encore ; en pleine écriture, des lignes du synopsis écrites et d'autres
   non, le bouton ni visible ni cliquable ; au bout de la scène, tout a paru,
-  le synopsis est écrit et le bouton répond. Puis le carton du chapitre, en
+  le synopsis est écrit et le bouton répond ; aucune animation du récit ne
+  fait varier de coupe (`clip-path`), qui se repeindrait à chaque image
+  (voir [Les scènes d'un univers](#les-scènes-dun-univers)). Puis le carton du chapitre, en
   tête du montage, tient l'écran (deux écrans de défilement au moins), sa
   phrase écrite ; il finit dans le noir si la salle est sombre (À la barre,
   Cléophène), s'efface sans noir si elle est claire (Bérénice, L'Homme
@@ -1522,6 +1525,11 @@ avec un temps à la césure.
 jour finisse'` : la lumière s'y arrête un instant, et un filet fin la marque.
 La barre ne s'affiche jamais telle quelle.
 
+Une réplique trop longue pour sa ligne s'y replie en **équilibrant ses
+dernières lignes** (`text-wrap: pretty` sur `.u-fit`) : cinq des trente
+citations des pages finissaient, au téléphone, sur un quart ou un tiers de
+ligne ; les fins de vers voulues (`\n`) ne bougent pas.
+
 Le **hero s'en va par couches** au premier geste : le surtitre, la flèche, le
 synopsis, puis le titre et l'auteur, qui glissent un peu moins vite que la page
 et partent en dernier (`.u-eyebrow`, `.u-couche-*` dans `univers.css`). Les
@@ -1765,6 +1773,20 @@ flèche suivait sa boîte, un écran plus ses marges, et tombait sous l'écran ;
 marges comprises (`box-sizing: border-box`), il fait un écran. Sur un écran
 bas (moins de 700 px), la flèche tombait sur le bouton : elle n'y est pas.
 
+**Le rideau et la trappe ne rognent rien à chaque image.** Ils faisaient
+varier une coupe (`clip-path`), que le navigateur repeint à chaque image : le
+récit était la phase la moins fluide après le zoom. Le même dessin vient
+désormais de cadres fixes qui rognent (`overflow: clip`) et de déplacements.
+Le surtitre et un cadre intérieur (`.u-rideau`) glissent en sens contraire,
+d'une demi-largeur et d'une largeur : leur recoupement est une fenêtre qui
+s'ouvre du milieu, et le texte (`.u-rideau-texte`), qui glisse d'autant en
+retour, ne bouge pas. L'auteur et le rôle montent dans leur couche immobile,
+qui les rogne à son bord bas ; leur marge y devient un retrait intérieur,
+pour qu'ils montent de toute la hauteur de la couche, comme la couche
+montait. Mesuré à ×4 au téléphone (Cléophène, trois passes) : peinture du
+récit 25 → 3 ms, images lentes 6 → 2 %. Captures identiques à cinq points de
+chaque course, au sous-pixel près, dans une salle claire et une sombre.
+
 ### La photo dans la lettre
 
 Demandé ainsi : « après le travelling avant, on arrive sur le titre qui
@@ -1837,6 +1859,22 @@ un téléphone renonce à dessiner la lettre en masque, et la photo s'en allait
 par carreaux. Il s'accélère, comme une caméra qui passe une porte, et se
 termine aux 85 % du zoom.
 
+**Ce que le zoom coûte encore.** C'est la seule scène sous soixante images
+par seconde : la lettre grandit dans un masque, que le navigateur ne sait ni
+composer ni garder d'une image à l'autre, et il redessine la photo masquée à
+chaque image. Deux dépenses invisibles s'y ajoutaient. Le masque, l'aplat qui
+le fonde et la nuit couvraient neuf écrans (de −W à 2W, de −H à 2H) : ils
+sont bornés à la scène, qui rogne de toute façon. Le filet des lettres, une
+copie du mot qui en garde le zoom, continuait de grandir une fois éteint —
+un calque de 14 273 × 10 840 px au bout du zoom de Cléophène — : il est caché
+au bout de son fondu (`u-lettre-filet`, `visibility`). Mesuré à ×4 au
+téléphone (Cléophène, trois passes) : pixellisation du zoom 329 → 152 ms,
+tuiles au plus fort 382 → 204 ; la cadence ne change pas (33 ms par image).
+Au-delà, raccourcir la course du zoom (`OUVERTURE_ZOOM`) ou changer la
+technique du masque est un choix d'écriture à faire sur un vrai téléphone :
+la pixellisation mesurée ici est logicielle, et le plafond de 2 400 px reste
+à y éprouver.
+
 **La porte s'ouvre** : de 70 % à 95 % du zoom, le trait des lettres du masque
 s'épaissit (`--lettre-gonfle`, en unités de la lettre, calculé sans compter
 sur l'encre autour du point de la porte, qui peut être à deux pixels de sa
@@ -1907,6 +1945,15 @@ image ne se montre jamais en grand : une vignette de 48 px agrandie à l'écran
 n'est qu'un flou vif — elle s'efface tôt à l'aller, et arrive tard au retour.
 Navigateur sans View Transitions, ou mouvement réduit : l'ancien comportement
 (dépliement en `clip-path`, fondu, coupe franche).
+
+**La boîte rogne ce qu'elle montre** (`u-boite`) : le panneau entier y était
+posé à pleine largeur, hauteur libre, dans une boîte partie de la ligne ; au
+début du passage, le surtitre, l'auteur, le rôle et « Le spectacle »
+flottaient sous elle, par-dessus la liste du CV. Le panneau s'y découvre
+désormais par le haut à mesure qu'elle grandit, et la ligne y garde sa
+taille, épinglée en haut, sans s'étirer. Au retour, les rôles s'échangent —
+la même règle au seul aller aurait agrandi la ligne douze fois, en texte
+flou. Pas de rayon fixe : il aurait claqué à la dernière image.
 
 **Pendant le passage d'une ligne du CV à son univers, le fil principal reste
 libre.** Chaque image du passage attend qu'il le soit : tant que la

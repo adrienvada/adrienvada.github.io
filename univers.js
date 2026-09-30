@@ -1593,8 +1593,19 @@ const SHOW_UNIVERSES = {
         const masque = document.createElementNS(SVGNS, 'mask');
         masque.id = `u-lettre-${n}`;
         masque.setAttribute('maskUnits', 'userSpaceOnUse');
-        masque.setAttribute('x', -W); masque.setAttribute('y', -H);
-        masque.setAttribute('width', W * 3); masque.setAttribute('height', H * 3);
+        // LE MASQUE NE COUVRE QUE LA SCÈNE. Il couvrait neuf écrans (de −W à
+        // 2W, de −H à 2H), comme l'aplat qui le fonde et la nuit : la scène
+        // rogne à W × H (overflow: clip), rien n'en paraissait, mais chaque
+        // image du zoom les pixellisait tous. Ramenés à la scène — un pixel
+        // de marge, pour une largeur qui ne tombe pas sur un pixel entier —,
+        // la pixellisation du zoom baisse d'un bon tiers, de moitié avec le
+        // filet caché au bout de son fondu (voir .u-lettre-trait : mesuré à
+        // ×4 au téléphone, 329 → 152 ms par passage du zoom). La cadence ne
+        // change pas : c'est la lettre masquée elle-même qui coûte (voir
+        // « La photo dans la lettre » dans README-build.md).
+        const [rx, ry, rw, rh] = [-1, -1, W + 2, H + 2];
+        masque.setAttribute('x', rx); masque.setAttribute('y', ry);
+        masque.setAttribute('width', rw); masque.setAttribute('height', rh);
         const mot = document.createElementNS(SVGNS, 'g');
         mot.setAttribute('class', 'u-lettre-mot rg-k');
         mot.setAttribute('fill', '#fff');
@@ -1651,8 +1662,8 @@ const SHOW_UNIVERSES = {
         mot.style.transformOrigin = `${porte.x.toFixed(1)}px ${porte.y.toFixed(1)}px`;
         svg.style.setProperty('--lettre-z', z.toFixed(1));
         const fondNoir = document.createElementNS(SVGNS, 'rect');
-        fondNoir.setAttribute('x', -W); fondNoir.setAttribute('y', -H);
-        fondNoir.setAttribute('width', W * 3); fondNoir.setAttribute('height', H * 3);
+        fondNoir.setAttribute('x', rx); fondNoir.setAttribute('y', ry);
+        fondNoir.setAttribute('width', rw); fondNoir.setAttribute('height', rh);
         fondNoir.setAttribute('fill', '#000');
         masque.append(fondNoir, mot);
 
@@ -1705,8 +1716,8 @@ const SHOW_UNIVERSES = {
         // a plus rien à voir transparaître.
         const nuit = document.createElementNS(SVGNS, 'rect');
         nuit.setAttribute('class', 'u-lettre-nuit rg-k');
-        nuit.setAttribute('x', -W); nuit.setAttribute('y', -H);
-        nuit.setAttribute('width', W * 3); nuit.setAttribute('height', H * 3);
+        nuit.setAttribute('x', rx); nuit.setAttribute('y', ry);
+        nuit.setAttribute('width', rw); nuit.setAttribute('height', rh);
         // LA PHOTO ENTIÈRE, tout au bout, la porte ouverte : la même photo,
         // au même endroit, sous l'encre qui couvre déjà l'écran — rien n'y
         // change à l'œil. Elle garantit la fin sur la photo, plein écran,
