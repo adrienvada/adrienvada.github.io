@@ -15,7 +15,11 @@
    Inter, Montserrat et Cinzel sont des polices VARIABLES : un fichier
    porte toutes les graisses, d'où les plages 100 900. Caveat, elle,
    n'est écrite qu'en 400 sur le site (la signature est une image) :
-   elle est figée à cette graisse, un tiers plus légère.
+   elle est figée à cette graisse, un tiers plus légère. Déclarée ici
+   comme les autres, elle n'est pourtant DEMANDÉE qu'après le
+   chargement de l'accueil : l'aperçu de la lettre ne l'emploie
+   qu'avec la classe `plume` (voir index.html, « La plume arrive après
+   la page »).
 
    Licence : SIL Open Font License 1.1 — voir LISEZMOI.txt.
    ============================================================ */

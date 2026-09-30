@@ -16,7 +16,8 @@
  *  après le dépôt sur Pages.
  *
  *  PRUDENT PAR CONSTRUCTION. Rien n'est réécrit : on retire, on ne
- *  transforme pas.
+ *  transforme pas — à UNE exception près, faite à part (voir plus bas,
+ *  « Les deux feuilles de l'accueil, dans la page »).
  *    • JavaScript : terser SANS compression — commentaires et blancs
  *      ôtés, noms de variables LOCALES raccourcis, rien d'autre. Les
  *      noms globaux (openShowUniverse, closeVideoModal…) ne bougent
@@ -26,6 +27,13 @@
  *    • HTML : blancs réduits À UNE ESPACE, jamais à zéro
  *      (conservativeCollapse) : le rendu d'un texte en ligne ne peut
  *      pas changer. Aucun attribut retiré ni réécrit — `alt=""` reste.
+ *
+ *  L'EXCEPTION : l'accueil reçoit styles.css et polices.css DANS la
+ *  page, à la place de leurs <link>. Deux feuilles bloquantes, c'était
+ *  un aller-retour de plus avant le premier affichage (FCP 676 → 496 ms
+ *  en 4G lente). C'est une étape à part, après l'allègement, avec son
+ *  propre contrôle : exactement deux <link> de moins, deux <style> de
+ *  plus, et rien d'autre de changé. Les sources gardent leurs <link>.
  *
  *  ET CHAQUE FICHIER EST VÉRIFIÉ AVANT D'ÊTRE ÉCRIT : le JavaScript
  *  produit doit se compiler, les scripts en ligne aussi, le JSON-LD et
@@ -61,7 +69,7 @@ function lireOption(nom) {
 }
 const RACINE = path.resolve(lireOption('--racine') || DEPOT);
 
-if (RACINE === DEPOT && process.env.GITHUB_ACTIONS !== 'true') {
+if (require.main === module && RACINE === DEPOT && process.env.GITHUB_ACTIONS !== 'true') {
     console.error(
         'Refusé : ce script réécrit les fichiers en place, commentaires compris.\n' +
         'Il ne tourne que dans l\'action de publication, ou sur une copie :\n' +
@@ -202,6 +210,66 @@ async function allegerHtml(source, nom, minifierHtml) {
 }
 
 // ────────────────────────────────────────────────────────────
+//  LES DEUX FEUILLES DE L'ACCUEIL, DANS LA PAGE
+// ────────────────────────────────────────────────────────────
+//  Le premier affichage de l'accueil attendait deux feuilles externes,
+//  alors que la page porte déjà l'essentiel de son CSS en ligne :
+//  styles.css (Tailwind, 24 ko, 5,6 compressés) et polices.css (les
+//  @font-face). Chacune bloque le rendu — un aller-retour de plus avant
+//  la première image. Recopiées dans la page, À LA MÊME PLACE, elles ne
+//  bloquent plus rien : premier affichage 676 → 496 ms en 4G lente
+//  émulée (téléphone, processeur ×4, 5 passes, distributions
+//  disjointes), Cinzel arrivée 116 ms plus tôt, et le décalage de mise en
+//  page divisé par trois (0,026 → 0,009). Le prix : 6 ko compressés de
+//  plus dans la page (60 → 66), que le cache de GitHub Pages (dix
+//  minutes) ne gardait guère de toute façon.
+//
+//  À la même place, et c'est ce qui rend l'opération sûre : un <style> et
+//  un <link> placés au même endroit ont le même rang dans la cascade. Le
+//  <noscript> posé entre les deux garde le sien. Les adresses des polices
+//  sont relatives à polices.css : elles deviennent absolues, puisque
+//  c'est désormais la page qui les lit. styles.css, à la racine comme
+//  l'accueil, n'a rien à réécrire (et ne contient aucune url()).
+//
+//  Seulement l'accueil, et seulement la copie publiée. Les autres pages
+//  ne lient que polices.css, et partagent son cache d'une page à
+//  l'autre ; /admin/ garde ses <link> ; les sources aussi — le
+//  développement et la régénération de Tailwind ne changent pas.
+//
+//  SON PROPRE CONTRÔLE, puisque verifierHtml exige une charpente
+//  identique et refuserait celle-ci : exactement deux <link> de moins et
+//  deux <style> de plus, rien d'autre, et aucune des deux feuilles ne
+//  doit contenir de quoi fermer sa balise. L'épreuve du navigateur passe
+//  ensuite, comme pour tout le reste.
+const FEUILLES_EN_LIGNE = [
+    { lien: 'href="/ressources/polices/polices.css"', fichier: 'ressources/polices/polices.css', dossier: '/ressources/polices/' },
+    { lien: 'href="styles.css"', fichier: 'styles.css', dossier: null },
+];
+
+const echapper = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function integrerFeuilles(html, lire) {
+    let sortie = html;
+    for (const f of FEUILLES_EN_LIGNE) {
+        const balise = new RegExp(`<link rel="stylesheet" ${echapper(f.lien)}\\s*/?>`, 'g');
+        const trouvees = sortie.match(balise) || [];
+        if (trouvees.length !== 1) throw new Error(`${f.fichier} : ${trouvees.length} <link> trouvé(s), 1 attendu`);
+        let css = lire(f.fichier);
+        if (/<\/style/i.test(css)) throw new Error(`${f.fichier} contient « </style »`);
+        if (f.dossier) {
+            css = css.replace(/url\((['"]?)(?![a-z]+:|\/)([^'")]+)\1\)/gi, (m, q, u) => `url(${q}${f.dossier}${u}${q})`);
+        }
+        sortie = sortie.replace(balise, () => `<style>${css}</style>`);
+    }
+    const avant = charpente(html), apres = charpente(sortie);
+    for (const b of new Set(Object.keys(avant).concat(Object.keys(apres)))) {
+        const attendu = (avant[b] || 0) + (b === 'link' ? -FEUILLES_EN_LIGNE.length : b === 'style' ? FEUILLES_EN_LIGNE.length : 0);
+        if ((apres[b] || 0) !== attendu) throw new Error(`<${b}> : ${apres[b] || 0} après l'intégration, ${attendu} attendu(s)`);
+    }
+    return sortie;
+}
+
+// ────────────────────────────────────────────────────────────
 //  L'ÉPREUVE DU NAVIGATEUR
 // ────────────────────────────────────────────────────────────
 //  Une page qui se compile peut encore planter à l'exécution. On ouvre
@@ -299,6 +367,22 @@ async function main() {
     const ko = n => Math.round(n / 1024);
     console.log(`${originaux.size} fichier(s) allégé(s) : ${ko(avant)} ko → ${ko(apres)} ko`);
 
+    // L'exception, à part : les deux feuilles de l'accueil dans la page —
+    // polices.css telle qu'elle vient d'être allégée. Si elle échoue,
+    // l'accueil garde ses <link>, allégé ou non.
+    const accueil = path.join(RACINE, 'index.html');
+    if (fs.existsSync(accueil)) {
+        const html = fs.readFileSync(accueil, 'utf8');
+        try {
+            const integre = integrerFeuilles(html, f => fs.readFileSync(path.join(RACINE, f), 'utf8'));
+            if (!originaux.has(accueil)) originaux.set(accueil, html);
+            fs.writeFileSync(accueil, integre);
+            console.log(`Accueil : styles.css et polices.css dans la page (+${ko(Buffer.byteLength(integre) - Buffer.byteLength(html))} ko).`);
+        } catch (e) {
+            console.warn(`  ⚠ accueil : feuilles laissées en <link> — ${e.message}`);
+        }
+    }
+
     if (!temoin) {
         console.log('Copie allégée sans épreuve du navigateur (vérifications de syntaxe seules).');
         return;
@@ -326,7 +410,14 @@ async function main() {
     console.log('Épreuve du navigateur réussie : la copie allégée part en ligne.');
 }
 
-main().catch(e => {
-    console.error(e);
-    process.exitCode = 1;
-});
+// build/verifier-site.js relit l'accueil des sources avec la même
+// fonction : un <link> retouché, et l'intégration échouerait en silence
+// à la publication (l'accueil partirait simplement avec ses <link>).
+if (require.main === module) {
+    main().catch(e => {
+        console.error(e);
+        process.exitCode = 1;
+    });
+}
+
+module.exports = { integrerFeuilles, verifierHtml };

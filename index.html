@@ -322,13 +322,29 @@
          connexions à ouvrir avant le premier rendu, et l'adresse IP de chaque
          visiteur transmise à Google. Même domaine désormais : la feuille part
          en même temps que styles.css, sans connexion de plus.
-         Les deux familles de la première page — Montserrat pour le nom et les
-         onglets, Inter pour le texte courant — sont demandées d'avance :
-         sans cela le navigateur ne les découvre qu'en lisant la feuille, un
-         aller-retour plus tard. `crossorigin` est exigé pour une police, même
-         servie par le site lui-même. -->
+         Les trois familles du premier écran sont demandées d'avance :
+         sans cela le navigateur ne les découvre qu'en lisant la feuille, puis
+         en mettant la page en forme — un aller-retour plus tard, au moins.
+         Cinzel pour le nom, Montserrat pour les onglets et l'en-tête, Inter
+         pour les libellés et le texte courant. `crossorigin` est exigé pour
+         une police, même servie par le site lui-même.
+
+         CINZEL EN ÉTAIT ABSENTE, et c'était la seule vraie cassure du
+         chargement : le préchargement datait d'un nom en Montserrat, et le
+         nom est passé en Cinzel sans lui. Le texte le plus en vue de la page
+         s'affichait en serif de secours, « Adrien » en bas de casse, puis
+         changeait de forme et de largeur 0,7 s plus tard. Demandée d'avance
+         (et la page publiée sans feuille bloquante), elle arrive à 1,0 s au
+         lieu de 1,4 en 4G lente émulée, 0,5 s après le premier affichage
+         au lieu de 0,7 ; en réseau rapide, elle est là dès la première
+         image. Inter reste : la retirer pour faire place à Cinzel lui
+         coûtait 120 à 280 ms, sans rien gagner sur le portrait.
+
+         En réseau lent, la bascule reste : ce que le secours peut encore
+         faire, c'est tenir la même place — voir « Cinzel repli ». -->
     <link rel="preload" href="/ressources/polices/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
 
     <!-- LES PAGES SPECTACLE ET LA GALERIE, PRÉPARÉES AU SURVOL. Chaque clic
          vers une fiche (67 liens dans l'onglet Dates) refaisait tout :
@@ -369,6 +385,9 @@
         <style>
             #intro-overlay { display: none !important; }
             .page { display: block !important; opacity: 1 !important; transform: none !important; }
+            /* L'aperçu de la lettre attend sa plume d'un script (voir
+               .bio-handwritten.plume) : sans lui, il la reçoit d'emblée. */
+            .bio-handwritten { font-family: 'Caveat', 'Kalam', cursive; }
         </style>
     </noscript>
 
@@ -2005,7 +2024,7 @@
            graisse 500 tient largement. C'était le CORPS qui manquait, pas
            l'encre. */
         .bio-handwritten {
-            font-family: 'Caveat', 'Kalam', cursive;
+            font-family: 'Kalam', cursive;
             /* 400, ET C'EST LE PLANCHER DE LA FONTE — pas un choix parmi
                d'autres. Caveat est déclarée `wght@400..700` : tout ce qu'on
                écrirait en dessous est ramené à 400 par le navigateur.
@@ -2043,6 +2062,15 @@
             line-height: 1.45;
             color: rgb(var(--c-text));
             transform: rotate(-0.4deg);
+        }
+
+        /* Caveat ne vient qu'avec la classe `plume`, posée après le
+           chargement : sans elle, l'aperçu réclamait la police dès la
+           première mise en page, devant le portrait (voir « La plume
+           arrive après la page », dans recit()). Sans JavaScript, le
+           <noscript> du <head> la lui donne d'emblée. */
+        .bio-handwritten.plume {
+            font-family: 'Caveat', 'Kalam', cursive;
         }
 
         .bio-handwritten .bio-quote {
@@ -4262,11 +4290,89 @@
 
            Le nom est en Cinzel dans les deux états, comme au répertoire, à
            la galerie et à la 404 : il mêlait Montserrat et Cinzel. */
+
+        /* CINZEL REPLI — LE SECOURS TIENT LA PLACE DE CINZEL. Tant que
+           Cinzel n'est pas là (font-display: swap), le nom s'écrit dans la
+           serif du système, et elle ne se pose pas au même endroit : Georgia
+           a moins de hampe (0,917 em contre 0,976) et bien moins de jambage
+           (0,219 contre 0,372). Sa ligne de base tombait 0,047 em plus bas —
+           deux pixels sur le nom du téléphone, qui sautaient à l'arrivée de
+           Cinzel. Les métriques de Cinzel, prêtées à la police du système,
+           posent les deux lignes de base au pixel près (mesuré, 390 et
+           1 280 px de large).
+
+           La LARGEUR se règle avec size-adjust, et pas d'un seul chiffre :
+           les minuscules de Cinzel sont des petites capitales, larges, et
+           ses capitales sont étroites. En Georgia, « Adrien » était 5 %
+           plus étroit qu'en Cinzel, « VADA » 10 % plus large ; aucun
+           réglage commun ne les rapprochait tous deux. D'où deux familles
+           par police : l'une pour « Adrien », l'autre pour les capitales
+           de « Vada » (le <span>), chacune ramenée à la largeur de son mot
+           en Cinzel. Le nom ne changeant pas, le réglage vaut pour lui
+           seul — à refaire le jour où l'on écrirait autre chose en Cinzel
+           dans l'en-tête.
+
+           Noto Serif est la serif d'Android, qui n'a pas Georgia. Hampe et
+           jambage sont divisés par size-adjust, qui les agrandit aussi.
+
+           Ce qui reste, et qu'aucun réglage ne rattrape : « Adrien » change
+           encore de casse, de bas de casse en petites capitales — c'est le
+           préchargement qui rend la bascule rare, pas ce secours. Un
+           système sans l'une ni l'autre police tombe sur Georgia, puis
+           serif, comme avant. */
+        @font-face {
+            font-family: 'Cinzel repli';
+            src: local('Georgia Bold'), local('Georgia-Bold');
+            font-weight: 600 900;
+            size-adjust: 105.5%;
+            ascent-override: 92.5%;
+            descent-override: 35.3%;
+            line-gap-override: 0%;
+        }
+
+        @font-face {
+            font-family: 'Cinzel repli Noto';
+            src: local('Noto Serif Bold'), local('NotoSerif-Bold');
+            font-weight: 600 900;
+            size-adjust: 108%;
+            ascent-override: 90.4%;
+            descent-override: 34.4%;
+            line-gap-override: 0%;
+        }
+
+        @font-face {
+            font-family: 'Cinzel repli capitales';
+            src: local('Georgia Bold'), local('Georgia-Bold');
+            font-weight: 600 900;
+            size-adjust: 91%;
+            ascent-override: 107.3%;
+            descent-override: 40.9%;
+            line-gap-override: 0%;
+        }
+
+        @font-face {
+            font-family: 'Cinzel repli capitales Noto';
+            src: local('Noto Serif Bold'), local('NotoSerif-Bold');
+            font-weight: 600 900;
+            ascent-override: 97.6%;
+            descent-override: 37.2%;
+            line-gap-override: 0%;
+        }
+
         @media screen {
             #en-tete .affiche-nom {
-                font-family: 'Cinzel', Georgia, serif;
+                font-family: 'Cinzel', 'Cinzel repli', 'Cinzel repli Noto', Georgia, serif;
                 font-weight: 600;
                 letter-spacing: .01em;
+            }
+
+            /* « Vada » garde la classe font-cinzel du nom d'avant (Cinzel,
+               serif), qui sert encore au papier : à l'écran, il prend le
+               secours des capitales (voir « Cinzel repli ») — sans quoi il
+               tombait sur la serif générique, Times sur iPhone, une autre
+               police encore que celle d'« Adrien ». */
+            #en-tete .affiche-nom span {
+                font-family: 'Cinzel', 'Cinzel repli capitales', 'Cinzel repli capitales Noto', Georgia, serif;
             }
 
             #en-tete .affiche-poursuite {
@@ -8441,7 +8547,12 @@
                          salle noire), et le halo y suit l'extrait en cours.
                          Les deux plans sont des images que YouTube tire lui-même
                          de la vidéo, bandes noires ôtées ; les débuts
-                         (data-salle-debut, en secondes) sont ceux du montage. -->
+                         (data-salle-debut, en secondes) sont ceux du montage.
+                         L'affiche de l'écran est en `loading="lazy"` : l'onglet
+                         est caché au chargement, et ses 16 Ko partaient en même
+                         temps que le portrait, qu'on voit, lui. Le halo attend
+                         son arrivée (voir « repos » plus bas) : il se peint à la
+                         première ouverture de l'onglet. -->
                     <div class="salle" id="salle">
                         <div class="salle-halo" aria-hidden="true"><canvas width="32" height="14"></canvas><canvas
                                 width="32" height="14"></canvas></div>
@@ -8451,7 +8562,7 @@
                                 <source srcset="ressources/images/miniatures/bande-demo-camera.webp" type="image/webp">
                                 <img src="ressources/images/miniatures/bande-demo-camera.jpg"
                                     alt="Image extraite de la bande démo caméra d’Adrien Vada" width="1280" height="720"
-                                    data-salle-plan-image>
+                                    loading="lazy" decoding="async" data-salle-plan-image>
                             </picture>
                             <span class="salle-lancer" aria-hidden="true">
                                 <svg class="ico" aria-hidden="true">
@@ -10765,6 +10876,46 @@
             const REDUIT = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             let rendreLeFocus = null, minuteur = 0, minuteurPrep = 0, liberer = null;
 
+            // ── LA PLUME ARRIVE APRÈS LA PAGE ───────────────────────────
+            //  Caveat n'écrit que la lettre et son aperçu, au pied du CV —
+            //  2 900 px sous le premier écran au téléphone. L'aperçu étant
+            //  dans l'arbre de rendu, le navigateur la réclamait pourtant
+            //  dès la première mise en page, en priorité « très haute »,
+            //  DEVANT le portrait : 49 Ko dans la fenêtre critique, et le
+            //  portrait 170 à 230 ms plus tard en 4G lente.
+            //
+            //  L'aperçu attend donc en cursive du système (.bio-handwritten)
+            //  et ne prend Caveat qu'avec la classe `plume` : une fois la
+            //  page chargée, au premier moment de calme — ou dès
+            //  l'ouverture de la lettre, si l'on y va avant. La lettre
+            //  elle-même (.recit-para) garde Caveat : cachée, elle ne la
+            //  demande qu'en s'ouvrant, et armerLEncre remesure à son
+            //  arrivée. Personne ne voit l'aperçu changer d'écriture : il
+            //  est au pied de la page.
+            //
+            //  POURQUOI UNE CLASSE, ET SUR L'APERÇU SEUL. Déclarer la police
+            //  à ce moment-là par l'API FontFace (document.fonts.add) a été
+            //  essayé : même gain sur le portrait, mais ajouter une police
+            //  au document fait recalculer le style de TOUT le document —
+            //  une tâche de 76 à 126 ms (processeur ×4) après le
+            //  chargement, en plus de celle de l'arrivée de la police.
+            //  Posée sur <html>, une classe ferait de même. Posée sur
+            //  l'aperçu, elle ne restyle qu'une ligne : aucune tâche longue
+            //  de plus (mesuré, 3 passes). Et polices.css reste la seule
+            //  déclaration des polices du site.
+            function demanderLaPlume() {
+                extrait.classList.add('plume');
+            }
+            //  Au calme, et non à l'instant du `load` : c'est là que
+            //  démarrent d'autres choses (la feuille des univers).
+            //  Safari n'a pas requestIdleCallback : un court délai en tient
+            //  lieu.
+            const auCalme = () => (window.requestIdleCallback
+                ? requestIdleCallback(demanderLaPlume, { timeout: 2000 })
+                : setTimeout(demanderLaPlume, 300));
+            if (document.readyState === 'complete') auCalme();
+            else addEventListener('load', auCalme, { once: true });
+
             // ── L'ENCRE SUIT LE DOIGT ───────────────────────────────────
             //  Ce n'est pas une animation déclenchée : c'est une FONCTION DE
             //  LA POSITION DE DÉFILEMENT. À un défilement donné correspond
@@ -11129,6 +11280,11 @@
                 clearTimeout(minuteurPrep);
                 rendreLeFocus = appelant || null;
                 panneau.hidden = false;
+                //  La signature est paresseuse (voir son balisage) : on la
+                //  demande tout de suite, sans attendre qu'on défile jusqu'à
+                //  elle. Et l'aperçu prend sa plume, s'il ne l'a pas déjà.
+                panneau.querySelectorAll('.recit-signature img').forEach((i) => { i.loading = 'eager'; });
+                demanderLaPlume();
                 //  LE RETOUR DU NAVIGATEUR REFERME LA LETTRE, et ne quitte
                 //  pas la page. C'est le réflexe dominant sur téléphone, où
                 //  le geste de retour est la façon normale de sortir d'un
@@ -12337,12 +12493,23 @@
                          échelles différentes — « Vada » aurait paru plus grand
                          qu'« Adrien », qui a des jambages plus longs.
 
-                         Engendrées par build/signature-vers-svg.py. -->
+                         Engendrées par build/signature-vers-svg.py.
+
+                         EN `loading="lazy"`, ET DEMANDÉES À L'OUVERTURE. Une
+                         image cachée (#recit est `hidden`) part quand même au
+                         chargement si rien ne l'en empêche : ces 23 Ko prenaient
+                         la bande passante du portrait, qui arrivait 190 ms plus
+                         tard en 4G lente. Mais la signature est au bout d'une
+                         feuille qui défile (3 400 px plus bas) : paresseuse,
+                         elle attendrait qu'on s'en approche, et le dernier geste
+                         de la lettre s'encrerait sur une boîte vide. ouvrir()
+                         la repasse donc en `eager` — elle a toute la lecture
+                         pour arriver. -->
                     <p class="recit-signature" aria-hidden="true"><span class="mot"><img
                                 src="ressources/images/papier/signature-1.webp" alt="" width="770" height="527"
-                                decoding="async" /></span> <span class="mot"><img
+                                loading="lazy" decoding="async" /></span> <span class="mot"><img
                                 src="ressources/images/papier/signature-2.webp" alt="" width="522" height="527"
-                                decoding="async" /></span></p>
+                                loading="lazy" decoding="async" /></span></p>
                 </div>
             </div>
         </div>

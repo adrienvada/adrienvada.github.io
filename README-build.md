@@ -219,12 +219,19 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - la fiche de casting : six rubriques étiquetées, le chant et le piano sur la
   même ligne, moins de 650 px de haut au téléphone ;
 - la page 404 : son titre, son retour, sa lampe, sans erreur ;
+- ce que l'accueil demande d'abord : Cinzel d'avance ; ni la signature de la
+  lettre, ni l'affiche de la salle de projection, ni Caveat avant la fin du
+  chargement ; l'aperçu de la lettre reçoit sa plume ensuite, et la lettre
+  ouverte, sa signature (voir [Polices](#polices--servies-par-le-site)) ;
 - la mesure attend : chaque page publique charge Umami par le chargeur,
   avant ses feuilles, jamais par une balise ; la balise insérée porte ses
   attributs ; `entree` attend en file tant qu'Umami n'est pas là ; une page
   spectacle pré-rendue ne charge pas Umami et n'écrit pas son titre avant
   d'être montrée, puis fait les deux (voir [Mesure
   d'audience](#mesure-daudience)) ;
+- la publication : l'accueil des sources reçoit ses deux feuilles dans la
+  page (adresses des polices absolues), et ses règles de spéculation — un
+  seul jeu, toutes en `moderate` — se relisent ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
 Pour ne passer que quelques vérifications — celles dont le nom contient un
@@ -315,11 +322,27 @@ Il est prudent par construction : terser **sans compression** (commentaires,
 blancs, noms de variables locales — rien d'autre), clean-css au niveau 1 (pas
 de réordonnancement de la cascade), blancs HTML réduits à une espace et jamais
 à zéro. Chaque fichier est vérifié avant d'être écrit (le JavaScript doit se
-compiler, le JSON-LD se relire, la page garder le même nombre de balises de
-chaque sorte) ; puis les pages sont ouvertes dans le Chromium de l'étape du
-PDF, et **une seule erreur de script de plus qu'avant** remet tout à
-l'original. L'étape est en `continue-on-error`, comme celle du PDF : au pire,
-le site part tel qu'il est dans le dépôt.
+compiler, le JSON-LD et les règles de spéculation se relire, la page garder
+le même nombre de balises de chaque sorte) ; puis les pages sont ouvertes
+dans le Chromium de l'étape du PDF, et **une seule erreur de script de plus
+qu'avant** remet tout à l'original. L'étape est en `continue-on-error`, comme
+celle du PDF : au pire, le site part tel qu'il est dans le dépôt.
+
+**Une exception à « on retire, on ne transforme pas » : les deux feuilles de
+l'accueil entrent dans la page.** `styles.css` et `polices.css` bloquaient
+le premier affichage, un aller-retour de plus chacune ; recopiées dans des
+`<style>` **à la place même de leurs `<link>`** — même rang dans la cascade,
+le `<noscript>` entre les deux garde le sien —, elles ne bloquent plus rien :
+premier affichage 676 → 496 ms en 4G lente émulée (téléphone, processeur ×4,
+5 passes, distributions disjointes), Cinzel 116 ms plus tôt, décalage de
+mise en page 0,026 → 0,009, pour 6 ko compressés de plus (60 → 66). Rendu
+final identique au pixel, téléphone et ordinateur, deux thèmes. Les
+adresses des polices y deviennent absolues. C'est une étape à part, après
+l'allègement, avec son propre contrôle (deux `<link>` de moins, deux `<style>`
+de plus, rien d'autre) ; si elle échoue, l'accueil part avec ses `<link>`. Les
+sources, les autres pages et `/admin/` gardent leurs `<link>`.
+`build/verifier-site.js` rejoue cette étape sur l'accueil des sources : un
+`<link>` retouché ferait sinon échouer l'intégration sans bruit.
 
 Pour l'essayer sur une copie (il refuse de réécrire le dépôt lui-même hors de
 l'action), les [outils](#les-outils--une-installation-des-versions-figées)
@@ -2531,8 +2554,33 @@ de Google Fonts : une feuille bloquante sur un autre domaine, deux connexions
 de plus avant le premier rendu, et l'adresse de chaque visiteur transmise à
 Google. Chaque famille tient en deux fichiers (`latin`, `latin-ext`, ce
 dernier ne se chargeant que pour un caractère qu'il est seul à avoir).
-L'accueil demande d'avance Montserrat et Inter (`preload`), les pages
-spectacle Cinzel et Inter. Pour changer de version : voir `LISEZMOI.txt`.
+Pour changer de version : voir `LISEZMOI.txt`.
+
+- **Demandées d'avance** (`preload`) : sur l'accueil, Cinzel, Montserrat et
+  Inter ; sur les pages spectacle, Cinzel et Inter. Cinzel manquait à
+  l'accueil — le préchargement datait d'un nom en Montserrat, et le nom est
+  passé en Cinzel sans lui : le texte le plus en vue de la page s'affichait
+  en serif de secours, puis changeait de forme 0,6 à 0,8 s plus tard. Inter
+  reste : la retirer pour faire place à Cinzel lui coûtait 120 à 280 ms.
+- **Le secours du nom tient la place de Cinzel** (« Cinzel repli », dans le
+  `<head>` de l'accueil). En réseau lent la bascule demeure ; Georgia (Noto
+  Serif sur Android) y reçoit les hampe et jambage de Cinzel — la ligne de
+  base ne saute plus — et, mot par mot, la largeur de « Adrien » et de
+  « VADA » en Cinzel (`size-adjust`), à 2 % près. Réglé sur ces deux mots :
+  à refaire si l'on écrivait autre chose en Cinzel dans l'en-tête. Le
+  changement de casse (Cinzel écrit ses minuscules en petites capitales),
+  lui, reste.
+- **Caveat vient après la page.** Elle n'écrit que la lettre et son aperçu, au
+  pied du CV, mais l'aperçu la réclamait dès la première mise en page, devant
+  le portrait (49 Ko, le portrait 170 à 230 ms plus tard en 4G lente).
+  L'aperçu ne l'emploie plus qu'avec la classe `plume`, posée au premier
+  moment de calme après le chargement, ou à l'ouverture de la lettre. Elle
+  reste déclarée dans `polices.css` : la déclarer plus tard par l'API
+  FontFace faisait recalculer le style de tout le document (76 à 126 ms à
+  ×4).
+- **Sur l'accueil publié, `polices.css` est dans la page** (voir [Ce qui part
+  en ligne](#ce-qui-part-en-ligne-perd-ses-commentaires--pas-le-dépôt)) : le
+  fichier reste la déclaration de référence, recopié à la publication.
 
 ---
 
@@ -2663,6 +2711,9 @@ dessous **la bobine** — un plan par extrait, qui lance le film à ce moment-l�
   flouté une fois pour toutes par la feuille (`.salle-halo`) — le flou n'est
   jamais animé, seule l'opacité l'est, en passant d'un canevas à l'autre. Sur
   la page, il peint l'affiche au repos et l'extrait survolé sur la bobine.
+  L'affiche de l'écran est en `loading="lazy"` : l'onglet est caché au
+  chargement, et ses 16 Ko ne passent plus devant le portrait ; le halo
+  attend son arrivée et se peint à la première ouverture de l'onglet.
 - **La salle noire** : lancer la projection ouvre `#video-modal`, dont la
   lumière baisse lentement (1 s) ; l'écran y garde son halo, et une bobine
   mène d'un extrait à l'autre sans quitter la salle. Le lecteur YouTube est

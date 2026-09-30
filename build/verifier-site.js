@@ -2467,6 +2467,30 @@ function exige(condition, message) {
             await c.close();
         });
 
+        await verifie('ce que l’accueil demande d’abord : Cinzel d’avance, rien de caché avant le portrait, la plume après le chargement, la signature à l’ouverture de la lettre', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            const demandes = [];
+            let charge = false;
+            p.on('request', (r) => demandes.push({ url: r.url(), avantLoad: !charge }));
+            p.on('load', () => { charge = true; });
+            await p.goto(base + '/', { waitUntil: 'load' });
+            const tot = demandes.filter((d) => d.avantLoad).map((d) => d.url);
+            exige(await p.evaluate(() => !!document.querySelector('link[rel="preload"][as="font"][href$="/cinzel-latin.woff2"][crossorigin]')),
+                'Cinzel n’est pas demandée d’avance : le nom s’afficherait en police de secours');
+            const cachees = tot.filter((u) => /signature-\d\.webp|bande-demo-camera|caveat-/.test(u));
+            exige(!cachees.length, `parti avant la fin du chargement sans être à l’écran : ${cachees.map((u) => u.split('/').pop()).join(', ')}`);
+            // La plume vient au calme, après load : l'aperçu la reçoit.
+            await p.waitForFunction(() => document.querySelector('.recit-extrait')?.classList.contains('plume'), null, { timeout: 5000 })
+                .catch(() => { throw new Error('l’aperçu de la lettre ne reçoit jamais sa plume (Caveat)'); });
+            // La lettre ouverte demande sa signature tout de suite.
+            await p.evaluate(() => document.querySelector('[data-recit-ouvrir]').click());
+            await p.waitForFunction(() => [...document.querySelectorAll('.recit-signature img')].every((i) => i.complete && i.naturalWidth), null, { timeout: 5000 })
+                .catch(() => { throw new Error('la signature n’est pas chargée à l’ouverture de la lettre'); });
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
 
         await verifie('la mesure attend : un chargeur partout et jamais un script différé, les gestes d’avant Umami en file, rien d’une page pré-rendue — ni vue, ni titre écrit', async () => {
             // Chaque page publique charge Umami par le chargeur, avant ses feuilles.
@@ -2520,6 +2544,20 @@ function exige(condition, message) {
             exige(!erreurs.length, erreurs.join(' | '));
             await c2.close();
         });
+
+        await verifie('la publication : l’accueil reçoit ses deux feuilles dans la page, ses règles de spéculation se relisent et restent modérées', async () => {
+            const { integrerFeuilles, verifierHtml } = require('./alleger-publication.js');
+            const source = fs.readFileSync(path.join(RACINE, 'index.html'), 'utf8');
+            const integre = integrerFeuilles(source, (f) => fs.readFileSync(path.join(RACINE, f), 'utf8'));
+            exige(!/<link rel="stylesheet" href="(styles\.css|\/ressources\/polices\/polices\.css)"/.test(integre), 'une feuille de l’accueil est restée en <link>');
+            exige(/url\(\/ressources\/polices\/cinzel-latin\.woff2\)/.test(integre), 'les adresses des polices ne sont pas devenues absolues');
+            verifierHtml(source, source, 'index.html');   // lève si les règles ne se relisent pas
+            const regles = [...source.matchAll(/<script type="speculationrules">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+            exige(regles.length === 1, `${regles.length} jeu(x) de règles de spéculation, 1 attendu`);
+            const toutes = [].concat(...['prerender', 'prefetch'].map((k) => regles[0][k] || []));
+            exige(toutes.length && toutes.every((r) => r.eagerness === 'moderate'), 'une règle de spéculation n’est pas « moderate » : elle préparerait des pages pour rien');
+        });
+
         await verifie('le sitemap annonce toutes les pages spectacle, et elles seules', async () => {
             const sitemap = fs.readFileSync(path.join(RACINE, 'sitemap.xml'), 'utf8');
             const annoncees = [...sitemap.matchAll(/\/spectacles\/([a-z0-9-]+)\/<\/loc>/g)].map((m) => m[1]);
