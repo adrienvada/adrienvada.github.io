@@ -241,6 +241,24 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - la publication : l'accueil des sources reçoit ses deux feuilles dans la
   page (adresses des polices absolues), et ses règles de spéculation — un
   seul jeu, toutes en `moderate` — se relisent ;
+- les pages générées s'affichent sans attendre : chaque fiche est écrite
+  ouverte (`is-open`), et, son moteur retenu 2,5 s, elle est déjà peinte et
+  Chrome a vu son premier affichage ; le répertoire et la galerie n'ont
+  aucune feuille en `<link>` (polices dans la page, adresses menant au
+  dossier), et leurs anciennes feuilles n'existent plus ; aucune page
+  publique ne déclare `favicon.svg`, toutes les PNG de 32 et 96 px ; les
+  fiches, le répertoire et la galerie pré-rendent les fiches et la galerie,
+  préchargent l'accueil et le répertoire, en `moderate` (voir [Préparées au
+  survol](#préparées-au-survol-le-pré-rendu)) ;
+- les passages entre documents : du répertoire à une fiche, c'est la
+  première photo du travelling qui porte le nom ; de l'accueil à la galerie,
+  la première vue de la planche, et au retour l'affiche ; aucun nom ne reste
+  posé ; en mouvement réduit, la galerie ne nomme rien ;
+- la galerie : les neuf premières vues partent avec la page et les suivantes
+  attendent, une ou deux en priorité haute, des tailles à deux branches
+  (quatre colonnes au téléphone, cinq au-delà) ; à 390 px (×3), 412 px
+  (×1,75) et 1 440 px, aucune vignette téléchargée deux fois, et les vues du
+  premier écran allumées ; sans JavaScript, aucune n'est cachée ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
 Pour ne passer que quelques vérifications — celles dont le nom contient un
@@ -349,7 +367,11 @@ final identique au pixel, téléphone et ordinateur, deux thèmes. Les
 adresses des polices y deviennent absolues. C'est une étape à part, après
 l'allègement, avec son propre contrôle (deux `<link>` de moins, deux `<style>`
 de plus, rien d'autre) ; si elle échoue, l'accueil part avec ses `<link>`. Les
-sources, les autres pages et `/admin/` gardent leurs `<link>`.
+sources de l'accueil, les pages spectacle et `/admin/` gardent leurs `<link>`.
+Le répertoire et la galerie n'en ont plus : leurs générateurs écrivent
+directement leur feuille et `polices.css` dans la page (voir [Pages
+spectacle](#pages-spectacle-spectacles--à-régénérer) et [La planche
+contact](#la-planche-contact)).
 `build/verifier-site.js` rejoue cette étape sur l'accueil des sources : un
 `<link>` retouché ferait sinon échouer l'intégration sans bruit.
 
@@ -2178,10 +2200,10 @@ lieu que si une police est encore en route une fois la première faite
 | Passage | Ce qui voyage |
 |---|---|
 | une ligne du CV → son univers, et retour | la boîte de la ligne, sa vignette (qui devient le **fond du titre**, `heroFondHtml`), son titre — `open`/`close` dans univers.js. Quand l'univers s'ouvre sur son travelling, le titre est au fond de la scène, pas encore là : seule la boîte voyage, et le titre s'écrit lettre à lettre au fond (`titreAuFond`) |
-| le répertoire, l'onglet Dates → une page spectacle | la vignette → le fond du titre de la page (`fiche-<slug>`, entre documents) |
+| le répertoire, l'onglet Dates → une page spectacle, et retour | la vignette → le fond du titre de la page (`fiche-<slug>`, entre documents). Quand la page s'ouvre sur son travelling, le fond du titre est au fond de la scène, invisible : la vignette s'enfonce dans la **première photo du travelling**, et la page en repart au retour (nom posé au `pagereveal` et au `pageswap`, rendu à la fin du passage) |
 | une vignette du book → la photo, et retour | la photo (`book-photo`) |
 | un onglet → un autre | la page, dans le sens de l'onglet ; la pastille glisse ; en quittant le CV ou en y revenant, le portrait, de l'affiche au médaillon (`portrait`, voir [Le portrait d'affiche](#le-portrait-daffiche)) |
-| l'accueil → la galerie | le portrait (`book-portrait`, nommé au départ s'il est à l'écran) — pourvu que la galerie consente au passage et nomme sa première vue de même |
+| l'accueil → la galerie, et retour | le portrait de l'affiche → la première vue de la planche (`book-portrait`, nommé de part et d'autre s'il est à l'écran), sur le ressort |
 | le thème | un cercle depuis le bouton |
 | l'ouverture → le site | un iris depuis le sceau ; le nom rejoint l'en-tête |
 
@@ -2252,8 +2274,10 @@ quatre chemins de fermeture rendent la page à la même position qu'avant.
 **`--ease-ressort`** (une courbe `linear()` qui dépasse sa cible de 4 % et s'y
 pose) pour ce qui se **déplace** — la pastille des onglets, une vignette qui
 devient page. `--dur-scene` (460 ms) pour un changement d'onglet,
-`--dur-morph` (620 ms) pour une vignette qui s'ouvre. Les pages spectacle
-relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir changé.
+`--dur-morph` (620 ms) pour une vignette qui s'ouvre. Les pages générées —
+les pages spectacle, le répertoire, la galerie — relisent ce vocabulaire dans
+`index.html` : les régénérer après l'avoir changé
+(`npm --prefix build run pages`).
 
 ### Le CV, le bandeau, la page 404
 
@@ -2402,6 +2426,51 @@ Les photos en pleine résolution ne sont téléchargées qu'à l'ouverture de la
 visionneuse, une par une : inutile de les compresser à l'extrême, mais rester
 sous ~300 Ko.
 
+**Le premier écran part avec la page.** Les dix-neuf vignettes attendaient
+leur tour (`loading="lazy"`), celles du premier écran comprises : la plus
+grande — celle que Chrome retient comme le plus grand affichage (LCP),
+photo2 aujourd'hui — n'était demandée qu'après la mise en page, en priorité
+basse (43 % de ce premier affichage à l'attendre, selon Lighthouse en
+ligne). Les neuf premières partent désormais avec le HTML (le premier écran
+au téléphone ; sept à l'ordinateur), et la plus grande à l'écran passe
+devant (`fetchpriority="high"`) : le générateur la trouve en rejouant la
+planche comme la feuille la compose, sur un téléphone et un ordinateur de
+référence (`plusGrandeVue`). Les tailles écrites dans le HTML ont **deux
+branches**, comme la planche à l'arrivée : quatre colonnes sous 640 px,
+cinq au-delà (`SEUIL_TELEPHONE`, la même constante pour le script de tête,
+l'échelle des boutons et la feuille). Elles n'en disaient qu'une, pour cinq
+colonnes ; tant que tout était paresseux, la réécriture du script passait
+avant les requêtes, mais des vignettes parties avec la page sur une taille
+fausse se téléchargeaient deux fois. Vérifié à 390 px (×3), 412 px (×1,75)
+et 1 440 px : chacune une seule fois.
+
+**La planche n'attend aucune feuille** : sa feuille et `polices.css` sont
+écrites dans la page par le générateur, comme au répertoire. Les deux
+ensemble, au téléphone en 4G lente (×4, copie publiée, cinq passes) :
+premier affichage 560 → 408 ms, plus grand affichage 1 860 → 1 576 ms.
+
+**Les vues s'allument, elles ne claquent pas.** Chaque case passait du fond
+sombre à la photo d'une image à l'autre, dix-neuf fois de suite. Une vignette
+attend désormais invisible jusqu'à son arrivée, puis paraît en fondu
+(`.allume-vignettes`, posée par le script de tête, qui marque chaque
+arrivée d'un `est-decodee`). Une vignette arrivée garde sa marque : les
+boutons − et +, la visionneuse (`book-photo`) et l'historique ne la font
+pas repartir du noir. Le fondu part d'**un centième** et non de zéro :
+Chrome ne compte pas une image peinte à opacité nulle, et la plus grande
+vignette n'était retenue qu'à la fin de son fondu, 350 à 400 ms après son
+arrivée ; un centième ne se voit pas, et avant son arrivée l'image n'a rien
+à montrer. En mouvement réduit, pas de fondu ; sans JavaScript, la marque
+manque et rien n'est caché.
+
+**De l'accueil à la planche, le portrait.** La page consent aux passages
+entre documents : la photo de l'affiche, nommée `book-portrait` au départ
+de l'accueil, se range dans la première vue de la planche, que la page
+nomme de même à son arrivée ; au retour vers l'accueil, l'inverse. Sur le
+ressort (`--dur-morph`, `--ease-ressort`, relus dans `index.html`), les deux
+images cadrées sur le visage comme l'affiche (50 % 28 %). Seulement si la
+vue est à l'écran, jamais en mouvement réduit ; le nom est rendu à la fin du
+passage. C'était la seule navigation du site sans passage.
+
 ---
 
 ## Images générées (à ne pas écraser sans les régénérer)
@@ -2484,8 +2553,30 @@ node build/generer-pages-spectacles.js
 ```
 
 Écrit `/spectacles/<slug>/index.html` pour chaque entrée de `SHOW_UNIVERSES`,
-la page-répertoire `/spectacles/`, la feuille `/spectacles/spectacle.css`, et
-réécrit `sitemap.xml`.
+la page-répertoire `/spectacles/` — sa feuille et les polices écrites dans
+son `<head>` —, et réécrit `sitemap.xml`.
+
+**La fiche s'affiche avant son moteur.** Son panneau est écrit ouvert
+(`<main id="show-universe" class="is-open">`) : sur l'accueil, le panneau
+part d'une opacité nulle que le moteur lève en l'ouvrant ; ici il n'y a rien
+à ouvrir, et ce fondu, joué par le compositeur après les cinq scripts de
+fin de page, n'était pas compté par Chrome comme un affichage. Sur les
+sources, aucun premier affichage émis (0 fois sur 3 sur Le rapt et
+Bérénice ; Lighthouse : « NO_FCP ») : les pages faites pour être trouvées
+n'avaient pas de mesure. Sur la copie publiée, il ne venait qu'au lever du
+panneau. Au téléphone en 4G lente (×4), copie publiée, cinq passes : premier
+affichage 1 848 → 900 ms sur Le rapt, 2 216 → 908 ms sur Bérénice. Ce que le
+moteur écrit — le titre, le synopsis —
+reste caché jusqu'à lui (`.u-anime`), et le repli sans JavaScript ne
+change pas.
+
+**Le répertoire n'attend aucune feuille.** Sa feuille, faite pour lui seul
+(aucun cache partagé à perdre), et `polices.css` (adresses réécrites vers
+`../ressources/polices/`) sont écrites dans son `<head>` : premier affichage
+680 → 432 ms au téléphone en 4G lente (×4, copie publiée, cinq passes).
+`polices.css` reste
+la déclaration de référence. Les fiches gardent `univers.css` en `<link>`,
+partagée par les onze.
 
 **À relancer après toute modification de `univers.js`, `dates.js`, ou d'une
 ligne de CV dans `index.html`.** Rien n'y est ressaisi : tout est relu depuis
@@ -2656,6 +2747,15 @@ conservé.
 - Les règles sont du **JSON**, pas du JavaScript : `alleger-publication.js`
   les relit comme telles (compilées comme un script, elles faisaient partir
   l'accueil non allégé). Safari et Firefox les ignorent, sans dommage.
+- **Les pages générées en ont aussi** — les fiches, le répertoire, la
+  galerie (`SPECULATION` dans `generer-pages-spectacles.js`, la même dans
+  `generer-page-galerie.js`) : du répertoire, les onze fiches sont préparées
+  comme depuis l'onglet Dates (le cas mesuré par l'audit, 362 → 139 ms), et
+  la galerie d'une fiche. L'accueil et le répertoire n'y sont que
+  **préchargés** (`prefetch` : le document seul, sans ses feuilles ni ses
+  scripts) : l'accueil est lourd à préparer pour rien, et le retour arrière
+  passe déjà par le cache avant/arrière. L'accueil, lui, ne pré-rend que les
+  fiches et la galerie.
 
 ---
 
@@ -2693,7 +2793,10 @@ Pour changer de version : voir `LISEZMOI.txt`.
   ×4).
 - **Sur l'accueil publié, `polices.css` est dans la page** (voir [Ce qui part
   en ligne](#ce-qui-part-en-ligne-perd-ses-commentaires--pas-le-dépôt)) : le
-  fichier reste la déclaration de référence, recopié à la publication.
+  fichier reste la déclaration de référence, recopié à la publication. **Au
+  répertoire et à la galerie aussi**, recopié cette fois par leurs
+  générateurs (`policesEnLigne`), commentaires ôtés et adresses réécrites :
+  relancer `npm --prefix build run pages` après avoir changé `polices.css`.
 
 ---
 
@@ -2854,8 +2957,14 @@ répertoire, à la galerie et à la 404.
   décor, que le repli de la régie ne mène pas.
 - **Vers la galerie, le portrait** : au départ vers `/galerie/`, s'il est à
   l'écran, la photo prend le nom `book-portrait` (retiré au `pageshow`) —
-  c'est la première photo du book. Elle ne voyage que si la galerie consent
-  au passage entre documents et nomme sa première vue de même.
+  c'est la première photo du book —, et se range dans la première vue de la
+  planche, que la galerie nomme de même (voir [La planche
+  contact](#la-planche-contact)). **Au retour**, la vue revient se poser
+  dans l'affiche : l'accueil nomme sa photo à l'arrivée depuis la galerie,
+  s'il la voit et hors mouvement réduit, et la rend à la fin du passage.
+  Cette écoute (`pagereveal`) vit dans le premier script du `<head>` : le
+  passage se prépare au premier rendu, pendant que la page se lit encore, et
+  le script principal arrivait trop tard pour nommer quoi que ce soit.
 - **Le papier ne bouge pas.** Toute la mise en page de l'affiche est en
   `@media screen` ; les classes Tailwind du balisage et les règles d'impression
   sont celles d'avant, et le médaillon imprimé est `profil-192.webp` (une

@@ -3,8 +3,9 @@
  * ============================================================
  *  GALERIE PHOTO — une page dédiée pour le book photographique
  * ============================================================
- *  Ce script fabrique la page /galerie/index.html et /galerie/galerie.css
- *  à partir de la liste déclarée dans galerie.js (GALLERY_IMAGES).
+ *  Ce script fabrique la page /galerie/index.html — sa feuille et les
+ *  polices du site écrites dans son <head> — à partir de la liste déclarée
+ *  dans galerie.js (GALLERY_IMAGES).
  *
  *  Il reprend l'architecture tactile et visuelle du répertoire de spectacles :
  *    · Grille responsive multi-colonnes, dont la densité se règle aux
@@ -89,6 +90,50 @@ function dimensionsWebp(fichier) {
 
 const SPRITE = chargerSprite();
 const IMAGES = chargerGalerie();
+
+// Le vocabulaire du mouvement — deux courbes, quatre durées —, relu dans
+// index.html comme le font les pages spectacle (voir chargerMouvement dans
+// build/generer-pages-spectacles.js) : le portrait qui arrive de l'accueil
+// se pose sur le même ressort et dans la même durée qu'une vignette qui
+// devient page. Changer une courbe dans index.html, c'est relancer ce
+// script aussi (npm --prefix build run pages).
+function chargerMouvement() {
+    const poses = new Map();
+    for (const m of lire('index.html').matchAll(/(--(?:ease|dur)-[a-z]+):\s*([^;]+);/g)) {
+        if (!poses.has(m[1])) poses.set(m[1], m[2].trim());
+    }
+    for (const n of ['--dur-morph', '--ease-ressort']) {
+        if (!poses.has(n)) throw new Error(`index.html : ${n} introuvable. La galerie en a besoin pour le passage depuis l'accueil.`);
+    }
+    return [...poses].map(([n, v]) => `${n}: ${v};`).join(' ');
+}
+
+const MOUVEMENT = chargerMouvement();
+
+// LES POLICES, DANS LA PAGE. La page attendait deux feuilles bloquantes —
+// la sienne (galerie.css, faite pour elle seule : aucun cache partagé à
+// perdre) et polices.css — : un aller-retour de plus après le HTML avant
+// le premier affichage. Les deux sont désormais écrites dans le <head> :
+// premier affichage 560 → 408 ms au téléphone en 4G lente (×4, copie
+// publiée, cinq passes). polices.css reste la déclaration de référence ; sa copie perd
+// ses commentaires, et ses adresses, relatives à elle, le deviennent à la
+// page. Même fonction que pour le répertoire (build/generer-pages-spectacles.js).
+function policesEnLigne(versPolices) {
+    const css = lire('ressources/polices/polices.css')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/url\((['"]?)(?![a-z]+:|\/)([^'")]+)\1\)/gi, (m, q, u) => `url(${q}${versPolices}${u}${q})`)
+        .replace(/\n{3,}/g, '\n\n').trim();
+    if (/<\/style/i.test(css)) throw new Error('polices.css contient « </style » : impossible de la recopier dans une page.');
+    return css;
+}
+
+// LE SEUIL DU TÉLÉPHONE, écrit une fois : sous cette largeur, la planche
+// s'ouvre à quatre colonnes au lieu de cinq (script de tête), l'échelle
+// des boutons − et + change de barreaux (NIVEAUX), et les tailles écrites
+// dans le HTML prennent leur première branche (taillesVignette). Trois
+// endroits qui doivent dire la même chose : un écart, et le navigateur
+// choisirait une vignette pour une planche qu'il n'affichera pas.
+const SEUIL_TELEPHONE = 640;
 
 function genererCss() {
     return `/* GALERIE PHOTO (/galerie/) — feuille générée (build/generer-page-galerie.js)
@@ -465,7 +510,31 @@ h1 {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform .6s cubic-bezier(.2, .6, .2, 1);
+    transition: transform .6s cubic-bezier(.2, .6, .2, 1), opacity .35s ease-out;
+}
+
+/* LA VUE S'ALLUME, ELLE NE CLAQUE PAS. Au chargement, chaque case passait
+   du fond sombre à la photo d'une image à l'autre, dix-neuf fois de suite
+   — le seul allumage sans geste de la page. Une vignette attend donc
+   invisible jusqu'à son arrivée (.est-decodee, posée par le script de
+   tête à son « load »), puis paraît en fondu : une opacité, rien à
+   repeindre. Seulement si ce script est là pour l'allumer
+   (.allume-vignettes, posée par lui) : sans JavaScript, la classe manque
+   et la planche reste telle quelle. Une vignette déjà arrivée garde sa
+   classe : la réécriture des tailles (boutons − et +), le passage vers la
+   visionneuse (book-photo) ou le retour par l'historique ne la refont pas
+   partir du noir. En mouvement réduit, le fondu tombe (voir la fin de la
+   feuille).
+
+   Le fondu part d'UN CENTIÈME, pas de zéro. Chrome ne compte pas une
+   image peinte à opacité nulle : partie de zéro, la plus grande vignette
+   n'était retenue comme premier grand affichage (LCP) qu'à la FIN de son
+   fondu, 350 à 400 ms après son arrivée (1 972 ms contre 1 572 à 1 624,
+   téléphone, 4G lente, ×4, trois passes). Un centième ne se voit pas — et
+   avant son arrivée, l'image n'a de toute façon rien à montrer : c'est
+   l'instant où le fondu commence qui est compté, à juste titre. */
+.allume-vignettes .media img:not(.est-decodee) {
+    opacity: .01;
 }
 
 .lueur {
@@ -539,7 +608,7 @@ html[data-zoom="4"] { --colonnes: 4; }
 html[data-zoom="5"] { --colonnes: 5; }
 html[data-zoom="6"] { --colonnes: 6; }
 
-@media (max-width: 640px) {
+@media (max-width: ${SEUIL_TELEPHONE}px) {
     html[data-zoom="3"] .repertoire { gap: 1.3rem .5rem; }
     html[data-zoom="4"] .repertoire { gap: 1.1rem .35rem; }
 }
@@ -631,6 +700,31 @@ html.vt-book .zoom-img {
     object-fit: cover;
     object-position: 50% 35%;
     animation-duration: .5s;
+}
+
+/* DE L'ACCUEIL À LA PLANCHE, LE PORTRAIT. La photo de l'affiche est la
+   première du book : au départ vers cette page, l'accueil la nomme
+   \`book-portrait\` (s'il la voit), et la page nomme de même sa première
+   vue à l'arrivée (voir le script de tête) — le portrait se range dans la
+   planche. Au retour vers l'accueil, l'inverse. C'était la seule
+   navigation du site sans passage : une coupe franche, dans les deux
+   sens. Il se déplace, donc sur le ressort (--ease-ressort, --dur-morph,
+   relus dans index.html) ; les deux images couvrent le groupe, cadrées
+   sur le visage comme l'affiche (50 % 28 %) : la vignette montre la photo
+   entière, l'affiche un peu plus haute que large. Navigateur sans passage
+   entre documents : une navigation ordinaire. */
+@view-transition { navigation: auto; }
+
+::view-transition-group(book-portrait) {
+    animation-duration: var(--dur-morph);
+    animation-timing-function: var(--ease-ressort);
+}
+
+::view-transition-old(book-portrait),
+::view-transition-new(book-portrait) {
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 28%;
 }
 
 .zoom-img {
@@ -733,7 +827,7 @@ html.vt-book .zoom-img {
 .zoom-next { right: 1.8vw; }
 
 /* ── Version mobile ── */
-@media (max-width: 640px) {
+@media (max-width: ${SEUIL_TELEPHONE}px) {
     body { padding: 0 .9rem 2.6rem; }
     .tete { padding: 2.3rem 0 1.6rem; }
     .sur-titre { font-size: .69rem; letter-spacing: .2em; margin-bottom: .8rem; }
@@ -755,6 +849,13 @@ html.vt-book .zoom-img {
         animation: none !important;
         transition-duration: 0.01ms !important;
     }
+
+    /* Les passages entre documents ne sont pas des éléments : « * » ne
+       les touche pas. Sans cette règle, le portrait voyageait quand même. */
+    ::view-transition-group(*), ::view-transition-image-pair(*),
+    ::view-transition-old(*), ::view-transition-new(*) {
+        animation: none !important;
+    }
 }
 `;
 }
@@ -763,9 +864,73 @@ html.vt-book .zoom-img {
 // vignette : sa photo à la hauteur visée (--h), un peu plus pour ce que la
 // rangée lui ajoute en se remplissant. Même calcul que la feuille ; le
 // script le refait quand la densité change (majTailles).
-function taillesVignette(r, colonnes) {
-    const k = (r * 1.12 * 1.25 / colonnes).toFixed(3);
-    return `calc(min(100vw, 68rem) * ${k})`;
+//
+// DEUX BRANCHES, COMME LA PLANCHE À L'ARRIVÉE : quatre colonnes sous le
+// seuil du téléphone, cinq au-delà (voir le script de tête). Le HTML
+// n'annonçait que les cinq : au téléphone, le navigateur choisissait pour
+// une planche qu'il n'afficherait pas, et le script réécrivait ensuite
+// les tailles. Tant que les vignettes attendaient toutes leur tour
+// (loading="lazy"), la réécriture passait avant les requêtes ; les
+// premières partent désormais avec le HTML, et une seule taille fausse les
+// aurait fait télécharger deux fois (vu : 6 vignettes, +61 Ko).
+const tailleCase = (r, colonnes) => (r * 1.12 * 1.25 / colonnes).toFixed(3);
+function taillesVignette(r) {
+    return `(max-width: ${SEUIL_TELEPHONE - 0.02}px) calc(100vw * ${tailleCase(r, 4)}), ` +
+        `calc(min(100vw, 68rem) * ${tailleCase(r, 5)})`;
+}
+
+// CE QUI EST À L'ÉCRAN EN ARRIVANT PART TOUT DE SUITE. Les dix-neuf
+// vignettes étaient paresseuses (loading="lazy"), celles du premier écran
+// comprises : la plus grande, celle que Chrome retient comme le plus grand
+// affichage (LCP), n'était demandée qu'après la mise en page, en priorité
+// basse — 43 % du temps de ce premier affichage à l'attendre (Lighthouse,
+// en ligne). Les neuf premières — le premier écran au téléphone (390 ×
+// 844), sept à l'ordinateur — partent avec le HTML ; les autres attendent
+// qu'on défile.
+const VIGNETTES_D_EMBLEE = 9;
+
+// Et la plus grande d'entre elles À L'ÉCRAN passe devant
+// (fetchpriority="high") : c'est elle que Chrome retient. On la trouve en
+// rejouant la planche comme la feuille la compose — la hauteur visée (--h,
+// la largeur divisée par les colonnes, × 1,12), une case par photo qui
+// part de r × --h, autant de cases par rangée qu'il en tient, la rangée
+// qui grandit à proportion de r pour se remplir, la dernière qui ne
+// s'étire pas —, puis en ne comptant que ce qui paraît au-dessus du bas du
+// premier écran. Deux écrans, relevés sur la page : le téléphone (390 ×
+// 844 : planche de 361 px à quatre colonnes, gouttière de 0,35 rem,
+// première rangée à 263 px, 32 px d'une rangée à l'autre en plus des
+// photos) et l'ordinateur (1 440 × 900 : 68 rem à cinq colonnes, 1 rem,
+// 335 px, 47 px). Aujourd'hui, les deux désignent photo2, celle que
+// mesure Chrome. Si la planche change dans la feuille, changer ces
+// chiffres : au pire, c'est une autre vignette qui passe devant.
+const ECRANS_DE_REFERENCE = [
+    // largeur de la planche, colonnes, gouttière, haut de la planche, bas de l'écran, entre deux rangées
+    [361.2, 4, 5.6, 263, 844, 32],
+    [1088, 5, 16, 335, 900, 47],
+];
+function plusGrandeVue(rs) {
+    const elues = new Set();
+    for (const [largeur, colonnes, gouttiere, haut, bas, pas] of ECRANS_DE_REFERENCE) {
+        const h = largeur / colonnes * 1.12;
+        let rangee = [], somme = 0, y = haut, meilleure = -1, aire = 0;
+        const clore = (derniere) => {
+            const libre = largeur - somme - gouttiere * (rangee.length - 1);
+            const hauteur = derniere ? h : h + libre / rangee.reduce((t, i) => t + rs[i], 0);
+            const vue = Math.max(0, Math.min(hauteur, bas - y));
+            rangee.filter((i) => i < VIGNETTES_D_EMBLEE).forEach((i) => {
+                if (rs[i] * hauteur * vue > aire) { aire = rs[i] * hauteur * vue; meilleure = i; }
+            });
+            y += hauteur + pas;
+            rangee = []; somme = 0;
+        };
+        rs.forEach((r, i) => {
+            if (rangee.length && somme + r * h + gouttiere * rangee.length > largeur) clore(false);
+            rangee.push(i); somme += r * h;
+        });
+        clore(true);
+        if (meilleure >= 0) elues.add(meilleure);
+    }
+    return elues;
 }
 
 function genererHtml() {
@@ -801,12 +966,13 @@ function genererHtml() {
         };
     });
 
+    const devant = plusGrandeVue(photosJson.map((p) => p.r));
     const cartes = photosJson.map((p, i) => `
         <li class="carte" style="--ac:#bfa98a;--i:${i};--r:${p.r}" data-index="${i}">
             <button type="button" class="carte-btn" data-zoom-photo="${i}" aria-label="Agrandir : ${esc(p.alt)}">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="${esc(p.srcset)}" sizes="${taillesVignette(p.r, 5)}"><img src="${esc(p.full)}" alt="${esc(p.alt)}" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="${esc(p.srcset)}" sizes="${taillesVignette(p.r)}"><img src="${esc(p.full)}" alt="${esc(p.alt)}"${i < VIGNETTES_D_EMBLEE ? '' : ' loading="lazy"'}${devant.has(i) ? ' fetchpriority="high"' : ''} decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -883,11 +1049,63 @@ function genererHtml() {
         //
         //  LE CHIFFRE EST CELUI DU HAUT DE L'ÉCHELLE, et il est écrit à un
         //  seul endroit : la même expression sert de borne aux boutons de
-        //  densité (voir NIVEAUX plus bas). Le seuil de 640 px est celui de la
-        //  feuille de style, pas un choix indépendant.
+        //  densité (voir NIVEAUX plus bas). Le seuil (${SEUIL_TELEPHONE} px) est celui
+        //  de la feuille de style et des tailles écrites dans le HTML, pas un
+        //  choix indépendant : une seule constante dans le générateur,
+        //  SEUIL_TELEPHONE.
         // ════════════════════════════════════════════════════════════════
         (function () {
-            document.documentElement.dataset.zoom = innerWidth < 640 ? '4' : '5';
+            document.documentElement.dataset.zoom = innerWidth < ${SEUIL_TELEPHONE} ? '4' : '5';
+        })();
+
+        // LES VIGNETTES S'ALLUMENT À LEUR ARRIVÉE (voir .allume-vignettes
+        // dans la feuille). Posé ici, avant la première vignette : son
+        // arrivée ne remonte pas jusqu'à la fenêtre, on l'écoute donc sur
+        // le document, à la descente — même geste que les photos du
+        // travelling d'une page spectacle.
+        (function () {
+            document.documentElement.classList.add('allume-vignettes');
+            document.addEventListener('load', function (e) {
+                var img = e.target;
+                if (img.matches && img.matches('.carte .media img')) img.classList.add('est-decodee');
+            }, true);
+        })();
+
+        // LE PORTRAIT DE L'ACCUEIL SE RANGE DANS LA PLANCHE (voir
+        // « book-portrait » dans la feuille). À l'arrivée depuis l'accueil,
+        // la première vue prend le nom que la photo de l'affiche a pris au
+        // départ ; au départ vers l'accueil, elle le prend aussi, et
+        // l'accueil nomme son affiche à l'arrivée. Seulement si elle est à
+        // l'écran — sinon le portrait partirait vers une case qu'on ne voit
+        // pas —, et le nom est rendu à la fin du passage (et au retour par
+        // l'historique). En mouvement réduit, rien n'est nommé.
+        (function () {
+            var vue = null;
+            function rendre() {
+                if (vue) vue.style.viewTransitionName = '';
+                vue = null;
+            }
+            function accueil(url) {
+                try { return new URL(url, location.href).pathname === '/'; } catch (e) { return false; }
+            }
+            function poser(e, versOuDepuis) {
+                if (!e.viewTransition || !versOuDepuis || !accueil(versOuDepuis.url)) return;
+                if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                var img = document.querySelector('.carte .media img');
+                var r = img && img.getBoundingClientRect();
+                if (!r || !r.width || r.bottom <= 0 || r.top >= innerHeight) return;
+                vue = img;
+                vue.style.viewTransitionName = 'book-portrait';
+                e.viewTransition.finished.then(rendre, rendre);
+            }
+            addEventListener('pagereveal', function (e) {
+                var a = (typeof navigation !== 'undefined') && navigation.activation;
+                poser(e, a && a.from);
+            });
+            addEventListener('pageswap', function (e) {
+                poser(e, e.activation && e.activation.entry);
+            });
+            addEventListener('pageshow', rendre);
         })();
     </script>
     <meta name="theme-color" content="#0a0907">
@@ -920,6 +1138,23 @@ function genererHtml() {
         })();
     </script>
 
+    <!-- Les pages voisines, préparées au survol : les mêmes règles que les
+         pages spectacle (voir SPECULATION dans build/generer-pages-spectacles.js
+         et README-build.md, « Préparées au survol »). D'ici, l'accueil et le
+         répertoire ne sont que préchargés. Du JSON, pas du JavaScript. -->
+    <script type="speculationrules">
+        {
+            "prerender": [{
+                "where": { "or": [{ "href_matches": "/spectacles/*/" }, { "href_matches": "/galerie/" }] },
+                "eagerness": "moderate"
+            }],
+            "prefetch": [{
+                "where": { "or": [{ "href_matches": "/" }, { "href_matches": "/spectacles/" }] },
+                "eagerness": "moderate"
+            }]
+        }
+    </script>
+
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">
@@ -928,11 +1163,26 @@ function genererHtml() {
     <meta property="og:image" content="${SITE}/ressources/images/og-adrien-vada.jpg">
     <meta property="og:url" content="${url}">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="icon" type="image/svg+xml" href="../favicon_io/favicon.svg">
+    <!-- En PNG, comme l'accueil : la page ne déclarait que favicon.svg, un
+         PNG de 256 px en base64 — 128 Ko, 20 % de ce que pesait la page. -->
+    <link rel="icon" type="image/png" href="../favicon_io/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="../favicon_io/favicon-96x96.png" sizes="96x96">
     <!-- Les polices du site, servies par le site (ressources/polices/). -->
     <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="../ressources/polices/polices.css">
-    <link rel="stylesheet" href="galerie.css">
+    <!-- Les polices, puis la feuille de la page, DANS la page : deux
+         feuilles bloquantes de moins, rien à attendre après le HTML pour le
+         premier affichage (voir policesEnLigne et genererCss dans
+         build/generer-page-galerie.js). -->
+    <style>
+${policesEnLigne('../ressources/polices/')}
+    </style>
+    <style>
+${genererCss()}    </style>
+    <style>
+        /* Le mouvement de l'accueil, relu dans index.html (voir
+           chargerMouvement) : le passage du portrait en dépend. */
+        :root { ${MOUVEMENT} }
+    </style>
     <script type="application/ld+json">
 ${JSON.stringify(schemaJson, null, 2)}
     </script>
@@ -1467,7 +1717,7 @@ ${JSON.stringify(schemaJson, null, 2)}
         var reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
         // Une colonne unique au téléphone : la photo en grand, pour qui
         // voit mal — le pincement ne l'offrait pas.
-        var NIVEAUX = function () { return innerWidth < 640 ? [1, 2, 3, 4] : [2, 3, 4, 5]; };
+        var NIVEAUX = function () { return innerWidth < ${SEUIL_TELEPHONE} ? [1, 2, 3, 4] : [2, 3, 4, 5]; };
         // LE REPOS EST LE HAUT DE L'ÉCHELLE, comme à l'arrivée : c'est la
         // planche contact qui fait le repos de cette page (voir le script
         // du <head>).
@@ -1521,7 +1771,7 @@ ${JSON.stringify(schemaJson, null, 2)}
         });
 
         // UN QUART DE TOUR PEUT RENDRE LE NIVEAU IMPOSSIBLE. L'échelle n'a
-        // pas les mêmes barreaux des deux côtés du seuil de 640 px : cinq
+        // pas les mêmes barreaux des deux côtés du seuil de ${SEUIL_TELEPHONE} px : cinq
         // colonnes existent à l'écran, pas au téléphone. Ouvrir la page en
         // paysage la pose donc à cinq, et la remettre en portrait garderait
         // ces cinq colonnes sur 390 px de large — des vignettes de 78 px.
@@ -1533,7 +1783,8 @@ ${JSON.stringify(schemaJson, null, 2)}
             }
             majBoutons();
         });
-        majTailles(zoomCourant());
+        // Pas de réécriture des tailles à l'arrivée : le HTML annonce déjà
+        // celles de la planche telle qu'elle s'ouvre (voir taillesVignette).
         majBoutons();
 
         // Un scintillement de loin en loin — TROIS fois, puis la planche se
@@ -1630,10 +1881,9 @@ function main() {
         fs.mkdirSync(SORTIE_DIR, { recursive: true });
     }
 
-    const cssContent = genererCss();
-    const cssPath = path.join(SORTIE_DIR, 'galerie.css');
-    fs.writeFileSync(cssPath, cssContent, 'utf8');
-    console.log(`✓ ${path.relative(RACINE, cssPath)} (${Buffer.byteLength(cssContent)} octets)`);
+    // La feuille vit désormais dans la page (voir genererCss) : l'ancien
+    // fichier, s'il traîne encore, part — rien ne le lit plus.
+    fs.rmSync(path.join(SORTIE_DIR, 'galerie.css'), { force: true });
 
     const htmlContent = genererHtml();
     const htmlPath = path.join(SORTIE_DIR, 'index.html');

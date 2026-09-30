@@ -55,6 +55,14 @@
  *      les deux pilotes, et tout posé en mouvement réduit ; le doigt qui
  *      fait défiler n'y dévoile rien, la souris et le clavier si ;
  *    · la page 404 ;
+ *    · les pages générées, qui s'affichent sans attendre : la fiche écrite
+ *      ouverte et peinte avant son moteur, le répertoire et la galerie
+ *      sans feuille à attendre, des icônes en PNG, les pages voisines
+ *      préparées au survol ;
+ *    · les passages entre documents, qui atterrissent sur ce qu'on voit
+ *      (la première photo du travelling, la première vue de la planche) ;
+ *    · la galerie : le premier écran part avec la page, à la bonne taille
+ *      et une seule fois, allumé en fondu, visible sans JavaScript ;
  *    · le sitemap, qui doit annoncer toutes les pages spectacle.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
@@ -2790,6 +2798,139 @@ function exige(condition, message) {
             exige(regles.length === 1, `${regles.length} jeu(x) de règles de spéculation, 1 attendu`);
             const toutes = [].concat(...['prerender', 'prefetch'].map((k) => regles[0][k] || []));
             exige(toutes.length && toutes.every((r) => r.eagerness === 'moderate'), 'une règle de spéculation n’est pas « moderate » : elle préparerait des pages pour rien');
+        });
+
+        await verifie('les pages générées s’affichent sans attendre : la fiche ouverte d’emblée, peinte avant son moteur ; le répertoire et la galerie sans feuille à attendre ; des icônes en PNG ; les pages voisines préparées au survol, en « moderate »', async () => {
+            const publiques = ['index.html', '404.html', 'galerie/index.html', 'spectacles/index.html']
+                .concat(dossiers.map((d) => `spectacles/${d}/index.html`));
+            for (const f of publiques) {
+                const h = fs.readFileSync(path.join(RACINE, f), 'utf8');
+                exige(!/<link[^>]*favicon\.svg/.test(h), `${f} : déclare encore favicon.svg (128 Ko pour une icône de 16 px)`);
+                exige(/favicon-32x32\.png/.test(h) && /favicon-96x96\.png/.test(h), `${f} : pas d’icône PNG de 32 et 96 px`);
+            }
+            for (const d of dossiers) {
+                const h = fs.readFileSync(path.join(RACINE, `spectacles/${d}/index.html`), 'utf8');
+                exige(/<main id="show-universe" class="is-open">/.test(h), `spectacles/${d} : le panneau n’est pas écrit ouvert — Chrome n’y verrait aucun premier affichage`);
+            }
+            for (const f of ['spectacles/index.html', 'galerie/index.html']) {
+                const h = fs.readFileSync(path.join(RACINE, f), 'utf8');
+                exige(!/<link rel="stylesheet"/.test(h), `${f} : une feuille est restée en <link>, à attendre avant le premier affichage`);
+                exige(/url\(\.\.\/ressources\/polices\/cinzel-latin\.woff2\)/.test(h), `${f} : les polices ne sont pas dans la page, ou leurs adresses ne mènent pas au dossier`);
+            }
+            for (const f of ['spectacles/spectacle.css', 'galerie/galerie.css']) {
+                exige(!fs.existsSync(path.join(RACINE, f)), `${f} existe encore : plus rien ne la lit`);
+            }
+            for (const f of ['galerie/index.html', 'spectacles/index.html', `spectacles/${dossiers[0]}/index.html`]) {
+                const h = fs.readFileSync(path.join(RACINE, f), 'utf8');
+                const regles = [...h.matchAll(/<script type="speculationrules">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+                exige(regles.length === 1, `${f} : ${regles.length} jeu(x) de règles de spéculation, 1 attendu`);
+                const cibles = (k) => (regles[0][k] || []).flatMap((r) => (r.where.or || [r.where]).map((w) => w.href_matches)).sort().join(' ');
+                exige([].concat(regles[0].prerender || [], regles[0].prefetch || []).every((r) => r.eagerness === 'moderate'), `${f} : une règle n’est pas « moderate »`);
+                exige(cibles('prerender') === '/galerie/ /spectacles/*/', `${f} : pré-rendu de « ${cibles('prerender')} »`);
+                exige(cibles('prefetch') === '/ /spectacles/', `${f} : préchargement de « ${cibles('prefetch')} »`);
+            }
+            // Le moteur retenu 2,5 s : la fiche est déjà peinte, et Chrome l'a vue.
+            const c = await visiteur({ viewport: { width: 390, height: 844 } });
+            await c.route(/\/univers\.js$/, async (r) => { await new Promise((f) => setTimeout(f, 2500)); r.continue().catch(() => { }); });
+            const p = await c.newPage();
+            await p.goto(`${base}/spectacles/${dossiers[0]}/`, { waitUntil: 'commit' });
+            await p.waitForTimeout(1500);
+            const avant = await p.evaluate(() => ({
+                moteur: !!window.__universPret,
+                fcp: performance.getEntriesByName('first-contentful-paint').length,
+                opacite: getComputedStyle(document.getElementById('show-universe')).opacity
+            }));
+            exige(!avant.moteur, 'le moteur a démarré malgré le retard : l’épreuve ne prouve rien');
+            exige(avant.opacite === '1' && avant.fcp === 1, `avant le moteur, la fiche est ${avant.opacite === '1' ? 'visible' : 'invisible'} et ${avant.fcp ? '' : 'sans '}premier affichage`);
+            await c.close();
+        });
+
+        await verifie('les passages entre documents atterrissent sur ce qu’on voit : la carte du répertoire dans la première photo du travelling, le portrait de l’accueil dans la première vue de la planche, et retour — rien de nommé en mouvement réduit', async () => {
+            // Ce qui porte un nom au moment où le passage se prépare.
+            const noter = () => {
+                if (window !== top) return;   // les cadres vides de l'accueil partagent son stockage
+                const relever = (type, e) => {
+                    const noms = [...document.querySelectorAll('*')].filter((el) => {
+                        const n = getComputedStyle(el).viewTransitionName;
+                        return n && n !== 'none' && el !== document.documentElement;
+                    }).map((el) => `${getComputedStyle(el).viewTransitionName}@${el.matches('.u-of-photo') ? 'photo' : el.matches('.u-hero-fond') ? 'fond' : el.matches('.carte .media img') ? 'vignette' : el.matches('.affiche-cadre img') ? 'affiche' : el.tagName}`);
+                    try { sessionStorage.setItem('__vt-' + type, JSON.stringify({ vt: !!e.viewTransition, noms, page: location.pathname })); } catch (x) { }
+                };
+                addEventListener('pagereveal', (e) => { if (e.viewTransition) e.viewTransition.ready.then(() => relever('reveal', e), () => relever('reveal', e)); else relever('reveal', e); });
+            };
+            const lire = (p) => p.evaluate(() => JSON.parse(sessionStorage.getItem('__vt-reveal') || 'null'));
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            await c.addInitScript(noter);
+            const p = await c.newPage();
+            await p.goto(`${base}/spectacles/`, { waitUntil: 'load' });
+            await p.waitForTimeout(400);
+            await p.evaluate(() => document.querySelector('a[href="lerapt/"]').scrollIntoView({ block: 'center' }));
+            await p.click('a[href="lerapt/"]');
+            await p.waitForURL(/lerapt/);
+            await p.waitForTimeout(1200);
+            const fiche = await lire(p);
+            exige(fiche && fiche.vt, 'répertoire → fiche : pas de passage');
+            exige(fiche.noms.join() === 'fiche-lerapt@photo', `répertoire → fiche : ${fiche.noms.join(', ') || 'rien'} nommé, au lieu de la première photo du travelling`);
+            await p.goto(`${base}/?direct`, { waitUntil: 'load' });
+            await p.waitForTimeout(800);
+            await p.click('a.affiche-portrait');
+            await p.waitForURL(/galerie/);
+            await p.waitForTimeout(1200);
+            const planche = await lire(p);
+            exige(planche && planche.vt && planche.noms.join() === 'book-portrait@vignette', `accueil → galerie : ${JSON.stringify(planche)}`);
+            await p.goBack();
+            await p.waitForTimeout(1200);
+            const retour = await lire(p);
+            exige(retour && retour.page === '/' && retour.vt && retour.noms.join() === 'book-portrait@affiche', `galerie → accueil : ${JSON.stringify(retour)}`);
+            const restants = await p.evaluate(() => [...document.querySelectorAll('[style*="view-transition-name"]')].filter((el) => el.style.viewTransitionName).length);
+            exige(!restants, `${restants} nom(s) de passage restés posés après le retour`);
+            await c.close();
+            // Mouvement réduit : la galerie ne nomme rien.
+            const r = await visiteur({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+            await r.addInitScript(noter);
+            const pr = await r.newPage();
+            await pr.goto(`${base}/?direct`, { waitUntil: 'load' });
+            await pr.waitForTimeout(800);
+            await pr.click('a.affiche-portrait');
+            await pr.waitForURL(/galerie/);
+            await pr.waitForTimeout(1000);
+            const reduit = await lire(pr);
+            exige(reduit && !reduit.noms.length, `en mouvement réduit, la galerie nomme ${reduit && reduit.noms.join(', ')}`);
+            await r.close();
+        });
+
+        await verifie('la galerie : le premier écran part avec la page, la plus grande vue devant, chacune à sa taille et une seule fois — au téléphone comme à l’ordinateur ; les vues s’allument en fondu, et sans JavaScript elles sont là', async () => {
+            const h = fs.readFileSync(path.join(RACINE, 'galerie/index.html'), 'utf8');
+            const imgs = [...h.matchAll(/<picture><source[^>]*sizes="([^"]*)"[^>]*><img([^>]*)>/g)];
+            const paresseuses = imgs.map((m) => /loading="lazy"/.test(m[2]));
+            exige(imgs.length >= 10 && paresseuses.slice(0, 9).every((x) => !x) && paresseuses.slice(9).every((x) => x), 'les neuf premières vues ne partent pas avec la page, ou les suivantes n’attendent pas');
+            const devant = imgs.filter((m) => /fetchpriority="high"/.test(m[2])).length;
+            exige(devant >= 1 && devant <= 2, `${devant} vue(s) en priorité haute`);
+            exige(imgs.every((m) => /^\(max-width: [\d.]+px\) calc\(100vw \* [\d.]+\), calc\(min\(100vw, 68rem\) \* [\d.]+\)$/.test(m[1])), 'les tailles écrites ne disent pas les deux planches (quatre colonnes au téléphone, cinq au-delà)');
+            for (const [vue, dpr, mobile] of [[{ width: 390, height: 844 }, 3, true], [{ width: 412, height: 915 }, 1.75, true], [{ width: 1440, height: 900 }, 1, false]]) {
+                const c = await visiteur({ viewport: vue, deviceScaleFactor: dpr, isMobile: mobile, hasTouch: mobile });
+                const p = await c.newPage();
+                const demandes = [];
+                p.on('request', (q) => { const m = q.url().match(/vignettes\/(.+)-(\d+)\.webp$/); if (m) demandes.push(m[1]); });
+                const erreurs = guette(p);
+                await p.goto(base + '/galerie/', { waitUntil: 'load' });
+                await p.waitForTimeout(900);
+                const doublons = demandes.filter((v, i) => demandes.indexOf(v) !== i);
+                exige(!doublons.length, `à ${vue.width} px (×${dpr}) : ${doublons.join(', ')} téléchargée(s) deux fois`);
+                const etat = await p.evaluate(() => {
+                    const vues = [...document.querySelectorAll('.carte .media img')].slice(0, 9);
+                    return { eteintes: vues.filter((i) => !i.classList.contains('est-decodee') || getComputedStyle(i).opacity !== '1').length };
+                });
+                exige(!etat.eteintes, `à ${vue.width} px : ${etat.eteintes} vue(s) du premier écran restées éteintes`);
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+            const s = await visiteur({ javaScriptEnabled: false });
+            const ps = await s.newPage();
+            await ps.goto(base + '/galerie/', { waitUntil: 'load' });
+            const cachees = await ps.evaluate(() => [...document.querySelectorAll('.carte .media img')].filter((i) => getComputedStyle(i).opacity !== '1').length);
+            exige(!cachees, `sans JavaScript, ${cachees} vue(s) de la planche sont invisibles`);
+            await s.close();
         });
 
         await verifie('le sitemap annonce toutes les pages spectacle, et elles seules', async () => {

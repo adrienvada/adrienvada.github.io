@@ -40,6 +40,18 @@
             else charger();
         })();
     </script>
+    <script type="speculationrules">
+        {
+            "prerender": [{
+                "where": { "or": [{ "href_matches": "/spectacles/*/" }, { "href_matches": "/galerie/" }] },
+                "eagerness": "moderate"
+            }],
+            "prefetch": [{
+                "where": { "or": [{ "href_matches": "/" }, { "href_matches": "/spectacles/" }] },
+                "eagerness": "moderate"
+            }]
+        }
+    </script>
 
     <meta property="og:type" content="article">
     <meta property="og:locale" content="fr_FR">
@@ -53,8 +65,11 @@
     <meta name="twitter:description" content="À la barre, peine perdue ?, CDN de Normandie-Rouen — avec Adrien Vada (Juge, accusé, greffier, avocat, narrateur). Inspirés d’affaires réelles, des…">
     <meta name="twitter:image" content="https://adrienvada.fr/ressources/images/univers/alabarre/19.jpg">
 
+    <!-- En PNG, comme l'accueil : favicon.svg n'était qu'un PNG de 256 px en
+         base64, 128 Ko que Chrome préférait aux PNG déclarés (voir
+         index.html). -->
+    <link rel="icon" type="image/png" href="../../favicon_io/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-96x96.png" sizes="96x96">
-    <link rel="icon" type="image/svg+xml" href="../../favicon_io/favicon.svg">
 
     <!-- Les polices du site, servies par le site (ressources/polices/). Le
          titre est en Cinzel et le synopsis en Inter : ce sont les deux
@@ -112,6 +127,41 @@
                 if (img.matches && img.matches('.u-of-photo img')) img.classList.add('est-decodee');
             }, true);
         })();
+
+        // LE PASSAGE ATTERRIT SUR CE QU'ON VOIT. La vignette du répertoire
+        // (ou de l'onglet Dates) devient d'ordinaire le fond du titre. Mais
+        // cette page s'ouvre sur son travelling, et le titre y est au fond
+        // de la scène, pas encore là : la vignette grandissait jusqu'au
+        // plein écran en s'effaçant dans le vide. Au début de la page, elle
+        // s'enfonce donc dans la première photo du travelling — la seule
+        // chose à l'écran, avec « Avancer » —, et la fiche en repart de
+        // même au retour. Le nom est posé au passage et rendu à sa fin, et
+        // le fond du titre garde le sien partout ailleurs (plus bas dans
+        // la page, historique). Même logique que le panneau de l'accueil,
+        // où « seule la boîte voyage » quand l'univers s'ouvre sur son
+        // travelling.
+        (function () {
+            var fond = null, photo = null;
+            function rendre() {
+                if (fond) fond.style.viewTransitionName = '';
+                if (photo) photo.style.viewTransitionName = '';
+                fond = photo = null;
+            }
+            function poser(e) {
+                if (!e.viewTransition) return;
+                var S = document.getElementById('show-universe');
+                var p = document.querySelector('#show-universe .u-ouverture .u-of-photo');
+                if (!S || !p || S.scrollTop > 0) return;
+                fond = document.querySelector('#show-universe .u-hero-fond');
+                if (fond) fond.style.viewTransitionName = 'none';
+                photo = p;
+                photo.style.viewTransitionName = 'fiche-alabarre';
+                e.viewTransition.finished.then(rendre, rendre);
+            }
+            addEventListener('pagereveal', poser);
+            addEventListener('pageswap', poser);
+            addEventListener('pageshow', rendre);
+        })();
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -147,13 +197,16 @@
            nom que la vignette touchée prend au départ. La photo de la
            vignette grandit jusqu'à devenir le fond du titre, comme dans le
            panneau de l'accueil (voir « La vignette devient l'univers »
-           dans univers.js). Sans photo, c'est la page entière qui sort de
-           la vignette. Navigateurs plus anciens : navigation ordinaire.
+           dans univers.js) — ou, quand la page s'ouvre sur son travelling,
+           la première photo de celui-ci (voir le script de l'en-tête). Sans
+           photo, c'est la page entière qui sort de la vignette. Navigateurs
+           plus anciens : navigation ordinaire.
 
            La petite image ne se montre jamais en grand : elle s'efface tôt,
            tant qu'elle est encore petite, et le fond arrive en même temps. */
         @view-transition { navigation: auto; }
         #show-universe .u-hero-fond { view-transition-name: fiche-alabarre; view-transition-class: fiche; }
+        #show-universe .u-of-photo { view-transition-class: fiche; }
         ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
         ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
         ::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
@@ -436,8 +489,20 @@
         </symbol></svg>
     <!-- <main> : le contenu principal de la page, annoncé comme tel. Un
          lecteur d'écran y saute d'une touche ; un moteur sait où commence
-         ce qui compte. -->
-    <main id="show-universe">
+         ce qui compte.
+
+         OUVERT D'EMBLÉE (is-open). Sur l'accueil, le panneau part d'une
+         opacité nulle que le moteur lève en l'ouvrant ; ici, il n'y a rien
+         à ouvrir, et cette opacité ne se levait qu'après les cinq scripts
+         de fin de page, en fondu joué par le compositeur — que Chrome ne
+         compte pas comme un affichage. Chrome ne voyait donc souvent aucun
+         premier affichage (Lighthouse « NO_FCP ») : les pages faites pour
+         être trouvées n'avaient pas de mesure, et le visiteur regardait un
+         fond vide jusqu'au lever du panneau. Au téléphone en 4G lente (×4),
+         copie publiée, cinq passes : premier affichage 1 848 → 900 ms sur
+         Le rapt, 2 216 → 908 ms sur Bérénice. Ce que le moteur écrit (le
+         titre, le synopsis) reste caché jusqu'à lui (.u-anime). -->
+    <main id="show-universe" class="is-open">
         <a class="u-retour" href="../../"><span aria-hidden="true">←</span> Adrien Vada</a>
         
         <a href="/spectacles/" class="u-close" aria-label="Retour au répertoire des spectacles">

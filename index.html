@@ -265,6 +265,30 @@
             else charger();
         })();
 
+
+        // LE PORTRAIT REVIENT DE LA GALERIE. Au départ vers la galerie, la
+        // photo de l'affiche prend le nom `book-portrait` (voir le pageswap,
+        // plus bas) ; la galerie nomme de même sa première vue, et au retour
+        // — par l'historique comme par « ← Adrien Vada » —, c'est cette vue
+        // qui revient se poser dans l'affiche. Mêmes conditions qu'à
+        // l'aller : l'affiche à l'écran, le mouvement non réduit ; le nom
+        // est rendu à la fin du passage. ÉCOUTÉ ICI, dans le premier script :
+        // le passage se prépare au premier rendu, alors que la page se lit
+        // encore — le script principal, en bas de page, ne serait pas encore
+        // là pour nommer quoi que ce soit (vérifié : rien n'était nommé).
+        addEventListener('pagereveal', function (e) {
+            if (!e.viewTransition || typeof navigation === 'undefined' || !navigation.activation) return;
+            var depuis = navigation.activation.from;
+            if (!depuis || new URL(depuis.url).pathname !== '/galerie/') return;
+            if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            var img = document.querySelector('#en-tete .affiche-cadre img');
+            var r = img && img.getBoundingClientRect();
+            if (!r || !r.width || r.bottom <= 0 || r.top >= innerHeight) return;
+            img.style.viewTransitionName = 'book-portrait';
+            var rendre = function () { img.style.viewTransitionName = ''; };
+            e.viewTransition.finished.then(rendre, rendre);
+        });
+
         // L'ANCRE D'ARRIVÉE EST MISE DE CÔTÉ AVANT QUE LE NAVIGATEUR NE S'EN
         // SERVE. Arriver sur adrienvada.fr/#demos_voix lui demande de faire
         // défiler jusqu'au conteneur portant cet identifiant. Ce défilement
@@ -1106,6 +1130,23 @@
 
         .dl-vignette img {
             view-transition-class: fiche;
+        }
+
+        /* DE LA GALERIE À L'AFFICHE, LE PORTRAIT (book-portrait, nommé à
+           l'arrivée par le pagereveal plus bas) : la première vue de la
+           planche revient se poser dans l'affiche, sur le ressort — les
+           mêmes règles que la galerie pour l'aller, cadrées sur le visage
+           comme l'affiche. */
+        ::view-transition-group(book-portrait) {
+            animation-duration: var(--dur-morph);
+            animation-timing-function: var(--ease-ressort);
+        }
+
+        ::view-transition-old(book-portrait),
+        ::view-transition-new(book-portrait) {
+            height: 100%;
+            object-fit: cover;
+            object-position: 50% 28%;
         }
 
         html.vt-onglet #en-tete {
@@ -12242,6 +12283,9 @@
             const r = img && img.getBoundingClientRect();
             if (r && r.width && r.bottom > 0 && r.top < innerHeight) img.style.viewTransitionName = 'book-portrait';
         });
+        // Au retour de la galerie, le portrait revient se poser dans
+        // l'affiche : voir « Le portrait revient de la galerie », dans le
+        // premier script du <head> — ici, il arriverait trop tard.
         addEventListener('pageshow', () => {
             document.querySelectorAll('.dl-vignette img').forEach(img => { img.style.viewTransitionName = ''; });
             const portrait = document.querySelector('#en-tete .affiche-cadre img');

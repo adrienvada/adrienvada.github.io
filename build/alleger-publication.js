@@ -119,9 +119,9 @@ function fichiersDuSite() {
             'regie.js', 'univers.js', 'univers-montage.js', 'intro.js', 'mask-points.js',
             'dates.js', 'dates-live.js',
         ]),
-        css: existants(['univers.css', 'univers-statique.css', 'ressources/polices/polices.css'])
-            .concat(lister('spectacles', '.css'))
-            .concat(lister('galerie', '.css')),
+        // Le répertoire et la galerie n'ont plus de feuille à eux : leurs
+        // générateurs l'écrivent dans la page, allégée avec elle.
+        css: existants(['univers.css', 'univers-statique.css', 'ressources/polices/polices.css']),
     };
 }
 
@@ -231,10 +231,12 @@ async function allegerHtml(source, nom, minifierHtml) {
 //  c'est désormais la page qui les lit. styles.css, à la racine comme
 //  l'accueil, n'a rien à réécrire (et ne contient aucune url()).
 //
-//  Seulement l'accueil, et seulement la copie publiée. Les autres pages
-//  ne lient que polices.css, et partagent son cache d'une page à
-//  l'autre ; /admin/ garde ses <link> ; les sources aussi — le
-//  développement et la régénération de Tailwind ne changent pas.
+//  Seulement l'accueil, et seulement la copie publiée. Le répertoire et
+//  la galerie ont déjà les leurs dans la page, écrites par leur
+//  générateur (mêmes raisons, mêmes mesures) ; les pages spectacle lient
+//  polices.css à côté d'univers.css, partagée par les onze ; /admin/
+//  garde ses <link> ; les sources aussi — le développement et la
+//  régénération de Tailwind ne changent pas.
 //
 //  SON PROPRE CONTRÔLE, puisque verifierHtml exige une charpente
 //  identique et refuserait celle-ci : exactement deux <link> de moins et

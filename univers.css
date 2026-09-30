@@ -167,7 +167,11 @@ html.u-locked body {
    dans l'en-tête du document et retiré si le moteur n'a pas démarré (voir
    build/generer-pages-spectacles.js) — même principe que js-revele sur
    l'accueil, où il est posé d'office : le panneau n'y existe que par le
-   script. */
+   script. Une page spectacle, elle, écrit son panneau déjà ouvert
+   (is-open) : il n'y a rien à ouvrir, et ce fondu levé par le compositeur
+   privait Chrome de tout premier affichage (voir le <main> du générateur).
+   La règle ne vaut donc plus que pour le panneau de l'accueil ; sur ces
+   pages, .u-anime ne cache que ce que le moteur écrit. */
 .u-anime #show-universe:not(.is-open) {
     opacity: 0;
 }

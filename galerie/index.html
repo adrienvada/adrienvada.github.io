@@ -42,11 +42,63 @@
         //
         //  LE CHIFFRE EST CELUI DU HAUT DE L'ÉCHELLE, et il est écrit à un
         //  seul endroit : la même expression sert de borne aux boutons de
-        //  densité (voir NIVEAUX plus bas). Le seuil de 640 px est celui de la
-        //  feuille de style, pas un choix indépendant.
+        //  densité (voir NIVEAUX plus bas). Le seuil (640 px) est celui
+        //  de la feuille de style et des tailles écrites dans le HTML, pas un
+        //  choix indépendant : une seule constante dans le générateur,
+        //  SEUIL_TELEPHONE.
         // ════════════════════════════════════════════════════════════════
         (function () {
             document.documentElement.dataset.zoom = innerWidth < 640 ? '4' : '5';
+        })();
+
+        // LES VIGNETTES S'ALLUMENT À LEUR ARRIVÉE (voir .allume-vignettes
+        // dans la feuille). Posé ici, avant la première vignette : son
+        // arrivée ne remonte pas jusqu'à la fenêtre, on l'écoute donc sur
+        // le document, à la descente — même geste que les photos du
+        // travelling d'une page spectacle.
+        (function () {
+            document.documentElement.classList.add('allume-vignettes');
+            document.addEventListener('load', function (e) {
+                var img = e.target;
+                if (img.matches && img.matches('.carte .media img')) img.classList.add('est-decodee');
+            }, true);
+        })();
+
+        // LE PORTRAIT DE L'ACCUEIL SE RANGE DANS LA PLANCHE (voir
+        // « book-portrait » dans la feuille). À l'arrivée depuis l'accueil,
+        // la première vue prend le nom que la photo de l'affiche a pris au
+        // départ ; au départ vers l'accueil, elle le prend aussi, et
+        // l'accueil nomme son affiche à l'arrivée. Seulement si elle est à
+        // l'écran — sinon le portrait partirait vers une case qu'on ne voit
+        // pas —, et le nom est rendu à la fin du passage (et au retour par
+        // l'historique). En mouvement réduit, rien n'est nommé.
+        (function () {
+            var vue = null;
+            function rendre() {
+                if (vue) vue.style.viewTransitionName = '';
+                vue = null;
+            }
+            function accueil(url) {
+                try { return new URL(url, location.href).pathname === '/'; } catch (e) { return false; }
+            }
+            function poser(e, versOuDepuis) {
+                if (!e.viewTransition || !versOuDepuis || !accueil(versOuDepuis.url)) return;
+                if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                var img = document.querySelector('.carte .media img');
+                var r = img && img.getBoundingClientRect();
+                if (!r || !r.width || r.bottom <= 0 || r.top >= innerHeight) return;
+                vue = img;
+                vue.style.viewTransitionName = 'book-portrait';
+                e.viewTransition.finished.then(rendre, rendre);
+            }
+            addEventListener('pagereveal', function (e) {
+                var a = (typeof navigation !== 'undefined') && navigation.activation;
+                poser(e, a && a.from);
+            });
+            addEventListener('pageswap', function (e) {
+                poser(e, e.activation && e.activation.entry);
+            });
+            addEventListener('pageshow', rendre);
         })();
     </script>
     <meta name="theme-color" content="#0a0907">
@@ -79,6 +131,23 @@
         })();
     </script>
 
+    <!-- Les pages voisines, préparées au survol : les mêmes règles que les
+         pages spectacle (voir SPECULATION dans build/generer-pages-spectacles.js
+         et README-build.md, « Préparées au survol »). D'ici, l'accueil et le
+         répertoire ne sont que préchargés. Du JSON, pas du JavaScript. -->
+    <script type="speculationrules">
+        {
+            "prerender": [{
+                "where": { "or": [{ "href_matches": "/spectacles/*/" }, { "href_matches": "/galerie/" }] },
+                "eagerness": "moderate"
+            }],
+            "prefetch": [{
+                "where": { "or": [{ "href_matches": "/" }, { "href_matches": "/spectacles/" }] },
+                "eagerness": "moderate"
+            }]
+        }
+    </script>
+
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">
@@ -87,11 +156,817 @@
     <meta property="og:image" content="https://adrienvada.fr/ressources/images/og-adrien-vada.jpg">
     <meta property="og:url" content="https://adrienvada.fr/galerie/">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="icon" type="image/svg+xml" href="../favicon_io/favicon.svg">
+    <!-- En PNG, comme l'accueil : la page ne déclarait que favicon.svg, un
+         PNG de 256 px en base64 — 128 Ko, 20 % de ce que pesait la page. -->
+    <link rel="icon" type="image/png" href="../favicon_io/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="../favicon_io/favicon-96x96.png" sizes="96x96">
     <!-- Les polices du site, servies par le site (ressources/polices/). -->
     <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="../ressources/polices/polices.css">
-    <link rel="stylesheet" href="galerie.css">
+    <!-- Les polices, puis la feuille de la page, DANS la page : deux
+         feuilles bloquantes de moins, rien à attendre après le HTML pour le
+         premier affichage (voir policesEnLigne et genererCss dans
+         build/generer-page-galerie.js). -->
+    <style>
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url(../ressources/polices/inter-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url(../ressources/polices/inter-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url(../ressources/polices/montserrat-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url(../ressources/polices/montserrat-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Cinzel';
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    src: url(../ressources/polices/cinzel-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Cinzel';
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    src: url(../ressources/polices/cinzel-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Caveat';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../ressources/polices/caveat-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Caveat';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../ressources/polices/caveat-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+    </style>
+    <style>
+/* GALERIE PHOTO (/galerie/) — feuille générée (build/generer-page-galerie.js)
+   Même univers visuel que le répertoire de spectacles : Cinzel, Inter, Montserrat,
+   or sur noir, grain de pellicule, grille dont la densité se règle aux boutons − et +. */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Le thème bascule en cercle (voir la bascule, dans le script) : pendant
+   le passage, rien ne transitionne. */
+html.vt-theme *, html.vt-theme *::before, html.vt-theme *::after { transition: none !important; }
+html.vt-theme::view-transition-old(root), html.vt-theme::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-theme::view-transition-new(root) { z-index: 2; }
+
+@property --ambiance {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #bfa98a;
+}
+
+:root {
+    --bg: #0a0907;
+    --surface: #171410;
+    --text: #f2ece0;
+    --muted: #b0a798;
+    --accent: #bfa98a;
+    --accent-ink: #c9b494;
+    --on-accent: #0a0907;
+    --line: rgba(255, 255, 255, 0.13);
+    --ombre: rgba(0, 0, 0, .8);
+    --vignette: rgba(0, 0, 0, .28);
+    --or-defaut: #bfa98a;
+    /* La planche : le numéro de vue, orangé comme les marques du film ; le
+       crayon gras, rouge. */
+    --num: #d69a3c;
+    --crayon: #ff4d5e;
+}
+
+:root[data-theme="light"] {
+    --bg: #faf9f5;
+    --surface: #ffffff;
+    --text: #1a1a1f;
+    --muted: #575761;
+    --accent: #967e5b;
+    --accent-ink: #826c4a;
+    --on-accent: #ffffff;
+    --line: rgba(26, 26, 31, 0.14);
+    --ombre: rgba(41, 37, 36, .28);
+    --vignette: rgba(41, 37, 36, .10);
+    --or-defaut: #967e5b;
+    --num: #9a5b0e;
+    --crayon: #c8102e;
+}
+
+body {
+    position: relative;
+    margin: 0;
+    padding: 0 1.25rem 3.5rem;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 16px/1.65 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    --ambiance: var(--or-defaut);
+    transition: background-color .35s ease, color .35s ease;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(58rem 30rem at 50% -8rem,
+            color-mix(in srgb, var(--ambiance) 9%, transparent), transparent 68%);
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    background:
+        radial-gradient(130% 110% at 50% 12%, transparent 58%, var(--vignette) 100%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.06'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") repeat;
+}
+
+main {
+    max-width: 68rem;
+    margin: 0 auto;
+}
+
+/* Réservé aux lecteurs d'écran : l'annonce de la visionneuse. */
+.sr {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+a { color: var(--accent-ink); }
+
+/* ── La barre d'en-tête flottante ── */
+.barre-sentinelle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.barre {
+    position: sticky;
+    top: .75rem;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    max-width: 68rem;
+    margin: .65rem auto 0;
+    padding: .4rem .55rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+}
+
+.barre.est-collee {
+    background: color-mix(in srgb, var(--surface) 94%, var(--ambiance));
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border-color: color-mix(in srgb, var(--ambiance) 30%, transparent);
+    box-shadow: 0 8px 22px -10px rgba(0, 0, 0, .55),
+        0 0 20px -6px color-mix(in srgb, var(--ambiance) 38%, transparent);
+    padding-left: .9rem;
+    padding-right: .55rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .barre {
+        transition: background-color 240ms ease, box-shadow 240ms ease, border-color 240ms ease, padding 240ms ease;
+    }
+}
+
+.retour {
+    display: inline-block;
+    font-size: .72rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--muted);
+    transition: color .25s ease;
+}
+
+.retour:hover { color: var(--accent-ink); }
+
+.bascule {
+    display: grid;
+    place-items: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    flex: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: #fbbf24;
+    cursor: pointer;
+    transition: border-color .3s ease, color .3s ease, background-color .35s ease;
+}
+
+:root[data-theme="light"] .bascule { color: #6366a8; }
+.bascule:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.bascule .ico { font-size: .95rem; }
+.ico { display: block; width: 1em; height: 1em; fill: currentColor; }
+
+.outils { display: flex; align-items: center; gap: .5rem; }
+/* La densité de la planche — mêmes pastilles que la bascule. */
+.densite { display: flex; gap: .3rem; }
+.densite-btn {
+    display: grid;
+    place-items: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    flex: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font: 500 1.15rem/1 'Inter', system-ui, sans-serif;
+    transition: border-color .3s ease, opacity .3s ease, background-color .35s ease;
+}
+.densite-btn:hover:not(:disabled) { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+/* Au bout de l'échelle, le bouton s'éteint (et le clavier le saute). */
+.densite-btn:disabled { opacity: .35; cursor: default; }
+.densite-btn:focus-visible, .bascule:focus-visible, .retour:focus-visible,
+.zoom-close:focus-visible, .zoom-nav:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+/* ── Titre et manchette ── */
+.tete {
+    padding: 3.2rem 0 2.2rem;
+    text-align: center;
+}
+
+.sur-titre {
+    margin: 0 0 1rem;
+    font: 700 .68rem/1.5 'Montserrat', system-ui, sans-serif;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+}
+
+h1 {
+    margin: 0;
+    font: 700 clamp(2.4rem, 6.5vw, 3.8rem)/1.05 'Cinzel', Georgia, serif;
+    letter-spacing: .04em;
+    color: var(--text);
+    text-wrap: balance;
+}
+
+.ornement {
+    position: relative;
+    margin: 1.5rem auto 0;
+    width: 11rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent,
+            color-mix(in srgb, var(--ambiance) 60%, transparent), transparent);
+}
+
+.ornement span {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    transform: translate(-50%, -50%) rotate(45deg);
+    background: var(--ambiance);
+    box-shadow: 0 0 0 3px var(--bg);
+}
+
+.sous-titre-galerie {
+    margin: 1.2rem 0 0;
+    font: 500 .72rem/1.5 'Montserrat', system-ui, sans-serif;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* ── La planche ──
+   Une planche contact, pas une grille : chaque photo garde le cadre du
+   photographe. La grille coupait tout en 3:4 — douze photos sur dix-neuf,
+   plus larges que hautes, y perdaient la moitié de leur image (le décor,
+   le partenaire, la salle), jusqu'à 58 % pour les images de film en 16:9.
+
+   Chaque rangée a la même hauteur, sans une ligne de script : une case
+   part de la largeur qu'aurait sa photo à la hauteur visée
+   (--r × --h), et grandit à proportion de --r pour remplir la rangée.
+   Deux cases qui grandissent à proportion de leur largeur gardent la même
+   hauteur. La dernière rangée ne s'étire pas (::after, qui prend le reste).
+
+   --h, la hauteur visée, suit la densité (boutons − et +) : la largeur de
+   la planche divisée par --colonnes, le nombre de colonnes qu'avait la
+   grille à ce cran — les boutons gardent le sens qu'ils avaient. */
+.planche {
+    container-type: inline-size;
+}
+
+.repertoire {
+    --h: calc(100cqi / var(--colonnes, 5) * 1.12);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.9rem 1rem;
+    margin: 0;
+    padding: 1.8rem 0 .6rem;
+    list-style: none;
+}
+
+.repertoire::after {
+    content: '';
+    flex: 100000 1 0;
+}
+
+.carte {
+    position: relative;
+    list-style: none;
+    flex: var(--r, .75) 1 calc(var(--r, .75) * var(--h));
+    min-width: 0;
+}
+
+/* Le numéro de la vue, en marge de la planche, comme sur le film. */
+.carte-num {
+    display: block;
+    margin-top: .45rem;
+    font: 600 .6rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .1em;
+    color: var(--num);
+}
+
+/* LE CRAYON GRAS. Sur une planche, on entoure la vue qu'on garde : au
+   survol ou au clavier, un cercle rouge se trace autour de la photo, d'un
+   seul geste, un peu tremblé et fermé en dépassant, comme à la main. */
+.crayon {
+    position: absolute;
+    inset: -.55rem -.5rem -.45rem -.55rem;
+    width: calc(100% + 1.05rem);
+    height: calc(100% + 1rem);
+    overflow: visible;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.crayon path {
+    fill: none;
+    stroke: var(--crayon);
+    stroke-width: 3.2;
+    stroke-linecap: round;
+    /* Un trait de la longueur du chemin, suivi d'un blanc plus long :
+       décalé de 1,2, il ne reste rien — pas même le point qu'une
+       extrémité arrondie laisserait d'un trait de longueur nulle. */
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 1.2;
+    opacity: .9;
+    transition: stroke-dashoffset .45s cubic-bezier(.3, .6, .2, 1);
+}
+
+.carte-btn:hover .crayon path,
+.carte-btn:focus-visible .crayon path,
+.carte.regarde .crayon path {
+    stroke-dashoffset: 0;
+}
+
+.carte-btn {
+    position: relative;
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    text-align: left;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.carte-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+    border-radius: .65rem;
+}
+
+.cadre {
+    position: relative;
+    display: block;
+    aspect-ratio: var(--r, .75);
+    overflow: hidden;
+    overflow: clip;
+    border-radius: .65rem;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), 0 10px 28px -18px var(--ombre);
+    transition: border-color .35s ease, box-shadow .35s ease, transform .35s ease;
+}
+
+.media {
+    position: absolute;
+    inset: 0;
+    display: block;
+}
+
+.media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .6s cubic-bezier(.2, .6, .2, 1), opacity .35s ease-out;
+}
+
+/* LA VUE S'ALLUME, ELLE NE CLAQUE PAS. Au chargement, chaque case passait
+   du fond sombre à la photo d'une image à l'autre, dix-neuf fois de suite
+   — le seul allumage sans geste de la page. Une vignette attend donc
+   invisible jusqu'à son arrivée (.est-decodee, posée par le script de
+   tête à son « load »), puis paraît en fondu : une opacité, rien à
+   repeindre. Seulement si ce script est là pour l'allumer
+   (.allume-vignettes, posée par lui) : sans JavaScript, la classe manque
+   et la planche reste telle quelle. Une vignette déjà arrivée garde sa
+   classe : la réécriture des tailles (boutons − et +), le passage vers la
+   visionneuse (book-photo) ou le retour par l'historique ne la refont pas
+   partir du noir. En mouvement réduit, le fondu tombe (voir la fin de la
+   feuille).
+
+   Le fondu part d'UN CENTIÈME, pas de zéro. Chrome ne compte pas une
+   image peinte à opacité nulle : partie de zéro, la plus grande vignette
+   n'était retenue comme premier grand affichage (LCP) qu'à la FIN de son
+   fondu, 350 à 400 ms après son arrivée (1 972 ms contre 1 572 à 1 624,
+   téléphone, 4G lente, ×4, trois passes). Un centième ne se voit pas — et
+   avant son arrivée, l'image n'a de toute façon rien à montrer : c'est
+   l'instant où le fondu commence qui est compté, à juste titre. */
+.allume-vignettes .media img:not(.est-decodee) {
+    opacity: .01;
+}
+
+.lueur {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent 65%, rgba(0, 0, 0, .4));
+}
+
+.zoom-indic {
+    position: absolute;
+    bottom: .6rem;
+    right: .6rem;
+    display: grid;
+    place-items: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 999px;
+    background: rgba(10, 9, 7, .65);
+    color: var(--accent-ink);
+    border: 1px solid var(--line);
+    font-size: .75rem;
+    opacity: 0;
+    transform: scale(.85);
+    transition: opacity .3s ease, transform .3s ease;
+    pointer-events: none;
+}
+
+.carte-btn:hover .zoom-indic,
+.carte.regarde .zoom-indic,
+.carte-btn:focus-visible .zoom-indic {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.carte-btn:hover .cadre,
+.carte.regarde .cadre,
+.carte-btn:focus-visible .cadre {
+    border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+    box-shadow: 0 16px 36px -12px color-mix(in srgb, var(--accent) 45%, transparent),
+        0 10px 28px -18px rgba(0, 0, 0, .8);
+    transform: translateY(-3px);
+}
+
+.carte-btn:hover .media img,
+.carte.regarde .media img {
+    transform: scale(1.05);
+}
+
+/* Scintillement ponctuel */
+.cadre::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 42%, rgba(255, 236, 200, .2) 50%, transparent 58%);
+    transform: translateX(-135%);
+}
+
+.carte.reluit .cadre::after {
+    transform: translateX(135%);
+    transition: transform 1.3s cubic-bezier(.2, .6, .2, 1);
+}
+
+/* ── La densité de la planche (boutons − et +) : voir --h ── */
+html[data-zoom="1"] { --colonnes: 1; }
+html[data-zoom="2"] { --colonnes: 2; }
+html[data-zoom="3"] { --colonnes: 3; }
+html[data-zoom="4"] { --colonnes: 4; }
+html[data-zoom="5"] { --colonnes: 5; }
+html[data-zoom="6"] { --colonnes: 6; }
+
+@media (max-width: 640px) {
+    html[data-zoom="3"] .repertoire { gap: 1.3rem .5rem; }
+    html[data-zoom="4"] .repertoire { gap: 1.1rem .35rem; }
+}
+
+/* ── Visionneuse plein écran (Lightbox) ── */
+
+/* LE FOND NE DÉFILE PAS DERRIÈRE LA PHOTO. Sans cela, le pouce qui glisse
+   à côté de l'image fait courir la grille par-dessous : on rouvre en ayant
+   perdu sa place, et le geste de balayage qui doit passer à la photo
+   suivante entre en concurrence avec le défilement de la page. C'est la
+   même technique que le panneau plein écran de l'accueil (u-locked), avec
+   la même conséquence à réparer : poser overflow:hidden sur <html> fait
+   ramener le défilement à zéro par le navigateur, et le retirer ne le rend
+   pas. C'est au script de le remettre — voir closeZoom(). */
+html.galerie-verrou {
+    overflow: hidden;
+}
+
+.galerie-zoom {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 4vh 4vw;
+    background: color-mix(in srgb, var(--bg) 95%, black);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .28s ease;
+    cursor: zoom-out;
+}
+
+.galerie-zoom[hidden] {
+    display: none;
+}
+
+.galerie-zoom.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.zoom-fig {
+    position: relative;
+    margin: 0;
+    max-width: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    cursor: default;
+    transform: scale(.96);
+    transition: transform .32s cubic-bezier(.2, .6, .2, 1);
+}
+
+.galerie-zoom.is-open .zoom-fig {
+    transform: none;
+}
+
+/* LA VIGNETTE DEVIENT LA PHOTO — et au retour, la photo se range dans sa
+   case. Par une View Transition (voir openZoom) : la vignette touchée et
+   la photo agrandie portent le même nom le temps du passage, et le
+   navigateur fait glisser l'une vers l'autre. Chacune remplit le cadre
+   qui voyage, recadrée comme il faut (cover) : la vignette est un 3:4
+   découpé dans la photo, la photo est entière — le recadrage se défait
+   en chemin. Le temps du passage, les fondus propres de la visionneuse
+   se taisent : c'est le passage qui fait le mouvement. */
+html.vt-book .galerie-zoom,
+html.vt-book .zoom-fig,
+html.vt-book .zoom-img {
+    transition: none !important;
+}
+
+::view-transition-group(book-photo) {
+    z-index: 3;
+    animation-duration: .5s;
+    animation-timing-function: cubic-bezier(.2, .8, .2, 1);
+}
+
+/* Le point visé est celui du recadrage des vignettes (35 % depuis le
+   haut, voir build/variantes-images.py) : au départ, la photo entière
+   recadrée dans la case de la vignette EST la vignette — pas de double
+   image pendant le fondu. */
+::view-transition-old(book-photo),
+::view-transition-new(book-photo) {
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 35%;
+    animation-duration: .5s;
+}
+
+/* DE L'ACCUEIL À LA PLANCHE, LE PORTRAIT. La photo de l'affiche est la
+   première du book : au départ vers cette page, l'accueil la nomme
+   `book-portrait` (s'il la voit), et la page nomme de même sa première
+   vue à l'arrivée (voir le script de tête) — le portrait se range dans la
+   planche. Au retour vers l'accueil, l'inverse. C'était la seule
+   navigation du site sans passage : une coupe franche, dans les deux
+   sens. Il se déplace, donc sur le ressort (--ease-ressort, --dur-morph,
+   relus dans index.html) ; les deux images couvrent le groupe, cadrées
+   sur le visage comme l'affiche (50 % 28 %) : la vignette montre la photo
+   entière, l'affiche un peu plus haute que large. Navigateur sans passage
+   entre documents : une navigation ordinaire. */
+@view-transition { navigation: auto; }
+
+::view-transition-group(book-portrait) {
+    animation-duration: var(--dur-morph);
+    animation-timing-function: var(--ease-ressort);
+}
+
+::view-transition-old(book-portrait),
+::view-transition-new(book-portrait) {
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 28%;
+}
+
+.zoom-img {
+    max-width: 88vw;
+    max-height: 80svh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 16px 48px -8px rgba(0, 0, 0, .85);
+    transition: opacity .18s ease, transform .18s ease;
+    /* Le grossissement part du centre : c'est ce que suppose le calcul
+       d'ancrage du script, qui replace la translation pour que le point
+       sous les doigts ne bouge pas. Changer cette origine fausserait
+       l'ancrage sans rien casser de visible au premier coup d'œil. */
+    transform-origin: center center;
+}
+
+/* LE PINCEMENT EST À NOUS, PAS AU NAVIGATEUR. Sans cette ligne, deux
+   doigts sur la photo déclenchent le zoom natif de la page : c'est toute
+   l'interface qui grossit — les flèches, la croix, le compteur — et l'on
+   se retrouve à devoir dézoomer le site pour reprendre la main. En
+   coupant les gestes par défaut sur la visionneuse, le pincement ne
+   grossit plus que l'image. Le reste de la page garde le sien : la règle
+   ne vaut que tant que la visionneuse est ouverte, puisqu'elle est seule
+   à porter cette classe. */
+.galerie-zoom {
+    touch-action: none;
+}
+
+.zoom-img.est-agrandie {
+    cursor: grab;
+}
+
+.zoom-img.est-agrandie:active {
+    cursor: grabbing;
+}
+
+.zoom-caption {
+    font-family: 'Montserrat', sans-serif;
+    font-size: .74rem;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+}
+
+.zoom-close {
+    position: absolute;
+    top: 1.4rem;
+    right: 1.4rem;
+    z-index: 110;
+    display: grid;
+    place-items: center;
+    width: 2.7rem;
+    height: 2.7rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 75%, transparent);
+    color: var(--text);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    transition: background-color .25s ease, color .25s ease, transform .25s ease;
+}
+
+.zoom-close:hover {
+    background: var(--accent);
+    color: var(--on-accent);
+    transform: scale(1.05);
+}
+
+.zoom-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 110;
+    display: grid;
+    place-items: center;
+    width: 2.9rem;
+    height: 2.9rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 65%, transparent);
+    color: var(--text);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    transition: background-color .25s ease, color .25s ease, transform .25s ease;
+}
+
+.zoom-nav:hover {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: var(--accent);
+}
+
+.zoom-nav:active {
+    transform: translateY(-50%) scale(.92);
+}
+
+.zoom-prev { left: 1.8vw; }
+.zoom-next { right: 1.8vw; }
+
+/* ── Version mobile ── */
+@media (max-width: 640px) {
+    body { padding: 0 .9rem 2.6rem; }
+    .tete { padding: 2.3rem 0 1.6rem; }
+    .sur-titre { font-size: .69rem; letter-spacing: .2em; margin-bottom: .8rem; }
+    .ornement { margin-top: 1.1rem; width: 8.5rem; }
+    .repertoire { gap: 1.5rem .65rem; padding: 1.2rem 0 .4rem; }
+    .carte-num { font-size: .55rem; margin-top: .35rem; }
+    .barre { top: .55rem; margin-top: .5rem; }
+    .bascule, .densite-btn { width: 2.1rem; height: 2.1rem; }
+    .zoom-close { top: .8rem; right: .8rem; width: 2.3rem; height: 2.3rem; }
+    .zoom-nav { width: 2.4rem; height: 2.4rem; }
+    .zoom-prev { left: 8px; }
+    .zoom-next { right: 8px; }
+    .galerie-zoom { padding: 6vh 2vw; }
+    .zoom-img { max-width: 94vw; max-height: 76svh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    /* Les passages entre documents ne sont pas des éléments : « * » ne
+       les touche pas. Sans cette règle, le portrait voyageait quand même. */
+    ::view-transition-group(*), ::view-transition-image-pair(*),
+    ::view-transition-old(*), ::view-transition-new(*) {
+        animation: none !important;
+    }
+}
+    </style>
+    <style>
+        /* Le mouvement de l'accueil, relu dans index.html (voir
+           chargerMouvement) : le passage du portrait en dépend. */
+        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --ease-ressort: linear(0, 0.005 1%, 0.039 3%, 0.098 5%, 0.215 8%, 0.566 16%, 0.715 20%, 0.807 23%, 0.901 27%, 0.966 31%, 1.013 36%, 1.036 42%, 1.032 52%, 1.002 75%, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; --dur-scene: 460ms; --dur-morph: 620ms; }
+    </style>
     <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -450,7 +1325,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="0" aria-label="Agrandir : Portrait serré en pull gris, regard étonné vers l’objectif, sur fond gris clair">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/vignette_principale-320.webp 320w, ../ressources/images/galerie/vignettes/vignette_principale-640.webp 640w, ../ressources/images/galerie/vignettes/vignette_principale-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.209)"><img src="../ressources/images/galerie/vignette_principale.jpeg" alt="Portrait serré en pull gris, regard étonné vers l’objectif, sur fond gris clair" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/vignette_principale-320.webp 320w, ../ressources/images/galerie/vignettes/vignette_principale-640.webp 640w, ../ressources/images/galerie/vignettes/vignette_principale-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.261), calc(min(100vw, 68rem) * 0.209)"><img src="../ressources/images/galerie/vignette_principale.jpeg" alt="Portrait serré en pull gris, regard étonné vers l’objectif, sur fond gris clair" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -465,7 +1340,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="1" aria-label="Agrandir : Portrait en pied, chemise bleue ouverte et jean, devant un mur de pierre">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo1-320.webp 320w, ../ressources/images/galerie/vignettes/photo1-640.webp 640w, ../ressources/images/galerie/vignettes/photo1-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.169)"><img src="../ressources/images/galerie/photo1.jpeg" alt="Portrait en pied, chemise bleue ouverte et jean, devant un mur de pierre" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo1-320.webp 320w, ../ressources/images/galerie/vignettes/photo1-640.webp 640w, ../ressources/images/galerie/vignettes/photo1-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.212), calc(min(100vw, 68rem) * 0.169)"><img src="../ressources/images/galerie/photo1.jpeg" alt="Portrait en pied, chemise bleue ouverte et jean, devant un mur de pierre" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -480,7 +1355,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="2" aria-label="Agrandir : Portrait de face, regard grave, sur fond bleu nuit">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/profil_1000x1000-320.webp 320w, ../ressources/images/galerie/vignettes/profil_1000x1000-640.webp 640w, ../ressources/images/galerie/vignettes/profil_1000x1000-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.280)"><img src="../ressources/images/profil_1000x1000.jpg" alt="Portrait de face, regard grave, sur fond bleu nuit" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/profil_1000x1000-320.webp 320w, ../ressources/images/galerie/vignettes/profil_1000x1000-640.webp 640w, ../ressources/images/galerie/vignettes/profil_1000x1000-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.350), calc(min(100vw, 68rem) * 0.280)"><img src="../ressources/images/profil_1000x1000.jpg" alt="Portrait de face, regard grave, sur fond bleu nuit" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -495,7 +1370,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="3" aria-label="Agrandir : Dans une salle d’audience tapissée de fleurs de lys, un comédien en robe d’avocat plaide devant le public">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo2-320.webp 320w, ../ressources/images/galerie/vignettes/photo2-640.webp 640w, ../ressources/images/galerie/vignettes/photo2-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.373)"><img src="../ressources/images/galerie/photo2.jpeg" alt="Dans une salle d’audience tapissée de fleurs de lys, un comédien en robe d’avocat plaide devant le public" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo2-320.webp 320w, ../ressources/images/galerie/vignettes/photo2-640.webp 640w, ../ressources/images/galerie/vignettes/photo2-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.466), calc(min(100vw, 68rem) * 0.373)"><img src="../ressources/images/galerie/photo2.jpeg" alt="Dans une salle d’audience tapissée de fleurs de lys, un comédien en robe d’avocat plaide devant le public" fetchpriority="high" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -510,7 +1385,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="4" aria-label="Agrandir : Même salle d’audience : un comédien en tee-shirt noir, bras ouverts, s’adresse au public">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo4-320.webp 320w, ../ressources/images/galerie/vignettes/photo4-640.webp 640w, ../ressources/images/galerie/vignettes/photo4-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.373)"><img src="../ressources/images/galerie/photo4.jpeg" alt="Même salle d’audience : un comédien en tee-shirt noir, bras ouverts, s’adresse au public" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo4-320.webp 320w, ../ressources/images/galerie/vignettes/photo4-640.webp 640w, ../ressources/images/galerie/vignettes/photo4-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.466), calc(min(100vw, 68rem) * 0.373)"><img src="../ressources/images/galerie/photo4.jpeg" alt="Même salle d’audience : un comédien en tee-shirt noir, bras ouverts, s’adresse au public" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -525,7 +1400,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="5" aria-label="Agrandir : Seul en scène dans un halo de lumière, casquette rouge et pull bordeaux">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo8-320.webp 320w, ../ressources/images/galerie/vignettes/photo8-640.webp 640w, ../ressources/images/galerie/vignettes/photo8-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo8.jpeg" alt="Seul en scène dans un halo de lumière, casquette rouge et pull bordeaux" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo8-320.webp 320w, ../ressources/images/galerie/vignettes/photo8-640.webp 640w, ../ressources/images/galerie/vignettes/photo8-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.526), calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo8.jpeg" alt="Seul en scène dans un halo de lumière, casquette rouge et pull bordeaux" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -540,7 +1415,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="6" aria-label="Agrandir : Plateau couvert de sable sous des voilages violets : un roi couronné à genoux, entre deux comédiens">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo10-320.webp 320w, ../ressources/images/galerie/vignettes/photo10-640.webp 640w, ../ressources/images/galerie/vignettes/photo10-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.420)"><img src="../ressources/images/galerie/photo10.jpeg" alt="Plateau couvert de sable sous des voilages violets : un roi couronné à genoux, entre deux comédiens" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo10-320.webp 320w, ../ressources/images/galerie/vignettes/photo10-640.webp 640w, ../ressources/images/galerie/vignettes/photo10-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.525), calc(min(100vw, 68rem) * 0.420)"><img src="../ressources/images/galerie/photo10.jpeg" alt="Plateau couvert de sable sous des voilages violets : un roi couronné à genoux, entre deux comédiens" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -555,7 +1430,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="7" aria-label="Agrandir : Étreinte sur un sol de sable : un comédien en manteau et une comédienne en robe claire">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo11-320.webp 320w, ../ressources/images/galerie/vignettes/photo11-640.webp 640w, ../ressources/images/galerie/vignettes/photo11-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo11.jpeg" alt="Étreinte sur un sol de sable : un comédien en manteau et une comédienne en robe claire" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo11-320.webp 320w, ../ressources/images/galerie/vignettes/photo11-640.webp 640w, ../ressources/images/galerie/vignettes/photo11-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.526), calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo11.jpeg" alt="Étreinte sur un sol de sable : un comédien en manteau et une comédienne en robe claire" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -570,7 +1445,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="8" aria-label="Agrandir : Deux comédiens devant un décor de bois, l’un en bleu de travail et bonnet, l’autre en casquette et veste de survêtement">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo12-320.webp 320w, ../ressources/images/galerie/vignettes/photo12-640.webp 640w, ../ressources/images/galerie/vignettes/photo12-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.417)"><img src="../ressources/images/galerie/photo12.jpeg" alt="Deux comédiens devant un décor de bois, l’un en bleu de travail et bonnet, l’autre en casquette et veste de survêtement" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo12-320.webp 320w, ../ressources/images/galerie/vignettes/photo12-640.webp 640w, ../ressources/images/galerie/vignettes/photo12-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.521), calc(min(100vw, 68rem) * 0.417)"><img src="../ressources/images/galerie/photo12.jpeg" alt="Deux comédiens devant un décor de bois, l’un en bleu de travail et bonnet, l’autre en casquette et veste de survêtement" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -585,7 +1460,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="9" aria-label="Agrandir : Deux comédiens vêtus de blanc, face à face, l’un tenant l’autre par le bras">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo13-320.webp 320w, ../ressources/images/galerie/vignettes/photo13-640.webp 640w, ../ressources/images/galerie/vignettes/photo13-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.241)"><img src="../ressources/images/galerie/photo13.jpeg" alt="Deux comédiens vêtus de blanc, face à face, l’un tenant l’autre par le bras" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo13-320.webp 320w, ../ressources/images/galerie/vignettes/photo13-640.webp 640w, ../ressources/images/galerie/vignettes/photo13-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.301), calc(min(100vw, 68rem) * 0.241)"><img src="../ressources/images/galerie/photo13.jpeg" alt="Deux comédiens vêtus de blanc, face à face, l’un tenant l’autre par le bras" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -600,7 +1475,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="10" aria-label="Agrandir : Image de film : sur une plage, un homme en costume rit au téléphone près d’une jeune femme aux cheveux au vent">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo14-320.webp 320w, ../ressources/images/galerie/vignettes/photo14-640.webp 640w, ../ressources/images/galerie/vignettes/photo14-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.498)"><img src="../ressources/images/galerie/photo14.jpeg" alt="Image de film : sur une plage, un homme en costume rit au téléphone près d’une jeune femme aux cheveux au vent" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo14-320.webp 320w, ../ressources/images/galerie/vignettes/photo14-640.webp 640w, ../ressources/images/galerie/vignettes/photo14-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.622), calc(min(100vw, 68rem) * 0.498)"><img src="../ressources/images/galerie/photo14.jpeg" alt="Image de film : sur une plage, un homme en costume rit au téléphone près d’une jeune femme aux cheveux au vent" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -615,7 +1490,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="11" aria-label="Agrandir : Portrait à lunettes, col roulé noir, sur fond clair">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo15-320.webp 320w, ../ressources/images/galerie/vignettes/photo15-640.webp 640w, ../ressources/images/galerie/vignettes/photo15-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.187)"><img src="../ressources/images/galerie/photo15.jpeg" alt="Portrait à lunettes, col roulé noir, sur fond clair" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo15-320.webp 320w, ../ressources/images/galerie/vignettes/photo15-640.webp 640w, ../ressources/images/galerie/vignettes/photo15-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.233), calc(min(100vw, 68rem) * 0.187)"><img src="../ressources/images/galerie/photo15.jpeg" alt="Portrait à lunettes, col roulé noir, sur fond clair" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -630,7 +1505,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="12" aria-label="Agrandir : Portrait en blouson de cuir marron, sur fond sombre">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo16-320.webp 320w, ../ressources/images/galerie/vignettes/photo16-640.webp 640w, ../ressources/images/galerie/vignettes/photo16-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.210)"><img src="../ressources/images/galerie/photo16.jpeg" alt="Portrait en blouson de cuir marron, sur fond sombre" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo16-320.webp 320w, ../ressources/images/galerie/vignettes/photo16-640.webp 640w, ../ressources/images/galerie/vignettes/photo16-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.263), calc(min(100vw, 68rem) * 0.210)"><img src="../ressources/images/galerie/photo16.jpeg" alt="Portrait en blouson de cuir marron, sur fond sombre" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -645,7 +1520,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="13" aria-label="Agrandir : Portrait en chemise verte, la main contre la tempe, sur fond bleu">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo17-320.webp 320w, ../ressources/images/galerie/vignettes/photo17-640.webp 640w, ../ressources/images/galerie/vignettes/photo17-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.300)"><img src="../ressources/images/galerie/photo17.jpeg" alt="Portrait en chemise verte, la main contre la tempe, sur fond bleu" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo17-320.webp 320w, ../ressources/images/galerie/vignettes/photo17-640.webp 640w, ../ressources/images/galerie/vignettes/photo17-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.375), calc(min(100vw, 68rem) * 0.300)"><img src="../ressources/images/galerie/photo17.jpeg" alt="Portrait en chemise verte, la main contre la tempe, sur fond bleu" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -660,7 +1535,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="14" aria-label="Agrandir : Crâne rasé et barbe, en extérieur devant un canyon rocheux">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo18-320.webp 320w, ../ressources/images/galerie/vignettes/photo18-640.webp 640w, ../ressources/images/galerie/vignettes/photo18-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.498)"><img src="../ressources/images/galerie/photo18.jpeg" alt="Crâne rasé et barbe, en extérieur devant un canyon rocheux" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo18-320.webp 320w, ../ressources/images/galerie/vignettes/photo18-640.webp 640w, ../ressources/images/galerie/vignettes/photo18-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.622), calc(min(100vw, 68rem) * 0.498)"><img src="../ressources/images/galerie/photo18.jpeg" alt="Crâne rasé et barbe, en extérieur devant un canyon rocheux" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -675,7 +1550,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="15" aria-label="Agrandir : Portrait éclatant de rire, chemisette beige, sur fond gris">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo19-320.webp 320w, ../ressources/images/galerie/vignettes/photo19-640.webp 640w, ../ressources/images/galerie/vignettes/photo19-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.187)"><img src="../ressources/images/galerie/photo19.jpeg" alt="Portrait éclatant de rire, chemisette beige, sur fond gris" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo19-320.webp 320w, ../ressources/images/galerie/vignettes/photo19-640.webp 640w, ../ressources/images/galerie/vignettes/photo19-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.233), calc(min(100vw, 68rem) * 0.187)"><img src="../ressources/images/galerie/photo19.jpeg" alt="Portrait éclatant de rire, chemisette beige, sur fond gris" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -690,7 +1565,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="16" aria-label="Agrandir : Image de film : gros plan en tee-shirt marron, regard inquiet vers un interlocuteur">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo20-320.webp 320w, ../ressources/images/galerie/vignettes/photo20-640.webp 640w, ../ressources/images/galerie/vignettes/photo20-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.498)"><img src="../ressources/images/galerie/photo20.jpeg" alt="Image de film : gros plan en tee-shirt marron, regard inquiet vers un interlocuteur" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo20-320.webp 320w, ../ressources/images/galerie/vignettes/photo20-640.webp 640w, ../ressources/images/galerie/vignettes/photo20-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.622), calc(min(100vw, 68rem) * 0.498)"><img src="../ressources/images/galerie/photo20.jpeg" alt="Image de film : gros plan en tee-shirt marron, regard inquiet vers un interlocuteur" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -705,7 +1580,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="17" aria-label="Agrandir : Salle d’audience lambrissée : en robe d’avocat, mains jointes devant un micro, l’air pensif">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo21-320.webp 320w, ../ressources/images/galerie/vignettes/photo21-640.webp 640w, ../ressources/images/galerie/vignettes/photo21-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo21.jpeg" alt="Salle d’audience lambrissée : en robe d’avocat, mains jointes devant un micro, l’air pensif" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo21-320.webp 320w, ../ressources/images/galerie/vignettes/photo21-640.webp 640w, ../ressources/images/galerie/vignettes/photo21-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.526), calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo21.jpeg" alt="Salle d’audience lambrissée : en robe d’avocat, mains jointes devant un micro, l’air pensif" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -720,7 +1595,7 @@
             <button type="button" class="carte-btn" data-zoom-photo="18" aria-label="Agrandir : Salle d’audience lambrissée : en tee-shirt noir, debout devant un micro, la main tendue">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo22-320.webp 320w, ../ressources/images/galerie/vignettes/photo22-640.webp 640w, ../ressources/images/galerie/vignettes/photo22-960.webp 960w" sizes="calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo22.jpeg" alt="Salle d’audience lambrissée : en tee-shirt noir, debout devant un micro, la main tendue" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo22-320.webp 320w, ../ressources/images/galerie/vignettes/photo22-640.webp 640w, ../ressources/images/galerie/vignettes/photo22-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.526), calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo22.jpeg" alt="Salle d’audience lambrissée : en tee-shirt noir, debout devant un micro, la main tendue" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1296,7 +2171,8 @@
             }
             majBoutons();
         });
-        majTailles(zoomCourant());
+        // Pas de réécriture des tailles à l'arrivée : le HTML annonce déjà
+        // celles de la planche telle qu'elle s'ouvre (voir taillesVignette).
         majBoutons();
 
         // Un scintillement de loin en loin — TROIS fois, puis la planche se

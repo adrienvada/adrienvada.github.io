@@ -112,6 +112,35 @@ const MESURE = `    <!-- Mesure d'audience — Umami, sans cookie ni identifiant
     </script>
 `;
 
+// ════════════════════════════════════════════════════════════════
+//  LES PAGES VOISINES, PRÉPARÉES AU SURVOL
+//  Les mêmes règles de spéculation que l'accueil (voir son <head>, et
+//  README-build.md, « Préparées au survol ») : d'une fiche ou du
+//  répertoire, les autres fiches et la galerie sont PRÉ-RENDUES dès
+//  qu'on marque l'intention d'y aller, et le passage entre les pages est
+//  conservé. L'accueil et le répertoire ne sont que PRÉCHARGÉS (le
+//  document seul, sans ses feuilles ni ses scripts) : l'accueil est
+//  lourd à préparer pour rien, et le retour arrière passe déjà par le
+//  cache avant/arrière. « moderate », jamais plus : deux pré-rendus au
+//  plus à la fois, et une page préparée pour rien ne compte pas de vue
+//  (voir MESURE) ni n'écrit son titre. Du JSON : build/alleger-publication.js
+//  le relit comme tel. Une seule écriture pour les deux gabarits — et la
+//  galerie a la même (build/generer-page-galerie.js).
+// ════════════════════════════════════════════════════════════════
+const SPECULATION = `    <script type="speculationrules">
+        {
+            "prerender": [{
+                "where": { "or": [{ "href_matches": "/spectacles/*/" }, { "href_matches": "/galerie/" }] },
+                "eagerness": "moderate"
+            }],
+            "prefetch": [{
+                "where": { "or": [{ "href_matches": "/" }, { "href_matches": "/spectacles/" }] },
+                "eagerness": "moderate"
+            }]
+        }
+    </script>
+`;
+
 // Toute espace — insécable, fine, insécable étroite — vaut une espace
 // ordinaire, et toute apostrophe vaut l'apostrophe droite. Voir
 // universeFor() dans univers.js : c'est la même règle, et elle doit le
@@ -174,6 +203,25 @@ function chargerMouvement() {
 }
 
 const MOUVEMENT = chargerMouvement();
+
+// LES POLICES, DANS LA PAGE — pour le répertoire seulement. Sa feuille
+// (voir FEUILLE) et polices.css étaient deux feuilles bloquantes : un
+// aller-retour de plus après le HTML avant le premier affichage, pour
+// une feuille faite pour cette seule page (aucun cache partagé à perdre)
+// et une autre de 1 Ko. Recopiées dans le <head> : premier affichage
+// 680 → 432 ms au téléphone en 4G lente (×4, copie publiée, cinq passes). polices.css
+// reste la déclaration de référence ; sa copie perd ses commentaires, et
+// ses adresses, relatives à elle, le deviennent à la page. Les fiches
+// gardent leurs <link> : univers.css, partagée par onze pages, s'y attend
+// de toute façon.
+function policesEnLigne(versPolices) {
+    const css = lire('ressources/polices/polices.css')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/url\((['"]?)(?![a-z]+:|\/)([^'")]+)\1\)/gi, (m, q, u) => `url(${q}${versPolices}${u}${q})`)
+        .replace(/\n{3,}/g, '\n\n').trim();
+    if (/<\/style/i.test(css)) throw new Error('polices.css contient « </style » : impossible de la recopier dans une page.');
+    return css;
+}
 
 // ── Extraction des données ──────────────────────────────────────────
 //  On n'exécute pas univers.js (il lui faudrait un DOM) : on en découpe la
@@ -566,7 +614,7 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     <link rel="canonical" href="${urlPage}">
     <meta name="theme-color" content="${esc(p.bg || '#0a0907')}">
 
-${MESURE}
+${MESURE}${SPECULATION}
     <meta property="og:type" content="article">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">
@@ -579,8 +627,11 @@ ${MESURE}
     <meta name="twitter:description" content="${esc(desc)}">
     <meta name="twitter:image" content="${esc(photoOg)}">
 
+    <!-- En PNG, comme l'accueil : favicon.svg n'était qu'un PNG de 256 px en
+         base64, 128 Ko que Chrome préférait aux PNG déclarés (voir
+         index.html). -->
+    <link rel="icon" type="image/png" href="../../favicon_io/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-96x96.png" sizes="96x96">
-    <link rel="icon" type="image/svg+xml" href="../../favicon_io/favicon.svg">
 
     <!-- Les polices du site, servies par le site (ressources/polices/). Le
          titre est en Cinzel et le synopsis en Inter : ce sont les deux
@@ -636,7 +687,42 @@ ${MESURE}
                 var img = e.target;
                 if (img.matches && img.matches('.u-of-photo img')) img.classList.add('est-decodee');
             }, true);
-        })();
+        })();${corps.includes('u-ouverture') ? `
+
+        // LE PASSAGE ATTERRIT SUR CE QU'ON VOIT. La vignette du répertoire
+        // (ou de l'onglet Dates) devient d'ordinaire le fond du titre. Mais
+        // cette page s'ouvre sur son travelling, et le titre y est au fond
+        // de la scène, pas encore là : la vignette grandissait jusqu'au
+        // plein écran en s'effaçant dans le vide. Au début de la page, elle
+        // s'enfonce donc dans la première photo du travelling — la seule
+        // chose à l'écran, avec « Avancer » —, et la fiche en repart de
+        // même au retour. Le nom est posé au passage et rendu à sa fin, et
+        // le fond du titre garde le sien partout ailleurs (plus bas dans
+        // la page, historique). Même logique que le panneau de l'accueil,
+        // où « seule la boîte voyage » quand l'univers s'ouvre sur son
+        // travelling.
+        (function () {
+            var fond = null, photo = null;
+            function rendre() {
+                if (fond) fond.style.viewTransitionName = '';
+                if (photo) photo.style.viewTransitionName = '';
+                fond = photo = null;
+            }
+            function poser(e) {
+                if (!e.viewTransition) return;
+                var S = document.getElementById('show-universe');
+                var p = document.querySelector('#show-universe .u-ouverture .u-of-photo');
+                if (!S || !p || S.scrollTop > 0) return;
+                fond = document.querySelector('#show-universe .u-hero-fond');
+                if (fond) fond.style.viewTransitionName = 'none';
+                photo = p;
+                photo.style.viewTransitionName = 'fiche-${uni.slug}';
+                e.viewTransition.finished.then(rendre, rendre);
+            }
+            addEventListener('pagereveal', poser);
+            addEventListener('pageswap', poser);
+            addEventListener('pageshow', rendre);
+        })();` : ''}
     </script>
 
     <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
@@ -672,13 +758,16 @@ ${MESURE}
            nom que la vignette touchée prend au départ. La photo de la
            vignette grandit jusqu'à devenir le fond du titre, comme dans le
            panneau de l'accueil (voir « La vignette devient l'univers »
-           dans univers.js). Sans photo, c'est la page entière qui sort de
-           la vignette. Navigateurs plus anciens : navigation ordinaire.
+           dans univers.js) — ou, quand la page s'ouvre sur son travelling,
+           la première photo de celui-ci (voir le script de l'en-tête). Sans
+           photo, c'est la page entière qui sort de la vignette. Navigateurs
+           plus anciens : navigation ordinaire.
 
            La petite image ne se montre jamais en grand : elle s'efface tôt,
            tant qu'elle est encore petite, et le fond arrive en même temps. */
         @view-transition { navigation: auto; }
         ${corps.includes('u-hero-fond') ? '#show-universe .u-hero-fond' : '#show-universe'} { view-transition-name: fiche-${uni.slug}; view-transition-class: fiche; }
+        #show-universe .u-of-photo { view-transition-class: fiche; }
         ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
         ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
         ::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
@@ -715,8 +804,20 @@ ${MESURE}
     ${spriteUtile(corps)}
     <!-- <main> : le contenu principal de la page, annoncé comme tel. Un
          lecteur d'écran y saute d'une touche ; un moteur sait où commence
-         ce qui compte. -->
-    <main id="show-universe">
+         ce qui compte.
+
+         OUVERT D'EMBLÉE (is-open). Sur l'accueil, le panneau part d'une
+         opacité nulle que le moteur lève en l'ouvrant ; ici, il n'y a rien
+         à ouvrir, et cette opacité ne se levait qu'après les cinq scripts
+         de fin de page, en fondu joué par le compositeur — que Chrome ne
+         compte pas comme un affichage. Chrome ne voyait donc souvent aucun
+         premier affichage (Lighthouse « NO_FCP ») : les pages faites pour
+         être trouvées n'avaient pas de mesure, et le visiteur regardait un
+         fond vide jusqu'au lever du panneau. Au téléphone en 4G lente (×4),
+         copie publiée, cinq passes : premier affichage 1 848 → 900 ms sur
+         Le rapt, 2 216 → 908 ms sur Bérénice. Ce que le moteur écrit (le
+         titre, le synopsis) reste caché jusqu'à lui (.u-anime). -->
+    <main id="show-universe" class="is-open">
         <a class="u-retour" href="../../"><span aria-hidden="true">←</span> Adrien Vada</a>
         ${corps}
     </main>
@@ -937,7 +1038,7 @@ function pageRepertoire(fiches, misAJour) {
     </script>
     <meta name="theme-color" content="#0a0907">
 
-${MESURE}
+${MESURE}${SPECULATION}
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">
@@ -946,12 +1047,26 @@ ${MESURE}
     <meta property="og:image" content="${SITE}/ressources/images/og-adrien-vada.jpg">
     <meta property="og:url" content="${url}">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="icon" type="image/svg+xml" href="../favicon_io/favicon.svg">
+    <!-- En PNG, comme l'accueil (voir la fiche d'un spectacle). La page ne
+         déclarait que favicon.svg : 128 Ko pour une icône de 16 px. -->
+    <link rel="icon" type="image/png" href="../favicon_io/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="../favicon_io/favicon-96x96.png" sizes="96x96">
     <!-- Les polices du site, servies par le site (ressources/polices/). -->
     <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="../ressources/polices/polices.css">
-    <link rel="stylesheet" href="spectacle.css">
+    <!-- Les polices, puis la feuille du répertoire, DANS la page : deux
+         feuilles bloquantes de moins, et rien à attendre après le HTML
+         pour le premier affichage (voir policesEnLigne et FEUILLE dans
+         build/generer-pages-spectacles.js). -->
     <style>
+${policesEnLigne('../ressources/polices/')}
+    </style>
+    <style>
+${FEUILLE}    </style>
+    <style>
+        /* Le mouvement de l'accueil — relu dans index.html (voir
+           chargerMouvement) : le retour d'une fiche à sa carte suit la même
+           courbe que l'aller. */
+        :root { ${MOUVEMENT} }
         :root {
             --bg: #0a0907; --surface: #171410; --text: #f2ece0; --muted: #b0a798;
             --accent: #bfa98a; --accent-ink: #c9b494; --on-accent: #0a0907;
@@ -1341,7 +1456,8 @@ ${JSON.stringify(liste, null, 2)}
 }
 
 // ── Feuille de style du répertoire ──────────────────────────────────
-//  Chargée par la seule page /spectacles/ — les fiches, elles, portent
+//  Écrite DANS la seule page qui s'en sert, /spectacles/ (voir
+//  policesEnLigne) — ce n'est plus un fichier. Les fiches, elles, portent
 //  univers.css et leur palette.
 const FEUILLE = `/* RÉPERTOIRE (/spectacles/) — feuille générée (build/generer-pages-spectacles.js)
    Le costume du site : Cinzel, or sur noir, la couleur de chaque spectacle
@@ -1740,9 +1856,10 @@ html.retour-vt .carte .cadre::after { animation: none !important; }
 /* AU RETOUR, la fiche revient se ranger dans sa carte : le fond du titre
    garde sa place le temps de rapetisser, puis la vignette le remplace —
    une photo de carte agrandie à la taille de l'écran ne serait qu'un
-   flou. Même tempo que le panneau de l'accueil qui se referme. */
+   flou. Même tempo que le panneau de l'accueil qui se referme, et même
+   courbe que l'aller (le ressort, --dur-morph : voir la fiche). */
 .carte .cadre { view-transition-class: fiche; }
-::view-transition-group(*.fiche) { animation-duration: .62s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
 ::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
 ::view-transition-old(*.fiche) { animation: vt-fiche-sort .19s ease-in .12s both; }
 ::view-transition-new(*.fiche) { animation: vt-fiche-entre .19s ease-out .22s both; }
@@ -1880,7 +1997,6 @@ function main() {
 
     fs.rmSync(SORTIE, { recursive: true, force: true });
     fs.mkdirSync(SORTIE, { recursive: true });
-    fs.writeFileSync(path.join(SORTIE, 'spectacle.css'), FEUILLE);
 
     const faites = [];
     Object.keys(SHOW_UNIVERSES).forEach(cle => {

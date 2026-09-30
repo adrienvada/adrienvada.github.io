@@ -53,6 +53,18 @@
             else charger();
         })();
     </script>
+    <script type="speculationrules">
+        {
+            "prerender": [{
+                "where": { "or": [{ "href_matches": "/spectacles/*/" }, { "href_matches": "/galerie/" }] },
+                "eagerness": "moderate"
+            }],
+            "prefetch": [{
+                "where": { "or": [{ "href_matches": "/" }, { "href_matches": "/spectacles/" }] },
+                "eagerness": "moderate"
+            }]
+        }
+    </script>
 
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">
@@ -62,12 +74,567 @@
     <meta property="og:image" content="https://adrienvada.fr/ressources/images/og-adrien-vada.jpg">
     <meta property="og:url" content="https://adrienvada.fr/spectacles/">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="icon" type="image/svg+xml" href="../favicon_io/favicon.svg">
+    <!-- En PNG, comme l'accueil (voir la fiche d'un spectacle). La page ne
+         déclarait que favicon.svg : 128 Ko pour une icône de 16 px. -->
+    <link rel="icon" type="image/png" href="../favicon_io/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="../favicon_io/favicon-96x96.png" sizes="96x96">
     <!-- Les polices du site, servies par le site (ressources/polices/). -->
     <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="../ressources/polices/polices.css">
-    <link rel="stylesheet" href="spectacle.css">
+    <!-- Les polices, puis la feuille du répertoire, DANS la page : deux
+         feuilles bloquantes de moins, et rien à attendre après le HTML
+         pour le premier affichage (voir policesEnLigne et FEUILLE dans
+         build/generer-pages-spectacles.js). -->
     <style>
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url(../ressources/polices/inter-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url(../ressources/polices/inter-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url(../ressources/polices/montserrat-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url(../ressources/polices/montserrat-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Cinzel';
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    src: url(../ressources/polices/cinzel-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Cinzel';
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    src: url(../ressources/polices/cinzel-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Caveat';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../ressources/polices/caveat-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Caveat';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../ressources/polices/caveat-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+    </style>
+    <style>
+/* RÉPERTOIRE (/spectacles/) — feuille générée (build/generer-pages-spectacles.js)
+   Le costume du site : Cinzel, or sur noir, la couleur de chaque spectacle
+   (--ac, posée sur sa carte) en signature — et quatre mises en scène :
+   le grain de pellicule, les kakemonos, la vitrine en profondeur, la
+   salle qui prend les couleurs du spectacle survolé (--ambiance). */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Le thème bascule en cercle (voir la bascule, dans le script) : pendant
+   le passage, rien ne transitionne. */
+html.vt-theme *, html.vt-theme *::before, html.vt-theme *::after { transition: none !important; }
+html.vt-theme::view-transition-old(root), html.vt-theme::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-theme::view-transition-new(root) { z-index: 2; }
+
+/* L'ambiance est une COULEUR ENREGISTRÉE : déclarée en <color>, elle
+   s'interpole — le passage d'un or à un carmin est un glissement, pas un
+   claquement. Les règles qui la changent sont écrites dans la page, une
+   par spectacle : le générateur les connaît toutes. */
+@property --ambiance {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #bfa98a;
+}
+
+/* Les deux thèmes — mêmes valeurs que la page d'accueil (avTheme). Les
+   couvertures des spectacles, elles, gardent leurs palettes : une affiche
+   ne change pas de couleurs selon la salle. */
+:root {
+    --ombre: rgba(0, 0, 0, .8);
+    --vignette: rgba(0, 0, 0, .28);
+    --or-defaut: #bfa98a;
+    /* Part d'accent gardée dans l'encre des pastilles d'état — voir .etat. */
+    --etat-encre: 65%;
+}
+:root[data-theme="light"] {
+    --etat-encre: 45%;
+    --bg: #faf9f5; --surface: #ffffff; --text: #1a1a1f; --muted: #575761;
+    --accent: #967e5b; --accent-ink: #826c4a; --on-accent: #ffffff;
+    --line: rgba(26, 26, 31, 0.14);
+    --ombre: rgba(41, 37, 36, .28);
+    --vignette: rgba(41, 37, 36, .10);
+    --or-defaut: #967e5b;
+}
+
+body {
+    position: relative; /* l'ancre de la sentinelle de barre */
+    margin: 0; padding: 0 1.25rem 3.5rem;
+    background: var(--bg); color: var(--text);
+    font: 400 16px/1.65 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    --ambiance: var(--or-defaut);
+    transition: --ambiance .55s ease, background-color .35s ease, color .35s ease;
+}
+
+/* Sous la page, la lueur — elle prend la couleur d'ambiance. */
+body::before {
+    content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(58rem 30rem at 50% -8rem,
+            color-mix(in srgb, var(--ambiance) 9%, transparent), transparent 68%);
+}
+
+/* Sur la page, la matière : un grain de pellicule (bruit SVG de 600 octets,
+   opacité gravée dans son alpha) et un vignettage de salle éteinte. */
+body::after {
+    content: ''; position: fixed; inset: 0; z-index: 40; pointer-events: none;
+    background:
+        radial-gradient(130% 110% at 50% 12%, transparent 58%, var(--vignette) 100%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.06'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") repeat;
+}
+
+main { max-width: 64rem; margin: 0 auto; }
+a { color: var(--accent-ink); }
+
+/* ── La barre — retour à gauche, bascule à droite ──
+   Chez elle en haut de page, transparente et sans cadre. Dès que la
+   sentinelle sort de l'écran, elle flotte à une petite marge du bord :
+   pastille presque opaque (du texte défile dessous), verre flouté,
+   filet d'or — le même costume que la barre d'onglets de l'accueil. */
+.barre-sentinelle { position: absolute; top: 0; left: 0; width: 1px; height: 1px; }
+.barre {
+    position: sticky; top: .75rem; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    max-width: 64rem; margin: .65rem auto 0; padding: .4rem .55rem;
+    border: 1px solid transparent; border-radius: 999px;
+}
+.barre.est-collee {
+    /* Le fond, le filet et le halo suivent l'ambiance : survoler
+       Bérénice rosit aussi la barre — la salle entière est au spectacle. */
+    background: color-mix(in srgb, var(--surface) 94%, var(--ambiance));
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border-color: color-mix(in srgb, var(--ambiance) 30%, transparent);
+    box-shadow: 0 8px 22px -10px rgba(0, 0, 0, .55),
+        0 0 20px -6px color-mix(in srgb, var(--ambiance) 38%, transparent);
+    padding-left: .9rem; padding-right: .55rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .barre { transition: background-color 240ms ease, box-shadow 240ms ease, border-color 240ms ease, padding 240ms ease; }
+}
+.retour {
+    display: inline-block;
+    font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+    text-decoration: none; color: var(--muted);
+    transition: color .25s ease;
+}
+.retour:hover { color: var(--accent-ink); }
+
+/* La bascule de thème — même geste qu'à l'accueil. Soleil d'ambre pour
+   aller au clair, lune d'encre pour revenir au soir. */
+.bascule {
+    display: grid; place-items: center; width: 2.3rem; height: 2.3rem; flex: none;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: var(--surface); color: #fbbf24; cursor: pointer;
+    transition: border-color .3s ease, color .3s ease, background-color .35s ease;
+}
+:root[data-theme="light"] .bascule { color: #6366a8; }
+.bascule:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.bascule .ico { font-size: .95rem; }
+.outils { display: flex; align-items: center; gap: .5rem; }
+/* La densité du mur — mêmes pastilles que la bascule, un signe dedans. */
+.densite { display: flex; gap: .3rem; }
+.densite-btn {
+    display: grid; place-items: center; width: 2.3rem; height: 2.3rem; flex: none;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: var(--surface); color: var(--text); cursor: pointer;
+    font: 500 1.15rem/1 'Inter', system-ui, sans-serif;
+    transition: border-color .3s ease, opacity .3s ease, background-color .35s ease;
+}
+.densite-btn:hover:not(:disabled) { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+/* Au bout de l'échelle, le bouton s'éteint (et le clavier le saute). */
+.densite-btn:disabled { opacity: .35; cursor: default; }
+.densite-btn:focus-visible, .bascule:focus-visible, .retour:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px;
+}
+
+/* ── La manchette ── */
+.tete { padding: 3.2rem 0 2.4rem; text-align: center; }
+.sur-titre {
+    margin: 0 0 1rem; font: 700 .68rem/1.5 'Montserrat', system-ui, sans-serif;
+    letter-spacing: .26em; text-transform: uppercase; color: var(--accent-ink);
+}
+h1 {
+    margin: 0; font: 700 clamp(2.6rem, 7vw, 4rem)/1.05 'Cinzel', Georgia, serif;
+    letter-spacing: .04em; color: var(--text); text-wrap: balance;
+}
+/* Le fleuron suit l'ambiance : il est la première chose qui rosit quand on
+   survole Bérénice, la première qui reprend l'or quand la main s'en va. */
+.ornement {
+    position: relative; margin: 1.5rem auto 0; width: 11rem; height: 1px;
+    background: linear-gradient(90deg, transparent,
+            color-mix(in srgb, var(--ambiance) 60%, transparent), transparent);
+}
+.ornement span {
+    position: absolute; left: 50%; top: 50%; width: 7px; height: 7px;
+    transform: translate(-50%, -50%) rotate(45deg);
+    background: var(--ambiance); box-shadow: 0 0 0 3px var(--bg);
+}
+
+/* ── Intitulés de groupe — les mêmes que le CV, icône comprise ── */
+.groupe {
+    display: flex; align-items: center; gap: .8rem; margin: 2.6rem 0 0;
+    font: 700 .72rem/1 'Montserrat', system-ui, sans-serif;
+    letter-spacing: .2em; text-transform: uppercase; color: var(--accent-ink);
+}
+.groupe-ico {
+    display: grid; place-items: center; width: 1.9rem; height: 1.9rem;
+    border: 1px solid var(--line); border-radius: .45rem;
+    background: var(--surface); color: var(--ambiance);
+}
+.ico { display: block; width: 1em; height: 1em; fill: currentColor; font-size: .8rem; }
+.groupe-filet {
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg,
+            color-mix(in srgb, var(--ambiance) 26%, var(--line)), transparent);
+}
+
+/* ── Les kakemonos ──
+   Des affiches hautes (2/3), serrées comme dans le hall d'une maison de
+   production. Le recadrage portrait vise le point du montage (--pos). */
+.repertoire {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 1.9rem 1.5rem; margin: 0; padding: 1.8rem 0 .6rem;
+    list-style: none; align-items: start;
+}
+.carte a {
+    display: block; text-decoration: none; color: inherit;
+    -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+}
+.carte a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: .65rem; }
+.cadre {
+    position: relative; display: block; aspect-ratio: 2 / 3;
+    /* hidden ferait du cadre un CONTENEUR DE DÉFILEMENT : la timeline
+       view() de la dérive s'y accrocherait et ne progresserait jamais.
+       clip rogne pareil sans créer de boîte — le même piège, et le même
+       remède, que la barre collante du CV (voir README). */
+    overflow: hidden; overflow: clip;
+    border-radius: .65rem; border: 1px solid var(--line); background: var(--surface);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), 0 10px 28px -18px var(--ombre);
+    transition: border-color .35s ease, box-shadow .35s ease, transform .35s ease;
+}
+.media { position: absolute; inset: 0; display: block; }
+/* Le rai de la dorure : hors champ à gauche, il ne traverse qu'une
+   fois, à l'entrée en scène. Doré, léger, au-dessus de l'affiche et
+   sous le murmure. */
+.cadre::after {
+    content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(105deg, transparent 42%, rgba(255, 236, 200, .2) 50%, transparent 58%);
+    transform: translateX(-135%);
+}
+.media img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; object-position: var(--pos, 50% 32%);
+    transition: transform .6s cubic-bezier(.2, .6, .2, 1);
+}
+/* Le deuxième regard : la photo suivante du montage, née au premier survol
+   (voir le script de la page), fond par-dessus la première. */
+.img2 { opacity: 0; transition: opacity .6s ease, transform .6s cubic-bezier(.2, .6, .2, 1); }
+.carte.regarde .img2.prete { opacity: 1; }
+.lueur { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, .3)); }
+
+/* Le murmure du kakemono — le synopsis se révèle mot à mot dans la
+   carte, comme sur les lignes du CV, par-dessus le deuxième regard. Un
+   voile monte d'abord pour asseoir la lecture ; chaque mot sort d'un
+   flou, l'un après l'autre (--m, posé au balisage). Toujours ivoire :
+   il se lit sur une photographie, pas sur la page. */
+.chuchote {
+    position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    display: flex; align-items: flex-end; padding: 1rem .95rem;
+}
+.voile {
+    position: absolute; inset: 0; opacity: 0; transition: opacity .5s ease;
+    background: linear-gradient(180deg, rgba(10, 9, 7, 0) 0%, rgba(10, 9, 7, .34) 42%, rgba(10, 9, 7, .82) 100%);
+}
+.chuchote p { position: relative; margin: 0; font: 400 .74rem/1.6 'Inter', system-ui, sans-serif; color: #f2ece0; }
+.mot {
+    display: inline-block; opacity: 0; filter: blur(5px); transform: translateY(4px);
+    transition: opacity .45s ease, filter .45s ease, transform .45s ease;
+}
+.carte a:hover .voile, .carte.regarde .voile { opacity: 1; }
+.carte a:hover .mot, .carte.regarde .mot {
+    opacity: 1; filter: none; transform: none;
+    transition-delay: calc(140ms + var(--m, 0) * 26ms);
+}
+
+/* La couverture des spectacles sans photographie : l'aplat de leur palette,
+   leur titre en Cinzel entre deux fleurons — une affiche d'attente. */
+.carton {
+    position: absolute; inset: 0; display: grid; place-content: center; gap: .8rem;
+    padding: 1.2rem; text-align: center;
+    background: linear-gradient(165deg, color-mix(in srgb, var(--cbg) 88%, #f2ece0), var(--cbg));
+}
+.carton::after {
+    content: ''; position: absolute; inset: .6rem; pointer-events: none;
+    border: 1px solid color-mix(in srgb, var(--ctx) 22%, transparent); border-radius: .4rem;
+}
+.carton-orne { font-size: .68rem; color: var(--ac, var(--accent)); }
+.carton-titre { font: 600 1.1rem/1.35 'Cinzel', Georgia, serif; color: var(--ctx); text-wrap: balance; }
+
+/* Le survol — et son jumeau .regarde, posé par l'appui maintenu du doigt. */
+.carte a:hover .cadre, .carte.regarde .cadre, .carte a:focus-visible .cadre {
+    border-color: color-mix(in srgb, var(--ac, var(--accent)) 55%, transparent);
+    box-shadow: 0 16px 38px -14px color-mix(in srgb, var(--ac, var(--accent)) 40%, transparent),
+        0 10px 28px -18px rgba(0, 0, 0, .8);
+    transform: translateY(-3px);
+}
+.carte a:hover .media img, .carte.regarde .media img { transform: scale(1.05); }
+
+.txt { display: block; padding-top: .7rem; }
+/* L'année sur sa ligne, la pastille d'état TOUJOURS sur la sienne :
+   « En création » n'est pas la suite de la date, c'est un tampon. */
+.fil { display: block; }
+.annee { display: block; }
+.etat { display: inline-block; margin-top: .35rem; }
+.annee {
+    font-size: .7rem; line-height: 1.4; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--accent-ink);
+}
+/* LA PASTILLE PORTE LA COULEUR DE SON SPECTACLE, comme le badge du CV.
+   Elle prenait l'or du site : toutes les cartes disaient donc leur état
+   de la même voix, alors que chacune a déjà sa teinte — le fleuron, le
+   filet sous le nom, la lueur au survol la portent. La pastille était le
+   dernier élément à ne pas suivre.
+
+   L'encre est l'accent ramené vers --text, jamais l'accent brut : sur
+   onze spectacles, les plus foncés tombent sous 2 de contraste en thème
+   sombre, les plus vifs en font autant en clair, et ce texte-ci est
+   petit (.69rem, 11 px : il faisait 9 px, et 7,7 au téléphone). Le mélange va toujours à l'opposé du fond. La proportion suit
+   le thème pour la même raison que sur le CV — voir --cv-badge-encre
+   dans index.html, où le calcul est détaillé.
+
+   Mesuré ici sur les onze cartes, encre contre fond de pastille composé :
+   5,06 au pire en sombre, 4,89 en clair. Le cas serré est le tilleul
+   d'As You Like It sur fond clair — c'est lui qui a fait descendre le
+   clair à 45 %, où 48 % le laissaient pile sur le seuil de 4,5. */
+.etat {
+    font: 600 .69rem/1 'Inter', system-ui, sans-serif; letter-spacing: .1em;
+    text-transform: uppercase; white-space: nowrap;
+    color: color-mix(in srgb, var(--ac, var(--accent)) var(--etat-encre, 65%), var(--text));
+    border: 1px solid color-mix(in srgb, var(--ac, var(--accent)) 45%, transparent);
+    border-radius: 999px; padding: .22rem .5rem;
+    background: color-mix(in srgb, var(--ac, var(--accent)) 9%, transparent);
+}
+.nom {
+    position: relative; display: block; margin-top: .3rem; padding-bottom: .5rem;
+    font: 600 1.02rem/1.3 'Cinzel', Georgia, serif; color: var(--text);
+    transition: color .3s ease;
+}
+.nom::after {
+    content: ''; position: absolute; left: 0; bottom: 0; width: 1.4rem; height: 2px;
+    background: var(--ac, var(--accent)); opacity: .55;
+    transition: width .35s ease, opacity .35s ease;
+}
+.carte a:hover .nom, .carte.regarde .nom { color: var(--accent-ink); }
+.carte a:hover .nom::after, .carte.regarde .nom::after { width: 2.6rem; opacity: 1; }
+.role { display: block; margin-top: .3rem; font-size: .78rem; color: var(--muted); }
+
+@media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+    /* Le fleuron respire — à peine : la manchette n'est pas un aplat mort.
+       UNE respiration (l'aller, puis le retour au repos), et non plus sans
+       fin : un mouvement perpétuel à côté du texte doit pouvoir être
+       arrêté (WCAG 2.2.2) — le plus simple est qu'il s'arrête seul. */
+    .ornement span { animation: fleuron-respire 5.5s ease-in-out 2 alternate; }
+}
+@keyframes fleuron-respire {
+    from { transform: translate(-50%, -50%) rotate(45deg); box-shadow: 0 0 0 3px var(--bg); }
+    to {
+        transform: translate(-50%, -50%) rotate(45deg) scale(1.16);
+        box-shadow: 0 0 0 3px var(--bg), 0 0 13px 2px color-mix(in srgb, var(--ambiance) 55%, transparent);
+    }
+}
+
+/* ── L'entrée en scène, LIÉE AU GESTE ──
+   La règle des univers vaut ici : une révélation pilotée par la
+   position de défilement, jamais par un déclencheur — c'est le lien
+   direct entre le doigt et l'image qui fait l'effet. Le script pose
+   sur chaque carte une progression --p (0 en bas de l'écran, 1 aux
+   deux tiers de la montée, déjà adoucie) ; tout le reste est du
+   calcul de feuille. Redescendre rembobine, remonter rejoue —
+   l'apparition appartient au geste. Sans script ou en mouvement
+   réduit, --p vaut 1 : tout est là, immobile.
+
+   La carte se lève et se resserre en s'éveillant ; l'affiche se tasse
+   doucement dans son cadre ; LE VOLET AUX COULEURS DU SPECTACLE glisse
+   vers le haut et la découvre, bord adouci en dégradé. Restent deux
+   surprises une-fois, au passage du milieu (.en-scene) : le rai de
+   dorure, puis le filet du titre qui s'embrase. */
+html.scrolly .carte { --p: 0; --pl: 0; }
+.carte {
+    /* Le fondu suit l'horloge LINÉAIRE (--pl) : la courbe souple charge
+       tant le départ que, posée sur elle, l'opacité était pleine dès le
+       bord de l'écran. Ici : zéro au bord, pleine au premier quart de la
+       montée. Elle l'était au tiers — mais au repos, sans défilement, les
+       cartes du bas de l'écran restaient alors à demi fondues, leur texte
+       sous le contraste minimal tant qu'on ne bougeait pas. Le fondu
+       s'achève désormais avant qu'une carte ne soit vraiment à l'écran ;
+       la montée, le resserrement et le volet gardent toute leur course. */
+    opacity: min(1, calc(var(--pl, 1) / .3));
+    transform: translateY(calc((1 - var(--p, 1)) * 72px)) scale(calc(.94 + var(--p, 1) * .06));
+}
+.media { transform: scale(calc(1.1 - var(--p, 1) * .1)); }
+.volet-couleur {
+    position: absolute; inset: -2% 0; z-index: 1; pointer-events: none;
+    opacity: .42;
+    background: linear-gradient(to top,
+            transparent 0%,
+            color-mix(in srgb, var(--ac, var(--accent)) 88%, transparent) 13%,
+            var(--ac, var(--accent)) 40%,
+            color-mix(in srgb, var(--ac, var(--accent)) 76%, #14100b) 100%);
+    transform: translateY(calc(clamp(0, (var(--p, 1) - .22) / .6, 1) * -118%));
+}
+html.scrolly .carte:not(.en-scene) .nom::after { width: 0; opacity: 0; }
+html.scrolly .carte.en-scene .nom::after { animation: filet-embrase .5s ease calc(var(--retard, 0ms) + 420ms) backwards; }
+html.scrolly .carte.en-scene .cadre::after { animation: dorure .9s ease var(--retard, 0ms) both; }
+/* La vitrine scintille : de temps en temps, une carte posée reçoit un
+   nouveau passage de dorure (classe posée par le script, retirée après).
+   La devanture vit, sans jamais gigoter. */
+html.scrolly .carte.reluit .cadre::after { animation: dorure 1.3s ease both; }
+@keyframes filet-embrase { from { width: 0; opacity: 0; } }
+@keyframes dorure { from { transform: translateX(-135%); } to { transform: translateX(135%); } }
+
+/* Au retour par morphing, les cartes sont déjà en place : rejouer
+   l'entrée disputerait l'écran à la fiche qui vient s'y ranger. */
+html.retour-vt .carte { --p: 1 !important; --pl: 1 !important; }
+html.retour-vt .carte .nom::after,
+html.retour-vt .carte .cadre::after { animation: none !important; }
+
+
+/* ── Le morphing vers la fiche ──
+   Les deux documents y consentent (celui-ci ici, les fiches dans leur
+   propre <style>) ; le script ne nomme que la carte cliquée, et la vignette
+   glisse jusqu'à devenir le panneau du spectacle. Navigateurs plus
+   anciens : navigation ordinaire, rien de cassé. */
+@view-transition { navigation: auto; }
+::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+/* AU RETOUR, la fiche revient se ranger dans sa carte : le fond du titre
+   garde sa place le temps de rapetisser, puis la vignette le remplace —
+   une photo de carte agrandie à la taille de l'écran ne serait qu'un
+   flou. Même tempo que le panneau de l'accueil qui se referme, et même
+   courbe que l'aller (le ressort, --dur-morph : voir la fiche). */
+.carte .cadre { view-transition-class: fiche; }
+::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
+::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
+::view-transition-old(*.fiche) { animation: vt-fiche-sort .19s ease-in .12s both; }
+::view-transition-new(*.fiche) { animation: vt-fiche-entre .19s ease-out .22s both; }
+@keyframes vt-fiche-sort { to { opacity: 0; } }
+@keyframes vt-fiche-entre { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*), ::view-transition-image-pair(*),
+    ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
+footer {
+    max-width: 64rem; margin: 2.6rem auto 0; padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    font-size: .8rem; color: var(--muted); text-align: center;
+}
+footer a { text-decoration: none; }
+footer a:hover { color: var(--accent-ink); }
+.maj { margin: .4rem 0 0; font-size: .72rem; letter-spacing: .06em; }
+
+/* ── La densité du mur ──
+   Les boutons − et + resserrent ou élargissent le mur : le script pose
+   data-zoom sur <html>, la grille suit, et les kakemonos glissent
+   jusqu'à leur nouveau rang (View Transitions même-document — sans
+   soutien, bascule nette). Aux rangs serrés, la carte redevient une
+   image : le fil et le rôle s'effacent, le titre se fait discret.
+   Le pincement, lui, appartient de nouveau au navigateur : c'est le
+   geste qui agrandit la page. */
+html[data-zoom] .repertoire { grid-template-columns: repeat(var(--colonnes, 2), 1fr); }
+html[data-zoom="1"] { --colonnes: 1; }
+html[data-zoom="2"] { --colonnes: 2; }
+html[data-zoom="3"] { --colonnes: 3; }
+html[data-zoom="4"] { --colonnes: 4; }
+html[data-zoom="5"] { --colonnes: 5; }
+html[data-zoom="6"] { --colonnes: 6; }
+html[data-zoom="1"] .nom { font-size: 1.12rem; }
+@media (max-width: 640px) {
+    html[data-zoom="3"] .repertoire { gap: .9rem .5rem; }
+    html[data-zoom="3"] .nom { font-size: .62rem; padding-bottom: .28rem; }
+    html[data-zoom="3"] .fil, html[data-zoom="3"] .role { display: none; }
+    html[data-zoom="3"] .txt { padding-top: .35rem; }
+    /* Au rang le plus serré, la carte n'est plus qu'une image : un mur
+       de galerie, le titre attend dans la fiche. */
+    html[data-zoom="4"] .repertoire { gap: .45rem .4rem; }
+    html[data-zoom="4"] .txt { display: none; }
+}
+
+/* ── Téléphone : un mur d'affiches, pas une liste ── */
+@media (max-width: 640px) {
+    body { padding: 0 .9rem 2.6rem; }
+    .tete { padding: 2.3rem 0 1.8rem; }
+    .sur-titre { font-size: .69rem; letter-spacing: .2em; margin-bottom: .8rem; }
+    .ornement { margin-top: 1.1rem; width: 8.5rem; }
+    .groupe { margin-top: 2rem; gap: .6rem; font-size: .7rem; letter-spacing: .16em; }
+    .groupe-ico { width: 1.65rem; height: 1.65rem; }
+    .repertoire { grid-template-columns: repeat(2, 1fr); gap: 1.3rem .75rem; padding: 1.2rem 0 .4rem; }
+    .txt { padding-top: .5rem; }
+    .etat { margin-top: .28rem; }
+    .annee { font-size: .69rem; letter-spacing: .1em; }
+    .etat { font-size: .66rem; padding: .2rem .42rem; }
+    .nom { font-size: .84rem; margin-top: .22rem; padding-bottom: .4rem; }
+    .nom::after { height: 1.5px; }
+    .role { font-size: .68rem; margin-top: .2rem; }
+    .carton-titre { font-size: .9rem; }
+    .carton-orne { font-size: .56rem; }
+    .chuchote { padding: .8rem .7rem; }
+    .chuchote p { font-size: .66rem; line-height: 1.55; }
+    .barre { top: .55rem; margin-top: .5rem; }
+    .bascule, .densite-btn { width: 2.1rem; height: 2.1rem; }
+    footer { margin-top: 2rem; }
+}
+    </style>
+    <style>
+        /* Le mouvement de l'accueil — relu dans index.html (voir
+           chargerMouvement) : le retour d'une fiche à sa carte suit la même
+           courbe que l'aller. */
+        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --ease-ressort: linear(0, 0.005 1%, 0.039 3%, 0.098 5%, 0.215 8%, 0.566 16%, 0.715 20%, 0.807 23%, 0.901 27%, 0.966 31%, 1.013 36%, 1.036 42%, 1.032 52%, 1.002 75%, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; --dur-scene: 460ms; --dur-morph: 620ms; }
         :root {
             --bg: #0a0907; --surface: #171410; --text: #f2ece0; --muted: #b0a798;
             --accent: #bfa98a; --accent-ink: #c9b494; --on-accent: #0a0907;
