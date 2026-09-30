@@ -53,6 +53,9 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - l'accueil se charge sans erreur de script ;
 - un lien direct entre sans rideau ; depuis un autre site, l'ouverture joue une
   fois ;
+- l'ouverture démarre après le chargement (plafonné à 1,5 s), tient sa durée
+  processeur ralenti 4×, et « Passer » pendant l'attente ne la relance pas
+  (voir [Elle attend que la salle se taise](#elle-attend-que-la-salle-se-taise)) ;
 - « Ajouter au calendrier » ouvre sa fenêtre dans un univers ouvert depuis le
   CV (une représentation fictive est glissée dans les dates le temps du test :
   il ne dépend pas de la saison) ;
@@ -714,6 +717,28 @@ arrivé, le garde lève le rideau sans animation et marque la scène passée
 (`__introPassee`), qu'`intro.js` trouve en arrivant et ne démarre pas. Il la
 relançait derrière le rideau fermé, et la page restait verrouillée.
 
+### Elle attend que la salle se taise
+
+Arrivé, `intro.js` ne lève pas le rideau tout de suite : il attend la fin du
+chargement (`load`), puis deux images (`auCalme`, en bas du fichier). Il
+démarrait sur `DOMContentLoaded`, dans la même tâche que tout le CV — 614 ms
+d'un seul tenant sur un téléphone moyen (processeur ralenti 4×) : le premier
+rôle restait figé, brouillé, puis le masque surgissait d'un coup en taille
+finale, sans sa matérialisation. Mesuré à 4× : dans les 600 ms qui suivent le
+lever de rideau, le plus long écart entre deux images tombe de 540-590 ms à
+60-90. Le prix : la première image du défilé arrive 40 à 140 ms plus tard.
+
+- l'attente est **plafonnée à 1,5 s** (`ATTENTE_MAX_MS`) : `load` attend aussi
+  les images, et le rideau ne reste pas noir pour un portrait que retient un
+  réseau qui cale. En « 4G lente » émulée, `load` suit `DOMContentLoaded` d'une
+  demi-seconde : le plafond n'y sert pas ;
+- le rideau noir et « Passer » sont à l'écran pendant l'attente, et
+  « Passer » y répond : la scène est passée, et `start()` ne la relance pas
+  (vérifié par `build/verifier-site.js`, portrait retenu trois secondes) ;
+- en mouvement réduit, rien n'attend : `start()` lève le rideau aussitôt ;
+- le garde d'`index.html` n'a pas changé : `__introPret` est posé dès
+  l'exécution d'`intro.js`, avant l'attente.
+
 ### La sortie : l'iris, et le nom qui rejoint l'en-tête
 
 Au clic sur le sceau (ou sur « Passer »), le rideau **s'ouvre en iris depuis
@@ -748,7 +773,9 @@ ralentir. Ils ne se marchent plus dessus.
   « Adrien ».** C'est une consigne : `intro.js` cherche au chargement, par
   dichotomie, le facteur de rythme qui l'atteint. Conséquence directe : ajouter
   dix rôles ne rallonge plus l'ouverture, ça la densifie. C'est ici, et nulle
-  part ailleurs, qu'on rend l'intro plus longue ou plus courte.
+  part ailleurs, qu'on rend l'intro plus longue ou plus courte. Elle est
+  **tenue sur un téléphone lent** aussi : voir plus bas « L'heure, pas les
+  images ».
 - `ROLES` — la liste et l'ordre des rôles. **Seuls les premiers et les derniers
   sont faits pour être lus** : entre les deux, c'est une masse qu'on traverse
   sans pouvoir la compter, et c'est le but. `'ADRIEN'` doit rester en dernier
@@ -757,10 +784,12 @@ ralentir. Ils ne se marchent plus dessus.
   s'étale ; au-dessus, la pointe se fait plus étroite et plus violente.
 - `PROFIL_BIAIS` — déplace le sommet. Au-dessus de 1 il arrive plus tard :
   l'accélération prend son temps, la décélération est plus serrée.
-- `SHIFT_FLOOR_MS` / `HOLD_FLOOR_MS` — le plancher absolu (38 + 8 ms par rôle).
+- `SHIFT_FLOOR_MS` / `HOLD_FLOOR_MS` — le plancher (38 + 8 ms par rôle).
   **C'est lui, et lui seul, qui fixe la vitesse de pointe** — voir juste en
   dessous. Les descendre encore ferait se chevaucher les mots sur un appareil
-  lent.
+  lent. 38 ms, c'est 2,3 images à 60 Hz : sur un appareil qui en affiche moins,
+  le plancher monte de lui-même (`IMAGES_PAR_CRAN`, `PLANCHER_MAX_MS`, voir
+  plus bas) ; il ne descend jamais sous 38.
 - `VITESSE_MAX` — **l'amplitude de la courbe, et le piège du réglage.** On
   croirait qu'elle règle la vitesse de pointe : elle ne la règle pas. Au sommet,
   le rythme bute depuis longtemps sur le plancher ci-dessus. Elle ne décide que
@@ -784,6 +813,32 @@ constante, une décélération plus longue et une chute finale plus lente se
 financent forcément sur le reste. Étaler les deux extrémités impose une pointe
 plus rapide au milieu, et comprime un peu l'ouverture. Il n'y a pas de réglage
 qui donne tout à la fois — seulement des équilibres.
+
+#### L'heure, pas les images
+
+La consigne ne vaut que si l'horloge est tenue. Chaque cran programmait le
+suivant « dans tant de millisecondes », et le décodage d'un mot avançait d'une
+lettre tous les trois minuteurs : sur un téléphone lent, chaque retard
+s'ajoutait au suivant. Processeur ralenti 4×, « Antiochus » et sa lecture
+prenaient 2,1 à 2,7 s au lieu de 0,72, la chaîne des crans 0,7 s de trop, et
+les mots du milieu arrivaient au centre à moitié brouillés. Trois règles, dans
+`intro.js` (section « L'horloge du défilé ») :
+
+| Règle | Où | Ce qu'elle fait |
+|---|---|---|
+| **Chaque cran a une heure** | `echeance`, `aLHeure` | calculée depuis le lever de rideau en ajoutant les durées prévues : un cran parti en retard ne décale plus le suivant. Le décodage et le « ça mouline » lisent l'heure eux aussi (`decodeCell`, `churnCell`) : un appareil lent voit moins d'images du brouillage, pas un mot plus long. Seul le dernier cran garde sa durée quoi qu'il arrive : `revele()` mesure « Adrien » pour y caler le nom, il doit être posé |
+| **Au moins une image par cran** | `cranPeint`, `marquerCran` | rattraper un retard fait partir deux crans coup sur coup ; s'ils tombent entre les deux mêmes images, un rôle disparaît sans avoir paru. Le suivant attend donc que l'image soit passée. Onglet caché, le défilé attend qu'on revienne |
+| **Le plancher suit la cadence** | `calerLePlancher` | la cadence est mesurée (médiane des écarts entre images) pendant les deux premiers rôles ; le plancher garde ses 2,3 images par cran, jamais sous 38 ms, jamais au-dessus de 76 (2,3 images à 30 i/s : au-delà, la pointe s'aplatit et la roulette défile au lieu de s'emballer). La dichotomie est relancée sur les crans qui restent pour tenir `SEQUENCE_CIBLE_MS` ; la chute d'« Adrien » (`dureeVerrou`) ne bouge pas |
+
+Mesuré, du démarrage au sceau (téléphone simulé, passes alternées avant et
+après) : 5,8 → 5,7 s à 1×, 7,6-8,2 → 5,8 s à 4×, 9,7-10,1 → 6 s à 6×. À 4×,
+au plus fort du défilé, 3,2 à 4,3 images par cran au lieu de 1,9 à 2,5 sans
+plancher calé. Sur un appareil lent, le prix est dans la forme : la pointe y
+est moins folle et les épaules un peu plus vives — l'arbitrage ci-dessus, fait
+par la machine.
+
+`build/verifier-site.js` le garde : à 4×, le défilé doit tenir sa consigne à
+20 % près (il en prenait 40 % de plus).
 
 ### Régler le grain (et pourquoi il ne faut pas le grossir)
 

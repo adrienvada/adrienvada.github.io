@@ -168,6 +168,83 @@ function exige(condition, message) {
             await c.close();
         });
 
+        await verifie('l’ouverture démarre au calme et tient sa durée sur un téléphone lent ; « Passer » pendant l’attente ne la relance pas', async () => {
+            // Le premier rôle (le tambour qui se remplit), la fin du défilé
+            // (revele() éteint le tambour sous le nom) et la fin du chargement.
+            const guetteTambour = () => {
+                window.__t = {};
+                addEventListener('load', () => { window.__t.load = performance.now(); });
+                addEventListener('DOMContentLoaded', () => {
+                    window.__t.dcl = performance.now();
+                    const reel = document.getElementById('intro-scramble');
+                    if (!reel) return;
+                    new MutationObserver(() => {
+                        if (!window.__t.role && reel.textContent.trim()) window.__t.role = performance.now();
+                        if (!window.__t.nom && reel.style.opacity === '0') window.__t.nom = performance.now();
+                    }).observe(reel, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['style'] });
+                });
+            };
+            const source = fs.readFileSync(path.join(RACINE, 'intro.js'), 'utf8');
+            const cible = +source.match(/SEQUENCE_CIBLE_MS = (\d+)/)[1] + +source.match(/SILENCE_MS = (\d+)/)[1];
+
+            // Téléphone moyen : processeur ralenti 4×. Le défilé partait dans
+            // la tâche qui installe le CV, et chaque minuteur en retard
+            // retardait les suivants : 6,7 à 7,2 s au lieu de 4,8.
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+            await c.addInitScript(guetteTambour);
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await (await c.newCDPSession(p)).send('Emulation.setCPUThrottlingRate', { rate: 4 });
+            await p.goto(base + '/?intro=1', { waitUntil: 'commit' });
+            await p.waitForFunction(() => window.__t && window.__t.nom, null, { timeout: 20000, polling: 100 })
+                .catch(() => { throw new Error('le défilé ne s’arrête pas sur le nom'); });
+            const t = await p.evaluate(() => window.__t);
+            exige(t.role > t.load, `le défilé démarre avant la fin du chargement (${Math.round(t.load - t.role)} ms avant)`);
+            exige(t.nom - t.role < cible * 1.2,
+                `le défilé s’allonge sur un téléphone lent : ${Math.round(t.nom - t.role)} ms pour ${cible} prévues`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+
+            // Le portrait retenu trois secondes (un réseau qui cale) : le
+            // défilé n'attend pas `load` au-delà d'une seconde et demie…
+            const retenir = async (ctx) => ctx.route(/portrait-affiche-/, async (r) => {
+                await new Promise((ok) => setTimeout(ok, 3000));
+                await r.continue().catch(() => { });
+            });
+            const c2 = await visiteur();
+            await retenir(c2);
+            await c2.addInitScript(guetteTambour);
+            const p2 = await c2.newPage();
+            await p2.goto(base + '/?intro=1', { waitUntil: 'commit' });
+            await p2.waitForFunction(() => window.__t && window.__t.role, null, { timeout: 6000, polling: 50 })
+                .catch(() => { throw new Error('le défilé attend le portrait au-delà du plafond'); });
+            const t2 = await p2.evaluate(() => window.__t);
+            exige(!t2.load && t2.role - t2.dcl < 2500, `le plafond de l’attente ne tient pas (${Math.round(t2.role - t2.dcl)} ms après DOMContentLoaded)`);
+            await c2.close();
+
+            // … et « Passer » pressé pendant cette attente lève le rideau pour
+            // de bon : le défilé ne part pas derrière, le verrou ne revient pas.
+            const c3 = await visiteur();
+            await retenir(c3);
+            await c3.addInitScript(guetteTambour);
+            const p3 = await c3.newPage();
+            const erreurs3 = guette(p3);
+            await p3.goto(base + '/?intro=1', { waitUntil: 'commit' });
+            await p3.waitForFunction(() => window.__introPret === true, null, { timeout: 8000, polling: 20 });
+            exige(!(await p3.evaluate(() => window.__t.role)), 'le défilé est déjà parti : l’attente n’a pas eu lieu');
+            await p3.click('#intro-skip', { timeout: 2000 });
+            await p3.waitForTimeout(2500);
+            const apres = await p3.evaluate(() => ({
+                rideau: document.getElementById('intro-overlay').hidden,
+                verrou: document.body.classList.contains('modal-open'),
+                role: window.__t.role
+            }));
+            exige(apres.rideau && !apres.verrou, '« Passer » pendant l’attente ne lève pas le rideau pour de bon');
+            exige(!apres.role, 'le défilé démarre derrière le rideau levé');
+            exige(!erreurs3.length, erreurs3.join(' | '));
+            await c3.close();
+        });
+
         await verifie('« Ajouter au calendrier » ouvre sa fenêtre dans un univers ouvert depuis le CV', async () => {
             const c = await visiteur({ viewport: { width: 1280, height: 900 } });
             const p = await c.newPage();
