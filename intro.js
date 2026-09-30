@@ -182,44 +182,67 @@
     //  trois, parce que les planchers rendent la somme non proportionnelle au
     //  facteur : en dessous d'un certain rythme, un rôle ne raccourcit plus.
     //  La somme reste en revanche croissante, ce qui suffit à la dichotomie.
-    //  Une trentaine d'itérations, une seule fois au chargement.
+    //  Une quarantaine d'itérations, au chargement — et une seconde fois,
+    //  sur la fin de la liste, si le plancher doit monter (voir « Le
+    //  plancher se cale sur la cadence réelle »).
+    //
+    //  UNE CONSIGNE N'EST TENUE QUE SI L'HORLOGE L'EST. La somme calculée
+    //  ici suppose des minuteurs ponctuels ; sur un téléphone lent, chaque
+    //  retard s'ajoutait au suivant et le défilé durait 30 à 75 % de plus
+    //  que prévu. Les crans et le décodage des mots lisent donc l'heure au
+    //  lieu de compter des images (voir « L'horloge du défilé »).
     var SEQUENCE_CIBLE_MS = 4455;  // du lever de rideau à l'arrêt sur « Adrien »
     var SHIFT_BASE_MS = 380, SHIFT_FLOOR_MS = 38;   // durée d'un cran du tambour
     var LOCK_SHIFT_FACTOR = 5;     // le dernier cran : « Adrien » tombe au ralenti
 
+    // Le plancher en vigueur : SHIFT_FLOOR_MS au départ, relevé en cours de
+    // route si l'appareil n'affiche pas assez d'images pour le tenir.
+    var plancherCran = SHIFT_FLOOR_MS;
+
     function shiftAvec(i, facteur) {
         var lock = i === ROLES.length - 1 ? LOCK_SHIFT_FACTOR : 1;
-        return Math.max(SHIFT_FLOOR_MS, Math.round(SHIFT_BASE_MS * accelK(i) * lock * facteur));
+        return Math.max(plancherCran, Math.round(SHIFT_BASE_MS * accelK(i) * lock * facteur));
     }
 
     function holdAvec(i, facteur) {
         return Math.max(HOLD_FLOOR_MS, Math.round(HOLD_BASE_MS * accelK(i) * facteur));
     }
 
+    // Les crans de `depuis` à l'avant-dernier, chacun avec sa lecture.
+    function dureeCrans(depuis, facteur) {
+        var total = 0;
+        for (var i = depuis; i < ROLES.length - 1; i++) total += shiftAvec(i, facteur) + holdAvec(i, facteur);
+        return total;
+    }
+
     // Le déroulé complet : le premier rôle se décode au centre, les suivants
     // arrivent déjà décodés et ne coûtent que leur cran plus leur lecture. Le
     // dernier n'a pas de lecture : c'est le verrouillage qui prend la suite.
     function dureeSequence(facteur) {
-        var total = decodeDuration(0, ROLES[0]) + holdAvec(0, facteur);
-        for (var i = 1; i < ROLES.length; i++) {
-            total += shiftAvec(i, facteur);
-            if (i < ROLES.length - 1) total += holdAvec(i, facteur);
-        }
-        return total;
+        return decodeDuration(0, ROLES[0]) + holdAvec(0, facteur)
+            + dureeCrans(1, facteur) + shiftAvec(ROLES.length - 1, facteur);
     }
 
-    var rythme = (function () {
-        if (ROLES.length < 2) return 1;
+    // La dichotomie : le facteur qui fait durer `duree` exactement `cible`.
+    function chercherRythme(duree, cible) {
         var bas = 0.01, haut = 20;
-        if (dureeSequence(haut) < SEQUENCE_CIBLE_MS) return haut;  // liste trop courte : au plus lent
+        if (duree(haut) < cible) return haut;  // liste trop courte : au plus lent
         for (var n = 0; n < 40; n++) {
             var mid = (bas + haut) / 2;
-            if (dureeSequence(mid) < SEQUENCE_CIBLE_MS) bas = mid; else haut = mid;
+            if (duree(mid) < cible) bas = mid; else haut = mid;
         }
         return (bas + haut) / 2;
-    })();
+    }
 
-    function shiftDuration(i) { return shiftAvec(i, rythme); }
+    var rythme = ROLES.length < 2 ? 1 : chercherRythme(dureeSequence, SEQUENCE_CIBLE_MS);
+
+    // LE DERNIER CRAN EST FIGÉ ICI, une fois pour toutes. Si le plancher
+    // monte en cours de route, le rythme des crans qui restent change —
+    // pas la chute d'« Adrien » : c'est un arrêt, pas un cran parmi d'autres,
+    // et sa durée est celle du « clac » réglé avec LOCK_EASE.
+    var dureeVerrou = shiftAvec(ROLES.length - 1, rythme);
+
+    function shiftDuration(i) { return i === ROLES.length - 1 ? dureeVerrou : shiftAvec(i, rythme); }
     function holdDuration(i) { return holdAvec(i, rythme); }
 
     var SEAL_DELAY_MS = 200;     // délai avant de dessiner le sceau après le nom final
@@ -945,9 +968,20 @@
     // Décode un mot caractère par caractère (façon "cyber-reveal") DANS une
     // cellule donnée, puis appelle onDone. Chaque cellule porte son propre
     // minuteur : le haut se décode pendant que le centre se laisse lire.
-    function decodeCell(cell, target, timing, onDone) {
-        var revealCount = 0, frameInChar = 0;
+    //
+    // LE DÉCODAGE LIT L'HEURE, IL NE COMPTE PLUS LES IMAGES. Il avançait
+    // d'un pas à chaque minuteur de 22 ms, et chaque minuteur en retard
+    // retardait tout le reste : sur un téléphone lent, « Antiochus » et sa
+    // lecture prenaient 2,1 à 2,7 s au lieu de 0,72 — la première cause de
+    // l'ouverture qui s'éternisait. Le nombre de lettres révélées se déduit
+    // maintenant du temps écoulé depuis `depart` : le minuteur ne règle plus
+    // que la fréquence du brouillage, plus la durée du mot. Un appareil lent
+    // voit moins d'images du brouillage, pas un mot plus long.
+    function decodeCell(cell, target, timing, onDone, depart) {
+        var revealCount = 0, groupes = 0;
         var chunk = timing.chunk || 1;
+        var groupeMs = timing.frames * timing.step;   // durée d'un groupe de lettres
+        var t0 = depart || performance.now();
 
         function skipSpaces() {
             while (revealCount < target.length && target[revealCount] === ' ') revealCount++;
@@ -956,34 +990,35 @@
 
         function tick() {
             if (isDismissed) return;
+            var dus = Math.floor((performance.now() - t0) / groupeMs);
+            while (groupes < dus && revealCount < target.length) {
+                revealCount += chunk;
+                groupes++;
+                skipSpaces();
+            }
             if (revealCount >= target.length) {
                 renderCell(cell, target, target.length);
                 onDone && onDone();
                 return;
             }
             renderCell(cell, target, revealCount);
-            frameInChar++;
-            if (frameInChar >= timing.frames) {
-                revealCount += chunk;
-                frameInChar = 0;
-                skipSpaces();
-            }
             cell.introTimer = setTimeout(tick, timing.step);
         }
         tick();
     }
 
     // « Ça mouline » : un bref brouillage sans mot lisible, le temps que le
-    // rôle suivant se présente en haut du tambour.
-    function churnCell(cell, noiseLen, durationMs, onDone) {
+    // rôle suivant se présente en haut du tambour. Lui aussi lit l'heure
+    // (depuis `depart`) : il comptait le temps à coups de 24 ms.
+    function churnCell(cell, noiseLen, durationMs, onDone, depart) {
         if (durationMs <= 0) { onDone(); return; }
-        var elapsed = 0, stepMs = 24;
+        var stepMs = 24, t0 = depart || performance.now();
         var placeholder = new Array(Math.max(1, noiseLen) + 1).join('X');
         function tick() {
             if (isDismissed) return;
+            // Le brouillage déjà échu ne se rattrape pas : on passe au mot.
+            if (performance.now() - t0 >= durationMs) { onDone(); return; }
             renderCell(cell, placeholder, 0);
-            elapsed += stepMs;
-            if (elapsed >= durationMs) { onDone(); return; }
             cell.introTimer = setTimeout(tick, stepMs);
         }
         tick();
@@ -991,7 +1026,10 @@
 
     // Charge le rôle `i` dans la cellule du haut et l'y décode. Passé le
     // dernier rôle, le haut reste vide : le tambour se vide par le bas.
-    function armTopCell(i) {
+    // `depart` est l'heure PRÉVUE du cran qui l'amène en haut, pas celle où
+    // il a eu lieu : un cran parti en retard ne retarde pas le mot suivant,
+    // qui doit être formé à l'heure où il descendra au centre.
+    function armTopCell(i, depart) {
         var cell = ring[1];
         clearTimeout(cell.introTimer);
         if (i >= ROLES.length) { cell.innerHTML = '&nbsp;'; return; }
@@ -1022,8 +1060,8 @@
             ? 0
             : Math.max(0, Math.min(Math.round(churnDuration(i) * 0.5), disponible));
         churnCell(cell, role.length, churn, function () {
-            decodeCell(cell, role, timing);
-        });
+            decodeCell(cell, role, timing, null, depart + churn);
+        }, depart);
     }
 
     function stopTicker() {
@@ -1069,6 +1107,105 @@
     var LOCK_EASE = 'cubic-bezier(0.26, 1.55, 0.56, 1), linear, cubic-bezier(0.4, 0, 0.2, 1)';
 
     // ════════════════════════════════════════════════════════════
+    //  L'HORLOGE DU DÉFILÉ
+    // ════════════════════════════════════════════════════════════
+    //  Chaque cran programmait le suivant en relatif — « dans dur + hold » —
+    //  et les retards s'additionnaient : un minuteur parti 30 ms trop tard
+    //  décalait tous ceux d'après. Processeur ralenti 4×, la chaîne des
+    //  crans durait 0,7 s de trop et, avec le décodage qui comptait ses
+    //  images (voir decodeCell), le sceau arrivait 7,6 à 8,2 s après le
+    //  démarrage au lieu de 5,7 ; 10 s à 6×.
+    //
+    //  Les crans ont maintenant une HEURE, calculée depuis le lever de
+    //  rideau du défilé en ajoutant les durées prévues : un cran parti en
+    //  retard ne décale plus le suivant, qui part à la sienne. Le dernier
+    //  cran fait exception (voir step) : c'est un arrêt, il garde sa durée.
+    //  Mesuré : le sceau à 5,8 s à 4×, à 6 s à 6× — la forme du rythme
+    //  réglée sur ordinateur, tenue sur un téléphone lent.
+    var t0Defile = 0;       // lever de rideau du défilé
+    var echeance = 0;       // l'heure prévue du cran en cours, puis du suivant
+
+    function aLHeure(fn, heure) {
+        return setTimeout(fn, Math.max(0, heure - performance.now()));
+    }
+
+    // AU MOINS UNE IMAGE PAR CRAN. Rattraper un retard, c'est faire partir
+    // deux crans coup sur coup ; s'ils tombent entre les deux mêmes images,
+    // le premier n'est jamais peint et son rôle disparaît sans avoir paru.
+    // Relevé à 6× : un ou deux crans par séquence, une passe sur deux. Chaque
+    // cran demande donc une image, et le suivant attend qu'elle soit passée
+    // — quelques millisecondes de retard, que l'heure rattrape ensuite ; plus
+    // aucun cran perdu en dix passes. Onglet caché, il n'y a plus d'images :
+    // le défilé attend qu'on revienne.
+    var cranPeint = true;
+
+    function marquerCran() {
+        cranPeint = false;
+        requestAnimationFrame(function () { cranPeint = true; });
+    }
+
+    // ── LE PLANCHER SE CALE SUR LA CADENCE RÉELLE ────────────────────
+    //  Tenir l'heure a un prix : un cran en retard part, et le suivant le
+    //  talonne. SHIFT_FLOOR_MS a été réglé sur un écran à 60 images par
+    //  seconde, où ses 38 ms font 2,3 images par cran ; un téléphone qui
+    //  n'en affiche que 30 n'en montre plus qu'une, et la pointe se hache —
+    //  des rôles traversent le centre entre deux images sans qu'on les y voie.
+    //
+    //  On mesure donc la cadence pendant les deux premiers rôles, lents et
+    //  lisibles, et le plancher garde ses 2,3 images par cran : jamais sous
+    //  38 ms, davantage si l'appareil est lent. La dichotomie est relancée
+    //  sur les crans qui restent, pour que la durée totale reste
+    //  SEQUENCE_CIBLE_MS : sur un appareil lent, la pointe est moins folle et
+    //  les épaules un peu plus vives. Le profil ne change pas, ni la chute
+    //  d'« Adrien » (dureeVerrou).
+    //
+    //  Mesuré à 4× (la cadence y tombe à 30 images par seconde) : 3,2 à 4,3
+    //  images par cran au plus fort du défilé, au lieu de 1,9 à 2,5, et plus
+    //  guère de cran qui ne dure qu'une image. À 60 Hz, rien ne change.
+    //
+    //  La MÉDIANE des écarts, et non leur moyenne : une image longue isolée
+    //  (le ramasse-miettes, une police qui arrive) ne dit rien de la cadence,
+    //  et à 60 Hz la moyenne relevait déjà le plancher.
+    //
+    //  PLAFONNÉ À 76 ms, soit 2,3 images à 30 par seconde — la cadence que
+    //  vise la poussière elle-même. Au-delà, il n'y a plus de pointe du tout :
+    //  à 100 ms, les crans du milieu ne sont plus que 1,6 fois plus rapides
+    //  que ceux des bords, et la roulette défile au lieu de s'emballer. Sur un
+    //  appareil aussi lent, on garde la forme et on accepte l'image manquée.
+    var IMAGES_PAR_CRAN = 2.3;
+    var PLANCHER_MAX_MS = 76;
+    var ecartsImages = null;    // écarts entre images, le temps de la mesure
+
+    function mesurerCadence() {
+        var derniere = 0;
+        ecartsImages = [];
+        function image(t) {
+            if (!ecartsImages || isDismissed) return;
+            if (derniere) ecartsImages.push(t - derniere);
+            derniere = t;
+            requestAnimationFrame(image);
+        }
+        requestAnimationFrame(image);
+    }
+
+    // Appelé au premier cran de l'accélération (`idx`), avant qu'il parte.
+    function calerLePlancher(idx) {
+        var ecarts = ecartsImages;
+        ecartsImages = null;    // la mesure s'arrête ici : rien ne bat sans fin
+        // Onglet caché, pas d'images : rien à mesurer, on garde 38 ms.
+        if (!ecarts || ecarts.length < 8) return;
+        ecarts.sort(function (a, b) { return a - b; });
+        var plancher = Math.min(PLANCHER_MAX_MS, Math.round(ecarts[ecarts.length >> 1] * IMAGES_PAR_CRAN));
+        if (plancher <= plancherCran) return;
+        plancherCran = plancher;
+        // Il reste à jouer la consigne, moins ce qui est déjà joué (au plan,
+        // pas à la montre : l'horloge rattrape le retard) et moins la chute
+        // d'« Adrien », qui garde sa durée.
+        var reste = SEQUENCE_CIBLE_MS - (echeance - t0Defile) - dureeVerrou;
+        rythme = chercherRythme(function (f) { return dureeCrans(idx, f); }, reste);
+    }
+
+    // ════════════════════════════════════════════════════════════
     //  SÉQUENCE PRINCIPALE
     // ════════════════════════════════════════════════════════════
     function runSequence() {
@@ -1085,16 +1222,30 @@
 
         // Lever de rideau : Antiochus se décode droit au centre — et, dans
         // le même temps, Le Juge se décode déjà tout en haut, atténué et
-        // plus loin. Le premier cran ne tombe qu'une fois Antiochus lu.
+        // plus loin. Le premier cran ne tombe qu'une fois Antiochus lu, et
+        // à son heure.
+        t0Defile = performance.now();
+        echeance = t0Defile + decodeDuration(0, ROLES[0]) + holdDuration(0);
+        if (ROLES.length > OPENING_INDEX) mesurerCadence();   // arrêtée par calerLePlancher
         decodeCell(ring[0], ROLES[0], wordTiming(0, ROLES[0]), function () {
-            seqTimer = setTimeout(function () { step(1); }, holdDuration(0));
-        });
-        armTopCell(1);
+            seqTimer = aLHeure(function () { step(1); }, echeance);
+        }, t0Defile);
+        armTopCell(1, t0Defile);
     }
 
     // Un cran du tambour : `idx` est le rôle qui prend la place centrale.
+    // `echeance` est son heure prévue.
     function step(idx) {
         if (isDismissed) return;
+        if (!cranPeint) {
+            // Le cran d'avant n'a pas encore eu son image : on la laisse
+            // passer (l'image, puis une tâche, pour tomber APRÈS elle).
+            requestAnimationFrame(function () {
+                seqTimer = setTimeout(function () { step(idx); }, 0);
+            });
+            return;
+        }
+        if (idx === OPENING_INDEX) calerLePlancher(idx);
 
         var dernier = idx === ROLES.length - 1;
         var dur = shiftDuration(idx);
@@ -1104,18 +1255,24 @@
         if (dernier) ring[1].style.transitionTimingFunction = LOCK_EASE;
 
         shiftReel(dur);
-        armTopCell(idx + 1);   // au-delà du dernier rôle, le haut reste vide
+        marquerCran();
+        armTopCell(idx + 1, echeance);   // au-delà du dernier rôle, le haut reste vide
 
         if (dernier) {
             // La course est finie : la poussière se relâche au moment même
             // où la machine se pose.
             turbulenceTarget = 0;
+            // LE DERNIER CRAN GARDE SA DURÉE, quelle que soit l'heure : le
+            // verrouillage attend qu'« Adrien » soit posé, parce que revele()
+            // mesure ses lettres pour y caler le nom. Mesurées en pleine
+            // chute, elles décaleraient « Adrien Vada » d'autant.
             seqTimer = setTimeout(verrouille, dur);
             return;
         }
 
         turbulenceTarget = Math.min(1, idx / ROLES.length);
-        seqTimer = setTimeout(function () { step(idx + 1); }, dur + holdDuration(idx));
+        echeance += dur + holdDuration(idx);
+        seqTimer = aLHeure(function () { step(idx + 1); }, echeance);
     }
 
     // TEMPS 3. La roulette s'est arrêtée sur « Adrien ». Les rôles encore
@@ -1406,9 +1563,56 @@
     // n'est jamais arrivé jusqu'ici.
     window.__introPret = true;
 
+    // ── LE LEVER DE RIDEAU ATTEND QUE LA SALLE SE TAISE ──────────────
+    //  La séquence démarrait sur DOMContentLoaded, DANS la tâche qui installe
+    //  aussi tout le CV (univers.js, le script de la page, le premier calcul
+    //  des styles) : 614 ms d'un seul tenant, processeur ralenti 4×. Le
+    //  premier rôle restait figé, brouillé, sans masque, puis le masque
+    //  surgissait d'un coup en taille finale — la matérialisation et le
+    //  décodage lettre à lettre se jouaient pendant que rien ne s'affichait.
+    //
+    //  On attend donc la fin de la rafale du chargement (`load`), puis deux
+    //  images, pour que la première image du défilé soit vraiment peinte.
+    //  Mesuré à 4× : dans les 600 ms qui suivent le lever de rideau, le plus
+    //  long écart entre deux images tombe de 540-590 ms à 60-90 ; le masque
+    //  se matérialise de nouveau sous les yeux. Le prix : la première image
+    //  du défilé arrive 40 à 140 ms plus tard. Le rideau noir et « Passer »
+    //  sont à l'écran pendant l'attente, et répondent — les écouteurs sont
+    //  posés plus haut, et start() ne démarre rien si la scène a été passée
+    //  entre-temps.
+    //
+    //  PLAFONNÉ À 1,5 s : `load` attend aussi les images. En « 4G lente »
+    //  émulée, il suit DOMContentLoaded d'une demi-seconde et le plafond
+    //  n'est pas atteint ; il est là pour le réseau qui cale, pour que le
+    //  rideau ne reste pas noir à attendre une photo que personne ne voit
+    //  encore. En arrière-plan, où les images ne sont pas peintes, c'est
+    //  aussi lui qui démarre.
+    var ATTENTE_MAX_MS = 1500;
+
+    function auCalme(fn) {
+        var parti = false;
+        function go() {
+            if (parti) return;
+            parti = true;
+            fn();
+        }
+        function apresChargement() {
+            requestAnimationFrame(function () { requestAnimationFrame(go); });
+        }
+        if (document.readyState === 'complete') apresChargement();
+        else window.addEventListener('load', apresChargement);
+        setTimeout(go, ATTENTE_MAX_MS);
+    }
+
+    // Mouvement réduit : start() lève le rideau aussitôt, sans rien jouer —
+    // il n'y a pas de calme à attendre.
+    function lancer() {
+        if (reduceMotion) start(); else auCalme(start);
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start);
+        document.addEventListener('DOMContentLoaded', lancer);
     } else {
-        start();
+        lancer();
     }
 })();

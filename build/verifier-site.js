@@ -64,7 +64,10 @@
  *    · la galerie : le premier écran part avec la page, à la bonne taille
  *      et une seule fois, allumé en fondu, visible sans JavaScript ;
  *    · le service worker, qui ne garde que les polices et les images ;
- *    · le sitemap, qui doit annoncer toutes les pages spectacle.
+ *    · le sitemap, qui doit annoncer toutes les pages spectacle ;
+ *    · les variantes d'images qui suivent le montage : la vignette du CV
+ *      recadrée au cadre de sa couverture, la version écran large là où
+ *      variantes.json l'annonce, le portrait en AVIF.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
  *  dates sont coupées (le site sait s'en passer). Des représentations
@@ -178,6 +181,83 @@ function exige(condition, message) {
             await p2.goto(base + '/', { waitUntil: 'load', referer: 'https://www.instagram.com/' });
             exige(!(await rideauBaisse(p2)), 'l’ouverture rejoue à la seconde visite');
             await c.close();
+        });
+
+        await verifie('l’ouverture démarre au calme et tient sa durée sur un téléphone lent ; « Passer » pendant l’attente ne la relance pas', async () => {
+            // Le premier rôle (le tambour qui se remplit), la fin du défilé
+            // (revele() éteint le tambour sous le nom) et la fin du chargement.
+            const guetteTambour = () => {
+                window.__t = {};
+                addEventListener('load', () => { window.__t.load = performance.now(); });
+                addEventListener('DOMContentLoaded', () => {
+                    window.__t.dcl = performance.now();
+                    const reel = document.getElementById('intro-scramble');
+                    if (!reel) return;
+                    new MutationObserver(() => {
+                        if (!window.__t.role && reel.textContent.trim()) window.__t.role = performance.now();
+                        if (!window.__t.nom && reel.style.opacity === '0') window.__t.nom = performance.now();
+                    }).observe(reel, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['style'] });
+                });
+            };
+            const source = fs.readFileSync(path.join(RACINE, 'intro.js'), 'utf8');
+            const cible = +source.match(/SEQUENCE_CIBLE_MS = (\d+)/)[1] + +source.match(/SILENCE_MS = (\d+)/)[1];
+
+            // Téléphone moyen : processeur ralenti 4×. Le défilé partait dans
+            // la tâche qui installe le CV, et chaque minuteur en retard
+            // retardait les suivants : 6,7 à 7,2 s au lieu de 4,8.
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+            await c.addInitScript(guetteTambour);
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await (await c.newCDPSession(p)).send('Emulation.setCPUThrottlingRate', { rate: 4 });
+            await p.goto(base + '/?intro=1', { waitUntil: 'commit' });
+            await p.waitForFunction(() => window.__t && window.__t.nom, null, { timeout: 20000, polling: 100 })
+                .catch(() => { throw new Error('le défilé ne s’arrête pas sur le nom'); });
+            const t = await p.evaluate(() => window.__t);
+            exige(t.role > t.load, `le défilé démarre avant la fin du chargement (${Math.round(t.load - t.role)} ms avant)`);
+            exige(t.nom - t.role < cible * 1.2,
+                `le défilé s’allonge sur un téléphone lent : ${Math.round(t.nom - t.role)} ms pour ${cible} prévues`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+
+            // Le portrait retenu trois secondes (un réseau qui cale) : le
+            // défilé n'attend pas `load` au-delà d'une seconde et demie…
+            const retenir = async (ctx) => ctx.route(/portrait-affiche-/, async (r) => {
+                await new Promise((ok) => setTimeout(ok, 3000));
+                await r.continue().catch(() => { });
+            });
+            const c2 = await visiteur();
+            await retenir(c2);
+            await c2.addInitScript(guetteTambour);
+            const p2 = await c2.newPage();
+            await p2.goto(base + '/?intro=1', { waitUntil: 'commit' });
+            await p2.waitForFunction(() => window.__t && window.__t.role, null, { timeout: 6000, polling: 50 })
+                .catch(() => { throw new Error('le défilé attend le portrait au-delà du plafond'); });
+            const t2 = await p2.evaluate(() => window.__t);
+            exige(!t2.load && t2.role - t2.dcl < 2500, `le plafond de l’attente ne tient pas (${Math.round(t2.role - t2.dcl)} ms après DOMContentLoaded)`);
+            await c2.close();
+
+            // … et « Passer » pressé pendant cette attente lève le rideau pour
+            // de bon : le défilé ne part pas derrière, le verrou ne revient pas.
+            const c3 = await visiteur();
+            await retenir(c3);
+            await c3.addInitScript(guetteTambour);
+            const p3 = await c3.newPage();
+            const erreurs3 = guette(p3);
+            await p3.goto(base + '/?intro=1', { waitUntil: 'commit' });
+            await p3.waitForFunction(() => window.__introPret === true, null, { timeout: 8000, polling: 20 });
+            exige(!(await p3.evaluate(() => window.__t.role)), 'le défilé est déjà parti : l’attente n’a pas eu lieu');
+            await p3.click('#intro-skip', { timeout: 2000 });
+            await p3.waitForTimeout(2500);
+            const apres = await p3.evaluate(() => ({
+                rideau: document.getElementById('intro-overlay').hidden,
+                verrou: document.body.classList.contains('modal-open'),
+                role: window.__t.role
+            }));
+            exige(apres.rideau && !apres.verrou, '« Passer » pendant l’attente ne lève pas le rideau pour de bon');
+            exige(!apres.role, 'le défilé démarre derrière le rideau levé');
+            exige(!erreurs3.length, erreurs3.join(' | '));
+            await c3.close();
         });
 
         await verifie('« Ajouter au calendrier » ouvre sa fenêtre dans un univers ouvert depuis le CV', async () => {
@@ -2980,6 +3060,77 @@ function exige(condition, message) {
             const fantomes = annoncees.filter((a) => !dossiers.includes(a));
             exige(!manquantes.length, `absentes du sitemap : ${manquantes.join(', ')}`);
             exige(!fantomes.length, `annoncées sans exister : ${fantomes.join(', ')}`);
+        });
+
+        // LES VARIANTES QUI DÉPENDENT D'AUTRE CHOSE QUE DE LA PHOTO (voir
+        // build/variantes-images.py). La vignette du CV (<nom>-v.webp) est
+        // recadrée au `cadre` de la couverture : changer ce cadre sans
+        // relancer le script la laisserait cadrée ailleurs, sans un mot. La
+        // version écran large (<nom>-2400.webp) n'existe que pour les photos
+        // qui y gagnent : une page qui en demanderait une absente montrerait
+        // une image cassée sur ordinateur. variantes.json dit ce que le
+        // script a fait ; on le confronte à univers.js, aux JPEG et au disque.
+        await verifie('les variantes d’images suivent le montage : la vignette du CV recadrée au cadre de chaque couverture, en 144 × 192 ; une version écran large là où variantes.json l’annonce, et nulle part ailleurs ; le portrait en AVIF, plus léger que sa WebP', async () => {
+            const crypto = require('crypto');
+            const UNIVERS = path.join(RACINE, 'ressources/images/univers');
+            const memoire = JSON.parse(fs.readFileSync(path.join(UNIVERS, 'variantes.json'), 'utf8'));
+            const empreinte = (cle) => crypto.createHash('sha1')
+                .update(fs.readFileSync(path.join(UNIVERS, cle + '.jpg'))).digest('hex').slice(0, 12);
+
+            const c = await visiteur();
+            const p = await c.newPage();
+            await p.goto(base + '/', { waitUntil: 'load' });
+            const couvertures = await p.evaluate(async () => {
+                const out = [];
+                for (const uni of Object.values(SHOW_UNIVERSES)) {
+                    const cv = UniversMontage.couverture(uni);
+                    if (!cv) continue;
+                    const img = new Image();
+                    img.src = cv.src.replace(/-240\.webp$/, '-v.webp');
+                    const lue = await img.decode().then(() => true, () => false);
+                    out.push({
+                        cle: cv.src.replace(/^.*univers\//, '').replace(/-240\.webp$/, ''),
+                        cadre: cv.pos || '50% 50%', lue, l: img.naturalWidth, h: img.naturalHeight
+                    });
+                }
+                return out;
+            });
+            await c.close();
+            exige(couvertures.length >= 5, `${couvertures.length} couverture(s) seulement`);
+            for (const v of couvertures) {
+                const m = memoire.v[v.cle];
+                exige(v.lue && v.l === 144 && v.h === 192, `${v.cle}-v.webp manque ou n’est pas en 144 × 192 : python3 build/variantes-images.py`);
+                exige(m && m.cadre === v.cadre, `${v.cle}-v.webp est cadrée à « ${m && m.cadre} », la couverture à « ${v.cadre} » : python3 build/variantes-images.py`);
+                exige(m.empreinte === empreinte(v.cle), `${v.cle}.jpg a changé depuis sa vignette : python3 build/variantes-images.py`);
+            }
+
+            for (const [cle, m] of Object.entries(memoire['2400'])) {
+                const existe = fs.existsSync(path.join(UNIVERS, `${cle}-2400.webp`));
+                exige(existe === (m.qualite != null), `${cle}-2400.webp ${existe ? 'existe alors que variantes.json dit qu’elle n’a pas lieu d’être' : 'manque'}`);
+                exige(m.empreinte === empreinte(cle), `${cle}.jpg a changé depuis sa version écran large : python3 build/variantes-images.py`);
+            }
+            const inconnues = fs.readdirSync(UNIVERS, { withFileTypes: true }).filter((d) => d.isDirectory())
+                .flatMap((d) => fs.readdirSync(path.join(UNIVERS, d.name)).filter((f) => f.endsWith('-2400.webp'))
+                    .map((f) => `${d.name}/${f.replace(/-2400\.webp$/, '')}`))
+                .filter((cle) => !(memoire['2400'][cle] && memoire['2400'][cle].qualite != null));
+            exige(!inconnues.length, `version(s) écran large inconnue(s) de variantes.json : ${inconnues.join(', ')}`);
+
+            // Ce que citent les pages écrites en dur : aucune version écran
+            // large, aucune vignette recadrée, aucun AVIF qui n'existe pas.
+            const pages = ['index.html', 'galerie/index.html', ...dossiers.map((d) => `spectacles/${d}/index.html`)];
+            for (const page of pages) {
+                const html = fs.readFileSync(path.join(RACINE, page), 'utf8');
+                for (const [, cible] of html.matchAll(/((?:\.\.\/)*ressources\/images\/[^"'\s,]+(?:-2400\.webp|-v\.webp|\.avif))/g)) {
+                    exige(fs.existsSync(path.join(RACINE, cible.replace(/^(\.\.\/)+/, ''))), `${page} demande ${cible}, qui n’existe pas`);
+                }
+            }
+
+            for (const l of [480, 720, 960]) {
+                const avif = path.join(RACINE, `ressources/images/portrait-affiche-${l}.avif`);
+                exige(fs.existsSync(avif), `portrait-affiche-${l}.avif manque : python3 build/variantes-images.py`);
+                const webp = fs.statSync(path.join(RACINE, `ressources/images/portrait-affiche-${l}.webp`)).size;
+                exige(fs.statSync(avif).size < webp, `portrait-affiche-${l}.avif ne pèse pas moins que sa WebP`);
+            }
         });
     } finally {
         await navigateur.close();

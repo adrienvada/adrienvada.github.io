@@ -1,0 +1,152 @@
+{
+ "_": "Écrit par build/variantes-images.py — ne pas modifier à la main. « 2400 » : chaque photo de plus de 1920 px, avec la qualité de sa version <nom>-2400.webp, ou null et la raison si elle n'en a pas (le JPEG reste alors servi aux écrans larges). « v » : le cadre de la vignette <nom>-v.webp de chaque couverture. « empreinte » : celle du JPEG d'où elles viennent.",
+ "2400": {
+  "alabarre/6": {
+   "qualite": 78,
+   "ssim": 0.9839,
+   "ko": 78,
+   "jpeg_ko": 331,
+   "empreinte": "eb86e581d398"
+  },
+  "alabarre/19": {
+   "qualite": null,
+   "raison": "SSIM 0,9790 au mieux (q90, 349 Ko) ; au-delà, plus de 75 % du JPEG",
+   "jpeg_ko": 549,
+   "empreinte": "46d66b8da3ec"
+  },
+  "asyoulikeit/3": {
+   "qualite": 86,
+   "ssim": 0.9806,
+   "ko": 200,
+   "jpeg_ko": 470,
+   "empreinte": "79ba17885ae9"
+  },
+  "asyoulikeit/8": {
+   "qualite": 84,
+   "ssim": 0.9811,
+   "ko": 219,
+   "jpeg_ko": 498,
+   "empreinte": "54b82e827dfd"
+  },
+  "audiences/4": {
+   "qualite": 78,
+   "ssim": 0.9809,
+   "ko": 331,
+   "jpeg_ko": 744,
+   "empreinte": "79a254adc033"
+  },
+  "audiences/8": {
+   "qualite": null,
+   "raison": "dès q78, plus de 75 % du JPEG",
+   "jpeg_ko": 1062,
+   "empreinte": "3fbe94a09f0c"
+  },
+  "berenice/3": {
+   "qualite": 78,
+   "ssim": 0.9888,
+   "ko": 64,
+   "jpeg_ko": 239,
+   "empreinte": "b8158586136c"
+  },
+  "berenice/18": {
+   "qualite": 78,
+   "ssim": 0.9848,
+   "ko": 178,
+   "jpeg_ko": 521,
+   "empreinte": "e09c4dad1d42"
+  },
+  "cleophene/5": {
+   "qualite": 78,
+   "ssim": 0.9852,
+   "ko": 148,
+   "jpeg_ko": 403,
+   "empreinte": "ec6ab6e5efda"
+  },
+  "cleophene/7": {
+   "qualite": 78,
+   "ssim": 0.9869,
+   "ko": 97,
+   "jpeg_ko": 326,
+   "empreinte": "a1b65647e2e0"
+  },
+  "cleophene/9": {
+   "qualite": 82,
+   "ssim": 0.9811,
+   "ko": 374,
+   "jpeg_ko": 696,
+   "empreinte": "ea5b321bb0c9"
+  },
+  "cleophene/21": {
+   "qualite": null,
+   "raison": "SSIM 0,9779 au mieux (q92, 337 Ko) ; au-delà, plus de 75 % du JPEG",
+   "jpeg_ko": 463,
+   "empreinte": "943357ef9ce8"
+  },
+  "fulgurees/2": {
+   "qualite": 78,
+   "ssim": 0.9898,
+   "ko": 51,
+   "jpeg_ko": 227,
+   "empreinte": "1dcf4bdd0bca"
+  },
+  "fulgurees/7": {
+   "qualite": 78,
+   "ssim": 0.9988,
+   "ko": 24,
+   "jpeg_ko": 62,
+   "empreinte": "f6c56e7c3e13"
+  },
+  "fulgurees/10": {
+   "qualite": 92,
+   "ssim": 0.9831,
+   "ko": 283,
+   "jpeg_ko": 416,
+   "empreinte": "612417fc01a2"
+  },
+  "fulgurees/23": {
+   "qualite": 78,
+   "ssim": 0.9949,
+   "ko": 24,
+   "jpeg_ko": 90,
+   "empreinte": "6cd77fb45831"
+  }
+ },
+ "v": {
+  "alabarre/19": {
+   "cadre": "45% 25%",
+   "empreinte": "46d66b8da3ec"
+  },
+  "asyoulikeit/3": {
+   "cadre": "50% 50%",
+   "empreinte": "79ba17885ae9"
+  },
+  "audiences/8": {
+   "cadre": "45% 55%",
+   "empreinte": "3fbe94a09f0c"
+  },
+  "berenice/2": {
+   "cadre": "55% 55%",
+   "empreinte": "787ca467f985"
+  },
+  "cleophene/5": {
+   "cadre": "15% 25%",
+   "empreinte": "ec6ab6e5efda"
+  },
+  "fulgurees/10": {
+   "cadre": "47% 35%",
+   "empreinte": "612417fc01a2"
+  },
+  "hommemoderne/1": {
+   "cadre": "74% 36%",
+   "empreinte": "629bc6853b3d"
+  },
+  "lerapt/1": {
+   "cadre": "66% 40%",
+   "empreinte": "f0f043649524"
+  },
+  "peaudesanges/1": {
+   "cadre": "50% 35%",
+   "empreinte": "a5082a133a57"
+  }
+ }
+}

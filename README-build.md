@@ -53,6 +53,9 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - l'accueil se charge sans erreur de script ;
 - un lien direct entre sans rideau ; depuis un autre site, l'ouverture joue une
   fois ;
+- l'ouverture démarre après le chargement (plafonné à 1,5 s), tient sa durée
+  processeur ralenti 4×, et « Passer » pendant l'attente ne la relance pas
+  (voir [Elle attend que la salle se taise](#elle-attend-que-la-salle-se-taise)) ;
 - « Ajouter au calendrier » ouvre sa fenêtre dans un univers ouvert depuis le
   CV (une représentation fictive est glissée dans les dates le temps du test :
   il ne dépend pas de la saison) ;
@@ -263,7 +266,15 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   il ne garde que des polices et des images de `/ressources/`, ni la page ni
   un script n'est passé par lui, et son interrupteur est là, levé (voir [Le
   service worker](#le-service-worker-swjs--les-polices-et-les-images-rien-dautre)) ;
-- le sitemap annonce toutes les pages spectacle, et elles seules.
+- le sitemap annonce toutes les pages spectacle, et elles seules ;
+- les [variantes d'images](#images-générées-à-ne-pas-écraser-sans-les-régénérer)
+  qui dépendent d'autre chose que de la photo : la vignette du CV de chaque
+  couverture existe, en 144 × 192, recadrée au `cadre` que lui donne
+  aujourd'hui `univers.js` et tirée du JPEG d'aujourd'hui ; une version écran
+  large existe là où `variantes.json` l'annonce, et nulle part ailleurs ;
+  aucune page écrite en dur ne demande une version écran large, une vignette
+  recadrée ou un AVIF absent ; le portrait a ses trois AVIF, chacun plus léger
+  que sa WebP.
 
 Pour ne passer que quelques vérifications — celles dont le nom contient un
 mot : `SEUL=planche npm --prefix build run verifier`.
@@ -284,10 +295,11 @@ ici : c'est ce qui l'empêche de revenir.
 | le **vocabulaire du mouvement** dans `index.html` (`--ease-*`, `--dur-*`) | la même commande | idem : les pages spectacle le relisent (voir [Un seul moteur](#un-seul-moteur-un-seul-visage)) |
 | une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis la commande ci-dessus | `dates.js`, puis `/spectacles/…` |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
-| le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées et copies floues (`-flou.webp`) comprises |
+| le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées, copies floues (`-flou.webp`), versions écran large (`-2400.webp`) et vignettes du CV (`-v.webp`) comprises |
+| le **`cadre` de la couverture** d'un univers (celui de la première photo de son montage) | `python3 build/variantes-images.py`, en plus de la commande des pages | sa vignette du CV recadrée (`<nom>-v.webp`) et `variantes.json` — le [contrôle automatique](#vérifier-le-site) le rappelle si on l'oublie |
 | une **scène** d'un univers — `lumiere`, `ouverture`, `poursuite`, une césure ` \| ` | `node build/generer-pages-spectacles.js` | `/spectacles/…` (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) |
 | une **démo voix** ajoutée ou remplacée (`<audio>` de l'onglet Démos voix) | `node build/ondes.js` | les ondes (`data-onde`, `data-duree`) dans `index.html` — voir [Les ondes](#démos-voix--les-ondes) |
-| le **portrait** de l'en-tête (la première photo de `galerie.js`) | `python3 build/variantes-images.py --tout`, ou effacer `portrait-affiche-*` puis le relancer | `ressources/images/portrait-affiche-*` |
+| le **portrait** de l'en-tête (la première photo de `galerie.js`) | `python3 build/variantes-images.py --tout`, ou effacer `portrait-affiche-*` puis le relancer | `ressources/images/portrait-affiche-*` (WebP, AVIF et JPEG) |
 | une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
 | la **signature** — un nouvel export reMarkable | `python3 build/signature-vers-svg.py <export.pdf>` | `signature.webp` + le bloc SVG à coller |
 
@@ -815,6 +827,28 @@ arrivé, le garde lève le rideau sans animation et marque la scène passée
 (`__introPassee`), qu'`intro.js` trouve en arrivant et ne démarre pas. Il la
 relançait derrière le rideau fermé, et la page restait verrouillée.
 
+### Elle attend que la salle se taise
+
+Arrivé, `intro.js` ne lève pas le rideau tout de suite : il attend la fin du
+chargement (`load`), puis deux images (`auCalme`, en bas du fichier). Il
+démarrait sur `DOMContentLoaded`, dans la même tâche que tout le CV — 614 ms
+d'un seul tenant sur un téléphone moyen (processeur ralenti 4×) : le premier
+rôle restait figé, brouillé, puis le masque surgissait d'un coup en taille
+finale, sans sa matérialisation. Mesuré à 4× : dans les 600 ms qui suivent le
+lever de rideau, le plus long écart entre deux images tombe de 540-590 ms à
+60-90. Le prix : la première image du défilé arrive 40 à 140 ms plus tard.
+
+- l'attente est **plafonnée à 1,5 s** (`ATTENTE_MAX_MS`) : `load` attend aussi
+  les images, et le rideau ne reste pas noir pour un portrait que retient un
+  réseau qui cale. En « 4G lente » émulée, `load` suit `DOMContentLoaded` d'une
+  demi-seconde : le plafond n'y sert pas ;
+- le rideau noir et « Passer » sont à l'écran pendant l'attente, et
+  « Passer » y répond : la scène est passée, et `start()` ne la relance pas
+  (vérifié par `build/verifier-site.js`, portrait retenu trois secondes) ;
+- en mouvement réduit, rien n'attend : `start()` lève le rideau aussitôt ;
+- le garde d'`index.html` n'a pas changé : `__introPret` est posé dès
+  l'exécution d'`intro.js`, avant l'attente.
+
 ### La sortie : l'iris, et le nom qui rejoint l'en-tête
 
 Au clic sur le sceau (ou sur « Passer »), le rideau **s'ouvre en iris depuis
@@ -849,7 +883,9 @@ ralentir. Ils ne se marchent plus dessus.
   « Adrien ».** C'est une consigne : `intro.js` cherche au chargement, par
   dichotomie, le facteur de rythme qui l'atteint. Conséquence directe : ajouter
   dix rôles ne rallonge plus l'ouverture, ça la densifie. C'est ici, et nulle
-  part ailleurs, qu'on rend l'intro plus longue ou plus courte.
+  part ailleurs, qu'on rend l'intro plus longue ou plus courte. Elle est
+  **tenue sur un téléphone lent** aussi : voir plus bas « L'heure, pas les
+  images ».
 - `ROLES` — la liste et l'ordre des rôles. **Seuls les premiers et les derniers
   sont faits pour être lus** : entre les deux, c'est une masse qu'on traverse
   sans pouvoir la compter, et c'est le but. `'ADRIEN'` doit rester en dernier
@@ -858,10 +894,12 @@ ralentir. Ils ne se marchent plus dessus.
   s'étale ; au-dessus, la pointe se fait plus étroite et plus violente.
 - `PROFIL_BIAIS` — déplace le sommet. Au-dessus de 1 il arrive plus tard :
   l'accélération prend son temps, la décélération est plus serrée.
-- `SHIFT_FLOOR_MS` / `HOLD_FLOOR_MS` — le plancher absolu (38 + 8 ms par rôle).
+- `SHIFT_FLOOR_MS` / `HOLD_FLOOR_MS` — le plancher (38 + 8 ms par rôle).
   **C'est lui, et lui seul, qui fixe la vitesse de pointe** — voir juste en
   dessous. Les descendre encore ferait se chevaucher les mots sur un appareil
-  lent.
+  lent. 38 ms, c'est 2,3 images à 60 Hz : sur un appareil qui en affiche moins,
+  le plancher monte de lui-même (`IMAGES_PAR_CRAN`, `PLANCHER_MAX_MS`, voir
+  plus bas) ; il ne descend jamais sous 38.
 - `VITESSE_MAX` — **l'amplitude de la courbe, et le piège du réglage.** On
   croirait qu'elle règle la vitesse de pointe : elle ne la règle pas. Au sommet,
   le rythme bute depuis longtemps sur le plancher ci-dessus. Elle ne décide que
@@ -885,6 +923,32 @@ constante, une décélération plus longue et une chute finale plus lente se
 financent forcément sur le reste. Étaler les deux extrémités impose une pointe
 plus rapide au milieu, et comprime un peu l'ouverture. Il n'y a pas de réglage
 qui donne tout à la fois — seulement des équilibres.
+
+#### L'heure, pas les images
+
+La consigne ne vaut que si l'horloge est tenue. Chaque cran programmait le
+suivant « dans tant de millisecondes », et le décodage d'un mot avançait d'une
+lettre tous les trois minuteurs : sur un téléphone lent, chaque retard
+s'ajoutait au suivant. Processeur ralenti 4×, « Antiochus » et sa lecture
+prenaient 2,1 à 2,7 s au lieu de 0,72, la chaîne des crans 0,7 s de trop, et
+les mots du milieu arrivaient au centre à moitié brouillés. Trois règles, dans
+`intro.js` (section « L'horloge du défilé ») :
+
+| Règle | Où | Ce qu'elle fait |
+|---|---|---|
+| **Chaque cran a une heure** | `echeance`, `aLHeure` | calculée depuis le lever de rideau en ajoutant les durées prévues : un cran parti en retard ne décale plus le suivant. Le décodage et le « ça mouline » lisent l'heure eux aussi (`decodeCell`, `churnCell`) : un appareil lent voit moins d'images du brouillage, pas un mot plus long. Seul le dernier cran garde sa durée quoi qu'il arrive : `revele()` mesure « Adrien » pour y caler le nom, il doit être posé |
+| **Au moins une image par cran** | `cranPeint`, `marquerCran` | rattraper un retard fait partir deux crans coup sur coup ; s'ils tombent entre les deux mêmes images, un rôle disparaît sans avoir paru. Le suivant attend donc que l'image soit passée. Onglet caché, le défilé attend qu'on revienne |
+| **Le plancher suit la cadence** | `calerLePlancher` | la cadence est mesurée (médiane des écarts entre images) pendant les deux premiers rôles ; le plancher garde ses 2,3 images par cran, jamais sous 38 ms, jamais au-dessus de 76 (2,3 images à 30 i/s : au-delà, la pointe s'aplatit et la roulette défile au lieu de s'emballer). La dichotomie est relancée sur les crans qui restent pour tenir `SEQUENCE_CIBLE_MS` ; la chute d'« Adrien » (`dureeVerrou`) ne bouge pas |
+
+Mesuré, du démarrage au sceau (téléphone simulé, passes alternées avant et
+après) : 5,8 → 5,7 s à 1×, 7,6-8,2 → 5,8 s à 4×, 9,7-10,1 → 6 s à 6×. À 4×,
+au plus fort du défilé, 3,2 à 4,3 images par cran au lieu de 1,9 à 2,5 sans
+plancher calé. Sur un appareil lent, le prix est dans la forme : la pointe y
+est moins folle et les épaules un peu plus vives — l'arbitrage ci-dessus, fait
+par la machine.
+
+`build/verifier-site.js` le garde : à 4×, le défilé doit tenir sa consigne à
+20 % près (il en prenait 40 % de plus).
 
 ### Régler le grain (et pourquoi il ne faut pas le grossir)
 
@@ -2481,15 +2545,18 @@ passage. C'était la seule navigation du site sans passage.
 
 | Fichier | Rôle |
 |---|---|
-| `ressources/images/portrait-affiche-{480,720,960}.webp` et `-720.jpg` | le [portrait d'affiche](#le-portrait-daffiche) de l'en-tête — `python3 build/variantes-images.py`, depuis la première photo du book |
+| `ressources/images/portrait-affiche-{480,720,960}.{webp,avif}` et `-720.jpg` | le [portrait d'affiche](#le-portrait-daffiche) de l'en-tête — `python3 build/variantes-images.py`, depuis la première photo du book. L'AVIF, réglé au SSIM de la WebP, pèse 27 à 38 % de moins |
 | `ressources/images/profil-192.webp` | le médaillon de l'en-tête **imprimé** (le CV en PDF) ; `profil-192.jpg` et `profil-384.*` ne servent plus |
 | `ressources/images/miniatures/bande-demo-{hommemoderne,lerapt}-640.webp` | les deux plans de la [bobine](#la-salle-de-projection) : les images que YouTube tire lui-même de la vidéo (`maxres2.jpg`, `maxres3.jpg`), bandes noires ôtées — à refaire à la main si la bande démo change |
 | `ressources/images/og-adrien-vada.jpg` | vignette de partage (réseaux sociaux, 1200×630) |
 | `ressources/images/miniatures/bande-demo-camera.{jpg,webp}` | miniature de la bande démo |
 | `ressources/images/galerie/vignettes/<nom>-{320,640,960}.webp` | vignettes du book — `python3 build/variantes-images.py` |
 | `ressources/images/univers/<slug>/<nom>-{640,1280}.webp` (et `-1920` pour un plein cadre) | versions allégées des photos d'univers, servies aux écrans de moins de 900 px et au répertoire — même script, lancé aussi par `prepare-univers-photos.py` |
+| `ressources/images/univers/<slug>/<nom>-2400.webp` | la version **écran large** d'une photo de plus de 1920 px, à pleine définition — seulement quand elle pèse au moins 25 % de moins que le JPEG au même SSIM (voir plus bas) — même script |
 | `ressources/images/univers/<slug>/<nom>-240.webp` | la **couverture** de chaque univers (la première photo de son montage), en vignette dans l'onglet Dates rangé par spectacle et sur chaque ligne du CV — même script |
+| `ressources/images/univers/<slug>/<nom>-v.webp` | la **vignette du CV** : la même couverture, recadrée en 144 × 192 (48 × 64 à la densité 3) au `cadre` de son montage — même script |
 | `ressources/images/univers/<slug>/<nom>-flou.webp` | la **photo hors point**, 200 px passés au flou : la mise au point des univers fond la photo nette dessus (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) — même script |
+| `ressources/images/univers/variantes.json` | la **mémoire du script** : la qualité de chaque `-2400` ou la raison de son absence, le cadre de chaque vignette du CV, l'empreinte du JPEG d'où elles viennent — écrite par lui seul |
 
 Les **sources** de ces images restent dans le dépôt et ne sont plus servies aux
 visiteurs : `profil2_1080x1080.png` (avatar) et `profil_1000x1000.jpg`
@@ -2497,10 +2564,37 @@ visiteurs : `profil2_1080x1080.png` (avatar) et `profil_1000x1000.jpg`
 
 `build/variantes-images.py` ne refait que ce qui manque (pour ne pas laisser
 de diff sans objet) ; `--tout` refait tout, `--nettoyer` efface les versions
-dont l'original a disparu. Pourquoi 1920 px pour un plein cadre : sur un
-téléphone tenu droit, une photo en paysage y est agrandie jusqu'à couvrir
-toute la hauteur — trois à quatre fois la largeur de l'écran. Sur un écran
-large, rien ne change : c'est l'original qui est servi.
+dont l'original a disparu. Seules la `-2400` et la vignette du CV se refont
+d'elles-mêmes quand leur JPEG ou leur cadre a changé : `variantes.json` s'en
+souvient. Pourquoi 1920 px pour un plein cadre : sur un téléphone tenu droit,
+une photo en paysage y est agrandie jusqu'à couvrir toute la hauteur — trois
+à quatre fois la largeur de l'écran.
+
+**L'écran large.** L'écran d'ordinateur recevait les JPEG d'origine :
+2,76 Mo de JPEG pour la page Cléophène, dont 696 Ko pour une seule photo. Une
+version WebP de même définition est là pour le remplacer — seulement où elle
+ne coûte rien à l'œil. Le script prend la qualité la plus basse, de 78 à 94, qui garde
+un SSIM de 0,98 face au JPEG (la mesure de l'audit : luminance, fenêtres de
+8 × 8 px), et n'écrit la version que si elle pèse au moins 25 % de moins.
+Treize photos sur seize y gagnent 59 % (2,1 Mo pour 5,1 Mo de JPEG) ; le grain
+de certaines demande plus (Cléophène 9 : q82, Fulguré.e.s 10 : q92). Trois
+restent en JPEG, leur grain ne se laissant pas alléger : Cléophène 21,
+À la barre 19, Audiences 8 — `variantes.json` dit pourquoi, chiffres à
+l'appui. Les photos de groupe (1500 px) n'en ont pas. L'affiche d'un film non
+plus : elle ne dépasse jamais 540 px à l'écran.
+
+**L'AVIF, pour le portrait seul.** C'est la première image de l'accueil, celle
+qu'on attend : au SSIM de sa WebP, l'AVIF pèse 14, 22 et 30 Ko contre 19, 33 et
+49 ; proposé avant elle, il fait paraître l'accueil 0,28 s plus tôt (4G lente,
+processeur ralenti ×4 : 3,71 → 3,43 s en médiane de cinq passes). Ailleurs, il ne vaut pas son
+décodage, plus lent de 20 à 40 % : sur les photos de plateau, le gain allait
+de 44 % à… une perte de 17 % (Cléophène 9 en 1280), selon le grain. Trop
+incertain pour le généraliser.
+
+Le script demande Pillow 11.3 ou plus (l'AVIF y est intégré) et numpy (le
+SSIM) : `pip install pillow numpy`. numpy n'est chargé que s'il y a une
+version écran large ou un AVIF à fabriquer ; sans lui, le script le dit et
+s'arrête.
 
 ---
 
