@@ -59,8 +59,14 @@ const MAX_ENTREES = 400;
 
 // Les polices du premier écran, gardées dès l'installation : le navigateur
 // vient de les télécharger pour la page qui l'inscrit, elles sont encore
-// dans son cache, et c'est la première chose que la revisite attend.
-const POLICES = ['inter-latin', 'montserrat-latin', 'cinzel-latin', 'caveat-latin']
+// dans son cache, et c'est la première chose que la revisite attend. Ce
+// sont celles que l'accueil précharge. PAS CAVEAT : elle n'est demandée
+// qu'après le chargement, et seulement par l'accueil (la classe `plume`,
+// voir index.html) ; l'installer d'office la faisait télécharger — 49 Ko
+// — par la première page venue, fiche, galerie ou 404, qui ne l'emploie
+// pas, et concourir avec sa propre demande sur l'accueil. Elle est gardée
+// à son premier usage, comme les images.
+const POLICES = ['inter-latin', 'montserrat-latin', 'cinzel-latin']
     .map((f) => `/ressources/polices/${f}.woff2`);
 
 const gardable = (url) => url.origin === self.location.origin && GARDE.test(url.pathname);

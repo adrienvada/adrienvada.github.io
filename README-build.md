@@ -47,8 +47,8 @@ fichiers.
 
 ## Vérifier le site
 
-`build/verifier-site.js` ouvre le site dans Chromium et vérifie, en une
-minute, ce qui a déjà cassé ou casserait sans bruit :
+`build/verifier-site.js` ouvre le site dans Chromium et vérifie, en moins
+de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
 
 - l'accueil se charge sans erreur de script ;
 - un lien direct entre sans rideau ; depuis un autre site, l'ouverture joue une
@@ -266,7 +266,8 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   (×1,75) et 1 440 px, aucune vignette téléchargée deux fois, et les vues du
   premier écran allumées ; sans JavaScript, aucune n'est cachée ;
 - le service worker : inscrit par chaque page publique et pas par `/admin/`,
-  il ne garde que des polices et des images de `/ressources/`, ni la page ni
+  il ne garde que des polices et des images de `/ressources/` — à son
+  installation, les seules polices que l'accueil précharge —, ni la page ni
   un script n'est passé par lui, et son interrupteur est là, levé (voir [Le
   service worker](#le-service-worker-swjs--les-polices-et-les-images-rien-dautre)) ;
 - le sitemap annonce toutes les pages spectacle, et elles seules ;
@@ -303,8 +304,9 @@ ici : c'est ce qui l'empêche de revenir.
 | **`galerie.js`** — ajout ou ordre des photos du book, texte `alt` | [`python3 build/variantes-images.py`](#ajouter-une-photo-au-book), puis `node build/generer-page-galerie.js` | les vignettes, puis `/galerie/…` |
 | **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml` |
 | une **ligne du CV** dans `index.html` — titre, auteur, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
-| le **vocabulaire du mouvement** dans `index.html` (`--ease-*`, `--dur-*`) | la même commande | idem : les pages spectacle le relisent (voir [Un seul moteur](#un-seul-moteur-un-seul-visage)) |
-| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis la commande ci-dessus | `dates.js`, puis `/spectacles/…` |
+| le **vocabulaire du mouvement** dans `index.html` (`--ease-*`, `--dur-*`) | `npm --prefix build run pages` (la galerie, puis les pages spectacle) | `/galerie/…`, `/spectacles/…` : les pages spectacle, le répertoire et la galerie le relisent (voir [Un seul moteur](#un-seul-moteur-un-seul-visage) et [Le vocabulaire](#le-vocabulaire)) |
+| **`ressources/polices/polices.css`** — une police ajoutée, une adresse | `npm --prefix build run pages` | `/spectacles/index.html` et `/galerie/index.html`, qui en portent une copie dans leur page (voir [Polices](#polices--servies-par-le-site)) ; l'accueil publié la recopie de lui-même |
+| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis `node build/generer-pages-spectacles.js` | `dates.js`, puis `/spectacles/…` |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
 | le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées, copies floues (`-flou.webp`), versions écran large (`-2400.webp`) et vignettes (`-v.webp`) comprises — et la liste `ECRAN_LARGE` d'`univers-montage.js` : s'il annonce qu'elle a changé, la commande des pages |
 | le **`cadre` de la couverture** d'un univers (celui de la première photo de son montage) | `python3 build/variantes-images.py`, en plus de la commande des pages | sa vignette du CV recadrée (`<nom>-v.webp`) et `variantes.json` — le [contrôle automatique](#vérifier-le-site) le rappelle si on l'oublie |
@@ -1614,8 +1616,11 @@ Chaque entrée porte :
 
 Au survol d'une ligne de spectacle, son synopsis paraît en gris clair. Au
 doigt, où il n'y a pas de survol, c'est l'**appui maintenu** (400 ms) qui
-l'appelle ; il se tait quand le doigt se lève, et le clic qui suit n'ouvre
-pas l'univers. Un doigt qui glisse annule : le défilement passe avant.
+l'appelle ; une fois paru, il reste quand le doigt se lève — épinglé
+jusqu'au prochain toucher, où qu'il soit : le pouce couvrait le texte qu'il
+fallait tenir pour le lire (voir `bindLongPress`) —, et le clic qui suit
+n'ouvre pas l'univers. Un doigt qui glisse annule : le défilement passe
+avant.
 
 Le texte n'est pas recopié — c'est le `synopsis` de l'univers, relu par
 `ecrireLeMurmure()`. Le corriger à un seul endroit le corrige partout.
@@ -1636,7 +1641,8 @@ casse — voir le commentaire dans `index.html`.)
   et la flèche. Rien n'est déplacé : la liste reste immobile. Trois lignes
   tiennent ; au-delà, le texte se dissout par le bas.
 - **Sur petit écran**, ce vide n'existe pas : la ligne s'ouvre par le bas,
-  sous le texte, le temps de l'appui. Au repos elle ne coûte pas un pixel.
+  sous le texte, tant que le murmure est là. Au repos elle ne coûte pas un
+  pixel.
 
 Un spectacle sans `synopsis` n'a pas de murmure — rien à corriger.
 
@@ -3004,9 +3010,14 @@ sache pourquoi. Celui-ci :
   réveillent même pas : il déclare à son installation des routes qui les
   envoient droit au réseau (`addRoutes`) ; ailleurs, son gestionnaire les
   laisse filer sans y répondre ;
-- garde, dès son installation, les quatre polices du premier écran, et ce
-  que la première page a déjà chargé avant lui (elle lui en envoie la liste ;
-  il le reprend du cache du navigateur, rien ne repart sur le réseau) ;
+- garde, dès son installation, les trois polices du premier écran (celles
+  que l'accueil précharge), et ce que la première page a déjà chargé avant
+  lui (elle lui en envoie la liste ; il le reprend du cache du navigateur,
+  rien ne repart sur le réseau). Pas Caveat : elle ne vient qu'après la page,
+  sur l'accueil seulement (voir [Polices](#polices--servies-par-le-site)) —
+  l'installer d'office la faisait télécharger (49 Ko) par une fiche, la
+  galerie ou la 404, qui ne l'emploient pas ; il la garde à son premier
+  usage ;
 - plafonne son stockage à 400 fichiers, les plus anciens partant d'abord ;
 - n'empêche pas le cache avant/arrière (vérifié : accueil, répertoire, fiche,
   galerie restaurés).

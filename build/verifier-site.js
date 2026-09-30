@@ -9,8 +9,8 @@
  *  ne faisait rien, et le CV en PDF imprimait les pastilles ▶ des
  *  bandes-annonces. Chacun tenait en une ligne de test.
  *
- *  Ce script ouvre le site dans un vrai navigateur et vérifie, en une
- *  minute, ce qui a déjà cassé ou ce qui casserait sans bruit :
+ *  Ce script ouvre le site dans un vrai navigateur et vérifie, en moins
+ *  de quatre minutes, ce qui a déjà cassé ou ce qui casserait sans bruit :
  *    · l'accueil se charge sans erreur de script ;
  *    · la règle de l'ouverture (lien direct : pas de rideau ; depuis un
  *      autre site : une fois) ;
@@ -3070,6 +3070,15 @@ function exige(condition, message) {
         await verifie('le service worker ne garde que les polices et les images : ni page, ni script, ni feuille, ni dates ; inscrit par chaque page publique, pas par /admin/, et il sait se retirer', async () => {
             const sw = fs.readFileSync(path.join(RACINE, 'sw.js'), 'utf8');
             exige(/const RETIRE = false;/.test(sw) && /self\.registration\.unregister\(\)/.test(sw), 'sw.js : l’interrupteur (RETIRE, et la désinscription) a disparu — ou il est baissé');
+            // Les polices gardées à l'installation sont celles que l'accueil
+            // précharge, et elles seules : Caveat, demandée après la page,
+            // serait téléchargée par la première page venue, qui ne
+            // l'emploie pas.
+            const installees = ((/const POLICES = \[([^\]]*)\]/.exec(sw) || [])[1] || '').match(/[\w-]+/g) || [];
+            const prechargees = [...fs.readFileSync(path.join(RACINE, 'index.html'), 'utf8')
+                .matchAll(/<link rel="preload" href="\/ressources\/polices\/([\w-]+)\.woff2"/g)].map((m) => m[1]);
+            exige(installees.length && installees.sort().join() === prechargees.sort().join(),
+                `sw.js garde à l’installation ${installees.join(', ') || 'rien'} ; l’accueil précharge ${prechargees.join(', ')}`);
             const publiques = ['index.html', '404.html', 'galerie/index.html', 'spectacles/index.html']
                 .concat(dossiers.map((d) => `spectacles/${d}/index.html`));
             for (const f of publiques) {
