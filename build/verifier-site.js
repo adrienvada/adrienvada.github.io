@@ -1621,6 +1621,52 @@ function exige(condition, message) {
             });
             exige(onglet.page === 'page_dates', 'le changement d’onglet ne pose pas la page');
             exige(onglet.ecart < 2, `la pastille n’a pas rejoint l’onglet (${onglet.ecart.toFixed(1)} px d’écart)`);
+            // Le sens du passage est une classe : écrit sur <html>, il
+            // recalculait tout le document avant chaque changement d'onglet.
+            exige(!(await p.evaluate(() => document.documentElement.style.getPropertyValue('--onglet-dx'))),
+                'le sens du passage d’onglet est encore écrit en ligne sur <html> (--onglet-dx)');
+            // Le fragment d'une couche refermée ramène la page déjà affichée :
+            // rien ne bouge (le recadrage au seuil de la barre, sur un
+            // téléphone lent, tombait après la remise en place de l'univers).
+            await p.click('#tab-page_cv');
+            await p.waitForTimeout(900);
+            const garde = await p.evaluate(() => new Promise((ok) => {
+                document.documentElement.style.scrollBehavior = 'auto';
+                scrollTo(0, 1500);
+                const y = scrollY;
+                history.replaceState(null, '', '#page_cv');
+                dispatchEvent(new HashChangeEvent('hashchange'));
+                setTimeout(() => { document.documentElement.style.scrollBehavior = ''; ok({ y, apres: scrollY }); }, 600);
+            }));
+            exige(garde.y > 1000 && Math.abs(garde.apres - garde.y) <= 1, `le retour d’un fragment vers l’onglet déjà affiché déplace la page (${garde.y} → ${garde.apres} px)`);
+            // Le thème bascule sans rien faire transitionner, et la classe qui
+            // l'empêche n'est posée que dans le rappel du passage : posée
+            // avant, elle recalculait le document dans l'image de l'ancien
+            // état. Retirée ensuite, au repos.
+            await p.evaluate(() => scrollTo(0, 0));
+            const theme = await p.evaluate(() => new Promise((ok) => {
+                const html = document.documentElement;
+                const origine = document.startViewTransition;
+                const depart = html.dataset.theme;
+                let enPassage = false, avant = null;
+                const lancees = [];
+                addEventListener('transitionrun', (e) => { if (enPassage) lancees.push(e.propertyName); }, true);
+                document.startViewTransition = function (rappel) {
+                    document.startViewTransition = origine;
+                    avant = html.classList.contains('vt-theme');
+                    const t = origine.call(document, () => { enPassage = true; rappel(); });
+                    t.finished.finally(() => {
+                        enPassage = false;
+                        setTimeout(() => ok({ avant, lancees, reste: html.classList.contains('vt-theme'), depart, theme: html.dataset.theme }), 900);
+                    });
+                    return t;
+                };
+                document.querySelector('[data-theme-toggle]').click();
+            }));
+            exige(theme.theme && theme.theme !== theme.depart, `le thème n’a pas basculé (${theme.depart} → ${theme.theme})`);
+            exige(theme.avant === false, 'vt-theme est posée avant le passage du thème : le document entier se recalcule pour l’image de l’ancien état');
+            exige(!theme.lancees.length, `une bascule de thème lance des transitions : ${theme.lancees.join(', ')}`);
+            exige(!theme.reste, 'vt-theme reste posée après le passage du thème');
             exige(fs.readFileSync(path.join(RACINE, 'styles.css'), 'utf8').includes('group-hover\\:scale-103'),
                 'le zoom de l’avatar (scale-103) n’existe pas dans styles.css');
             exige(!erreurs.length, erreurs.join(' | '));
@@ -1660,6 +1706,64 @@ function exige(condition, message) {
             // groupe de photos est rendue.
             const cleo = fs.readFileSync(path.join(RACINE, 'spectacles', 'cleophene', 'index.html'), 'utf8');
             exige(/class="u-group[^"]*"[\s\S]*?class="u-over[\s\S]*?semblables/.test(cleo), 'la phrase posée sur un groupe de photos n’est pas rendue');
+        });
+
+        // ── LA FENÊTRE D'ABORD, LA PAGE ENSUITE ──
+        // Le verrou et l'inertie de la page suivent l'ouverture d'une image
+        // (voir isolerCouche et openModal) ; le focus, lui, entre tout de
+        // suite. Refermée, la fenêtre rend tout ; rouverte pendant son fondu
+        // de sortie, elle ne doit être ni cachée par lui ni laisser la page
+        // vivante dessous.
+        await verifie('la fenêtre d’agenda : le focus y entre tout de suite, la page devient inerte et se fige une image après, tout revient à la fermeture — et la rouvrir aussitôt ne la cache pas', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await p.waitForTimeout(800);
+            // Une date à venir, quelle que soit la saison du dépôt.
+            await p.evaluate(() => {
+                const d = new Date(Date.now() + 20 * 86400000);
+                const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                SHOW_DATA.upcoming = [{
+                    type: 'single', title: 'Bérénice', location: 'Scène de vérification (76)', city: 'Rouen',
+                    dateLabel: iso, icsDate: iso, time: '20h00', bookingUrl: '', isSchool: false
+                }];
+                datesMisesAJour();
+            });
+            const bouton = p.locator('#page_dates .dl-agenda').first();
+            await bouton.scrollIntoViewIfNeeded();
+            await p.waitForTimeout(300);
+            const etat = () => p.evaluate(() => ({
+                dedans: !!document.activeElement?.closest('#calendar-modal'),
+                surLeBouton: !!document.activeElement?.classList.contains('dl-agenda'),
+                inertes: [...document.body.children].filter((e) => e.inert).length,
+                fige: getComputedStyle(document.documentElement).overflowY === 'hidden',
+                cachee: document.getElementById('calendar-modal').hidden
+            }));
+            await bouton.tap();
+            const aussitot = await etat();
+            exige(aussitot.dedans, 'le focus n’entre pas dans la fenêtre au geste');
+            await p.waitForTimeout(400);
+            const ouverte = await etat();
+            exige(ouverte.dedans && ouverte.inertes > 0 && ouverte.fige && !ouverte.cachee, `fenêtre ouverte : ${JSON.stringify(ouverte)}`);
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(600);
+            const fermee = await etat();
+            exige(fermee.surLeBouton && !fermee.inertes && !fermee.fige && fermee.cachee, `fenêtre refermée : ${JSON.stringify(fermee)}`);
+            // Rouverte pendant le fondu de sortie.
+            await bouton.tap();
+            await p.waitForTimeout(400);
+            await p.keyboard.press('Escape');
+            await bouton.tap();
+            await p.waitForTimeout(900);
+            const rouverte = await etat();
+            exige(!rouverte.cachee && rouverte.dedans && rouverte.inertes > 0 && rouverte.fige, `fenêtre rouverte aussitôt : ${JSON.stringify(rouverte)}`);
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(600);
+            const finale = await etat();
+            exige(!finale.inertes && !finale.fige && finale.cachee, `fenêtre refermée pour de bon : ${JSON.stringify(finale)}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
         });
 
         await verifie('le book : fermer puis rouvrir aussitôt ne laisse pas une page morte', async () => {

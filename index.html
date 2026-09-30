@@ -602,7 +602,8 @@
            qui grandit. Aucune couleur ne transitionne — la page change
            d'un coup, sous le cercle. Le temps du passage, rien ne doit
            transitionner du tout, sans quoi la nouvelle image montrerait
-           ses couleurs encore en route (vt-theme). Navigateurs plus
+           ses couleurs encore en route (vt-theme, posée avec le thème
+           dans le rappel du passage). Navigateurs plus
            anciens, ou mouvement réduit : la bascule est nette. */
         html.vt-theme *,
         html.vt-theme *::before,
@@ -956,7 +957,17 @@
            passage) : l'ancienne page s'efface vers un côté pendant que la
            nouvelle arrive de l'autre. Ailleurs, une animation d'entrée fait
            au moins arriver la nouvelle (onglet-glisse). --onglet-dx porte le
-           sens. En mouvement réduit : le changement est net. */
+           sens. En mouvement réduit : le changement est net.
+
+           LE SENS EST UNE CLASSE, PAS UNE VARIABLE ÉCRITE SUR <html>.
+           showPage y posait --onglet-dx en style en ligne : une variable
+           héritée, que les 2 500 éléments du document recalculaient avant
+           la capture, pour trois lecteurs — les deux images du passage et
+           la page qui arrive. Au téléphone à ×4, le passage partait 50 à
+           150 ms plus tard selon l'onglet, et le bandeau « Prochaine date »
+           répondait en 200 à 224 ms au lieu de 112. La valeur est désormais
+           déclarée là où elle est lue, et onglet-retour (posée seulement
+           quand le sens change) ne dit que le sens : 2 à 3 ms. */
         .page {
             display: none;
         }
@@ -976,6 +987,18 @@
            sélecteur. */
         html.onglet-glisse .page.active {
             animation: onglet-entre var(--dur-scene) var(--ease-out) both;
+        }
+
+        html.onglet-glisse .page.active,
+        html::view-transition-old(root),
+        html::view-transition-new(root) {
+            --onglet-dx: 28px;
+        }
+
+        html.onglet-retour.onglet-glisse .page.active,
+        html.onglet-retour::view-transition-old(root),
+        html.onglet-retour::view-transition-new(root) {
+            --onglet-dx: -28px;
         }
 
         @keyframes onglet-entre {
@@ -9317,6 +9340,19 @@
 
         // Le cercle part du bouton pressé et grandit jusqu'au coin le plus
         // éloigné de l'écran (voir « Le thème bascule en cercle »).
+        //
+        // vt-theme (plus de transition nulle part) touche TOUS les éléments :
+        // la poser recalcule le document entier. Elle est donc posée DANS le
+        // rappel, avec le thème — un seul recalcul pour les deux, et c'est
+        // sur ce style d'après le changement que les transitions se
+        // décident : aucune ne part. Posée avant le passage, elle refaisait
+        // tout le document dans l'image qui photographie l'ANCIEN état, où
+        // elle ne sert à rien : au téléphone à ×4, le geste répondait en
+        // 152 à 184 ms au lieu de 80 à 88, et le cercle partait 60 à 120 ms
+        // plus tard.
+        // Son retrait recoûte un recalcul complet (130 ms à ×4) : il attend
+        // que le fil principal soit libre, pour ne pas tomber sur un toucher.
+        let passageTheme = 0;
         function basculerTheme(theme, bouton) {
             const html = document.documentElement;
             const calme = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -9324,15 +9360,25 @@
             const r = bouton.getBoundingClientRect();
             const x = r.left + r.width / 2, y = r.top + r.height / 2;
             const rayon = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-            html.classList.add('vt-theme');
-            const passage = document.startViewTransition(() => applyTheme(theme, true));
+            // Une seconde bascule avant le retrait : c'est à elle de le faire.
+            const jeton = ++passageTheme;
+            const passage = document.startViewTransition(() => {
+                html.classList.add('vt-theme');
+                applyTheme(theme, true);
+            });
             passage.ready.then(() => {
                 html.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${rayon}px at ${x}px ${y}px)`] }, {
                     duration: 620, easing: 'cubic-bezier(.65, 0, .35, 1)',
                     pseudoElement: '::view-transition-new(root)'
                 });
             }).catch(() => { });
-            passage.finished.catch(() => { }).finally(() => html.classList.remove('vt-theme'));
+            // requestIdleCallback manque à Safari : une image de marge suffit.
+            const auRepos = window.requestIdleCallback
+                ? (f) => requestIdleCallback(f, { timeout: 400 })
+                : (f) => setTimeout(f, 50);
+            passage.finished.catch(() => { }).finally(() => auRepos(() => {
+                if (jeton === passageTheme) html.classList.remove('vt-theme');
+            }));
         }
 
         function initThemeToggle() {
@@ -9448,12 +9494,33 @@
         window.dropOverlayState = dropOverlayState;
         window.adoptOverlayState = adoptOverlayState;
 
+        // ── LA FENÊTRE D'ABORD, LA PAGE ENSUITE ──
+        //  Ouvrir ou fermer une fenêtre (l'agenda, la salle noire) touche la
+        //  page entière : le verrou (modal-open, qui fige le défilement et
+        //  suspend les animations du CV), l'inertie de tout le reste (voir
+        //  isolerCouche), le focus. Faits dans le geste, ils recalculaient
+        //  les 1 450 éléments du document avant que la fenêtre ne paraisse :
+        //  au téléphone à ×4, l'agenda s'ouvrait en 240 ms (88 désormais) et
+        //  se fermait en 150 à 190 (40 à 64) ; la salle noire, en 160 et 88
+        //  (88 et 72). La fenêtre et son fondu partent donc d'abord ; le
+        //  verrou et l'inertie suivent une image plus tard, pendant le fondu,
+        //  que joue le compositeur. Le focus, lui, entre tout de suite dans
+        //  la fenêtre : il n'y recalcule plus qu'elle (le différer aussi ne
+        //  gagnait rien).
+        //  À la fermeture, c'est le fondu de sortie qu'il ne faut pas
+        //  retarder : le verrou, l'inertie et le focus rendu attendent
+        //  DEUX images — à une seule, quatre fois sur dix, ils tombaient
+        //  encore avant que l'image du geste soit montrée. Une fenêtre
+        //  rouverte entre-temps fait d'abord ce que la fermeture attendait.
+        const apresLImage = (f) => requestAnimationFrame(() => setTimeout(f, 0));
+        let liberationModale = null;
+
         function openModal(modalId, cardId) {
             const modal = document.getElementById(modalId);
             if (!modal) return;
+            if (liberationModale) liberationModale();
             lastFocusedEl = document.activeElement;
             modal.hidden = false;
-            document.body.classList.add('modal-open');
             // Laisser un frame au navigateur pour appliquer display avant la transition
             requestAnimationFrame(() => {
                 modal.classList.remove('pointer-events-none', 'opacity-0');
@@ -9470,8 +9537,9 @@
             // — une fois le focus DANS le lecteur YouTube, les touches ne
             // remontaient plus jusqu'ici, et Tab sortait de la fenêtre.
             libererSousModale = window.isolerCouche ? window.isolerCouche(modal) : null;
+            apresLImage(() => { if (openModalEl === modal) document.body.classList.add('modal-open'); });
             const first = modal.querySelector(FOCUSABLE);
-            if (first) first.focus();
+            if (first) first.focus({ preventScroll: true });
         }
 
         let libererSousModale = null;
@@ -9486,23 +9554,35 @@
             modal.classList.remove('pointer-events-auto', 'opacity-100');
             modal.classList.add('pointer-events-none', 'opacity-0');
             openModalEl = null;
-            document.body.classList.remove('modal-open');
             dropOverlayState('modal');
-            if (libererSousModale) { libererSousModale(); libererSousModale = null; }
 
-            const finish = () => { modal.hidden = true; };
+            // Rouverte pendant son fondu de sortie, la fenêtre ne doit pas
+            // être cachée par la fin de celui-ci.
+            const finish = () => { if (openModalEl !== modal) modal.hidden = true; };
             // Attendre la fin du fondu, avec repli si transitionend ne se déclenche pas
             let done = false;
             const once = () => { if (!done) { done = true; finish(); } };
             modal.addEventListener('transitionend', once, { once: true });
             setTimeout(once, 400);
 
-            if (lastFocusedEl && lastFocusedEl !== document.body && document.contains(lastFocusedEl)) {
-                lastFocusedEl.focus();
-            } else if (document.activeElement && modal.contains(document.activeElement)) {
-                document.activeElement.blur();
-            }
+            const liberer = libererSousModale, rendre = lastFocusedEl;
+            libererSousModale = null;
             lastFocusedEl = null;
+            const liberation = () => {
+                if (liberationModale !== liberation) return;
+                liberationModale = null;
+                if (!openModalEl) document.body.classList.remove('modal-open');
+                // La page redevient vivante AVANT de reprendre le focus : un
+                // élément inerte ne peut pas le recevoir.
+                if (liberer) liberer();
+                if (rendre && rendre !== document.body && document.contains(rendre)) {
+                    rendre.focus();
+                } else if (document.activeElement && modal.contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
+            };
+            liberationModale = liberation;
+            requestAnimationFrame(() => apresLImage(liberation));
         }
 
         // Tabulation maintenue à l'intérieur de la modale ouverte
@@ -9613,6 +9693,16 @@
 
             window.addEventListener("hashchange", () => {
                 const newHash = window.location.hash.substring(1);
+                // DÉJÀ SUR CETTE PAGE : RIEN À FAIRE. C'est le cas de chaque
+                // couche qu'on referme (univers, lettre, fenêtre) : le retour
+                // ramène #page_cv, ou l'adresse nue, sur le CV déjà affiché.
+                // showPage le « recadrait » quand même au seuil de la barre
+                // d'onglets — et sur un téléphone lent, ce recadrage tombait
+                // 1,4 à 2 s après le geste, bien après les 320 ms pendant
+                // lesquelles la fermeture d'un univers repose la page : elle
+                // restait au seuil (916 → 821 px). Voir « Refermer un univers
+                // rend la page où elle était » (README-build.md).
+                if (document.querySelector('.page.active')?.id === (newHash || 'page_cv')) return;
                 if (newHash) {
                     if (document.getElementById(newHash)) showPage(newHash, true);
                     return;
@@ -11312,14 +11402,24 @@
                 // univers, une seule classe pour les deux.
                 document.documentElement.classList.add('u-locked');
                 // Et elle devient inerte : la touche Tab sortait de la lettre
-                // pour aller dans l'en-tête caché dessous.
+                // pour aller dans l'en-tête caché dessous (une image plus
+                // tard : voir isolerCouche).
                 liberer = window.isolerCouche ? window.isolerCouche(panneau) : null;
-                defile.scrollTop = 0;
                 panneau.classList.remove('est-prete');
                 //  D'ABORD LA FEUILLE, SEULE ET VIDE. Rien de lourd ne tourne
                 //  pendant qu'elle se pose : c'est la seule façon que son
                 //  arrivée soit franche.
-                requestAnimationFrame(() => panneau.classList.add('est-ouvert'));
+                //  Elle repart du haut. Le défilement se remet à zéro dans
+                //  l'image qui la montre, juste avant qu'elle soit calculée
+                //  de toute façon : dans le geste, derrière l'inertie alors
+                //  posée aussitôt, cette lecture forçait le calcul de toute
+                //  la page (1 200 éléments, 123 à 156 ms à ×4). Et pas plus
+                //  tôt : tant qu'elle est `hidden`, l'affectation est
+                //  ignorée, et le navigateur lui rend l'ancienne position.
+                requestAnimationFrame(() => {
+                    defile.scrollTop = 0;
+                    panneau.classList.add('est-ouvert');
+                });
                 //  ENSUITE LE TRAVAIL, à l'abri. Le texte est encore
                 //  invisible : découper les mots et les mesurer ne se voit
                 //  pas, même si cela prend deux images.
@@ -11685,8 +11785,10 @@
                 poserPage(pageId, animate);
                 return Promise.resolve();
             }
-            const sens = ORDRE_ONGLETS.indexOf(pageId) >= ORDRE_ONGLETS.indexOf(avant.id) ? 1 : -1;
-            html.style.setProperty('--onglet-dx', (sens * 28) + 'px');
+            // Le sens, par une classe lue par les seuls lecteurs du
+            // glissement (voir « Le sens est une classe » dans le <style>).
+            const retour = ORDRE_ONGLETS.indexOf(pageId) < ORDRE_ONGLETS.indexOf(avant.id);
+            if (html.classList.contains('onglet-retour') !== retour) html.classList.toggle('onglet-retour', retour);
             if (!document.startViewTransition) {
                 html.classList.add('onglet-glisse');
                 poserPage(pageId, animate);

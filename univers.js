@@ -873,16 +873,47 @@ const SHOW_UNIVERSES = {
     //
     //  Exposée (window.isolerCouche) : les fenêtres de l'accueil s'en
     //  servent aussi — voir index.html.
+    //
+    //  L'INERTIE EST POSÉE UNE IMAGE PLUS TARD. `inert` change le style de
+    //  tout ce qu'il touche : les frères de la couche, c'est la page entière.
+    //  Posée dans le geste, la première lecture qui suivait — un scrollTop,
+    //  un focus — recalculait aussitôt les 1 200 à 1 450 éléments du
+    //  document, avant la première image de la couche : au téléphone à ×4,
+    //  ouvrir la lettre répondait en 224 ms (136 désormais), la photo
+    //  agrandie en 184 (104), l'agenda de l'onglet Dates en 240 (88). Elle
+    //  attend donc que la couche ait paru (une image, puis une tâche) : le
+    //  recalcul tombe pendant son arrivée, un fondu et un glissement que
+    //  joue le compositeur. Pendant cette image, le focus est déjà dans la
+    //  couche. La fonction rendue annule la pose si la couche se referme
+    //  avant, et une couche qui s'ouvre par-dessus pose d'abord ce que
+    //  celle de dessous attendait : l'ordre des couches ne change pas.
+    const posesEnAttente = new Set();
+
     function isolerCouche(couche) {
+        posesEnAttente.forEach(p => p());
         const rendus = [];
-        for (let el = couche; el && el.parentElement && el !== document.body; el = el.parentElement) {
-            for (const frere of el.parentElement.children) {
-                if (frere === el || frere.inert || /^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(frere.tagName)) continue;
-                frere.inert = true;
-                rendus.push(frere);
+        let image = 0, tache = 0;
+        const poser = () => {
+            posesEnAttente.delete(poser);
+            cancelAnimationFrame(image);
+            clearTimeout(tache);
+            for (let el = couche; el && el.parentElement && el !== document.body; el = el.parentElement) {
+                for (const frere of el.parentElement.children) {
+                    if (frere === el || frere.inert || /^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(frere.tagName)) continue;
+                    frere.inert = true;
+                    rendus.push(frere);
+                }
             }
-        }
-        return () => rendus.forEach(n => { n.inert = false; });
+        };
+        posesEnAttente.add(poser);
+        image = requestAnimationFrame(() => { tache = setTimeout(poser, 0); });
+        return () => {
+            posesEnAttente.delete(poser);
+            cancelAnimationFrame(image);
+            clearTimeout(tache);
+            rendus.forEach(n => { n.inert = false; });
+            rendus.length = 0;
+        };
     }
     window.isolerCouche = isolerCouche;
 

@@ -154,9 +154,17 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   rien d'animé au défilement ;
 - les défauts réparés de l'audit du mouvement : le verrou de défilement posé
   sur `<html>` et la place de la barre réservée, le changement d'onglet et sa
-  pastille, « Passer » qui répond avant l'arrivée d'`intro.js`, Maj seule qui
-  ne lève pas le rideau (Échap, si), le zoom de l'avatar dans `styles.css`, la
-  phrase posée sur un groupe de photos (« Jusqu'où serez-vous semblables ? ») ;
+  pastille — son sens n'est pas écrit en ligne sur `<html>` —, le fragment
+  d'une couche refermée qui ramène l'onglet déjà affiché sans déplacer la
+  page, la bascule de thème qui ne lance aucune transition et ne pose
+  `vt-theme` que dans le rappel du passage (retirée ensuite), « Passer » qui
+  répond avant l'arrivée d'`intro.js`, Maj seule qui ne lève pas le rideau
+  (Échap, si), le zoom de l'avatar dans `styles.css`, la phrase posée sur un
+  groupe de photos (« Jusqu'où serez-vous semblables ? ») ;
+- la fenêtre d'agenda de l'onglet Dates : le focus y entre au geste, la page
+  devient inerte et cesse de défiler une image après, tout revient à la
+  fermeture (focus sur le bouton) ; rouverte pendant son fondu de sortie,
+  elle n'est pas cachée par lui ;
 - le book : fermer puis rouvrir aussitôt ne laisse pas une page morte ;
 - la frise du CV, comme le prototype de l'audit, avec les deux pilotes : la
   ligne de lecture aux trois quarts de l'écran, la pointe du fil dessus
@@ -610,6 +618,15 @@ transitionne. ⚠️ **Ne pas remettre de transition de couleur sur `*`** : chaq
 élément de la page en portait une, pour ce seul geste — une image figée de
 0,13 à 0,22 s au moment de basculer (près d'une seconde sur un téléphone
 modeste), et des éléments qui ne changeaient pas ensemble.
+
+Le temps du passage, `vt-theme` coupe toute transition — sur tous les
+éléments, donc elle recalcule la page entière. Elle est posée **dans le
+rappel** du passage, avec le thème (un seul recalcul pour les deux), et
+retirée **au repos** (`requestIdleCallback`, une image de marge sous
+Safari). Posée avant, elle recalculait tout le document pour l'image de
+l'ancien état, où elle ne sert à rien : au téléphone à ×4, la bascule
+répondait en 152 à 184 ms au lieu de 80 à 88, et le cercle partait 60 à
+120 ms plus tard. Même chose au répertoire (104-112 → 72-80 ms) et au book.
 
 **L'impression reste toujours claire**, même quand le site est affiché en
 sombre : le bloc `@media print` réimpose la palette claire à la racine. Un CV
@@ -2109,6 +2126,15 @@ n'est qu'un flou vif — elle s'efface tôt à l'aller, et arrive tard au retour
 Navigateur sans View Transitions, ou mouvement réduit : l'ancien comportement
 (dépliement en `clip-path`, fondu, coupe franche).
 
+**Le sens d'un changement d'onglet est une classe** (`onglet-retour`, sur
+`<html>`, posée seulement quand il change) ; la valeur du glissement
+(`--onglet-dx`, ±28 px) est déclarée sur ses seuls lecteurs : les deux
+images du passage et la page qui arrive, quand il n'y a pas de passage.
+Écrite en ligne sur `<html>`, la variable était héritée par tout le
+document, recalculé avant la capture : au téléphone à ×4, le passage partait
+50 à 150 ms plus tard selon l'onglet, et le bandeau « Prochaine date »
+répondait en 200 à 224 ms au lieu de 112.
+
 **La boîte rogne ce qu'elle montre** (`u-boite`) : le panneau entier y était
 posé à pleine largeur, hauteur libre, dans une boîte partie de la ligne ; au
 début du passage, le surtitre, l'auteur, le rôle et « Le spectacle »
@@ -2423,7 +2449,19 @@ bouton du navigateur). On lâche prise dès le premier geste de l'utilisateur
 (`wheel`, `touchstart`, `keydown`, `pointerdown`) pour ne jamais lutter contre
 lui.
 
-Vérifié sur les quatre chemins de fermeture, en mobile et en desktop.
+**Le fragment revenu ne change plus d'onglet.** Il réveillait aussi le
+gestionnaire `hashchange` de l'accueil, qui rappelait `showPage('page_cv')`
+sur le CV déjà affiché — et `showPage` recadre la page au seuil de la barre
+d'onglets. C'était la vraie source du déplacement, et les 320 ms ne la
+couvraient que sur une machine rapide : sur ordinateur, le recadrage tombait
+dedans (un éclair de 45 à 60 ms au mauvais endroit) ; sur un téléphone lent
+(processeur ralenti ×4), il arrivait 1,4 à 2 s après le geste, et la page
+restait au seuil (916 → 821 px). Le gestionnaire ne fait désormais rien
+quand la page visée est déjà affichée : un showPage de moins, et son
+recalcul, pendant le passage du retour.
+
+Vérifié sur les quatre chemins de fermeture, en mobile (×4 compris) et en
+desktop.
 
 La page, cachée sous le panneau pendant qu'il est ouvert (voir
 [Les passages](#les-passages-view-transitions)), est rendue **en tout premier**
@@ -2602,7 +2640,15 @@ galerie et l'administration. À garder en tête en modifiant le site :
   agenda, récit, visionneuse de la galerie : tout ce qui est dessous reçoit
   `inert` (voir `isolerCouche` dans `univers.js`) — la touche Tab ne
   s'échappe plus derrière, un lecteur d'écran ne lit plus la page cachée —
-  et le focus revient à la fermeture sur ce qui l'avait ouverte.
+  et le focus revient à la fermeture sur ce qui l'avait ouverte. **L'inertie
+  arrive une image après la couche** (le focus, lui, y entre tout de
+  suite) : posée dans le geste, elle faisait recalculer tout le document
+  avant la première image de la couche — au téléphone à ×4, la lettre
+  s'ouvrait en 224 ms (136 désormais), la photo agrandie en 184 (104),
+  l'agenda en 240 (88). Une couche refermée avant annule la pose. Les
+  fenêtres de l'accueil (agenda, salle noire) posent aussi leur verrou une
+  image après, et à la fermeture rendent verrou, inertie et focus deux
+  images après le départ de leur fondu (`openModal`, `closeModal`).
 - **Un panneau replié est hors d'atteinte** : `visibility: hidden` en plus de
   la hauteur nulle (tiroirs du CV, séries de dates, filtres, archives). Sans
   cela, le clavier parcourait des liens invisibles.

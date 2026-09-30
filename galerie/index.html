@@ -1343,7 +1343,10 @@
         // LE THÈME BASCULE EN CERCLE depuis la bascule, comme sur l'accueil
         // (voir basculerTheme dans index.html) : une View Transition, un
         // cercle qui grandit jusqu'au coin le plus éloigné, et aucune couleur
-        // qui transitionne pendant ce temps (vt-theme).
+        // qui transitionne pendant ce temps (vt-theme, posée avec le thème
+        // dans le rappel — posée avant, elle recalculait toute la page pour
+        // l'image de l'ancien état —, et retirée au repos).
+        var passageTheme = 0;
         if (bascule) bascule.addEventListener('click', function () {
             var t = document.documentElement.getAttribute('data-theme');
             var vers = t === 'light' ? 'dark' : 'light';
@@ -1360,13 +1363,20 @@
             var r = bascule.getBoundingClientRect();
             var x = r.left + r.width / 2, y = r.top + r.height / 2;
             var rayon = Math.sqrt(Math.pow(Math.max(x, innerWidth - x), 2) + Math.pow(Math.max(y, innerHeight - y), 2));
-            racine.classList.add('vt-theme');
-            var passage = document.startViewTransition(function () { appliqueTheme(vers, true); });
+            var jeton = ++passageTheme;
+            var passage = document.startViewTransition(function () {
+                racine.classList.add('vt-theme');
+                appliqueTheme(vers, true);
+            });
             passage.ready.then(function () {
                 racine.animate({ clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + rayon + 'px at ' + x + 'px ' + y + 'px)'] },
                     { duration: 620, easing: 'cubic-bezier(.65, 0, .35, 1)', pseudoElement: '::view-transition-new(root)' });
             }).catch(function () { });
-            passage.finished.catch(function () { }).then(function () { racine.classList.remove('vt-theme'); });
+            passage.finished.catch(function () { }).then(function () {
+                var retirer = function () { if (jeton === passageTheme) racine.classList.remove('vt-theme'); };
+                if (window.requestIdleCallback) requestIdleCallback(retirer, { timeout: 400 });
+                else setTimeout(retirer, 50);
+            });
         });
 
     })();
