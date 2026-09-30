@@ -12373,8 +12373,9 @@
                 if (jeton === passageOnglet) {
                     html.classList.remove('vt-onglet');
                     // Ce qui a bougé pendant le passage (une police arrivée,
-                    // la page recadrée) : la pastille finit sous son onglet.
-                    recalerPastille();
+                    // la page recadrée, un glissement figé) : la pastille
+                    // finit sous son onglet.
+                    recalerPastille(true);
                 }
             });
             return passage.updateCallbackDone.catch(() => { });
@@ -12449,10 +12450,20 @@
         // changer de taille (son voisin s'est resserré). Vu sur une machine
         // chargée : Montserrat arrivée après le clic, l'onglet CV plus étroit
         // de 1,7 px, et la pastille restée 4 px à côté de l'onglet Dates.
-        function recalerPastille() {
+        function recalerPastille(finDuPassage) {
             const onglet = document.querySelector('#nav-tabs-container a[aria-current="page"]');
             const pastille = document.querySelector('#nav-tabs-container .onglet-pastille');
             if (!onglet || !pastille) return;
+            // À la fin d'un passage d'onglet, on regarde aussi où elle est
+            // DESSINÉE : sur la machine lente des demandes de fusion, son
+            // glissement restait figé en plein ressort (2,5 % au-delà de la
+            // cible, 4 px à côté de l'onglet), alors que ses variables étaient
+            // justes. Elle se pose alors sans glisser. Pas pendant un
+            // glissement ordinaire : ce serait le couper.
+            if (finDuPassage) {
+                const o = onglet.getBoundingClientRect(), p = pastille.getBoundingClientRect();
+                if (Math.abs(o.left - p.left) + Math.abs(o.width - p.width) > 1) { placerPastille(onglet, false); return; }
+            }
             if (pastille.style.getPropertyValue('--x') === onglet.offsetLeft + 'px'
                 && pastille.style.getPropertyValue('--y') === onglet.offsetTop + 'px'
                 && pastille.style.getPropertyValue('--w') === onglet.offsetWidth + 'px'

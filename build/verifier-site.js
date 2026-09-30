@@ -1923,6 +1923,8 @@ function exige(condition, message) {
                     detail: `onglet ${t.left.toFixed(1)} + ${t.width.toFixed(1)}, pastille ${pa.left.toFixed(1)} + ${pa.width.toFixed(1)}`
                         + ` (--x ${pastille.style.getPropertyValue('--x')}, --w ${pastille.style.getPropertyValue('--w')}, ${pastille.className}),`
                         + ` polices ${document.fonts.status}, barre « ${document.getElementById('nav-barre')?.className || ''} », défilement ${Math.round(scrollY)}`
+                        + `, glissement ${pastille.getAnimations().map((a) => `${a.transitionProperty || a.animationName} ${a.playState} ${Math.round(a.currentTime)} ms`).join(' / ') || 'fini'}`
+                        + `, horloge ${Math.round(document.timeline.currentTime)} ms, page ${document.visibilityState}, <html> « ${document.documentElement.className} »`
                 };
             });
             exige(onglet.page === 'page_dates', 'le changement d’onglet ne pose pas la page');
