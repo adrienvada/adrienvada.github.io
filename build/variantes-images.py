@@ -47,13 +47,19 @@ CE QUE LE SCRIPT PRODUIT, à côté des originaux servis :
       L'affiche d'un film n'en a pas : elle ne dépasse jamais 540 px à
       l'écran (.u-affiche, univers.css), et sa version de 1280 lui suffit.
 
+      Les pages ne la proposent qu'aux photos de la liste ECRAN_LARGE
+      d'univers-montage.js, que ce script ÉCRIT LUI-MÊME d'après
+      variantes.json (ecrire_liste_large) : une version proposée mais
+      absente serait une image cassée sur ordinateur. Quand la liste
+      change, il le dit — les pages sont alors à régénérer.
+
   ressources/images/univers/<slug>/<nom>-240.webp     la COUVERTURE seule
-      La première photo du montage de chaque univers — celle que montrent
-      le répertoire et l'onglet Dates — reçoit en plus une version de
-      240 px. L'onglet Dates l'affiche sur 40 px de large, en tête de
-      chaque spectacle quand on range les dates par spectacle : la plus
-      petite des autres versions, 640 px, pesait jusqu'à 86 Ko pour cette
-      vignette.
+      La première photo du montage de chaque univers reçoit en plus une
+      version de 240 px, à son cadre entier. Elle a été la vignette de
+      l'onglet Dates et du CV (la plus petite des autres versions, 640 px,
+      pesait jusqu'à 86 Ko pour 40 px de large) ; la vignette recadrée,
+      plus bas, l'y remplace. Elle reste le halo de la salle noire, quand
+      on y joue la bande-annonce du spectacle.
 
   ressources/images/univers/<slug>/<nom>-v.webp       la VIGNETTE DU CV
       La couverture encore, mais RECADRÉE, en 144 × 192 : la vignette d'une
@@ -65,8 +71,8 @@ CE QUE LE SCRIPT PRODUIT, à côté des originaux servis :
       est celui que ferait `object-fit: cover` au `cadre` de la couverture
       dans univers.js (framePos, univers-montage.js) : la vignette montre
       ce qu'elle montrait, à pleine définition, et les neuf pèsent 35 Ko
-      au lieu de 54. L'onglet Dates (40 × 50) peut s'en servir aussi : le
-      3:4 n'y perd que quelques pixels de haut.
+      au lieu de 54. L'onglet Dates (40 × 50, 48 × 56) s'en sert aussi :
+      il n'en rogne que quelques pixels de haut.
 
       CHANGER CE CADRE, OU LA PREMIÈRE PHOTO DU MONTAGE, demande de
       relancer le script : il voit que le cadre a changé et refait la
@@ -302,6 +308,41 @@ def ecrire_memoire(m):
         json.dump(m, f, ensure_ascii=False, indent=1)
         f.write("\n")
     os.replace(tmp, MEMOIRE)
+    ecrire_liste_large(m)
+
+
+# La liste des photos qui ont leur -2400, dans univers-montage.js : les
+# pages ne la proposent qu'à elles. Une -2400 proposée mais absente, c'est
+# une image cassée sur ordinateur ; présente mais pas proposée, un gain
+# perdu. Elle suit donc variantes.json, et c'est ce script qui l'écrit.
+MONTAGE_JS = os.path.join(ROOT, "univers-montage.js")
+LISTE_LARGE = re.compile(r"(const ECRAN_LARGE = new Set\(\[)[^\]]*(\]\);)")
+
+
+def ecrire_liste_large(m):
+    cles = [f"'{c}'" for c, e in m["2400"].items() if e.get("qualite") is not None]
+    lignes, ligne = [], ""
+    for c in cles:
+        if ligne and len(ligne) + len(c) + 2 > 80:
+            lignes.append(ligne + ",")
+            ligne = ""
+        ligne = f"{ligne}, {c}" if ligne else f"        {c}"
+    if ligne:
+        lignes.append(ligne)
+    corps = ("\n" + "\n".join(lignes) + "\n    ") if lignes else ""
+    src = open(MONTAGE_JS, encoding="utf-8").read()
+    if not LISTE_LARGE.search(src):
+        print("  ⚠ univers-montage.js : la liste ECRAN_LARGE est introuvable — "
+              "les pages ne proposent plus aucune version écran large")
+        return
+    neuf = LISTE_LARGE.sub(lambda x: x.group(1) + corps + x.group(2), src, count=1)
+    if neuf != src:
+        tmp = MONTAGE_JS + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(neuf)
+        os.replace(tmp, MONTAGE_JS)
+        print("  ⚠ univers-montage.js : la liste des versions écran large a changé — "
+              "régénérez les pages : npm --prefix build run pages")
 
 
 def cle_de_tri(cle):

@@ -67,7 +67,11 @@
  *    · le sitemap, qui doit annoncer toutes les pages spectacle ;
  *    · les variantes d'images qui suivent le montage : la vignette du CV
  *      recadrée au cadre de sa couverture, la version écran large là où
- *      variantes.json l'annonce, le portrait en AVIF.
+ *      variantes.json l'annonce — et proposée par les pages là seulement —,
+ *      le portrait en AVIF ;
+ *    · chaque écran prend sa version : l'ordinateur la version écran
+ *      large sans le JPEG en plus, le téléphone jamais plus de 1920 px,
+ *      le portrait en AVIF, les vignettes du CV et des Dates recadrées.
  *
  *  Rien ne sort vers l'extérieur : la mesure d'audience et la base des
  *  dates sont coupées (le site sait s'en passer). Des représentations
@@ -3086,10 +3090,10 @@ function exige(condition, message) {
                     const cv = UniversMontage.couverture(uni);
                     if (!cv) continue;
                     const img = new Image();
-                    img.src = cv.src.replace(/-240\.webp$/, '-v.webp');
+                    img.src = cv.vignette;
                     const lue = await img.decode().then(() => true, () => false);
                     out.push({
-                        cle: cv.src.replace(/^.*univers\//, '').replace(/-240\.webp$/, ''),
+                        cle: cv.vignette.replace(/^.*univers\//, '').replace(/-v\.webp$/, ''),
                         cadre: cv.pos || '50% 50%', lue, l: img.naturalWidth, h: img.naturalHeight
                     });
                 }
@@ -3115,13 +3119,31 @@ function exige(condition, message) {
                 .filter((cle) => !(memoire['2400'][cle] && memoire['2400'][cle].qualite != null));
             exige(!inconnues.length, `version(s) écran large inconnue(s) de variantes.json : ${inconnues.join(', ')}`);
 
+            // La liste des photos à qui les pages proposent leur -2400
+            // (ECRAN_LARGE, univers-montage.js) est celle de variantes.json,
+            // ni plus ni moins — le script l'écrit ; une main qui l'aurait
+            // touchée, ou un passage oublié, se voit ici. pictureHtml la suit.
+            const MONTAGE = require(path.join(RACINE, 'univers-montage.js'));
+            const annoncees = Object.entries(memoire['2400']).filter(([, m]) => m.qualite != null).map(([cle]) => cle).sort();
+            const listees = [...MONTAGE.ECRAN_LARGE].sort();
+            exige(annoncees.join() === listees.join(), `ECRAN_LARGE (univers-montage.js) dit ${listees.join(', ') || 'rien'}, variantes.json ${annoncees.join(', ') || 'rien'} : python3 build/variantes-images.py, puis npm --prefix build run pages`);
+            for (const cle of Object.keys(memoire['2400'])) {
+                const html = MONTAGE.pictureHtml(`ressources/images/univers/${cle}.jpg`, 'plein', 'alt=""');
+                exige(html.includes(`${cle}-2400.webp 2400w`) === listees.includes(cle), `pictureHtml ${listees.includes(cle) ? 'ne propose pas' : 'propose'} ${cle}-2400.webp`);
+            }
+
             // Ce que citent les pages écrites en dur : aucune version écran
-            // large, aucune vignette recadrée, aucun AVIF qui n'existe pas.
+            // large, aucune vignette recadrée, aucun AVIF qui n'existe pas —
+            // et, dans une page spectacle, chaque photo de la liste propose
+            // bien la sienne (une page d'avant la liste en manquerait).
             const pages = ['index.html', 'galerie/index.html', ...dossiers.map((d) => `spectacles/${d}/index.html`)];
             for (const page of pages) {
                 const html = fs.readFileSync(path.join(RACINE, page), 'utf8');
                 for (const [, cible] of html.matchAll(/((?:\.\.\/)*ressources\/images\/[^"'\s,]+(?:-2400\.webp|-v\.webp|\.avif))/g)) {
                     exige(fs.existsSync(path.join(RACINE, cible.replace(/^(\.\.\/)+/, ''))), `${page} demande ${cible}, qui n’existe pas`);
+                }
+                for (const [, cle] of html.matchAll(/<img src="(?:\.\.\/)*ressources\/images\/univers\/([a-z]+\/\d+)\.jpg"/g)) {
+                    exige(!listees.includes(cle) || html.includes(`${cle}-2400.webp 2400w`), `${page} ne propose pas ${cle}-2400.webp : npm --prefix build run pages`);
                 }
             }
 
@@ -3131,6 +3153,117 @@ function exige(condition, message) {
                 const webp = fs.statSync(path.join(RACINE, `ressources/images/portrait-affiche-${l}.webp`)).size;
                 exige(fs.statSync(avif).size < webp, `portrait-affiche-${l}.avif ne pèse pas moins que sa WebP`);
             }
+        });
+
+        // CHAQUE ÉCRAN PREND SA VERSION (voir pictureHtml, univers-montage.js,
+        // et « Images générées » dans le README). L'ordinateur recevait les
+        // JPEG de 2400 px ; il prend désormais la -2400 là où elle existe —
+        // sans le JPEG en plus, ce qui doublerait le poids au lieu de
+        // l'alléger —, et le JPEG là où elle n'existe pas (une 1920 le
+        // remplacerait par moins fin). Le téléphone n'en voit rien : jamais
+        // plus de 1920 px. Le portrait part en AVIF ; les vignettes du CV
+        // et des Dates sont la couverture recadrée (-v), et la version de
+        // 240 px, qu'elles prenaient, ne part plus avec l'accueil.
+        await verifie('chaque écran prend sa version : l’ordinateur la version écran large là où elle existe, jamais le JPEG en plus, le JPEG ailleurs ; le téléphone jamais plus de 1920 px ; le portrait en AVIF ; les vignettes du CV et des Dates recadrées, sans la couverture de 240 px', async () => {
+            const MONTAGE = require(path.join(RACINE, 'univers-montage.js'));
+            const larges = [...MONTAGE.ECRAN_LARGE];
+            // La page qui a le plus de photos de la liste, et au moins une
+            // sans : les deux cas à la fois.
+            const page = dossiers.map((d) => {
+                const html = fs.readFileSync(path.join(RACINE, `spectacles/${d}/index.html`), 'utf8');
+                const cles = [...html.matchAll(/<img src="(?:\.\.\/)*ressources\/images\/univers\/([a-z]+\/\d+)\.jpg"/g)].map((m) => m[1]);
+                return { d, avec: cles.filter((k) => larges.includes(k)).length, sans: cles.filter((k) => !larges.includes(k)).length };
+            }).filter((x) => x.avec && x.sans).sort((a, b) => b.avec - a.avec)[0];
+            exige(page, 'aucune page spectacle n’a à la fois des photos avec et sans version écran large');
+            const toutes = async (p) => p.evaluate(async () => {
+                const imgs = [...document.querySelectorAll('picture img')];
+                imgs.forEach((i) => { i.loading = 'eager'; });
+                await Promise.race([Promise.all(imgs.map((i) => i.decode().catch(() => { }))), new Promise((ok) => setTimeout(ok, 15000))]);
+                return imgs.map((i) => ({ src: i.getAttribute('src'), vu: i.currentSrc, l: i.naturalWidth }));
+            });
+            const cle = (u) => (u.match(/univers\/([a-z]+\/\d+)(?:-[\w]+)?\.(?:jpg|webp)$/) || [])[1];
+
+            for (const [vue, dpr, mobile] of [[{ width: 1440, height: 900 }, 2, false], [{ width: 390, height: 844 }, 3, true]]) {
+                const c = await visiteur({ viewport: vue, deviceScaleFactor: dpr, isMobile: mobile, hasTouch: mobile, serviceWorkers: 'block' });
+                const p = await c.newPage();
+                const demandes = [];
+                p.on('request', (q) => { if (/\/univers\/[a-z]+\/\d+(-\d+)?\.(jpg|webp)$/.test(q.url())) demandes.push(new URL(q.url()).pathname); });
+                const erreurs = guette(p);
+                await p.goto(`${base}/spectacles/${page.d}/`, { waitUntil: 'load' });
+                const imgs = (await toutes(p)).filter((i) => /univers\/[a-z]+\/\d+\.jpg$/.test(i.src));
+                exige(imgs.length >= 3, `${page.d} : ${imgs.length} photo(s) seulement`);
+                for (const i of imgs) {
+                    const k = cle(i.src);
+                    exige(i.l > 0, `${page.d} : ${k} ne s’affiche pas (${i.vu})`);
+                    if (!mobile) {
+                        const attendu = larges.includes(k) ? `${k}-2400.webp` : `${k}.jpg`;
+                        exige(i.vu.endsWith(attendu), `à 1 440 px (×2), ${k} prend ${i.vu.split('/').pop()} au lieu de ${attendu.split('/').pop()}`);
+                    } else {
+                        exige(!/-2400\.webp$|\.jpg$/.test(i.vu), `au téléphone, ${k} prend ${i.vu.split('/').pop()}`);
+                    }
+                }
+                if (!mobile) {
+                    const doubles = larges.filter((k) => demandes.some((u) => u.endsWith(`/${k}.jpg`)));
+                    exige(!doubles.length, `à 1 440 px, le JPEG de ${doubles.join(', ')} part en plus de sa version écran large`);
+                } else {
+                    const trop = demandes.filter((u) => /-2400\.webp$|\.jpg$/.test(u));
+                    exige(!trop.length, `au téléphone : ${trop.join(', ')}`);
+                }
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+
+            // L'accueil, au téléphone : le portrait, les vignettes du CV,
+            // puis celles des Dates — deux dates fictives de spectacles qui
+            // ont des photos, rangées par date puis par spectacle.
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, serviceWorkers: 'block' });
+            const p = await c.newPage();
+            const couvertures = [];
+            p.on('request', (q) => { if (/-240\.webp$/.test(q.url())) couvertures.push(new URL(q.url()).pathname); });
+            const erreurs = guette(p);
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForTimeout(600);
+            const accueil = await p.evaluate(async () => {
+                const portrait = document.querySelector('#en-tete .affiche-cadre img');
+                const vign = [...document.querySelectorAll('.cv-vignette img')];
+                vign.forEach((i) => { i.loading = 'eager'; });
+                await Promise.all(vign.map((i) => i.decode().catch(() => { })));
+                return { portrait: portrait.currentSrc, vign: vign.map((i) => ({ vu: i.currentSrc, l: i.naturalWidth, h: i.naturalHeight })) };
+            });
+            exige(/portrait-affiche-960\.avif$/.test(accueil.portrait), `le portrait prend ${accueil.portrait.split('/').pop()} au téléphone (×3), pas portrait-affiche-960.avif`);
+            exige(accueil.vign.length >= 5, `${accueil.vign.length} vignette(s) au CV`);
+            const floues = accueil.vign.filter((v) => !/-v\.webp$/.test(v.vu) || v.l !== 144 || v.h !== 192);
+            exige(!floues.length, `vignette(s) du CV qui ne sont pas la couverture recadrée en 144 × 192 : ${floues.map((v) => v.vu.split('/').slice(-2).join('/')).join(', ')}`);
+            await p.click('#tab-page_dates');
+            await p.waitForTimeout(400);
+            const dates = await p.evaluate(async () => {
+                const iso = (n) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + n);
+                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                };
+                SHOW_DATA.upcoming = ['Bérénice', 'Cléophène, d’après Rodogune'].map((title, i) => ({
+                    type: 'single', title, location: 'Scène de vérification (76)', city: 'Rouen',
+                    dateLabel: iso(20 + i), icsDate: iso(20 + i), time: '20h00', bookingUrl: '', isSchool: false
+                }));
+                datesMisesAJour();
+                const lire = async (sel) => {
+                    const imgs = [...document.querySelectorAll(sel)];
+                    imgs.forEach((i) => { i.loading = 'eager'; });
+                    await Promise.all(imgs.map((i) => i.decode().catch(() => { })));
+                    return imgs.map((i) => i.currentSrc);
+                };
+                const parDate = await lire('#page_dates .dl-feuille img');
+                document.querySelector('[data-dates-vue="spectacle"]').click();
+                await new Promise((ok) => setTimeout(ok, 300));
+                return { parDate, parSpectacle: await lire('#page_dates .dl-vignette img') };
+            });
+            exige(dates.parDate.length >= 2 && dates.parSpectacle.length >= 2, `onglet Dates : ${dates.parDate.length} feuille(s) sur photo, ${dates.parSpectacle.length} vignette(s) de spectacle`);
+            const autres = [...dates.parDate, ...dates.parSpectacle].filter((u) => !/-v\.webp$/.test(u));
+            exige(!autres.length, `onglet Dates : ${autres.map((u) => u.split('/').slice(-2).join('/')).join(', ')} au lieu de la vignette recadrée`);
+            exige(!couvertures.length, `l’accueil télécharge encore la couverture de 240 px : ${couvertures.join(', ')}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
         });
     } finally {
         await navigateur.close();

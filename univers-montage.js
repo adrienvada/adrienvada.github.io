@@ -211,9 +211,21 @@ const UniversMontage = (function () {
     //  le plein cadre (build/variantes-images.py). Un téléphone les reçoit
     //  à la place de l'original de 2400 px : trois à dix fois moins lourd.
     //
-    //  SOUS 900 PX DE LARGE SEULEMENT (`media`). Au-delà, c'est l'original
-    //  qui sert, exactement comme avant : un grand écran le mérite, et il
-    //  n'y a rien à y regagner.
+    //  SOUS 900 PX DE LARGE, CES VERSIONS-LÀ (`media`) : jamais plus de
+    //  1920 px, même quand l'écran dense en réclamerait davantage — c'est
+    //  ce qui tient le poids d'une page au téléphone.
+    //
+    //  AU-DELÀ, L'ÉCRAN LARGE. Une photo de 2400 px qui a sa version WebP
+    //  à pleine définition (<nom>-2400.webp, voir ECRAN_LARGE) la propose,
+    //  avec les autres : même définition que l'original, même image à
+    //  l'œil (SSIM ≥ 0,98), 32 à 78 % de moins. La page Cléophène, lue
+    //  jusqu'au bout sur un écran de 1 440 px (densité 2), passe de 3,06 à
+    //  2,26 Mo d'images : sa photo 9 pesait 696 Ko, elle en pèse 374. Les
+    //  autres gardent l'original, comme avant : leur grain ne se laisse pas
+    //  alléger (Cléophène 21), ou elles n'ont pas de version aussi grande
+    //  (les photos de groupe, 1500 px). Pas de source pour elles : le
+    //  navigateur y prendrait la 1280 ou la 1920 à la place d'un original
+    //  plus fin.
     //
     //  `sizes` dit au navigateur quelle largeur la photo OCCUPERA — pas
     //  celle de son cadre. En plein cadre, sur un téléphone tenu droit, une
@@ -227,15 +239,35 @@ const UniversMontage = (function () {
         video: { largeurs: [640, 1280], sizes: '100vw' }
     };
 
-    // <picture> plutôt qu'un srcset nu : l'écran large et le navigateur qui
-    // ne lirait pas le WebP retombent tous deux sur le <img> et l'original.
-    // L'agrandissement lit le `src` du <img> : il montre toujours l'original.
+    //  LES PHOTOS QUI ONT LEUR VERSION ÉCRAN LARGE (<nom>-2400.webp). Pas
+    //  toutes : le script ne l'écrit que si elle pèse au moins 25 % de moins
+    //  que le JPEG au même SSIM (variantes.json dit pourquoi les autres n'en
+    //  ont pas). En proposer une absente montrerait une image cassée sur
+    //  ordinateur : la liste est donc ÉCRITE PAR build/variantes-images.py,
+    //  d'après variantes.json — jamais à la main —, et le contrôle
+    //  automatique les confronte.
+    const ECRAN_LARGE = new Set([
+        'alabarre/6', 'asyoulikeit/3', 'asyoulikeit/8', 'audiences/4',
+        'berenice/3', 'berenice/18', 'cleophene/5', 'cleophene/7', 'cleophene/9',
+        'fulgurees/2', 'fulgurees/7', 'fulgurees/10', 'fulgurees/23'
+    ]);
+
+    // <picture> plutôt qu'un srcset nu : l'écran large sans version WebP
+    // et le navigateur qui ne lirait pas le WebP retombent tous deux sur le
+    // <img> et l'original. L'agrandissement lit le `src` du <img> : il
+    // montre toujours l'original.
     function pictureHtml(src, genre, imgAttrs) {
         const t = TAILLES[genre] || TAILLES.groupe;
         const base = String(src).replace(/\.jpg$/, '');
         const jeu = t.largeurs.map(w => `${base}-${w}.webp ${w}w`).join(', ');
+        // « cleophene/9 », que la page vive à la racine ou deux dossiers
+        // plus bas.
+        const large = ECRAN_LARGE.has(base.replace(/^.*\/univers\//, ''))
+            ? `
+                    <source type="image/webp" srcset="${escape(`${jeu}, ${base}-2400.webp 2400w`)}" sizes="${t.sizes}">`
+            : '';
         return `<picture>
-                    <source type="image/webp" media="(max-width: 900px)" srcset="${escape(jeu)}" sizes="${t.sizes}">
+                    <source type="image/webp" media="(max-width: 900px)" srcset="${escape(jeu)}" sizes="${t.sizes}">${large}
                     <img src="${escape(src)}" ${imgAttrs}>
                 </picture>`;
     }
@@ -1201,15 +1233,29 @@ const UniversMontage = (function () {
         return bloc ? photoSrc(uni, bloc.p[0]) : '';
     }
 
-    //  LA COUVERTURE DES VIGNETTES : la première photo du montage, dans sa
-    //  version de 240 px — la seule que build/variantes-images.py fabrique
-    //  à cette taille (voir couvertures() là-bas). L'affiche n'y a pas de
-    //  place : elle n'existe pas en 240 px. Deux vignettes s'en servent,
-    //  celle de l'onglet Dates (rangement par spectacle) et celle des lignes
-    //  du CV ; la règle est donc écrite ici, une fois.
+    //  LA COUVERTURE DES VIGNETTES : la première photo du montage — la
+    //  seule à qui build/variantes-images.py fabrique ses petites versions
+    //  (voir couvertures() là-bas). L'affiche n'y a pas de place : elle
+    //  n'en a pas. Les vignettes des lignes du CV et celles de l'onglet
+    //  Dates s'en servent ; la règle est donc écrite ici, une fois.
+    //
+    //  `vignette` est ce qu'elles montrent : la couverture RECADRÉE en
+    //  144 × 192 au cadre `pos` (<nom>-v.webp), soit 48 × 64 à la densité
+    //  3 — la vignette du CV, au pixel. Elles prenaient la version de
+    //  240 px, qui garde le cadre de la photo : en paysage, il n'en restait
+    //  que 100 à 181 px de haut pour les 192 qu'il faut (Le rapt : 100), et
+    //  la vignette était floue. Les neuf pèsent 35 Ko au lieu de 54. Les
+    //  Dates (40 × 50, 48 × 56), moins hautes, en rognent encore un peu, au
+    //  même `pos` : 7 à 14 % plus serrées qu'avec la version de 240 px, et
+    //  nettes elles aussi.
+    //
+    //  `src`, la version de 240 px, garde le cadre entier : le halo de la
+    //  salle noire s'en colore (bandes-annonces), et c'est d'elle qu'on
+    //  déduit les grandes versions (le fond du titre, la couverture
+    //  décodée d'avance).
     //
     //  `repli` est la version de 640 px, qui existe toujours : une
-    //  couverture manque si la photo a été changée sans relancer le script,
+    //  vignette manque si la photo a été changée sans relancer le script,
     //  et l'accueil se rabat alors sur elle (écouteur `data-repli`, dans
     //  index.html). Sans photo — un spectacle pas encore créé —, rien :
     //  l'appelant pose les initiales.
@@ -1217,7 +1263,10 @@ const UniversMontage = (function () {
         const bloc = (uni?.sequence || []).find(b => b && Array.isArray(b.p) && b.p.length);
         if (!bloc) return null;
         const base = `ressources/images/univers/${uni.slug}/${bloc.p[0]}`;
-        return { src: `${base}-240.webp`, repli: `${base}-640.webp`, pos: framePos(uni, bloc, bloc.p[0]) || '' };
+        return {
+            src: `${base}-240.webp`, vignette: `${base}-v.webp`, repli: `${base}-640.webp`,
+            pos: framePos(uni, bloc, bloc.p[0]) || ''
+        };
     }
 
     //  La compagnie est écrite sous le titre, dans le CV, avec deux
@@ -1352,7 +1401,7 @@ const UniversMontage = (function () {
         longestLine, photoSrc, pictureHtml, framePos, figureHtml, overHtml, videoRef, flouSrc,
         photosOuverture, imagesDuPlan, ouvertureHtml, poursuiteHtml, LUMIERES,
         videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock,
-        FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT
+        FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT, ECRAN_LARGE
     };
 })();
 

@@ -271,10 +271,18 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   qui dépendent d'autre chose que de la photo : la vignette du CV de chaque
   couverture existe, en 144 × 192, recadrée au `cadre` que lui donne
   aujourd'hui `univers.js` et tirée du JPEG d'aujourd'hui ; une version écran
-  large existe là où `variantes.json` l'annonce, et nulle part ailleurs ;
-  aucune page écrite en dur ne demande une version écran large, une vignette
-  recadrée ou un AVIF absent ; le portrait a ses trois AVIF, chacun plus léger
-  que sa WebP.
+  large existe là où `variantes.json` l'annonce, et nulle part ailleurs ; la
+  liste `ECRAN_LARGE` d'`univers-montage.js` est la sienne, et chaque page
+  spectacle propose la version écran large de chacune de ses photos qui en a
+  une ; aucune page écrite en dur ne demande une version écran large, une
+  vignette recadrée ou un AVIF absent ; le portrait a ses trois AVIF, chacun
+  plus léger que sa WebP ;
+- chaque écran prend sa version : sur une page spectacle à 1 440 px (×2), la
+  version écran large pour les photos qui en ont une — sans que leur JPEG
+  parte en plus — et le JPEG pour les autres ; au téléphone (×3), ni l'une
+  ni l'autre ; le portrait en AVIF (960 px au téléphone) ; les vignettes du
+  CV en 144 × 192 recadrées, celles des Dates (par date, par spectacle) aussi,
+  et la couverture de 240 px ne part plus avec l'accueil.
 
 Pour ne passer que quelques vérifications — celles dont le nom contient un
 mot : `SEUL=planche npm --prefix build run verifier`.
@@ -295,7 +303,7 @@ ici : c'est ce qui l'empêche de revenir.
 | le **vocabulaire du mouvement** dans `index.html` (`--ease-*`, `--dur-*`) | la même commande | idem : les pages spectacle le relisent (voir [Un seul moteur](#un-seul-moteur-un-seul-visage)) |
 | une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis la commande ci-dessus | `dates.js`, puis `/spectacles/…` |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
-| le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées, copies floues (`-flou.webp`), versions écran large (`-2400.webp`) et vignettes du CV (`-v.webp`) comprises |
+| le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées, copies floues (`-flou.webp`), versions écran large (`-2400.webp`) et vignettes (`-v.webp`) comprises — et la liste `ECRAN_LARGE` d'`univers-montage.js` : s'il annonce qu'elle a changé, la commande des pages |
 | le **`cadre` de la couverture** d'un univers (celui de la première photo de son montage) | `python3 build/variantes-images.py`, en plus de la commande des pages | sa vignette du CV recadrée (`<nom>-v.webp`) et `variantes.json` — le [contrôle automatique](#vérifier-le-site) le rappelle si on l'oublie |
 | une **scène** d'un univers — `lumiere`, `ouverture`, `poursuite`, une césure ` \| ` | `node build/generer-pages-spectacles.js` | `/spectacles/…` (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) |
 | une **démo voix** ajoutée ou remplacée (`<audio>` de l'onglet Démos voix) | `node build/ondes.js` | les ondes (`data-onde`, `data-duree`) dans `index.html` — voir [Les ondes](#démos-voix--les-ondes) |
@@ -1472,9 +1480,10 @@ autrement que la clé de l'univers ne le retrouve pas : pas de rapprochement
 approximatif. Pour un spectacle annoncé sous un autre nom, l'univers déclare
 ses **`autresTitres`** : `['À la barre']` relie ainsi les archives 2024 - 2025
 à « À la barre, peine perdue ? ». La photo est la
-**couverture** de l'univers — la première de son montage — en 240 px
-(`<n>-240.webp`, fabriquée par `build/variantes-images.py`) ; si elle manque,
-la page se rabat sur la version de 640 px.
+**couverture** de l'univers — la première de son montage —, recadrée comme
+la vignette du CV (`<n>-v.webp`, fabriquée par `build/variantes-images.py`,
+voir [La vignette](#la-vignette--lannée-et-létat-sur-la-ligne-du-cv)) ; si
+elle manque, la page se rabat sur la version de 640 px.
 
 ### Comment ça tient — et ce qui peut lâcher
 
@@ -1631,9 +1640,9 @@ Un spectacle sans `synopsis` n'a pas de murmure — rien à corriger.
 ### La vignette — l'année et l'état sur la ligne du CV
 
 Chaque ligne de spectacle ou de film s'ouvre sur une **vignette** : la
-couverture de son univers (la première photo du montage, en 240 px — la même
-que dans l'onglet Dates), ou ses initiales sur sa couleur tant qu'il n'a pas
-de photos. L'**année** s'imprime au bas de la photo, en blanc sur un voile ;
+couverture de son univers (la première photo du montage — la même que dans
+l'onglet Dates), ou ses initiales sur sa couleur tant qu'il n'a pas de
+photos. L'**année** s'imprime au bas de la photo, en blanc sur un voile ;
 l'**état** (« création », « tournée ») en bandeau, en haut, comme sur la
 feuille des Dates. Au passage du lavis (voir la frise, au chapitre
 [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)), c'est la
@@ -1653,6 +1662,22 @@ badge, c'est donc toujours changer la ligne du CV dans `index.html`. La
 couverture vient de `UniversMontage.couverture()` (univers-montage.js),
 partagée avec l'onglet Dates : changer la première photo d'un montage change
 les deux, après `python3 build/variantes-images.py`.
+
+**Une image faite pour elle** (`<nom>-v.webp`) : la couverture recadrée en
+144 × 192 au `cadre` de son montage — la vignette au pixel, à la densité 3.
+Elle prenait la version de 240 px, qui garde le cadre de la photo : en
+paysage, il n'en restait que 100 à 181 px de haut pour les 192 qu'il faut, et
+la vignette était floue (Le rapt, L'Homme moderne, Peau d'anges) ; Bérénice,
+en portrait, pesait 18 Ko pour 144 px utiles. Le cadrage est le même, net, et
+les neuf pèsent 35 Ko au lieu de 54 (l'accueil lu jusqu'au bout au téléphone :
+113 → 76 Ko d'images, avec le portrait en AVIF). L'onglet Dates prend la même
+image : un fichier par spectacle pour les deux onglets. Ses vignettes, moins
+hautes (40 × 50, et 48 × 56 sous la feuille), en rognent encore un peu, au
+même cadre : 7 à 14 % plus serrées qu'avant, et nettes elles aussi. La
+version de 240 px reste là où il faut le cadre entier : le halo de la salle
+noire, quand on joue une bande-annonce. Changer le `cadre` de la couverture
+demande de relancer `python3 build/variantes-images.py` : le contrôle
+automatique le rappelle.
 
 La mise en page, à l'écran (`LA LIGNE À VIGNETTE`, dans `index.html`) :
 
@@ -1756,6 +1781,11 @@ les valeurs ci-dessus n'arrive jamais dans la page.
 
 **L'agrandissement au clic n'est pas concerné** : il montre la photo entière,
 jamais recadrée.
+
+**Le cadre de la couverture** (la première photo du montage) fait aussi la
+vignette des lignes du CV et de l'onglet Dates, recadrée une fois pour toutes
+(`<nom>-v.webp`) : le changer demande `python3 build/variantes-images.py`,
+qui s'en aperçoit et la refait.
 
 ### Les six emplacements de texte
 
@@ -1878,7 +1908,10 @@ l'efface.
 #### Remplacer une photo
 
 - **Changer l'image derrière un numéro** (retouche, autre prise) : remplacez
-  le fichier dans `Images spectacles/…`, relancez le script. Rien d'autre.
+  le fichier dans `Images spectacles/…`, relancez le script. Rien d'autre —
+  sauf s'il annonce que la liste des versions écran large a changé (une
+  photo de 2400 px gagne ou perd sa `-2400`) : régénérez alors les pages,
+  `npm --prefix build run pages`.
   Le script cherche ce dossier à côté du dépôt, puis à son ancienne place ;
   `UNIVERS_PHOTOS=/chemin` permet d'en désigner un autre.
 - **Changer quelle photo apparaît** : modifiez le numéro dans la `sequence`
@@ -2545,16 +2578,16 @@ passage. C'était la seule navigation du site sans passage.
 
 | Fichier | Rôle |
 |---|---|
-| `ressources/images/portrait-affiche-{480,720,960}.{webp,avif}` et `-720.jpg` | le [portrait d'affiche](#le-portrait-daffiche) de l'en-tête — `python3 build/variantes-images.py`, depuis la première photo du book. L'AVIF, réglé au SSIM de la WebP, pèse 27 à 38 % de moins |
+| `ressources/images/portrait-affiche-{480,720,960}.{webp,avif}` et `-720.jpg` | le [portrait d'affiche](#le-portrait-daffiche) de l'en-tête — `python3 build/variantes-images.py`, depuis la première photo du book. L'AVIF, réglé au SSIM de la WebP, pèse 27 à 38 % de moins : la page le propose en premier, la WebP ensuite, le JPEG en dernier |
 | `ressources/images/profil-192.webp` | le médaillon de l'en-tête **imprimé** (le CV en PDF) ; `profil-192.jpg` et `profil-384.*` ne servent plus |
 | `ressources/images/miniatures/bande-demo-{hommemoderne,lerapt}-640.webp` | les deux plans de la [bobine](#la-salle-de-projection) : les images que YouTube tire lui-même de la vidéo (`maxres2.jpg`, `maxres3.jpg`), bandes noires ôtées — à refaire à la main si la bande démo change |
 | `ressources/images/og-adrien-vada.jpg` | vignette de partage (réseaux sociaux, 1200×630) |
 | `ressources/images/miniatures/bande-demo-camera.{jpg,webp}` | miniature de la bande démo |
 | `ressources/images/galerie/vignettes/<nom>-{320,640,960}.webp` | vignettes du book — `python3 build/variantes-images.py` |
-| `ressources/images/univers/<slug>/<nom>-{640,1280}.webp` (et `-1920` pour un plein cadre) | versions allégées des photos d'univers, servies aux écrans de moins de 900 px et au répertoire — même script, lancé aussi par `prepare-univers-photos.py` |
-| `ressources/images/univers/<slug>/<nom>-2400.webp` | la version **écran large** d'une photo de plus de 1920 px, à pleine définition — seulement quand elle pèse au moins 25 % de moins que le JPEG au même SSIM (voir plus bas) — même script |
-| `ressources/images/univers/<slug>/<nom>-240.webp` | la **couverture** de chaque univers (la première photo de son montage), en vignette dans l'onglet Dates rangé par spectacle et sur chaque ligne du CV — même script |
-| `ressources/images/univers/<slug>/<nom>-v.webp` | la **vignette du CV** : la même couverture, recadrée en 144 × 192 (48 × 64 à la densité 3) au `cadre` de son montage — même script |
+| `ressources/images/univers/<slug>/<nom>-{640,1280}.webp` (et `-1920` pour un plein cadre) | versions allégées des photos d'univers, servies aux écrans de moins de 900 px et au répertoire, et au-delà avec la `-2400` quand elle existe — même script, lancé aussi par `prepare-univers-photos.py` |
+| `ressources/images/univers/<slug>/<nom>-2400.webp` | la version **écran large** d'une photo de plus de 1920 px, à pleine définition — seulement quand elle pèse au moins 25 % de moins que le JPEG au même SSIM (voir plus bas) — même script, qui en écrit aussi la liste dans `univers-montage.js` (`ECRAN_LARGE`) |
+| `ressources/images/univers/<slug>/<nom>-240.webp` | la **couverture** de chaque univers (la première photo de son montage), à son cadre entier : le halo de la salle noire quand on y joue sa bande-annonce, et le nom d'où l'on tire ses grandes versions — même script |
+| `ressources/images/univers/<slug>/<nom>-v.webp` | la **vignette** : la même couverture, recadrée en 144 × 192 (48 × 64 à la densité 3) au `cadre` de son montage — sur chaque ligne du CV et dans l'onglet Dates — même script |
 | `ressources/images/univers/<slug>/<nom>-flou.webp` | la **photo hors point**, 200 px passés au flou : la mise au point des univers fond la photo nette dessus (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) — même script |
 | `ressources/images/univers/variantes.json` | la **mémoire du script** : la qualité de chaque `-2400` ou la raison de son absence, le cadre de chaque vignette du CV, l'empreinte du JPEG d'où elles viennent — écrite par lui seul |
 
@@ -2564,7 +2597,7 @@ visiteurs : `profil2_1080x1080.png` (avatar) et `profil_1000x1000.jpg`
 
 `build/variantes-images.py` ne refait que ce qui manque (pour ne pas laisser
 de diff sans objet) ; `--tout` refait tout, `--nettoyer` efface les versions
-dont l'original a disparu. Seules la `-2400` et la vignette du CV se refont
+dont l'original a disparu. Seules la `-2400` et la vignette se refont
 d'elles-mêmes quand leur JPEG ou leur cadre a changé : `variantes.json` s'en
 souvient. Pourquoi 1920 px pour un plein cadre : sur un téléphone tenu droit,
 une photo en paysage y est agrandie jusqu'à couvrir toute la hauteur — trois
@@ -2583,10 +2616,35 @@ restent en JPEG, leur grain ne se laissant pas alléger : Cléophène 21,
 l'appui. Les photos de groupe (1500 px) n'en ont pas. L'affiche d'un film non
 plus : elle ne dépasse jamais 540 px à l'écran.
 
+La page la propose par une **seconde source**, sans condition de largeur,
+après celle des écrans de moins de 900 px (`pictureHtml`, univers-montage.js) :
+les versions de la photo, `-2400` comprise, et le JPEG reste le `<img>` — le
+repli de qui ne lit pas le WebP, et ce que montre l'agrandissement. Le
+téléphone n'y gagne ni n'y perd rien : sa source passe avant, et plafonne à
+1920 px. Une photo sans `-2400` n'a pas de seconde source : le navigateur y
+prendrait la 1920 à la place d'un original plus fin. Lues jusqu'au bout sur
+un écran de 1 440 px (densité 2), les pages s'allègent de 0,25 à 0,8 Mo —
+Cléophène 3,06 → 2,26 Mo d'images, Bérénice 4,02 → 3,46, Audiences 4,31 →
+3,78, As You Like It 3,10 → 2,62, Fulguré.e.s 1,50 → 1,05, À la barre 2,59 →
+2,34 — et de 38 % à la densité 1, où suffit la 1920 (Cléophène 3,00 →
+1,87 Mo).
+
+**La liste des photos qui ont leur `-2400`** (`ECRAN_LARGE`, en tête de
+`pictureHtml`) est écrite par le script, d'après `variantes.json` : une
+version proposée mais absente serait une image cassée sur ordinateur. Quand
+elle change — une photo remplacée gagne ou perd sa version écran large —, le
+script le dit, et il faut régénérer les pages (`npm --prefix build run
+pages`) ; le [contrôle automatique](#vérifier-le-site) échoue sinon. Les
+plein-cadres de 1920 px (les films, Bérénice 2) n'ont pas de seconde source
+non plus : leur `-1920`, à la définition de l'original, ne tient pas toujours
+le SSIM de 0,98 (0,947 à 0,988 selon la photo, en q78).
+
 **L'AVIF, pour le portrait seul.** C'est la première image de l'accueil, celle
 qu'on attend : au SSIM de sa WebP, l'AVIF pèse 14, 22 et 30 Ko contre 19, 33 et
-49 ; proposé avant elle, il fait paraître l'accueil 0,28 s plus tôt (4G lente,
-processeur ralenti ×4 : 3,71 → 3,43 s en médiane de cinq passes). Ailleurs, il ne vaut pas son
+49 ; proposé avant elle (une `<source type="image/avif">`, après celle du
+papier), il fait paraître l'accueil 0,33 s plus tôt (4G lente, processeur
+ralenti ×4, téléphone : 4,11 → 3,78 s en médiane de cinq passes alternées,
+sans recouvrement). Ailleurs, il ne vaut pas son
 décodage, plus lent de 20 à 40 % : sur les photos de plateau, le gain allait
 de 44 % à… une perte de 17 % (Cléophène 9 en 1280), selon le grain. Trop
 incertain pour le généraliser.
@@ -3069,7 +3127,11 @@ répertoire, à la galerie et à la 404.
 - **Une seule image pour l'affiche et le médaillon** : la photo de
   présentation du book (la première de `galerie.js`), à son cadre, en trois
   largeurs (`portrait-affiche-*`, faites par `variantes-images.py`). `sizes`
-  annonce la taille de l'affiche, la plus grande. Le médaillon la cadre comme
+  annonce la taille de l'affiche, la plus grande. **En AVIF d'abord** : c'est
+  l'image qu'on attend, et au même SSIM elle pèse 27 à 38 % de moins que la
+  WebP (30 Ko au lieu de 49 au téléphone) — l'accueil paraît 0,33 s plus tôt
+  en 4G lente (voir [Images générées](#images-générées-à-ne-pas-écraser-sans-les-régénérer)).
+  Qui ne lit pas l'AVIF prend la WebP, puis le JPEG. Le médaillon la cadre comme
   l'affiche (`object-position: 50% 28%`) : centrée, elle y mettait les yeux
   à 23 % de la hauteur contre 30 % sur l'affiche, et le passage de l'une à
   l'autre montrait deux visages.

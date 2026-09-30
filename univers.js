@@ -3308,7 +3308,7 @@ const SHOW_UNIVERSES = {
         el.setAttribute('aria-hidden', 'true');
         el.innerHTML = '<span class="cv-vignette-cadre">'
             + (c
-                ? `<img src="${escape(c.src)}" data-repli="${escape(c.repli)}" alt="" width="48" height="64" loading="lazy" decoding="async"${c.pos ? ` style="object-position:${escape(c.pos)}"` : ''}>`
+                ? `<img src="${escape(c.vignette)}" data-repli="${escape(c.repli)}" alt="" width="48" height="64" loading="lazy" decoding="async"${c.pos ? ` style="object-position:${escape(c.pos)}"` : ''}>`
                 : `<span class="cv-vignette-initiales">${escape(initiales(uni.title || li.dataset.cvShow || ''))}</span>`)
             + (etat ? `<span class="cv-vignette-etat">${escape(etat)}</span>` : '')
             + (annee ? `<span class="cv-vignette-annee">${escape(annee)}</span>` : '')

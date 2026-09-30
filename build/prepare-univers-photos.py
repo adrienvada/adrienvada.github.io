@@ -245,7 +245,7 @@ def main():
 
     # LES VERSIONS ALLÉGÉES SUIVENT. Les pages proposent aux téléphones une
     # copie en 640 et 1280 px de chaque photo, à l'écran large une version
-    # WebP de 2400 px, au CV une vignette recadrée (voir
+    # WebP de 2400 px, au CV et aux Dates une vignette recadrée (voir
     # build/variantes-images.py) : une photo refaite ici sans elles laisserait
     # le visiteur sur l'ancienne image. On les refait donc pour les seuls
     # fichiers qu'on vient d'écrire — la version écran large et la vignette

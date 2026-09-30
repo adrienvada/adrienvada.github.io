@@ -7543,6 +7543,14 @@
                             <!-- Sur papier, le médaillon de 68 px : le portrait
                                  d'affiche y pesait 300 Ko de plus dans le PDF. -->
                             <source media="print" srcset="ressources/images/profil-192.webp" type="image/webp">
+                            <!-- L'AVIF d'abord : c'est l'image qu'on attend,
+                                 et au même SSIM elle pèse 27 à 38 % de moins
+                                 que la WebP — l'accueil paraît 0,33 s plus tôt
+                                 en 4G lente. Qui ne lit pas l'AVIF prend la
+                                 WebP ; sur papier, rien ne change. -->
+                            <source
+                                srcset="ressources/images/portrait-affiche-480.avif 480w, ressources/images/portrait-affiche-720.avif 720w, ressources/images/portrait-affiche-960.avif 960w"
+                                sizes="(min-width: 768px) 340px, 100vw" type="image/avif">
                             <source
                                 srcset="ressources/images/portrait-affiche-480.webp 480w, ressources/images/portrait-affiche-720.webp 720w, ressources/images/portrait-affiche-960.webp 960w"
                                 sizes="(min-width: 768px) 340px, 100vw" type="image/webp">
@@ -10759,7 +10767,7 @@
             const c = vue === 'date' ? dlCouverture(e.spectacle) : null;
             const genre = vue !== 'date' ? ' dl-feuille--papier' : c ? ' dl-feuille--photo' : ' dl-feuille--sans-photo';
             const photo = c
-                ? `<img src="${esc(c.src)}" data-repli="${esc(c.repli)}" alt="" width="48" height="56" loading="lazy" decoding="async"${c.pos ? ` style="object-position:${esc(c.pos)}"` : ''}>`
+                ? `<img src="${esc(c.vignette)}" data-repli="${esc(c.repli)}" alt="" width="48" height="56" loading="lazy" decoding="async"${c.pos ? ` style="object-position:${esc(c.pos)}"` : ''}>`
                 : '';
             return `<span class="dl-feuille${plusieurs ? ' dl-feuille--2' : ''}${genre}" aria-hidden="true">${photo}`
                 + `<span class="dl-bande${deuxMois ? ' dl-bande--2' : ''}">${deuxMois ? `${DL_MOIS_BREFS[d.m]}–${DL_MOIS_BREFS[z.m]}` : DL_MOIS_COURTS[d.m]}</span>`
@@ -10873,9 +10881,9 @@
         //  Les mêmes lignes, sous le nom de chaque pièce, dans l'ordre de sa
         //  prochaine date. La feuille garde alors le mois, que l'intercalaire
         //  ne dit plus. En tête, la vignette : la couverture de l'univers (la
-        //  première photo du montage, en 240 px — voir
-        //  build/variantes-images.py), ou les initiales sur la couleur du
-        //  spectacle quand il n'a pas encore d'images.
+        //  première photo du montage, recadrée comme sur la ligne du CV — voir
+        //  couverture(), univers-montage.js), ou les initiales sur la couleur
+        //  du spectacle quand il n'a pas encore d'images.
         function dlParSpectacle(entrees) {
             const groupes = [];
             entrees.forEach(e => {
@@ -10902,7 +10910,7 @@
             return UniversMontage.couverture(uni);
         }
 
-        // Une couverture de 240 px manque si une photo a été changée sans
+        // Une vignette (<nom>-v.webp) manque si une photo a été changée sans
         // relancer build/variantes-images.py : on se rabat alors sur la
         // version de 640 px, qui existe toujours.
         document.addEventListener('error', (e) => {
@@ -10919,7 +10927,7 @@
                     const s = g.s, id = `dl-spec-${s.id}`;
                     const c = dlCouverture(s);
                     const vignette = c
-                        ? `<img src="${esc(c.src)}" data-repli="${esc(c.repli)}" alt="" width="40" height="50" loading="lazy" decoding="async"${c.pos ? ` style="object-position:${esc(c.pos)}"` : ''}>`
+                        ? `<img src="${esc(c.vignette)}" data-repli="${esc(c.repli)}" alt="" width="40" height="50" loading="lazy" decoding="async"${c.pos ? ` style="object-position:${esc(c.pos)}"` : ''}>`
                         : esc(dlInitiales(s.titre));
                     // Le lien, c'est le nom. La flèche le double pour le doigt,
                     // sans second arrêt au clavier ni seconde annonce au
