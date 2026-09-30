@@ -167,6 +167,16 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
   réduit, et la guirlande à horloge n'est pas revenue ; au téléphone, une
   ligne touchée avant le fil (le survol que garde le navigateur) reste voilée,
   sans point ; à la souris et au clavier, elle est pleine ;
+- les gestes sur une ligne du CV : aucun mot de murmure au chargement ; au
+  survol comme au clavier, le murmure s'écrit, en fondu depuis zéro ; la
+  salle ne s'allume qu'une fois le pointeur posé, et sa cible va à `<body>`
+  et à la barre, jamais à `<html>`, sans descendre jusqu'aux lignes ; au
+  téléphone, un glissement commencé sur une ligne n'allume rien, l'appui se
+  marque après 110 ms, le murmure vient mot à mot à 400 ms et reste une fois
+  le doigt levé, un tap bref ouvre l'univers ; un « resize » de hauteur
+  seule (la barre d'adresse) ne relance pas l'égalisation des lignes, un
+  changement de largeur si ; avec `?repli`, le bouton d'une ligne reçoit sa
+  place (`--ph`), son titre non ;
 - la frise des mois de l'onglet Dates, avec les deux pilotes, sur une saison
   fictive de cinq mois : un espace entre deux mois ; le mois déjà lu est
   tracé, son point posé ; celui qu'on lit est tracé jusqu'à la ligne de
@@ -1391,7 +1401,19 @@ l'appelle ; il se tait quand le doigt se lève, et le clic qui suit n'ouvre
 pas l'univers. Un doigt qui glisse annule : le défilement passe avant.
 
 Le texte n'est pas recopié — c'est le `synopsis` de l'univers, relu par
-`addWhisper()`. Le corriger à un seul endroit le corrige partout.
+`ecrireLeMurmure()`. Le corriger à un seul endroit le corrige partout.
+
+**Il n'est écrit qu'à la demande.** Au chargement, la ligne ne reçoit que sa
+place, vide (`addWhisper()`) : elle suffit à la mise en page, identique à onze
+largeurs de 360 à 1 440 px. Les mots n'y entrent que la première fois qu'on la
+désigne — le pointeur qui s'y pose, le clavier qui l'atteint, le doigt qui y
+reste 110 ms. Écrits d'avance, ils faisaient 355 mots (393 éléments) de plus,
+un sur sept de la page, calculés au démarrage pour un texte que personne ne
+voit au repos. Chaque mot naît dans son état de repos (invisible, teinté du
+spectacle), posé en ligne le temps d'une lecture, puis rendu au CSS : sans
+cela, un mot entré dans une ligne déjà survolée paraissait d'emblée, sans
+fondu. (`@starting-style` le dirait en CSS, mais la publication allégée le
+casse — voir le commentaire dans `index.html`.)
 
 - **Sur grand écran**, il s'inscrit dans le vide de la ligne, entre le texte
   et la flèche. Rien n'est déplacé : la liste reste immobile. Trois lignes
@@ -1706,6 +1728,21 @@ en place ; le renseigner pour toute série qui en demande un.
   [Les passages](#les-passages-view-transitions)). La lumière se mesure une
   fois, en lisant tout avant d'écrire (voir
   [L'écriture à la lumière](#lécriture-à-la-lumière)).
+- **Le CV démarre en une mesure.** `univers.js` lit le fond (`--c-bg`, pour
+  la crête du lavis) avant d'écrire quoi que ce soit dans les lignes ; il
+  égalise leurs hauteurs en trois temps, toutes listes confondues (tout
+  retirer, tout mesurer, tout poser), place les pastilles ▶ de même, et
+  n'écrit pas les murmures (voir
+  [Le murmure](#le-murmure--le-synopsis-sur-la-ligne-du-cv)). Lire le fond
+  après avoir écrit, puis mesurer liste par liste, recalculait trois fois
+  les mêmes lignes. Mesuré au téléphone à ×4 (quatre passes, médianes,
+  deux thèmes) : `init` 296-311 → 129-133 ms, la tâche du chargement
+  539-563 → 346-355 ms, 393 éléments de moins. L'égalisation ne se refait
+  qu'à un changement de **largeur**, et à l'arrivée des polices seulement
+  si l'une est en route : la barre d'adresse du téléphone, qui se replie au
+  premier défilement, la relançait pour rien (30 ms forcées à ×4, au départ
+  du geste) — de même la mesure de la barre d'onglets pour les
+  intercalaires des Dates, que son observateur suit déjà.
 - **Rien n'est animé en JavaScript au défilement.** Les scènes sont des
   animations CSS que le navigateur fait avancer lui-même ; ailleurs,
   `regie.js` n'écrit qu'un nombre par scène visible (voir
@@ -2106,6 +2143,23 @@ relisent ce vocabulaire dans `index.html` : les régénérer après l'avoir chan
   la cible (`--ambiance-cible`) change une fois par geste, et seuls ses deux
   consommateurs — la lueur et la barre collée — glissent vers elle. Survoler
   une ligne recalculait les 2 276 éléments du document à chaque image.
+  **La cible non plus n'hérite pas** : posée sur `<html>`, chaque geste
+  recalculait encore tout le document — 1 199 éléments, 130 à 160 ms à ×4
+  sous le doigt, une image perdue par ligne survolée sur ordinateur. Elle
+  est déclarée sur `<body>` (dont la lueur, `body::before`, l'hérite
+  explicitement) et sur la barre, et `univers.js` l'écrit sur ces deux-là.
+- **La salle attend le geste.** À la souris, elle ne prend la couleur d'une
+  ligne qu'après 120 ms du pointeur posé dessus ; une ligne amenée sous le
+  pointeur par la molette attend qu'on cesse de défiler (400 ms) — la salle
+  passait par sept à neuf couleurs en deux secondes. Le lavis et le murmure,
+  eux, répondent toujours au survol. Au doigt, l'appui (lavis, salle, grain)
+  n'est marqué qu'après 110 ms sans glisser, comme le navigateur le fait
+  pour son propre `:active` : presque tout défilement du CV commence sur une
+  ligne, et chaque glissement allumait puis éteignait la salle — un éclair
+  coloré, et deux tâches longues (110 à 210 ms à ×4). Défiler le CV au
+  doigt (téléphone, ×4, quatre passes) : 9 % d'images perdues → 4 %, calcul
+  de style 394 → 137 ms. Un tap plus bref ouvre l'univers comme avant ;
+  l'appui maintenu murmure toujours à 400 ms.
 - **La prochaine date du CV** (`renderNextDate`). Une ligne de tableau de
   gare, en palettes : chaque palette est faite de quatre
   moitiés — le haut et le bas fixes, et deux volets qui battent en `rotateX`

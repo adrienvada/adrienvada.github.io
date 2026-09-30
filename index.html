@@ -518,12 +518,11 @@
            saute. C'est toute la différence entre une lumière de salle et
            un interrupteur.
 
-           C'est univers.js qui en pose la CIBLE sur <html>
-           (--ambiance-cible), en relayant le `--cv-accent` de la ligne
-           regardée. Le répertoire, lui, doit écrire une règle par
-           spectacle : le CSS ne sait pas lire la couleur d'un élément
-           survolé. Ici la couleur est déjà connue du script, il n'y a qu'à
-           la faire remonter.
+           C'est univers.js qui en pose la CIBLE (--ambiance-cible), en
+           relayant le `--cv-accent` de la ligne regardée. Le répertoire,
+           lui, doit écrire une règle par spectacle : le CSS ne sait pas
+           lire la couleur d'un élément survolé. Ici la couleur est déjà
+           connue du script, il n'y a qu'à la faire remonter.
 
            ELLE N'EST ANIMÉE QUE LÀ OÙ ELLE SE VOIT. Enregistrée héritée et
            transitionnée sur la racine, elle passait à chacun des 2 276
@@ -532,6 +531,16 @@
            en 0,8 s. Elle n'hérite donc plus : la cible change une fois par
            geste, et seuls ses deux consommateurs — la lueur de salle et la
            barre collée — font glisser leur propre --ambiance jusqu'à elle.
+
+           LA CIBLE NON PLUS N'HÉRITE PAS. Posée sur <html>, elle
+           descendait encore jusqu'au dernier élément : chaque geste — une
+           ligne survolée, un appui — recalculait tout le document, 1 199
+           éléments et 130 à 160 ms à ×4 sous le doigt, une image perdue à
+           chaque ligne survolée sur ordinateur. Elle est donc déclarée là
+           où on la lit, sur <body> (dont la lueur, body::before, l'hérite
+           explicitement) et sur la barre, et univers.js l'écrit sur ces
+           deux-là. Un navigateur sans @property la laisse hériter, comme
+           avant : juste, et seulement plus lent.
 
            RESTER DISCRET EST LA CONSIGNE. Un CV se lit ; ce n'est pas une
            devanture. La teinte n'entre que dans la lueur de fond, dans le
@@ -565,8 +574,20 @@
             initial-value: 1;
         }
 
-        :root {
+        @property --ambiance-cible {
+            syntax: '*';
+            inherits: false;
+        }
+
+        /* L'or au repos, relu dans le thème du moment : qu'il change, et la
+           lueur comme la barre glissent vers le nouvel or. */
+        body,
+        #nav-barre {
             --ambiance-cible: rgb(var(--c-gold));
+        }
+
+        body::before {
+            --ambiance-cible: inherit;
         }
 
         body::before,
@@ -649,10 +670,7 @@
            servent à désigner, pas à distraire. */
         @media (prefers-reduced-motion: reduce) {
 
-            :root {
-                transition: none;
-            }
-
+            body::before,
             body::after {
                 transition: none;
             }
@@ -9250,10 +9268,14 @@
             setupDateFilters();   // avant renderDates : construit les puces
             renderDates();
             dlMesurerBarre();
-            window.addEventListener('resize', dlMesurerBarre);
+            // La barre ne change de hauteur qu'avec la largeur, et son
+            // observateur la suit. L'écouteur « resize » ne reste que là où
+            // l'observateur manque : au téléphone, la barre d'adresse qui se
+            // replie au premier défilement en envoie un de hauteur seule, et
+            // la barre était remesurée pour rien (8 à 13 ms forcées à ×4).
             if ('ResizeObserver' in window && document.getElementById('nav-barre')) {
                 new ResizeObserver(dlMesurerBarre).observe(document.getElementById('nav-barre'));
-            }
+            } else window.addEventListener('resize', dlMesurerBarre);
             renderNextDate();     // lit la même source, sans dépendre des filtres
             setupCvDrawers();
             initAudioPlayers();

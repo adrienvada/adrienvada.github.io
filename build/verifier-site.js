@@ -1680,6 +1680,179 @@ function exige(condition, message) {
             }
         });
 
+        // LES GESTES SUR UNE LIGNE DU CV, ET CE QU'ILS NE COÛTENT PLUS. Les
+        // murmures ne sont pas écrits au chargement, mais à la première
+        // désignation — et s'écrivent quand même mot à mot, en fondu. La
+        // cible de la salle ne descend plus de <html> : elle va à <body> et
+        // à la barre, sans héritage. Au doigt, un glissement n'allume rien ;
+        // l'appui se marque à 110 ms, le murmure vient à 400, un tap bref
+        // ouvre l'univers. La barre d'adresse (hauteur seule) ne relance pas
+        // l'égalisation des lignes. En repli, --ph n'hérite pas : la ligne
+        // et ses relais le portent, rien d'autre.
+        await verifie('les gestes sur une ligne du CV : le murmure écrit à la première désignation et toujours en fondu, la salle sans héritage et après un temps d’arrêt ; au doigt, un glissement n’allume rien, l’appui se marque à 110 ms, le murmure à 400, un tap ouvre l’univers ; la barre d’adresse ne remesure rien ; en repli, la place d’une ligne n’hérite pas', async () => {
+            // À LA SOURIS ET AU CLAVIER
+            {
+                const c = await visiteur({ viewport: { width: 1280, height: 860 } });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.goto(base + '/', { waitUntil: 'load' });
+                await p.waitForTimeout(600);
+                const repos = await p.evaluate(() => ({
+                    mots: document.querySelectorAll('#page_cv .cv-wd').length,
+                    places: document.querySelectorAll('#page_cv .cv-whisper').length
+                }));
+                exige(repos.places >= 5, `${repos.places} places de murmure au chargement`);
+                exige(repos.mots === 0, `${repos.mots} mots de murmure écrits dès le chargement`);
+                const lire = (n) => p.evaluate((n) => {
+                    const li = document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[n];
+                    const mots = [...li.querySelectorAll('.cv-wd')];
+                    return {
+                        mots: mots.length,
+                        fondus: document.getAnimations().filter((a) => mots.includes(a.effect && a.effect.target)).length,
+                        premier: mots.length ? +getComputedStyle(mots[0]).opacity : -1,
+                        salle: document.documentElement.classList.contains('salle-allumee'),
+                        surHtml: document.documentElement.style.getPropertyValue('--ambiance-cible'),
+                        surBody: document.body.style.getPropertyValue('--ambiance-cible').trim(),
+                        surBarre: document.getElementById('nav-barre').style.getPropertyValue('--ambiance-cible').trim(),
+                        heritee: getComputedStyle(li.querySelector('.cv-title')).getPropertyValue('--ambiance-cible').trim(),
+                        accent: li.style.getPropertyValue('--cv-accent').trim()
+                    };
+                }, n);
+                await p.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[1].scrollIntoView({ block: 'center' }); });
+                await p.waitForTimeout(200);
+                const b = await p.locator('#cv-theatre-list > li.cv-has-universe').nth(1).locator('.cv-vignette').boundingBox();
+                await p.mouse.move(b.x - 80, b.y + b.height / 2);
+                await p.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 6 });
+                await p.waitForTimeout(40);
+                const tot = await lire(1);
+                exige(tot.mots > 5, `le murmure survolé n’est pas écrit (${tot.mots} mots)`);
+                exige(tot.fondus > 0 && tot.premier < 0.05, `le murmure survolé paraît d’un bloc (${tot.fondus} fondus, premier mot à ${tot.premier})`);
+                exige(!tot.salle, 'la salle s’allume sans attendre que le pointeur se pose');
+                await p.waitForTimeout(400);
+                const pose = await lire(1);
+                exige(pose.salle, 'la salle ne s’allume pas sous le pointeur posé');
+                exige(!pose.surHtml, 'la cible de la salle est encore posée sur <html>');
+                exige(pose.surBody === pose.accent && pose.surBarre === pose.accent, `la cible de la salle ne va pas à <body> et à la barre (${pose.surBody}, ${pose.surBarre}, accent ${pose.accent})`);
+                exige(!pose.heritee, `la cible de la salle descend encore jusqu’aux lignes (${pose.heritee})`);
+                // Au clavier : jusqu'au bouton de la 6e ligne.
+                await p.mouse.move(2, 2);
+                await p.evaluate(() => document.querySelectorAll('#cv-theatre-list > li.cv-has-universe .cv-row-toggle')[4].focus({ preventScroll: true }));
+                for (let k = 0; k < 4; k++) {
+                    await p.keyboard.press('Tab');
+                    if (await p.evaluate(() => document.activeElement === document.querySelectorAll('#cv-theatre-list > li.cv-has-universe .cv-row-toggle')[5])) break;
+                }
+                await p.waitForTimeout(40);
+                const clavier = await lire(5);
+                exige(clavier.mots > 5 && clavier.fondus > 0, `au clavier, le murmure ne s’écrit pas en fondu (${clavier.mots} mots, ${clavier.fondus} fondus)`);
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+            // AU DOIGT
+            {
+                const c = await visiteur({ viewport: { width: 412, height: 839 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                const cdp = await c.newCDPSession(p);
+                await p.goto(base + '/', { waitUntil: 'load' });
+                await p.waitForTimeout(600);
+                await p.evaluate(() => {
+                    window.__allumages = 0; window.__appuis = 0;
+                    new MutationObserver((ms) => ms.forEach((m) => {
+                        const avant = m.oldValue || '';
+                        if (m.target === document.documentElement && m.target.classList.contains('salle-allumee') && !avant.includes('salle-allumee')) window.__allumages++;
+                        if (m.target.classList.contains('is-pressed') && !avant.includes('is-pressed')) window.__appuis++;
+                    })).observe(document.documentElement, { attributes: true, attributeFilter: ['class'], attributeOldValue: true, subtree: true });
+                });
+                const viser = () => p.evaluate(() => {
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    const li = document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[1];
+                    li.scrollIntoView({ block: 'center' });
+                    const r = li.getBoundingClientRect();
+                    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
+                });
+                const etat = () => p.evaluate(() => {
+                    const li = document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')[1];
+                    const mots = [...li.querySelectorAll('.cv-wd')];
+                    return {
+                        appui: li.classList.contains('is-pressed'), murmure: li.classList.contains('is-whispering'),
+                        salle: document.documentElement.classList.contains('salle-allumee'),
+                        mots: mots.length, fondus: document.getAnimations().filter((a) => mots.includes(a.effect && a.effect.target)).length,
+                        allumages: window.__allumages, appuis: window.__appuis,
+                        ouvert: document.getElementById('show-universe').classList.contains('is-open')
+                    };
+                });
+                // Un glissement commencé sur la ligne.
+                let pt = await viser();
+                await p.waitForTimeout(200);
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [pt] });
+                for (let k = 1; k <= 6; k++) {
+                    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: pt.x, y: pt.y - k * 14 }] });
+                    await p.waitForTimeout(12);
+                }
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+                await p.waitForTimeout(300);
+                const glisse = await etat();
+                exige(!glisse.allumages && !glisse.appuis, `un glissement sur une ligne allume la salle (${glisse.allumages}) ou marque l’appui (${glisse.appuis})`);
+                // L'appui maintenu.
+                pt = await viser();
+                await p.waitForTimeout(200);
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [pt] });
+                await p.waitForTimeout(40);
+                const tot = await etat();
+                await p.waitForTimeout(160);
+                const marque = await etat();
+                await p.waitForTimeout(400);
+                const tenu = await etat();
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+                await p.waitForTimeout(300);
+                const leve = await etat();
+                exige(!tot.appui && !tot.salle, 'l’appui est marqué dès le contact');
+                exige(marque.appui && marque.salle && !marque.murmure, `l’appui n’est pas marqué à 110 ms (${JSON.stringify(marque)})`);
+                exige(tenu.murmure && tenu.mots > 5 && tenu.fondus > 0, `l’appui maintenu ne murmure pas mot à mot (${JSON.stringify(tenu)})`);
+                exige(leve.murmure && !leve.ouvert, 'relevé, le doigt referme le murmure ou ouvre l’univers');
+                // Toucher ailleurs referme ; un tap bref ouvre l'univers.
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 6, y: 6 }] });
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+                await p.waitForTimeout(300);
+                pt = await viser();
+                await p.waitForTimeout(200);
+                await p.touchscreen.tap(pt.x, pt.y);
+                await p.waitForTimeout(1200);
+                exige((await etat()).ouvert, 'un tap bref sur la ligne n’ouvre plus l’univers');
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+            // LA BARRE D'ADRESSE, ET LE REPLI
+            {
+                const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+                const p = await c.newPage();
+                await p.goto(base + '/?repli', { waitUntil: 'load' });
+                await p.waitForTimeout(600);
+                const effacer = () => p.evaluate(() => document.querySelector('#cv-theatre-list > li.cv-item').style.removeProperty('min-height'));
+                const hauteur = () => p.evaluate(() => document.querySelector('#cv-theatre-list > li.cv-item').style.minHeight);
+                await effacer();
+                await p.setViewportSize({ width: 390, height: 788 });
+                await p.waitForTimeout(400);
+                exige(!(await hauteur()), 'la barre d’adresse (hauteur seule) relance l’égalisation des lignes');
+                await p.setViewportSize({ width: 430, height: 788 });
+                await p.waitForTimeout(400);
+                exige(!!(await hauteur()), 'un changement de largeur ne relance plus l’égalisation des lignes');
+                const repli = await p.evaluate(() => {
+                    const li = [...document.querySelectorAll('#cv-theatre-list > li.cv-has-universe')].find((l) => l.style.getPropertyValue('--ph'));
+                    if (!li) return null;
+                    return {
+                        ligne: li.style.getPropertyValue('--ph'),
+                        bouton: li.querySelector('.cv-row-toggle').style.getPropertyValue('--ph'),
+                        titre: getComputedStyle(li.querySelector('.cv-title')).getPropertyValue('--ph').trim()
+                    };
+                });
+                exige(repli, 'en repli, aucune ligne du CV ne reçoit sa place (--ph)');
+                exige(repli.bouton === repli.ligne, `en repli, le bouton de la ligne ne reçoit pas sa place (${repli.bouton} au lieu de ${repli.ligne})`);
+                exige(!repli.titre, `en repli, la place de la ligne descend jusqu’à son titre (${repli.titre})`);
+                await c.close();
+            }
+        });
+
         // LA FRISE DES MOIS DE L'ONGLET DATES. Comme le fil du CV : chaque
         // mois a son liseré dans la marge, qui se trace jusqu'à la ligne de
         // lecture, au milieu de l'écran ; son point, devant le nom du mois,

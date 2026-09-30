@@ -2914,13 +2914,17 @@ const SHOW_UNIVERSES = {
         window.closeUniverseZoom = closeZoom;
         window.hasShowUniverse = (li) => !!universeFor(li);
 
-        markCvRows();
+        // LE FOND, LU AVANT TOUTE ÉCRITURE (voir calerLesCretes) : ici, le
+        // style est encore propre, la lecture ne coûte rien.
+        markCvRows(lireLeFond());
         bindLongPress();
         bindAmbianceSurvol();
+        bindMurmures();
         bindPrechauffage();
         bindPreconnexion();
-        // Après markCvRows et addWhisper : le murmure ajoute son balisage
-        // dans la ligne, et la mesure doit porter sur la ligne finie.
+        // Après markCvRows : la vignette et la place du murmure sont dans
+        // la ligne, et la mesure doit porter sur la ligne finie. Les mots
+        // du murmure, eux, n'y changent rien (voir ecrireLeMurmure).
         suivreLesHauteurs();
         // Après markCvRows : le routage ouvre un univers, et une ligne doit
         // déjà porter sa marque pour que le panneau en reprenne la couleur.
@@ -3132,9 +3136,20 @@ const SHOW_UNIVERSES = {
         return null;
     }
 
-    function calerLesCretes() {
-        const fond = versRgb(getComputedStyle(document.documentElement)
+    //  LE FOND EST LU UNE FOIS, AVANT QU'ON ÉCRIVE DANS LES LIGNES. Lu
+    //  juste après — markCvRows venait d'y poser couleur, vignette et
+    //  murmure —, il forçait le navigateur à recalculer sur-le-champ tout
+    //  ce qui venait d'être écrit (724 éléments, 100 ms au démarrage à ×4),
+    //  puis les --cv-crete posées dans la foulée faisaient tout recalculer
+    //  une seconde fois à la mesure des hauteurs. init() le lit donc
+    //  d'abord, et le passe ; seul le changement de thème le fait relire.
+    //  C'est toujours le fond RÉEL, pas une table : voir ci-dessus.
+    function lireLeFond() {
+        return versRgb(getComputedStyle(document.documentElement)
             .getPropertyValue('--c-bg')) || [10, 9, 7];
+    }
+
+    function calerLesCretes(fond = lireLeFond()) {
         const lFond = luminance(fond[0], fond[1], fond[2]);
         document.querySelectorAll('.cv-has-universe').forEach(li => {
             const rgb = versRgb(li.style.getPropertyValue('--cv-accent'));
@@ -3153,11 +3168,11 @@ const SHOW_UNIVERSES = {
     // guirlande n'a pas à savoir QUI a changé le thème, seulement qu'il a
     // changé.
     function suivreLeTheme() {
-        new MutationObserver(calerLesCretes).observe(document.documentElement,
+        new MutationObserver(() => calerLesCretes()).observe(document.documentElement,
             { attributes: true, attributeFilter: ['data-theme'] });
     }
 
-    function markCvRows() {
+    function markCvRows(fond) {
         document.querySelectorAll('.cv-item').forEach(li => {
             const uni = universeFor(li);
             if (!uni) return;
@@ -3203,7 +3218,7 @@ const SHOW_UNIVERSES = {
             li.querySelectorAll('.cv-row-toggle, .cv-vignette.a-etat')
                 .forEach(el => el.classList.add('rg-relais'));
         });
-        calerLesCretes();
+        calerLesCretes(fond);
         suivreLeTheme();
         window.Regie?.observer(document.getElementById('page_cv'));
     }
@@ -3309,10 +3324,19 @@ const SHOW_UNIVERSES = {
     //     grand écran il occupe le vide de la ligne ; sur petit il passe
     //     à la ligne suivante. Une seule place dans le balisage, deux
     //     mises en page (voir .cv-whisper dans index.html).
+    //
+    //     LA PLACE AU CHARGEMENT, LES MOTS À LA DEMANDE. Écrits d'avance,
+    //     les murmures faisaient 355 mots de plus dans la page — un élément
+    //     sur sept, chacun avec son style propre —, calculés et mis en
+    //     page au démarrage pour un texte que personne ne voit au repos :
+    //     100 ms de la plus longue tâche du chargement, à ×4. La place
+    //     est posée ici, vide ; elle suffit à la mise en page (sur grand
+    //     écran elle prend le vide de la ligne quel que soit son texte,
+    //     sur petit elle est repliée à zéro) — mesuré identique à onze
+    //     largeurs, de 360 à 1 440 px. Les mots, eux, sont écrits la
+    //     première fois qu'on la désigne (voir ecrireLeMurmure).
     function addWhisper(li, uni) {
-        if (!uni.synopsis || li.querySelector('.cv-whisper')) return;
-        const lines = toLines(uni.synopsis).map(l => l.trim()).filter(Boolean);
-        if (!lines.length) return;
+        if (!murmureDe(uni).length || li.querySelector('.cv-whisper')) return;
 
         const row = li.querySelector('.cv-row-toggle > div');
         const badges = row && row.lastElementChild;
@@ -3325,6 +3349,36 @@ const SHOW_UNIVERSES = {
         // Compagnie Crescite, Rome an 79, huit jours après la mort… ».
         // Le synopsis leur est donné en entier dans l'univers, à un clic.
         el.setAttribute('aria-hidden', 'true');
+        row.insertBefore(el, badges);
+    }
+
+    function murmureDe(uni) {
+        return uni && uni.synopsis
+            ? toLines(uni.synopsis).map(l => l.trim()).filter(Boolean) : [];
+    }
+
+    //  LES MOTS, LA PREMIÈRE FOIS QU'ON DÉSIGNE LA LIGNE : le pointeur qui
+    //  s'y pose, le clavier qui l'atteint, le doigt qui y reste (voir
+    //  bindMurmures et bindLongPress). Une ligne, une fois : une dizaine de
+    //  millisecondes à ×4.
+    //
+    //  LE FONDU DOIT AVOIR UN DÉPART. Un mot qui entre dans une ligne déjà
+    //  survolée — ou déjà atteinte au clavier — y prend d'emblée l'état
+    //  visé : un élément neuf n'a pas d'état d'avant, donc pas de
+    //  transition, et le murmure paraissait d'un bloc. Chaque mot naît
+    //  donc dans l'état de repos de .cv-wd (invisible, teinté du
+    //  spectacle), posé en ligne pour l'emporter sur le survol ; une
+    //  lecture fait calculer cet état, puis on le retire, et l'écriture
+    //  mot à mot part bien de zéro. (@starting-style le dirait en CSS,
+    //  mais la publication allégée le casse : voir index.html.) Cet état
+    //  de repos est celui que .cv-wd déclare dans index.html.
+    const MOT_AU_REPOS = 'opacity:0;color:var(--cv-accent, currentColor)';
+
+    function ecrireLeMurmure(li) {
+        const el = li && li.querySelector('.cv-whisper');
+        if (!el || el.firstChild) return;
+        const lines = murmureDe(universeFor(li));
+        if (!lines.length) return;
         // Mot à mot, comme le synopsis s'inscrit dans l'univers : `--i` est
         // le rang du mot, et le CSS en fait un retard. Le compteur court
         // d'une ligne à l'autre, sinon chaque ligne repartirait de zéro et
@@ -3332,17 +3386,33 @@ const SHOW_UNIVERSES = {
         let i = 0;
         const html = lines.map(line =>
             `<span class="cv-whisper-line">` + line.split(/[^\S\u00A0]+/).filter(Boolean)
-                .map(w => `<span class="cv-wd" style="--i:${i++}">${escape(w)}</span>`)
+                .map(w => `<span class="cv-wd" style="--i:${i++};${MOT_AU_REPOS}">${escape(w)}</span>`)
                 .join(' ') + `</span>`
         ).join('');
-        el.innerHTML = `<div class="cv-whisper-clip"><p>${html}</p></div>`;
         // Chaque murmure s'écrit dans le même temps, quelle que soit sa
         // longueur : c'est une phrase, pas un métronome. Les cinquante et
         // un mots d'As You Like It couleraient sinon deux fois plus
         // longtemps que les dix-huit d'À la barre.
         el.style.setProperty('--wd-step',
             Math.min(240, Math.max(56, Math.round(3280 / i))) + 'ms');
-        row.insertBefore(el, badges);
+        el.innerHTML = `<div class="cv-whisper-clip"><p>${html}</p></div>`;
+        const mots = el.querySelectorAll('.cv-wd');
+        void getComputedStyle(mots[0]).opacity;
+        mots.forEach(m => { m.style.opacity = ''; m.style.color = ''; });
+    }
+
+    //  À LA SOURIS ET AU CLAVIER. Le survol attend 150 ms avant d'écrire
+    //  (voir .cv-wd) : les mots ont largement le temps d'être là. Le doigt
+    //  passe par l'appui maintenu (bindLongPress) : écrire ici à chaque
+    //  toucher, ce serait écrire pour chaque défilement commencé sur une
+    //  ligne. (Un navigateur sans événements de pointeur a encore la
+    //  souris : mouseover, qui ne sait pas distinguer le doigt.)
+    function bindMurmures() {
+        const ligne = (e) => e.target.closest?.('.cv-item.cv-has-universe');
+        document.addEventListener(window.PointerEvent ? 'pointerover' : 'mouseover', (e) => {
+            if (e.pointerType !== 'touch') ecrireLeMurmure(ligne(e));
+        }, { passive: true });
+        document.addEventListener('focusin', (e) => ecrireLeMurmure(ligne(e)));
     }
 
     // ── La bande-annonce, en pastille sous le badge ────────────────────
@@ -3431,22 +3501,33 @@ const SHOW_UNIVERSES = {
     //  la ligne change de taille — polices arrivées, égalisation des
     //  hauteurs, pivotement, et surtout retour sur l'onglet CV : caché, il
     //  n'a pas de mise en page, et une mesure faite là rendrait zéro.
-    function placerPastille(li) {
+    //
+    //  Toutes les lignes d'abord mesurées, puis tous les liens posés : poser
+    //  un lien entre deux mesures obligeait le navigateur à refaire sa mise
+    //  en page avant la suivante — quatre fois au démarrage.
+    function mesurerPastille(li) {
         const place = li.querySelector('.cv-trailer-place');
         const lien = li.querySelector('.cv-trailer-lien');
-        if (!place || !lien) return;
+        if (!place || !lien) return null;
         const r = li.getBoundingClientRect();
         const p = place.getBoundingClientRect();
-        if (!r.width || !p.width) return;
-        lien.style.top = (p.top - r.top) + 'px';
-        lien.style.left = (p.left - r.left) + 'px';
+        if (!r.width || !p.width) return null;
+        return [lien, (p.top - r.top) + 'px', (p.left - r.left) + 'px'];
+    }
+
+    function placerPastilles(lignes) {
+        lignes.map(mesurerPastille).forEach(pose => {
+            if (!pose) return;
+            pose[0].style.top = pose[1];
+            pose[0].style.left = pose[2];
+        });
     }
 
     let guetPastilles = null;
     function suivrePastille(li) {
-        if (!('ResizeObserver' in window)) { requestAnimationFrame(() => placerPastille(li)); return; }
+        if (!('ResizeObserver' in window)) { requestAnimationFrame(() => placerPastilles([li])); return; }
         guetPastilles = guetPastilles || new ResizeObserver(entrees =>
-            entrees.forEach(e => placerPastille(e.target)));
+            placerPastilles(entrees.map(e => e.target)));
         guetPastilles.observe(li);
     }
 
@@ -3464,6 +3545,14 @@ const SHOW_UNIVERSES = {
     //  sorte que le clic droit reste normal partout ailleurs.
     const PRESS_DELAY = 400;
     const PRESS_SLOP = 10;
+    //  L'APPUI N'EST MARQUÉ QU'AU BOUT DE 110 MS SANS GLISSER. Au
+    //  téléphone, presque tout défilement du CV commence sur une ligne :
+    //  marqué dès le contact, chaque glissement allumait lavis, grain et
+    //  couleur de salle, puis les éteignait dix pixels plus loin — un
+    //  éclair coloré, et deux tâches longues (110 à 210 ms à ×4) au départ
+    //  de chaque geste. C'est ce que fait le navigateur pour son propre
+    //  `:active`. Un tap plus bref ouvre l'univers comme avant.
+    const APPUI_MARQUE = 110;
 
     // ── LES LIGNES D'UNE MÊME CATÉGORIE, À LA MÊME HAUTEUR ───────────
     //  Le CSS pose le rôle sur une ligne et centre le contenu ; il ne sait
@@ -3478,11 +3567,20 @@ const SHOW_UNIVERSES = {
     //  hauteur qu'on a imposée au passage précédent, et la liste ne
     //  pourrait plus jamais rétrécir — elle grandirait à chaque
     //  redimensionnement, sans retour.
+    //
+    //  TOUT RETIRER, PUIS TOUT MESURER, PUIS TOUT POSER — toutes listes
+    //  confondues. Liste par liste, chaque mesure suivait l'écriture de la
+    //  précédente, et le navigateur refaisait sa mise en page à chaque
+    //  fois : une par liste (quatre), au lieu d'une seule.
     function egaliserLesLignes() {
+        const listes = [];
         document.querySelectorAll('#page_cv ul').forEach(ul => {
             const lignes = ul.querySelectorAll(':scope > li.cv-item');
             if (lignes.length < 2) return;
             lignes.forEach(li => li.style.removeProperty('min-height'));
+            listes.push(lignes);
+        });
+        const cibles = listes.map(lignes => {
             let max = 0;
             lignes.forEach(li => {
                 // UNE LIGNE DÉPLIÉE NE COMPTE PAS. Son murmure lui donne
@@ -3495,12 +3593,13 @@ const SHOW_UNIVERSES = {
                 const h = li.getBoundingClientRect().height;
                 if (h > max) max = h;
             });
-            if (!max) return;
             // Un demi-pixel de marge : les hauteurs mesurées sont
             // fractionnaires, et arrondir vers le bas rognerait la ligne
             // la plus haute — celle-là même qui a donné la mesure.
-            const cible = Math.ceil(max) + 'px';
-            lignes.forEach(li => li.style.minHeight = cible);
+            return max ? Math.ceil(max) + 'px' : '';
+        });
+        listes.forEach((lignes, i) => {
+            if (cibles[i]) lignes.forEach(li => li.style.minHeight = cibles[i]);
         });
     }
 
@@ -3510,13 +3609,28 @@ const SHOW_UNIVERSES = {
     //  hauteur fausse. On mesure donc au chargement, à l'arrivée des
     //  polices, et à chaque changement de largeur — le repli des titres en
     //  dépend entièrement.
+    //
+    //  DE LARGEUR, PAS DE HAUTEUR. Au téléphone, la barre d'adresse se
+    //  replie au premier défilement et revient quand on remonte : la
+    //  fenêtre reçoit un « resize » où seule la hauteur change. Aucun
+    //  titre ne s'y replie autrement, et l'égalisation repartait pour
+    //  rien — 30 ms de mises en page forcées à ×4, au moment même où le
+    //  doigt lance le défilement.
+    //
+    //  Et les polices, seulement si l'une est EN ROUTE une fois la mesure
+    //  faite — c'est souvent la mesure elle-même qui l'a demandée (le
+    //  titre en Cinzel). Relancée d'office sur document.fonts.ready, déjà
+    //  tenue quand les polices sont là, elle refaisait tout le travail
+    //  dans la même tâche (même règle que mesurerLesLignes).
     function suivreLesHauteurs() {
         egaliserLesLignes();
-        if (document.fonts && document.fonts.ready) {
+        if (document.fonts && document.fonts.status === 'loading') {
             document.fonts.ready.then(egaliserLesLignes);
         }
-        let minuteur = 0;
+        let minuteur = 0, largeur = window.innerWidth;
         window.addEventListener('resize', () => {
+            if (window.innerWidth === largeur) return;
+            largeur = window.innerWidth;
             clearTimeout(minuteur);
             minuteur = setTimeout(egaliserLesLignes, 150);
         });
@@ -3528,7 +3642,7 @@ const SHOW_UNIVERSES = {
     //  doit écrire une règle CSS par spectacle, parce que le CSS ne sait
     //  pas lire la couleur d'une carte survolée. Nous, nous avons déjà posé
     //  `--cv-accent` sur chaque ligne (voir markCvRows) — il n'y a qu'à la
-    //  relayer vers la racine, d'où toute la page la voit.
+    //  relayer vers ce qui l'affiche : la lueur de salle et la barre collée.
     //
     //  L'ambiance est déclarée en <color> dans index.html (@property), donc
     //  elle S'INTERPOLE : passer d'un carmin à un bleu est un glissement,
@@ -3541,13 +3655,24 @@ const SHOW_UNIVERSES = {
     const racine = document.documentElement;
     let ambianceEnCours = null;
 
+    //  LA CIBLE NE VA QU'À CEUX QUI LA LISENT : le <body>, dont la lueur
+    //  (body::before) la reçoit en héritage explicite, et la barre collée.
+    //  Posée sur <html>, elle descendait jusqu'au dernier élément de la
+    //  page, et chaque allumage, chaque extinction les recalculait tous —
+    //  1 199 éléments, 130 à 160 ms à ×4 sous le doigt, une image perdue à
+    //  chaque ligne survolée sur ordinateur. Elle n'hérite plus (voir
+    //  @property --ambiance-cible dans index.html).
+    let eclaires = null;
+    const lesEclaires = () => eclaires ||
+        (eclaires = [document.body, document.getElementById('nav-barre')].filter(Boolean));
+
     function allumerLaSalle(li) {
         const c = li && li.style.getPropertyValue('--cv-accent').trim();
         if (!c || c === ambianceEnCours) return;
         ambianceEnCours = c;
         // LA CIBLE, pas la couleur animée : la lueur et la barre collée
         // glissent chacune vers elle (voir @property --ambiance).
-        racine.style.setProperty('--ambiance-cible', c);
+        lesEclaires().forEach(el => el.style.setProperty('--ambiance-cible', c));
         // La classe pilote le grain de pellicule (voir body::after dans
         // index.html) : il n'apparaît qu'avec la salle, et repart avec
         // elle. Une couleur seule reste une couleur ; c'est le bruit qui
@@ -3561,25 +3686,64 @@ const SHOW_UNIVERSES = {
         // On retire la déclaration plutôt que de reposer l'or : la valeur
         // par défaut vit dans la feuille de style, et c'est elle qui doit
         // décider — y compris quand le thème change.
-        racine.style.removeProperty('--ambiance-cible');
+        lesEclaires().forEach(el => el.style.removeProperty('--ambiance-cible'));
         racine.classList.remove('salle-allumee');
     }
 
-    //  À LA SOURIS. On écoute la liste, pas chaque ligne : une seule paire
+    //  À LA SOURIS. On écoute la page, pas chaque ligne : une seule paire
     //  d'écouteurs pour tout le CV, et les lignes ajoutées plus tard sont
     //  servies sans qu'on y pense.
+    //
+    //  LA SALLE ATTEND QU'ON S'ARRÊTE. Elle ne prend la couleur d'une
+    //  ligne qu'une fois le pointeur posé dessus, la ligne immobile sous
+    //  lui : 120 ms quand c'est le pointeur qui est venu à elle — ce qu'on
+    //  regarde, pas ce qu'on traverse. À la molette, c'est l'inverse : le
+    //  pointeur ne bouge pas, les lignes défilent sous lui, et le
+    //  navigateur signale chacune comme survolée — la salle passait par
+    //  sept à neuf couleurs en deux secondes. Une ligne arrivée ainsi
+    //  attend donc qu'on ait cessé de défiler (400 ms) ; d'ici là, la
+    //  salle garde sa couleur. Le lavis de la ligne et son murmure, eux,
+    //  répondent toujours au survol. Même pause pour s'éteindre : d'une
+    //  ligne à la suivante, la salle glisse de l'une à l'autre sans
+    //  retomber à l'or entre les deux.
+    const PAUSE_SALLE = 120;
+    const PAUSE_DEFILEMENT = 400;
+
     function bindAmbianceSurvol() {
         if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+        let visee = null, attente = 0, repere = 0, bouge = false;
+        const guetter = (pause) => {
+            attente = setTimeout(() => {
+                if (!visee) { eteindreLaSalle(); return; }
+                // La ligne a bougé sous le pointeur : la page défile
+                // encore, on attend qu'elle s'arrête.
+                const y = visee.getBoundingClientRect().top;
+                if (Math.abs(y - repere) > 1) { repere = y; guetter(PAUSE_DEFILEMENT); return; }
+                allumerLaSalle(visee);
+            }, pause);
+        };
+        const viser = (li, pause) => {
+            // D'un mot à l'autre dans la même ligne, rien ne change.
+            if (li === visee) return;
+            visee = li;
+            clearTimeout(attente);
+            repere = li ? li.getBoundingClientRect().top : 0;
+            guetter(pause);
+        };
+        // Le pointeur qui bouge vraiment : le défilement, lui, ne produit
+        // que des survols (pointerover), jamais de pointermove.
+        document.addEventListener('pointermove', () => { bouge = true; }, { passive: true });
+        // Le doigt a son geste à lui : l'appui maintenu (bindLongPress).
         document.addEventListener('pointerover', (e) => {
-            const li = e.target.closest?.('.cv-item.cv-has-universe');
-            if (li) allumerLaSalle(li);
-        });
+            if (e.pointerType === 'touch') return;
+            const pause = bouge ? PAUSE_SALLE : PAUSE_DEFILEMENT;
+            bouge = false;
+            viser(e.target.closest?.('.cv-item.cv-has-universe') || null, pause);
+        }, { passive: true });
+        // Le pointeur qui sort de la fenêtre ne survole plus rien.
         document.addEventListener('pointerout', (e) => {
-            const li = e.target.closest?.('.cv-item.cv-has-universe');
-            // On ne s'éteint que si le pointeur quitte vraiment la ligne,
-            // pas quand il passe d'un mot à l'autre à l'intérieur.
-            if (li && !li.contains(e.relatedTarget)) eteindreLaSalle();
-        });
+            if (e.pointerType !== 'touch' && !e.relatedTarget) viser(null, PAUSE_SALLE);
+        }, { passive: true });
     }
 
     //  LA COUVERTURE AVANT LE CLIC (voir prechaufferCouverture). Au doigt,
@@ -3647,9 +3811,9 @@ const SHOW_UNIVERSES = {
     //  dernier mot, et il n'y a aucune raison qu'une ligne reste éclairée
     //  quand le pointeur est parti ailleurs.
     function bindLongPress() {
-        let timer = 0, row = null, x0 = 0, y0 = 0, shown = false, epingle = false;
+        let timer = 0, marque = 0, row = null, x0 = 0, y0 = 0, shown = false, epingle = false;
 
-        const disarm = () => { clearTimeout(timer); timer = 0; };
+        const disarm = () => { clearTimeout(timer); clearTimeout(marque); timer = marque = 0; };
         const hush = () => {
             if (row) row.classList.remove('is-whispering', 'is-pressed');
             eteindreLaSalle();
@@ -3665,11 +3829,18 @@ const SHOW_UNIVERSES = {
             // reconnaître autre chose qu'un tap — un début de défilement,
             // un appui long — et la couleur retombait alors à zéro sous le
             // doigt, la guirlande reprenant la main. Ce marqueur-ci ne
-            // dépend que de nous : il tient de touchstart à touchend.
-            li.classList.add('is-pressed');
-            allumerLaSalle(li);
+            // dépend que de nous : il tient de l'appui reconnu (voir
+            // APPUI_MARQUE) jusqu'à touchend.
             const t = e.touches[0];
             row = li; x0 = t.clientX; y0 = t.clientY;
+            marque = setTimeout(() => {
+                marque = 0;
+                li.classList.add('is-pressed');
+                allumerLaSalle(li);
+                // Les mots du murmure, s'il doit venir : les 290 ms qui
+                // restent avant lui leur donnent leur état de départ.
+                ecrireLeMurmure(li);
+            }, APPUI_MARQUE);
             // Le murmure, lui, demande un synopsis : sans lui la ligne
             // s'allume au doigt mais n'a rien à dire (voir Cassandres).
             if (!li.querySelector('.cv-whisper')) return;
