@@ -264,9 +264,11 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   préchargent l'accueil et le répertoire, en `moderate` (voir [Préparées au
   survol](#préparées-au-survol-le-pré-rendu)) ;
 - les passages entre documents : du répertoire à une fiche, c'est la
-  première photo du travelling qui porte le nom ; de l'accueil à la galerie,
-  la première vue de la planche, et au retour l'affiche ; aucun nom ne reste
-  posé ; en mouvement réduit, la galerie ne nomme rien ;
+  première photo du travelling qui porte le nom, rognée à sa carte ; de
+  l'accueil à la galerie, la première vue de la planche, et au retour le
+  cadre de l'affiche, la pastille « Galerie photo » invisible jusqu'à ce
+  qu'il soit posé ; aucun nom ne reste posé ; en mouvement réduit, la
+  galerie ne nomme rien ;
 - la galerie : les neuf premières vues partent avec la page et les suivantes
   attendent, une ou deux en priorité haute, des tailles à deux branches
   (quatre colonnes au téléphone, cinq au-delà) ; à 390 px (×3), 412 px
@@ -2344,7 +2346,7 @@ lieu que si une police est encore en route une fois la première faite
 | le répertoire, l'onglet Dates → une page spectacle, et retour | la vignette → le fond du titre de la page (`fiche-<slug>`, entre documents). Quand la page s'ouvre sur son travelling, le fond du titre est au fond de la scène, invisible : la vignette s'enfonce dans la **première photo du travelling**, et la page en repart au retour (nom posé au `pagereveal` et au `pageswap`, rendu à la fin du passage). La paire d'images est rognée à la boîte qui voyage (`::view-transition-image-pair(*.fiche) { overflow: clip }`, dans les deux documents) : une image de passage ne rogne pas ce qui déborde de son cadrage, et la photo, en paysage, s'étalait hors de la carte en portrait, sur la carte voisine |
 | une vignette du book → la photo, et retour | la photo (`book-photo`) |
 | un onglet → un autre | la page, dans le sens de l'onglet ; la pastille glisse ; en quittant le CV ou en y revenant, le portrait, de l'affiche au médaillon (`portrait`, voir [Le portrait d'affiche](#le-portrait-daffiche)) |
-| l'accueil → la galerie, et retour | le portrait de l'affiche → la première vue de la planche (`book-portrait`, nommé de part et d'autre s'il est à l'écran), sur le ressort |
+| l'accueil → la galerie, et retour | le cadre de l'affiche, poursuite comprise → la première vue de la planche (`book-portrait`, nommé de part et d'autre s'il est à l'écran), sur le ressort. À l'aller, le nom et la pastille ont leur groupe (`book-nom`, `book-pastille`) et s'effacent au-dessus de la photo ; au retour, ils attendent invisibles (`vt-book-retour`) et reviennent en fondu, comme au retour sur l'onglet CV |
 | le thème | un cercle depuis le bouton |
 | l'ouverture → le site | un iris depuis le sceau ; le nom rejoint l'en-tête |
 
@@ -3276,12 +3278,24 @@ répertoire, à la galerie et à la 404.
   mouvement réduit, pour une arrivée sur un autre onglet : rien ne bouge — un
   décor, que le repli de la régie ne mène pas.
 - **Vers la galerie, le portrait** : au départ vers `/galerie/`, s'il est à
-  l'écran, la photo prend le nom `book-portrait` (retiré au `pageshow`) —
-  c'est la première photo du book —, et se range dans la première vue de la
-  planche, que la galerie nomme de même (voir [La planche
+  l'écran, le cadre de l'affiche prend le nom `book-portrait` (retiré au
+  `pageshow`) — c'est la première photo du book —, et se range dans la
+  première vue de la planche, que la galerie nomme de même (voir [La planche
   contact](#la-planche-contact)). **Au retour**, la vue revient se poser
-  dans l'affiche : l'accueil nomme sa photo à l'arrivée depuis la galerie,
-  s'il la voit et hors mouvement réduit, et la rend à la fin du passage.
+  dans l'affiche : l'accueil nomme son cadre à l'arrivée depuis la galerie,
+  s'il le voit et hors mouvement réduit, et le rend à la fin du passage.
+  **Le cadre, pas la seule photo**, comme pour le passage d'onglet : la
+  photo seule nommée, la poursuite, le nom et le métier (posés sur l'affiche
+  au téléphone) et la pastille « Galerie photo » restaient dans la page,
+  sous elle. À l'aller, ils disparaissaient en une image et la photo
+  s'éclaircissait avant de bouger ; au retour, ils restaient cachés tout le
+  passage (0,9 s) puis claquaient ensemble en une image — l'écart au rendu
+  final, dans la zone du nom, tombait de 43 à 0 d'une image à l'autre. La
+  poursuite voyage désormais avec la photo ; à l'aller, le nom et la
+  pastille ont leur propre groupe (`book-nom`, `book-pastille`, sans pendant
+  dans la galerie) et s'effacent au-dessus d'elle ; au retour, ils attendent
+  invisibles sous `vt-book-retour` et reviennent en fondu une fois la photo
+  posée (l'écart descend de 23 à 0 en 0,35 s).
   Cette écoute (`pagereveal`) vit dans le premier script du `<head>` : le
   passage se prépare au premier rendu, pendant que la page se lit encore, et
   le script principal arrivait trop tard pour nommer quoi que ce soit. Au

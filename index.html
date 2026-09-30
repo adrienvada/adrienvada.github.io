@@ -326,13 +326,23 @@
             });
         })();
 
-        // LE PORTRAIT REVIENT DE LA GALERIE. Au départ vers la galerie, la
-        // photo de l'affiche prend le nom `book-portrait` (voir le pageswap,
+        // LE PORTRAIT REVIENT DE LA GALERIE. Au départ vers la galerie, le
+        // cadre de l'affiche prend le nom `book-portrait` (voir le pageswap,
         // plus bas) ; la galerie nomme de même sa première vue, et au retour
         // — par l'historique comme par « ← Adrien Vada » —, c'est cette vue
         // qui revient se poser dans l'affiche. Mêmes conditions qu'à
         // l'aller : l'affiche à l'écran, le mouvement non réduit ; le nom
-        // est rendu à la fin du passage. ÉCOUTÉ ICI, dans le premier script :
+        // est rendu à la fin du passage.
+        //
+        // LE CADRE, PAS LA SEULE PHOTO, comme pour le passage d'onglet
+        // (« portrait », voir showPage) : la poursuite et les coins arrondis
+        // voyagent avec elle. Et ce qui se pose sur la photo — au téléphone
+        // le nom et le métier, partout la pastille « Galerie photo » —
+        // attend, invisible, sous la classe vt-book-retour, puis revient en
+        // fondu (voir « Au retour sur le CV » dans le <style>). La photo
+        // seule nommée, ils restaient dans la page, sous elle, tout le
+        // passage (0,9 s), puis claquaient d'un coup avec la poursuite, en
+        // une image. ÉCOUTÉ ICI, dans le premier script :
         // le passage se prépare au premier rendu, alors que la page se lit
         // encore — le script principal, en bas de page, ne serait pas encore
         // là pour nommer quoi que ce soit (vérifié : rien n'était nommé).
@@ -341,11 +351,15 @@
             var depuis = navigation.activation.from;
             if (!depuis || new URL(depuis.url).pathname !== '/galerie/') return;
             if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            var img = document.querySelector('#en-tete .affiche-cadre img');
-            var r = img && img.getBoundingClientRect();
+            var cadre = document.querySelector('#en-tete .affiche-cadre');
+            var r = cadre && cadre.getBoundingClientRect();
             if (!r || !r.width || r.bottom <= 0 || r.top >= innerHeight) return;
-            img.style.viewTransitionName = 'book-portrait';
-            var rendre = function () { img.style.viewTransitionName = ''; };
+            cadre.style.viewTransitionName = 'book-portrait';
+            document.documentElement.classList.add('vt-book-retour');
+            var rendre = function () {
+                cadre.style.viewTransitionName = '';
+                document.documentElement.classList.remove('vt-book-retour');
+            };
             e.viewTransition.finished.then(rendre, rendre);
         });
         // Le premier rendu peut précéder la lecture du portrait, aux deux
@@ -1225,11 +1239,11 @@
             view-transition-class: fiche;
         }
 
-        /* DE LA GALERIE À L'AFFICHE, LE PORTRAIT (book-portrait, nommé à
-           l'arrivée par le pagereveal plus bas) : la première vue de la
-           planche revient se poser dans l'affiche, sur le ressort — les
-           mêmes règles que la galerie pour l'aller, cadrées sur le visage
-           comme l'affiche. */
+        /* DE LA GALERIE À L'AFFICHE, LE PORTRAIT (book-portrait, posé sur
+           le cadre de l'affiche à l'arrivée par le pagereveal plus haut) : la
+           première vue de la planche revient se poser dans l'affiche, sur le
+           ressort — les mêmes règles que la galerie pour l'aller, cadrées sur
+           le visage comme l'affiche. */
         ::view-transition-group(book-portrait) {
             animation-duration: var(--dur-morph);
             animation-timing-function: var(--ease-ressort);
@@ -1320,8 +1334,11 @@
            le fond, disparaissaient sous la photo qui grandissait, puis
            reparaissaient d'un coup à la fin du passage. Ils attendent,
            invisibles — d'emblée : sans transition pour s'effacer — et
-           viennent en fondu une fois la photo posée. */
-        html.vt-onglet.onglet-retour #en-tete:not(.replie) .affiche-galerie {
+           viennent en fondu une fois la photo posée. Même chose au retour
+           de la galerie (vt-book-retour, voir « Le portrait revient de la
+           galerie » dans le premier script). */
+        html.vt-onglet.onglet-retour #en-tete:not(.replie) .affiche-galerie,
+        html.vt-book-retour #en-tete:not(.replie) .affiche-galerie {
             opacity: 0;
             transition: none;
         }
@@ -1329,7 +1346,9 @@
         @media (max-width: 767px) {
 
             html.vt-onglet.onglet-retour #en-tete:not(.replie) .affiche-nom,
-            html.vt-onglet.onglet-retour #en-tete:not(.replie) .metier {
+            html.vt-onglet.onglet-retour #en-tete:not(.replie) .metier,
+            html.vt-book-retour #en-tete:not(.replie) .affiche-nom,
+            html.vt-book-retour #en-tete:not(.replie) .metier {
                 opacity: 0;
                 transition: none;
             }
@@ -12372,25 +12391,38 @@
             if (r.width && r.bottom > 0 && r.top < innerHeight) img.style.viewTransitionName = 'fiche-' + m[1];
         });
         // VERS LA GALERIE, LE PORTRAIT. La photo de l'affiche (ou du
-        // médaillon) est la première du book : c'est elle qui devient la
-        // première vue de la planche, si elle est à l'écran. La galerie
+        // médaillon) est la première du book : c'est elle, dans son cadre
+        // (la poursuite comprise, voir « Le portrait revient de la
+        // galerie »), qui devient la première vue de la planche, si elle
+        // est à l'écran. La galerie
         // nomme sa vignette `book-portrait` à son arrivée ; tant qu'elle ne
         // consent pas au passage, e.viewTransition manque et rien n'est
         // nommé.
         addEventListener('pageswap', (e) => {
             if (!e.viewTransition || !e.activation || !e.activation.entry) return;
             if (new URL(e.activation.entry.url).pathname !== '/galerie/') return;
-            const img = document.querySelector('#en-tete .affiche-cadre img');
-            const r = img && img.getBoundingClientRect();
-            if (r && r.width && r.bottom > 0 && r.top < innerHeight) img.style.viewTransitionName = 'book-portrait';
+            const cadre = document.querySelector('#en-tete .affiche-cadre');
+            const r = cadre && cadre.getBoundingClientRect();
+            if (!r || !r.width || r.bottom <= 0 || r.top >= innerHeight) return;
+            cadre.style.viewTransitionName = 'book-portrait';
+            // CE QUI SE POSE SUR LA PHOTO S'EFFACE AU-DESSUS D'ELLE. Restés
+            // dans la page, le nom et la pastille (posés sur l'affiche au
+            // téléphone) passaient sous le groupe de la photo dès la
+            // première image du passage : coupés net. Nommés, ils ont leur
+            // propre groupe, sans pendant dans la galerie : ils sortent en
+            // fondu, à leur place.
+            const nom = document.querySelector('#en-tete .affiche-texte');
+            const pastille = document.querySelector('#en-tete .affiche-galerie');
+            if (nom) nom.style.viewTransitionName = 'book-nom';
+            if (pastille) pastille.style.viewTransitionName = 'book-pastille';
         });
         // Au retour de la galerie, le portrait revient se poser dans
         // l'affiche : voir « Le portrait revient de la galerie », dans le
         // premier script du <head> — ici, il arriverait trop tard.
         addEventListener('pageshow', () => {
             document.querySelectorAll('.dl-vignette img').forEach(img => { img.style.viewTransitionName = ''; });
-            const portrait = document.querySelector('#en-tete .affiche-cadre img');
-            if (portrait) portrait.style.viewTransitionName = '';
+            document.querySelectorAll('#en-tete .affiche-cadre, #en-tete .affiche-texte, #en-tete .affiche-galerie')
+                .forEach(el => { el.style.viewTransitionName = ''; });
         });
 
         // La pastille sous l'onglet actif. Sans transition au premier

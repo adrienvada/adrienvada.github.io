@@ -2647,7 +2647,10 @@ function exige(condition, message) {
                     requestAnimationFrame(pas);
                 });
                 await p.click('#tab-page_dates');
-                await p.waitForTimeout(900);
+                // La fin du passage, et non un délai fixe : sur une machine
+                // chargée, 900 ms ne suffisaient pas toujours à le finir.
+                await p.waitForFunction(() => !document.documentElement.classList.contains('vt-onglet'), null, { timeout: 5000 }).catch(() => { });
+                await p.waitForTimeout(300);
                 const dates = await lire();
                 exige(dates.replie && dates.l <= 100 && /50%|9\dpx|4\dpx/.test(dates.rond), `hors du CV, le portrait n’est pas redevenu un médaillon (${dates.l.toFixed(0)} px, ${dates.rond})`);
                 const passage = await p.evaluate(() => ({
@@ -3175,12 +3178,16 @@ function exige(condition, message) {
                     const noms = [...document.querySelectorAll('*')].filter((el) => {
                         const n = getComputedStyle(el).viewTransitionName;
                         return n && n !== 'none' && el !== document.documentElement;
-                    }).map((el) => `${getComputedStyle(el).viewTransitionName}@${el.matches('.u-of-photo') ? 'photo' : el.matches('.u-hero-fond') ? 'fond' : el.matches('.carte .media img') ? 'vignette' : el.matches('.affiche-cadre img') ? 'affiche' : el.tagName}`);
+                    }).map((el) => `${getComputedStyle(el).viewTransitionName}@${el.matches('.u-of-photo') ? 'photo' : el.matches('.u-hero-fond') ? 'fond' : el.matches('.carte .media img') ? 'vignette' : el.matches('.affiche-cadre') ? 'affiche' : el.tagName}`);
                     // La paire d'images de chaque nom rogne-t-elle à sa boîte ?
                     // Une image de passage ne rogne pas ce qui déborde de son
                     // cadrage (object-fit: cover).
                     const rognes = noms.map((n) => e.viewTransition ? getComputedStyle(document.documentElement, `::view-transition-image-pair(${n.split('@')[0]})`).overflow : '');
-                    try { sessionStorage.setItem('__vt-' + type, JSON.stringify({ vt: !!e.viewTransition, noms, rognes, page: location.pathname })); } catch (x) { }
+                    // Ce qui se pose sur l'affiche attend, invisible, que le
+                    // portrait revenu de la galerie s'y soit posé.
+                    const pastille = document.querySelector('#en-tete .affiche-galerie');
+                    const attend = pastille ? getComputedStyle(pastille).opacity : null;
+                    try { sessionStorage.setItem('__vt-' + type, JSON.stringify({ vt: !!e.viewTransition, noms, rognes, attend, page: location.pathname })); } catch (x) { }
                 };
                 addEventListener('pagereveal', (e) => { if (e.viewTransition) e.viewTransition.ready.then(() => relever('reveal', e), () => relever('reveal', e)); else relever('reveal', e); });
             };
@@ -3209,8 +3216,10 @@ function exige(condition, message) {
             await p.waitForTimeout(1200);
             const retour = await lire(p);
             exige(retour && retour.page === '/' && retour.vt && retour.noms.join() === 'book-portrait@affiche', `galerie → accueil : ${JSON.stringify(retour)}`);
-            const restants = await p.evaluate(() => [...document.querySelectorAll('[style*="view-transition-name"]')].filter((el) => el.style.viewTransitionName).length);
-            exige(!restants, `${restants} nom(s) de passage restés posés après le retour`);
+            exige(retour.attend === '0', `galerie → accueil : la pastille « Galerie photo » reste sous la photo qui revient (opacité ${retour.attend}), et claquera à la fin`);
+            const restants = await p.evaluate(() => [...document.querySelectorAll('[style*="view-transition-name"]')].filter((el) => el.style.viewTransitionName).length
+                + document.documentElement.classList.contains('vt-book-retour'));
+            exige(!restants, `${restants} nom(s) de passage — ou vt-book-retour — restés posés après le retour`);
             await c.close();
             // Mouvement réduit : la galerie ne nomme rien.
             const r = await visiteur({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
