@@ -122,6 +122,28 @@ html.u-locked body {
     overflow: hidden;
 }
 
+/* LA PAGE COUVERTE N'EST PLUS RENDUE (voir cacherLaPage dans univers.js).
+   Sous le panneau ouvert, le CV ne se voit plus, mais il coûtait toujours :
+   chaque recalcul du panneau recalculait aussi ses deux mille éléments, et
+   le passage d'ouverture, à chaque image. Caché (content-visibility:
+   hidden), il ne compte plus. Sa hauteur est retenue
+   (contain-intrinsic-size: auto, tenu en permanence pour que le navigateur
+   la mémorise tant que la page est rendue) : rien ne s'effondre dessous, la
+   position à rendre reste juste. Ce n'est pas le content-visibility: auto
+   écarté des figures du montage : rien ne s'y décide au défilement.
+   À l'écran seulement : une impression, univers ouvert, garde le CV.
+   Posée par le script, jamais sans lui : univers-statique.css n'a rien à
+   défaire. */
+#site {
+    contain-intrinsic-size: auto 100vw auto 100vh;
+}
+
+@media screen {
+    html.u-page-cachee #site {
+        content-visibility: hidden;
+    }
+}
+
 #show-universe {
     position: fixed;
     inset: 0;

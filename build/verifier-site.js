@@ -15,6 +15,9 @@
  *    · la règle de l'ouverture (lien direct : pas de rideau ; depuis un
  *      autre site : une fois) ;
  *    · la fenêtre d'agenda d'un univers ouvert depuis le CV ;
+ *    · le même univers ne charge que son panneau : la page couverte
+ *      cesse d'être rendue, le montage suit le passage, la lumière est
+ *      posée une fois — et la fermeture rend la page où elle était ;
  *    · l'onglet Dates : feuilles, intercalaires de mois et leur liseré
  *      (une couleur par mois, que reprennent les initiales de la saison
  *      d'un regard), séances en cases (une date seule aussi),
@@ -198,6 +201,85 @@ function exige(condition, message) {
                 const m = document.querySelector('#show-universe #u-cal-modal');
                 return !!m && !m.hidden;
             }), 'la fenêtre d’agenda ne s’ouvre pas');
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        // ── LE PASSAGE D'OUVERTURE NE CHARGE QUE LE PANNEAU ──
+        // Ouvert depuis le CV, le panneau cache la page qu'il couvre (elle
+        // cesse d'être rendue : html.u-page-cachee), pose son montage une
+        // fois le passage fini et mesure la lumière UNE fois — elle l'était
+        // deux, et le passage gelait. Toute fermeture rend la page, à sa
+        // place, le focus sur la ligne ; un saut aux dates dès la fin du
+        // passage arrive au pied, le montage posé au-dessus.
+        await verifie('un univers ouvert depuis le CV : la page couverte n’est plus rendue, le montage suit le passage, la lumière est posée une fois — et la fermeture rend la page où elle était', async () => {
+            const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForTimeout(800);
+            const viser = () => p.evaluate(() => {
+                const li = [...document.querySelectorAll('#page_cv li.cv-has-universe[data-cv-show]')]
+                    .find((l) => window.spectacleParTitre?.(l.dataset.cvShow)?.uni.slug === 'cleophene');
+                if (!li) return null;
+                li.id = li.id || 'verif-cleophene';
+                li.scrollIntoView({ block: 'center', behavior: 'instant' });
+                return '#' + CSS.escape(li.id) + ' .cv-row-toggle';
+            });
+            const sel = await viser();
+            exige(sel, 'la ligne de Cléophène n’ouvre pas d’univers');
+            await p.waitForTimeout(300);
+            const avant = await p.evaluate((sel) => {
+                window.__lumieres = 0;
+                new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => {
+                    if (n.nodeType === 1 && n.classList.contains('u-lum')) window.__lumieres++;
+                }))).observe(document.getElementById('show-universe'), { childList: true, subtree: true });
+                return { y: scrollY, haut: document.querySelector(sel).getBoundingClientRect().top };
+            }, sel);
+            const finDuPassage = () => p.waitForFunction(() => document.getElementById('show-universe').classList.contains('is-open')
+                && !document.documentElement.classList.contains('vt-univers'), null, { timeout: 8000, polling: 5 });
+            await p.click(sel);
+            await finDuPassage();
+            await p.waitForTimeout(2500);
+            const ouvert = await p.evaluate(() => {
+                const o = document.getElementById('show-universe');
+                return {
+                    cachee: document.documentElement.classList.contains('u-page-cachee'),
+                    rendue: getComputedStyle(document.getElementById('site')).contentVisibility,
+                    temps: o.querySelectorAll('.u-figs > *').length,
+                    lumieres: o.querySelectorAll('.u-lum').length, posees: window.__lumieres
+                };
+            });
+            exige(ouvert.cachee && ouvert.rendue === 'hidden', `la page sous le panneau est encore rendue (${ouvert.rendue})`);
+            exige(ouvert.temps > 0, 'le montage n’a pas été posé après le passage');
+            exige(ouvert.lumieres > 0 && ouvert.posees === ouvert.lumieres,
+                `la lumière n’est pas posée une seule fois : ${ouvert.posees} fenêtres créées pour ${ouvert.lumieres}`);
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(1800);
+            const ferme = await p.evaluate((sel) => ({
+                cachee: document.documentElement.classList.contains('u-page-cachee'),
+                rendue: getComputedStyle(document.getElementById('site')).contentVisibility,
+                haut: document.querySelector(sel).getBoundingClientRect().top,
+                focus: document.activeElement === document.querySelector(sel)
+            }), sel);
+            exige(!ferme.cachee && ferme.rendue === 'visible', 'la page reste cachée après la fermeture');
+            exige(Math.abs(ferme.haut - avant.haut) <= 20, `la ligne n’est pas revenue à sa place : ${Math.round(avant.haut)} px puis ${Math.round(ferme.haut)} px`);
+            exige(ferme.focus, 'le focus n’est pas revenu sur la ligne');
+            // Rouvert, et « Accéder aux dates » dès la fin du passage.
+            await p.waitForTimeout(300);
+            await p.click(await viser());
+            await finDuPassage();
+            await p.evaluate(() => document.querySelector('#show-universe [data-u-jump]').click());
+            await p.waitForTimeout(2000);
+            const saut = await p.evaluate(() => {
+                const o = document.getElementById('show-universe');
+                return {
+                    temps: o.querySelectorAll('.u-figs > *').length, pied: o.querySelector('.u-foot').getBoundingClientRect().top,
+                    auBout: Math.abs(o.scrollTop - (o.scrollHeight - o.clientHeight)) <= 2
+                };
+            });
+            exige(saut.temps === ouvert.temps, `le montage est incomplet après le saut : ${saut.temps} temps sur ${ouvert.temps}`);
+            exige(Math.abs(saut.pied) <= 2 || (saut.pied > 0 && saut.auBout), `le saut aux dates n’arrive pas au pied (${Math.round(saut.pied)} px)`);
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
         });
@@ -959,6 +1041,9 @@ function exige(condition, message) {
                 await p.goto(`${base}/#/univers/${slug}`, { waitUntil: 'load' });
                 await p.waitForFunction(() => document.getElementById('show-universe')?.classList.contains('is-open'), null, { timeout: 8000 })
                     .catch(() => { throw new Error(`${slug} : l’univers ne s’ouvre pas à son adresse`); });
+                // Une ligne à l'écran à l'arrivée (Cassandres, en tête du CV)
+                // s'ouvre par le passage : son montage n'est posé qu'après.
+                await p.waitForFunction(() => !document.documentElement.classList.contains('vt-univers'), null, { timeout: 8000 });
                 await p.waitForTimeout(400);
                 await nette();
                 const panneau = await p.evaluate(releve);

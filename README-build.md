@@ -56,6 +56,11 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - « Ajouter au calendrier » ouvre sa fenêtre dans un univers ouvert depuis le
   CV (une représentation fictive est glissée dans les dates le temps du test :
   il ne dépend pas de la saison) ;
+- un univers ouvert depuis le CV : la page qu'il couvre cesse d'être rendue
+  tant qu'il est ouvert, son montage est posé après le passage, sa lumière
+  ne l'est qu'une fois ; la fermeture rend la page, la ligne à sa place et le
+  focus dessus ; « Accéder aux dates » touché dès la fin du passage arrive au
+  pied, le montage entier au-dessus (voir [Les passages](#les-passages-view-transitions)) ;
 - l'onglet Dates, à la densité du CV : une série de deux soirs tient en
   80 px au plus au téléphone ; la feuille d'éphéméride posée sur la photo du
   spectacle, les jours d'une série écrits avec un tiret ; la ville et la
@@ -1629,7 +1634,15 @@ en place ; le renseigner pour toute série qui en demande un.
 - Pas de `backdrop-filter` sur les légendes, qui défilent (il reste sur la
   croix, immobile).
 - `contain: paint` sur les figures, mais **pas** `content-visibility: auto` :
-  celui-ci faisait s'effondrer leur hauteur.
+  celui-ci faisait s'effondrer leur hauteur. (La page du CV, elle, passe en
+  `content-visibility: hidden` sous le panneau ouvert, sa hauteur retenue :
+  voir [Les passages](#les-passages-view-transitions).)
+- **Rien ne se mesure pendant le passage** qui ouvre un univers depuis le CV,
+  et le montage n'est posé qu'après lui : à ×4, le passage dure 0,7 s en 26
+  images, au lieu de 2,7 s en 15 dont une figée 1,9 s (voir
+  [Les passages](#les-passages-view-transitions)). La lumière se mesure une
+  fois, en lisant tout avant d'écrire (voir
+  [L'écriture à la lumière](#lécriture-à-la-lumière)).
 - **Rien n'est animé en JavaScript au défilement.** Les scènes sont des
   animations CSS que le navigateur fait avancer lui-même ; ailleurs,
   `regie.js` n'écrit qu'un nombre par scène visible (voir
@@ -1845,6 +1858,11 @@ invisible sur une capture — la porte ouverte couvre l'écran à elle seule.
 En mouvement réduit, le titre détoure la photo, posé, sans zoom. Sans photo de
 couverture, pas de calque : le titre d'avant.
 
+La porte d'une lettre ne dépend que de la lettre et de sa police : elle est
+gardée (`porteDe`), et une réouverture ne redessine plus rien. Seulement une
+fois la police du titre arrivée — tracée avec la police de secours, elle
+serait fausse et le resterait.
+
 ### L'écriture à la lumière
 
 Les mots restent dans la page — lus par les lecteurs d'écran, indexés —, en
@@ -1859,6 +1877,18 @@ couvriraient qu'un coin du texte. Elles sont refaites quand la largeur change.
 Dans une scène tenue (`data-ecrire="scene"`), le texte s'écrit sur la course
 de la scène, entre les deux fractions qu'il porte (`data-de`, `data-a`) :
 c'est le cas du synopsis dans l'ouverture et de la phrase du carton.
+
+**Une seule mesure, en trois temps** (`ecrireALaLumiere`) : toutes les
+fenêtres retirées, tous les blocs mesurés sans rien écrire
+(`mesurerLaLumiere`), puis tous posés (`poserLaLumiere`). Bloc par bloc, la
+mesure d'un bloc suivait l'écriture du précédent, et le navigateur
+recalculait tout le document entre les deux : 1,4 s de fil principal bloqué
+à ×4 sur un téléphone, contre 45 à 60 ms désormais (la page couverte n'étant
+plus rendue non plus), fenêtres identiques au pixel sur cinq spectacles.
+Elle n'est plus doublée : la seconde mesure, sur `document.fonts.ready`, n'a
+lieu que si une police est encore en route une fois la première faite
+(`mesurerLesLignes`). Ouvert depuis le CV, tout attend la fin du passage
+(voir [Les passages](#les-passages-view-transitions)).
 
 ### Les passages (View Transitions)
 
@@ -1877,6 +1907,42 @@ image ne se montre jamais en grand : une vignette de 48 px agrandie à l'écran
 n'est qu'un flou vif — elle s'efface tôt à l'aller, et arrive tard au retour.
 Navigateur sans View Transitions, ou mouvement réduit : l'ancien comportement
 (dépliement en `clip-path`, fondu, coupe franche).
+
+**Pendant le passage d'une ligne du CV à son univers, le fil principal reste
+libre.** Chaque image du passage attend qu'il le soit : tant que la
+construction et les mesures du panneau tombaient dedans, la vignette mettait
+2,7 s à devenir page au lieu de 620 ms, figée jusqu'à 1,9 s, et le geste
+finissait 4 s après le toucher (téléphone, processeur ralenti ×4).
+Désormais :
+
+- **la couverture est décodée avant** — dès l'appui au doigt, après 90 ms de
+  survol à la souris (`prechaufferCouverture`), une fois par univers : le clic
+  la trouve prête (3 à 6 ms entre le clic et le passage sur ordinateur, contre
+  40 à 65), toujours plafonné à 350 ms ;
+- **la page couverte cesse d'être rendue** : le rappel du passage verrouille la
+  page et pose `html.u-page-cachee` avant de construire le panneau —
+  `content-visibility: hidden` sur `#site`, sa hauteur retenue par
+  `contain-intrinsic-size: auto` (voir `univers.css`). Ce que le panneau fait
+  recalculer ne porte plus que sur lui, et le CV n'est plus recalculé à chaque
+  image du passage. Personne ne le voit : à l'aller, le nouvel état de la
+  racine est invisible. Sans passage (mouvement réduit, navigateur sans View
+  Transitions, historique), la page reste visible pendant le dépliement et
+  n'est cachée qu'à sa fin (ou à la fin du fondu du panneau, quand rien ne se
+  déplie) — d'emblée en mouvement réduit, où rien ne bouge. Toute fermeture la
+  rend en premier (`fermer`) ; à l'impression, elle reste là ;
+- **le rappel ne pose que l'ouverture et le pied** (« Accéder aux dates »
+  répond tout de suite) ; le montage suit le passage, par tranches de quatre
+  temps, une image entre chacune (`monterLeMontage`). Un saut aux dates avant
+  la fin pose d'un coup ce qui manque ;
+- **la lumière et la lettre ne se mesurent qu'ensuite**, une seule fois (voir
+  [L'écriture à la lumière](#lécriture-à-la-lumière)).
+
+Mesuré à ×4 sur Cléophène et Bérénice : le passage part 0,69 à 0,72 s après
+le toucher au lieu de 1,49 s, finit 1,39 à 1,44 s après au lieu de 4,1 à
+4,2 s, et la plus longue image figée tombe de 1,8-1,9 s à 0,35 s ; sur
+ordinateur, il finit à 1,1-1,2 s au lieu de 1,6 s. Vérifié : le panneau, la
+lumière, la lettre et la page refermée sont identiques au pixel, et les
+quatre chemins de fermeture rendent la page à la même position qu'avant.
 
 ### Le vocabulaire
 
@@ -2106,6 +2172,12 @@ bouton du navigateur). On lâche prise dès le premier geste de l'utilisateur
 lui.
 
 Vérifié sur les quatre chemins de fermeture, en mobile et en desktop.
+
+La page, cachée sous le panneau pendant qu'il est ouvert (voir
+[Les passages](#les-passages-view-transitions)), est rendue **en tout premier**
+à la fermeture, avant la position à reposer et le focus à rendre : c'est
+elle qu'ils lisent. Sa hauteur étant retenue pendant qu'elle est cachée,
+rien ne bouge dessous.
 
 ### Un seul moteur, un seul visage
 

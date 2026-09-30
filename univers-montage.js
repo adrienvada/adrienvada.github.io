@@ -899,8 +899,12 @@ const UniversMontage = (function () {
     }
 
     function panelHtml(info, uni, opts) {
-        const { dates = '', enCreation = false, statique = false } = opts || {};
-        const figures = beatsHtml(uni, info.title);
+        const { dates = '', enCreation = false, statique = false, montage = true } = opts || {};
+        // `montage: false` laisse le montage vide : le panneau ouvert par un
+        // passage le reçoit ensuite, une fois la vignette devenue la page
+        // (voir monterLeMontage dans univers.js). Une page autonome l'a
+        // toujours, écrit en dur.
+        const figures = montage ? beatsHtml(uni, info.title) : '';
         // Un film n'est pas « à l'affiche » et n'a pas de tournée : le
         // vocabulaire du plateau ne lui va pas. `kind` le dit une fois, et
         // le hero comme le pied s'y accordent.

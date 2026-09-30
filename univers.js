@@ -1154,8 +1154,8 @@ const SHOW_UNIVERSES = {
     // dans le balisage, et l'attribut retiré interdit toute boucle.
     const YT_PLACEHOLDER = 120;
 
-    function wireVideoPosters() {
-        overlay.querySelectorAll('img[data-u-poster]').forEach(img => {
+    function wireVideoPosters(zone) {
+        (zone || overlay).querySelectorAll('img[data-u-poster]').forEach(img => {
             const secours = () => {
                 const id = img.dataset.uPoster;
                 if (!id || !YT_ID.test(id)) return;
@@ -1178,14 +1178,17 @@ const SHOW_UNIVERSES = {
     // /spectacles/ : c'est ce qui garantit qu'un univers et sa page ont le
     // même visage. Ici on ne fournit que ce qui vient du DOM et de l'état
     // du site — la ligne de CV, les dates du moment, le badge de création.
-    function render(li, uni) {
+    function render(li, uni, parPassage) {
         const info = rowInfo(li, uni);
         overlay.innerHTML = panelHtml(info, uni, {
             dates: datesBlock(info.key, uni),
             // Sans date à venir, un spectacle peut être arrêté OU pas encore
             // créé : le badge de la ligne du CV est ce qui les distingue.
-            enCreation: window.cvShowIsEnCreation?.(li) || false
+            enCreation: window.cvShowIsEnCreation?.(li) || false,
+            // Dans le passage, le montage vient après (voir monterLeMontage).
+            montage: !parPassage
         });
+        montageAPoser = parPassage ? beatsHtml(uni, info.title) : '';
         // innerHTML vient d'effacer la fenêtre « ajouter à l'agenda », qui
         // vit dans ce même conteneur : on la repose. Sans cette ligne, les
         // boutons agenda d'un univers ouvert depuis le CV ne faisaient RIEN
@@ -1279,12 +1282,26 @@ const SHOW_UNIVERSES = {
     //
     //  Une seule mesure par ouverture (et par redimensionnement), jamais à
     //  chaque image : c'est le navigateur qui fait ensuite avancer la lumière.
+    //
+    //  TOUT DÉFAIRE, PUIS TOUT MESURER, PUIS TOUT ÉCRIRE. Bloc par bloc, la
+    //  mesure d'un bloc suivait l'écriture du précédent (ses fenêtres, sa
+    //  classe, ses césures) : le navigateur recalculait les styles de tout
+    //  le document avant chaque bloc — 6 à 7 recalculs de 1 700 à
+    //  2 000 éléments, 1,4 à 1,8 s de fil principal bloqué à ×4 sur un
+    //  téléphone, en plein passage. Les trois temps séparés, il n'en reste
+    //  qu'un : 250 à 280 ms — 45 à 65 ms depuis que la page couverte n'est
+    //  plus rendue (voir cacherLaPage). Rien de ce qui est écrit ne déplace
+    //  un mot (des fenêtres en position absolue, une opacité, des
+    //  variables) : les mesures sont les mêmes, fenêtre pour fenêtre.
     const LECTURE_DEBUT = 0.74, LECTURE_FIN = 0.5;
     const PAUSE_CESURE = 7, PAUSE_LIGNE = 2;
 
     function ecrireALaLumiere(zone) {
         if (REDUCED) return;
-        zone.querySelectorAll('.u-ecrit').forEach(poserLaLumiere);
+        const blocs = [...zone.querySelectorAll('.u-ecrit')];
+        blocs.forEach(bloc => bloc.querySelectorAll('.u-lum').forEach(n => n.remove()));
+        const plans = blocs.map(mesurerLaLumiere);
+        plans.forEach((plan, i) => { if (plan) poserLaLumiere(blocs[i], plan); });
     }
 
     //  MESURER LA MISE EN PAGE, PAS L'IMAGE À L'ÉCRAN. Un texte posé dans
@@ -1301,13 +1318,14 @@ const SHOW_UNIVERSES = {
         return [x, y];
     }
 
-    function poserLaLumiere(bloc) {
+    //  La mesure d'un bloc : ses segments et leurs plages, sans rien écrire
+    //  dans la page. Rend ce que poserLaLumiere posera, ou null.
+    function mesurerLaLumiere(bloc) {
         const texte = bloc.matches('p, h2, h3') ? bloc : bloc.querySelector('p, h2, h3');
-        if (!texte) return;
-        texte.querySelectorAll('.u-lum').forEach(n => n.remove());
+        if (!texte) return null;
         const elements = [...texte.querySelectorAll('.u-rw, .u-cesure')];
-        if (!elements.some(el => el.classList.contains('u-rw'))) return;
-        if (!texte.offsetWidth) return;   // pas encore mis en page : on reviendra
+        if (!elements.some(el => el.classList.contains('u-rw'))) return null;
+        if (!texte.offsetWidth) return null;   // pas encore mis en page : on reviendra
         const [tx, ty] = position(texte);
 
         // 1. Les segments : une ligne visuelle, ou la moitié d'un vers.
@@ -1330,7 +1348,7 @@ const SHOW_UNIVERSES = {
                 seg.mots.push(el);
             }
         }
-        if (!segments.length) return;
+        if (!segments.length) return null;
 
         // 2. Les plages de chaque segment : la plage du texte entier, puis
         //    sa part à chacun, l'un après l'autre.
@@ -1366,8 +1384,12 @@ const SHOW_UNIVERSES = {
             sg.reprise = t;
         });
 
-        // 3. Les fenêtres de lumière.
         const em = parseFloat(getComputedStyle(texte).fontSize) || 16;
+        return { texte, segments, enScene, em };
+    }
+
+    function poserLaLumiere(bloc, { texte, segments, enScene, em }) {
+        // 3. Les fenêtres de lumière.
         const frag = document.createDocumentFragment();
         segments.forEach(sg => {
             const lum = document.createElement('span');
@@ -1435,7 +1457,28 @@ const SHOW_UNIVERSES = {
     let lettres = 0;
     const photosLettre = new Map();
 
+    // LA PORTE D'UNE LETTRE NE DÉPEND QUE DE LA LETTRE ET DE SA POLICE, pas
+    // de la mise en page : elle est gardée. Elle était redessinée et
+    // recherchée à chaque détourage — à chaque ouverture, et deux fois par
+    // ouverture tant que la mesure était doublée : 70 à 110 ms à ×4 sur un
+    // téléphone. On ne garde qu'une porte tracée dans la police du titre
+    // arrivée : dessinée avec la police de secours, elle serait fausse, et
+    // le serait restée.
+    const portes = new Map();
+
     function porteDe(car, police) {
+        const cle = `${car}|${police.style}|${police.weight}|${police.family}`;
+        if (portes.has(cle)) return portes.get(cle);
+        const porte = tracerLaPorte(car, police);
+        let prete = false;
+        try {
+            prete = !document.fonts || document.fonts.check(`${police.style} ${police.weight} 96px ${police.family}`, car);
+        } catch (e) { /* une police illisible : on ne garde rien */ }
+        if (prete) portes.set(cle, porte);
+        return porte;
+    }
+
+    function tracerLaPorte(car, police) {
         const F = 96, pad = 8;
         const c = document.createElement('canvas');
         const ctx = c.getContext('2d', { willReadFrequently: true });
@@ -1739,20 +1782,101 @@ const SHOW_UNIVERSES = {
         guets = [];
     }
 
-    // Tout ce qui donne vie au montage, une fois qu'il est dans la page.
-    function animerLeMontage() {
-        window.Regie?.observer(overlay);
-        guetterNettete(overlay);
-        guetterAllumage(overlay);
-        // Les lignes se mesurent sur la mise en page finale : polices
-        // arrivées, et une image plus tard, le temps que tout se pose.
-        const mesurer = () => requestAnimationFrame(() => {
+    // LES LIGNES SE MESURENT SUR LA MISE EN PAGE FINALE, une image plus
+    // tard, le temps que tout se pose — et UNE FOIS : une seule mesure en
+    // attente à la fois. La mesure était relancée d'office sur
+    // document.fonts.ready, déjà tenue quand les polices sont là : les deux
+    // tombaient dans la même image, et la lumière comme la lettre étaient
+    // mesurées et écrites deux fois (74 fenêtres créées pour 37 gardées,
+    // sur Cléophène). On ne remesure plus que si une police est EN ROUTE
+    // une fois la mesure faite : c'est souvent la mesure elle-même qui l'a
+    // demandée (le titre en Cinzel, l'italique d'une citation), et les
+    // lignes posées avec la police de secours seraient fausses.
+    let mesurePrevue = 0;
+
+    function mesurerLesLignes() {
+        if (mesurePrevue) return;
+        mesurePrevue = requestAnimationFrame(() => {
+            mesurePrevue = 0;
             if (!isOpen) return;
             ecrireALaLumiere(overlay);
             detourerLeTitre(overlay);
+            if (document.fonts && document.fonts.status === 'loading') document.fonts.ready.then(mesurerLesLignes);
         });
-        mesurer();
-        if (document.fonts && document.fonts.ready) document.fonts.ready.then(mesurer);
+    }
+
+    // Tout ce qui donne vie au montage, une fois qu'il est dans la page.
+    function animerLeMontage(zone) {
+        window.Regie?.observer(zone);
+        guetterNettete(zone);
+        guetterAllumage(zone);
+    }
+
+    // ── LE MONTAGE APRÈS LE PASSAGE ──────────────────────────────────
+    //  Le rappel du passage — ce qui construit le panneau pendant que la
+    //  vignette attend de devenir la page — insérait tout d'un coup :
+    //  l'ouverture, le pied, et le montage entier, cinq à sept cents
+    //  éléments dont le premier écran ne montre rien. Il ne pose plus que
+    //  l'ouverture et le pied (« Accéder aux dates » répond tout de suite) ;
+    //  le montage suit le passage, par tranches de quelques temps qui
+    //  rendent la main entre elles — à l'image, à un geste.
+    //
+    //  PENDANT LE PASSAGE, RIEN NE SE MESURE non plus. La vignette devient
+    //  la page sur la carte graphique, mais chaque image du passage attend
+    //  que le fil principal soit libre : la mesure des lignes et de la
+    //  lettre, qui tombait dedans, le figeait — 620 ms prévues, 2,6 s
+    //  jouées à ×4, dont une image figée 1,8 s. Rien n'est à éclairer au
+    //  premier écran — la lumière part au défilement, la lettre au bout du
+    //  travelling : on mesure une fois le montage posé.
+    //
+    //  L'ORDRE COMPTE : les tranches, puis la régie, la mise au point et le
+    //  top lumière sur ce qui vient d'arriver, puis la mesure des lignes,
+    //  qui porte sur la page finie. Un saut vers les dates pendant ce
+    //  temps pose d'un coup ce qui manque (finirLeMontage) : la page ne
+    //  doit plus grandir au-dessus du pied une fois qu'on y va.
+    let montageAPoser = '';
+    let finirLeMontage = null;
+    const TEMPS_PAR_TRANCHE = 4;
+
+    // RENDRE LA MAIN JUSQU'À L'IMAGE SUIVANTE : la tranche posée est mise
+    // en page et peinte avant la suivante. scheduler.yield() ne suffisait
+    // pas — il rend la main aux gestes, pas à l'image : les tranches
+    // s'additionnaient dans la même image, figée 350 ms à ×4 juste après
+    // le passage, contre 210 à 280 ms ainsi. Le minuteur couvre l'onglet
+    // passé en arrière-plan, où les images ne viennent plus.
+    const ceder = () => new Promise(ok => {
+        let fait = false;
+        const suite = () => { if (!fait) { fait = true; ok(); } };
+        requestAnimationFrame(() => setTimeout(suite, 0));
+        setTimeout(suite, 200);
+    });
+
+    async function monterLeMontage() {
+        const figs = overlay.querySelector('.u-figs');
+        const html = montageAPoser;
+        montageAPoser = '';
+        const token = openToken;
+        if (figs && html) {
+            const modele = document.createElement('template');
+            modele.innerHTML = html;
+            const temps = [...modele.content.childNodes];
+            const poser = (n) => figs.append(...temps.splice(0, n));
+            finirLeMontage = () => poser(temps.length);
+            while (temps.length) {
+                // Une tranche : quelques temps du montage, sans compter les
+                // blancs qui les séparent.
+                let n = 0, pris = 0;
+                while (n < temps.length && pris < TEMPS_PAR_TRANCHE) if (temps[n++].nodeType === 1) pris++;
+                poser(n);
+                if (!temps.length) break;
+                await ceder();
+                if (token !== openToken) return;
+            }
+            finirLeMontage = null;
+            wireVideoPosters(figs);
+            animerLeMontage(figs);
+        }
+        mesurerLesLignes();
     }
 
     // ── Agrandissement d'une photo ───────────────────────────────────
@@ -1933,6 +2057,59 @@ const SHOW_UNIVERSES = {
     const PASSAGE = typeof document.startViewTransition === 'function' && !REDUCED;
     let ligneOuverte = null;   // la ligne d'où l'on est parti : on y revient
     let passageEnCours = false;
+    // Le passage d'ouverture qui joue : ce qui doit attendre sa fin (les
+    // mesures, voir animerLeMontage) s'accroche à sa promesse.
+    let passageCourant = null;
+
+    // ── LA PAGE SOUS LE PANNEAU CESSE D'ÊTRE RENDUE ──────────────────
+    //  Une fois le panneau à l'écran, la page qu'il couvre (#site, le CV et
+    //  ses deux mille éléments) passe en content-visibility: hidden (voir
+    //  html.u-page-cachee dans univers.css). Sans cela, tout ce que le
+    //  panneau faisait recalculer — sa construction, son défilement remis à
+    //  zéro, le focus sur la croix — recalculait aussi le CV, entièrement
+    //  couvert : 1 200 à 1 970 éléments à chaque fois. Et pendant le
+    //  passage, le navigateur le recalculait à CHAQUE image. La page garde
+    //  sa taille (contain-intrinsic-size: auto) : rien ne bouge dessous.
+    //
+    //  DANS LE PASSAGE, dès la construction du panneau : la page est déjà
+    //  capturée, et le nouvel état de la racine est invisible à l'aller —
+    //  personne ne voit la page disparaître. SANS PASSAGE (mouvement
+    //  réduit, navigateur sans View Transitions, historique), le panneau se
+    //  déplie depuis la ligne sur la page encore visible autour : elle n'est
+    //  cachée qu'une fois le dépliement fini, ou le fondu du panneau quand
+    //  rien ne se déplie — d'emblée en mouvement réduit, où rien ne bouge.
+    //
+    //  Toute fermeture la rend EN PREMIER (voir fermer) : la position à
+    //  rendre, la ligne où revenir et le focus s'y lisent.
+    function cacherLaPage() {
+        if (isOpen) document.documentElement.classList.add('u-page-cachee');
+    }
+
+    function montrerLaPage() {
+        document.documentElement.classList.remove('u-page-cachee');
+    }
+
+    // On retient où l'on en était dans la page AVANT de la verrouiller.
+    // `u-locked` pose overflow:hidden sur <html> : la page cesse d'être
+    // défilable, et le navigateur ramène aussitôt son défilement à zéro.
+    // Le retrait de la classe ne le rend pas — d'où un « précédent » qui
+    // renvoyait tout en haut du CV, alors qu'on avait ouvert un spectacle
+    // depuis le bas de la liste. C'est à nous de le rendre (voir close()).
+    function verrouillerLaPage(cacher) {
+        defilementAvant = window.scrollY || document.documentElement.scrollTop || 0;
+        document.documentElement.classList.add('u-locked');
+        if (cacher) document.documentElement.classList.add('u-page-cachee');
+    }
+
+    // L'écoute de la fin du dépliement (voir montrer), retirée à sa fin
+    // comme à la fermeture.
+    let depliement = null;
+
+    function lacherLeDepliement() {
+        if (!depliement) return;
+        overlay.removeEventListener('transitionend', depliement);
+        depliement = null;
+    }
 
     function nommer(el, nom) {
         if (el) el.style.viewTransitionName = nom;
@@ -1943,16 +2120,35 @@ const SHOW_UNIVERSES = {
         return r.width > 0 && r.bottom > 0 && r.top < window.innerHeight;
     }
 
+    // LA COUVERTURE SE DÉCODE DÈS QU'ON VISE LA LIGNE. Au clic, il fallait
+    // encore la télécharger et la décoder avant que le passage parte : 30 à
+    // 85 ms sur ordinateur, jusqu'au plafond de 350 ms à ×4. L'appui et le
+    // survol précèdent le clic : ils la lancent, et le clic trouve le
+    // décodage en route, ou fini (voir bindPrechauffage). Une promesse par
+    // univers, gardée avec son image — une image que rien ne retient peut
+    // être ramassée avant d'avoir fini (voir photosLettre) — : une
+    // réouverture ne refait rien.
+    const couvertures = new Map();
+
+    function prechaufferCouverture(uni) {
+        let prete = couvertures.get(uni.slug);
+        if (!prete) {
+            const c = couverture(uni);
+            const img = c ? new Image() : null;
+            if (img) {
+                const base = c.src.replace(/-240\.webp$/, '');
+                img.sizes = '100vw';
+                img.srcset = `${base}-640.webp 640w, ${base}-1280.webp 1280w`;
+                img.src = `${base}-1280.webp`;
+            }
+            prete = { img, decodee: img && img.decode ? img.decode().catch(() => { }) : Promise.resolve() };
+            couvertures.set(uni.slug, prete);
+        }
+        return prete.decodee;
+    }
+
     function decoderCouverture(uni) {
-        const c = couverture(uni);
-        if (!c) return Promise.resolve();
-        const base = c.src.replace(/-240\.webp$/, '');
-        const img = new Image();
-        img.sizes = '100vw';
-        img.srcset = `${base}-640.webp 640w, ${base}-1280.webp 1280w`;
-        img.src = `${base}-1280.webp`;
-        const decodee = img.decode ? img.decode().catch(() => { }) : Promise.resolve();
-        return Promise.race([decodee, new Promise(ok => setTimeout(ok, 350))]);
+        return Promise.race([prechaufferCouverture(uni), new Promise(ok => setTimeout(ok, 350))]);
     }
 
     // LE TITRE AU FOND DU TRAVELLING (voir ouvertureHtml) : au premier
@@ -1994,8 +2190,10 @@ const SHOW_UNIVERSES = {
                     montrer(li, uni, false, true);
                     nomsDuPanneau(true);
                 });
+                passageCourant = passage;
                 passage.finished.catch(() => { }).finally(() => {
                     passageEnCours = false;
+                    passageCourant = null;
                     nomsDuPanneau(false);
                     racine.classList.remove('vt-univers');
                 });
@@ -2006,10 +2204,16 @@ const SHOW_UNIVERSES = {
     }
 
     function montrer(li, uni, fromHistory, parPassage) {
+        // Dans le passage, la page est verrouillée et cachée AVANT que le
+        // panneau soit construit : chaque recalcul qui suit ne porte plus
+        // que sur lui (voir cacherLaPage). À ×4, le rappel du passage tombe
+        // de 600-650 ms à 220-240 ms (130-165 ms, le montage posé après :
+        // voir monterLeMontage).
+        if (parPassage) verrouillerLaPage(true);
         ligneOuverte = li;
         const token = ++openToken;
         lastFocus = document.activeElement;
-        render(li, uni);
+        render(li, uni, parPassage);
         wireVideoPosters();
         applyPalette(uni.palette);
         overlay.dataset.slug = uni.slug;
@@ -2020,7 +2224,9 @@ const SHOW_UNIVERSES = {
         overlay.removeAttribute('aria-label');
         overlay.setAttribute('aria-labelledby', 'u-titre');
 
-        const r = li.getBoundingClientRect();
+        // La ligne n'est mesurée que pour s'y déplier : dans le passage, c'est
+        // le navigateur qui l'a déjà capturée.
+        const r = parPassage ? null : li.getBoundingClientRect();
         const vw = window.innerWidth, vh = window.innerHeight;
         overlay.hidden = false;
         // Pas de retard de chargement dans un passage : la photo du fond est
@@ -2031,7 +2237,8 @@ const SHOW_UNIVERSES = {
         // dates faisait arriver directement en bas de page.
         overlay.scrollTop = 0;
         if (!parPassage) overlay.classList.add('is-loading');
-        if (!REDUCED && !parPassage) {
+        const deplie = !REDUCED && !parPassage;
+        if (deplie) {
             overlay.style.willChange = 'clip-path';
             overlay.style.clipPath = `inset(${r.top}px ${vw - r.right}px ${vh - r.bottom}px ${r.left}px round 10px)`;
             // Reflow imposé : sans lui, le navigateur fusionne l'état de
@@ -2042,12 +2249,35 @@ const SHOW_UNIVERSES = {
         overlay.style.clipPath = 'inset(0px 0px 0px 0px round 0px)';
         // Le cadre final ne sert à rien une fois ouvert, et il gardait au
         // panneau un détourage et un contexte d'empilement pour toute sa vie.
-        const lacherLeCadre = (e) => {
-            if (e.target !== overlay || e.propertyName !== 'clip-path') return;
-            overlay.removeEventListener('transitionend', lacherLeCadre);
-            if (token === openToken) { overlay.style.clipPath = ''; overlay.style.willChange = ''; }
-        };
-        overlay.addEventListener('transitionend', lacherLeCadre);
+        // Le dépliement fini, le panneau couvre tout : la page peut cesser
+        // d'être rendue (voir cacherLaPage).
+        // Écouté seulement quand on déplie : dans le passage, le clip-path
+        // ne s'anime pas, sa fin ne venait jamais, et chaque ouverture
+        // laissait un écouteur de plus sur le panneau.
+        if (deplie) {
+            const finDuDepliement = () => {
+                lacherLeDepliement();
+                if (token !== openToken) return;
+                overlay.style.clipPath = '';
+                overlay.style.willChange = '';
+                cacherLaPage();
+            };
+            depliement = (e) => {
+                if (e.target === overlay && e.propertyName === 'clip-path') finDuDepliement();
+            };
+            overlay.addEventListener('transitionend', depliement);
+            // Un dépliement qui ne part pas n'a pas de fin à écouter : c'est
+            // le cas d'un univers rouvert par « suivant », où le navigateur
+            // n'anime pas le clip-path. On le constate à l'image suivante, et
+            // l'on attend seulement la fin du fondu du panneau : la page se
+            // voit à travers tant qu'il n'est pas opaque.
+            requestAnimationFrame(() => {
+                if (!depliement || token !== openToken || !overlay.getAnimations) return;
+                const enCours = overlay.getAnimations();
+                if (enCours.some(a => a.transitionProperty === 'clip-path')) return;
+                Promise.all(enCours.map(a => a.finished)).then(finDuDepliement, () => { });
+            });
+        }
 
         awaitFirstPhoto().then(() => {
             // Panneau refermé, ou déjà rouvert sur un autre spectacle,
@@ -2058,14 +2288,10 @@ const SHOW_UNIVERSES = {
             onScroll();
         });
 
-        // On retient où l'on en était dans la page AVANT de la verrouiller.
-        // `u-locked` pose overflow:hidden sur <html> : la page cesse d'être
-        // défilable, et le navigateur ramène aussitôt son défilement à zéro.
-        // Le retrait de la classe ne le rend pas — d'où un « précédent » qui
-        // renvoyait tout en haut du CV, alors qu'on avait ouvert un spectacle
-        // depuis le bas de la liste. C'est à nous de le rendre (voir close()).
-        defilementAvant = window.scrollY || document.documentElement.scrollTop || 0;
-        document.documentElement.classList.add('u-locked');
+        // Sans passage, la page est verrouillée APRÈS avoir mesuré la ligne
+        // (le verrou ramène le défilement à zéro, voir verrouillerLaPage) ;
+        // en mouvement réduit, rien ne se déplie : elle est cachée d'emblée.
+        if (!parPassage) verrouillerLaPage(REDUCED);
         // Une entrée d'historique de plus : « précédent » referme l'univers
         // et rend le CV, au lieu de quitter le site (voir index.html).
         // Cette entrée porte désormais UNE ADRESSE : #/univers/berenice. Un
@@ -2085,7 +2311,11 @@ const SHOW_UNIVERSES = {
         overlay.addEventListener('scroll', onScroll, { passive: true });
         window.addEventListener('resize', reecrireALaLumiere);
         onScroll();
-        animerLeMontage();
+        animerLeMontage(overlay);
+        // Dans le passage, le montage et les mesures l'attendent (voir
+        // monterLeMontage) ; sans lui, tout est déjà là.
+        if (parPassage) (passageCourant ? passageCourant.finished : Promise.resolve()).catch(() => { }).finally(monterLeMontage);
+        else mesurerLesLignes();
         lastScrollTop = 0;
         playWriting({ titrePose: parPassage && !titreAuFond() });
         // LA PAGE DERRIÈRE DEVIENT INERTE. Le panneau couvre l'écran, mais le
@@ -2137,7 +2367,11 @@ const SHOW_UNIVERSES = {
     }
 
     function fermer(direct) {
+        // La page d'abord, et quoi qu'il arrive : une page restée cachée
+        // serait un écran vide (voir cacherLaPage).
+        montrerLaPage();
         if (!isOpen) return;
+        lacherLeDepliement();
         // L'agrandissement est empilé PAR-DESSUS l'univers : le dépiler
         // d'abord, sinon l'historique garderait une entrée orpheline.
         closeZoom();
@@ -2153,6 +2387,8 @@ const SHOW_UNIVERSES = {
         }
         isOpen = false;
         openToken++;
+        montageAPoser = '';
+        finirLeMontage = null;
         overlay.classList.remove('is-open', 'is-loading');
         overlay.style.willChange = '';
         overlay.removeEventListener('scroll', onScroll);
@@ -2575,6 +2811,9 @@ const SHOW_UNIVERSES = {
             // « Accéder aux dates » : on saute au pied du panneau. Les
             // photos restent au-dessus, on ne les a pas perdues.
             if (e.target.closest('[data-u-jump]')) {
+                // Le montage encore en route : posé d'un coup, sinon il
+                // pousserait le pied pendant qu'on y va.
+                finirLeMontage?.();
                 const foot = overlay.querySelector('.u-foot');
                 if (!foot) return;
                 // Rien à préparer : ce qui se trouve en chemin s'anime au
@@ -2622,6 +2861,7 @@ const SHOW_UNIVERSES = {
         markCvRows();
         bindLongPress();
         bindAmbianceSurvol();
+        bindPrechauffage();
         // Après markCvRows et addWhisper : le murmure ajoute son balisage
         // dans la ligne, et la mesure doit porter sur la ligne finie.
         suivreLesHauteurs();
@@ -2686,7 +2926,8 @@ const SHOW_UNIVERSES = {
         overlay.classList.add('is-open');
         overlay.addEventListener('scroll', onScroll, { passive: true });
         window.addEventListener('resize', reecrireALaLumiere);
-        animerLeMontage();
+        animerLeMontage(overlay);
+        mesurerLesLignes();
         lastScrollTop = 0;
         // AVANT l'écriture : le pied se refait en silence, la page n'a pas
         // encore bougé. Si rien n'a changé depuis la génération, l'opération
@@ -3273,6 +3514,33 @@ const SHOW_UNIVERSES = {
             // pas quand il passe d'un mot à l'autre à l'intérieur.
             if (li && !li.contains(e.relatedTarget)) eteindreLaSalle();
         });
+    }
+
+    //  LA COUVERTURE AVANT LE CLIC (voir prechaufferCouverture). Au doigt,
+    //  dès l'appui — en capture, avant que quiconque ne l'arrête ; le clic
+    //  suit de 100 à 250 ms. À la souris, après une pause de 90 ms sur la
+    //  ligne : le survol précède le clic de bien plus, et une ligne
+    //  seulement traversée ne télécharge pas sa couverture (30 à 70 Ko
+    //  chacune).
+    const PAUSE_PRECHAUFFE = 90;
+
+    function bindPrechauffage() {
+        const prechauffer = (li) => {
+            const uni = li && universeFor(li);
+            if (uni) prechaufferCouverture(uni);
+        };
+        document.addEventListener('pointerdown', (e) => {
+            prechauffer(e.target.closest?.('.cv-item.cv-has-universe'));
+        }, { capture: true, passive: true });
+        let visee = null, attente = 0;
+        document.addEventListener('pointerover', (e) => {
+            if (e.pointerType === 'touch') return;
+            const li = e.target.closest?.('.cv-item.cv-has-universe') || null;
+            if (li === visee) return;
+            visee = li;
+            clearTimeout(attente);
+            if (li) attente = setTimeout(() => prechauffer(li), PAUSE_PRECHAUFFE);
+        }, { passive: true });
     }
 
     //  LE MURMURE S'ÉPINGLE UNE FOIS PARU. Tant qu'il fallait garder le
