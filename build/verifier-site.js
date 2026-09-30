@@ -3248,7 +3248,7 @@ function exige(condition, message) {
             await s.close();
         });
 
-        await verifie('le service worker ne garde que les polices et les images : ni page, ni script, ni feuille, ni dates ; inscrit par chaque page publique, pas par /admin/, et il sait se retirer', async () => {
+        await verifie('le service worker ne garde que les polices et les images : ni page, ni script, ni feuille, ni dates ; inscrit par chaque page publique, pas par /admin/ ni sur l’aperçu Cloudflare, et il sait se retirer', async () => {
             const sw = fs.readFileSync(path.join(RACINE, 'sw.js'), 'utf8');
             exige(/const RETIRE = false;/.test(sw) && /self\.registration\.unregister\(\)/.test(sw), 'sw.js : l’interrupteur (RETIRE, et la désinscription) a disparu — ou il est baissé');
             // Les polices gardées à l'installation sont celles que l'accueil
@@ -3263,7 +3263,11 @@ function exige(condition, message) {
             const publiques = ['index.html', '404.html', 'galerie/index.html', 'spectacles/index.html']
                 .concat(dossiers.map((d) => `spectacles/${d}/index.html`));
             for (const f of publiques) {
-                exige(/navigator\.serviceWorker\.register\('\/sw\.js'\)/.test(fs.readFileSync(path.join(RACINE, f), 'utf8')), `${f} : n’inscrit pas le service worker`);
+                const h = fs.readFileSync(path.join(RACINE, f), 'utf8');
+                exige(/navigator\.serviceWorker\.register\('\/sw\.js'\)/.test(h), `${f} : n’inscrit pas le service worker`);
+                // Pas sur l'aperçu Cloudflare, où l'on recharge après chaque
+                // poussée : une photo remplacée y paraissait ancienne.
+                exige(h.includes('/\\.workers\\.dev$/.test(location.hostname)'), `${f} : inscrit le service worker sur l’aperçu Cloudflare (.workers.dev)`);
             }
             exige(!/serviceWorker/.test(fs.readFileSync(path.join(RACINE, 'admin/index.html'), 'utf8')), '/admin/ inscrit le service worker');
             const c = await visiteur({ viewport: { width: 390, height: 844 } });

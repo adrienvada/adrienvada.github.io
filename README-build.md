@@ -272,10 +272,11 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   (quatre colonnes au téléphone, cinq au-delà) ; à 390 px (×3), 412 px
   (×1,75) et 1 440 px, aucune vignette téléchargée deux fois, et les vues du
   premier écran allumées ; sans JavaScript, aucune n'est cachée ;
-- le service worker : inscrit par chaque page publique et pas par `/admin/`,
-  il ne garde que des polices et des images de `/ressources/` — à son
-  installation, les seules polices que l'accueil précharge —, ni la page ni
-  un script n'est passé par lui, et son interrupteur est là, levé (voir [Le
+- le service worker : inscrit par chaque page publique, pas par `/admin/` ni
+  sur l'aperçu Cloudflare (`.workers.dev`), il ne garde que des polices et
+  des images de `/ressources/` — à son installation, les seules polices que
+  l'accueil précharge —, ni la page ni un script n'est passé par lui, et son
+  interrupteur est là, levé (voir [Le
   service worker](#le-service-worker-swjs--les-polices-et-les-images-rien-dautre)) ;
 - le sitemap annonce toutes les pages spectacle, et elles seules ;
 - les [variantes d'images](#images-générées-à-ne-pas-écraser-sans-les-régénérer)
@@ -324,6 +325,12 @@ ici : c'est ce qui l'empêche de revenir.
 | la **signature** — un nouvel export reMarkable | `python3 build/signature-vers-svg.py <export.pdf>` | `signature.webp` + le bloc SVG à coller |
 
 Chacune a sa section plus bas, avec ce qu'elle fait et pourquoi.
+
+**Une image refaite sous le même nom** — le portrait, une photo du montage,
+une vignette recadrée par un nouveau `cadre`, la signature — est servie
+ancienne **une fois** aux visiteurs revenus, par le service worker :
+augmenter `VERSION` n'y change rien (voir [Le service
+worker](#le-service-worker-swjs--les-polices-et-les-images-rien-dautre)).
 
 **L'ordre compte entre les deux générateurs** : la galerie d'abord, les pages
 spectacle ensuite. C'est le second qui écrit `sitemap.xml`, et il date
@@ -594,6 +601,10 @@ qui elles déclenchent bien les deux à la fois.
 
 Les visites sur `.workers.dev` **ne sont pas comptées** par Umami — voir plus
 bas, `data-domains`.
+
+Le **service worker** ne s'y inscrit pas (voir [Le service
+worker](#le-service-worker-swjs--les-polices-et-les-images-rien-dautre)) : une
+photo poussée sous le même nom paraît dès le premier rechargement.
 
 Vérifier la configuration sans rien publier :
 
@@ -1927,7 +1938,9 @@ l'efface.
   le fichier dans `Images spectacles/…`, relancez le script. Rien d'autre —
   sauf s'il annonce que la liste des versions écran large a changé (une
   photo de 2400 px gagne ou perd sa `-2400`) : régénérez alors les pages,
-  `npm --prefix build run pages`.
+  `npm --prefix build run pages`. Les visiteurs revenus verront encore
+  l'ancienne une fois : le service worker la leur sert de son cache (voir
+  [Le service worker](#le-service-worker-swjs--les-polices-et-les-images-rien-dautre)).
   Le script cherche ce dossier à côté du dépôt, puis à son ancienne place ;
   `UNIVERS_PHOTOS=/chemin` permet d'en désigner un autre.
 - **Changer quelle photo apparaît** : modifiez le numéro dans la `sequence`
@@ -3011,17 +3024,23 @@ Pour changer de version : voir `LISEZMOI.txt`.
 
 GitHub Pages sert **tout** avec `cache-control: max-age=600` — les polices et
 le portrait comme la page —, et on ne règle pas ces en-têtes depuis le
-dépôt. Au-delà de dix minutes, chaque revisite redemandait chaque fichier au
-serveur (« a-t-il changé ? », 25 fois « non » sur l'accueil) et les polices
-attendaient leur aller-retour. `/sw.js` garde les **polices** et les
-**images** du site, les sert tout de suite, et demande au serveur, derrière,
-s'il y a plus neuf pour la fois suivante (*stale-while-revalidate*).
+dépôt. Au-delà de dix minutes, chaque revisite redemande chaque fichier au
+serveur (« a-t-il changé ? », 25 fois « non » sur l'accueil), et la page
+attendait chaque réponse — les polices avant le premier affichage.
+`/sw.js` garde les **polices** et les **images** du site, les sert tout de
+suite, et demande au serveur, derrière, s'il y a plus neuf pour la fois
+suivante (*stale-while-revalidate*).
 
 Revisite de l'accueil publié après expiration du cache, au téléphone en 4G
 lente (×4), le service worker arrêté avant la visite — le cas réel au-delà
 de dix minutes —, cinq passes alternées : premier affichage 416 → 348 ms,
-plus grand affichage 432 → 348 ms, 25 → 6 questions au serveur (la page,
-ses scripts, ses feuilles). Rien pour une première visite ; le public est
+plus grand affichage 432 → 348 ms, 25 → 6 requêtes que la page attend du
+réseau (la page, ses scripts, ses feuilles) ; les 19 autres, polices et
+images, lui sont servies d'emblée. **Le serveur, lui, n'en reçoit pas
+moins** : le worker lui repose ces 19 questions derrière la page (304), plus
+celle sur `sw.js` — 26 → 27 à la revisite (relevé sur la copie publiée,
+deux passes alternées). Le gain est l'attente, pas le nombre de requêtes ni
+les données. Rien pour une première visite ; le public est
 celui qui revient sur le même appareil — Adrien d'abord, et Safari efface
 tout d'un site non visité depuis sept jours.
 
@@ -3049,16 +3068,33 @@ sache pourquoi. Celui-ci :
 - n'empêche pas le cache avant/arrière (vérifié : accueil, répertoire, fiche,
   galerie restaurés).
 
-Une image **remplacée sous le même nom** est servie ancienne une fois, puis
-la nouvelle la remplace. Pour qu'elle paraisse partout tout de suite :
-augmenter `VERSION` dans `sw.js` — le nouveau worker efface les caches des
-versions précédentes en s'activant.
+Une image **remplacée sous le même nom** (portrait, photo d'un montage,
+vignette recadrée, signature) est servie ancienne une fois à qui revient,
+puis la nouvelle la remplace : l'ancienne à la visite qui suit la
+publication, la nouvelle à la suivante. **Augmenter `VERSION` n'y change
+rien**, contrairement à ce que ce paragraphe a longtemps promis : le nouveau
+worker efface bien les caches des versions précédentes en s'activant, mais
+la visite qui le découvre est encore servie par l'ancien, depuis son cache.
+Rejoué (portrait remplacé, revisite au-delà de dix minutes, VERSION augmentée
+ou non) : l'ancien à la 2e visite, le nouveau à la 3e, dans les deux cas.
+Pour qu'une image paraisse dès la première revisite, il faut lui donner un
+**autre nom**. `VERSION` reste l'outil pour purger un cache abîmé, ou après
+avoir changé ce que le worker garde.
 
 **Inscrit après le chargement**, par un petit bloc identique sur chaque page
 publique — l'accueil et la 404 (dans le premier script du `<head>`), les
 pages spectacle et le répertoire (`SERVICE_WORKER`, dans
 `generer-pages-spectacles.js`), la galerie (`generer-page-galerie.js`) —,
 pas par `/admin/` : rien de ce que la page demande ne l'attend.
+
+**Pas sur l'aperçu Cloudflare.** Sur une adresse en `.workers.dev` (voir
+[Regarder une branche](#regarder-une-branche-avant-quelle-ne-touche-le-site-cloudflare)),
+le même bloc n'inscrit rien, et retire le worker qu'une visite passée y
+aurait inscrit, ses caches avec. On y garde la page ouverte et on recharge
+après chaque poussée : une photo remplacée sous le même nom y était servie
+ancienne au premier rechargement (rejoué : l'ancien portrait au 1er, le
+nouveau au 2e ; désormais le nouveau dès le 1er), et l'aperçu ne montrait
+plus ce qui sera publié.
 
 **L'interrupteur.** Pour le retirer : passer `RETIRE` à `true` dans `sw.js`
 et publier. À sa visite suivante, chaque visiteur reçoit ce fichier, qui vide

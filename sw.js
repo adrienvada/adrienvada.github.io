@@ -27,7 +27,9 @@
  *  navigateur les envoie au réseau sans le réveiller (addRoutes, là où il
  *  existe ; ailleurs, le gestionnaire les laisse filer sans y toucher).
  *  Une image remplacée sous le même nom est servie ancienne UNE fois,
- *  puis la nouvelle la remplace : c'est le prix, et il est borné.
+ *  puis la nouvelle la remplace : c'est le prix, et il est borné. Pour
+ *  qu'elle paraisse dès la visite suivante, il faut lui donner un autre
+ *  nom — rien, ici, ne peut le faire (voir VERSION plus bas).
  *
  *  POUR LE RETIRER (l'interrupteur) : passer RETIRE à true ci-dessous et
  *  publier. À sa visite suivante, chaque visiteur reçoit ce fichier-ci,
@@ -37,9 +39,14 @@
  *  visite réinscrit ce fichier, qui se désinscrit aussitôt : inoffensif,
  *  mais inutile.
  *
- *  POUR TOUT OUBLIER sans le retirer (une image changée qu'on veut voir
- *  partout tout de suite) : augmenter VERSION. Le nouveau worker efface les
- *  caches des versions précédentes en s'activant.
+ *  POUR TOUT OUBLIER sans le retirer (un cache abîmé, une règle de garde
+ *  changée) : augmenter VERSION. Le nouveau worker efface les caches des
+ *  versions précédentes en s'activant. CE N'EST PAS le moyen de montrer
+ *  plus tôt une image remplacée : la visite qui découvre le nouveau worker
+ *  est encore servie par l'ancien, depuis son cache ; l'image paraît à la
+ *  visite d'après, exactement comme sans rien toucher (rejoué : portrait
+ *  remplacé, l'ancien à la 2e visite et le nouveau à la 3e, VERSION
+ *  augmentée ou non).
  * ============================================================
  */
 'use strict';
