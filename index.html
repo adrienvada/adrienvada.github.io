@@ -8145,9 +8145,9 @@
                     <div class="no-print" id="dates-filters">
                         <div class="dates-outils">
                             <div class="dates-vue" role="group" aria-label="Ranger les dates">
-                                <button type="button" data-dates-vue="date" aria-pressed="true"
+                                <button type="button" data-dates-vue="date" aria-pressed="false"
                                     data-track="dates_vue" data-track-detail="date">Par date</button>
-                                <button type="button" data-dates-vue="spectacle" aria-pressed="false"
+                                <button type="button" data-dates-vue="spectacle" aria-pressed="true"
                                     data-track="dates_vue" data-track-detail="spectacle">Par spectacle</button>
                             </div>
                             <button type="button" id="dates-search-open" aria-expanded="false"
@@ -10147,8 +10147,8 @@
             dlSaisonOuvrir(e.currentTarget.getAttribute('aria-expanded') !== 'true'));
 
         // Le rangement choisi est retenu d'une visite à l'autre.
-        let dlVue = 'date';
-        try { if (localStorage.getItem('av.datesVue') === 'spectacle') dlVue = 'spectacle'; } catch (e) { /* stockage indisponible */ }
+        let dlVue = 'spectacle';
+        try { if (localStorage.getItem('av.datesVue') === 'date') dlVue = 'date'; } catch (e) { /* stockage indisponible */ }
 
         function dlChoisirVue(vue) {
             if ((vue !== 'date' && vue !== 'spectacle') || vue === dlVue) return;
@@ -11888,10 +11888,6 @@
                         un corps, pour en faire émerger un sens profond. Autant de plaisir à préparer, reprendre et
                         préciser qu’à jouer. Depuis quelques années, la caméra a pris sa place à
                         côté du plateau, et le micro aussi.</p>
-                    <p class="recit-para">En ce moment, je joue notamment dans un spectacle sur les violences
-                        conjugales, monté à partir d’extraits de procès réels. On le donne dans des tribunaux, des
-                        hôtels de ville, des salles de réunion citoyenne — rarement dans un théâtre. Le débat qui suit
-                        dure presque aussi longtemps que la représentation.</p>
                     <p class="recit-para">Et il y a les ateliers, en collège et en lycée. Faire dire un alexandrin à
                         voix haute à quelqu’un qui n’en avait jamais lu. J’y apprends au moins autant que j’y donne.</p>
                     <p class="recit-para">Le piano me suit depuis l’âge de cinq ans — Conservatoire, improvisation,
