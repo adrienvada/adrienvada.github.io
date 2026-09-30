@@ -70,13 +70,46 @@ const MONTAGE = require('../univers-montage.js');
 //  d'accueil — Cloudflare sert une copie de tout le site à chaque
 //  branche, et sans cette restriction chaque relecture de maquette
 //  gonflerait les chiffres du vrai domaine.
+//
+//  UN CHARGEUR, LE MÊME QUE CELUI DE L'ACCUEIL (voir son <head>,
+//  « Mesure d'audience ») : Umami inséré en `async`, dont personne
+//  n'attend l'arrivée pour démarrer — le moteur des univers démarre au
+//  DOMContentLoaded, qu'une balise `defer` faisait attendre —, et chargé
+//  seulement une fois la page MONTRÉE. Ces pages sont justement celles
+//  que l'accueil fait pré-rendre au survol de leurs liens : sans ce
+//  garde, chaque survol sans clic comptait une vue. Les gestes relevés
+//  avant son arrivée attendent dans window.avMesureEnAttente (voir
+//  brancherMesure, dans univers.js), que le chargeur rejoue.
+//  Placé avant les feuilles de style, comme dans les deux gabarits : un
+//  script en ligne qui les suivrait les attendrait.
 // ════════════════════════════════════════════════════════════════
 const MESURE = `    <!-- Mesure d'audience — Umami, sans cookie ni identifiant persistant.
-         Balise identique à celle du <head> d'index.html ; elle est écrite
-         ici par build/generer-pages-spectacles.js, ne la modifiez pas à la
+         Chargeur identique à celui du <head> d'index.html ; il est écrit
+         ici par build/generer-pages-spectacles.js, ne le modifiez pas à la
          main. Voir README-build.md, § Mesure d'audience. -->
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="23c34c7a-c28c-4b5b-b237-a154139b62da"
-        data-domains="adrienvada.fr"></script>
+    <script>
+        (function () {
+            var ATTRIBUTS = {
+                'website-id': '23c34c7a-c28c-4b5b-b237-a154139b62da',
+                'domains': 'adrienvada.fr'
+            };
+            var file = window.avMesureEnAttente = window.avMesureEnAttente || [];
+            function charger() {
+                var s = document.createElement('script');
+                s.src = 'https://cloud.umami.is/script.js';
+                s.async = true;
+                for (var k in ATTRIBUTS) s.setAttribute('data-' + k, ATTRIBUTS[k]);
+                s.onload = function () {
+                    var u = window.umami;
+                    if (!u || typeof u.track !== 'function') return;
+                    file.splice(0).forEach(function (g) { u.track(g[0], g[1]); });
+                };
+                document.head.appendChild(s);
+            }
+            if (document.prerendering) document.addEventListener('prerenderingchange', charger, { once: true });
+            else charger();
+        })();
+    </script>
 `;
 
 // Toute espace — insécable, fine, insécable étroite — vaut une espace

@@ -2467,6 +2467,59 @@ function exige(condition, message) {
             await c.close();
         });
 
+
+        await verifie('la mesure attend : un chargeur partout et jamais un script différé, les gestes d’avant Umami en file, rien d’une page pré-rendue — ni vue, ni titre écrit', async () => {
+            // Chaque page publique charge Umami par le chargeur, avant ses feuilles.
+            const pages = ['index.html', '404.html', 'galerie/index.html', 'spectacles/index.html']
+                .concat(dossiers.map((d) => `spectacles/${d}/index.html`));
+            for (const f of pages) {
+                const h = fs.readFileSync(path.join(RACINE, f), 'utf8');
+                exige(!/<script[^>]*\bsrc="https:\/\/cloud\.umami\.is/.test(h), `${f} : Umami en balise, que DOMContentLoaded attend`);
+                exige(/document\.prerendering\)\s*document\.addEventListener\('prerenderingchange', charger/.test(h), `${f} : pas de chargeur de mesure`);
+                const debut = h.indexOf("s.src = 'https://cloud.umami.is/script.js'"), feuille = h.search(/<link rel="stylesheet"/);
+                exige(feuille < 0 || debut < feuille, `${f} : le chargeur suit une feuille de style, qu'il attendrait`);
+            }
+            // Umami n'arrive pas ici (rien ne sort) : « entree » attend en file.
+            const c = await visiteur();
+            const p = await c.newPage();
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForTimeout(300);
+            const accueil = await p.evaluate(() => ({
+                file: (window.avMesureEnAttente || []).map((g) => g[0]),
+                balise: (() => { const s = document.querySelector('script[src="https://cloud.umami.is/script.js"]'); return s && s.async && s.dataset.beforeSend === 'avAvantEnvoi' && s.dataset.domains === 'adrienvada.fr'; })()
+            }));
+            exige(accueil.balise, 'la balise insérée par le chargeur n’a pas ses attributs (async, data-domains, data-before-send)');
+            exige(accueil.file.includes('entree') && accueil.file.length <= 20, `les gestes d’avant Umami ne sont pas mis en file (${accueil.file.join(', ')})`);
+            await c.close();
+            // Une page pré-rendue ne charge pas Umami et n'écrit pas son
+            // titre avant d'être montrée. (Le vrai pré-rendu est refusé à un
+            // navigateur piloté ; on joue ses deux signaux.)
+            const c2 = await visiteur();
+            await c2.addInitScript(() => {
+                let pr = true;
+                Object.defineProperty(document, 'prerendering', { get: () => pr, configurable: true });
+                window.__montrer = () => { pr = false; document.dispatchEvent(new Event('prerenderingchange')); };
+            });
+            const p2 = await c2.newPage();
+            const erreurs = guette(p2);
+            await p2.goto(base + `/spectacles/${dossiers[0]}/`, { waitUntil: 'load' });
+            await p2.waitForTimeout(1500);
+            const cache = await p2.evaluate(() => ({
+                umami: !!document.querySelector('script[src*="cloud.umami.is"]'),
+                ecrites: document.querySelectorAll('.u-hero .u-ch.is-lit').length
+            }));
+            exige(!cache.umami, 'une page pré-rendue charge Umami avant d’être montrée : elle compterait une vue');
+            exige(cache.ecrites === 0, `une page pré-rendue écrit son titre avant d’être montrée (${cache.ecrites} lettres)`);
+            await p2.evaluate(() => window.__montrer());
+            await p2.waitForTimeout(1200);
+            const montre = await p2.evaluate(() => ({
+                umami: !!document.querySelector('script[src*="cloud.umami.is"]'),
+                ecrites: document.querySelectorAll('.u-hero .u-ch.is-lit').length
+            }));
+            exige(montre.umami && montre.ecrites > 0, `montrée, la page ne charge pas Umami ou n’écrit pas son titre (${JSON.stringify(montre)})`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c2.close();
+        });
         await verifie('le sitemap annonce toutes les pages spectacle, et elles seules', async () => {
             const sitemap = fs.readFileSync(path.join(RACINE, 'sitemap.xml'), 'utf8');
             const annoncees = [...sitemap.matchAll(/\/spectacles\/([a-z0-9-]+)\/<\/loc>/g)].map((m) => m[1]);

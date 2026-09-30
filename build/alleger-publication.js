@@ -28,9 +28,10 @@
  *      pas changer. Aucun attribut retiré ni réécrit — `alt=""` reste.
  *
  *  ET CHAQUE FICHIER EST VÉRIFIÉ AVANT D'ÊTRE ÉCRIT : le JavaScript
- *  produit doit se compiler, les scripts en ligne aussi, le JSON-LD
- *  se relire, et la page garder exactement le même nombre de balises
- *  de chaque sorte. Au moindre doute, le fichier reste l'original.
+ *  produit doit se compiler, les scripts en ligne aussi, le JSON-LD et
+ *  les règles de spéculation se relire, et la page garder exactement le
+ *  même nombre de balises de chaque sorte. Au moindre doute, le fichier
+ *  reste l'original.
  *  Puis, si Playwright est là (l'étape du PDF l'installe), les pages
  *  sont ouvertes pour de bon : une seule erreur de script, et TOUT
  *  est remis dans l'état d'origine. Le pire cas est donc le site
@@ -173,7 +174,13 @@ function verifierHtml(original, allege, nom) {
     while ((m = scripts.exec(allege))) {
         const attributs = m[1], corps = m[2];
         if (/\bsrc=/.test(attributs) || !corps.trim()) continue;
-        if (/application\/ld\+json/.test(attributs)) JSON.parse(corps);
+        // Deux sortes de <script> ne sont pas du JavaScript, mais du JSON :
+        // les données structurées, et les règles de spéculation (voir le
+        // <head> de l'accueil). Compilées comme du JavaScript, les secondes
+        // levaient « Unexpected token ':' » — et la page partait non
+        // allégée, 636 ko au lieu de 240, sans autre bruit qu'un
+        // avertissement.
+        if (/application\/ld\+json|speculationrules/.test(attributs)) JSON.parse(corps);
         else verifierJs(corps, `${nom} (script en ligne n° ${++n})`);
     }
 }

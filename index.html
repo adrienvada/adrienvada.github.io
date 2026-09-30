@@ -105,8 +105,9 @@
         //       les pages vues, et le fait sur TOUT le domaine : les onze
         //       pages spectacle, le répertoire et la page d'erreur n'ont
         //       rien à porter de plus, le stockage local est commun.
-        //    2. `data-before-send` sur la balise — l'outil demande son avis
-        //       à `avAvantEnvoi` avant chaque envoi, quel qu'il soit.
+        //    2. `data-before-send`, que le chargeur (juste après) pose sur
+        //       la balise — l'outil demande son avis à `avAvantEnvoi` avant
+        //       chaque envoi, quel qu'il soit.
         //    3. le garde en tête de `track()` — celui-là est démontré : la
         //       fonction est le SEUL point de sortie du site, aucun appel
         //       direct à l'outil nulle part ailleurs.
@@ -182,6 +183,88 @@
             }, { once: true });
         })();
 
+        // ════════════════════════════════════════════════════════════════
+        //  MESURE D'AUDIENCE — Umami (compte européen), et son chargeur
+        //  ----------------------------------------------------------------
+        //  Sans cookie, sans identifiant persistant, sans recoupement entre
+        //  sites : la mesure reste dans le cadre que la CNIL exempte de
+        //  consentement, et le site n'a donc pas de bandeau à imposer en
+        //  premier écran. C'est aussi la seule raison pour laquelle elle est
+        //  acceptable ici — un traceur publicitaire ne le serait pas, pas
+        //  plus que le lecteur YouTube avant le clic. Tout passe par track()
+        //  (voir plus bas) — jamais d'appel direct à umami depuis le reste
+        //  du code, pour n'avoir qu'un endroit à changer le jour où l'on
+        //  change d'outil.
+        //
+        //  UN CHARGEUR, ET NON PLUS UNE BALISE <script defer>. Deux raisons.
+        //
+        //  1. `defer` NE RETARDAIT PAS L'AFFICHAGE, MAIS LE DÉMARRAGE. Un
+        //     script différé s'exécute AVANT DOMContentLoaded, et l'événement
+        //     l'attend — or tout le site y est branché : univers.js, les
+        //     onglets, la barre, les lecteurs. Umami servi avec 2,5 s de
+        //     retard, et c'est le site entier qui démarrait 0,8 s plus tard
+        //     (DOMContentLoaded à 3,2 s au lieu de 2,4, en 4G lente) ; un
+        //     pare-feu qui avale les paquets au lieu de les refuser l'aurait
+        //     tenu plusieurs secondes. Inséré par script, il est `async` : il
+        //     arrive quand il arrive, et personne ne l'attend.
+        //
+        //  2. UNE PAGE PRÉ-RENDUE N'A PAS ÉTÉ VUE. Chrome prépare parfois une
+        //     page avant qu'on y aille — au survol d'un lien que les règles
+        //     de spéculation désignent, ou d'après ce qu'on tape dans la
+        //     barre d'adresse — et l'on n'y va pas toujours. Umami ne le sait
+        //     pas : il compte la vue dès que la page est prête. Le chargeur
+        //     attend donc qu'elle soit montrée (`prerenderingchange`), et une
+        //     page préparée pour rien ne compte rien.
+        //
+        //  LES GESTES D'AVANT SON ARRIVÉE NE SONT PAS PERDUS. En `async`,
+        //  Umami arrive souvent après le démarrage — et `entree` part au
+        //  démarrage : sans file d'attente, il était perdu quatre fois sur
+        //  quatre dans l'essai à 2,5 s. track() range donc ce qui vient trop
+        //  tôt dans window.avMesureEnAttente, vingt gestes au plus (une page
+        //  où Umami ne vient jamais, derrière un bloqueur, n'accumule rien),
+        //  et le chargeur la rejoue à l'arrivée d'Umami.
+        //
+        //  LES ATTRIBUTS sont ceux qu'Umami lit sur sa propre balise
+        //  (document.currentScript, défini aussi pour un script inséré) :
+        //    `data-domains` : la mesure ne compte QUE les visites sur
+        //      adrienvada.fr. Le même fichier est aussi servi par les aperçus
+        //      de branche Cloudflare (adresses en .workers.dev) — sans cette
+        //      restriction, chaque relecture d'une maquette viendrait gonfler
+        //      les chiffres du vrai site. Ailleurs que sur le domaine listé,
+        //      le script se charge et ne compte rien.
+        //    `data-before-send` : le deuxième verrou de l'interrupteur, juste
+        //      au-dessus — l'accueil seul le porte.
+        //
+        //  IL VIT ICI, dans le premier script, et non plus bas dans le
+        //  <head> où était la balise : un script en ligne placé après une
+        //  feuille de style attend qu'elle arrive, et toute la suite de la
+        //  page avec lui.
+        //
+        //  LE MÊME CHARGEUR sur chaque page (voir README-build.md, « Mesure
+        //  d'audience ») : seuls les attributs changent d'une page à l'autre.
+        (function () {
+            var ATTRIBUTS = {
+                'website-id': '23c34c7a-c28c-4b5b-b237-a154139b62da',
+                'domains': 'adrienvada.fr',
+                'before-send': 'avAvantEnvoi'
+            };
+            var file = window.avMesureEnAttente = window.avMesureEnAttente || [];
+            function charger() {
+                var s = document.createElement('script');
+                s.src = 'https://cloud.umami.is/script.js';
+                s.async = true;
+                for (var k in ATTRIBUTS) s.setAttribute('data-' + k, ATTRIBUTS[k]);
+                s.onload = function () {
+                    var u = window.umami;
+                    if (!u || typeof u.track !== 'function') return;
+                    file.splice(0).forEach(function (g) { u.track(g[0], g[1]); });
+                };
+                document.head.appendChild(s);
+            }
+            if (document.prerendering) document.addEventListener('prerenderingchange', charger, { once: true });
+            else charger();
+        })();
+
         // L'ANCRE D'ARRIVÉE EST MISE DE CÔTÉ AVANT QUE LE NAVIGATEUR NE S'EN
         // SERVE. Arriver sur adrienvada.fr/#demos_voix lui demande de faire
         // défiler jusqu'au conteneur portant cet identifiant. Ce défilement
@@ -246,6 +329,37 @@
          servie par le site lui-même. -->
     <link rel="preload" href="/ressources/polices/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- LES PAGES SPECTACLE ET LA GALERIE, PRÉPARÉES AU SURVOL. Chaque clic
+         vers une fiche (67 liens dans l'onglet Dates) refaisait tout :
+         la page, ses feuilles, ses scripts, puis le démarrage du moteur.
+         Ces règles demandent à Chrome de la PRÉ-RENDRE dès qu'on marque
+         l'intention d'y aller — au survol à la souris (200 ms) ; au
+         téléphone, d'après les liens restés à l'écran une demi-seconde
+         après l'arrêt du défilement, sans attendre le toucher. Au clic, la
+         page est déjà faite : première image 362 → 139 ms (100 ms par
+         requête), moteur prêt à l'instant au lieu de 560 ms plus tard, et
+         le passage entre les deux pages est conservé.
+
+         « moderate », jamais « eager » ni « immediate » : ceux-là
+         préparent toutes les pages d'un coup, en données et en requêtes
+         Supabase, pour des pages qu'on n'ouvrira pas — et Chrome n'en
+         garde que dix. Deux pré-rendus au plus à la fois en « moderate ».
+
+         Ce qu'une page préparée pour rien ne fait pas : compter une vue (le
+         chargeur de mesure attend qu'elle soit montrée, voir le <head> de
+         chaque page) ni écrire son titre en cachette (univers.js attend
+         lui aussi). Les autres navigateurs ignorent la balise, sans
+         dommage. Du JSON, pas du JavaScript : build/alleger-publication.js
+         le relit comme tel. -->
+    <script type="speculationrules">
+        {
+            "prerender": [{
+                "where": { "or": [{ "href_matches": "/spectacles/*/" }, { "href_matches": "/galerie/" }] },
+                "eagerness": "moderate"
+            }]
+        }
+    </script>
     <link rel="stylesheet" href="/ressources/polices/polices.css">
 
     <!-- SANS JAVASCRIPT, LE SITE RESTE UN SITE. Pas de rideau (personne pour
@@ -276,30 +390,6 @@
     <link rel="manifest" href="/favicon_io/site.webmanifest" />
 
     <title>Adrien Vada — Comédien | Dates, CV & démos</title>
-
-    <!-- ══════════════════════════════════════════════════════════════
-         MESURE D'AUDIENCE — Umami (compte européen)
-         Sans cookie, sans identifiant persistant, sans recoupement entre
-         sites : la mesure reste dans le cadre que la CNIL exempte de
-         consentement, et le site n'a donc pas de bandeau à imposer en
-         premier écran. C'est aussi la seule raison pour laquelle cette
-         balise est acceptable ici — un traceur publicitaire ne le serait
-         pas, pas plus que le lecteur YouTube avant le clic.
-         `defer` : la mesure ne retarde jamais l'affichage.
-         Tout passe par track() (voir plus bas) — jamais d'appel direct à
-         umami depuis le reste du code, pour n'avoir qu'un endroit à
-         changer le jour où l'on change d'outil.
-
-         `data-domains` : la mesure ne compte QUE les visites sur
-         adrienvada.fr. Le même fichier est aussi servi par les aperçus de
-         branche Cloudflare (adresses en .workers.dev) — sans cette
-         restriction, chaque relecture d'une maquette viendrait gonfler les
-         chiffres du vrai site, et les statistiques ne voudraient plus rien
-         dire. Ailleurs que sur le domaine listé, le script se charge et ne
-         compte rien.
-         ══════════════════════════════════════════════════════════════ -->
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="23c34c7a-c28c-4b5b-b237-a154139b62da"
-        data-domains="adrienvada.fr" data-before-send="avAvantEnvoi"></script>
 
     <!-- Données structurées : fiche artiste (les représentations sont ajoutées par script depuis dates.js) -->
     <script type="application/ld+json">
@@ -8995,14 +9085,16 @@
         //  MESURE — le seul point de sortie
         //  Tout le site passe par ici. Aucun autre fichier n'appelle l'outil
         //  de mesure directement : le jour où l'on en change, il n'y a que
-        //  cette fonction et la balise du <head> à toucher, pas une chasse
+        //  cette fonction et le chargeur du <head> à toucher, pas une chasse
         //  dans cinq fichiers.
         //
         //  CE QU'ON N'ENVOIE PAS : rien qui identifie qui que ce soit. Les
         //  détails transmis sont des noms de spectacle et de démo — ce que la
-        //  page affiche déjà. Si l'outil n'a pas chargé (bloqueur, réseau,
-        //  navigation privée), track() ne fait rien et le site n'en sait rien :
-        //  aucune fonctionnalité ne doit dépendre de la mesure.
+        //  page affiche déjà. Si l'outil n'est pas ENCORE là, le geste attend
+        //  son arrivée dans une file bornée (voir le chargeur, dans le
+        //  <head>) ; s'il ne vient pas (bloqueur, réseau, navigation privée),
+        //  rien ne part et le site n'en sait rien : aucune fonctionnalité ne
+        //  doit dépendre de la mesure.
         // ════════════════════════════════════════════════════════════════
         // ════════════════════════════════════════════════════════════════
         //  CHANGER UNE ICÔNE
@@ -9026,6 +9118,11 @@
                 if (window.avSansMesure && window.avSansMesure()) return;
                 if (window.umami && typeof window.umami.track === 'function') {
                     window.umami.track(nom, details || undefined);
+                } else if (window.avMesureEnAttente && window.avMesureEnAttente.length < 20) {
+                    // Pas encore arrivé (il est chargé en `async`, voir le
+                    // chargeur du <head>) : le geste attend, et partira à son
+                    // arrivée. S'il ne vient jamais, la file reste en l'état.
+                    window.avMesureEnAttente.push([nom, details || undefined]);
                 }
             } catch (e) {
                 /* la mesure ne casse jamais la page */

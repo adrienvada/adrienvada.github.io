@@ -2968,6 +2968,12 @@ const SHOW_UNIVERSES = {
                     if (localStorage.getItem('av.sansMesure')) return;
                     if (window.umami && typeof window.umami.track === 'function') {
                         window.umami.track(nom, details || undefined);
+                    } else if (window.avMesureEnAttente && window.avMesureEnAttente.length < 20) {
+                        // Umami arrive en `async`, et seulement une fois la
+                        // page montrée (voir le chargeur du <head>) : le geste
+                        // attend, le chargeur le rejouera. Même file, même
+                        // borne que sur l'accueil.
+                        window.avMesureEnAttente.push([nom, details || undefined]);
                     }
                 } catch (e) { /* la mesure ne casse jamais la page */ }
             };
@@ -2996,7 +3002,20 @@ const SHOW_UNIVERSES = {
         // encore bougé. Si rien n'a changé depuis la génération, l'opération
         // réécrit à l'identique et personne ne voit rien.
         rafraichirDatesSpectacle();
-        playWriting();
+        // UNE PAGE PRÉ-RENDUE N'EST PAS ENCORE REGARDÉE. L'accueil fait
+        // préparer ces pages au survol de leurs liens (règles de
+        // spéculation), parfois des secondes avant le clic — au téléphone,
+        // Chrome les prépare même sans toucher, d'après ce qui est à
+        // l'écran. requestAnimationFrame ne tourne pas pendant ce temps,
+        // mais le minuteur de garde de l'écriture, si : au-delà de quelques
+        // secondes il écrivait tout, et la page s'ouvrait sur un titre déjà
+        // écrit (vérifié : 10 lettres sur 10 après 15 s de pré-rendu).
+        // L'écriture, et sa garde avec elle, attendent qu'on la montre.
+        if (document.prerendering) {
+            document.addEventListener('prerenderingchange', () => playWriting(), { once: true });
+        } else {
+            playWriting();
+        }
         onScroll();
     }
 

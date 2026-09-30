@@ -892,9 +892,33 @@ function genererHtml() {
     </script>
     <meta name="theme-color" content="#0a0907">
 
-    <!-- Mesure d'audience Umami -->
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="23c34c7a-c28c-4b5b-b237-a154139b62da"
-        data-domains="adrienvada.fr"></script>
+    <!-- Mesure d'audience Umami — le chargeur de l'accueil (voir son
+         <head>, « Mesure d'audience ») : \`async\`, et rien de compté tant
+         que la page n'est pas montrée — l'accueil la fait pré-rendre au
+         survol de son lien. Voir README-build.md, § Mesure d'audience. -->
+    <script>
+        (function () {
+            var ATTRIBUTS = {
+                'website-id': '23c34c7a-c28c-4b5b-b237-a154139b62da',
+                'domains': 'adrienvada.fr'
+            };
+            var file = window.avMesureEnAttente = window.avMesureEnAttente || [];
+            function charger() {
+                var s = document.createElement('script');
+                s.src = 'https://cloud.umami.is/script.js';
+                s.async = true;
+                for (var k in ATTRIBUTS) s.setAttribute('data-' + k, ATTRIBUTS[k]);
+                s.onload = function () {
+                    var u = window.umami;
+                    if (!u || typeof u.track !== 'function') return;
+                    file.splice(0).forEach(function (g) { u.track(g[0], g[1]); });
+                };
+                document.head.appendChild(s);
+            }
+            if (document.prerendering) document.addEventListener('prerenderingchange', charger, { once: true });
+            else charger();
+        })();
+    </script>
 
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">

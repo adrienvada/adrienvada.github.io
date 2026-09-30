@@ -29,9 +29,38 @@
          mesure enregistre, et c'est ce qui permet d'aller la réparer.
          `data-domains` : mêmes raisons qu'ailleurs, les aperçus de branche
          Cloudflare ne doivent rien peser. Voir README-build.md, § Mesure
-         d'audience. -->
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="23c34c7a-c28c-4b5b-b237-a154139b62da"
-        data-domains="adrienvada.fr"></script>
+         d'audience.
+         LE MÊME CHARGEUR QUE L'ACCUEIL (voir son <head>, « Mesure
+         d'audience ») : `async`, donc personne ne l'attend, et rien
+         n'est compté d'une page préparée d'avance que personne n'a vue.
+         Pas de `data-before-send` ici, et la file d'attente y reste
+         vide : la page n'envoie que sa vue, et le verrou « ?sansmesure »
+         (umami.disabled) vaut pour tout le domaine. Placé avant la
+         feuille des polices : un script en ligne qui la suivrait
+         l'attendrait. -->
+    <script>
+        (function () {
+            var ATTRIBUTS = {
+                'website-id': '23c34c7a-c28c-4b5b-b237-a154139b62da',
+                'domains': 'adrienvada.fr'
+            };
+            var file = window.avMesureEnAttente = window.avMesureEnAttente || [];
+            function charger() {
+                var s = document.createElement('script');
+                s.src = 'https://cloud.umami.is/script.js';
+                s.async = true;
+                for (var k in ATTRIBUTS) s.setAttribute('data-' + k, ATTRIBUTS[k]);
+                s.onload = function () {
+                    var u = window.umami;
+                    if (!u || typeof u.track !== 'function') return;
+                    file.splice(0).forEach(function (g) { u.track(g[0], g[1]); });
+                };
+                document.head.appendChild(s);
+            }
+            if (document.prerendering) document.addEventListener('prerenderingchange', charger, { once: true });
+            else charger();
+        })();
+    </script>
 
     <!-- Les polices du site, servies par le site (voir ressources/polices/
          polices.css) : plus de détour par Google Fonts. -->

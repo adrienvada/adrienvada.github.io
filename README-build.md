@@ -219,6 +219,12 @@ minute, ce qui a déjà cassé ou casserait sans bruit :
 - la fiche de casting : six rubriques étiquetées, le chant et le piano sur la
   même ligne, moins de 650 px de haut au téléphone ;
 - la page 404 : son titre, son retour, sa lampe, sans erreur ;
+- la mesure attend : chaque page publique charge Umami par le chargeur,
+  avant ses feuilles, jamais par une balise ; la balise insérée porte ses
+  attributs ; `entree` attend en file tant qu'Umami n'est pas là ; une page
+  spectacle pré-rendue ne charge pas Umami et n'écrit pas son titre avant
+  d'être montrée, puis fait les deux (voir [Mesure
+  d'audience](#mesure-daudience)) ;
 - le sitemap annonce toutes les pages spectacle, et elles seules.
 
 Pour ne passer que quelques vérifications — celles dont le nom contient un
@@ -1653,6 +1659,10 @@ non par des `animation-delay` CSS** — on ne pourrait pas les accélérer en
 cours de route. Un garde-fou (`writeGuard`) affiche le texte quoi qu'il arrive
 si `requestAnimationFrame` est étranglé, ce qui arrive dans un onglet en
 arrière-plan : un titre resté invisible serait pire que pas d'animation.
+Sur une page spectacle **pré-rendue** (voir [Préparées au
+survol](#préparées-au-survol-le-pré-rendu)), l'écriture — et son garde-fou
+avec elle — attend que la page soit montrée : sans quoi, pré-rendue plus de
+quelques secondes, elle s'ouvrait sur un titre déjà écrit.
 
 Le bouton **« Accéder aux dates »** est posé sous le titre, dès la première
 page : il saute directement au pied du panneau. Sans lui il fallait traverser
@@ -2479,6 +2489,38 @@ Si vous ajoutez une règle qui masque un élément au départ dans `univers.css`
 **ajoutez-la aussi à `univers-statique.css`**, sinon ce morceau du montage
 sera invisible sans JavaScript, et seulement là.
 
+### Préparées au survol (le pré-rendu)
+
+Chaque clic vers une fiche depuis l'accueil (67 liens dans l'onglet Dates)
+refaisait tout : la page, ses feuilles, ses scripts, puis le démarrage du
+moteur. Des **règles de spéculation**, dans le `<head>` de l'accueil,
+demandent à Chrome de **pré-rendre** `/spectacles/<slug>/` et `/galerie/` dès
+qu'on marque l'intention d'y aller. Au clic, la page est déjà faite : première
+image 362 → 139 ms (100 ms par requête, mesure de l'audit), moteur prêt à
+l'instant au lieu de 560 ms plus tard, et le passage entre les deux pages est
+conservé.
+
+- **`moderate`, jamais `eager` ni `immediate`** : ceux-là préparent toutes les
+  pages d'un coup — données, requêtes Supabase —, pour des pages qu'on
+  n'ouvrira pas, et Chrome n'en garde que dix. Deux pré-rendus au plus à la
+  fois.
+- **Au téléphone, `moderate` n'attend pas le toucher.** À la souris, c'est un
+  survol de 200 ms. Au doigt, depuis 2025, Chrome prépare les liens restés à
+  l'écran une demi-seconde après l'arrêt du défilement : plus de pages
+  préparées sans clic, et certaines longtemps avant lui.
+- **Une page préparée pour rien ne fait rien de visible** : elle ne compte pas
+  de vue (le [chargeur de mesure](#mesure-daudience) attend
+  `prerenderingchange`) et n'écrit pas son titre en cachette (`playWriting`
+  attend aussi). Vérifié : préparée 15 s puis ouverte, la fiche commence son
+  écriture à l'ouverture (0 lettre sur 8), et Umami compte une vue, au clic,
+  avec le bon référent ; préparée sans clic, elle ne compte rien.
+- **Le rideau d'ouverture n'est pas concerné** : les pages préparées n'en ont
+  pas, et revenir à l'accueil depuis l'une d'elles se fait depuis le site, qui
+  ne le lève pas.
+- Les règles sont du **JSON**, pas du JavaScript : `alleger-publication.js`
+  les relit comme telles (compilées comme un script, elles faisaient partir
+  l'accueil non allégé). Safari et Firefox les ignorent, sans dommage.
+
 ---
 
 ## Polices — servies par le site
@@ -2731,18 +2773,51 @@ consigne ne puisse plus l'en déloger. **Ne pas ajouter de `Disallow`.**
 
 ## Mesure d'audience
 
-Umami (compte européen), balise dans le `<head>` de **toutes** les pages. Sans
+Umami (compte européen), chargé dans le `<head>` de **toutes** les pages. Sans
 cookie, sans identifiant persistant, sans recoupement entre sites : la mesure
 reste dans le cadre que la CNIL exempte de consentement, et le site n'a donc
 pas de bandeau à imposer en premier écran.
 
-**Où vit la balise.** Trois endroits, et pas un de plus :
+**Un chargeur, pas une balise.** Umami n'est plus une balise
+`<script defer src>` mais un petit script en ligne qui l'insère — le même
+partout, seuls ses attributs changent. Deux raisons :
+
+- **`defer` faisait attendre le démarrage.** Un script différé s'exécute
+  avant `DOMContentLoaded`, que l'événement attend — et tout le site y est
+  branché. Umami servi avec 2,5 s de retard, et tout l'accueil démarrait
+  d'autant plus tard : `DOMContentLoaded` à 2,6 s au lieu de 0,2 s sur une
+  machine rapide, à 3,2 s au lieu de 2,4 s en 4G lente. Inséré par script, il
+  est `async` : personne ne l'attend.
+- **Une page pré-rendue n'a pas été vue.** L'accueil fait préparer les pages
+  spectacle et la galerie au survol de leurs liens (voir [Préparées au
+  survol](#préparées-au-survol-le-pré-rendu)) ; Umami, lui, compte la vue dès
+  que la page est prête, qu'on y aille ou non. Le chargeur attend
+  `prerenderingchange` quand `document.prerendering` est vrai : une page
+  préparée pour rien ne compte rien, et la vue d'une page préparée part au
+  clic, avec le bon référent (vérifié avec le vrai traceur, servi en local).
+
+Le chargeur recopie les attributs qu'Umami lit sur sa propre balise
+(`document.currentScript`, défini aussi pour un script inséré) :
+`data-website-id`, `data-domains`, et sur l'accueil `data-before-send`. Il
+vit **avant les feuilles de style** : un script en ligne placé après une
+feuille l'attend, et toute la suite de la page avec lui.
+
+**Les gestes d'avant son arrivée attendent.** En `async`, Umami arrive souvent
+après le démarrage — or `entree` part au démarrage : sans file, il était perdu
+à chaque fois dans l'essai à 2,5 s de retard. `track()` range donc ce qui
+vient trop tôt dans `window.avMesureEnAttente` — **vingt gestes au plus**, pour
+qu'une page où Umami ne vient jamais (bloqueur) n'accumule rien —, et le
+chargeur rejoue la file à l'arrivée d'Umami. Le verrou « `?sansmesure` » ne
+change pas : un geste muet n'entre pas dans la file.
+
+**Où vit le chargeur.** Quatre endroits, et pas un de plus :
 
 | Page | Écrite par |
 |---|---|
-| `index.html` | à la main, avec l'interrupteur (voir plus bas) |
+| `index.html` | à la main, dans le premier script du `<head>`, avec l'interrupteur (voir plus bas) |
 | `404.html` | à la main |
 | `/spectacles/` et les onze pages spectacle | `build/generer-pages-spectacles.js`, constante `MESURE` |
+| `/galerie/` | `build/generer-page-galerie.js` |
 
 Ne pas oublier une page en ajoutant une page : pendant longtemps `index.html`
 était seule à compter, alors que les pages spectacle sont précisément celles
@@ -2751,14 +2826,15 @@ disaient rien.
 
 Tout passe par **`track(nom, details)`** — aucun appel direct à `umami`
 ailleurs dans le code, pour n'avoir qu'un endroit à changer le jour où l'on
-change d'outil. Si l'outil n'a pas chargé (bloqueur, réseau), `track()` ne fait
-rien : aucune fonctionnalité du site ne dépend de la mesure.
+change d'outil. Si l'outil n'est pas encore là, le geste attend dans la file ;
+s'il ne vient pas (bloqueur, réseau), rien ne part : aucune fonctionnalité du
+site ne dépend de la mesure.
 
 `track()` est défini par `index.html`. Les pages spectacle, qui ne chargent pas
 ce script, reçoivent le **même** `track()` et la même délégation des
 `data-track` de `univers.js` (`brancherMesure`), avec le même verrou
-« `?sansmesure` » : leurs clics « Réserver » ne comptaient nulle part
-auparavant. Les boutons « Réserver » des univers portent `date_booking`,
+« `?sansmesure` » et la même file d'attente : leurs clics « Réserver » ne
+comptaient nulle part auparavant. Les boutons « Réserver » des univers portent `date_booking`,
 comme ceux de l'onglet Dates — sur l'accueil comme sur les pages spectacle.
 
 Deux façons de relever un geste :
@@ -2804,8 +2880,8 @@ vérifié depuis l'atelier (le proxy n'atteint pas `cloud.umami.is`) :
 
 1. `umami.disabled` — le verrou d'Umami, qui coupe les pages vues. Le stockage
    local étant commun au domaine, il vaut d'un coup pour les quatorze pages.
-2. `data-before-send="avAvantEnvoi"` sur la balise d'`index.html` — Umami
-   demande son avis avant chaque envoi.
+2. `data-before-send="avAvantEnvoi"`, que le chargeur d'`index.html` pose sur
+   la balise — Umami demande son avis avant chaque envoi.
 3. le garde en tête de `track()` — le seul démontrable : cette fonction est
    l'unique point de sortie du site.
 
@@ -2816,8 +2892,8 @@ or ce site n'est presque que ça.
 Ça n'efface pas le passé, et ça ne vaut que sur l'appareil et le navigateur où
 l'on s'est armé. Vider ses données le désarme.
 
-**`data-domains="adrienvada.fr"`** sur la balise : la mesure ne compte que le
-domaine public. Le même `index.html` est aussi servi par les aperçus de branche
+**`data-domains="adrienvada.fr"`**, recopié par chaque chargeur : la mesure ne
+compte que le domaine public. Le même `index.html` est aussi servi par les aperçus de branche
 Cloudflare ; sans cette restriction, chaque relecture d'une maquette viendrait
 gonfler les chiffres du vrai site. Ailleurs que sur le domaine listé, le script
 se charge et ne compte rien — c'est à retoucher le jour où le site changerait
