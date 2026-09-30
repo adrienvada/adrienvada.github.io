@@ -1462,7 +1462,9 @@ texte.
 choisi — de la droite vers « Démos voix », de la gauche en revenant au CV —,
 par une View Transition (`showPage` → `poserPage`) : l'ancienne s'efface d'un
 côté pendant que la nouvelle arrive de l'autre ; l'en-tête et la barre ne
-bougent pas. Le fond et le filet de l'onglet actif sont une **pastille** qui
+bougent pas — sauf le portrait, qui se range dans le médaillon en quittant le
+CV et en ressort au retour (voir [Le portrait d'affiche](#le-portrait-daffiche)).
+Le fond et le filet de l'onglet actif sont une **pastille** qui
 glisse d'un onglet à l'autre sur un ressort (`placerPastille`, et
 `--ease-ressort`) ; l'onglet ne garde que sa couleur, et sa bordure reste
 transparente (l'onglet actif prenait le gris par défaut de Tailwind, hors
@@ -1952,7 +1954,11 @@ D'où deux règles :
   la même façon sans créer de boîte de défilement, précédé
   d'`overflow: hidden` pour les navigateurs qui ne connaissent pas `clip`
   (ils n'ont pas de ligne de temps non plus : c'est le repli qui les mène).
-  C'est le cas de `.u-fig--plein`, comme du `<body>` pour la barre collante ;
+  C'est le cas de `.u-fig--plein`, du cadre de l'affiche, comme du `<body>`
+  pour la barre collante. Et quand l'élément suivi n'est pas celui qui
+  bouge, la ligne de temps se **nomme** sur un ancêtre qui ne rogne pas
+  (`view-timeline-name`) : la photo de l'affiche suit l'en-tête entier,
+  jamais son cadre (voir [Le portrait d'affiche](#le-portrait-daffiche)) ;
 - **une information ne s'anime pas.** L'année des vignettes ne monte plus sur
   la photo : même réparée, la montée la cachait sur les vignettes du bas de
   l'écran tant qu'on n'avait pas défilé.
@@ -2174,7 +2180,8 @@ lieu que si une police est encore en route une fois la première faite
 | une ligne du CV → son univers, et retour | la boîte de la ligne, sa vignette (qui devient le **fond du titre**, `heroFondHtml`), son titre — `open`/`close` dans univers.js. Quand l'univers s'ouvre sur son travelling, le titre est au fond de la scène, pas encore là : seule la boîte voyage, et le titre s'écrit lettre à lettre au fond (`titreAuFond`) |
 | le répertoire, l'onglet Dates → une page spectacle | la vignette → le fond du titre de la page (`fiche-<slug>`, entre documents) |
 | une vignette du book → la photo, et retour | la photo (`book-photo`) |
-| un onglet → un autre | la page, dans le sens de l'onglet ; la pastille glisse |
+| un onglet → un autre | la page, dans le sens de l'onglet ; la pastille glisse ; en quittant le CV ou en y revenant, le portrait, de l'affiche au médaillon (`portrait`, voir [Le portrait d'affiche](#le-portrait-daffiche)) |
+| l'accueil → la galerie | le portrait (`book-portrait`, nommé au départ s'il est à l'écran) — pourvu que la galerie consente au passage et nomme sa première vue de même |
 | le thème | un cercle depuis le bouton |
 | l'ouverture → le site | un iris depuis le sceau ; le nom rejoint l'en-tête |
 
@@ -2799,10 +2806,28 @@ répertoire, à la galerie et à la 404.
 - **Une seule image pour l'affiche et le médaillon** : la photo de
   présentation du book (la première de `galerie.js`), à son cadre, en trois
   largeurs (`portrait-affiche-*`, faites par `variantes-images.py`). `sizes`
-  annonce la taille de l'affiche, la plus grande.
+  annonce la taille de l'affiche, la plus grande. Le médaillon la cadre comme
+  l'affiche (`object-position: 50% 28%`) : centrée, elle y mettait les yeux
+  à 23 % de la hauteur contre 30 % sur l'affiche, et le passage de l'une à
+  l'autre montrait deux visages.
 - **Hors de l'onglet CV**, l'en-tête redevient la carte compacte d'avant,
   portrait en médaillon (`.replie`, posé par `showPage`, à côté du repli de la
-  bio).
+  bio). **Le visage s'y range** : le portrait a son propre groupe dans le
+  passage d'onglet (`portrait`, sur `.affiche-cadre`, poursuite comprise),
+  qui le mène d'une place à l'autre sur `--dur-scene` et `--ease-ressort`
+  et ferme l'arrondi en chemin — ou le rouvre au retour. Il passait de
+  l'affiche (37 % de l'écran au téléphone) au médaillon d'une image à
+  l'autre, pendant que tout le reste glissait. Seulement en quittant le CV
+  ou en y revenant, et s'il est à l'écran ; en mouvement réduit, le
+  changement reste net. Son groupe coûte peu — au téléphone à ×4, 15 à 30 ms
+  de fil principal sur le passage, 1 à 4 points d'images perdues —, et le
+  flou des cartes retiré, le changement d'onglet en perd moins qu'avant
+  (40 → 30 % à l'aller, 39 → 21 % au retour). Au retour, ce qui se pose sur
+  la photo — le nom et le métier au téléphone, la pastille « Galerie photo »
+  partout — attend invisible sous elle, puis vient en fondu : il paraissait,
+  disparaissait sous la photo qui grandissait, et revenait d'un coup. Le nom
+  n'a pas son propre groupe : de deux lignes à une, le fondu montrait deux
+  textes.
 - **Arriver sur un autre onglet** (`#page_dates`, `#demos_camera`,
   `#demos_voix`) pose `arrivee-hors-cv` et `data-arrivee` sur `<html>` avant
   le premier rendu : l'affiche n'est jamais peinte pour être repliée, et la
@@ -2816,6 +2841,21 @@ répertoire, à la galerie et à la 404.
 - **La poursuite** : sur le portrait, la salle autour du visage est dans
   l'ombre ; à la souris, la lumière suit le pointeur (`suivrePoursuite`).
   Fixe au doigt et en mouvement réduit.
+- **Le travelling arrière** : quand l'affiche sort par le haut, la photo
+  glisse un peu moins vite que son cadre et s'approche (7 %, × 1,06), une
+  animation menée par le défilement (`affiche-recul`), en transformation
+  seule. La ligne de temps est nommée sur l'en-tête (`--affiche`, encart nul
+  — l'encart par défaut retranche les 84 px du `scroll-padding-top`), et le
+  cadre rogne en `clip` (voir [Ce que suit une animation au défilement](#ce-que-suit-une-animation-au-défilement)).
+  La bande que la photo laisse en haut du cadre (4 % au plus) est toujours
+  déjà sortie de l'écran, et le visage ne glisse que de 5 px au plus sous la
+  poursuite, posée sur le cadre, tant qu'il se voit. Sans ligne de temps (Firefox), en
+  mouvement réduit, pour une arrivée sur un autre onglet : rien ne bouge — un
+  décor, que le repli de la régie ne mène pas.
+- **Vers la galerie, le portrait** : au départ vers `/galerie/`, s'il est à
+  l'écran, la photo prend le nom `book-portrait` (retiré au `pageshow`) —
+  c'est la première photo du book. Elle ne voyage que si la galerie consent
+  au passage entre documents et nomme sa première vue de même.
 - **Le papier ne bouge pas.** Toute la mise en page de l'affiche est en
   `@media screen` ; les classes Tailwind du balisage et les règles d'impression
   sont celles d'avant, et le médaillon imprimé est `profil-192.webp` (une

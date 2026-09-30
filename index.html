@@ -1130,6 +1130,83 @@
             animation: none;
         }
 
+        /* LE PORTRAIT VOYAGE, de l'affiche au médaillon et retour (nommé
+           par showPage) : il se déplace, donc sur le ressort, le temps d'un
+           changement d'onglet. L'arrondi se ferme en chemin — ou se rouvre
+           au retour vers le CV, toujours un retour —, porté par la paire
+           d'images qui remplit le groupe, pour laisser au groupe son propre
+           trajet. Les deux images couvrent le groupe, cadrées sur le visage
+           comme l'affiche : le médaillon est carré, l'affiche un peu plus
+           haute que large. */
+        html.vt-onglet::view-transition-group(portrait) {
+            animation-duration: var(--dur-scene);
+            animation-timing-function: var(--ease-ressort);
+        }
+
+        html.vt-onglet::view-transition-image-pair(portrait) {
+            overflow: clip;
+            animation: vt-portrait-rond var(--dur-scene) var(--ease-ressort) both;
+        }
+
+        html.vt-onglet.onglet-retour::view-transition-image-pair(portrait) {
+            animation-name: vt-portrait-affiche;
+        }
+
+        html.vt-onglet::view-transition-old(portrait),
+        html.vt-onglet::view-transition-new(portrait) {
+            height: 100%;
+            object-fit: cover;
+            object-position: 50% 28%;
+        }
+
+        @keyframes vt-portrait-rond {
+            from {
+                border-radius: 0;
+            }
+
+            to {
+                border-radius: 50%;
+            }
+        }
+
+        @keyframes vt-portrait-affiche {
+            from {
+                border-radius: 50%;
+            }
+
+            to {
+                border-radius: 0;
+            }
+        }
+
+        /* AU RETOUR SUR LE CV, CE QUI SE POSE SUR LA PHOTO L'ATTEND. Le
+           groupe du portrait passe au-dessus de l'en-tête : au téléphone,
+           le nom et le métier, posés sur le bas de l'affiche, et partout
+           la pastille « Galerie photo », dans son coin, se montraient sur
+           le fond, disparaissaient sous la photo qui grandissait, puis
+           reparaissaient d'un coup à la fin du passage. Ils attendent,
+           invisibles — d'emblée : sans transition pour s'effacer — et
+           viennent en fondu une fois la photo posée. */
+        html.vt-onglet.onglet-retour #en-tete:not(.replie) .affiche-galerie {
+            opacity: 0;
+            transition: none;
+        }
+
+        @media (max-width: 767px) {
+
+            html.vt-onglet.onglet-retour #en-tete:not(.replie) .affiche-nom,
+            html.vt-onglet.onglet-retour #en-tete:not(.replie) .metier {
+                opacity: 0;
+                transition: none;
+            }
+        }
+
+        #en-tete .affiche-nom,
+        #en-tete .metier,
+        #en-tete .affiche-galerie {
+            transition: opacity var(--dur-base) var(--ease-out);
+        }
+
         html.vt-onglet::view-transition-old(root) {
             animation: vt-onglet-sort var(--dur-quick) var(--ease-panel) both;
         }
@@ -4498,6 +4575,15 @@
                 display: none;
             }
 
+            /* Le médaillon cadre le visage comme l'affiche : c'est la même
+               photo qui passe de l'une à l'autre au changement d'onglet
+               (voir « Le portrait voyage »). Centrée, elle mettait les yeux
+               à 23 % du médaillon contre 30 % de l'affiche, et le fondu
+               entre les deux montrait deux visages. */
+            #en-tete .affiche-cadre img {
+                object-position: 50% 28%;
+            }
+
             /* Les !important répondent à ceux de la mise à l'échelle du
                téléphone (« Global text scale-down », plus haut), qui
                règlent le padding de l'en-tête, le corps du h1 et du métier. */
@@ -4702,6 +4788,57 @@
                     justify-content: start;
                     column-gap: 28px;
                 }
+            }
+        }
+
+        /* LE TRAVELLING ARRIÈRE DE L'AFFICHE. Tout le CV répond au
+           défilement ; le portrait, la plus grande image du premier écran,
+           restait collé à son cadre. Quand l'affiche sort par le haut, la
+           photo y glisse un peu moins vite qu'elle et s'approche (7 %,
+           × 1,06) : une profondeur de cinéma, en transformation seule,
+           menée par le navigateur hors du fil principal. La bande que la
+           photo laisse en haut du cadre (4 % au plus) est toujours déjà
+           sortie de l'écran.
+
+           LA LIGNE DE TEMPS EST NOMMÉE SUR L'EN-TÊTE, pas sur le cadre : le
+           cadre rogne, et un `view()` posé sous lui le suivrait, lui qui ne
+           défile pas (voir « Ce que suit une animation au défilement »).
+           Il rogne donc en `clip` quand il est affiche, comme la règle le
+           veut. Encart nul : l'encart par défaut retranche de l'écran le
+           `scroll-padding-top` du html (84 px), et la photo bougeait déjà
+           au chargement. Sans ligne de temps (Firefox), en mouvement
+           réduit, pour une arrivée sur un autre onglet et sur le papier :
+           rien ne bouge. C'est un décor, pas une scène : aucun repli ne
+           le mène. La poursuite, posée sur le cadre, reste où elle est :
+           le visage ne glisse dessous que de 5 px au plus tant qu'il se
+           voit. */
+        @media screen {
+            html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) .affiche-cadre {
+                overflow: hidden;
+                overflow: clip;
+            }
+        }
+
+        @supports (animation-timeline: view()) {
+            @media screen and (prefers-reduced-motion: no-preference) {
+                html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) {
+                    view-timeline-name: --affiche;
+                    view-timeline-axis: block;
+                    view-timeline-inset: 0px;
+                }
+
+                html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) .affiche-cadre img {
+                    animation: affiche-recul linear both;
+                    animation-timeline: --affiche;
+                    animation-range: exit 0% exit 100%;
+                }
+            }
+        }
+
+        @keyframes affiche-recul {
+            to {
+                translate: 0 7%;
+                scale: 1.06;
             }
         }
 
@@ -12041,6 +12178,20 @@
                 poserPage(pageId, animate);
                 return Promise.resolve();
             }
+            // LE VISAGE SE RANGE DANS LE MÉDAILLON. En quittant le CV, l'affiche
+            // (37 % de l'écran au téléphone) devenait médaillon d'une image à
+            // l'autre, pendant que tout le reste glissait ; de même au retour.
+            // Le portrait a donc son propre groupe dans le passage, qui le
+            // mène d'une place à l'autre et l'arrondit (voir « Le portrait
+            // voyage » dans le <style>). C'est la même image dans les deux
+            // états : rien ne se mêle. Seulement quand on quitte le CV ou
+            // qu'on y revient — ailleurs, il reste médaillon —, et s'il est
+            // à l'écran : sinon il arriverait de l'extérieur. Nommé juste
+            // avant, le nom retiré à la fin du passage.
+            const portrait = (avant.id === 'page_cv') !== (pageId === 'page_cv')
+                ? document.querySelector('#en-tete .affiche-cadre') : null;
+            const vu = portrait && portrait.getBoundingClientRect();
+            const voyage = !!vu && vu.width > 0 && vu.bottom > 0 && vu.top < innerHeight;
             // Le sens, par une classe lue par les seuls lecteurs du
             // glissement (voir « Le sens est une classe » dans le <style>).
             const retour = ORDRE_ONGLETS.indexOf(pageId) < ORDRE_ONGLETS.indexOf(avant.id);
@@ -12054,8 +12205,10 @@
             // abandonnée, et sa fin ne doit pas retirer la classe de la seconde.
             const jeton = ++passageOnglet;
             html.classList.add('vt-onglet');
+            if (voyage) portrait.style.viewTransitionName = 'portrait';
             const passage = document.startViewTransition(() => poserPage(pageId, animate));
             passage.finished.finally(() => {
+                if (voyage) portrait.style.viewTransitionName = '';
                 if (jeton === passageOnglet) html.classList.remove('vt-onglet');
             });
             return passage.updateCallbackDone.catch(() => { });
@@ -12076,8 +12229,23 @@
             const r = img.getBoundingClientRect();
             if (r.width && r.bottom > 0 && r.top < innerHeight) img.style.viewTransitionName = 'fiche-' + m[1];
         });
+        // VERS LA GALERIE, LE PORTRAIT. La photo de l'affiche (ou du
+        // médaillon) est la première du book : c'est elle qui devient la
+        // première vue de la planche, si elle est à l'écran. La galerie
+        // nomme sa vignette `book-portrait` à son arrivée ; tant qu'elle ne
+        // consent pas au passage, e.viewTransition manque et rien n'est
+        // nommé.
+        addEventListener('pageswap', (e) => {
+            if (!e.viewTransition || !e.activation || !e.activation.entry) return;
+            if (new URL(e.activation.entry.url).pathname !== '/galerie/') return;
+            const img = document.querySelector('#en-tete .affiche-cadre img');
+            const r = img && img.getBoundingClientRect();
+            if (r && r.width && r.bottom > 0 && r.top < innerHeight) img.style.viewTransitionName = 'book-portrait';
+        });
         addEventListener('pageshow', () => {
             document.querySelectorAll('.dl-vignette img').forEach(img => { img.style.viewTransitionName = ''; });
+            const portrait = document.querySelector('#en-tete .affiche-cadre img');
+            if (portrait) portrait.style.viewTransitionName = '';
         });
 
         // La pastille sous l'onglet actif. Sans transition au premier

@@ -2285,7 +2285,7 @@ function exige(condition, message) {
             }
         });
 
-        await verifie('le portrait d’affiche : le visage en grand sur l’onglet CV, le nom en Cinzel, la fiche en six cases ; ailleurs, le médaillon — et le papier inchangé', async () => {
+        await verifie('le portrait d’affiche : le visage en grand sur l’onglet CV, le nom en Cinzel, la fiche en six cases, la photo qui recule au défilement ; ailleurs, le médaillon, où le visage se range — et le papier inchangé', async () => {
             for (const vue of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
                 const c = await visiteur({ viewport: vue });
                 const p = await c.newPage();
@@ -2310,10 +2310,46 @@ function exige(condition, message) {
                 exige(cv.etiquettes === 6, `la fiche de l’affiche a ${cv.etiquettes} case(s) étiquetée(s) sur 6`);
                 if (vue.width > 1000) exige(cv.l >= 300 && cv.h >= 360, `le portrait fait ${cv.l.toFixed(0)} × ${cv.h.toFixed(0)} px à l’écran`);
                 else exige(cv.l >= cv.entete - 2 && cv.h >= 300, `le portrait ne tient pas la largeur de l’en-tête au téléphone (${cv.l.toFixed(0)} px sur ${cv.entete.toFixed(0)})`);
+                // Le travelling arrière : immobile en haut de page, la photo
+                // recule dans son cadre quand l'affiche sort par le haut —
+                // menée par l'en-tête, pas par le cadre qui rogne.
+                const recul = await p.evaluate(async () => {
+                    const img = document.querySelector('#en-tete .affiche-cadre img');
+                    const lu = () => getComputedStyle(img).translate;
+                    const haut = lu();
+                    document.documentElement.style.scrollBehavior = 'auto';
+                    scrollTo(0, 250);
+                    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+                    const bas = lu();
+                    scrollTo(0, 0);
+                    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+                    const a = document.getAnimations().find((x) => x.animationName === 'affiche-recul');
+                    return { haut, bas, sujet: a && a.timeline && a.timeline.subject ? a.timeline.subject.id : null };
+                });
+                exige(/^(none|0px( 0(px|%))?)$/.test(recul.haut) && /%|px/.test(recul.bas) && recul.bas !== recul.haut && recul.sujet === 'en-tete',
+                    `le portrait ne recule pas au défilement, ou pas mené par l’en-tête (en haut « ${recul.haut} », à 250 px « ${recul.bas} », suit ${recul.sujet})`);
+                // Le visage se range dans le médaillon : un groupe à lui dans
+                // le passage d'onglet, nommé juste avant, retiré juste après.
+                await p.evaluate(() => {
+                    const vus = window.__groupes = new Set();
+                    const fin = performance.now() + 1500;
+                    const pas = () => {
+                        document.getAnimations().forEach((a) => a.effect && a.effect.pseudoElement && vus.add(a.effect.pseudoElement));
+                        if (performance.now() < fin) requestAnimationFrame(pas);
+                    };
+                    requestAnimationFrame(pas);
+                });
                 await p.click('#tab-page_dates');
                 await p.waitForTimeout(900);
                 const dates = await lire();
                 exige(dates.replie && dates.l <= 100 && /50%|9\dpx|4\dpx/.test(dates.rond), `hors du CV, le portrait n’est pas redevenu un médaillon (${dates.l.toFixed(0)} px, ${dates.rond})`);
+                const passage = await p.evaluate(() => ({
+                    groupe: window.__groupes.has('::view-transition-group(portrait)'),
+                    nom: document.querySelector('#en-tete .affiche-cadre').style.viewTransitionName,
+                    cadrage: getComputedStyle(document.querySelector('#en-tete .affiche-cadre img')).objectPosition
+                }));
+                exige(passage.groupe && !passage.nom, `le portrait ne voyage pas jusqu’au médaillon (groupe ${passage.groupe ? 'présent' : 'absent'}, nom resté : « ${passage.nom} »)`);
+                exige(passage.cadrage === '50% 28%', `le médaillon ne cadre pas le visage comme l’affiche (${passage.cadrage})`);
                 exige(!erreurs.length, erreurs.join(' | '));
                 await c.close();
             }
