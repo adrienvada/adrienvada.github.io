@@ -212,7 +212,7 @@ const SHOW_UNIVERSES = {
                 chapterTitle: 'Grand-Paris · 27 millions d’habitants · Espérance de vie : 51,2 ans'
             },
             {
-                p: [3], cadre: { 3: '45% 40%' }
+                p: [4], cadre: { 4: '50% 60%' }
             },
             {
                 q: ['« Il fait chaud. Mais on s’en accommode', 'avec cette docilité morne qu’on observe', 'souvent chez les animaux d’élevage. »'],
@@ -237,6 +237,9 @@ const SHOW_UNIVERSES = {
             {
                 q: ['« Les “progrès agricoles” du XXᵉ siècle n’auront consisté', 'qu’à doubler les rendements des cultures', 'pour en bazarder le tiers. »'],
                 by: 'Rémi, partie 1'
+            },
+            {
+                p: [3], cadre: { 3: '45% 40%' }
             },
             {
                 q: ['« La fin ou la faim ? » — « Les deux. »'],
