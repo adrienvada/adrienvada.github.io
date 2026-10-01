@@ -212,8 +212,7 @@ const SHOW_UNIVERSES = {
                 chapterTitle: 'Grand-Paris · 27 millions d’habitants · Espérance de vie : 51,2 ans'
             },
             {
-                p: [3], cadre: { 3: '45% 40%' },
-                c: ['Paris, 2076 : la chronologie s’arrête là où la fiction commence.']
+                p: [3], cadre: { 3: '45% 40%' }
             },
             {
                 q: ['« Il fait chaud. Mais on s’en accommode', 'avec cette docilité morne qu’on observe', 'souvent chez les animaux d’élevage. »'],
