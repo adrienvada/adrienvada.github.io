@@ -12,9 +12,7 @@
  *  La clé de chaque entrée doit être EXACTEMENT la valeur de
  *  `data-cv-show` sur le <li class="cv-item"> correspondant dans
  *  index.html — même appariement que pour les dates, sans rapprochement
- *  approximatif. Un spectacle sans entrée ici garde l'ancien tiroir :
- *  c'est le cas volontaire de « L'imaginaire forcé » et « Cassandres »,
- *  dont la direction visuelle n'est pas arrêtée.
+ *  approximatif. Un spectacle sans entrée ici garde l'ancien tiroir.
  *
  *  CHAMPS
  *  ------
@@ -184,29 +182,90 @@ const SHOW_UNIVERSES = {
 
     'Cassandres': {
         slug: 'cassandres',
-        // ⚠️ PALETTE PROVISOIRE. Rien n'est public sur ce spectacle et sa
-        // direction visuelle n'est pas arrêtée : ces couleurs disent le nom,
-        // pas la mise en scène. La cendre et le rouge de l'alerte qu'on
-        // n'écoute pas — à remplacer dès que le plateau existe.
+        // Le bleu des biscuits Nutri-Planc, celui de la cuve où l'usine
+        // plonge les corps : un bleu marine d'abattoir et de salle blanche,
+        // sur un noir d'encre. Rien de chaleureux : un plateau de faïence
+        // froide, de bâches et d'inox, éclairé au néon (voir la
+        // scénographie du dossier). L'accent est le marine lui-même ;
+        // `accentInk`, son éclaircie, porte le texte sur le fond sombre.
         palette: {
-            bg: '#0f0e10', surface: '#1b191d', text: '#eeeaea', muted: '#9a9298',
-            accent: '#b8452f', accentInk: '#cf5a41', onAccent: '#ffffff',
-            line: 'rgba(238,234,234,0.14)', glow: 'rgba(184,69,47,0.30)'
+            bg: '#050913', surface: '#0c1426', text: '#e4e9f2', muted: '#8a95ab',
+            accent: '#1f3a73', accentInk: '#7f9fe0', onAccent: '#ffffff',
+            line: 'rgba(228,233,242,0.14)', glow: 'rgba(46,84,170,0.38)'
         },
+        // Sur le CV, l'accent marine disparaîtrait dans le fond sombre de
+        // l'univers : le filet prend le bleu éclairci du Nutri-Planc.
+        cvAccent: '#4d74c9',
         genre: 'Fiction d’anticipation',
-        synopsis: ['Paris, 2077.\nPas de guerre nucléaire, pas de fertilité perdue, pas d’intelligence venue d’ailleurs pour nous exterminer ou nous sauver : le monde a seulement continué. Un meurtre étrange, une enquêtrice — et au bout de la piste, notre système agro-alimentaire.'],
-        // Un seul bloc, tant que le plateau n'existe pas : la note
-        // d'intention. Condensée des intentions d'Angelo Jossec, à la
-        // troisième personne — le « je » d'un metteur en scène sur le site
-        // d'un comédien se lirait comme celui d'Adrien.
+        // Les tubes d'une salle de soins ou d'une chaîne de découpe, qui
+        // s'allument en hésitant.
+        lumiere: 'neon',
+        synopsis: ['Paris, 2077.\nPas de guerre nucléaire, pas de fertilité perdue, pas d’intelligence venue d’ailleurs pour nous exterminer ou nous sauver : le monde a seulement continué. Un meurtre étrange, une enquêtrice — et au bout de la piste, notre système agro-alimentaire.'],
+        // Les photos sont celles des répétitions de la lecture (dossier de
+        // production 2026) ; les répliques viennent du texte d'Angelo
+        // Jossec (version de la lecture d'octobre 2026) et sont courtes à
+        // dessein : elles n'éventent pas l'enquête. Leur publication relève
+        // de l'accord de l'auteur (voir « Droits sur les textes » plus haut).
         sequence: [
             {
+                chapter: '2077',
+                chapterTitle: 'Grand-Paris · 27 millions d’habitants · Espérance de vie : 51,2 ans'
+            },
+            {
+                p: [3], cadre: { 3: '45% 40%' },
+                c: ['Paris, 2076 : la chronologie s’arrête là où la fiction commence.']
+            },
+            {
+                q: ['« Il fait chaud. Mais on s’en accommode', 'avec cette docilité morne qu’on observe', 'souvent chez les animaux d’élevage. »'],
+                by: 'Narrateur, partie 2 — Paris, août 2077, trente-huit degrés'
+            },
+            {
                 text: 'Sous couvert d’une enquête policière, Cassandre(s) imagine le quotidien ' +
-                    'de la génération 2000 arrivée au terme de son espérance de vie : la forme est ' +
+                    'de la génération 2000 arrivée au terme de son espérance de vie : la forme est ' +
                     'au service du divertissement quand le fond est l’objet de la diversion. Pour ' +
                     'que l’anticipation ne soit pas reçue comme de la science-fiction, le spectacle ' +
                     's’ouvre sur une chronologie de notre développement agro-industriel, de 1850 à ' +
                     '2077 — un générique qui fait basculer la fiction du côté du probable.'
+            },
+            {
+                p: [2], cadre: { 2: '30% 30%' },
+                c: ['Partie 1 : de 1841 à 2077, l’histoire de ce que nous mangeons, jouée sur le proscenium.']
+            },
+            {
+                q: ['« Tout ce qui est dit ici', 'n’est pas du domaine de la fiction. »'],
+                by: 'Premier carton, partie 1'
+            },
+            {
+                q: ['« Les “progrès agricoles” du XXᵉ siècle n’auront consisté', 'qu’à doubler les rendements des cultures', 'pour en bazarder le tiers. »'],
+                by: 'Rémi, partie 1'
+            },
+            {
+                q: ['« La fin ou la faim ? » — « Les deux. »'],
+                by: 'Charline et Rémi, prologue'
+            },
+            {
+                p: [1], cadre: { 1: '50% 45%' },
+                c: ['L’équipe de la lecture, en répétition.']
+            },
+            {
+                q: ['« Dans les abattoirs, ils mettent de la musique douce', 'pour attendrir les chairs. »'],
+                by: 'Lauren, prologue'
+            },
+            {
+                q: ['« Il y a 7 homicides par jour à Paris,', 'deux cents agressions et un millier de cambriolages.', 'On fait ce qu’on peut. »'],
+                by: 'Cassandre, partie 2'
+            },
+            {
+                q: ['« Nous avions le monde entier entre les mains,', 'juste sous les doigts… »'],
+                by: 'Solal, partie 2'
+            },
+            {
+                q: ['« Nos tristesses sont peut-être', 'la dernière des subversions authentiques. »'],
+                by: 'Épilogue'
+            },
+            {
+                q: ['« Regardez-vous vous-même depuis les étoiles. »'],
+                by: 'Cassandre, partie 2'
             },
         ]
     },

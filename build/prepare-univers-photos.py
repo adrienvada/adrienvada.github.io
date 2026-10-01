@@ -90,6 +90,7 @@ FOLDERS = {
     "hommemoderne": "homme moderne",
     "lerapt":      "le rapt",
     "peaudesanges": "peau des anges",
+    "cassandres":  "cassandres",
 }
 
 
