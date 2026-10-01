@@ -200,6 +200,8 @@ const SHOW_UNIVERSES = {
         // Les tubes d'une salle de soins ou d'une chaîne de découpe, qui
         // s'allument en hésitant.
         lumiere: 'neon',
+        // La photo qui paraît dans les lettres du titre : le plateau vide.
+        lettre: 5,
         synopsis: ['Sous couvert d’une enquête policière, Cassandre(s) imagine le quotidien de la génération 2000 arrivée au terme de son espérance de vie : la forme est au service du divertissement quand le fond est l’objet de la diversion. Pour que l’anticipation ne soit pas reçue comme de la science-fiction, le spectacle s’ouvre sur une chronologie de notre développement agro-industriel, de 1850 à 2077 — un générique qui fait basculer la fiction du côté du probable.'],
         // Les photos sont celles des répétitions de la lecture (dossier de
         // production 2026) ; les répliques viennent du texte d'Angelo
@@ -213,6 +215,9 @@ const SHOW_UNIVERSES = {
             },
             {
                 p: [4], cadre: { 4: '50% 60%' }
+            },
+            {
+                p: [5]
             },
             {
                 q: ['« Il fait chaud. Mais on s’en accommode', 'avec cette docilité morne qu’on observe', 'souvent chez les animaux d’élevage. »'],
