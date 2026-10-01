@@ -251,22 +251,6 @@ const SHOW_UNIVERSES = {
                 q: ['« Dans les abattoirs, ils mettent de la musique douce', 'pour attendrir les chairs. »'],
                 by: 'Lauren, prologue'
             },
-            {
-                q: ['« Il y a 7 homicides par jour à Paris,', 'deux cents agressions et un millier de cambriolages.', 'On fait ce qu’on peut. »'],
-                by: 'Cassandre, partie 2'
-            },
-            {
-                q: ['« Nous avions le monde entier entre les mains,', 'juste sous les doigts… »'],
-                by: 'Solal, partie 2'
-            },
-            {
-                q: ['« Nos tristesses sont peut-être', 'la dernière des subversions authentiques. »'],
-                by: 'Épilogue'
-            },
-            {
-                q: ['« Regardez-vous vous-même depuis les étoiles. »'],
-                by: 'Cassandre, partie 2'
-            },
         ]
     },
 
