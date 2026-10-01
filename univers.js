@@ -200,7 +200,7 @@ const SHOW_UNIVERSES = {
         // Les tubes d'une salle de soins ou d'une chaîne de découpe, qui
         // s'allument en hésitant.
         lumiere: 'neon',
-        synopsis: ['Paris, 2077.\nPas de guerre nucléaire, pas de fertilité perdue, pas d’intelligence venue d’ailleurs pour nous exterminer ou nous sauver : le monde a seulement continué. Un meurtre étrange, une enquêtrice — et au bout de la piste, notre système agro-alimentaire.'],
+        synopsis: ['Sous couvert d’une enquête policière, Cassandre(s) imagine le quotidien de la génération 2000 arrivée au terme de son espérance de vie : la forme est au service du divertissement quand le fond est l’objet de la diversion. Pour que l’anticipation ne soit pas reçue comme de la science-fiction, le spectacle s’ouvre sur une chronologie de notre développement agro-industriel, de 1850 à 2077 — un générique qui fait basculer la fiction du côté du probable.'],
         // Les photos sont celles des répétitions de la lecture (dossier de
         // production 2026) ; les répliques viennent du texte d'Angelo
         // Jossec (version de la lecture d'octobre 2026) et sont courtes à
@@ -217,14 +217,6 @@ const SHOW_UNIVERSES = {
             {
                 q: ['« Il fait chaud. Mais on s’en accommode', 'avec cette docilité morne qu’on observe', 'souvent chez les animaux d’élevage. »'],
                 by: 'Narrateur, partie 2 — Paris, août 2077, trente-huit degrés'
-            },
-            {
-                text: 'Sous couvert d’une enquête policière, Cassandre(s) imagine le quotidien ' +
-                    'de la génération 2000 arrivée au terme de son espérance de vie : la forme est ' +
-                    'au service du divertissement quand le fond est l’objet de la diversion. Pour ' +
-                    'que l’anticipation ne soit pas reçue comme de la science-fiction, le spectacle ' +
-                    's’ouvre sur une chronologie de notre développement agro-industriel, de 1850 à ' +
-                    '2077 — un générique qui fait basculer la fiction du côté du probable.'
             },
             {
                 p: [2], cadre: { 2: '30% 30%' },
