@@ -1078,6 +1078,8 @@ function pageRepertoire(fiches, misAJour) {
             if (stored === 'light' || stored === 'dark') { t = stored; }
             else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) { t = 'light'; }
             document.documentElement.setAttribute('data-theme', t);
+            // Au téléphone, le répertoire s'ouvre sur trois colonnes (zoom 3).
+            if (innerWidth < 640) document.documentElement.dataset.zoom = '3';
             // Visiter le répertoire, c'est avoir commencé sa visite : le
             // retour vers l'accueil ne lève pas le rideau (mémoire de la
             // visite, pas de l'appareil — voir la fiche d'un spectacle).
@@ -1369,7 +1371,7 @@ ${JSON.stringify(liste, null, 2)}
         // Une colonne unique au téléphone : l'affiche en grand, pour qui
         // voit mal — le pincement ne l'offrait pas.
         var NIVEAUX = function () { return innerWidth < 640 ? [1, 2, 3, 4] : [2, 3, 4, 5]; };
-        var zoomRepos = function () { return innerWidth < 640 ? 2 : 4; };
+        var zoomRepos = function () { return innerWidth < 640 ? 3 : 4; };
         var zoomCourant = function () {
             return parseInt(document.documentElement.dataset.zoom || '0', 10) || zoomRepos();
         };
