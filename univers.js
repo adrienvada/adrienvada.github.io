@@ -208,10 +208,12 @@ const SHOW_UNIVERSES = {
         // Jossec (version de la lecture d'octobre 2026) et sont courtes à
         // dessein : elles n'éventent pas l'enquête. Leur publication relève
         // de l'accord de l'auteur (voir « Droits sur les textes » plus haut).
+        // Dans l'ordre de la pièce : prologue, partie 1 (la chronologie),
+        // partie 2 (la fiction, Paris 2077). Les photos suivent leur partie.
         sequence: [
             {
-                chapter: '2077',
-                chapterTitle: 'Grand-Paris · 27 millions d’habitants · Espérance de vie : 51,2 ans'
+                chapter: 'Prologue',
+                chapterTitle: 'Les acteurs entrent en salle, autour des spectateurs'
             },
             {
                 p: [4], cadre: { 4: '50% 60%' }
@@ -220,16 +222,28 @@ const SHOW_UNIVERSES = {
                 p: [5]
             },
             {
-                q: ['« Il fait chaud. Mais on s’en accommode', 'avec cette docilité morne qu’on observe', 'souvent chez les animaux d’élevage. »'],
-                by: 'Narrateur, partie 2 — Paris, août 2077, trente-huit degrés'
+                q: ['« La fin ou la faim ? » — « Les deux. »'],
+                by: 'Charline et Rémi, prologue'
             },
             {
-                p: [2], cadre: { 2: '30% 30%' },
-                c: ['Partie 1 : de 1841 à 2077, l’histoire de ce que nous mangeons, jouée sur le proscenium.']
+                q: ['« Dans les abattoirs, ils mettent de la musique douce', 'pour attendrir les chairs. »'],
+                by: 'Lauren, prologue'
+            },
+            {
+                p: [1], cadre: { 1: '50% 45%' },
+                c: ['L’équipe de la lecture, en répétition.']
+            },
+            {
+                chapter: 'Partie 1',
+                chapterTitle: 'Chronologie de l’agro-industrie, 1841 – 2077'
             },
             {
                 q: ['« Tout ce qui est dit ici', 'n’est pas du domaine de la fiction. »'],
                 by: 'Premier carton, partie 1'
+            },
+            {
+                p: [2], cadre: { 2: '30% 30%' },
+                c: ['De 1841 à 2077, l’histoire de ce que nous mangeons, jouée sur le proscenium.']
             },
             {
                 q: ['« Les “progrès agricoles” du XXᵉ siècle n’auront consisté', 'qu’à doubler les rendements des cultures', 'pour en bazarder le tiers. »'],
@@ -239,16 +253,12 @@ const SHOW_UNIVERSES = {
                 p: [3], cadre: { 3: '45% 40%' }
             },
             {
-                q: ['« La fin ou la faim ? » — « Les deux. »'],
-                by: 'Charline et Rémi, prologue'
+                chapter: 'Partie 2',
+                chapterTitle: 'Grand-Paris, 2077 · 27 millions d’habitants · Espérance de vie : 51,2 ans'
             },
             {
-                p: [1], cadre: { 1: '50% 45%' },
-                c: ['L’équipe de la lecture, en répétition.']
-            },
-            {
-                q: ['« Dans les abattoirs, ils mettent de la musique douce', 'pour attendrir les chairs. »'],
-                by: 'Lauren, prologue'
+                q: ['« Il fait chaud. Mais on s’en accommode', 'avec cette docilité morne qu’on observe', 'souvent chez les animaux d’élevage. »'],
+                by: 'Narrateur, partie 2 — Paris, août 2077, trente-huit degrés'
             },
         ]
     },
