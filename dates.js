@@ -125,6 +125,19 @@ const SHOW_DATA = {
       ]
     },
 
+    // ── 4 déc. 2026 : L’imaginaire forcé (Canteleu) [Date unique] ──
+    {
+      type: "single",
+      dateLabel: "4 déc. 2026",
+      fullDate: "4 décembre 2026",
+      title: "L’imaginaire forcé",
+      location: "Collège Charles Gounod, Canteleu (76)", city: "Canteleu",
+      time: "",
+      bookingUrl: "",
+      isSchool: true,
+      icsDate: "2026-12-04"
+    },
+
     // ── 18 déc. 2026 : Cléophène, d’après Rodogune (Pont-Audemer) [Série] ──
     {
       type: "series",
