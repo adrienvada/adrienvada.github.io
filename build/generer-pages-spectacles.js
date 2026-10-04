@@ -564,7 +564,7 @@ function spriteUtile(html) {
 }
 
 // ── Gabarit d'une page ──────────────────────────────────────────────
-function pageSpectacle(uni, cle, cv, SHOW_DATA) {
+function pageSpectacle(uni, cle, cv, SHOW_DATA, suivant) {
     const titre = uni.title || cle;
     const dates = datesDe(cle, SHOW_DATA);
     const photos = photosDe(uni);
@@ -600,14 +600,17 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     // icsDate et bookingUrl alimentent les boutons « agenda » et « réserver » ;
     // title/subtitle sont constants pour la page, pas portés par datesDe().
     const perfs = dates.map(d => ({
-        dateLabel: d.label, location: d.lieu, time: d.heure, isSchool: d.scolaire,
+        dateLabel: d.label, location: d.lieu, city: d.ville, time: d.heure, isSchool: d.scolaire,
         icsDate: d.iso, bookingUrl: d.billetterie, title: titre, subtitle: uni.subtitle || ''
     }));
 
     const panneau = MONTAGE.panelHtml(info, uni, {
         dates: MONTAGE.datesHtml(perfs),
         enCreation,
-        statique: true
+        statique: true,
+        // Le spectacle suivant, dans l'ordre du CV (voir main) : null après
+        // le dernier — le pied renvoie alors au répertoire.
+        suivant: suivant || null
     });
 
     // Les chemins d'images du montage sont relatifs à la racine du site ;
@@ -2028,6 +2031,10 @@ function main() {
     const SHOW_UNIVERSES = chargerUnivers();
     const SHOW_DATA = chargerDates();
     const cvParTitre = lireLignesCv();
+    // L'ORDRE DU CV, relevé avant qu'on n'y ajoute les clés normalisées :
+    // c'est lui que suit « Spectacle suivant », au pied de chaque page —
+    // le même ordre que le panneau de l'accueil, qui lit les lignes.
+    const ordreCv = Object.keys(cvParTitre);
     // Les mêmes lignes, indexées sur leur titre normalisé : c'est ce
     // second jeu de clés qui sauve le rapprochement quand la typographie
     // diffère d'un fichier à l'autre.
@@ -2051,6 +2058,25 @@ function main() {
     fs.rmSync(SORTIE, { recursive: true, force: true });
     fs.mkdirSync(SORTIE, { recursive: true });
 
+    // La suite des pages, dans l'ordre du CV ; un univers sans ligne de CV
+    // vient après, dans l'ordre du fichier.
+    const rangCv = (cle) => {
+        const n = normaliserTitre(cle);
+        const i = ordreCv.findIndex(k => k === cle || normaliserTitre(k) === n);
+        return i < 0 ? Infinity : i;
+    };
+    const suite = Object.keys(SHOW_UNIVERSES)
+        .filter(cle => SHOW_UNIVERSES[cle] && SHOW_UNIVERSES[cle].slug)
+        .map((cle, i) => ({ cle, i, r: rangCv(cle) }))
+        .sort((a, b) => (a.r - b.r) || (a.i - b.i))
+        .map(x => x.cle);
+    const suivantDe = (cle) => {
+        const n = suite[suite.indexOf(cle) + 1];
+        if (!n) return null;
+        const u = SHOW_UNIVERSES[n];
+        return { titre: u.title || n, slug: u.slug, film: u.kind === 'film' };
+    };
+
     const faites = [];
     Object.keys(SHOW_UNIVERSES).forEach(cle => {
         const uni = SHOW_UNIVERSES[cle];
@@ -2063,7 +2089,7 @@ function main() {
         const cv = ligneCv || {};
         const dossier = path.join(SORTIE, uni.slug);
         fs.mkdirSync(dossier, { recursive: true });
-        dates[uni.slug] = ecrirePage(`spectacles/${uni.slug}/index.html`, pageSpectacle(uni, cle, cv, SHOW_DATA), anciens);
+        dates[uni.slug] = ecrirePage(`spectacles/${uni.slug}/index.html`, pageSpectacle(uni, cle, cv, SHOW_DATA, suivantDe(cle)), anciens);
         const photos = photosDe(uni);
         faites.push({
             slug: uni.slug,

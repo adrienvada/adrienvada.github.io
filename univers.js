@@ -1263,9 +1263,20 @@ const SHOW_UNIVERSES = {
     // /spectacles/ : c'est ce qui garantit qu'un univers et sa page ont le
     // même visage. Ici on ne fournit que ce qui vient du DOM et de l'état
     // du site — la ligne de CV, les dates du moment, le badge de création.
+    //  LE SPECTACLE SUIVANT, dans l'ordre des lignes du CV (voir
+    //  suivantHtml, univers-montage.js) : la ligne d'après qui ouvre un
+    //  univers ; null après la dernière.
+    function suivantDe(li) {
+        const lignes = [...document.querySelectorAll('#page_cv li.cv-has-universe[data-cv-show]')];
+        const apres = lignes[lignes.indexOf(li) + 1];
+        const uni = apres && universeFor(apres);
+        return uni && uni.slug ? { titre: uni.title || apres.dataset.cvShow, slug: uni.slug, film: uni.kind === 'film' } : null;
+    }
+
     function render(li, uni, parPassage) {
         const info = rowInfo(li, uni);
         overlay.innerHTML = panelHtml(info, uni, {
+            suivant: suivantDe(li),
             dates: datesBlock(info.key, uni),
             // Sans date à venir, un spectacle peut être arrêté OU pas encore
             // créé : le badge de la ligne du CV est ce qui les distingue.
@@ -1325,12 +1336,103 @@ const SHOW_UNIVERSES = {
     let lastScrollTop = 0;
     const BARRE_NATIVE = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
 
+    // ── LES CHAPITRES (voir chapitresHtml, univers-montage.js) ─────────
+    //  Chaque chapitre est retrouvé par sa cible dans le panneau, mesuré
+    //  une fois (et de nouveau quand la page change de hauteur : le montage
+    //  qui arrive après le passage, une police, un pivotement) ; au
+    //  défilement, on ne fait que comparer une position à cette liste.
+    let chapitres = [];
+    let chapitresHauteur = 0;
+    let chapitreCourant = -1;
+
+    function cibleDuChapitre(zone, cle) {
+        if (cle === 'montage') return zone.querySelector('.u-figs > *');
+        if (cle === 'video') return zone.querySelector('.u-figs .u-video');
+        if (cle === 'pied') return zone.querySelector('#u-foot');
+        if (cle === 'distribution') return zone.querySelector('.u-cast');
+        return null;
+    }
+
+    function mesurerChapitres(zone) {
+        const nav = zone && zone.querySelector('.u-chapitres');
+        chapitres = [];
+        chapitreCourant = -1;
+        if (!nav) return;
+        const origine = zone.getBoundingClientRect().top - zone.scrollTop;
+        nav.querySelectorAll('[data-u-chapitre]').forEach(b => {
+            const cle = b.dataset.uChapitre;
+            const el = cle === 'haut' ? null : cibleDuChapitre(zone, cle);
+            if (cle !== 'haut' && !el) return;   // pas encore posé (le montage arrive après le passage)
+            chapitres.push({
+                cle, bouton: b,
+                nom: b.lastChild ? b.lastChild.textContent : '',
+                haut: el ? Math.max(0, Math.round(el.getBoundingClientRect().top - origine)) : 0
+            });
+        });
+        chapitresHauteur = zone.scrollHeight;
+        // Les débuts de chapitre, marqués sur la barre de progression.
+        const barre = zone.querySelector('.u-progress');
+        const total = zone.scrollHeight - zone.clientHeight;
+        if (barre) {
+            barre.querySelectorAll('.u-progress-repere').forEach(n => n.remove());
+            if (total > 0) chapitres.slice(1).forEach(c => {
+                const i = document.createElement('i');
+                i.className = 'u-progress-repere';
+                i.style.left = `${(Math.min(1, c.haut / total) * 100).toFixed(2)}%`;
+                barre.appendChild(i);
+            });
+        }
+        suivreChapitre(zone);
+    }
+
+    function suivreChapitre(zone) {
+        if (!chapitres.length) return;
+        if (zone.scrollHeight !== chapitresHauteur) { mesurerChapitres(zone); return; }
+        const y = zone.scrollTop + zone.clientHeight * 0.35;
+        let k = 0;
+        chapitres.forEach((c, i) => { if (c.haut <= y) k = i; });
+        const nav = zone.querySelector('.u-chapitres');
+        // La pastille se tait pendant l'ouverture : le premier écran reste
+        // au titre et à « Avancer ». Elle paraît quand le montage approche.
+        const seuil = chapitres[1] ? chapitres[1].haut - zone.clientHeight * 0.6 : Infinity;
+        if (nav) nav.classList.toggle('est-visible', zone.scrollTop > seuil);
+        if (k === chapitreCourant) return;
+        chapitreCourant = k;
+        if (!nav) return;
+        const n = nav.querySelector('[data-u-chapitre-n]');
+        const nom = nav.querySelector('[data-u-chapitre-nom]');
+        if (n) n.textContent = `${k + 1}/${chapitres.length}`;
+        if (nom) nom.textContent = chapitres[k].nom;
+        chapitres.forEach((c, i) => c.bouton.setAttribute('aria-current', i === k ? 'step' : 'false'));
+    }
+
+    function ouvrirChapitres(zone, ouvrir) {
+        const nav = zone && zone.querySelector('.u-chapitres');
+        if (!nav) return;
+        const bouton = nav.querySelector('.u-chapitres-bouton');
+        const liste = nav.querySelector('.u-chapitres-liste');
+        if (!bouton || !liste) return;
+        bouton.setAttribute('aria-expanded', String(ouvrir));
+        liste.hidden = !ouvrir;
+        nav.classList.toggle('est-ouverte', ouvrir);
+        if (ouvrir) (liste.querySelector('[aria-current="step"]') || liste.querySelector('button'))?.focus({ preventScroll: true });
+    }
+
+    function allerAuChapitre(zone, cle) {
+        if (!chapitres.length || zone.scrollHeight !== chapitresHauteur) mesurerChapitres(zone);
+        const c = chapitres.find(x => x.cle === cle);
+        if (!c) return;
+        zone.scrollTo({ top: c.haut, behavior: REDUCED ? 'auto' : 'smooth' });
+        window.track?.('univers_chapitre', { spectacle: overlay?.dataset.slug || document.body.dataset.uShow || '', chapitre: cle });
+    }
+
     function onScroll() {
         // Le geste pousse l'écriture avant même d'avoir bougé la page :
         // c'est ce qui donne l'impression que le récit répond à la main.
         const moved = Math.abs(overlay.scrollTop - lastScrollTop);
         lastScrollTop = overlay.scrollTop;
         if (moved) nudgeWriting(moved / 90);
+        suivreChapitre(overlay);
 
         if (BARRE_NATIVE || rafId) return;
         rafId = requestAnimationFrame(() => {
@@ -1900,6 +2002,7 @@ const SHOW_UNIVERSES = {
             if (!isOpen) return;
             ecrireALaLumiere(overlay);
             detourerLeTitre(overlay);
+            mesurerChapitres(overlay);
             if (document.fonts && document.fonts.status === 'loading') document.fonts.ready.then(mesurerLesLignes);
         });
     }
@@ -2726,6 +2829,9 @@ const SHOW_UNIVERSES = {
                 </button>
                 <h3 id="u-cal-modal-title">Ajouter à l'agenda</h3>
                 <p class="u-cal-modal-subtitle"></p>
+                <!-- Les séances d'une série (voir openAgendaModal) : on
+                     choisit laquelle emporter, la première publique d'abord. -->
+                <div class="u-cal-modal-seances" role="group" aria-label="Séance à ajouter" hidden></div>
                 <div class="u-cal-modal-options">
                     <button type="button" data-cal-type="google">Google Agenda</button>
                     <button type="button" data-cal-type="outlook">Outlook</button>
@@ -2748,17 +2854,37 @@ const SHOW_UNIVERSES = {
     // sort pas par Tab, et le focus revient au bouton qui l'a ouverte.
     let agendaDepuis = null, agendaLibere = null;
 
+    //  UNE SÉRIE SUR UNE LIGNE, UNE SÉANCE DANS L'AGENDA. Le pied d'un
+    //  univers range une série sur une ligne, avec un seul bouton
+    //  d'agenda (voir datesHtml) : la fenêtre demande alors laquelle
+    //  emporter — une puce par séance, la première publique choisie
+    //  d'emblée, comme dans l'onglet Dates de l'accueil.
+    function sousTitreAgenda(modal, data) {
+        const sub = modal.querySelector('.u-cal-modal-subtitle');
+        if (!sub) return;
+        const cleanSubtitle = data.subtitle ? ` (${data.subtitle})` : '';
+        // La date telle qu'on la lit (« Vendredi 29 janvier 2027 »), et
+        // non « 2027-01-29 » : l'ISO ne sert qu'à fabriquer l'agenda.
+        sub.textContent = `${data.dateLabel || data.icsDate || ''}${cleanSubtitle} • ${data.location || ''}`;
+    }
+
     function openAgendaModal(data, depuis) {
         calModalData = data;
         const modal = overlay.querySelector('#u-cal-modal');
         if (!modal) return;
         agendaDepuis = depuis || null;
-        const sub = modal.querySelector('.u-cal-modal-subtitle');
-        if (sub) {
-            const cleanSubtitle = data.subtitle ? ` (${data.subtitle})` : '';
-            // La date telle qu'on la lit (« Vendredi 29 janvier 2027 »), et
-            // non « 2027-01-29 » : l'ISO ne sert qu'à fabriquer l'agenda.
-            sub.textContent = `${data.dateLabel || data.icsDate || ''}${cleanSubtitle} • ${data.location || ''}`;
+        sousTitreAgenda(modal, data);
+        const choix = modal.querySelector('.u-cal-modal-seances');
+        if (choix) {
+            const seances = Array.isArray(data.seances) ? data.seances : [];
+            choix.hidden = seances.length < 2;
+            choix.innerHTML = seances.length < 2 ? '' : seances.map((s, i) => {
+                const heure = Array.isArray(s.times) && s.times.length ? s.times.join(' & ') : (s.time || '');
+                const choisie = s.icsDate === data.icsDate && (s.time || '') === (data.time || '');
+                return `<button type="button" data-u-cal-seance="${i}" aria-pressed="${choisie}">`
+                    + `${escape(s.dateLabel || s.icsDate)}${heure ? ' · ' + escape(heure) : ''}${s.scolaire ? ' · <i>scolaire</i>' : ''}</button>`;
+            }).join('');
+            choix._seances = seances;
         }
         const shareBtn = modal.querySelector('[data-cal-type="share"]');
         if (shareBtn) {
@@ -2933,6 +3059,21 @@ const SHOW_UNIVERSES = {
         });
 
         overlay.addEventListener('click', (e) => {
+            // Les chapitres : la pastille ouvre la liste, une entrée y mène.
+            // Un clic ailleurs referme la liste ouverte.
+            const versChapitre = e.target.closest('[data-u-chapitre]');
+            if (versChapitre) {
+                ouvrirChapitres(overlay, false);
+                overlay.querySelector('.u-chapitres-bouton')?.focus({ preventScroll: true });
+                allerAuChapitre(overlay, versChapitre.dataset.uChapitre);
+                return;
+            }
+            if (e.target.closest('.u-chapitres-bouton')) {
+                const ouverte = overlay.querySelector('.u-chapitres-bouton').getAttribute('aria-expanded') === 'true';
+                ouvrirChapitres(overlay, !ouverte);
+                return;
+            }
+            if (overlay.querySelector('.u-chapitres.est-ouverte')) ouvrirChapitres(overlay, false);
             // La fenêtre « ajouter à l'agenda » d'abord : elle vit dans ce même
             // conteneur, ses propres clics ne doivent pas retomber plus bas.
             const calBtn = e.target.closest('.u-date-cal');
@@ -2940,6 +3081,17 @@ const SHOW_UNIVERSES = {
                 let data = null;
                 try { data = JSON.parse(calBtn.dataset.cal || '{}'); } catch (err) { }
                 if (data) openAgendaModal(data, calBtn);
+                return;
+            }
+            const seance = e.target.closest('[data-u-cal-seance]');
+            if (seance) {
+                const groupe = seance.parentElement;
+                const s = groupe && groupe._seances && groupe._seances[+seance.dataset.uCalSeance];
+                if (s) {
+                    calModalData = Object.assign({}, s, { seances: groupe._seances });
+                    groupe.querySelectorAll('[data-u-cal-seance]').forEach(b => b.setAttribute('aria-pressed', String(b === seance)));
+                    sousTitreAgenda(overlay.querySelector('#u-cal-modal'), calModalData);
+                }
                 return;
             }
             const calOption = e.target.closest('[data-cal-type]');
@@ -3023,6 +3175,12 @@ const SHOW_UNIVERSES = {
         document.addEventListener('keydown', (e) => {
             if (!isOpen) return;
             if (calModalData && e.key === 'Escape') { e.stopPropagation(); closeAgendaModal(); return; }
+            if (e.key === 'Escape' && overlay.querySelector('.u-chapitres.est-ouverte')) {
+                e.stopPropagation();
+                ouvrirChapitres(overlay, false);
+                overlay.querySelector('.u-chapitres-bouton')?.focus({ preventScroll: true });
+                return;
+            }
             if (zoomIsOpen()) {
                 if (e.key === 'Escape') { e.stopPropagation(); closeZoom(); }
                 else if (e.key === 'ArrowLeft') showZoom(zoomIndex - 1);
@@ -3110,6 +3268,46 @@ const SHOW_UNIVERSES = {
         }, true);
     }
 
+    // ── QUI ARRIVE D'UN AUTRE SITE VOIT D'ABORD LE HAUT DE PAGE COMPLET ──
+    //  Une page spectacle trouvée sur un moteur de recherche s'ouvrait sur
+    //  le travelling : une petite photo au loin, « Avancer », et le titre
+    //  seulement après plusieurs écrans de défilement. Or celui qui arrive
+    //  de Google cherche une information — le titre, le rôle, les dates —,
+    //  pas une ouverture de spectacle. Il arrive donc au point de la scène
+    //  où tout est posé : le titre, sa ligne de salle, le synopsis écrit, le
+    //  rôle et « Accéder aux dates », comme en mouvement réduit. Le
+    //  travelling reste là, au-dessus : il suffit de remonter pour le voir.
+    //
+    //  « Un autre site », c'est un référent d'une autre origine, à la
+    //  première navigation (pas un rechargement ni un retour). Sans
+    //  référent — une adresse tapée, un signet, un lien ouvert depuis une
+    //  application —, ni depuis le site lui-même (le répertoire, l'onglet
+    //  Dates), rien ne change : le travelling joue depuis le début.
+    function arriveDunAutreSite() {
+        try {
+            const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+            if (nav && nav.type && nav.type !== 'navigate') return false;
+            return !!document.referrer && new URL(document.referrer).origin !== location.origin;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    //  Le point où tout est posé : la fin de l'arrivée de la flèche
+    //  (--of-fleche-e), avant que la lettre ne s'ouvre sur la photo. La
+    //  scène est une course « contain » : sa fraction p tombe à
+    //  haut de la scène + p × (sa hauteur − l'écran).
+    function poserLeHautDePage() {
+        if (REDUCED) return false;
+        const scene = overlay.querySelector('.u-ouverture');
+        if (!scene) return false;
+        const p = parseFloat(getComputedStyle(scene).getPropertyValue('--of-fleche-e'));
+        const course = scene.offsetHeight - overlay.clientHeight;
+        if (!(p > 0) || course <= 0) return false;
+        overlay.scrollTop = Math.round(scene.offsetTop + p * course);
+        return true;
+    }
+
     function demarrerStatique() {
         brancherMesure();
         scroller = overlay;
@@ -3121,6 +3319,9 @@ const SHOW_UNIVERSES = {
         wireVideoPosters();
         animerLeMontage(overlay);
         mesurerLesLignes();
+        if (arriveDunAutreSite() && poserLeHautDePage()) {
+            document.documentElement.classList.add('u-arrivee-directe');
+        }
         lastScrollTop = 0;
         // AVANT l'écriture : le pied se refait en silence, la page n'a pas
         // encore bougé. Si rien n'a changé depuis la génération, l'opération

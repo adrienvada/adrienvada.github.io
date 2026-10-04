@@ -528,7 +528,7 @@ const UniversMontage = (function () {
             // Les plages des couches du haut de la page (voir « Le récit
             // s'écrit sur la scène » dans univers.css).
             vars: {
-                invite: f(14), titre: f(A),
+                invite: f(14), repere: f(42), titre: f(A),
                 'fond-s': f(A), 'fond-e': f(A + 45),
                 'sur-s': f(A + 8), 'sur-e': f(A + 40),
                 'auteur-s': f(A + 22), 'auteur-e': f(A + 52),
@@ -599,7 +599,19 @@ const UniversMontage = (function () {
     // attendent, et ne partent jamais. La page générée ne peut pas le
     // savoir en s'écrivant : ses photos attendent, et son en-tête précharge
     // la première, seulement si le mouvement n'est pas réduit.
-    function ouvertureHtml(uni, titre, tempo, vu) {
+    //
+    // `repere` : { sur, titre, chars, len } — LE REPÈRE DU PREMIER ÉCRAN.
+    // Trois secondes après le toucher, l'écran ne montrait qu'une petite
+    // photo au loin et « Avancer » : rien ne nommait le spectacle avant
+    // qu'on défile — et une page trouvée sur un moteur de recherche
+    // s'ouvrait de même. Le titre est donc là dès l'ouverture, en
+    // filigrane au fond de la scène, et la ligne de la feuille de salle
+    // (« 2024 · Tragédie · En tournée ») au-dessus d'« Avancer ». Le
+    // filigrane s'efface dès que le vrai titre part du fond du plateau
+    // (--of-repere) ; la ligne, avec l'invitation. Décoratifs pour les
+    // lecteurs d'écran : le titre et la ligne sont écrits plus loin, dans
+    // le haut de la page.
+    function ouvertureHtml(uni, titre, tempo, vu, repere) {
         const photos = photosOuverture(uni);
         if (photos.length < 2) return '';
         const plans = photos.map((n, i) => {
@@ -621,12 +633,18 @@ const UniversMontage = (function () {
         // La photo de la lettre, lue par detourerLeTitre (univers.js).
         const lettre = photoLettre(uni);
         const attrLettre = lettre ? ` data-u-src="${escape(lettre.src)}"${lettre.pos ? ` data-lettre-pos="${escape(lettre.pos)}"` : ''}` : '';
+        const r = repere || {};
+        const filigrane = r.titre
+            ? `<span class="u-of-repere rg-k" aria-hidden="true"><span class="u-of-repere-titre" style="--u-title-chars:${r.chars || 12};--u-title-len:${r.len || 18}">${escape(r.titre)}</span></span>`
+            : '';
+        const surInvite = r.sur ? `<span class="u-of-invite-sur">${r.sur}</span>` : '';
         return `<section class="u-ouverture rg-scene" style="${reglage}"${attrLettre}>
             <div class="u-of-scene">
                 <span class="u-of-fond" aria-hidden="true"></span>
+                ${filigrane}
                 <div class="u-of-titre rg-k">${titre}</div>
                 <span class="u-of-plans" aria-hidden="true">${plans}</span>
-                <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
+                <p class="u-of-invite rg-k" aria-hidden="true">${surInvite}<span>Avancer</span><span class="u-of-rail"></span></p>
             </div>
         </section>`;
     }
@@ -983,8 +1001,62 @@ const UniversMontage = (function () {
         return `<div class="u-hero-fond rg-k" aria-hidden="true"><img src="${escape(base)}-1280.webp" srcset="${escape(base)}-640.webp 640w, ${escape(base)}-1280.webp 1280w" sizes="100vw" alt=""${priorite} decoding="async"${c.pos ? ` style="object-position:${escape(c.pos)}"` : ''}></div>`;
     }
 
+    // ── LES CHAPITRES ────────────────────────────────────────────────
+    //  Un univers fait une vingtaine d'écrans au téléphone (17 000 px pour
+    //  Bérénice), et la barre de 2 px du haut ne disait ni où l'on en était
+    //  ni ce qui restait. Il se lit désormais en chapitres : l'ouverture,
+    //  le montage, la bande-annonce s'il y en a une, les dates (ou le film),
+    //  la distribution. Leurs débuts sont marqués sur la barre ; une
+    //  pastille, en bas de l'écran, dit le chapitre en cours et s'ouvre sur
+    //  la liste, qu'on touche pour y sauter (voir brancherChapitres, dans
+    //  univers.js, qui trouve chaque chapitre par sa cible).
+    function chapitresDe(uni, isFilm) {
+        const avecVideo = (uni.sequence || []).some(b => b && b.video && videoRef(uni, b.video));
+        return [
+            { cle: 'haut', nom: 'Ouverture' },
+            { cle: 'montage', nom: isFilm ? 'Images' : 'Le spectacle' },
+            avecVideo ? { cle: 'video', nom: 'Bande-annonce' } : null,
+            { cle: 'pied', nom: isFilm ? 'Le film' : 'Dates' },
+            uni.cast && uni.cast.length ? { cle: 'distribution', nom: 'Distribution' } : null
+        ].filter(Boolean);
+    }
+
+    function chapitresHtml(uni, isFilm) {
+        const ch = chapitresDe(uni, isFilm);
+        return `<nav class="u-chapitres" aria-label="Chapitres">
+            <ol class="u-chapitres-liste" id="u-chapitres-liste" hidden>
+                ${ch.map((c, i) => `<li><button type="button" data-u-chapitre="${c.cle}"><span class="u-chapitres-n">${i + 1}</span>${escape(c.nom)}</button></li>`).join('')}
+            </ol>
+            <button type="button" class="u-chapitres-bouton" aria-expanded="false" aria-controls="u-chapitres-liste">
+                <span class="u-chapitres-n" data-u-chapitre-n>1/${ch.length}</span>
+                <span class="u-chapitres-courant" data-u-chapitre-nom>${escape(ch[0].nom)}</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-chevron-up"></use></svg>
+            </button>
+        </nav>`;
+    }
+
+    // ── LE SPECTACLE SUIVANT ─────────────────────────────────────────
+    //  Au bout d'un univers, on repartait par le CV pour ouvrir le suivant.
+    //  Le pied finit donc sur la suite, dans l'ordre du CV : un vrai lien
+    //  vers la page du spectacle suivant (/spectacles/…), qui est le même
+    //  univers — il s'ouvre aussi depuis le panneau de l'accueil, et se lit
+    //  sans JavaScript. Après le dernier, le répertoire.
+    //  `suivant` : { titre, slug, film }, ou null après le dernier (posé
+    //  par l'appelant, qui connaît l'ordre du CV : univers.js lit les
+    //  lignes, le générateur aussi). Absent : rien n'est écrit.
+    function suivantHtml(suivant) {
+        if (!suivant) {
+            return `<p class="u-suivant"><a href="/spectacles/"><span class="u-suivant-quoi">Tout le répertoire</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></p>`;
+        }
+        return `<p class="u-suivant"><a href="/spectacles/${escape(suivant.slug)}/" data-track="univers_suivant" data-track-detail="${escape(suivant.titre)}">
+                <span class="u-suivant-quoi">${suivant.film ? 'Film suivant' : 'Spectacle suivant'}</span>
+                <span class="u-suivant-titre">${escape(suivant.titre)}</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></p>`;
+    }
+
     function panelHtml(info, uni, opts) {
-        const { dates = '', enCreation = false, statique = false, montage = true, travellingVu = false } = opts || {};
+        const { dates = '', enCreation = false, statique = false, montage = true, travellingVu = false, suivant } = opts || {};
         // `montage: false` laisse le montage vide : le panneau ouvert par un
         // passage le reçoit ensuite, une fois la vignette devenue la page
         // (voir monterLeMontage dans univers.js). Une page autonome l'a
@@ -1087,8 +1159,9 @@ const UniversMontage = (function () {
         <!-- La barre de progression vaut aussi pour une page autonome : le
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
+        ${chapitresHtml(uni, isFilm)}
 
-        ${ouverture ? ouvertureHtml(uni, hero, tempo, travellingVu) : hero}
+        ${ouverture ? ouvertureHtml(uni, hero, tempo, travellingVu, { sur: surtitre, titre: info.title, chars: tm.chars, len: tm.len }) : hero}
 
         <div class="u-figs">${figures}</div>
 
@@ -1102,6 +1175,7 @@ const UniversMontage = (function () {
             ${prixBlock(uni)}
             ${castBlock(uni)}
             ${uni.credit ? `<p class="u-credit">Photographies : ${escape(uni.credit)}</p>` : ''}
+            ${suivant === undefined ? '' : suivantHtml(suivant)}
         </footer>
 
 <!-- Agrandissement : la photo entière, jamais recadrée. C'est le
@@ -1138,55 +1212,149 @@ const UniversMontage = (function () {
     //  le navigateur la tire de dates.js par upcomingPerformances(), le
     //  script de build la lit dans le même fichier. Deux chemins, un seul
     //  dessin — les dates ne sont dupliquées nulle part.
+    //
+    //  LE DESSIN DE L'ONGLET DATES. Le pied des univers avait sa propre
+    //  liste, moins soignée : une séance par ligne, la date en police à
+    //  chasse fixe, « horaire à confirmer » et « séance scolaire » répétés
+    //  quatre fois pour la série du lycée Corneille. L'onglet Dates, lui,
+    //  met une série sur une ligne : l'éphéméride (le mois en bandeau, le
+    //  jour, le jour de la semaine), la ville et la salle, une puce par
+    //  séance. C'est ce dessin que reprend le pied, à la couleur du
+    //  spectacle (univers.css, « Les dates au pied de l'univers »). Une
+    //  série, ce sont les séances d'un même lieu à moins d'une semaine
+    //  d'écart — la règle de dates-live.js.
+    //
+    //  Le bouton d'agenda ferme la ligne. Pour une série, la fenêtre
+    //  demande quelle séance ajouter (voir openAgendaModal, univers.js) :
+    //  `seances` voyage avec les autres données dans data-cal.
+    const MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    const MOIS_BREFS = ['janv', 'févr', 'mars', 'avr', 'mai', 'juin', 'juil', 'août', 'sept', 'oct', 'nov', 'déc'];
+    const MOIS_LONGS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    const JOURS_COURTS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+    const JOURS_BREFS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+    const JOURS_LONGS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+
+    // « 2026-11-12 » → le jour, à midi en temps universel : aucun fuseau ne
+    // le fait basculer la veille.
+    function jourIso(iso) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+        if (!m) return null;
+        const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12));
+        return { iso: m[0], a: +m[1], m: +m[2] - 1, j: +m[3], js: d.getUTCDay(), t: d.getTime() };
+    }
+
+    // « Tribunal judiciaire, Rouen (76) » et « Rouen » → la ville, puis la
+    // salle sans elle, et le département : la même découpe que l'onglet
+    // Dates (dlLieu, index.html).
+    function lieuDecoupe(location, ville) {
+        let salle = String(location || '').trim();
+        const dep = salle.match(/\s*\((\d{2,3}[AB]?)\)$/i);
+        if (dep) salle = salle.slice(0, dep.index).trim();
+        const v = String(ville || '').trim();
+        if (v) {
+            const bas = salle.toLowerCase();
+            const lien = [', ', ' de ', ' du ', ' d’', " d'", ' à '].find(l => bas.endsWith((l + v).toLowerCase()));
+            if (lien) salle = salle.slice(0, salle.length - (lien + v).length).trim();
+            else if (bas === v.toLowerCase()) salle = '';
+        }
+        return { ville: v, salle, dep: dep ? dep[1] : '' };
+    }
+
+    // Les séances d'un même lieu, à moins d'une semaine d'écart, font une
+    // ligne. L'ordre est celui de la liste reçue (par jour, puis par heure).
+    function rangsDeDates(perfs) {
+        const rangs = [];
+        perfs.forEach(p => {
+            const j = jourIso(p.icsDate);
+            const r = rangs[rangs.length - 1];
+            const dernier = r && r.perfs[r.perfs.length - 1];
+            const ecart = r && j && dernier.j ? (j.t - dernier.j.t) / 864e5 : Infinity;
+            const q = Object.assign({}, p, { j });
+            if (r && r.location === (p.location || '') && ecart >= 0 && ecart <= 7) r.perfs.push(q);
+            else rangs.push({ location: p.location || '', city: p.city || '', perfs: [q] });
+        });
+        return rangs;
+    }
+
+    function feuilleHtml(rang) {
+        const jours = [...new Set(rang.perfs.map(q => q.j && q.j.iso).filter(Boolean))].map(jourIso);
+        const d = jours[0], z = jours[jours.length - 1];
+        if (!d) {
+            return '<span class="u-dl-feuille u-dl-feuille--vide" aria-hidden="true"><span class="u-dl-bande">·</span><span class="u-dl-num">?</span></span>';
+        }
+        const plusieurs = z.iso !== d.iso;
+        const deuxMois = plusieurs && (z.m !== d.m || z.a !== d.a);
+        return `<span class="u-dl-feuille${plusieurs ? ' u-dl-feuille--2' : ''}" aria-hidden="true">`
+            + `<span class="u-dl-bande${deuxMois ? ' u-dl-bande--2' : ''}">${deuxMois ? `${MOIS_BREFS[d.m]}–${MOIS_BREFS[z.m]}` : MOIS_COURTS[d.m]}</span>`
+            + `<span class="u-dl-num">${plusieurs ? `${d.j}–${z.j}` : d.j}</span>`
+            + `<span class="u-dl-jour">${plusieurs ? `${JOURS_BREFS[d.js]}–${JOURS_BREFS[z.js]}` : JOURS_COURTS[d.js]}</span></span>`;
+    }
+
+    // « jeudi 12 novembre 2026 », ou « du lundi 18 au jeudi 21 mai 2026 » :
+    // la date entière, pour les lecteurs d'écran (la feuille leur est cachée).
+    function quandEnLettres(rang) {
+        const jours = [...new Set(rang.perfs.map(q => q.j && q.j.iso).filter(Boolean))].map(jourIso);
+        if (!jours.length) return rang.perfs[0].dateLabel || 'Date à préciser';
+        const d = jours[0], z = jours[jours.length - 1];
+        const long = (x, annee) => `${JOURS_LONGS[x.js]} ${x.j === 1 ? '1er' : x.j} ${MOIS_LONGS[x.m]}${annee ? ' ' + x.a : ''}`;
+        return d.iso === z.iso ? long(d, true) : `du ${long(d, d.a !== z.a)} au ${long(z, true)}`;
+    }
+
+    function heuresDe(p) {
+        return Array.isArray(p.times) && p.times.length ? p.times.join(' & ') : String(p.time || '').trim();
+    }
+
+    function puceHtml(p, rang, titre) {
+        const serie = new Set(rang.perfs.map(q => q.j && q.j.iso)).size > 1;
+        const jour = serie && p.j ? `<span class="u-dl-s-jour">${JOURS_COURTS[p.j.js]}</span> ` : '';
+        const h = heuresDe(p);
+        const heure = h ? `<span class="u-dl-s-heure">${escape(h)}</span>` : '';
+        if (p.isSchool) {
+            return `<li><span class="u-dl-puce u-dl-puce--muette">${jour}${heure ? heure + ' ' : ''}<i>scolaire</i></span></li>`;
+        }
+        const billet = lienSur(p.bookingUrl);
+        if (billet) {
+            const quand = [p.j ? `${JOURS_LONGS[p.j.js]} ${p.j.j} ${MOIS_LONGS[p.j.m]}` : p.dateLabel, h].filter(Boolean).join(' à ');
+            return `<li><a class="u-dl-puce u-date-book" href="${escape(billet)}" target="_blank" rel="noopener" data-track="date_booking" data-track-detail="${escape(titre)}">`
+                + `<span class="u-sr">Réserver, </span>${jour}${heure || '<span class="u-dl-s-heure u-dl-s-flou">horaire à confirmer</span>'}`
+                + `<svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg>`
+                + `<span class="u-sr"> : ${escape(quand)}${rang.location ? ', ' + escape(rang.location) : ''} (nouvel onglet)</span></a></li>`;
+        }
+        return `<li><span class="u-dl-puce u-dl-puce--muette">${jour}${heure ? heure + ' · ' : ''}<i>billetterie à venir</i></span></li>`;
+    }
+
+    function agendaHtml(rang, titre) {
+        const perfs = rang.perfs.filter(p => p.icsDate);
+        if (!perfs.length) return '';
+        // La séance proposée d'abord : la première ouverte au public.
+        const p = perfs.find(q => !q.isSchool) || perfs[0];
+        const donnee = (q) => ({
+            title: q.title || '', subtitle: q.subtitle || '', location: q.location || '',
+            dateLabel: q.dateLabel || '', icsDate: q.icsDate, time: q.time || '', times: q.times || null,
+            scolaire: !!q.isSchool
+        });
+        const data = donnee(p);
+        if (perfs.length > 1) data.seances = perfs.map(donnee);
+        return `<li class="u-dl-agenda"><button type="button" class="u-date-cal" data-cal="${escape(JSON.stringify(data))}"`
+            + ` aria-label="Ajouter au calendrier : ${escape(titre)}, ${escape(quandEnLettres(rang))}">`
+            + `<svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button></li>`;
+    }
+
     function datesHtml(perfs) {
         if (!perfs || !perfs.length) return '';
-        const rows = perfs.map(p => {
-            const t = Array.isArray(p.times) && p.times.length ? p.times.join(' & ') : (p.time || '');
-            // SUPERPOSÉE, PAS ACCOLÉE : « · séance scolaire » à la suite de
-            // l'horaire allongeait la ligne au point de faire passer les
-            // boutons à la ligne suivante, à un endroit différent d'une
-            // représentation à l'autre. Un second bloc, empilé sous le
-            // premier, tient dans la même largeur quel que soit l'horaire.
-            const school = p.isSchool ? `<span class="u-warn">séance scolaire</span>` : '';
-            // LES DONNÉES VOYAGENT DANS L'ATTRIBUT, PAS L'OUVERTURE DU
-            // CALENDRIER. Ce fichier ne touche pas au DOM (voir l'en-tête) —
-            // c'est univers.js qui lit `data-cal` au clic et construit le
-            // .ics / les liens Google-Outlook. Un bouton sans icsDate ne
-            // mène nulle part, donc on ne le pose pas.
-            // Ce qui distingue cette ligne des autres, pour les libellés.
-            const quand = [p.dateLabel, p.location].filter(Boolean).join(', ');
-            const calBtn = p.icsDate
-                ? `<button type="button" class="u-date-cal" data-cal="${escape(JSON.stringify({
-                    title: p.title || '', subtitle: p.subtitle || '', location: p.location || '',
-                    dateLabel: p.dateLabel || '', icsDate: p.icsDate, time: p.time || '', times: p.times || null
-                }))}" aria-label="Ajouter au calendrier : ${escape(quand)}">
-                    <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button>` : '';
-            // Le lien ne part que vers une page web (voir lienSur). Son texte
-            // visible est « Réserver », le même sur chaque ligne : la date et
-            // le lieu le complètent pour un lecteur d'écran, qui entendrait
-            // sinon six « Réserver » sans savoir lequel est lequel.
-            // `data-track` : le clic est compté comme ceux de l'onglet Dates
-            // (même nom d'événement), sur l'accueil comme sur les pages
-            // spectacle — voir brancherMesure dans univers.js.
-            const billetterie = lienSur(p.bookingUrl);
-            const bookBtn = billetterie
-                ? `<a href="${escape(billetterie)}" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="${escape(p.title || '')}">Réserver<span class="u-sr"> — ${escape(quand)} (nouvel onglet)</span>
-                       <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>` : '';
-            // DEUX COLONNES, PAS UNE SEULE LIGNE QUI S'ENROULE. .u-date-info
-            // absorbe seule le retour à la ligne (date, lieu, horaire) ;
-            // .u-date-actions ne s'enroule jamais et reste donc toujours au
-            // même endroit à droite, quelle que soit la longueur du reste.
-            return `<li class="u-date">
-                <div class="u-date-info">
-                    <span class="u-date-when">${escape(p.dateLabel)}</span>
-                    <span class="u-date-where">${escape(p.location)}</span>
-                    <span class="u-date-time">${t ? escape(t) : 'horaire à confirmer'}${school}</span>
-                </div>
-                <div class="u-date-actions">${calBtn}${bookBtn}</div>
-            </li>`;
+        const titre = perfs[0].title || '';
+        const rows = rangsDeDates(perfs).map(rang => {
+            const l = lieuDecoupe(rang.location, rang.city);
+            const lieu = (l.ville ? `<span class="u-dl-ville">${escape(l.ville)}</span>` : '')
+                + (l.ville && l.salle ? ' · ' : '') + escape(l.salle) + (l.dep ? ` (${escape(l.dep)})` : '');
+            return `<li class="u-dl${rang.perfs.length > 1 ? ' u-dl--serie' : ''}">`
+                + feuilleHtml(rang)
+                + `<div class="u-dl-corps"><p class="u-sr">${escape(quandEnLettres(rang))}</p>`
+                + `<p class="u-dl-lieu">${lieu || escape(rang.location)}</p>`
+                + `<ul class="u-dl-seances" role="list">${rang.perfs.map(p => puceHtml(p, rang, titre)).join('')}${agendaHtml(rang, titre)}</ul>`
+                + '</div></li>';
         }).join('');
-        return `<ul class="u-dates">${rows}</ul>`;
+        return `<ul class="u-dates" role="list">${rows}</ul>`;
     }
 
     // ── LES REPRÉSENTATIONS POUR LES MOTEURS DE RECHERCHE ─────────────
@@ -1395,7 +1563,7 @@ const UniversMontage = (function () {
     }
 
     return {
-        panelHtml, datesHtml, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, photoPrincipale, couverture, organisateurs,
+        panelHtml, datesHtml, chapitresDe, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, photoPrincipale, couverture, organisateurs,
         toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
         longestLine, photoSrc, pictureHtml, framePos, figureHtml, overHtml, videoRef, flouSrc,

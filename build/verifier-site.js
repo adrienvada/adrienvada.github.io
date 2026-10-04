@@ -3596,6 +3596,152 @@ function exige(condition, message) {
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
         });
+
+        // ── L'EXPERTISE D'OCTOBRE 2026, CÔTÉ ACCUEIL ──
+        // Au téléphone, la barre d'onglets flotte en bas de l'écran, dans la
+        // zone du pouce, ses quatre destinations visibles dès l'arrivée, en
+        // mots courts ; sur grand écran elle reste en haut, en mots longs.
+        // L'adresse se copie, la fiche contact se télécharge, et plus aucun
+        // texte de l'accueil n'est sous les onze pixels.
+        await verifie('l’accueil d’après l’expertise : la barre d’onglets en bas au téléphone, en haut sur grand écran ; « Copier » l’adresse, la fiche contact ; rien sous onze pixels', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+            await c.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForTimeout(600);
+            const barre = await p.evaluate(() => {
+                const n = document.getElementById('nav-barre');
+                const r = n.getBoundingClientRect();
+                const visibles = (a) => [...a.querySelectorAll('span')].filter((s) => getComputedStyle(s).display !== 'none').map((s) => s.textContent.trim()).join('');
+                return {
+                    position: getComputedStyle(n).position, bas: innerHeight - r.bottom, haut: r.top,
+                    mots: [...document.querySelectorAll('#nav-tabs-container a')].map(visibles),
+                    cibles: [...document.querySelectorAll('#nav-tabs-container a')].map((a) => Math.round(a.getBoundingClientRect().height))
+                };
+            });
+            exige(barre.position === 'fixed' && barre.bas >= 0 && barre.bas < 40 && barre.haut > 600,
+                `au téléphone, la barre d’onglets n’est pas en bas de l’écran (${barre.position}, à ${Math.round(barre.haut)} px du haut)`);
+            exige(barre.mots.join('·') === 'CV·Dates·Caméra·Voix', `au téléphone, les onglets ne disent pas « CV · Dates · Caméra · Voix » (${barre.mots.join(' · ')})`);
+            exige(barre.cibles.every((h) => h >= 44), `au téléphone, un onglet fait moins de 44 px de haut (${barre.cibles.join(', ')})`);
+            // « Copier » met l'adresse dans le presse-papiers et le dit.
+            await p.locator('header [data-copier]').scrollIntoViewIfNeeded();
+            await p.click('header [data-copier]');
+            await p.waitForTimeout(300);
+            const copie = await p.evaluate(async () => ({
+                presse: await navigator.clipboard.readText(),
+                annonce: document.getElementById('annonce-copie')?.textContent || '',
+                vcard: document.querySelector('header a[href$=".vcf"]')?.getAttribute('href') || ''
+            }));
+            exige(copie.presse === 'adrien.vada@gmail.com' && /copiée/i.test(copie.annonce), `« Copier » : presse-papiers « ${copie.presse} », annonce « ${copie.annonce} »`);
+            const vcf = await p.evaluate(async (h) => { const r = await fetch(h); return { ok: r.ok, texte: await r.text() }; }, copie.vcard);
+            exige(vcf.ok && /^BEGIN:VCARD\r\n/.test(vcf.texte) && /FN:Adrien Vada/.test(vcf.texte) && /END:VCARD\r\n$/.test(vcf.texte),
+                'la fiche contact (.vcf) est absente ou mal formée');
+            // Rien sous onze pixels, dans les onglets CV et Dates (la seule
+            // exception écrite : « janv–févr », à dix et demi).
+            const petits = async () => p.evaluate(() => [...document.querySelectorAll('body *')].filter((e) => {
+                if (!e.offsetParent && getComputedStyle(e).position !== 'fixed') return false;
+                // .cv-cie : le mot « Compagnie », gardé à corps nul pour les
+                // lecteurs d'écran ; l'œil lit « Cie », dessiné à 12 px.
+                if (e.closest('svg, .sr-only, [aria-hidden="true"] .sr-only, .dl-bande--2, #intro-overlay, .td-fl, .cv-cie')) return false;
+                const texte = [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+                return texte && parseFloat(getComputedStyle(e).fontSize) < 10.99;
+            }).map((e) => `${e.className || e.tagName} (${getComputedStyle(e).fontSize})`).slice(0, 6));
+            const cv = await petits();
+            await p.click('#tab-page_dates');
+            await p.waitForTimeout(1200);
+            const dates = await petits();
+            exige(!cv.length && !dates.length, `du texte sous onze pixels : ${[...cv, ...dates].join(', ')}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+            // Sur grand écran, la barre reste en haut, en mots longs.
+            const c2 = await visiteur({ viewport: { width: 1280, height: 860 } });
+            const p2 = await c2.newPage();
+            await p2.goto(base + '/', { waitUntil: 'load' });
+            await p2.waitForTimeout(400);
+            const grand = await p2.evaluate(() => ({
+                position: getComputedStyle(document.getElementById('nav-barre')).position,
+                mots: [...document.querySelectorAll('#nav-tabs-container a')].map((a) => [...a.querySelectorAll('span')]
+                    .filter((s) => getComputedStyle(s).display !== 'none').map((s) => s.textContent.trim()).join(''))
+            }));
+            exige(grand.position === 'sticky' && grand.mots.join('·') === 'CV·Dates théâtres·Démos caméra·Démos voix',
+                `sur grand écran, la barre d’onglets a changé (${grand.position}, ${grand.mots.join(' · ')})`);
+            await c2.close();
+        });
+
+        // ── L'EXPERTISE D'OCTOBRE 2026, CÔTÉ UNIVERS ──
+        // Le premier écran nomme le spectacle ; qui arrive d'un moteur de
+        // recherche voit d'abord le haut de page complet ; les dates du pied
+        // ont le dessin de l'onglet Dates, une série sur une ligne et un
+        // agenda qui demande la séance ; les chapitres se suivent et se
+        // touchent ; le pied finit sur le spectacle suivant ; et « Cléophène »
+        // tient dans l'écran du plus petit téléphone.
+        await verifie('les univers d’après l’expertise : un repère au premier écran, le haut de page complet depuis un moteur de recherche, les dates au dessin de l’onglet Dates, des chapitres qu’on touche, le spectacle suivant, un titre qui tient', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/spectacles/berenice/', { waitUntil: 'load' });
+            await p.waitForTimeout(900);
+            const premier = await p.evaluate(() => ({
+                titre: document.querySelector('.u-of-repere-titre')?.textContent.trim() || '',
+                ligne: document.querySelector('.u-of-invite-sur')?.textContent.trim() || '',
+                pastille: document.querySelector('.u-chapitres')?.classList.contains('est-visible')
+            }));
+            exige(premier.titre === 'Bérénice' && /2022/.test(premier.ligne), `le premier écran ne nomme pas le spectacle (« ${premier.titre} », « ${premier.ligne} »)`);
+            exige(premier.pastille === false, 'la pastille des chapitres paraît dès le premier écran');
+            // Les chapitres : la pastille paraît avec le montage, et « Dates » mène au pied.
+            const chap = await p.evaluate(async () => {
+                const o = document.getElementById('show-universe');
+                o.scrollTop = o.scrollHeight * 0.4;
+                await new Promise((r) => setTimeout(r, 400));
+                const nav = document.querySelector('.u-chapitres');
+                return { visible: nav.classList.contains('est-visible'), n: nav.querySelectorAll('[data-u-chapitre]').length, reperes: document.querySelectorAll('.u-progress-repere').length };
+            });
+            exige(chap.visible && chap.n >= 4 && chap.reperes === chap.n - 1, `les chapitres : pastille ${chap.visible ? 'visible' : 'absente'}, ${chap.n} chapitre(s), ${chap.reperes} repère(s) sur la barre`);
+            await p.tap('.u-chapitres-bouton');
+            await p.tap('[data-u-chapitre="pied"]');
+            await p.waitForTimeout(1600);
+            const pied = await p.evaluate(() => {
+                const f = document.getElementById('u-foot').getBoundingClientRect();
+                return { haut: Math.round(f.top), nom: document.querySelector('[data-u-chapitre-nom]').textContent };
+            });
+            exige(Math.abs(pied.haut) < 40 && pied.nom === 'Dates', `« Dates » ne mène pas au pied (${pied.haut} px, chapitre « ${pied.nom} »)`);
+            // Les dates : une série sur une ligne, l'agenda demande la séance.
+            const serie = p.locator('#u-foot .u-dl--serie .u-date-cal').first();
+            exige(await serie.count(), 'aucune série sur une ligne au pied de Bérénice');
+            await serie.click();
+            await p.waitForTimeout(400);
+            const seances = await p.locator('#u-cal-modal [data-u-cal-seance]').count();
+            exige(seances >= 2, `l’agenda d’une série ne demande pas la séance (${seances} choix)`);
+            await p.keyboard.press('Escape');
+            // Le spectacle suivant, dans l'ordre du CV : As You Like It.
+            const suite = await p.evaluate(() => document.querySelector('.u-suivant a')?.getAttribute('href'));
+            exige(suite === '/spectacles/asyoulikeit/', `le pied de Bérénice ne mène pas à As You Like It (${suite})`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            // Depuis un moteur de recherche : le haut de page complet.
+            const p2 = await c.newPage();
+            await p2.goto(base + '/spectacles/berenice/', { waitUntil: 'load', referer: 'https://www.google.com/' });
+            await p2.waitForTimeout(900);
+            const g = await p2.evaluate(() => {
+                const b = document.querySelector('.u-hero-actions .u-btn');
+                const r = b.getBoundingClientRect();
+                return { y: document.getElementById('show-universe').scrollTop, dedans: r.top >= 0 && r.bottom <= innerHeight };
+            });
+            exige(g.y > 0 && g.dedans, `depuis un moteur de recherche, le haut de page n’est pas posé (défilement ${g.y}, bouton ${g.dedans ? 'visible' : 'hors de l’écran'})`);
+            await c.close();
+            // Le titre le plus large tient dans le plus petit téléphone.
+            const c3 = await visiteur({ viewport: { width: 360, height: 740 }, isMobile: true, reducedMotion: 'reduce' });
+            const p3 = await c3.newPage();
+            await p3.goto(base + '/spectacles/cleophene/', { waitUntil: 'load' });
+            await p3.evaluate(() => document.fonts.ready);
+            const marge = await p3.evaluate(() => {
+                let g = 1e9, d = 0;
+                document.querySelectorAll('.u-title .u-word').forEach((w) => { const r = w.getBoundingClientRect(); g = Math.min(g, r.left); d = Math.max(d, r.right); });
+                return Math.round(Math.min(g, innerWidth - d));
+            });
+            exige(marge >= 16, `« Cléophène » ne laisse que ${marge} px au bord de l’écran à 360 px`);
+            await c3.close();
+        });
     } finally {
         await navigateur.close();
         serveur.close();
