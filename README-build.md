@@ -1224,6 +1224,20 @@ compte.
 > pas `:has()` ignore la règle et retombe sur deux lignes : le CV déborde d'un
 > cheveu, il ne casse pas.
 
+**Le script s'arrête si le PDF fait plus d'une page** : il compte les pages
+dans le fichier produit, et une seconde page (une ligne de trop, un pied
+trop haut) n'est plus une surprise découverte en recevant le fichier.
+
+**Un code QR au pied du CV imprimé** (`.cv-qr`, sur papier seulement : à
+l'écran, il n'existe pas) mène à `adrienvada.fr/?direct` — la bande démo,
+les démos voix et les dates d'un geste du téléphone, sans rideau
+d'ouverture. L'adresse est écrite en clair à côté, pour qui n'a pas
+d'appareil photo sous la main, et le bloc est un lien dans le PDF. Il tient
+dans la marge du bas (22 mm, plus 3 mm de blanc autour, la marge que les
+lecteurs attendent). Fabriqué une fois avec segno (le commentaire du
+balisage donne la commande, à refaire seulement si l'adresse change), et
+relu par OpenCV sur le PDF rendu à 200 dpi.
+
 ### « Profil » : la fiche de casting, à l'écran comme sur le papier
 
 Le profil était une grille de sept cadres, dont plusieurs à moitié vides
@@ -2742,6 +2756,16 @@ le toucher au lieu de 1,49 s, finit 1,39 à 1,44 s après au lieu de 4,1 à
 ordinateur, il finit à 1,1-1,2 s au lieu de 1,6 s. Vérifié : le panneau, la
 lumière, la lettre et la page refermée sont identiques au pixel, et les
 quatre chemins de fermeture rendent la page à la même position qu'avant.
+
+**Le geste de retour du téléphone a déjà son passage.** Sur iPhone, glisser
+depuis le bord de l'écran fait passer la page d'avant sous le doigt ; le
+navigateur le dit (`hasUAVisualTransition` sur `popstate` et `hashchange`).
+Le site rejouait ensuite le sien — le glissement des onglets dans l'autre
+sens, le retour de l'univers dans sa ligne, le fondu de la lettre. Dans ce
+cas, l'onglet change d'un coup (`showPage(…, { sansPassage })`), l'univers
+et la lettre disparaissent sans passage ni fondu
+(`closeShowUniverse({ sansPassage, instantane })`, `fermerLeRecit(true)`).
+Un navigateur qui ne le dit pas garde les passages.
 
 ### Le vocabulaire
 

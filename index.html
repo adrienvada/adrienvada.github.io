@@ -1691,6 +1691,57 @@
                 transform: none !important;
             }
 
+            /* ══ LE CODE QR ══
+               Au pied du CV imprimé, sous la formation : le code (22 mm,
+               assez pour un téléphone tenu à une main au-dessus d'une
+               table) et l'adresse en clair, pour qui n'a pas d'appareil
+               photo sous la main. Une marge blanche de quatre modules au
+               moins autour du code : sans elle, les lecteurs le cherchent
+               longtemps. Il ne prend que le bas de la page, où il reste
+               de la place — le contrôle du nombre de pages, dans
+               build/generer-cv-pdf.js, arrête tout s'il en coûtait une
+               seconde. */
+            .cv-qr {
+                display: flex !important;
+                align-items: center;
+                gap: 14px;
+                margin-top: 14px !important;
+                padding-top: 10px;
+                border-top: 1px solid #e2ddd4;
+                color: #000 !important;
+                text-decoration: none !important;
+                break-inside: avoid;
+            }
+
+            .cv-qr-code {
+                width: 22mm;
+                height: 22mm;
+                padding: 3mm;
+                box-sizing: content-box;
+                background: #fff;
+                flex: none;
+            }
+
+            .cv-qr-texte {
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+            }
+
+            .cv-qr-sur {
+                font-size: 8pt;
+                font-weight: 600;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+                color: #6b5a3e;
+            }
+
+            .cv-qr-adresse {
+                font-size: 13pt;
+                font-weight: 700;
+                letter-spacing: 0.02em;
+            }
+
             /* ══ LE CV TIENT SUR UNE PAGE ══
                Un CV de comédien se lit debout, en pile, entre deux
                auditions. La seconde page ne se lit pas : elle se perd, ou
@@ -1746,6 +1797,14 @@
                 padding: 0 !important;
                 background: transparent !important;
                 color: #000 !important;
+            }
+
+            /* Le rang du contact se range à gauche, comme le reste de
+               l'en-tête : sous 768 px de large, l'écran le centre, et la
+               page imprimée en fait 703. */
+            header .contact-rang {
+                display: flex !important;
+                justify-content: flex-start !important;
             }
 
             /* Le portrait perd un quart de son diamètre : il reste un
@@ -2457,6 +2516,12 @@
             .bio-handwritten {
                 transform: rotate(-0.5deg);
             }
+        }
+
+        /* Le code QR n'existe que sur papier (voir « LE CODE QR » dans
+           @media print). */
+        .cv-qr {
+            display: none;
         }
 
         /* ══ LE RÉCIT ══════════════════════════════════════════════════
@@ -9575,6 +9640,25 @@
                     </span>
                 </button>
 
+                <!-- ══ LE CODE QR DU CV IMPRIMÉ ═══════════════════════════
+                     Sur papier seulement (voir « LE CODE QR » dans la
+                     feuille d'impression) : le CV imprimé, posé sur une
+                     table de casting, mène au site — la bande démo, les
+                     démos voix, les dates — d'un geste du téléphone, et
+                     sans rideau d'ouverture (?direct). Dans le PDF, le bloc
+                     est aussi un lien. Fabriqué par segno (correction Q,
+                     version 3 : 29 modules) et relu par OpenCV sur le PDF
+                     rendu. À refaire seulement si l'adresse change :
+                         python3 -c "import segno; segno.make('https://adrienvada.fr/?direct', error='m').save('qr.svg', border=0, omitsize=True, xmldecl=False, nl=False)" -->
+                <a class="cv-qr" href="https://adrienvada.fr/?direct" tabindex="-1" aria-hidden="true">
+                    <svg class="cv-qr-code" viewBox="0 0 29 29" shape-rendering="crispEdges"><path stroke="#000"
+                            d="M0 0.5h7m1 0h2m1 0h2m1 0h1m1 0h1m1 0h3m1 0h7m-29 1h1m5 0h1m2 0h2m2 0h2m1 0h3m1 0h1m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m7 0h3m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m3 0h2m4 0h2m2 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h2m2 0h3m1 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m1 0h3m1 0h2m3 0h2m3 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-17 1h1m3 0h1m3 0h1m-20 1h7m2 0h1m2 0h5m5 0h2m3 0h1m-29 1h3m1 0h2m1 0h1m1 0h1m4 0h2m1 0h1m1 0h2m1 0h1m1 0h1m3 0h1m-29 1h1m2 0h1m2 0h2m4 0h3m3 0h1m2 0h3m1 0h1m-25 1h1m1 0h1m1 0h1m1 0h1m6 0h2m3 0h1m1 0h3m3 0h1m-28 1h1m1 0h5m2 0h2m5 0h2m3 0h1m1 0h1m2 0h3m-28 1h1m1 0h2m4 0h1m1 0h3m4 0h5m1 0h2m1 0h2m-27 1h1m1 0h1m1 0h1m5 0h4m4 0h1m1 0h2m-24 1h4m1 0h1m1 0h1m1 0h1m1 0h2m5 0h1m3 0h1m1 0h2m1 0h1m-24 1h3m2 0h2m3 0h3m1 0h1m1 0h1m4 0h2m-27 1h1m1 0h1m2 0h1m1 0h1m3 0h1m3 0h1m2 0h5m1 0h5m-29 1h1m4 0h6m3 0h3m3 0h1m1 0h1m3 0h1m-27 1h1m1 0h2m4 0h1m3 0h4m6 0h1m1 0h2m-26 1h1m1 0h2m1 0h2m1 0h1m2 0h1m1 0h3m1 0h1m1 0h6m1 0h1m1 0h1m-21 1h1m1 0h1m2 0h2m1 0h1m1 0h1m1 0h1m3 0h2m1 0h2m-29 1h7m1 0h2m2 0h2m1 0h1m2 0h3m1 0h1m1 0h1m-25 1h1m5 0h1m1 0h1m2 0h2m3 0h1m1 0h3m3 0h2m-26 1h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h2m2 0h1m1 0h8m-28 1h1m1 0h3m1 0h1m1 0h1m1 0h2m3 0h7m1 0h1m1 0h1m-26 1h1m1 0h3m1 0h1m1 0h2m1 0h1m2 0h1m2 0h1m1 0h6m1 0h2m-28 1h1m5 0h1m1 0h1m1 0h1m5 0h1m1 0h1m1 0h1m3 0h2m1 0h1m-28 1h7m2 0h3m2 0h1m1 0h2m1 0h1m1 0h1m2 0h3" /></svg>
+                    <span class="cv-qr-texte">
+                        <span class="cv-qr-sur">Bande démo · démos voix · dates</span>
+                        <span class="cv-qr-adresse">adrienvada.fr</span>
+                    </span>
+                </a>
+
             </div>
 
             <!-- PAGE 2: DATES THEATRE -->
@@ -10694,7 +10778,12 @@
             history.back();
         }
 
-        window.addEventListener('popstate', () => {
+        window.addEventListener('popstate', (e) => {
+            // Le geste de retour de l'iPhone a déjà montré, sous le doigt,
+            // la page d'avant : la couche disparaît alors d'un coup, sans
+            // son passage ni son fondu, qui rejouaient la fermeture une
+            // seconde fois (voir le gestionnaire de hashchange).
+            const dejaAnime = e.hasUAVisualTransition === true;
             // Un history.back() que nous avons nous-mêmes déclenché en
             // refermant une couche : la pile est déjà à jour, il n'y a rien
             // à refermer de plus. Sans ce garde-fou, fermer une photo
@@ -10708,9 +10797,9 @@
                 if (layer === 'u-zoom') {
                     window.closeUniverseZoom?.();
                 } else if (layer === 'univers') {
-                    window.closeShowUniverse?.();
+                    window.closeShowUniverse?.(dejaAnime ? { sansPassage: true, instantane: true } : undefined);
                 } else if (layer === 'recit') {
-                    window.fermerLeRecit?.();
+                    window.fermerLeRecit?.(dejaAnime);
                 } else if (openModalEl) {
                     if (openModalEl.id === 'video-modal') closeVideoModal();
                     else closeCalendarModal();
@@ -10921,8 +11010,15 @@
                 allerAOnglet(cible);
             });
 
-            window.addEventListener("hashchange", () => {
+            window.addEventListener("hashchange", (e) => {
                 const newHash = window.location.hash.substring(1);
+                // LE GESTE DE RETOUR A DÉJÀ SON ANIMATION. Sur iPhone, glisser
+                // depuis le bord de l'écran fait passer la page d'avant sous
+                // le doigt (hasUAVisualTransition) : le glissement des
+                // onglets la rejouait ensuite, une seconde fois, dans
+                // l'autre sens. La page change alors d'un coup. Les
+                // navigateurs qui ne le disent pas gardent le glissement.
+                const passage = { sansPassage: e.hasUAVisualTransition === true };
                 // DÉJÀ SUR CETTE PAGE : RIEN À FAIRE. C'est le cas de chaque
                 // couche qu'on referme (univers, lettre, fenêtre) : le retour
                 // ramène #page_cv, ou l'adresse nue, sur le CV déjà affiché.
@@ -10934,13 +11030,13 @@
                 // rend la page où elle était » (README-build.md).
                 if (document.querySelector('.page.active')?.id === (newHash || 'page_cv')) return;
                 if (newHash) {
-                    if (document.getElementById(newHash)) showPage(newHash, true);
+                    if (document.getElementById(newHash)) showPage(newHash, true, passage);
                     return;
                 }
                 // Hash vide : on est revenu à l'entrée d'origine, celle d'avant
                 // le premier clic sur un onglet. Sans ce repli, « précédent »
                 // depuis Dates laissait l'URL nue mais l'écran sur Dates.
-                showPage('page_cv', true);
+                showPage('page_cv', true, passage);
             });
 
             // Raccourcis clavier globaux (modales)
@@ -12784,7 +12880,9 @@
                 defile.focus({ preventScroll: true });
             }
 
-            function fermer() {
+            //  `instantane` : la lettre disparaît sans son fondu — le geste
+            //  de retour du téléphone l'a déjà fait passer (voir popstate).
+            function fermer(instantane) {
                 if (panneau.hidden) return;
                 //  Si la fermeture vient d'une fermeture « normale » — croix,
                 //  fond, Échap — on recule d'une entrée pour que l'historique
@@ -12807,7 +12905,8 @@
                 // rendu : le cacher tout de suite ferait disparaître la
                 // feuille d'un coup, sans qu'elle ait le temps de se replier.
                 clearTimeout(minuteur);
-                minuteur = setTimeout(() => { panneau.hidden = true; }, DUREE_SORTIE);
+                if (instantane === true) panneau.hidden = true;
+                else minuteur = setTimeout(() => { panneau.hidden = true; }, DUREE_SORTIE);
                 if (liberer) { liberer(); liberer = null; }
                 if (rendreLeFocus && document.contains(rendreLeFocus)) rendreLeFocus.focus();
                 rendreLeFocus = null;
@@ -13149,10 +13248,14 @@
         const ONGLETS_IMMOBILES = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
         let passageOnglet = 0;
 
-        function showPage(pageId, animate = true) {
+        //  `opts.sansPassage` : la page change d'un coup, sans glissement —
+        //  le navigateur vient d'en jouer un à sa façon (le geste de retour
+        //  de l'iPhone, voir le gestionnaire de hashchange).
+        function showPage(pageId, animate = true, opts) {
             const avant = document.querySelector('.page.active');
             const html = document.documentElement;
-            if (!animate || !avant || avant.id === pageId || (ONGLETS_IMMOBILES && ONGLETS_IMMOBILES.matches)) {
+            if (!animate || !avant || avant.id === pageId || (opts && opts.sansPassage)
+                || (ONGLETS_IMMOBILES && ONGLETS_IMMOBILES.matches)) {
                 poserPage(pageId, animate);
                 return Promise.resolve();
             }

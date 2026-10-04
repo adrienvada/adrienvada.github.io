@@ -2618,7 +2618,9 @@ const SHOW_UNIVERSES = {
         if (!isOpen) return;
         const li = ligneOuverte;
         const avecPassage = PASSAGE && !(opts && opts.sansPassage) && !passageEnCours && li && li.isConnected;
-        if (!avecPassage) { fermer(false); return; }
+        // `instantane` : sans le fondu de sortie non plus (le geste de retour
+        // du téléphone a déjà montré la page d'avant, voir index.html).
+        if (!avecPassage) { fermer(!!(opts && opts.instantane)); return; }
         passageEnCours = true;
         const racine = document.documentElement;
         const heroVu = overlay.scrollTop < window.innerHeight * 0.5 && !titreAuFond();
