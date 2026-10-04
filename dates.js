@@ -233,7 +233,7 @@ const SHOW_DATA = {
       fullDate: "2 février 2027",
       title: "Cléophène, d’après Rodogune",
       location: "La Ferme de Bel Ebat, Guyancourt (78)", city: "Guyancourt",
-      time: "",
+      time: "20h30",
       bookingUrl: "https://www.scenes2guyancourt.fr/agenda/cleophene/",
       isSchool: false,
       icsDate: "2027-02-02"

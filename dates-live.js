@@ -110,7 +110,15 @@
         const tri = lignes.map(l => Object.assign({}, l, {
             spectacle: typographie(l.spectacle), lieu: typographie(l.lieu), ville: typographie(l.ville)
         })).sort((x, y) =>
-            x.jour < y.jour ? -1 : x.jour > y.jour ? 1 : String(x.heure).localeCompare(String(y.heure)));
+            x.jour < y.jour ? -1 : x.jour > y.jour ? 1 :
+                String(x.heure).localeCompare(String(y.heure)) || (x.id || 0) - (y.id || 0));
+        // L'ID DÉPARTAGE LES EX-ÆQUO. Deux spectacles le même jour au même
+        // lieu, tous deux sans heure (les scolaires de Saint-Lô, le 29
+        // janvier 2027) : la base les rend dans un ordre qu'elle ne
+        // garantit pas, et Bérénice passait tantôt avant Cléophène, tantôt
+        // après. L'ordre d'une liste changeait d'une lecture à l'autre, et
+        // avec lui son empreinte : la page se redessinait pour rien. Par
+        // l'id, c'est l'ordre de saisie — toujours le même.
 
         const groupes = [];
         tri.forEach(l => {
