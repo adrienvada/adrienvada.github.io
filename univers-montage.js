@@ -1332,7 +1332,7 @@ const UniversMontage = (function () {
         const donnee = (q) => ({
             title: q.title || '', subtitle: q.subtitle || '', location: q.location || '',
             dateLabel: q.dateLabel || '', icsDate: q.icsDate, time: q.time || '', times: q.times || null,
-            scolaire: !!q.isSchool
+            scolaire: !!q.isSchool, billetterie: lienSur(q.bookingUrl) || ''
         });
         const data = donnee(p);
         if (perfs.length > 1) data.seances = perfs.map(donnee);
@@ -1563,8 +1563,150 @@ const UniversMontage = (function () {
             .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
     }
 
+    // ── AJOUTER UNE DATE À SON AGENDA ────────────────────────────────
+    //  Une seule fabrique pour l'accueil (calOptionClick, index.html) et
+    //  les univers (agendaAction, univers.js), qui avaient chacun la leur.
+    //  Elles écrivaient l'heure « flottante » — sans fuseau : 20 h chez qui
+    //  ouvre le fichier, à Montréal comme à Paris —, un identifiant tiré de
+    //  l'horloge (ajouter deux fois la même séance faisait deux
+    //  événements), des lignes ni échappées ni pliées, et un nom de fichier
+    //  qui perdait ses lettres accentuées (« b-r-nice »). Mêmes règles que
+    //  l'agenda auquel on s'abonne (build/fabriquer-agenda.js) : l'heure de
+    //  Paris écrite avec son fuseau, un identifiant tiré de la séance — le
+    //  jour, l'heure, le spectacle, le lieu —, la norme iCalendar
+    //  (RFC 5545). Sans DOM : du texte et des adresses, rien d'autre.
+    //    data : { title, subtitle, location, icsDate (AAAA-MM-JJ), time ou
+    //             times, duree (minutes, facultatif), billetterie, page }
+    //  → null si la date est illisible ; sinon { ics(), google(), outlook(),
+    //    fichier }. Google et Outlook ne prennent qu'une séance : la
+    //    première.
+    const AGENDA_FUSEAU = [
+        'BEGIN:VTIMEZONE', 'TZID:Europe/Paris', 'X-LIC-LOCATION:Europe/Paris',
+        'BEGIN:DAYLIGHT', 'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'TZNAME:CEST',
+        'DTSTART:19700329T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU', 'END:DAYLIGHT',
+        'BEGIN:STANDARD', 'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'TZNAME:CET',
+        'DTSTART:19701025T030000', 'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU', 'END:STANDARD',
+        'END:VTIMEZONE'
+    ];
+    const sansAccents = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    //  Une empreinte courte et stable (FNV-1a, deux passes) : il ne s'agit
+    //  que de distinguer deux séances, pas de chiffrer quoi que ce soit.
+    function empreinte(texte) {
+        let a = 0x811c9dc5, b = 0x01000193 ^ 0x5bd1e995;
+        for (const c of texte) {
+            const n = c.codePointAt(0);
+            a = Math.imul(a ^ n, 0x01000193) >>> 0;
+            b = Math.imul(b ^ n, 0x01000193) >>> 0;
+        }
+        return a.toString(16).padStart(8, '0') + b.toString(16).padStart(8, '0').slice(0, 2);
+    }
+    function icsTexte(s) {
+        return String(s == null ? '' : s)
+            .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,')
+            .replace(/\r\n|\r|\n/g, '\\n').replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, '');
+    }
+    //  75 OCTETS par ligne, au plus ; la suite commence par une espace.
+    const OCTETS = typeof TextEncoder === 'function' ? new TextEncoder() : null;
+    function icsPlier(ligne) {
+        const morceaux = [];
+        let courant = '', octets = 0, limite = 75;
+        for (const c of ligne) {
+            const n = OCTETS ? OCTETS.encode(c).length : (c.codePointAt(0) > 0x7ff ? 3 : c.codePointAt(0) > 0x7f ? 2 : 1);
+            if (octets + n > limite) {
+                morceaux.push(courant);
+                courant = '';
+                octets = 0;
+                limite = 74;
+            }
+            courant += c;
+            octets += n;
+        }
+        morceaux.push(courant);
+        return morceaux.join('\r\n ');
+    }
+    function agendaDe(data) {
+        const jour = String((data && data.icsDate) || '');
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(jour)) return null;
+        const texteHeure = Array.isArray(data.times) ? data.times.join(' & ') : String(data.time || '');
+        const heures = /confirmer/i.test(texteHeure) ? [] : [...texteHeure.matchAll(/(\d{1,2})\s*[hH:]\s*(\d{2})?/g)]
+            .map(h => ({ h: +h[1], m: +(h[2] || 0) })).filter(h => h.h < 24 && h.m < 60);
+        const titre = String(data.title || 'Spectacle');
+        const sommaire = data.subtitle ? `${titre} (${data.subtitle})` : titre;
+        const lieu = String(data.location || '');
+        const duree = data.duree > 0 ? data.duree : 120;
+        const billet = lienSur(data.billetterie);
+        const page = /^https:\/\//.test(data.page || '') ? data.page : `${SITE}/#page_dates`;
+        const deux = (n) => String(n).padStart(2, '0');
+        const [a, mo, j] = jour.split('-').map(Number);
+        const compact = jour.replace(/-/g, '');
+        // L'heure locale de la fin, comptée en UTC pour ne dépendre d'aucun
+        // fuseau : une soirée qui finit après minuit change de jour.
+        const local = (h, plus) => {
+            const f = new Date(Date.UTC(a, mo - 1, j, h.h, h.m + plus));
+            return { jour: `${f.getUTCFullYear()}${deux(f.getUTCMonth() + 1)}${deux(f.getUTCDate())}`, heure: `${deux(f.getUTCHours())}${deux(f.getUTCMinutes())}00`,
+                iso: `${f.getUTCFullYear()}-${deux(f.getUTCMonth() + 1)}-${deux(f.getUTCDate())}T${deux(f.getUTCHours())}:${deux(f.getUTCMinutes())}:00` };
+        };
+        const lendemain = local({ h: 0, m: 0 }, 24 * 60);
+        const description = [
+            'Avec Adrien Vada.',
+            heures.length ? '' : (texteHeure && !/confirmer/i.test(texteHeure) ? `Horaire : ${texteHeure}.` : 'Horaire à confirmer.'),
+            billet ? `Réservations : ${billet}` : 'Réservations pas encore ouvertes.',
+            /#page_dates$/.test(page) ? `Toutes les dates : ${page}` : `Le spectacle : ${page}`
+        ].filter(Boolean).join('\n');
+        const cle = `${sansAccents(titre).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()}|${sansAccents(lieu).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()}`;
+        const fichier = `${sansAccents(titre).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'spectacle'}-${jour}.ics`;
+
+        function ics() {
+            const maintenant = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+            const evenement = (h) => {
+                const uid = `${compact}${h ? `T${deux(h.h)}${deux(h.m)}` : ''}-${empreinte(h ? cle : `${cle}|${texteHeure}`)}@adrienvada.fr`;
+                const lignes = ['BEGIN:VEVENT', `UID:${uid}`, `DTSTAMP:${maintenant}`];
+                if (h) {
+                    const fin = local(h, duree);
+                    lignes.push(`DTSTART;TZID=Europe/Paris:${compact}T${deux(h.h)}${deux(h.m)}00`,
+                        `DTEND;TZID=Europe/Paris:${fin.jour}T${fin.heure}`);
+                } else {
+                    lignes.push(`DTSTART;VALUE=DATE:${compact}`, `DTEND;VALUE=DATE:${lendemain.jour}`, 'TRANSP:TRANSPARENT');
+                }
+                lignes.push(`SUMMARY:${icsTexte(sommaire)}`, `LOCATION:${icsTexte(lieu)}`,
+                    `URL:${/^https:\/\//i.test(billet) ? billet : page}`,
+                    `DESCRIPTION:${icsTexte(description)}`, 'END:VEVENT');
+                return lignes;
+            };
+            const lignes = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Adrien Vada//Spectacles//FR',
+                'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', ...AGENDA_FUSEAU];
+            (heures.length ? heures : [null]).forEach(h => lignes.push(...evenement(h)));
+            lignes.push('END:VCALENDAR');
+            return lignes.map(icsPlier).join('\r\n') + '\r\n';
+        }
+
+        // Google : l'heure de l'affiche, et le fuseau de Paris dit à part
+        // (ctz) — sans lui, Google la plaçait dans le fuseau de l'agenda.
+        function google() {
+            const h = heures[0];
+            const dates = h ? `${compact}T${deux(h.h)}${deux(h.m)}00/${local(h, duree).jour}T${local(h, duree).heure}`
+                : `${compact}/${lendemain.jour}`;
+            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(sommaire)}`
+                + `&dates=${dates}${h ? '&ctz=Europe%2FParis' : ''}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(lieu)}`;
+        }
+
+        // Outlook : l'heure avec son décalage (« +01:00 » l'hiver, « +02:00 »
+        // l'été), lu dans le fuseau de Paris du jour même.
+        function outlook() {
+            const h = heures[0];
+            const base = 'https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent'
+                + `&subject=${encodeURIComponent(sommaire)}&location=${encodeURIComponent(lieu)}&body=${encodeURIComponent(description)}`;
+            if (!h) return `${base}&startdt=${jour}&enddt=${lendemain.iso.slice(0, 10)}&allday=true`;
+            const fin = local(h, duree);
+            return `${base}&startdt=${encodeURIComponent(`${jour}T${deux(h.h)}:${deux(h.m)}:00${decalageParis(jour)}`)}`
+                + `&enddt=${encodeURIComponent(`${fin.iso}${decalageParis(fin.iso.slice(0, 10))}`)}`;
+        }
+
+        return { ics, google, outlook, fichier };
+    }
+
     return {
-        panelHtml, datesHtml, chapitresDe, salleDe, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, photoPrincipale, couverture, organisateurs,
+        panelHtml, datesHtml, chapitresDe, salleDe, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, agendaDe, photoPrincipale, couverture, organisateurs,
         toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
         longestLine, photoSrc, pictureHtml, framePos, figureHtml, overHtml, videoRef, flouSrc,

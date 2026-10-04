@@ -2851,6 +2851,102 @@ a.u-dl-puce:focus-visible {
     font-weight: 700;
 }
 
+/* ── AU TÉLÉPHONE, UNE FEUILLE QUI MONTE DU BAS ──
+   Comme l'agenda de l'accueil (« AJOUTER À L'AGENDA » : UNE FEUILLE AU
+   TÉLÉPHONE, dans index.html) : sous 768 px, la fenêtre quitte le milieu
+   de l'écran, loin du pouce, pour une feuille posée sur le bord du bas,
+   ses coins hauts arrondis, une poignée qui dit qu'elle se tire (voir
+   feuilleAuDoigt, univers.js). Son fond va jusqu'au bord ; son contenu
+   s'arrête au-dessus de la barre d'accueil de l'iPhone. Seul le voile
+   fond : une feuille qui monte en devenant opaque se lit mal. La croix,
+   les choix et les séances à la taille du doigt (44 px). Sur ordinateur,
+   rien ne change. */
+.u-cal-poignee {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .u-cal-modal {
+        place-items: end stretch;
+        padding: 0;
+        opacity: 1;
+        transition: none;
+    }
+
+    .u-cal-modal-backdrop {
+        opacity: 0;
+        transition: opacity var(--dur-base) var(--ease-out);
+    }
+
+    .u-cal-modal.is-open .u-cal-modal-backdrop {
+        opacity: 1;
+    }
+
+    .u-cal-modal-card {
+        /* Les pages spectacle n'ont pas la remise à zéro de Tailwind : sans
+           cela, la largeur pleine s'ajoutait aux marges intérieures. */
+        box-sizing: border-box;
+        max-width: none;
+        max-height: calc(100% - 40px - env(safe-area-inset-top, 0px));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0 20px calc(20px + env(safe-area-inset-bottom, 0px));
+        border-bottom: 0;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -16px 40px -16px rgb(0 0 0 / .55);
+        transform: translateY(100%);
+    }
+
+    .u-cal-modal.is-open .u-cal-modal-card {
+        transform: none;
+    }
+
+    .u-cal-poignee {
+        display: flex;
+        justify-content: center;
+        margin: 0 -20px;
+        padding: 10px 0 14px;
+    }
+
+    .u-cal-poignee::before {
+        content: '';
+        width: 40px;
+        height: 5px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--u-muted) 55%, transparent);
+    }
+
+    /* La prise : ni défilement ni sélection sous le doigt qui tire. */
+    .u-cal-modal [data-u-cal-prise] {
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .u-cal-modal-close {
+        top: 18px;
+        right: 8px;
+        width: 44px;
+        height: 44px;
+        border: 0;
+    }
+
+    .u-cal-modal-options button {
+        min-height: 44px;
+    }
+
+    .u-cal-modal-seances button {
+        min-height: 40px;
+    }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+    .u-cal-modal-card,
+    .u-cal-modal-backdrop {
+        transition: none;
+    }
+}
+
 /* ── Le palmarès ──
    Au générique, juste avant la distribution : ce qui est arrivé au
    film après le tournage, avant ceux qui l'ont fait. La distinction

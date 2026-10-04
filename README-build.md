@@ -330,6 +330,13 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   Bérénice mène au spectacle suivant du CV ; une page spectacle ouverte
   depuis un moteur de recherche pose son haut de page, bouton des dates
   visible ; « Cléophène » laisse au moins 16 px au bord à 360 px.
+- l'agenda d'une date (`agendaDe`) : l'heure de Paris avec son fuseau
+  (`VTIMEZONE`, `TZID`), une soirée de 23 h 30 qui finit le lendemain, le
+  même identifiant d'un ajout à l'autre, des lignes de 75 octets au plus, la
+  virgule du lieu échappée, un nom de fichier qui garde ses lettres
+  (« berenice-… »), le fuseau passé à Google et à Outlook, une séance
+  « matin » en journée entière ; au téléphone, la fenêtre d'agenda d'un
+  univers est une feuille posée en bas, qui se referme quand on la tire.
 
 Pour ne passer que quelques vérifications — celles dont le nom contient un
 mot : `SEUL=planche npm --prefix build run verifier`.
@@ -1747,6 +1754,28 @@ pendant qu'elle monte et descend, seul le voile fond. En mouvement réduit,
 elle paraît et disparaît d'un coup ; tirée, elle suit encore le doigt (c'est
 lui qui bouge, pas une animation). **Sur ordinateur, rien ne change** : la
 fenêtre reste au centre, sans poignée.
+
+**La fenêtre d'agenda d'un univers fait de même** (`#u-cal-modal`, sur
+l'accueil comme sur les pages spectacle) : feuille au bas de l'écran sous
+768 px, poignée et titre comme prise (`data-u-cal-prise`), mêmes seuils pour
+la renvoyer (`feuilleAuDoigt`, univers.js, délégué à `#show-universe`
+puisque la fenêtre est réécrite à chaque ouverture), choix et croix à
+44 px. Elle n'est plus cachée sous les yeux quand on la rouvre aussitôt
+refermée.
+
+**Les fichiers et les adresses d'agenda sortent d'une seule fabrique**
+(`agendaDe`, univers-montage.js), pour l'accueil comme pour les univers,
+qui avaient chacun la leur. Elles écrivaient l'heure « flottante » (sans
+fuseau : 20 h chez qui ouvre le fichier, à Montréal comme à Paris), un
+identifiant tiré de l'horloge (ajouter deux fois la même séance faisait
+deux événements), des lignes ni échappées ni pliées, et un nom de fichier
+qui perdait ses lettres accentuées (« b-r-nice »). Désormais : l'heure de
+Paris avec son fuseau (`TZID=Europe/Paris` et le bloc `VTIMEZONE` de
+`dates.ics`), la fin d'après la durée du spectacle (deux heures sinon), un
+identifiant tiré du jour, de l'heure, du spectacle et du lieu, le texte
+échappé et plié à 75 octets, la billetterie et la page du spectacle dans la
+description. Google reçoit le fuseau à part (`ctz=Europe/Paris`), Outlook
+l'heure avec son décalage du jour (« +01:00 », « +02:00 »).
 
 **« Partager cette date »**, une ligne de plus sous les agendas
 (`calPartager`) : la date part chez quelqu'un, et non dans son propre agenda.

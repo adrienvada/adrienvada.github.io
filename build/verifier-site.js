@@ -4043,6 +4043,64 @@ function exige(condition, message) {
             exige(marge >= 16, `« Cléophène » ne laisse que ${marge} px au bord de l’écran à 360 px`);
             await c3.close();
         });
+
+        // ── L'AGENDA D'UNE DATE ──
+        //  Une seule fabrique (agendaDe, univers-montage.js) pour l'accueil
+        //  et les univers : l'heure de Paris avec son fuseau, un identifiant
+        //  tiré de la séance (deux ajouts, un seul événement), des lignes de
+        //  75 octets au plus, une soirée qui finit après minuit le lendemain.
+        //  Et, au téléphone, la fenêtre d'agenda d'un univers est une feuille
+        //  posée en bas, qu'on renvoie en la tirant.
+        await verifie('l’agenda d’une date : l’heure de Paris avec son fuseau, un identifiant tiré de la séance, des lignes pliées ; dans un univers au téléphone, une feuille qu’on renvoie en la tirant', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/spectacles/berenice/', { waitUntil: 'load' });
+            await p.waitForTimeout(600);
+            const f = await p.evaluate(() => {
+                const d = { title: 'Bérénice', subtitle: 'Racine', location: 'Le Forum, Falaise (14)', icsDate: '2026-12-31', times: ['23h30'], duree: 90, billetterie: 'https://exemple.fr/billets' };
+                const a = UniversMontage.agendaDe(d), b = UniversMontage.agendaDe(d);
+                const ics = a.ics();
+                const uid = (s) => (s.match(/^UID:(.*)$/m) || [])[1];
+                const octets = Math.max(...ics.split('\r\n').map((l) => new TextEncoder().encode(l).length));
+                return {
+                    ics, uidStable: uid(ics) === uid(b.ics()), octets, fichier: a.fichier,
+                    google: a.google(), outlook: a.outlook(),
+                    sansHeure: UniversMontage.agendaDe({ title: 'X', location: 'Y', icsDate: '2027-04-15', time: 'matin' }).ics()
+                };
+            });
+            exige(/\r\nBEGIN:VTIMEZONE\r\nTZID:Europe\/Paris\r\n/.test(f.ics), 'le fichier d’agenda n’a pas le fuseau de Paris');
+            exige(/\r\nDTSTART;TZID=Europe\/Paris:20261231T233000\r\n/.test(f.ics) && /\r\nDTEND;TZID=Europe\/Paris:20270101T010000\r\n/.test(f.ics),
+                'la séance n’est pas à l’heure de Paris, ou la fin d’une soirée après minuit n’est pas le lendemain');
+            exige(f.uidStable && !/Date\.now|NaN|undefined/.test(f.ics), 'l’identifiant de l’événement change d’un ajout à l’autre');
+            exige(f.octets <= 75, `une ligne du fichier d’agenda fait ${f.octets} octets (75 au plus)`);
+            exige(/LOCATION:Le Forum\\, Falaise \(14\)/.test(f.ics), 'la virgule du lieu n’est pas échappée');
+            exige(f.fichier === 'berenice-2026-12-31.ics', `le nom du fichier perd ses accents (${f.fichier})`);
+            exige(/[?&]ctz=Europe%2FParis/.test(f.google) && /startdt=2026-12-31T23%3A30%3A00%2B01%3A00/.test(f.outlook),
+                'Google ou Outlook ne reçoivent pas le fuseau de Paris');
+            exige(/DTSTART;VALUE=DATE:20270415/.test(f.sansHeure) && /Horaire : matin\./.test(f.sansHeure), 'une séance sans heure d’horloge n’est pas une journée');
+            // La feuille d'un univers, au téléphone.
+            await p.evaluate(() => document.querySelector('#show-universe .u-date-cal').scrollIntoView({ block: 'center' }));
+            await p.waitForTimeout(400);
+            await p.tap('#show-universe .u-date-cal');
+            await p.waitForTimeout(600);
+            const feuille = await p.evaluate(() => {
+                const r = document.querySelector('#u-cal-modal .u-cal-modal-card').getBoundingClientRect();
+                return { bas: Math.round(r.bottom), gauche: Math.round(r.left), large: Math.round(r.width), vh: innerHeight, vw: innerWidth };
+            });
+            exige(Math.abs(feuille.bas - feuille.vh) <= 1 && feuille.gauche === 0 && feuille.large === feuille.vw,
+                `au téléphone, la fenêtre d’agenda d’un univers n’est pas une feuille posée en bas (${JSON.stringify(feuille)})`);
+            const prise = await (await p.$('#u-cal-modal .u-cal-poignee')).boundingBox();
+            const x = prise.x + prise.width / 2, y = prise.y + prise.height / 2;
+            await p.mouse.move(x, y);
+            await p.mouse.down();
+            for (let i = 1; i <= 10; i++) { await p.mouse.move(x, y + i * 25); await p.waitForTimeout(16); }
+            await p.mouse.up();
+            await p.waitForTimeout(500);
+            exige(await p.evaluate(() => document.getElementById('u-cal-modal').hidden), 'tirée vers le bas, la feuille d’agenda d’un univers ne se referme pas');
+            exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
+            await c.close();
+        });
     } finally {
         await navigateur.close();
         serveur.close();

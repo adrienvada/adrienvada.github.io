@@ -11998,10 +11998,14 @@
                     // `ecole` et `slug` servent à « Partager cette date » : la
                     // séance scolaire le dit, et le lien mène à la page du
                     // spectacle quand il en a une.
+                    // `duree` et `billetterie` vont dans le fichier d'agenda
+                    // (agendaDe, univers-montage.js) : la fin de la soirée,
+                    // et le lien de réservation dans sa description.
                     p.cal = window.renderedEventsData.push({
                         title: show.title, subtitle: show.subtitle || '', location: show.location,
                         icsDate: r.icsDate, time: r.time, times: r.times, dateLabel: p.dateLabel, seance,
-                        ecole: p.ecole, slug: spectacle.slug
+                        ecole: p.ecole, slug: spectacle.slug, billetterie: p.billetterie,
+                        duree: (spectacle.uni && UniversMontage.dureeMinutes(spectacle.uni)) || 0
                     }) - 1;
                     return p;
                 });
@@ -13499,96 +13503,23 @@
             // ics, google, outlook, share.
             track('date_agenda', { spectacle: data.title || '', par: type });
 
-            const yearMonthDay = (data.icsDate || '').split('-');
-            if (yearMonthDay.length !== 3) return;
-            const y = yearMonthDay[0], m = yearMonthDay[1], d = yearMonthDay[2];
+            // Le fichier et les adresses viennent de la fabrique commune
+            // (agendaDe, univers-montage.js) : l'heure de Paris, un
+            // identifiant tiré de la séance, la norme iCalendar.
+            const agenda = UniversMontage.agendaDe(Object.assign({}, data, {
+                page: data.slug ? `https://adrienvada.fr/spectacles/${data.slug}/` : ''
+            }));
+            if (!agenda) return;
 
-            const now = new Date();
-            const dtstamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-            const cleanTitle = (data.title || '').replace(/[,;\\]/g, ' ');
-            const cleanSubtitle = data.subtitle ? ` (${data.subtitle.replace(/[,;\\]/g, ' ')})` : '';
-            const summary = `${cleanTitle}${cleanSubtitle}`;
-            const location = (data.location || '').replace(/[,;\\]/g, ' ');
-            const timeStr = Array.isArray(data.times) ? data.times.join(' & ') : String(data.time || '');
-            const description = `Représentation : ${summary}\\nLieu : ${location}\\n${timeStr ? 'Horaire : ' + timeStr : 'Horaire à confirmer'}`;
-
-            if (type === 'google') {
-                let datesParam = '';
-                const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
-                if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
-                    const tm = timeMatches[0];
-                    const hour = String(tm[1]).padStart(2, '0');
-                    const min = String(tm[2] || '00').padStart(2, '0');
-                    const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
-                    datesParam = `${y}${m}${d}T${hour}${min}00/${y}${m}${d}T${endHour}${min}00`;
-                } else {
-                    const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-                    dateObj.setDate(dateObj.getDate() + 1);
-                    datesParam = `${y}${m}${d}/${dateObj.getFullYear()}${String(dateObj.getMonth() + 1).padStart(2, '0')}${String(dateObj.getDate()).padStart(2, '0')}`;
-                }
-                window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(summary)}&dates=${datesParam}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`, '_blank', 'noopener');
-                closeCalendarModal();
-                return;
-            }
-
-            if (type === 'outlook') {
-                let startISO = '', endISO = '', isAllDay = false;
-                const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
-                if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
-                    const tm = timeMatches[0];
-                    const hour = String(tm[1]).padStart(2, '0');
-                    const min = String(tm[2] || '00').padStart(2, '0');
-                    const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
-                    startISO = `${y}-${m}-${d}T${hour}:${min}:00`;
-                    endISO = `${y}-${m}-${d}T${endHour}:${min}:00`;
-                } else {
-                    isAllDay = true;
-                    startISO = `${y}-${m}-${d}T09:00:00`;
-                    endISO = `${y}-${m}-${d}T18:00:00`;
-                }
-                window.open(`https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=${encodeURIComponent(summary)}&startdt=${encodeURIComponent(startISO)}&enddt=${encodeURIComponent(endISO)}&location=${encodeURIComponent(location)}&body=${encodeURIComponent(description)}${isAllDay ? '&allday=true' : ''}`, '_blank', 'noopener');
+            if (type === 'google' || type === 'outlook') {
+                window.open(type === 'google' ? agenda.google() : agenda.outlook(), '_blank', 'noopener');
                 closeCalendarModal();
                 return;
             }
 
             // Fichier .ics standard ('ics' ou 'share')
-            const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
-            const vevents = [];
-            if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
-                timeMatches.forEach((tm, idx) => {
-                    const hour = String(tm[1]).padStart(2, '0');
-                    const min = String(tm[2] || '00').padStart(2, '0');
-                    const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
-                    vevents.push([
-                        'BEGIN:VEVENT',
-                        `UID:event-${y}${m}${d}-${hour}${min}-${Date.now()}-${idx}@adrienvada.fr`,
-                        `DTSTAMP:${dtstamp}`,
-                        `DTSTART:${y}${m}${d}T${hour}${min}00`,
-                        `DTEND:${y}${m}${d}T${endHour}${min}00`,
-                        `SUMMARY:${summary}`, `LOCATION:${location}`, `DESCRIPTION:${description}`,
-                        'END:VEVENT'
-                    ].join('\r\n'));
-                });
-            } else {
-                const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-                dateObj.setDate(dateObj.getDate() + 1);
-                const nextY = dateObj.getFullYear();
-                const nextM = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const nextD = String(dateObj.getDate()).padStart(2, '0');
-                vevents.push([
-                    'BEGIN:VEVENT',
-                    `UID:event-${y}${m}${d}-${Date.now()}@adrienvada.fr`,
-                    `DTSTAMP:${dtstamp}`,
-                    `DTSTART;VALUE=DATE:${y}${m}${d}`,
-                    `DTEND;VALUE=DATE:${nextY}${nextM}${nextD}`,
-                    `SUMMARY:${summary}`, `LOCATION:${location}`, `DESCRIPTION:${description}`,
-                    'END:VEVENT'
-                ].join('\r\n'));
-            }
-
-            const icsContent = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Adrien Vada//Spectacles//FR',
-                ...vevents, 'END:VCALENDAR'].join('\r\n');
-            const filename = `${cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'spectacle'}-${y}-${m}-${d}.ics`;
+            const icsContent = agenda.ics();
+            const filename = agenda.fichier;
 
             if (type === 'share' && navigator.canShare) {
                 try {
