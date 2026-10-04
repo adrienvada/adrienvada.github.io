@@ -1118,16 +1118,19 @@ function exige(condition, message) {
             const c = await visiteur({ viewport: { width: 412, height: 915 }, hasTouch: true, isMobile: true });
             const p = await c.newPage();
             const erreurs = guette(p);
-            await p.goto(base + '/#demos_voix', { waitUntil: 'load' });
+            await p.goto(base + '/#demos', { waitUntil: 'load' });
             // L'onglet arrive en glissant, ses cartes en montant (0,6 s) : on
             // touche la barre une fois la page posée, comme un visiteur.
             await p.waitForTimeout(1200);
             // Seule la première démo est demandée à l'ouverture ; les autres
             // attendent qu'on s'en approche (voir amorcerDemo).
-            const amorcees = await p.evaluate(() => [...document.querySelectorAll('#demos_voix audio')]
+            const amorcees = await p.evaluate(() => [...document.querySelectorAll('#demos audio')]
                 .map((a) => a.preload !== 'none' || a.readyState > 0));
             exige(amorcees[0] && amorcees.slice(1).every((x) => !x),
                 `l’ouverture de l’onglet Voix doit amorcer la première démo, et elle seule : ${JSON.stringify(amorcees)}`);
+            // Les démos voix sont sous la bande démo : on y descend d'abord.
+            await p.locator('[data-audio-seek="audio-nexity"]').scrollIntoViewIfNeeded();
+            await p.waitForTimeout(300);
             const barre = await p.locator('[data-audio-seek="audio-nexity"]').boundingBox();
             await p.touchscreen.tap(barre.x + barre.width * 0.5, barre.y + barre.height / 2);
             await p.waitForFunction(() => document.getElementById('audio-nexity').currentTime > 0, null, { timeout: 10000 }).catch(() => { });
@@ -2521,7 +2524,7 @@ function exige(condition, message) {
             const c = await visiteur({ viewport: { width: 412, height: 915 } });
             const p = await c.newPage();
             const erreurs = guette(p);
-            await p.goto(base + '/#demos_voix', { waitUntil: 'load' });
+            await p.goto(base + '/#demos', { waitUntil: 'load' });
             await p.waitForTimeout(1200);
             const barres = await p.evaluate(() => [...document.querySelectorAll('[data-audio-seek]')].map((b) => {
                 const t = b.querySelector('canvas.onde-toile');
@@ -2696,7 +2699,7 @@ function exige(condition, message) {
             // Arriver sur un autre onglet : le médaillon dès le premier rendu.
             const c = await visiteur({ viewport: { width: 1280, height: 900 } });
             const p = await c.newPage();
-            await p.goto(base + '/#demos_voix', { waitUntil: 'domcontentloaded' });
+            await p.goto(base + '/#demos', { waitUntil: 'domcontentloaded' });
             const l = await p.evaluate(() => document.querySelector('#en-tete .affiche-cadre').getBoundingClientRect().width);
             exige(l <= 100, `arrivée sur les démos voix : l’affiche est peinte avant de se replier (${l.toFixed(0)} px)`);
             // Le papier garde son en-tête, réglé pour que le CV tienne sur une page.
@@ -2859,7 +2862,7 @@ function exige(condition, message) {
             const c = await visiteur({ viewport: { width: 1280, height: 900 } });
             const p = await c.newPage();
             const erreurs = guette(p);
-            await p.goto(base + '/#demos_camera', { waitUntil: 'load' });
+            await p.goto(base + '/#demos', { waitUntil: 'load' });
             await p.waitForTimeout(1200);
             const salle = await p.evaluate(() => {
                 const peint = (t) => { const d = t.getContext('2d').getImageData(0, 0, t.width, t.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) return true; return false; };

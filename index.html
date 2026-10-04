@@ -397,13 +397,16 @@
         // est inscrit après celui du routeur — ordre du document — donc
         // l'URL est déjà rétablie quand il la consulte.
         window.__ancreArrivee = (location.hash || '').substring(1);
+        // Les démos caméra et voix ne font plus qu'un onglet : les anciens
+        // liens (#demos_camera, #demos_voix) y mènent toujours.
+        if (/^demos_(camera|voix)$/.test(window.__ancreArrivee)) window.__ancreArrivee = 'demos';
         // L'en-tête n'est une affiche que sur l'onglet CV (voir « Le portrait
         // d'affiche ») : arriver sur un autre onglet le pose replié dès le
         // premier rendu, plutôt que de peindre l'affiche pour la replier.
         // Et la page visée paraît d'emblée, la bio déjà repliée : le CV ne
         // passe plus devant (voir « L'arrivée sur un autre onglet »). Le
         // premier poserPage retire les deux drapeaux.
-        if (/^(page_dates|demos_camera|demos_voix)$/.test(window.__ancreArrivee)) {
+        if (/^(page_dates|demos)$/.test(window.__ancreArrivee)) {
             document.documentElement.classList.add('arrivee-hors-cv');
             document.documentElement.setAttribute('data-arrivee', window.__ancreArrivee);
         }
@@ -1161,8 +1164,7 @@
         }
 
         html[data-arrivee="page_dates"] #page_dates,
-        html[data-arrivee="demos_camera"] #demos_camera,
-        html[data-arrivee="demos_voix"] #demos_voix {
+        html[data-arrivee="demos"] #demos {
             display: block;
             isolation: isolate;
         }
@@ -1172,8 +1174,7 @@
         }
 
         html[data-arrivee="page_dates"] #tab-page_dates,
-        html[data-arrivee="demos_camera"] #tab-demos_camera,
-        html[data-arrivee="demos_voix"] #tab-demos_voix {
+        html[data-arrivee="demos"] #tab-demos {
             color: rgb(var(--c-gold-ink));
         }
 
@@ -8219,17 +8220,11 @@
                         <use href="#i-solid-calendar-days"></use>
                     </svg> <span>Dates théâtres</span>
                 </a>
-                <a href="#demos_camera" id="tab-demos_camera"
+                <a href="#demos" id="tab-demos"
                     class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase text-stone-500 flex items-center justify-center gap-1.5 border border-transparent">
                     <svg class="ico text-[10px]" aria-hidden="true">
                         <use href="#i-solid-film"></use>
-                    </svg> <span>Démos caméra</span>
-                </a>
-                <a href="#demos_voix" id="tab-demos_voix"
-                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase text-stone-500 flex items-center justify-center gap-1.5 border border-transparent">
-                    <svg class="ico text-[10px]" aria-hidden="true">
-                        <use href="#i-solid-microphone"></use>
-                    </svg> <span>Démos voix</span>
+                    </svg> <span>Démos</span>
                 </a>
             </div>
 
@@ -9029,9 +9024,9 @@
             </div>
 
 
-            <!-- PAGE 3: DEMOS CAMERA (Now hosts all videos) -->
-            <div id="demos_camera" class="page space-y-5">
-                <h2 class="sr-only">Démos Caméra</h2>
+            <!-- PAGE 3: DEMOS (bande démo caméra, puis démos voix) -->
+            <div id="demos" class="page space-y-4">
+                <h2 class="sr-only">Démos</h2>
                 <!-- CINEMA VIDEOS -->
                 <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
                     <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
@@ -9104,12 +9099,6 @@
                     </div>
                 </section>
 
-
-            </div>
-
-            <!-- PAGE 4: DEMOS VOIX -->
-            <div id="demos_voix" class="page space-y-4">
-                <h2 class="sr-only">Démos Voix</h2>
                 <!-- PUBLICITÉ -->
                 <section class="glass-card rounded-xl p-4 shadow-sm reveal active">
                     <div class="flex items-center gap-2 mb-3 border-b border-stone-200/60 pb-2">
@@ -12317,8 +12306,7 @@
         const TITRES_ONGLETS = {
             page_cv: document.title,
             page_dates: 'Dates théâtres — Adrien Vada',
-            demos_camera: 'Démos caméra — Adrien Vada',
-            demos_voix: 'Démos voix — Adrien Vada',
+            demos: 'Démos — Adrien Vada',
         };
 
         // LE SEUIL : le défilement à partir duquel la barre d'onglets se colle
@@ -12372,7 +12360,7 @@
         //  Dans l'ordre de la barre : c'est lui qui donne le sens. On va vers
         //  la droite, la page arrive de la droite ; on revient, elle revient
         //  de la gauche (voir « Le changement d'onglet » dans le <style>).
-        const ORDRE_ONGLETS = ['page_cv', 'page_dates', 'demos_camera', 'demos_voix'];
+        const ORDRE_ONGLETS = ['page_cv', 'page_dates', 'demos'];
         const ONGLETS_IMMOBILES = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
         let passageOnglet = 0;
 
@@ -12613,7 +12601,7 @@
 
             // La première démo s'amorce à l'ouverture de l'onglet Voix ; les
             // autres, quand on s'en approche (voir amorcerDemo).
-            if (pageId === 'demos_voix') primeAudioMetadata();
+            if (pageId === 'demos') primeAudioMetadata();
 
             // `animate=false` ne sert QU'AU TOUT PREMIER CHARGEMENT (le seul
             // appel ainsi plus bas) : on arrive sur adrienvada.fr par la porte
@@ -13058,7 +13046,7 @@
         function primeAudioMetadata() {
             if (audioMetadataPrimed) return;
             audioMetadataPrimed = true;
-            amorcerDemo(document.querySelector('#demos_voix audio'));
+            amorcerDemo(document.querySelector('#demos audio'));
         }
 
         // La durée d'une démo : celle du fichier dès qu'il la connaît, sinon

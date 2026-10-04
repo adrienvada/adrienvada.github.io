@@ -3261,8 +3261,8 @@ répertoire, à la galerie et à la 404.
   disparaissait sous la photo qui grandissait, et revenait d'un coup. Le nom
   n'a pas son propre groupe : de deux lignes à une, le fondu montrait deux
   textes.
-- **Arriver sur un autre onglet** (`#page_dates`, `#demos_camera`,
-  `#demos_voix`) pose `arrivee-hors-cv` et `data-arrivee` sur `<html>` avant
+- **Arriver sur un autre onglet** (`#page_dates`, `#demos` ; les anciens
+  `#demos_camera` et `#demos_voix` y mènent encore) pose `arrivee-hors-cv` et `data-arrivee` sur `<html>` avant
   le premier rendu : l'affiche n'est jamais peinte pour être repliée, et la
   page visée paraît d'emblée, son onglet allumé, la bio et la prochaine date
   déjà repliées, sans transition, aux valeurs de `.bio-hidden`. Le premier
