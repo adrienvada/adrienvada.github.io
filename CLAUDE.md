@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # adrienvada.fr — consignes pour Claude
 
 Site d'Adrien Vada, comédien. Statique, servi par GitHub Pages depuis `main` :
@@ -137,3 +141,57 @@ quelle date a changé. Puis réponds à Adrien en quelques lignes :
 - que la PR met à jour la copie de repli et les pages spectacle, et qu'elle sera
   publiée quand il dira « fusionne » (fusionne seulement à sa demande, et quand
   les tests sont verts).
+
+---
+
+## Autres modifications : commandes et pièges
+
+Pas de framework : HTML/CSS/JS à la main, servis tels quels. `build/` ne
+contient que les outils qui fabriquent des fichiers **générés** (jamais à éditer
+à la main : le prochain passage les écrase). Installation, une fois par session :
+`npm --prefix build ci`, puis `npm --prefix build run navigateur` (Chromium de
+Playwright, pour le PDF et les vérifications ; il est déjà installé dans
+l'environnement cloud, voir `PLAYWRIGHT_BROWSERS_PATH`).
+
+| Commande (depuis la racine) | Rôle |
+|---|---|
+| `npm --prefix build run css` | `styles.css` (Tailwind) : après tout changement de classe dans `index.html`, `404.html`, `dates.js`, `galerie.js`, `admin/` |
+| `npm --prefix build run pages` | galerie **puis** pages spectacle + `sitemap.xml` (cet ordre compte) |
+| `npm --prefix build run pdf` | CV en PDF : après un changement du CV ou de `@media print` |
+| `npm --prefix build run verifier` | vérifie le site dans Chromium (tourne aussi sur chaque PR) ; une seule épreuve : `SEUL=mot node build/verifier-site.js` |
+| `npx --yes serve -l 8080 .` | aperçu local (les chemins absolus cassent en ouvrant le fichier) |
+
+Le tableau « Ce qu'il faut relancer, selon ce qu'on a modifié » de
+`README-build.md` dit quelle commande suit quelle modification (univers,
+photos, icônes, polices, ondes des démos voix…). Le lire avant de committer :
+un fichier généré périmé est publié sans le moindre signal.
+
+Architecture en bref :
+
+- `index.html` est le gros fichier : CV, onglets, thèmes, CSS inline, commentaires
+  abondants (retirés de la copie publiée par `build/alleger-publication.js`).
+- `univers.js` / `univers-montage.js` décrivent le « univers » de chaque
+  spectacle (textes, photos, scènes) ; `regie.js` pilote le mouvement ;
+  `intro.js` + `mask-points.js` (généré) l'ouverture de scène.
+- `spectacles/`, `galerie/`, `sitemap.xml` sont **générés** à partir de
+  `index.html`, `univers.js`, `dates.js` et `galerie.js`. Une ligne du CV ou un
+  texte d'univers modifié impose donc `npm --prefix build run pages`.
+- `sw.js` : service worker limité aux polices et images de `/ressources/`.
+  Une image refaite **sous le même nom** reste servie ancienne une fois aux
+  visiteurs revenus.
+- Les couleurs passent par des variables CSS ; l'échelle Tailwind `stone` est
+  **inversée en thème sombre** (raisonner en niveaux, pas en « clair/foncé »).
+
+Règles de travail :
+
+- **Une poussée toutes les dix minutes au plus** : GitHub Pages plafonne à 10
+  publications par heure ; au-delà le site reste figé sans message. Groupe les
+  commits.
+- Pour un changement qui touche l'allure, la structure ou plusieurs pages,
+  **propose une branche à Adrien avant de commencer** ; l'aperçu est à
+  `<branche>-adrienvada-apercu.djerby-adrien.workers.dev`.
+- Ne force jamais une poussée : l'historique a été réécrit en août 2026 ; une
+  branche locale `main` ancienne se supprime (`git branch -D main`), elle ne se
+  force pas.
+- Toute correction de défaut mérite son épreuve dans `build/verifier-site.js`
+  et sa ligne dans `README-build.md`.
