@@ -1420,6 +1420,29 @@
             position: relative;
         }
 
+        /* LES CAPITALES AU MILIEU DE LEUR CASE. Un texte se centre sur sa
+           ligne entière — la place des accents et des jambages comprise —,
+           et des capitales centrées ainsi tombent un peu haut ou un peu bas
+           selon la fonte. `text-box` rogne la ligne à la hauteur des
+           capitales et à la ligne de base : elles sont alors au milieu, à
+           l'œil. Sur les onglets et les boutons du CV et du contact, dont
+           la hauteur ne change pas (min-height). Un navigateur qui ne le
+           connaît pas (Safari d'avant 18.2, Firefox d'avant 154) garde le
+           rendu d'avant. */
+        @supports (text-box: trim-both cap alphabetic) {
+
+            #nav-tabs-container>a,
+            .pdf-btn {
+                min-height: 30px;
+            }
+
+            #nav-tabs-container>a>span,
+            .pdf-btn>span,
+            .contact-outil>span {
+                text-box: trim-both cap alphabetic;
+            }
+        }
+
         /* HIDDEN VEUT DIRE CACHÉ. Les fenêtres fermées portaient l'attribut
            `hidden` ET une classe Tailwind `flex` : la classe gagnait (même
            poids, écrite après), et une fenêtre « fermée » restait affichée,
@@ -2009,6 +2032,17 @@
                 text-decoration: none !important;
             }
 
+            #page_cv .cv-fiche .sigle {
+                text-decoration: none !important;
+            }
+
+            /* La bulle du sigle n'existe pas sur papier : la règle qui met
+               toute la fiche en ligne (display: inline, plus bas) la
+               faisait imprimer, posée sur la fiche. */
+            #page_cv .cv-fiche .sigle-bulle {
+                display: none !important;
+            }
+
             /* LA FICHE EST DÉJÀ ÉCRITE POUR LE PAPIER : les valeurs multiples
                sont séparées par des points médians dans le texte même, et
                chaque précision (le niveau d'une langue, le lieu d'un
@@ -2515,6 +2549,61 @@
         @media (min-width: 768px) {
             .bio-handwritten {
                 transform: rotate(-0.5deg);
+            }
+        }
+
+        /* LE SIGLE ET SA BULLE (voir le balisage de « Combat & sport »).
+           Le sigle garde l'allure du texte, souligné d'un pointillé d'or :
+           on voit qu'il s'explique. La bulle est une carte du site ; là où
+           le positionnement par ancre existe (Chrome 125, Safari 26,
+           Firefox 147), elle se pose au-dessus du sigle, ou dessous s'il
+           n'y a pas la place ; ailleurs, le navigateur la centre. */
+        .sigle {
+            font: inherit;
+            color: inherit;
+            padding: 0;
+            border: 0;
+            background: none;
+            text-decoration: underline dotted rgb(var(--c-gold-ink) / .8);
+            text-underline-offset: 3px;
+            cursor: help;
+            anchor-name: --sigle;
+        }
+
+        .sigle-bulle {
+            max-width: min(20rem, calc(100vw - 32px));
+            margin: auto;
+            padding: 12px 14px;
+            border: 1px solid rgb(var(--c-gold) / .4);
+            border-radius: 10px;
+            background: rgb(var(--c-surface));
+            color: rgb(var(--c-text));
+            font: 400 13px/1.5 Inter, sans-serif;
+            box-shadow: 0 12px 32px -12px rgb(0 0 0 / .55);
+        }
+
+        .sigle-bulle a {
+            color: rgb(var(--c-gold-ink));
+            font-weight: 600;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            white-space: nowrap;
+        }
+
+        .sigle-bulle a .ico {
+            margin-left: 3px;
+        }
+
+        /* Au-dessus du sigle, centrée sur lui tant qu'elle tient dans
+           l'écran, poussée contre le bord sinon (span-all + anchor-center,
+           à 16 px des bords) ; dessous s'il n'y a pas la place au-dessus. */
+        @supports (position-area: top) {
+            .sigle-bulle {
+                position-anchor: --sigle;
+                position-area: top span-all;
+                justify-self: anchor-center;
+                position-try-fallbacks: flip-block;
+                margin: 0 16px 8px;
             }
         }
 
@@ -9119,7 +9208,7 @@
                         data-track="cv_pdf" data-track-detail="mobile" class="pdf-btn inline-flex">
                         <svg class="ico" aria-hidden="true">
                             <use href="#i-solid-file-pdf"></use>
-                        </svg> Télécharger le CV
+                        </svg> <span>Télécharger le CV</span>
                     </a>
                     <!-- « PARTAGER LE CV » : la feuille de partage du téléphone,
                          le PDF joint. Un agent l'envoie par WhatsApp ou par mail
@@ -9689,13 +9778,24 @@
                         </div>
                         <div class="fiche-large">
                             <dt class="cv-fiche-cle">Combat &amp; sport</dt>
-                            <dd>Boxe anglaise · Karaté · Escrime artistique · <a
-                                    href="https://fr.wikipedia.org/wiki/Technique_d%27intervention_op%C3%A9rationnelle_rapproch%C3%A9e"
-                                    target="_blank" rel="noopener"
-                                    title="Technique d’intervention opérationnelle rapprochée">TIOR <svg
-                                        class="ico text-[7px]" aria-hidden="true">
-                                        <use href="#i-solid-up-right-from-square"></use>
-                                    </svg><span class="sr-only"> (Wikipédia, nouvel onglet)</span></a> · Tir militaire
+                            <!-- LE SIGLE S'EXPLIQUE AU DOIGT. Il n'avait qu'une bulle
+                                 `title`, qui ne paraît qu'au survol d'une souris :
+                                 au téléphone, « TIOR » restait une énigme, ou
+                                 menait droit à Wikipédia. Un bouton ouvre
+                                 maintenant une bulle (popover, sans script : le
+                                 navigateur gère Échap, le toucher à côté et le
+                                 premier plan), posée contre le sigle là où le
+                                 navigateur sait l'ancrer, au centre ailleurs ;
+                                 le lien vers Wikipédia est dedans. -->
+                            <dd>Boxe anglaise · Karaté · Escrime artistique · <button type="button" class="sigle"
+                                    popovertarget="sigle-tior">TIOR<span class="sr-only"> : ce que c’est</span></button><span
+                                    id="sigle-tior" class="sigle-bulle" popover><b>TIOR</b> · Technique d’intervention
+                                    opérationnelle rapprochée : la méthode de combat rapproché des forces de l’ordre et de
+                                    l’armée. <a
+                                        href="https://fr.wikipedia.org/wiki/Technique_d%27intervention_op%C3%A9rationnelle_rapproch%C3%A9e"
+                                        target="_blank" rel="noopener">Wikipédia<svg class="ico text-[8px]" aria-hidden="true">
+                                            <use href="#i-solid-up-right-from-square"></use>
+                                        </svg><span class="sr-only"> (nouvel onglet)</span></a></span> · Tir militaire
                                 <em>arme de poing, fusil d’assaut</em> · Natation</dd>
                         </div>
                         <div>
@@ -11051,6 +11151,11 @@
         //  adresse d'univers atteinte par le bouton « suivant » du navigateur.
         //  L'entrée existe déjà ; en pousser une seconde ferait que la
         //  refermer retomberait sur elle-même, indéfiniment.
+        //  Le geste de retour du navigateur a déjà joué son passage (voir
+        //  le popstate ci-dessous) : `retourDejaAnime` le garde pour le
+        //  hashchange qui suit, `fermerSansFondu` le dit à closeModal.
+        let retourDejaAnime = false, fermerSansFondu = false;
+
         function adoptOverlayState(name) {
             overlayStack.push(name);
         }
@@ -11070,6 +11175,10 @@
             // son passage ni son fondu, qui rejouaient la fermeture une
             // seconde fois (voir le gestionnaire de hashchange).
             const dejaAnime = e.hasUAVisualTransition === true;
+            // Safari ne le dit qu'ici, pas au hashchange qui suit un retour
+            // vers un autre onglet : on le lui garde, le temps d'une tâche.
+            retourDejaAnime = dejaAnime;
+            if (dejaAnime) setTimeout(() => { retourDejaAnime = false; }, 0);
             // Un history.back() que nous avons nous-mêmes déclenché en
             // refermant une couche : la pile est déjà à jour, il n'y a rien
             // à refermer de plus. Sans ce garde-fou, fermer une photo
@@ -11079,9 +11188,10 @@
             if (!overlayStack.length) return;  // changement d'onglet : hashchange s'en charge
             const layer = overlayStack.pop();
             closingFromHistory = true;
+            fermerSansFondu = dejaAnime;
             try {
                 if (layer === 'u-zoom') {
-                    window.closeUniverseZoom?.();
+                    window.closeUniverseZoom?.(dejaAnime);
                 } else if (layer === 'univers') {
                     window.closeShowUniverse?.(dejaAnime ? { sansPassage: true, instantane: true } : undefined);
                 } else if (layer === 'recit') {
@@ -11092,6 +11202,7 @@
                 }
             } finally {
                 closingFromHistory = false;
+                fermerSansFondu = false;
             }
         });
 
@@ -11167,8 +11278,11 @@
             // Attendre la fin du fondu, avec repli si transitionend ne se déclenche pas
             let done = false;
             const once = () => { if (!done) { done = true; finish(); } };
-            modal.addEventListener('transitionend', once, { once: true });
-            setTimeout(once, 400);
+            if (fermerSansFondu) once();
+            else {
+                modal.addEventListener('transitionend', once, { once: true });
+                setTimeout(once, 400);
+            }
 
             const liberer = libererSousModale, rendre = lastFocusedEl;
             libererSousModale = null;
@@ -11304,7 +11418,7 @@
                 // onglets la rejouait ensuite, une seconde fois, dans
                 // l'autre sens. La page change alors d'un coup. Les
                 // navigateurs qui ne le disent pas gardent le glissement.
-                const passage = { sansPassage: e.hasUAVisualTransition === true };
+                const passage = { sansPassage: e.hasUAVisualTransition === true || retourDejaAnime };
                 // DÉJÀ SUR CETTE PAGE : RIEN À FAIRE. C'est le cas de chaque
                 // couche qu'on referme (univers, lettre, fenêtre) : le retour
                 // ramène #page_cv, ou l'adresse nue, sur le CV déjà affiché.

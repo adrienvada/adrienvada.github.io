@@ -3610,7 +3610,13 @@ function exige(condition, message) {
             exige(imgs.length >= 10 && paresseuses.slice(0, 9).every((x) => !x) && paresseuses.slice(9).every((x) => x), 'les neuf premières vues ne partent pas avec la page, ou les suivantes n’attendent pas');
             const devant = imgs.filter((m) => /fetchpriority="high"/.test(m[2])).length;
             exige(devant >= 1 && devant <= 2, `${devant} vue(s) en priorité haute`);
-            exige(imgs.every((m) => /^\(max-width: [\d.]+px\) calc\(100vw \* [\d.]+\), calc\(min\(100vw, 68rem\) \* [\d.]+\)$/.test(m[1])), 'les tailles écrites ne disent pas les deux planches (quatre colonnes au téléphone, cinq au-delà)');
+            // Les deux planches — quatre colonnes au téléphone, cinq au-delà —,
+            // et la largeur bornée à 68 rem SANS min(), que des navigateurs ne
+            // lisent pas dans `sizes` (ils prenaient la plus grande vignette).
+            // `auto, ` en tête pour les vignettes paresseuses, et pour elles
+            // seules (sizes="auto" n'a de sens qu'en loading="lazy").
+            exige(imgs.every((m, i) => new RegExp(`^${i < 9 ? '' : 'auto, '}\\(max-width: [\\d.]+px\\) calc\\(100vw \\* [\\d.]+\\), \\(max-width: 1088px\\) calc\\(100vw \\* [\\d.]+\\), \\d+px$`).test(m[1])),
+                'les tailles écrites ne disent pas les deux planches (quatre colonnes au téléphone, cinq au-delà), passent par min(), ou mettent « auto » ailleurs que sur les vignettes paresseuses');
             for (const [vue, dpr, mobile] of [[{ width: 390, height: 844 }, 3, true], [{ width: 412, height: 915 }, 1.75, true], [{ width: 1440, height: 900 }, 1, false]]) {
                 const c = await visiteur({ viewport: vue, deviceScaleFactor: dpr, isMobile: mobile, hasTouch: mobile });
                 const p = await c.newPage();
@@ -3968,6 +3974,27 @@ function exige(condition, message) {
             exige(grand.position === 'sticky' && grand.mots.join('·') === 'CV·Dates théâtres·Démos caméra·Démos voix',
                 `sur grand écran, la barre d’onglets a changé (${grand.position}, ${grand.mots.join(' · ')})`);
             await c2.close();
+            // Le sigle TIOR s'explique au doigt : une bulle dans l'écran,
+            // qu'Échap referme, et qui n'existe pas sur papier.
+            const c3 = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const p3 = await c3.newPage();
+            await p3.goto(base + '/?direct', { waitUntil: 'load' });
+            await p3.waitForTimeout(500);
+            await p3.evaluate(() => document.querySelector('.sigle').scrollIntoView({ block: 'center' }));
+            await p3.waitForTimeout(200);
+            await p3.tap('.sigle');
+            await p3.waitForTimeout(200);
+            const bulle = await p3.evaluate(() => {
+                const e = document.getElementById('sigle-tior');
+                const r = e.getBoundingClientRect();
+                return { ouverte: e.matches(':popover-open'), dedans: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, lien: !!e.querySelector('a[href*="wikipedia"]') };
+            });
+            exige(bulle.ouverte && bulle.dedans && bulle.lien, `le sigle TIOR ne s’explique pas au doigt (${JSON.stringify(bulle)})`);
+            await p3.keyboard.press('Escape');
+            exige(await p3.evaluate(() => !document.getElementById('sigle-tior').matches(':popover-open')), 'Échap ne referme pas la bulle du sigle');
+            await p3.emulateMedia({ media: 'print' });
+            exige(await p3.evaluate(() => getComputedStyle(document.getElementById('sigle-tior')).display === 'none'), 'la bulle du sigle s’imprime');
+            await c3.close();
         });
 
         // ── L'EXPERTISE D'OCTOBRE 2026, CÔTÉ UNIVERS ──
@@ -4098,6 +4125,69 @@ function exige(condition, message) {
             await p.mouse.up();
             await p.waitForTimeout(500);
             exige(await p.evaluate(() => document.getElementById('u-cal-modal').hidden), 'tirée vers le bas, la feuille d’agenda d’un univers ne se referme pas');
+            exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
+            await c.close();
+        });
+
+        // ── LE GESTE DE RETOUR DE L'IPHONE ──
+        //  Glisser depuis le bord fait passer la page d'avant sous le doigt
+        //  (hasUAVisualTransition) : le site ne rejoue pas son passage par-
+        //  dessus. Safari ne le dit qu'au popstate : le hashchange qui suit
+        //  doit s'en souvenir. Un retour ordinaire garde ses passages.
+        await verifie('le geste de retour de l’iPhone : l’onglet, l’univers et la fenêtre d’agenda changent d’un coup quand le navigateur a déjà animé le retour — même si seul le popstate le dit —, et un retour ordinaire garde ses passages', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/?direct', { waitUntil: 'load' });
+            await p.waitForTimeout(800);
+            const onglet = (cible, drapeau) => p.evaluate(async ({ cible, drapeau }) => {
+                history.pushState(null, '', '#' + cible);
+                let vt = false;
+                const obs = new MutationObserver(() => { if (document.documentElement.classList.contains('vt-onglet')) vt = true; });
+                obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+                if (drapeau) {
+                    const pe = new PopStateEvent('popstate', { state: null });
+                    Object.defineProperty(pe, 'hasUAVisualTransition', { value: true });
+                    window.dispatchEvent(pe);
+                }
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                await new Promise((r) => setTimeout(r, 700));
+                obs.disconnect();
+                return { actif: document.querySelector('.page.active')?.id, vt };
+            }, { cible, drapeau });
+            const ua = await onglet('page_dates', true);
+            exige(ua.actif === 'page_dates' && !ua.vt, `après un retour déjà animé, l’onglet glisse encore (${JSON.stringify(ua)})`);
+            const ordinaire = await onglet('demos_voix', false);
+            exige(ordinaire.actif === 'demos_voix' && ordinaire.vt, `un retour ordinaire ne fait plus glisser l’onglet (${JSON.stringify(ordinaire)})`);
+            // La fenêtre d'agenda de l'onglet Dates
+            await onglet('page_dates', false);
+            await p.waitForTimeout(800);
+            await p.evaluate(() => { const bt = document.querySelector('#page_dates [data-cal-index]'); bt.scrollIntoView({ block: 'center' }); bt.click(); });
+            await p.waitForTimeout(600);
+            const agenda = await p.evaluate(() => {
+                const m = document.getElementById('calendar-modal');
+                const ouvert = !m.hidden;
+                const pe = new PopStateEvent('popstate', { state: null });
+                Object.defineProperty(pe, 'hasUAVisualTransition', { value: true });
+                window.dispatchEvent(pe);
+                return { ouvert, cache: m.hidden };
+            });
+            exige(agenda.ouvert && agenda.cache, `après un retour déjà animé, la fenêtre d’agenda joue encore son fondu (${JSON.stringify(agenda)})`);
+            // Un univers
+            await onglet('page_cv', false);
+            await p.waitForTimeout(600);
+            await p.evaluate(() => { const li = document.querySelector('#page_cv li.cv-has-universe[data-cv-show]'); li.scrollIntoView({ block: 'center' }); li.querySelector('.cv-row-toggle').click(); });
+            await p.waitForTimeout(1800);
+            const univers = await p.evaluate(async () => {
+                const o = document.getElementById('show-universe');
+                const ouvert = o.classList.contains('is-open');
+                const pe = new PopStateEvent('popstate', { state: null });
+                Object.defineProperty(pe, 'hasUAVisualTransition', { value: true });
+                window.dispatchEvent(pe);
+                await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+                return { ouvert, cache: o.hidden, passage: document.documentElement.classList.contains('vt-univers-retour') };
+            });
+            exige(univers.ouvert && univers.cache && !univers.passage, `après un retour déjà animé, l’univers rejoue sa fermeture (${JSON.stringify(univers)})`);
             exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
             await c.close();
         });

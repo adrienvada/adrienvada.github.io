@@ -2162,7 +2162,9 @@ const SHOW_UNIVERSES = {
         box.querySelector('.u-zoom-close')?.focus({ preventScroll: true });
     }
 
-    function closeZoom() {
+    //  `instantane` : sans le fondu (le geste de retour du téléphone a déjà
+    //  montré la page d'avant, voir le popstate d'index.html).
+    function closeZoom(instantane) {
         const box = zoomEl();
         if (!box || box.hidden) return;
         box.classList.remove('is-open');
@@ -2179,7 +2181,7 @@ const SHOW_UNIVERSES = {
             box.hidden = true;
             box.querySelector('img').src = '';
         };
-        if (REDUCED) done(); else setTimeout(done, 300);
+        if (REDUCED || instantane === true) done(); else setTimeout(done, 300);
     }
 
     function zoomIsOpen() {

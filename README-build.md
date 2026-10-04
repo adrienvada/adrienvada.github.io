@@ -291,7 +291,8 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   galerie ne nomme rien ;
 - la galerie : les neuf premières vues partent avec la page et les suivantes
   attendent, une ou deux en priorité haute, des tailles à deux branches
-  (quatre colonnes au téléphone, cinq au-delà) ; à 390 px (×3), 412 px
+  (quatre colonnes au téléphone, cinq au-delà) écrites sans `min()`, et
+  `auto, ` en tête des seules vignettes paresseuses ; à 390 px (×3), 412 px
   (×1,75) et 1 440 px, aucune vignette téléchargée deux fois, et les vues du
   premier écran allumées ; sans JavaScript, aucune n'est cachée ;
 - le service worker : inscrit par chaque page publique, pas par `/admin/` ni
@@ -322,7 +323,9 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   chaque onglet fait au moins 44 px de haut ; sur grand écran, elle est en
   haut ; « Copier » met l'adresse dans le presse-papiers et l'annonce
   (« Copiée ») ; la fiche contact se télécharge et se lit (`BEGIN:VCARD`…) ;
-  aucun texte visible sous onze pixels, sur le CV ni sur les Dates ;
+  aucun texte visible sous onze pixels, sur le CV ni sur les Dates ; le
+  sigle TIOR ouvre au doigt une bulle dans l'écran, avec son lien, qu'Échap
+  referme et qui ne s'imprime pas ;
 - les univers d'après l'expertise : le premier écran de Bérénice nomme le
   spectacle et sa ligne de salle ; la pastille des chapitres est là, avec un
   repère sur la barre de progression par début de chapitre ; « Dates » y
@@ -337,6 +340,11 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   (« berenice-… »), le fuseau passé à Google et à Outlook, une séance
   « matin » en journée entière ; au téléphone, la fenêtre d'agenda d'un
   univers est une feuille posée en bas, qui se referme quand on la tire.
+- le geste de retour de l'iPhone (`hasUAVisualTransition`) : quand le
+  navigateur a déjà animé le retour — même si seul le `popstate` le dit —,
+  l'onglet change sans glisser, l'univers et la fenêtre d'agenda
+  disparaissent sans passage ni fondu ; un retour ordinaire garde ses
+  passages ;
 
 Pour ne passer que quelques vérifications — celles dont le nom contient un
 mot : `SEUL=planche npm --prefix build run verifier`.
@@ -742,6 +750,13 @@ Safari). Posée avant, elle recalculait tout le document pour l'image de
 l'ancien état, où elle ne sert à rien : au téléphone à ×4, la bascule
 répondait en 152 à 184 ms au lieu de 80 à 88, et le cercle partait 60 à
 120 ms plus tard. Même chose au répertoire (104-112 → 72-80 ms) et au book.
+
+**Les capitales au milieu de leur case.** Sur les onglets et les boutons du
+CV et du contact, le texte est rogné à la hauteur des capitales et à la ligne
+de base (`text-box: trim-both cap alphabetic`, dans un `@supports`) : centré
+sur sa ligne entière, accents et jambages compris, il tombait un peu bas.
+Leur hauteur ne change pas (`min-height`). Ailleurs (Safari d'avant 18.2,
+Firefox d'avant 154), rien ne change.
 
 **L'impression reste toujours claire**, même quand le site est affiché en
 sombre : le bloc `@media print` réimpose la palette claire à la racine. Un CV
@@ -1282,6 +1297,16 @@ largeur ; au téléphone, 559 px au lieu de 787, sans rien retirer.
   cherche pour un rôle.
 - Les précisions (le niveau d'une langue, le lieu d'un employeur) sont dans
   un `<em>`, en gris de service à l'écran.
+- **Le sigle « TIOR » s'explique au doigt** : il n'avait qu'une bulle
+  `title`, que seule une souris fait paraître. C'est un bouton
+  (`.sigle`, `popovertarget`) qui ouvre une bulle (`popover`, sans script :
+  Échap, un toucher à côté et le premier plan sont l'affaire du navigateur),
+  posée au-dessus du sigle là où le positionnement par ancre existe
+  (`position-area: top span-all`, `justify-self: anchor-center`, 16 px des
+  bords, dessous s'il n'y a pas la place), au centre ailleurs. Le lien
+  Wikipédia est dedans. Sur papier, ni bulle ni pointillé : la règle qui
+  met la fiche en ligne (`display: inline !important`) l'aurait imprimée
+  par-dessus la fiche, d'où une règle plus précise qui la cache.
 
 Le papier avait déjà cette mise en page (`.cv-fiche` en `display: block`) :
 une rubrique par ligne, l'intitulé dans une gouttière, la valeur en regard.
@@ -3144,6 +3169,16 @@ vue est à l'écran, jamais en mouvement réduit ; le nom est rendu à la fin du
 passage. C'était la seule navigation du site sans passage.
 
 ---
+
+**Des tailles que tous les navigateurs lisent.** La largeur des vignettes
+(`sizes`, écrite par `taillesVignette` et réécrite par `majTailles` quand la
+densité change) passait par `min(100vw, 68rem)`, que Safari ne lit dans
+`sizes` que depuis 26.4 : avant, toute la règle tombait, et le navigateur
+prenait la plus grande vignette. Elle est écrite en paliers (jusqu'au
+téléphone, jusqu'à 1 088 px, au-delà), et les vignettes paresseuses
+commencent par `auto, ` : le navigateur qui le sait (Chrome 126, Firefox
+150, Safari 27) prend la largeur réelle de leur case, les autres lisent la
+suite.
 
 ## Images générées (à ne pas écraser sans les régénérer)
 

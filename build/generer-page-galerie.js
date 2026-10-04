@@ -887,11 +887,25 @@ html.vt-book .zoom-img {
 // (loading="lazy"), la réécriture passait avant les requêtes ; les
 // premières partent désormais avec le HTML, et une seule taille fausse les
 // aurait fait télécharger deux fois (vu : 6 vignettes, +61 Ko).
+//
+// SANS min() : la planche fait toute la largeur jusqu'à 68 rem (1 088 px),
+// puis s'arrête. On le disait `min(100vw, 68rem)`, que les navigateurs
+// d'avant 2020 — et certains lecteurs d'images des moteurs — ne lisent
+// pas dans `sizes` : ils écartaient toute la règle et prenaient la plus
+// grande vignette. Une branche de plus dit la même chose avec des mots
+// que tous comprennent.
 const tailleCase = (r, colonnes) => (r * 1.12 * 1.25 / colonnes).toFixed(3);
+const PLANCHE_MAX = 1088; // 68rem
 function taillesVignette(r) {
     return `(max-width: ${SEUIL_TELEPHONE - 0.02}px) calc(100vw * ${tailleCase(r, 4)}), ` +
-        `calc(min(100vw, 68rem) * ${tailleCase(r, 5)})`;
+        `(max-width: ${PLANCHE_MAX}px) calc(100vw * ${tailleCase(r, 5)}), ${Math.ceil(PLANCHE_MAX * tailleCase(r, 5))}px`;
 }
+
+// `auto, ` EN TÊTE POUR LES VIGNETTES QUI ATTENDENT (loading="lazy") :
+// elles ne partent qu'une fois mises en page, et le navigateur qui le
+// sait (Chrome 126, Firefox 150, Safari 27) prend alors la largeur
+// réelle de la case, au lieu de notre estimation. Les autres ignorent ce
+// mot et lisent la suite.
 
 // CE QUI EST À L'ÉCRAN EN ARRIVANT PART TOUT DE SUITE. Les dix-neuf
 // vignettes étaient paresseuses (loading="lazy"), celles du premier écran
@@ -986,7 +1000,7 @@ function genererHtml() {
             <button type="button" class="carte-btn" data-zoom-photo="${i}" aria-label="Agrandir : ${esc(p.alt)}">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="${esc(p.srcset)}" sizes="${taillesVignette(p.r)}"><img src="${esc(p.full)}" alt="${esc(p.alt)}"${i < VIGNETTES_D_EMBLEE ? '' : ' loading="lazy"'}${devant.has(i) ? ' fetchpriority="high"' : ''} decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="${esc(p.srcset)}" sizes="${i < VIGNETTES_D_EMBLEE ? '' : 'auto, '}${taillesVignette(p.r)}"><img src="${esc(p.full)}" alt="${esc(p.alt)}"${i < VIGNETTES_D_EMBLEE ? '' : ' loading="lazy"'}${devant.has(i) ? ' fetchpriority="high"' : ''} decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1785,7 +1799,10 @@ ${JSON.stringify(schemaJson, null, 2)}
             cartes.forEach(function (c) {
                 var r = parseFloat(c.style.getPropertyValue('--r')) || .75;
                 var el = c.querySelector('source');
-                if (el) el.setAttribute('sizes', 'calc(min(100vw, 68rem) * ' + (r * 1.12 * 1.25 / colonnes).toFixed(3) + ')');
+                // Sans min() (voir taillesVignette, dans le générateur).
+                var k = (r * 1.12 * 1.25 / colonnes).toFixed(3);
+                var auto = /^auto,/.test(el && el.getAttribute('sizes') || '') ? 'auto, ' : '';
+                if (el) el.setAttribute('sizes', auto + '(max-width: 1088px) calc(100vw * ' + k + '), ' + Math.ceil(1088 * k) + 'px');
             });
         }
 
