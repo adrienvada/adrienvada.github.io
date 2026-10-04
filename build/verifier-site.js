@@ -15,6 +15,10 @@
  *    · la règle de l'ouverture (lien direct : pas de rideau ; depuis un
  *      autre site : une fois) ;
  *    · la fenêtre d'agenda d'un univers ouvert depuis le CV ;
+ *    · celle de l'onglet Dates, au téléphone une feuille posée en bas qu'on
+ *      renvoie en la tirant, et « Partager cette date » ;
+ *    · l'agenda à s'abonner (dates.ics) : à jour avec dates.js, lisible par
+ *      tous les agendas, sans séance scolaire ;
  *    · le même univers ne charge que son panneau : la page couverte
  *      cesse d'être rendue, le montage suit le passage, la lumière est
  *      posée une fois — et la fermeture rend la page où elle était ;
@@ -2098,6 +2102,298 @@ function exige(condition, message) {
             exige(!finale.inertes && !finale.fige && finale.cachee, `fenêtre refermée pour de bon : ${JSON.stringify(finale)}`);
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
+        });
+
+        // ── LA FEUILLE D'AGENDA, AU TÉLÉPHONE ──
+        // Sous 768 px, la fenêtre d'agenda est une feuille posée au bas de
+        // l'écran, au-dessus de la barre d'onglets, qu'on referme en la
+        // tirant vers le bas par sa poignée (de vrais touchers : la prise ne
+        // doit pas défiler, sans quoi le navigateur coupe le suivi). Un petit
+        // glissement la rend à sa place ; un lancer bref la renvoie, même
+        // court. « Partager cette date » envoie le texte de la date et le lien
+        // de la page du spectacle, ou les copie sans partage du navigateur.
+        // En mouvement réduit, elle paraît sans glisser ; sur ordinateur, la
+        // fenêtre reste au centre, sans poignée. La date fictive, un jeudi
+        // 12 novembre lointain, ne dépend pas de la saison.
+        await verifie('la fenêtre d’agenda au téléphone : une feuille collée en bas, au-dessus de la barre d’onglets, qu’on referme en la tirant vers le bas — un petit glissement la rend, un lancer la renvoie ; « Partager cette date » partage, ou copie ; sans glissement en mouvement réduit, et au centre sur ordinateur', async () => {
+            const preparer = async (options) => {
+                const c = await visiteur(Object.assign({ permissions: ['clipboard-read', 'clipboard-write'] }, options));
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.goto(base + '/#page_dates', { waitUntil: 'load' });
+                await p.waitForTimeout(800);
+                await p.evaluate(() => {
+                    SHOW_DATA.upcoming = [{
+                        type: 'single', title: 'Bérénice', location: 'Le Forum, Falaise (14)', city: 'Falaise',
+                        dateLabel: '12 nov. 2099', icsDate: '2099-11-12', time: '20h00', bookingUrl: '', isSchool: false
+                    }];
+                    datesMisesAJour();
+                });
+                const bouton = p.locator('#page_dates .dl-agenda').first();
+                await bouton.scrollIntoViewIfNeeded();
+                await p.waitForTimeout(300);
+                return { c, p, erreurs, bouton };
+            };
+            const lire = (p) => p.evaluate(() => {
+                const m = document.getElementById('calendar-modal');
+                const k = document.getElementById('calendar-modal-card');
+                const r = k.getBoundingClientRect();
+                return {
+                    cachee: m.hidden, haut: r.top, bas: r.bottom, gauche: r.left, droite: r.right,
+                    vh: innerHeight, vw: innerWidth,
+                    surLeBouton: !!document.activeElement?.classList.contains('dl-agenda'),
+                    inertes: [...document.body.children].filter((e) => e.inert).length,
+                    fige: getComputedStyle(document.documentElement).overflowY === 'hidden'
+                };
+            });
+
+            // ── Au téléphone ──
+            const { c, p, erreurs, bouton } = await preparer({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            await bouton.tap();
+            await p.waitForTimeout(600);
+            const feuille = await p.evaluate(() => {
+                const m = document.getElementById('calendar-modal');
+                const k = document.getElementById('calendar-modal-card');
+                const s = getComputedStyle(k);
+                const poignee = k.querySelector('.cal-poignee');
+                const croix = k.querySelector('.cal-fermer').getBoundingClientRect();
+                const partage = document.getElementById('cal-option-partager');
+                // Ce qui est au-dessus, là où est la barre d'onglets : la
+                // page sous la feuille est inerte, et un élément inerte
+                // échappe au test de position — on la rend vivante le temps
+                // de regarder.
+                const barre = document.getElementById('nav-barre').getBoundingClientRect();
+                const inertes = [...document.body.children].filter((e) => e.inert);
+                inertes.forEach((e) => { e.inert = false; });
+                const dessus = document.elementFromPoint(barre.left + barre.width / 2, barre.top + barre.height / 2);
+                inertes.forEach((e) => { e.inert = true; });
+                return {
+                    dialogue: m.getAttribute('role') === 'dialog' && m.getAttribute('aria-modal') === 'true'
+                        && !!document.getElementById(m.getAttribute('aria-labelledby'))?.textContent.trim(),
+                    coins: [s.borderTopLeftRadius, s.borderTopRightRadius, s.borderBottomLeftRadius, s.borderBottomRightRadius].map(parseFloat),
+                    poignee: !!poignee && poignee.getBoundingClientRect().height > 0,
+                    prise: [...k.querySelectorAll('[data-feuille-prise]')].map((x) => getComputedStyle(x).touchAction),
+                    croix: [croix.width, croix.height],
+                    auDessus: !!dessus && k.contains(dessus),
+                    partage: !!partage && partage.getBoundingClientRect().height >= 44 && /Partager cette date/.test(partage.textContent),
+                    dedans: !!document.activeElement?.closest('#calendar-modal')
+                };
+            });
+            const ouverte = await lire(p);
+            exige(feuille.dialogue && feuille.dedans, `la feuille n’est plus une fenêtre accessible (rôle, nom, focus) : ${JSON.stringify(feuille)}`);
+            exige(!ouverte.cachee && Math.abs(ouverte.bas - ouverte.vh) <= 1 && ouverte.gauche <= 1 && Math.abs(ouverte.droite - ouverte.vw) <= 1,
+                `la feuille n’est pas posée au bas de l’écran, d’un bord à l’autre : ${JSON.stringify(ouverte)}`);
+            exige(feuille.coins[0] >= 12 && feuille.coins[1] >= 12 && !feuille.coins[2] && !feuille.coins[3], `les coins de la feuille : ${feuille.coins.join(', ')}`);
+            exige(feuille.poignee && feuille.prise.length >= 2 && feuille.prise.every((x) => x === 'none'),
+                `la poignée manque, ou la prise défile au lieu de suivre le doigt : ${JSON.stringify(feuille.prise)}`);
+            exige(feuille.croix[0] >= 44 && feuille.croix[1] >= 44, `la croix fait ${feuille.croix.join(' × ')} px au doigt (44 au moins)`);
+            exige(feuille.auDessus, 'la barre d’onglets passe au-dessus de la feuille');
+            exige(feuille.partage, '« Partager cette date » manque à la feuille, ou fait moins de 44 px');
+
+            // De vrais touchers sur la poignée.
+            const cdp = await c.newCDPSession(p);
+            const toucher = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] });
+            const prise = await p.evaluate(() => {
+                const r = document.querySelector('#calendar-modal .cal-poignee').getBoundingClientRect();
+                return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+            });
+            const glisser = async (pas, ecart, attente) => {
+                await toucher('touchStart', prise.x, prise.y);
+                for (let i = 1; i <= pas; i++) {
+                    await toucher('touchMove', prise.x, prise.y + i * ecart);
+                    await p.waitForTimeout(attente);
+                }
+            };
+            // Un petit glissement, lent : la feuille suit, puis revient.
+            await glisser(4, 10, 40);
+            const suivie = await lire(p);
+            await toucher('touchEnd');
+            await p.waitForTimeout(600);
+            const rendue = await lire(p);
+            exige(suivie.bas > suivie.vh + 30, `la feuille ne suit pas le doigt (${Math.round(suivie.bas - suivie.vh)} px pour 40)`);
+            exige(!rendue.cachee && Math.abs(rendue.bas - rendue.vh) <= 1, `un petit glissement ne rend pas la feuille à sa place : ${JSON.stringify(rendue)}`);
+            // Tirée loin : elle se referme, et tout revient comme à la croix.
+            await glisser(16, 20, 20);
+            await toucher('touchEnd');
+            await p.waitForTimeout(700);
+            const tiree = await lire(p);
+            exige(tiree.cachee && tiree.surLeBouton && !tiree.inertes && !tiree.fige,
+                `tirée vers le bas, la feuille ne se referme pas, ou ne rend pas la page : ${JSON.stringify(tiree)}`);
+            // Un lancer bref (60 px en une quinzaine de millisecondes) : en
+            // dessous du seuil de distance, c'est la vitesse qui la renvoie.
+            await bouton.tap();
+            await p.waitForTimeout(600);
+            await p.evaluate(() => {
+                const poignee = document.querySelector('#calendar-modal .cal-poignee');
+                const r = poignee.getBoundingClientRect();
+                const x = r.left + r.width / 2, y = r.top + r.height / 2;
+                const patienter = (ms) => { const f = performance.now() + ms; while (performance.now() < f) { /* l'horloge avance */ } };
+                const pousser = (type, dy) => poignee.dispatchEvent(new PointerEvent(type, {
+                    bubbles: true, cancelable: true, pointerId: 7, pointerType: 'touch', isPrimary: true, clientX: x, clientY: y + dy
+                }));
+                pousser('pointerdown', 0);
+                [20, 40, 60].forEach((dy) => { patienter(5); pousser('pointermove', dy); });
+                patienter(3);
+                pousser('pointerup', 60);
+            });
+            await p.waitForTimeout(700);
+            const lancee = await lire(p);
+            exige(lancee.cachee && lancee.surLeBouton, `un lancer bref vers le bas ne renvoie pas la feuille : ${JSON.stringify(lancee)}`);
+
+            // « Partager cette date » : le texte de la date et la page du
+            // spectacle, à la feuille de partage du téléphone…
+            await bouton.tap();
+            await p.waitForTimeout(600);
+            await p.evaluate(() => {
+                window.__partage = null;
+                Object.defineProperty(navigator, 'share', {
+                    configurable: true, value: (d) => { window.__partage = d; return Promise.resolve(); }
+                });
+            });
+            await p.locator('#cal-option-partager').tap();
+            await p.waitForTimeout(700);
+            const partage = await p.evaluate(() => window.__partage);
+            const apresPartage = await lire(p);
+            exige(partage && partage.text === 'Bérénice — jeu. 12 nov. à 20h00, Le Forum, Falaise (14)'
+                && partage.url === 'https://adrienvada.fr/spectacles/berenice/',
+                `« Partager cette date » n’envoie pas la date et la page du spectacle : ${JSON.stringify(partage)}`);
+            exige(apresPartage.cachee && apresPartage.surLeBouton, 'la date partagée, la fenêtre reste ouverte');
+            // … ou copiés, sans partage du navigateur, et la ligne le dit.
+            await p.evaluate(() => Object.defineProperty(navigator, 'share', { configurable: true, value: undefined }));
+            await bouton.tap();
+            await p.waitForTimeout(600);
+            const aideAvant = await p.evaluate(() => document.getElementById('cal-partager-aide').textContent.trim());
+            await p.locator('#cal-option-partager').tap();
+            await p.waitForTimeout(400);
+            const copie = await p.evaluate(async () => ({
+                presse: await navigator.clipboard.readText().catch(() => ''),
+                aide: document.getElementById('cal-partager-aide').textContent.trim(),
+                annonce: document.getElementById('annonce-copie').textContent,
+                dedans: !!document.activeElement?.closest('#calendar-modal')
+            }));
+            exige(/^Copier/.test(aideAvant), `sans partage du navigateur, la ligne ne dit pas qu’elle copie : « ${aideAvant} »`);
+            exige(copie.presse === 'Bérénice — jeu. 12 nov. à 20h00, Le Forum, Falaise (14)\nhttps://adrienvada.fr/spectacles/berenice/',
+                `le texte copié : ${JSON.stringify(copie.presse)}`);
+            exige(/^Copiée/.test(copie.aide) && /^Date copiée : Bérénice/.test(copie.annonce) && copie.dedans,
+                `la copie n’est pas dite, ou le focus a quitté la fenêtre : ${JSON.stringify(copie)}`);
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(600);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+
+            // ── En mouvement réduit : posée d'emblée, sans glisser ──
+            const calme = await preparer({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
+            await calme.bouton.tap();
+            await calme.p.waitForTimeout(100);
+            const posee = await lire(calme.p);
+            exige(!posee.cachee && Math.abs(posee.bas - posee.vh) <= 1 && posee.haut > posee.vh / 3,
+                `en mouvement réduit, la feuille glisse encore (100 ms après le toucher : ${JSON.stringify(posee)})`);
+            await calme.p.keyboard.press('Escape');
+            await calme.p.waitForTimeout(150);
+            exige((await lire(calme.p)).cachee, 'en mouvement réduit, la feuille ne disparaît pas d’un coup');
+            exige(!calme.erreurs.length, calme.erreurs.join(' | '));
+            await calme.c.close();
+
+            // ── Sur ordinateur : la fenêtre d'avant, au centre ──
+            const ordi = await preparer({ viewport: { width: 1440, height: 900 } });
+            await ordi.bouton.click();
+            await ordi.p.waitForTimeout(600);
+            const centre = await ordi.p.evaluate(() => {
+                const r = document.getElementById('calendar-modal-card').getBoundingClientRect();
+                return {
+                    ecart: Math.abs((r.top + r.bottom) / 2 - innerHeight / 2), largeur: r.width,
+                    poignee: getComputedStyle(document.querySelector('#calendar-modal .cal-poignee')).display,
+                    partage: !!document.getElementById('cal-option-partager')?.offsetParent
+                };
+            });
+            exige(centre.ecart < 30 && centre.largeur <= 448 && centre.poignee === 'none' && centre.partage,
+                `sur ordinateur, la fenêtre d’agenda n’est plus celle d’avant (au centre, sans poignée) : ${JSON.stringify(centre)}`);
+            exige(!ordi.erreurs.length, ordi.erreurs.join(' | '));
+            await ordi.c.close();
+        });
+
+        // ── L'AGENDA À S'ABONNER ──
+        // dates.ics est fabriqué par build/fabriquer-agenda.js, que lance le
+        // générateur des pages. Il doit être refait après chaque export des
+        // dates (sinon les abonnés retardent sans bruit), et rester un
+        // iCalendar que tous les agendas lisent : lignes CRLF de 75 octets
+        // au plus, blocs appariés, un UID par événement. Il annonce chaque
+        // séance publique de dates.js (passée de moins de 60 jours au jour
+        // de la copie, ou à venir), et jamais une séance scolaire.
+        await verifie('l’agenda à s’abonner (dates.ics) : à jour avec dates.js, des lignes CRLF de 75 octets au plus, chaque BEGIN fermé par son END, des UID uniques, chaque séance publique et aucune scolaire — et l’onglet Dates y mène', async () => {
+            const AGENDA = require('./fabriquer-agenda.js');
+            const texte = fs.readFileSync(path.join(RACINE, 'dates.ics'), 'utf8');
+            exige(texte === AGENDA.fabriquer(RACINE).texte, 'dates.ics n’est pas à jour avec dates.js et univers.js : npm --prefix build run pages');
+            exige(!/(^|[^\r])\n/.test(texte) && !/\r(?!\n)/.test(texte) && texte.endsWith('\r\n'), 'dates.ics : une fin de ligne n’est pas CRLF');
+            const physiques = texte.slice(0, -2).split('\r\n');
+            const longues = physiques.filter((l) => Buffer.byteLength(l, 'utf8') > 75);
+            exige(!longues.length, `dates.ics : ${longues.length} ligne(s) de plus de 75 octets, dont « ${(longues[0] || '').slice(0, 40)}… »`);
+            const lignes = texte.slice(0, -2).replace(/\r\n[ \t]/g, '').split('\r\n');
+            const pile = [];
+            lignes.forEach((l) => {
+                const m = l.match(/^(BEGIN|END):(.+)$/);
+                if (!m) return;
+                if (m[1] === 'BEGIN') pile.push(m[2]);
+                else exige(pile.pop() === m[2], `dates.ics : END:${m[2]} ne ferme pas le bloc ouvert`);
+            });
+            exige(!pile.length && lignes[0] === 'BEGIN:VCALENDAR' && lignes[lignes.length - 1] === 'END:VCALENDAR',
+                `dates.ics : des blocs restent ouverts (${pile.join(', ')})`);
+            ['VERSION:2.0', 'X-WR-CALNAME:Adrien Vada — dates', 'REFRESH-INTERVAL;VALUE=DURATION:P1D', 'X-PUBLISHED-TTL:P1D', 'TZID:Europe/Paris']
+                .forEach((x) => exige(lignes.includes(x), `dates.ics : « ${x} » manque`));
+
+            const evenements = [];
+            let ev = null;
+            lignes.forEach((l) => {
+                if (l === 'BEGIN:VEVENT') ev = {};
+                else if (l === 'END:VEVENT') { evenements.push(ev); ev = null; }
+                else if (ev) {
+                    const i = l.indexOf(':');
+                    ev[l.slice(0, i).split(';')[0]] = { tete: l.slice(0, i), valeur: l.slice(i + 1) };
+                }
+            });
+            const lisible = (v) => v.replace(/\\n/gi, '\n').replace(/\\([,;\\])/g, '$1');
+            evenements.forEach((e) => {
+                exige(e.UID && e.DTSTAMP && e.DTSTART && e.DTEND && e.SUMMARY && e.LOCATION && e.URL,
+                    `dates.ics : un événement incomplet (${Object.keys(e).join(', ')})`);
+                exige(/^\d{8}T\d{6}Z$/.test(e.DTSTAMP.valeur), `dates.ics : DTSTAMP « ${e.DTSTAMP.valeur} »`);
+                exige(/^DTSTART(;TZID=Europe\/Paris|;VALUE=DATE)$/.test(e.DTSTART.tete), `dates.ics : « ${e.DTSTART.tete} » — l’heure de Paris, ou le jour seul`);
+                exige(/^https:\/\//.test(e.URL.valeur), `dates.ics : URL « ${e.URL.valeur} »`);
+            });
+            const uids = evenements.map((e) => e.UID.valeur);
+            exige(new Set(uids).size === uids.length, 'dates.ics : deux événements portent le même UID');
+
+            // Ce que la copie annonce, relu ici à part : chaque séance
+            // publique — une par heure —, et aucune scolaire.
+            const source = fs.readFileSync(path.join(RACINE, 'dates.js'), 'utf8');
+            const copie = AGENDA.dateDeLaCopie(source);
+            exige(copie, 'dates.js : la ligne « Dernier export : … » ne se lit plus, et c’est elle qui date dates.ics (voir build/fabriquer-agenda.js)');
+            const depuis = AGENDA.decaler(copie.jour, -AGENDA.JOURS_GARDES);
+            const donnees = new Function(source + '; return SHOW_DATA;')();
+            const publiques = [], scolaires = [];
+            donnees.upcoming.forEach((e) => (e.type === 'series' ? e.shows : [e]).forEach((r) => {
+                if (!r.icsDate || r.icsDate < depuis) return;
+                const brute = Array.isArray(r.times) ? r.times.join(' & ') : String(r.time || '');
+                const heures = /confirmer/i.test(brute) ? [] : [...brute.matchAll(/(\d{1,2})\s*[hH:]\s*(\d{2})?/g)];
+                const jour = r.icsDate.replace(/-/g, '');
+                const debuts = heures.length ? heures.map((h) => `${jour}T${h[1].padStart(2, '0')}${h[2] || '00'}00`) : [jour];
+                debuts.forEach((debut) => ((r.isSchool || e.isSchool) ? scolaires : publiques).push({ debut, lieu: e.location, titre: e.title }));
+            }));
+            const annonce = (s) => evenements.some((x) => x.DTSTART.valeur === s.debut && lisible(x.LOCATION.valeur) === s.lieu);
+            const manquantes = publiques.filter((s) => !annonce(s));
+            exige(!manquantes.length, `dates.ics n’annonce pas : ${manquantes.map((s) => `${s.titre} ${s.debut}`).join(', ')}`);
+            exige(evenements.length === publiques.length, `dates.ics annonce ${evenements.length} événement(s) pour ${publiques.length} séance(s) publique(s)`);
+            const intruses = scolaires.filter((s) => annonce(s) && !publiques.some((x) => x.debut === s.debut && x.lieu === s.lieu));
+            exige(!intruses.length, `dates.ics annonce une séance scolaire : ${intruses.map((s) => `${s.titre} ${s.debut}`).join(', ')}`);
+
+            // Servi comme un agenda, et l'onglet Dates y mène : webcal pour
+            // Calendrier et Outlook, l'adresse https à copier pour Google.
+            const servi = await fetch(base + '/dates.ics');
+            exige(servi.ok && /^text\/calendar/.test(servi.headers.get('content-type') || ''), `dates.ics servi en « ${servi.headers.get('content-type')} »`);
+            const accueil = fs.readFileSync(path.join(RACINE, 'index.html'), 'utf8');
+            const bloc = (accueil.match(/<div class="dates-abonnement[^"]*"[\s\S]*?<\/div>/) || [''])[0];
+            exige(/no-print/.test(bloc) && /href="webcal:\/\/adrienvada\.fr\/dates\.ics"/.test(bloc) && /data-copier="https:\/\/adrienvada\.fr\/dates\.ics"/.test(bloc)
+                && (bloc.match(/data-track="agenda_abonnement"/g) || []).length === 2,
+                'l’onglet Dates ne propose pas l’abonnement (webcal, l’adresse https à copier, la mesure agenda_abonnement), ou l’imprime');
         });
 
         await verifie('le book : fermer puis rouvrir aussitôt ne laisse pas une page morte', async () => {

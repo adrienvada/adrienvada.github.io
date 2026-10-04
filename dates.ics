@@ -1,0 +1,195 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Adrien Vada//Dates des représentations//FR
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Adrien Vada — dates
+NAME:Adrien Vada — dates
+X-WR-CALDESC:Les représentations publiques d’Adrien Vada\, comédien. To
+ utes les dates : https://adrienvada.fr/#page_dates
+X-WR-TIMEZONE:Europe/Paris
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:P1D
+BEGIN:VTIMEZONE
+TZID:Europe/Paris
+X-LIC-LOCATION:Europe/Paris
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:20261022T1900-930d4fedcf@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;TZID=Europe/Paris:20261022T190000
+DTEND;TZID=Europe/Paris:20261022T200500
+SUMMARY:À la barre\, peine perdue ?
+LOCATION:Tribunal judiciaire de Rouen (76)
+URL:https://www.cdn-normandierouen.fr/saison-26-27/la-barre-peine-perdue
+DESCRIPTION:Avec Adrien Vada.\nRéservations : https://www.cdn-normandierou
+ en.fr/saison-26-27/la-barre-peine-perdue\nLe spectacle : https://adrienvad
+ a.fr/spectacles/alabarre/
+END:VEVENT
+BEGIN:VEVENT
+UID:20261023T1900-930d4fedcf@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;TZID=Europe/Paris:20261023T190000
+DTEND;TZID=Europe/Paris:20261023T200500
+SUMMARY:À la barre\, peine perdue ?
+LOCATION:Tribunal judiciaire de Rouen (76)
+URL:https://www.cdn-normandierouen.fr/saison-26-27/la-barre-peine-perdue
+DESCRIPTION:Avec Adrien Vada.\nRéservations : https://www.cdn-normandierou
+ en.fr/saison-26-27/la-barre-peine-perdue\nLe spectacle : https://adrienvad
+ a.fr/spectacles/alabarre/
+END:VEVENT
+BEGIN:VEVENT
+UID:20261112T2000-55c3728f55@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;TZID=Europe/Paris:20261112T200000
+DTEND;TZID=Europe/Paris:20261112T210500
+SUMMARY:À la barre\, peine perdue ?
+LOCATION:Tribunal judiciaire de Saint-Quentin (02)
+URL:https://billetterie-saint-quentin.mapado.com/event/757061-a-la-barre-pe
+ ine-perdue
+DESCRIPTION:Avec Adrien Vada.\nRéservations : https://billetterie-saint-qu
+ entin.mapado.com/event/757061-a-la-barre-peine-perdue\nLe spectacle : http
+ s://adrienvada.fr/spectacles/alabarre/
+END:VEVENT
+BEGIN:VEVENT
+UID:20261125T2000-aff83de5b5@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;TZID=Europe/Paris:20261125T200000
+DTEND;TZID=Europe/Paris:20261125T210500
+SUMMARY:À la barre\, peine perdue ?
+LOCATION:Hôtel de Ville de Grand-Quevilly (76)
+URL:https://mediatheque.ville-grand-quevilly.fr/cms/articleview/id/1155
+DESCRIPTION:Avec Adrien Vada.\nRéservations : https://mediatheque.ville-gr
+ and-quevilly.fr/cms/articleview/id/1155\nLe spectacle : https://adrienvada
+ .fr/spectacles/alabarre/
+END:VEVENT
+BEGIN:VEVENT
+UID:20261201T1900-704c391adc@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;TZID=Europe/Paris:20261201T190000
+DTEND;TZID=Europe/Paris:20261201T210000
+SUMMARY:L’Imaginaire forcé (d’après Le Mariage forcé\, de Molière)
+LOCATION:Espace Culturel Philippe Torreton\, Saint-Pierre-lès-Elbeuf (76)
+URL:https://www.vostickets.net/billet/FR/representation-ST_PIERRE_LES_ELBEU
+ F-34764-0.wb?REFID=_hE3AAAAAAAAAAAAegA
+DESCRIPTION:Avec Adrien Vada.\nRéservations : https://www.vostickets.net/b
+ illet/FR/representation-ST_PIERRE_LES_ELBEUF-34764-0.wb?REFID=_hE3AAAAAAAA
+ AAAAegA\nLe spectacle : https://adrienvada.fr/spectacles/imaginaireforce/
+END:VEVENT
+BEGIN:VEVENT
+UID:20261218T1400-17a8357e4c@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;TZID=Europe/Paris:20261218T140000
+DTEND;TZID=Europe/Paris:20261218T153000
+SUMMARY:Cléophène (d’après Rodogune\, de Corneille)
+LOCATION:L’Éclat\, Pont-Audemer (27)
+URL:https://www.ville-pont-audemer.fr/agenda/cleophene-cie-crescite/cleophe
+ ne-cie-crescite-2026-12-18/
+DESCRIPTION:Avec Adrien Vada.\nRéservations : https://www.ville-pont-audem
+ er.fr/agenda/cleophene-cie-crescite/cleophene-cie-crescite-2026-12-18/\nLe
+  spectacle : https://adrienvada.fr/spectacles/cleophene/
+END:VEVENT
+BEGIN:VEVENT
+UID:20261218T2000-17a8357e4c@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;TZID=Europe/Paris:20261218T200000
+DTEND;TZID=Europe/Paris:20261218T213000
+SUMMARY:Cléophène (d’après Rodogune\, de Corneille)
+LOCATION:L’Éclat\, Pont-Audemer (27)
+URL:https://www.ville-pont-audemer.fr/agenda/cleophene-cie-crescite/cleophe
+ ne-cie-crescite-2026-12-18/
+DESCRIPTION:Avec Adrien Vada.\nRéservations : https://www.ville-pont-audem
+ er.fr/agenda/cleophene-cie-crescite/cleophene-cie-crescite-2026-12-18/\nLe
+  spectacle : https://adrienvada.fr/spectacles/cleophene/
+END:VEVENT
+BEGIN:VEVENT
+UID:20270126T2000-73f0e11e7c@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;TZID=Europe/Paris:20270126T200000
+DTEND;TZID=Europe/Paris:20270126T213000
+SUMMARY:Cléophène (d’après Rodogune\, de Corneille)
+LOCATION:Le Forum\, Falaise (14)
+URL:https://www.vostickets.net/billet/FR/representation-FALAISE-34843-0.wb?
+ REFID=RBI2AAAAAAAAAAAAQQA
+DESCRIPTION:Avec Adrien Vada.\nRéservations : https://www.vostickets.net/b
+ illet/FR/representation-FALAISE-34843-0.wb?REFID=RBI2AAAAAAAAAAAAQQA\nLe s
+ pectacle : https://adrienvada.fr/spectacles/cleophene/
+END:VEVENT
+BEGIN:VEVENT
+UID:20270130T1800-2cf7040f4d@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;TZID=Europe/Paris:20270130T180000
+DTEND;TZID=Europe/Paris:20270130T192500
+SUMMARY:Bérénice
+LOCATION:Théâtre de la ville de Saint-Lô (50)
+URL:https://www.vostickets.net/billet/FR/representation-SAINT_LO-32786-0.wb
+ ?REFID=coU2AAAAAAAAAAAAkwE
+DESCRIPTION:Avec Adrien Vada.\nRéservations : https://www.vostickets.net/b
+ illet/FR/representation-SAINT_LO-32786-0.wb?REFID=coU2AAAAAAAAAAAAkwE\nLe 
+ spectacle : https://adrienvada.fr/spectacles/berenice/
+END:VEVENT
+BEGIN:VEVENT
+UID:20270130T2030-c1bea3578b@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;TZID=Europe/Paris:20270130T203000
+DTEND;TZID=Europe/Paris:20270130T220000
+SUMMARY:Cléophène (d’après Rodogune\, de Corneille)
+LOCATION:Théâtre de la ville de Saint-Lô (50)
+URL:https://www.vostickets.net/billet/FR/representation-SAINT_LO-32787-0.wb
+ ?REFID=coU2AAAAAAAAAAAAkwE
+DESCRIPTION:Avec Adrien Vada.\nRéservations : https://www.vostickets.net/b
+ illet/FR/representation-SAINT_LO-32787-0.wb?REFID=coU2AAAAAAAAAAAAkwE\nLe 
+ spectacle : https://adrienvada.fr/spectacles/cleophene/
+END:VEVENT
+BEGIN:VEVENT
+UID:20270202T2030-be4d2531c4@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;TZID=Europe/Paris:20270202T203000
+DTEND;TZID=Europe/Paris:20270202T220000
+SUMMARY:Cléophène (d’après Rodogune\, de Corneille)
+LOCATION:La Ferme de Bel Ebat\, Guyancourt (78)
+URL:https://www.scenes2guyancourt.fr/agenda/cleophene/
+DESCRIPTION:Avec Adrien Vada.\nRéservations : https://www.scenes2guyancour
+ t.fr/agenda/cleophene/\nLe spectacle : https://adrienvada.fr/spectacles/cl
+ eophene/
+END:VEVENT
+BEGIN:VEVENT
+UID:20270312-5bb07cdef3@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;VALUE=DATE:20270312
+DTEND;VALUE=DATE:20270313
+TRANSP:TRANSPARENT
+SUMMARY:À la barre\, peine perdue ?
+LOCATION:Salle du Conseil Communautaire Caux Austreberthe\, Hôtel de Ville
+  de Barentin (76)
+URL:https://adrienvada.fr/spectacles/alabarre/
+DESCRIPTION:Avec Adrien Vada.\nHoraire à confirmer.\nRéservations pas enc
+ ore ouvertes.\nLe spectacle : https://adrienvada.fr/spectacles/alabarre/
+END:VEVENT
+BEGIN:VEVENT
+UID:20270521-ca1335c486@adrienvada.fr
+DTSTAMP:20261004T220200Z
+DTSTART;VALUE=DATE:20270521
+DTEND;VALUE=DATE:20270522
+TRANSP:TRANSPARENT
+SUMMARY:Bérénice
+LOCATION:Lycée Corneille\, Rouen (76)
+URL:https://adrienvada.fr/spectacles/berenice/
+DESCRIPTION:Avec Adrien Vada.\nHoraire à confirmer.\nRéservations pas enc
+ ore ouvertes.\nLe spectacle : https://adrienvada.fr/spectacles/berenice/
+END:VEVENT
+END:VCALENDAR
