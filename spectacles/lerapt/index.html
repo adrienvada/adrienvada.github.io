@@ -12,6 +12,11 @@
     <meta name="description" content="Le rapt, réalisé par Cécile Dessillons et Ladane Dehdar — avec Adrien Vada (Steven). Deux ouvrières enlèvent le fils de leur patron pour en tirer une…">
     <link rel="canonical" href="https://adrienvada.fr/spectacles/lerapt/">
     <meta name="theme-color" content="#eae4d3">
+    <!-- LE NAVIGATEUR SAIT QUE LA SALLE EST SOMBRE (ou claire) : ses barres
+         de défilement, ses champs et le fond qu'il peint avant la feuille
+         de style s'y accordent — un éclair blanc avant une salle noire, au
+         téléphone, se voyait. -->
+    <meta name="color-scheme" content="light">
 
     <!-- Mesure d'audience — Umami, sans cookie ni identifiant persistant.
          Chargeur identique à celui du <head> d'index.html ; il est écrit
@@ -86,18 +91,26 @@
     <meta property="og:site_name" content="Adrien Vada">
     <meta property="og:title" content="Le rapt · court-métrage · Adrien Vada">
     <meta property="og:description" content="Le rapt, réalisé par Cécile Dessillons et Ladane Dehdar — avec Adrien Vada (Steven). Deux ouvrières enlèvent le fils de leur patron pour en tirer une…">
-    <meta property="og:image" content="https://adrienvada.fr/ressources/images/univers/lerapt/affiche.jpg">
+    <meta property="og:image" content="https://adrienvada.fr/ressources/images/partage/lerapt.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Le rapt · court-métrage · Adrien Vada">
     <meta property="og:url" content="https://adrienvada.fr/spectacles/lerapt/">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Le rapt · court-métrage · Adrien Vada">
     <meta name="twitter:description" content="Le rapt, réalisé par Cécile Dessillons et Ladane Dehdar — avec Adrien Vada (Steven). Deux ouvrières enlèvent le fils de leur patron pour en tirer une…">
-    <meta name="twitter:image" content="https://adrienvada.fr/ressources/images/univers/lerapt/affiche.jpg">
+    <meta name="twitter:image" content="https://adrienvada.fr/ressources/images/partage/lerapt.jpg">
 
     <!-- En PNG, comme l'accueil : favicon.svg n'était qu'un PNG de 256 px en
          base64, 128 Ko que Chrome préférait aux PNG déclarés (voir
          index.html). -->
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-96x96.png" sizes="96x96">
+    <!-- L'icône d'écran d'accueil et le manifeste, comme l'accueil : sans
+         eux, « Sur l'écran d'accueil » depuis une page spectacle posait une
+         capture de la page en guise d'icône. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../../favicon_io/site.webmanifest">
 
     <!-- Les polices du site, servies par le site (ressources/polices/). Le
          titre est en Cinzel et le synopsis en Inter : ce sont les deux
@@ -263,7 +276,7 @@
   "description": "Le rapt, réalisé par Cécile Dessillons et Ladane Dehdar — avec Adrien Vada (Steven). Deux ouvrières enlèvent le fils de leur patron pour en tirer une…",
   "url": "https://adrienvada.fr/spectacles/lerapt/",
   "inLanguage": "fr",
-  "image": "https://adrienvada.fr/ressources/images/univers/lerapt/affiche.jpg",
+  "image": "https://adrienvada.fr/ressources/images/partage/lerapt.jpg",
   "actor": {
     "@type": "Person",
     "@id": "https://adrienvada.fr/#adrien-vada",

@@ -179,9 +179,13 @@ html.vt-theme::view-transition-new(root) { z-index: 2; }
        crayon gras, rouge. */
     --num: #d69a3c;
     --crayon: #ff4d5e;
+    /* Les barres de défilement et les champs du navigateur suivent le thème
+       (comme sur l'accueil). */
+    color-scheme: dark;
 }
 
 :root[data-theme="light"] {
+    color-scheme: light;
     --bg: #faf9f5;
     --surface: #ffffff;
     --text: #1a1a1f;
@@ -1205,6 +1209,8 @@ function genererHtml() {
          PNG de 256 px en base64 — 128 Ko, 20 % de ce que pesait la page. -->
     <link rel="icon" type="image/png" href="../favicon_io/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../favicon_io/favicon-96x96.png" sizes="96x96">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon_io/site.webmanifest">
     <!-- Les polices du site, servies par le site (ressources/polices/). -->
     <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
     <!-- Les polices, puis la feuille de la page, DANS la page : deux

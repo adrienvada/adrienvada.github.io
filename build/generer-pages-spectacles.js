@@ -570,7 +570,14 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA, suivant) {
     const photos = photosDe(uni);
     const urlPage = `${SITE}/spectacles/${uni.slug}/`;
     const desc = descriptionDe(uni, titre, cv);
-    const photoOg = photos[0] ? `${SITE}/${photos[0].src}` : `${SITE}/ressources/images/og-adrien-vada.jpg`;
+    // L'IMAGE DE PARTAGE : celle que le spectacle a à lui, au format que
+    // les messageries attendent (1200 × 630, avec le titre — voir
+    // build/fabriquer-images-partage.py), sinon sa première photo, sinon
+    // celle du site.
+    const partage = `ressources/images/partage/${uni.slug}.jpg`;
+    const ogPropre = fs.existsSync(path.join(RACINE, partage));
+    const photoOg = ogPropre ? `${SITE}/${partage}`
+        : photos[0] ? `${SITE}/${photos[0].src}` : `${SITE}/ressources/images/og-adrien-vada.jpg`;
     const p = uni.palette || {};
     const titreComplet = titreDe(uni, titre, cv);
 
@@ -658,6 +665,11 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA, suivant) {
     <meta name="description" content="${esc(desc)}">
     <link rel="canonical" href="${urlPage}">
     <meta name="theme-color" content="${esc(p.bg || '#0a0907')}">
+    <!-- LE NAVIGATEUR SAIT QUE LA SALLE EST SOMBRE (ou claire) : ses barres
+         de défilement, ses champs et le fond qu'il peint avant la feuille
+         de style s'y accordent — un éclair blanc avant une salle noire, au
+         téléphone, se voyait. -->
+    <meta name="color-scheme" content="${MONTAGE.salleDe(uni) === 'claire' ? 'light' : 'dark'}">
 
 ${MESURE}${SERVICE_WORKER}${SPECULATION}
     <meta property="og:type" content="article">
@@ -665,7 +677,10 @@ ${MESURE}${SERVICE_WORKER}${SPECULATION}
     <meta property="og:site_name" content="Adrien Vada">
     <meta property="og:title" content="${esc(titreComplet)}">
     <meta property="og:description" content="${esc(desc)}">
-    <meta property="og:image" content="${esc(photoOg)}">
+    <meta property="og:image" content="${esc(photoOg)}">${ogPropre ? `
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="${esc(titreComplet)}">` : ''}
     <meta property="og:url" content="${urlPage}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${esc(titreComplet)}">
@@ -677,6 +692,11 @@ ${MESURE}${SERVICE_WORKER}${SPECULATION}
          index.html). -->
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-96x96.png" sizes="96x96">
+    <!-- L'icône d'écran d'accueil et le manifeste, comme l'accueil : sans
+         eux, « Sur l'écran d'accueil » depuis une page spectacle posait une
+         capture de la page en guise d'icône. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../../favicon_io/site.webmanifest">
 
     <!-- Les polices du site, servies par le site (ressources/polices/). Le
          titre est en Cinzel et le synopsis en Inter : ce sont les deux
@@ -965,16 +985,26 @@ const couverture = (rel) => {
     return d && d.h ? Math.max(1, 1.5 * d.w / d.h) : 2.25;
 };
 
-//  Au repos : deux colonnes au téléphone, quatre cartes de 240 px au plus
-//  sur grand écran. Le script réécrit ces tailles à chaque changement de
-//  densité (voir majTailles).
-const taillesCarte = (f, colonnesMobile = 2, colonnesEcran = 4) =>
+//  Au repos : TROIS colonnes au téléphone — le répertoire s'y ouvre au
+//  zoom 3, posé avant le premier rendu (voir le script du <head>) — et
+//  quatre cartes de 240 px au plus sur grand écran. Les tailles écrites
+//  ici en annonçaient deux au téléphone : le navigateur y allait chercher
+//  des photos moitié trop grandes (relevé par l'expertise d'octobre 2026).
+//  Le script réécrit ces tailles à chaque changement de densité (voir
+//  majTailles).
+const taillesCarte = (f, colonnesMobile = 3, colonnesEcran = 4) =>
     `(max-width: 640px) ${Math.ceil(f * 100 / colonnesMobile)}vw, ${Math.ceil(f * 960 / colonnesEcran)}px`;
 
-function imageCarte(src, pos, f) {
+//  LA PREMIÈRE RANGÉE PART AVEC LA PAGE. Paresseuses, les trois premières
+//  affiches attendaient que la mise en page dise qu'elles sont à l'écran —
+//  elles le sont toujours : c'est le premier écran. Elles partent donc
+//  d'emblée, la première devant tout le reste ; les suivantes restent
+//  paresseuses.
+function imageCarte(src, pos, f, rang = 99) {
     const base = '../' + src.replace(/\.jpg$/, '');
+    const priorite = rang === 0 ? ' fetchpriority="high"' : rang < 3 ? '' : ' loading="lazy"';
     return `<picture><source type="image/webp" srcset="${esc(base)}-640.webp 640w, ${esc(base)}-1280.webp 1280w" sizes="${taillesCarte(f)}">`
-        + `<img src="../${esc(src)}"${pos ? ` style="--pos:${esc(pos)}"` : ''} alt="" loading="lazy" decoding="async"></picture>`;
+        + `<img src="../${esc(src)}"${pos ? ` style="--pos:${esc(pos)}"` : ''} alt=""${priorite} decoding="async"></picture>`;
 }
 
 function pageRepertoire(fiches, misAJour) {
@@ -994,7 +1024,7 @@ function pageRepertoire(fiches, misAJour) {
         // premier survol, jamais d'avance.
         const f1 = f.vignette ? couverture(f.vignette) : 1;
         const media = f.vignette
-            ? `<span class="media media--photo">${imageCarte(f.vignette, f.vignettePos, f1)}</span>`
+            ? `<span class="media media--photo">${imageCarte(f.vignette, f.vignettePos, f1, i)}</span>`
             : `<span class="media"><span class="carton" style="--cbg:${esc(f.paletteBg || '#171410')};--ctx:${esc(f.paletteText || '#f2ece0')}">
                     <span class="carton-orne" aria-hidden="true">✦</span>
                     <span class="carton-titre">${esc(f.titre)}</span>
@@ -1031,14 +1061,14 @@ function pageRepertoire(fiches, misAJour) {
         { titre: 'Courts-métrages', icone: 'i-solid-film', fiches: fiches.filter(f => f.film) }
     ].filter(g => g.fiches.length);
 
-    const sections = groupes.map(g => `
+    const sections = groupes.map((g, gi) => `
         <section>
             <h2 class="groupe">
                 <span class="groupe-ico" aria-hidden="true"><svg class="ico"><use href="#${g.icone}"></use></svg></span>
                 <span>${esc(g.titre)}</span>
                 <span class="groupe-filet" aria-hidden="true"></span>
             </h2>
-            <ul class="repertoire">${g.fiches.map(carte).join('')}
+            <ul class="repertoire">${g.fiches.map((f, i) => carte(f, gi === 0 ? i : 99)).join('')}
             </ul>
         </section>`).join('');
 
@@ -1104,6 +1134,8 @@ ${MESURE}${SERVICE_WORKER}${SPECULATION}
          déclarait que favicon.svg : 128 Ko pour une icône de 16 px. -->
     <link rel="icon" type="image/png" href="../favicon_io/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../favicon_io/favicon-96x96.png" sizes="96x96">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon_io/site.webmanifest">
     <!-- Les polices du site, servies par le site (ressources/polices/). -->
     <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
     <!-- Les polices, puis la feuille du répertoire, DANS la page : deux
@@ -1287,9 +1319,17 @@ ${JSON.stringify(liste, null, 2)}
                 var reste = doc.scrollHeight - vh - (window.scrollY || doc.scrollTop || 0);
                 var plancher = Math.max(0, Math.min(1, 1 - reste / (vh * .3)));
                 var encore = false;
+                // TOUT LIRE, PUIS TOUT ÉCRIRE. Chaque carte lisait sa place
+                // juste après que la précédente avait écrit ses variables :
+                // le navigateur refaisait le style et la mise en page avant
+                // chaque lecture, une fois par carte et par image — au
+                // téléphone à ×4, des images perdues pendant le défilement
+                // (mesuré par l'expertise d'octobre 2026). Les places sont
+                // donc lues toutes ensemble, avant la première écriture.
+                var places = suivies.map(function (c) { return c.getBoundingClientRect(); });
                 for (var k = 0; k < suivies.length; k++) {
                     var carte = suivies[k];
-                    var r = carte.getBoundingClientRect();
+                    var r = places[k];
                     var base = Math.max(0, Math.min(1, (vh - r.top) / (vh * .75)));
                     // La vague gauche-droite : chaque colonne prend un
                     // retard de phase sur sa voisine. La phase S'ÉTEINT à
@@ -1544,8 +1584,12 @@ html.vt-theme::view-transition-new(root) { z-index: 2; }
     --or-defaut: #bfa98a;
     /* Part d'accent gardée dans l'encre des pastilles d'état — voir .etat. */
     --etat-encre: 65%;
+    /* Les barres de défilement et les champs du navigateur suivent le thème
+       (comme sur l'accueil). */
+    color-scheme: dark;
 }
 :root[data-theme="light"] {
+    color-scheme: light;
     --etat-encre: 45%;
     --bg: #faf9f5; --surface: #ffffff; --text: #1a1a1f; --muted: #575761;
     --accent: #967e5b; --accent-ink: #826c4a; --on-accent: #ffffff;
@@ -1953,7 +1997,9 @@ html[data-zoom="6"] { --colonnes: 6; }
 html[data-zoom="1"] .nom { font-size: 1.12rem; }
 @media (max-width: 640px) {
     html[data-zoom="3"] .repertoire { gap: .9rem .5rem; }
-    html[data-zoom="3"] .nom { font-size: .62rem; padding-bottom: .28rem; }
+    /* Onze pixels au plus serré : pas de texte sous onze pixels (il était
+       à .62rem, moins de dix). */
+    html[data-zoom="3"] .nom { font-size: .69rem; padding-bottom: .28rem; }
     html[data-zoom="3"] .fil, html[data-zoom="3"] .role { display: none; }
     html[data-zoom="3"] .txt { padding-top: .35rem; }
     /* Au rang le plus serré, la carte n'est plus qu'une image : un mur

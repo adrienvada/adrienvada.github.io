@@ -1315,9 +1315,12 @@ const SHOW_UNIVERSES = {
         });
     }
 
+    // La couleur d'avant est oubliée une fois rendue : gardée, elle aurait
+    // servi à la fermeture suivante même après un changement de thème.
     function restoreThemeColor() {
         document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
             if (m.dataset.uPrev) m.content = m.dataset.uPrev;
+            delete m.dataset.uPrev;
         });
     }
 
@@ -2530,6 +2533,13 @@ const SHOW_UNIVERSES = {
                 overlay.style.clipPath = '';
                 overlay.style.willChange = '';
                 cacherLaPage();
+                // Les mesures de la lumière et du titre détouré, APRÈS le
+                // dépliement : faites pendant, elles recalculaient le
+                // panneau et peignaient le titre dans une image au milieu de
+                // l'animation — des images perdues au téléphone (relevé par
+                // l'expertise d'octobre 2026). Rien de ce qu'elles posent ne
+                // se voit avant qu'on défile.
+                mesurerLesLignes();
             };
             depliement = (e) => {
                 if (e.target === overlay && e.propertyName === 'clip-path') finDuDepliement();
@@ -2584,7 +2594,7 @@ const SHOW_UNIVERSES = {
         // Dans le passage, le montage et les mesures l'attendent (voir
         // monterLeMontage) ; sans lui, tout est déjà là.
         if (parPassage) (passageCourant ? passageCourant.finished : Promise.resolve()).catch(() => { }).finally(monterLeMontage);
-        else mesurerLesLignes();
+        else if (!deplie) mesurerLesLignes();   // déplié : à la fin du dépliement (voir finDuDepliement)
         lastScrollTop = 0;
         playWriting({ titrePose: parPassage && !titreAuFond() });
         // LA PAGE DERRIÈRE DEVIENT INERTE. Le panneau couvre l'écran, mais le

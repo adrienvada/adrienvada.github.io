@@ -15,6 +15,9 @@
             if (choisi === 'light' || choisi === 'dark') t = choisi;
             else if (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) t = 'light';
             document.documentElement.setAttribute('data-theme', t);
+            // La barre du navigateur suit (voir index.html).
+            var m = document.querySelector('meta[name="theme-color"]');
+            if (m) m.setAttribute('content', t === 'light' ? '#FAF9F5' : '#0a0907');
         })();
     </script>
     <title>Page introuvable — Adrien Vada</title>
@@ -97,6 +100,7 @@
          index.html). -->
     <link rel="icon" type="image/png" href="/favicon_io/favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="/favicon_io/favicon-96x96.png" sizes="96x96" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
 
     <style>

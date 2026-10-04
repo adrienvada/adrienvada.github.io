@@ -326,6 +326,9 @@ ici : c'est ce qui l'empêche de revenir.
 | le **portrait** de l'en-tête (la première photo de `galerie.js`) | `python3 build/variantes-images.py --tout`, ou effacer `portrait-affiche-*` puis le relancer | `ressources/images/portrait-affiche-*` (WebP, AVIF et JPEG) |
 | une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
 | la **signature** — un nouvel export reMarkable | `python3 build/signature-vers-svg.py <export.pdf>` | `signature.webp` + le bloc SVG à coller |
+| la **couverture**, le titre, le genre ou la palette d'un univers | `python3 build/fabriquer-images-partage.py` (il faut `pip install fonttools brotli`), puis la commande des pages | `ressources/images/partage/<slug>.jpg`, l'image de partage de chaque page spectacle (voir [Les images de partage](#les-images-de-partage)) |
+| le **portrait** ou l'**adresse mail** | `python3 build/fabriquer-vcard.py` | `ressources/adrien-vada.vcf`, la fiche contact de l'en-tête |
+| le **portrait du site** (`favicon_io/`) | `python3 build/fabriquer-icones-admin.py` | les icônes de `/admin/` |
 
 Chacune a sa section plus bas, avec ce qu'elle fait et pourquoi.
 
@@ -704,6 +707,24 @@ répondait en 152 à 184 ms au lieu de 80 à 88, et le cercle partait 60 à
 **L'impression reste toujours claire**, même quand le site est affiché en
 sombre : le bloc `@media print` réimpose la palette claire à la racine. Un CV
 imprimé sur fond noir gâcherait l'encre et passerait mal en photocopie.
+
+**La barre du navigateur suit le thème choisi, pas celui du système.** Les
+balises `theme-color` de l'en-tête portent une condition
+(`prefers-color-scheme`) : un visiteur qui avait choisi le clair sur un
+téléphone réglé en sombre voyait une barre d'adresse noire au-dessus d'une
+page claire. Un petit script, juste après ces balises, leur donne à toutes la
+couleur du thème posé par le tout premier script, et `applyTheme` les
+réaccorde à chaque bascule. Un univers ouvert prend la couleur de sa salle
+le temps de la visite (`data-u-prev` garde l'ancienne) ; la bascule efface
+cette mémoire, pour qu'il ne rende pas à la fermeture la couleur d'avant.
+Même règle à la page 404.
+
+**Les pages générées disent leur couleur au navigateur** (`color-scheme`,
+en balise dans chaque page spectacle selon sa salle, en CSS au répertoire et
+au book, qui suivent le thème) : les barres de défilement, les champs et le
+fond d'avant le premier rendu y sont de la bonne couleur — sans cela, une
+salle sombre s'ouvrait sur un éclair blanc et des barres de défilement
+claires.
 
 ---
 
@@ -2184,6 +2205,12 @@ en place ; le renseigner pour toute série qui en demande un.
   [Les passages](#les-passages-view-transitions)). La lumière se mesure une
   fois, en lisant tout avant d'écrire (voir
   [L'écriture à la lumière](#lécriture-à-la-lumière)).
+  **Sans passage non plus** : un univers qui se déplie depuis sa ligne
+  (navigateur sans View Transitions) ne mesure sa lumière et son titre
+  détouré qu'**à la fin du dépliement** (`finDuDepliement`). Mesurées
+  pendant, elles recalculaient le panneau et peignaient le titre au milieu
+  de l'animation — des images perdues au téléphone. Rien de ce qu'elles
+  posent ne se voit avant qu'on défile.
 - **Le CV démarre en une mesure.** `univers.js` lit le fond (`--c-bg`, pour
   la crête du lavis) avant d'écrire quoi que ce soit dans les lignes ; il
   égalise leurs hauteurs en trois temps, toutes listes confondues (tout
@@ -2784,6 +2811,26 @@ passage. C'était la seule navigation du site sans passage.
 
 ## Images générées (à ne pas écraser sans les régénérer)
 
+### Les images de partage
+
+Une page spectacle envoyée par WhatsApp, Messages, LinkedIn ou un mail
+s'annonce par son image de partage (`og:image`). C'était la première photo
+du montage, telle quelle : au format du fichier, chaque application la
+recadrait à sa façon, souvent sur un bout de décor, et rien n'y disait de
+quel spectacle il s'agissait. Chaque spectacle a désormais la sienne,
+`ressources/images/partage/<slug>.jpg`, au format que toutes attendent
+(1200 × 630) : sa couverture recadrée sur le point du montage, le titre en
+Cinzel, la ligne de salle (sous-titre · genre), le filet à la couleur du
+spectacle et « Adrien Vada · comédien ». L'affiche d'un film, qui porte déjà
+son titre, est posée entière à droite. Le générateur des pages l'annonce
+(`og:image`, avec sa taille et son texte de remplacement) dès qu'elle
+existe, sinon il garde l'ancienne règle.
+
+    pip install fonttools brotli          # une fois : Pillow ne lit pas le WOFF2
+    python3 build/fabriquer-images-partage.py
+    npm --prefix build run pages
+
+
 | Fichier | Rôle |
 |---|---|
 | `ressources/images/portrait-affiche-{480,720,960}.{webp,avif}` et `-720.jpg` | le [portrait d'affiche](#le-portrait-daffiche) de l'en-tête — `python3 build/variantes-images.py`, depuis la première photo du book. L'AVIF, réglé au SSIM de la WebP, pèse 27 à 38 % de moins : la page le propose en premier, la WebP ensuite, le JPEG en dernier |
@@ -2941,6 +2988,23 @@ change pas.
 `polices.css` reste
 la déclaration de référence. Les fiches gardent `univers.css` en `<link>`,
 partagée par les onze.
+
+**Le premier écran du répertoire part avec la page.** Au téléphone, il
+s'ouvre au zoom 3 (trois colonnes) : les tailles d'image (`taillesCarte`)
+l'annoncent, au lieu des deux colonnes d'avant qui faisaient venir des photos
+moitié trop grandes. Les trois premières affiches ne sont plus paresseuses
+— elles sont toujours à l'écran —, la première passe devant tout
+(`fetchpriority="high"`), les autres attendent leur tour (`imageCarte`).
+Au défilement, la vague lit la place de toutes les cartes **avant** d'écrire
+la première variable : lire après chaque écriture refaisait la mise en page
+une fois par carte et par image. Le nom de carte, au zoom le plus serré,
+passe de 9,9 à 11 px.
+
+**Chaque page dit qui elle est hors du site** : son image de partage (voir
+[Les images de partage](#les-images-de-partage)), son icône d'écran d'accueil
+et le manifeste (`apple-touch-icon`, `manifest`, comme l'accueil ; sans eux,
+« Sur l'écran d'accueil » posait une capture de la page), sa couleur
+(`color-scheme`, voir [Thèmes sombre / clair](#thèmes-sombre--clair)).
 
 **À relancer après toute modification de `univers.js`, `dates.js`, ou d'une
 ligne de CV dans `index.html`.** Rien n'y est ressaisi : tout est relu depuis

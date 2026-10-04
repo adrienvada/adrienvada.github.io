@@ -414,6 +414,19 @@
 
     <meta name="theme-color" content="#0a0907" media="(prefers-color-scheme: dark)">
     <meta name="theme-color" content="#0a0907">
+    <script>
+        // LA BARRE DU NAVIGATEUR SUIT LE THÈME DE LA PAGE, dès le premier
+        // rendu. Les deux balises disaient « noir » : un téléphone en clair
+        // peignait sa barre en noir au-dessus d'une page claire jusqu'à ce
+        // que le script principal la corrige — et celle qui vise le
+        // système sombre gardait le noir même quand on choisissait le clair
+        // (relevé par l'expertise d'octobre 2026). Toutes suivent le thème
+        // posé plus haut ; applyTheme les tient ensuite à jour.
+        (function () {
+            var c = document.documentElement.getAttribute('data-theme') === 'light' ? '#FAF9F5' : '#0a0907';
+            document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.setAttribute('content', c); });
+        })();
+    </script>
     <meta name="google-site-verification" content="nXR_UIG-2NcBhs6kQGuCqpROfPUAqIfyt67kgJUJH6Q" />
     <link rel="canonical" href="https://adrienvada.fr/" />
     <meta name="description"
@@ -4914,6 +4927,14 @@
                 font-family: 'Cinzel', 'Cinzel repli capitales', 'Cinzel repli capitales Noto', Georgia, serif;
             }
 
+            /* En clair, « Vada » prend l'encre d'or et non l'or : l'or tombait
+               à 3,9:1 sur la carte blanche, et le nom de l'en-tête replié
+               (hors du CV) n'est pas assez grand pour s'en contenter — il
+               en faut 4,5. L'encre d'or y fait 5:1, et reste de l'or. */
+            :root[data-theme="light"] #en-tete .affiche-nom span {
+                color: rgb(var(--c-gold-ink));
+            }
+
             #en-tete .affiche-poursuite {
                 display: none;
             }
@@ -7394,6 +7415,13 @@
             color: var(--td-blanc);
         }
 
+        /* C'est un h2 : la règle des titres du téléphone (h2 à 11 px, espacé
+           de .12em, en !important) le rattraperait — il garde son dessin. */
+        #next-date-banner .td-sur {
+            font-size: 11px !important;
+            letter-spacing: 0.22em !important;
+        }
+
         /* LE VOYANT : la donnée est vivante. Deux coups rapprochés, puis il
            se tient (une seule fois : voir « Ce qui bouge s'arrête ») — un
            pouls, pas un clignotant. L'anneau se dilate et s'efface ; le
@@ -8576,7 +8604,9 @@
             // quand elle prend sa colonne sur un tableau plus large.
             const sous = (d.heure ? `<span class="s-heure">${esc(d.heure)}${d.ville ? '<span class="s-sep"> · </span>' : ''}</span>` : '')
                 + (d.ville ? `<span class="s-ville">${esc(d.ville)}</span>` : '');
-            dedans.innerHTML = '<h3 class="td-sur" id="td-titre"><span class="td-voyant" aria-hidden="true"></span>Prochaine date</h3>'
+            // Un h2, et non plus un h3 : la prochaine date suit directement le
+            // nom (h1) — un h3 sautait un niveau dans le plan de la page.
+            dedans.innerHTML = '<h2 class="td-sur" id="td-titre"><span class="td-voyant" aria-hidden="true"></span>Prochaine date</h2>'
                 + `<button type="button" class="td-dep" data-depart="${esc(d.cle)}" data-track="banner_next_date"`
                 + ` data-track-detail="${esc(d.titre)}" style="${style}">`
                 + `<span class="sr-only">${esc(d.clair)}</span>`
@@ -10526,8 +10556,12 @@
                 if (label) label.textContent = toLight ? 'Thème clair' : 'Thème sombre';
             });
 
-            const meta = document.querySelector('meta[name="theme-color"]:not([media])');
-            if (meta) meta.setAttribute('content', theme === 'light' ? '#FAF9F5' : '#0a0907');
+            // TOUTES les balises : celle qui vise le système sombre gardait
+            // le noir quand on choisissait le clair (voir le <head>).
+            document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
+                m.setAttribute('content', theme === 'light' ? '#FAF9F5' : '#0a0907');
+                delete m.dataset.uPrev;
+            });
             // Les ondes des démos voix lisent leurs couleurs dans les jetons :
             // redessinées ici, dans le même rendu que le reste de la page (la
             // bascule en cercle photographie ce rendu-là).

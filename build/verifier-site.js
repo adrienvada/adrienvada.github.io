@@ -1412,6 +1412,11 @@ function exige(condition, message) {
                 // s'ouvre par le passage : son montage n'est posé qu'après.
                 await p.waitForFunction(() => !document.documentElement.classList.contains('vt-univers'), null, { timeout: 8000 });
                 await p.waitForTimeout(400);
+                // Ouvert sans passage, le panneau se déplie depuis la ligne ;
+                // la lumière et le titre détouré ne sont mesurés qu'à la fin
+                // du dépliement (voir finDuDepliement, univers.js).
+                await p.waitForFunction(() => !document.getElementById('show-universe').style.clipPath, null, { timeout: 3000 }).catch(() => { });
+                await p.waitForTimeout(150);
                 await nette();
                 const panneau = await p.evaluate(releve);
                 await p.goto(`${base}/spectacles/${slug}/`, { waitUntil: 'load' });
