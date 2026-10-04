@@ -31,7 +31,7 @@ Ensuite, depuis la racine du dépôt :
 | Commande | Ce qu'elle fait |
 |---|---|
 | `npm --prefix build run css` | régénère `styles.css` |
-| `npm --prefix build run pages` | régénère la galerie **puis** les pages spectacle et le sitemap (dans cet ordre) |
+| `npm --prefix build run pages` | régénère la galerie **puis** les pages spectacle, le sitemap et [l'agenda à s'abonner](#lagenda-à-sabonner-datesics) (`dates.ics`) |
 | `npm --prefix build run pdf` | refait le CV en PDF |
 | `npm --prefix build run dates` | recopie les dates de Supabase dans `dates.js` |
 | `npm --prefix build run ondes` | écrit [les ondes des démos voix](#démos-voix--les-ondes) dans `index.html` |
@@ -176,6 +176,25 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   devient inerte et cesse de défiler une image après, tout revient à la
   fermeture (focus sur le bouton) ; rouverte pendant son fondu de sortie,
   elle n'est pas cachée par lui ;
+- la même fenêtre au téléphone (voir [une feuille qui monte du
+  bas](#-ajouter-à-lagenda---au-téléphone-une-feuille-qui-monte-du-bas)) :
+  une feuille collée au bas de l'écran, d'un bord à l'autre, coins hauts
+  arrondis, au-dessus de la barre d'onglets, sa poignée et son en-tête en
+  `touch-action: none`, la croix à 44 px ; de vrais touchers sur la poignée —
+  un petit glissement lent la rend à sa place, tirée loin elle se referme et
+  rend focus et page, un lancer bref la renvoie ; « Partager cette date »
+  envoie « Bérénice — jeu. 12 nov. à 20h00, Le Forum, Falaise (14) » et la
+  page du spectacle, ou les copie (presse-papiers relu, copie annoncée, focus
+  resté dans la fenêtre) ; en mouvement réduit elle est posée d'emblée et
+  disparaît d'un coup ; sur ordinateur, la fenêtre reste au centre, sans
+  poignée ;
+- l'agenda à s'abonner (`dates.ics`) : exactement celui que donnent
+  `dates.js` et `univers.js` (sinon : `npm --prefix build run pages`), fins de
+  ligne CRLF, lignes de 75 octets au plus, chaque `BEGIN` fermé par son `END`,
+  un UID par événement, les champs attendus, chaque séance publique de la
+  copie (relue à part, une par heure) et aucune scolaire, servi en
+  `text/calendar` ; l'onglet Dates y mène (webcal, l'adresse https à copier,
+  la mesure), et rien ne s'en imprime ;
 - le book : fermer puis rouvrir aussitôt ne laisse pas une page morte ;
 - la frise du CV, comme le prototype de l'audit, avec les deux pilotes : la
   ligne de lecture aux trois quarts de l'écran, la pointe du fil dessus
@@ -313,11 +332,11 @@ ici : c'est ce qui l'empêche de revenir.
 |---|---|---|
 | une classe Tailwind dans `index.html`, `404.html`, `dates.js`, `galerie.js`, `admin/` | [la commande Tailwind](#régénérer-stylescss-obligatoire-après-modification-des-classes) | `styles.css` |
 | **`galerie.js`** — ajout ou ordre des photos du book, texte `alt` | [`python3 build/variantes-images.py`](#ajouter-une-photo-au-book), puis `node build/generer-page-galerie.js` | les vignettes, puis `/galerie/…` |
-| **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml` |
+| **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml`, `dates.ics` (le nom, la page et la durée d'un spectacle, voir [l'agenda à s'abonner](#lagenda-à-sabonner-datesics)) |
 | une **ligne du CV** dans `index.html` — titre, auteur, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
 | le **vocabulaire du mouvement** dans `index.html` (`--ease-*`, `--dur-*`) | `npm --prefix build run pages` (la galerie, puis les pages spectacle) | `/galerie/…`, `/spectacles/…` : les pages spectacle, le répertoire et la galerie le relisent (voir [Un seul moteur](#un-seul-moteur-un-seul-visage) et [Le vocabulaire](#le-vocabulaire)) |
 | **`ressources/polices/polices.css`** — une police ajoutée, une adresse | `npm --prefix build run pages` | `/spectacles/index.html` et `/galerie/index.html`, qui en portent une copie dans leur page (voir [Polices](#polices--servies-par-le-site)) ; l'accueil publié la recopie de lui-même |
-| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis `node build/generer-pages-spectacles.js` | `dates.js`, puis `/spectacles/…` |
+| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis `node build/generer-pages-spectacles.js` | `dates.js`, puis `/spectacles/…`, `sitemap.xml` et `dates.ics` |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
 | le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées, copies floues (`-flou.webp`), versions écran large (`-2400.webp`) et vignettes (`-v.webp`) comprises — et la liste `ECRAN_LARGE` d'`univers-montage.js` : s'il annonce qu'elle a changé, la commande des pages |
 | le **`cadre` de la couverture** d'un univers (celui de la première photo de son montage) | `python3 build/variantes-images.py`, en plus de la commande des pages | sa vignette du CV recadrée (`<nom>-v.webp`) et `variantes.json` — le [contrôle automatique](#vérifier-le-site) le rappelle si on l'oublie |
@@ -1298,9 +1317,11 @@ prochain export :
   JavaScript, et ce que lisent les robots d'indexation, `TheaterEvent`
   compris — une date absente de `dates.js` ne remontera pas dans les
   résultats enrichis de Google, même si la page l'affiche ;
+- l'**agenda à s'abonner**, `dates.ics` (voir [plus bas](#lagenda-à-sabonner-datesics)) :
+  les agendas abonnés ne voient une date qu'une fois la PR fusionnée ;
 - le **PDF du CV**.
 
-Aucun des trois n'est urgent, aucun ne doit être oublié. Avant le prochain
+Aucun des quatre n'est urgent, aucun ne doit être oublié. Avant le prochain
 commit, donc :
 
 ```bash
@@ -1310,7 +1331,8 @@ node build/generer-pages-spectacles.js
 
 Le premier recopie la base entre les repères `⇊ ⇈` de `dates.js` ; tout ce
 qui est hors des repères (titre de saison, archives) reste à la main. Le
-second refait les pages spectacle avec les nouvelles dates.
+second refait les pages spectacle avec les nouvelles dates, et `dates.ics`
+avec elles.
 
 **Ne modifiez plus la partie `upcoming` de `dates.js` à la main** : le
 prochain export l'écraserait sans prévenir. Le bon endroit, c'est `/admin/`.
@@ -1464,6 +1486,54 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   bascule de rangement 220 → 164 ms (sous le seuil de 200), frappe 80 → 72
   ms, première frappe 192 → 144 ms.
 
+### « Ajouter à l'agenda » : au téléphone, une feuille qui monte du bas
+
+Au téléphone, la fenêtre d'agenda (`#calendar-modal`, ouverte par
+`openCalendarModal`) s'ouvrait au milieu de l'écran, loin du pouce, et se
+fermait par une croix de 28 px dans son coin haut. **Sous 768 px** — la
+limite où la barre d'onglets passe en bas —, c'est maintenant une **feuille
+posée au bas de l'écran** : coins hauts arrondis, une poignée en tête, le
+fond jusqu'au bord et le contenu au-dessus de la barre d'accueil de l'iPhone
+(`env(safe-area-inset-bottom)`, que `viewport-fit=cover` rend lisible). Elle
+passe au-dessus de la barre d'onglets (la fenêtre est à `z-index` 10 000, la
+barre à 40). Plus haute que l'écran — un téléphone couché —, elle laisse
+40 px de voile en haut et défile en dedans, sous sa prise.
+
+**On la renvoie au pouce** : en la tirant vers le bas par sa poignée ou son
+en-tête (`data-feuille-prise`, `calFeuilleAuDoigt`). Elle suit le doigt sans
+transition, le voile s'éclaircit à mesure ; lâchée au-delà du tiers de sa
+hauteur (140 px au plus) ou lancée vers le bas (plus de 0,45 px/ms sur les
+100 dernières ms), elle se referme, sinon elle remonte — la transition part
+de là où le doigt l'a laissée. La prise est en `touch-action: none` : sans
+cela, le navigateur prend le geste pour un défilement et coupe le suivi
+(`pointercancel`). Restent la croix — 44 px au doigt désormais —, Échap et
+le voile. **Rien d'autre ne change** : c'est la même fenêtre, que
+`openModal` et `closeModal` ouvrent et referment — focus gardé dedans puis
+rendu au bouton, page inerte, entrée d'historique, mesure `date_agenda`. Le
+voile est alors un calque à lui (`.cal-voile`) : la feuille reste pleine
+pendant qu'elle monte et descend, seul le voile fond. En mouvement réduit,
+elle paraît et disparaît d'un coup ; tirée, elle suit encore le doigt (c'est
+lui qui bouge, pas une animation). **Sur ordinateur, rien ne change** : la
+fenêtre reste au centre, sans poignée.
+
+**« Partager cette date »**, une ligne de plus sous les agendas
+(`calPartager`) : la date part chez quelqu'un, et non dans son propre agenda.
+Un texte qui se lit tel quel dans un message — « Bérénice — jeu. 12 nov. à
+20h00, Le Forum, Falaise (14) » (« horaire à confirmer », « séance
+scolaire » quand c'est le cas) — et le lien de la page du spectacle,
+`https://adrienvada.fr/spectacles/<slug>/`, ou de l'onglet Dates s'il n'en a
+pas : les adresses du site public, même depuis un aperçu. Par la feuille de
+partage du téléphone (`navigator.share`) ; sans elle — Firefox, un
+ordinateur sous Linux —, le texte et le lien sont copiés par le mécanisme de
+« Copier une adresse » (`window.copierTexte`, `window.annoncerCopie`), la ligne
+dit « Copiée » deux secondes et `#annonce-copie` le dit aux lecteurs d'écran.
+Son sous-titre annonce lequel des deux arrivera. Partagée, la date est
+partie : la fenêtre se referme ; une feuille de partage refermée sans rien
+envoyer ne fait rien. Mesure : `date_partage`, le spectacle en détail. La
+ligne « Autre application mobile… » (le fichier `.ics` confié à une autre
+application) a pris un dessin d'agenda : deux lignes au même signe de
+partage, pour deux gestes différents, se confondaient.
+
 ### La prochaine date, en tête du CV
 
 `renderNextDate()`, dans le script écrit juste après son emplacement : la
@@ -1543,6 +1613,80 @@ elle manque, la page se rabat sur la version de 640 px.
   décrite dans `supabase/schema.sql`, l'import initial dans
   `supabase/import-initial.sql` ; les deux ont déjà été joués et servent de
   mémoire.
+
+### L'agenda à s'abonner (`dates.ics`)
+
+« Ajouter à l'agenda » pose **une** date, **une** fois : que la salle change
+l'heure, qu'une date s'ajoute, et l'agenda du visiteur n'en sait rien.
+`dates.ics`, à la racine, est un agenda **publié** : on s'y abonne une fois,
+et l'application le relit d'elle-même, chaque jour (`REFRESH-INTERVAL` et
+`X-PUBLISHED-TTL` à `P1D`). Le lien est au pied de la liste de l'onglet
+Dates, « S'abonner à l'agenda » :
+
+- **`webcal://adrienvada.fr/dates.ics`** — Calendrier (iPhone, Mac) et
+  Outlook l'ouvrent d'un toucher et proposent l'abonnement ;
+- **l'adresse en `https://`**, avec un bouton « Copier » (celui de
+  « Copier une adresse ») — Android et Google Agenda ne connaissent pas
+  `webcal:` ; on colle l'adresse dans Google Agenda, *Autres agendas ›
+  À partir de l'URL*. Une phrase sous le lien dit les deux gestes.
+
+Mesure : `agenda_abonnement`, détail `webcal` ou `https`.
+
+**Ce qu'il contient.** Les représentations **publiques** de `dates.js`, jamais
+une séance scolaire (même règle que les données structurées) ; celles à
+venir, et celles jouées depuis **moins de 60 jours** — un agenda abonné efface
+ce que le flux ne contient plus, et une date jouée la veille ne doit pas
+disparaître du jour au lendemain. **Un événement par séance** : deux séances
+le même jour, deux événements ; « 14h30 & 19h00 » sur une ligne, deux aussi.
+L'heure est celle de l'affiche, en heure de Paris (`DTSTART;TZID=Europe/Paris`,
+avec le fuseau `VTIMEZONE` écrit une fois : l'agenda place lui-même l'heure
+d'été, rien n'est calculé à la fabrication). Sans heure lisible — vide,
+« matin », « à confirmer » —, l'événement tient la journée, « transparent »
+(la journée n'est pas marquée prise). Le nom est celui du spectacle, comme
+dans la fenêtre d'agenda d'un univers (« Cléophène (d'après Rodogune, de
+Corneille) ») ; la fin, le début plus la durée annoncée dans l'univers, deux
+heures sinon ; `URL` mène à la billetterie si elle est en `https`, à la page du
+spectacle sinon ; la description, courte, porte les deux liens en clair
+(Google Agenda ne montre pas `URL`). Lignes pliées à 75 octets, fins de ligne
+CRLF, texte échappé selon la RFC 5545.
+
+**L'identifiant (UID) est tiré de la représentation**, pas de la base :
+le jour, l'heure, et une empreinte du spectacle et du lieu
+(`20261022T1900-930d4fedcf@adrienvada.fr`). C'est par lui qu'un agenda
+reconnaît, d'une lecture à l'autre, le même événement. L'identifiant de la
+ligne Supabase n'est pas dans `dates.js`, et il change quand une ligne est
+effacée puis ressaisie pour corriger une faute — la soirée, elle, n'a pas
+bougé. Le lien de billetterie n'en fait pas partie : quand les réservations
+ouvrent, l'événement se met à jour au lieu de se doubler. Une heure, un jour
+ou une salle qui changent font un autre événement : l'ancien disparaît des
+agendas, le nouveau y paraît — c'est ce qui est arrivé à la soirée. La
+typographie (accents, apostrophes, espaces, ponctuation) n'y compte pas :
+soigner l'écriture d'une salle ne retire ni ne rajoute rien chez personne.
+Sans heure d'horloge, ce qui en tient lieu (« matin », « après-midi ») entre
+dans l'empreinte : deux séances, deux événements.
+
+**Le même fichier pour la même entrée.** Rien ne lit la date du jour : un flux
+daté de sa fabrication changerait à chaque passage sans qu'une date ait
+bougé, et la vérification ne saurait plus dire s'il est à jour. Le seul
+« maintenant » est celui de la **copie** : la ligne « `Dernier export : …` »
+que `exporter-dates.js` écrit en tête des dates. Elle borne le passé gardé
+(60 jours avant elle) et donne `DTSTAMP`, que la norme exige sur chaque
+événement. Illisible, elle arrête la fabrication avec un message : mieux vaut
+qu'elle le dise que de publier autre chose en silence. Conséquence à
+connaître : chaque export redate tous les `DTSTAMP`, et `dates.ics` change
+avec `dates.js`.
+
+**Quand il est refait.** Par `build/fabriquer-agenda.js`, qu'appelle
+`build/generer-pages-spectacles.js` à chaque passage — donc par
+`npm --prefix build run pages`, la commande qu'on relance déjà après un export
+des dates : une commande à part aurait été oubliée. Seul :
+`node build/fabriquer-agenda.js`. Il lit `dates.js` et `univers.js` (le nom, la
+page, la durée) : après un changement de l'un ou de l'autre, il faut le
+refaire, et la [vérification](#vérifier-le-site) refuse un `dates.ics` qui
+n'est pas exactement celui qu'ils donnent. **Il n'est pas en direct** : le
+site lit la base à chaque visite, les abonnés ne voient une date nouvelle
+qu'une fois la PR fusionnée et publiée. GitHub Pages le sert en
+`text/calendar`, comme le serveur local.
 
 ---
 
@@ -3166,7 +3310,8 @@ galerie et l'administration. À garder en tête en modifiant le site :
   tout, et chaque scène a alors un état fixe qui a du sens.
 - **Pas de texte sous 11 px**, pas de cible sous 24 px (la piste des démos
   voix et les icônes du pied de page ont une zone de clic agrandie sans
-  changer d'aspect).
+  changer d'aspect). Au doigt, la feuille d'agenda (sa croix, ses séances,
+  ses lignes) et l'abonnement à l'agenda visent les 44 px d'Apple.
 - **Le pincement appartient au navigateur** : il agrandit la page. La densité
   du répertoire et de la galerie se règle aux boutons − et +.
 - **Un lien qui ouvre un onglet le dit** (« nouvel onglet », en texte masqué).
@@ -3542,7 +3687,11 @@ savoir lequel travaille), `cv_pdf` (`bureau` ou `mobile` : un seul lien,
 dont le détail suit la largeur de l'écran, 768 px), `fiche_pro`
 (`agences-artistiques`, `filmmakers`), `reseau` (`instagram`, `linkedin`,
 `spotify`), `demo_youtube`, `date_agenda`, `date_booking`, `banner_next_date`
-(la prochaine date du CV, ouverte dans l'onglet Dates : le nom du spectacle).
+(la prochaine date du CV, ouverte dans l'onglet Dates : le nom du spectacle),
+`date_partage` (« Partager cette date », dans la fenêtre d'agenda : le nom du
+spectacle — qu'elle parte par la feuille de partage ou par le
+presse-papiers), `agenda_abonnement` (« S'abonner à l'agenda », au pied de
+l'onglet Dates : `webcal` pour le lien, `https` pour l'adresse copiée).
 
 **Ne jamais transmettre autre chose que ce que la page affiche déjà** : noms de
 spectacle, noms de démo. Rien qui identifie qui que ce soit.

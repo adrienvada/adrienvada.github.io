@@ -32,8 +32,10 @@
  *
  *      node build/generer-pages-spectacles.js
  *
- *  Le script réécrit /spectacles/ et sitemap.xml de bout en bout. Il est
- *  idempotent : le relancer sans rien changer ne produit aucune différence.
+ *  Le script réécrit /spectacles/ et sitemap.xml de bout en bout, et
+ *  l'agenda à s'abonner, dates.ics (voir build/fabriquer-agenda.js). Il
+ *  est idempotent : le relancer sans rien changer ne produit aucune
+ *  différence.
  *  Ne modifiez jamais un fichier de /spectacles/ à la main — il sera écrasé.
  */
 
@@ -2151,11 +2153,20 @@ function main() {
     fs.writeFileSync(path.join(RACINE, 'sitemap.xml'),
         `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`);
 
+    // ── L'AGENDA À S'ABONNER (dates.ics) ──
+    // Fait ICI, et non par une commande à lui : il lit les mêmes dates.js
+    // et univers.js que ces pages, et c'est ce script qu'on relance après
+    // chaque export des dates. Une commande de plus aurait été oubliée au
+    // premier export, et l'agenda des abonnés aurait retardé sans bruit.
+    // Voir build/fabriquer-agenda.js.
+    const agenda = require('./fabriquer-agenda.js').ecrire(RACINE);
+
     console.log(`  ${faites.length} pages spectacle générées dans /spectacles/`);
     faites.forEach(f => console.log(`    /spectacles/${f.slug}/   ${f.titre}${f.cv ? '' : '   (aucune ligne de CV appariée)'}`));
     console.log(`  /spectacles/            répertoire (plaque tournante)`);
     console.log(`  /galerie/               galerie photo`);
     console.log(`  sitemap.xml : ${faites.length + 3} adresses`);
+    console.log(`  dates.ics : ${agenda.evenements} représentation(s) publique(s), depuis le ${agenda.depuis}${agenda.change ? '' : ' (inchangé)'}`);
 }
 
 main();

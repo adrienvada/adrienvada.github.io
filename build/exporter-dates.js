@@ -104,6 +104,10 @@ async function main() {
 
     const entrees = L.versShowData(lignes);
     const corps = entrees.map(entreeSource).join(',\n\n');
+    // CETTE LIGNE EST LUE : l'agenda à s'abonner (build/fabriquer-agenda.js,
+    // dateDeLaCopie) en tire le jour de la copie — c'est lui qui borne le
+    // passé gardé dans dates.ics et qui le date. En changer la forme, c'est
+    // changer celle-là aussi ; la vérification du site le rappellerait.
     const horodatage = new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
     const bloc = `${DEBUT}\n    // Dernier export : ${horodatage} — ${lignes.length} soirée(s), ${entrees.length} entrée(s).\n${corps}\n${FIN}`;
 

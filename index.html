@@ -6327,6 +6327,65 @@
             color: rgb(var(--c-muted));
         }
 
+        /* S'ABONNER À L'AGENDA, au pied de la liste : un lien et deux lignes
+           d'aide, à la taille des notes — le geste est là pour qui le
+           cherche, il ne dispute rien aux dates. L'or de l'encre pour le
+           lien, le gris des notes pour l'aide (12 px, 4,5:1 au moins dans
+           les deux thèmes). Au doigt, le lien et « Copier » font 44 px de
+           haut, sans grossir à l'œil. */
+        .dates-abonnement {
+            margin-top: 0.75rem;
+            padding: 0.75rem 0.25rem 0;
+            border-top: 1px solid rgb(var(--c-s200) / 0.6);
+        }
+
+        .dates-abonnement-lien {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 32px;
+            font: 600 13px/1.2 Inter, sans-serif;
+            color: rgb(var(--c-gold-ink));
+            text-decoration: underline;
+            text-decoration-color: rgb(var(--c-gold-ink) / 0.35);
+            text-underline-offset: 3px;
+            transition: text-decoration-color var(--dur-quick) var(--ease-out);
+        }
+
+        .dates-abonnement-lien:hover,
+        .dates-abonnement-lien:focus-visible {
+            text-decoration-color: currentColor;
+        }
+
+        .dates-abonnement-lien .ico {
+            font-size: 14px;
+        }
+
+        .dates-abonnement-aide {
+            max-width: 42rem;
+            margin-top: 2px;
+            font: 400 12px/1.5 Inter, sans-serif;
+            color: rgb(var(--c-muted));
+        }
+
+        .dates-abonnement-adresse {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px 10px;
+            margin-top: 6px;
+            font: 500 12px/1.4 Inter, sans-serif;
+            color: rgb(var(--c-text));
+            overflow-wrap: anywhere;
+        }
+
+        @media (pointer: coarse) {
+            .dates-abonnement-lien,
+            .dates-abonnement .contact-outil {
+                min-height: 44px;
+            }
+        }
+
         /* L'AGENDA D'UNE SÉRIE. Un seul bouton par ligne : pour une série,
            la fenêtre « Ajouter à l'agenda » demande laquelle des séances
            ajouter (voir openCalendarModal). */
@@ -6355,6 +6414,140 @@
             background: rgb(var(--c-gold-ink));
             border-color: rgb(var(--c-gold-ink));
             color: rgb(var(--c-on-gold));
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           « AJOUTER À L'AGENDA » : UNE FEUILLE AU TÉLÉPHONE
+           ══════════════════════════════════════════════════════════════
+           Au téléphone, la fenêtre s'ouvrait au milieu de l'écran, loin du
+           pouce, et se fermait par une croix de 28 px dans son coin haut.
+           Sous 768 px — la limite où la barre d'onglets passe en bas —,
+           elle devient une FEUILLE QUI MONTE DU BAS : posée sur le bord de
+           l'écran, ses coins hauts arrondis, une poignée qui dit qu'elle
+           se tire. On la renvoie en la faisant glisser vers le bas (voir
+           calFeuilleAuDoigt), par la croix (44 px désormais), par Échap ou
+           en touchant le voile. Tout le reste ne change pas : c'est la
+           même fenêtre, ouverte et refermée par openModal et closeModal —
+           focus gardé dedans puis rendu, page inerte, mesure.
+
+           SON FOND VA JUSQU'AU BORD, SON CONTENU S'ARRÊTE AU-DESSUS DE LA
+           BARRE D'ACCUEIL DE L'IPHONE : la feuille porte en bas
+           env(safe-area-inset-bottom), que `viewport-fit=cover` rend
+           lisible. Elle passe au-dessus de la barre d'onglets (fixe, en bas,
+           z-index 40) : la fenêtre est à 10 000.
+
+           LE VOILE DEVIENT UN CALQUE À LUI (.cal-voile). Sur ordinateur, la
+           fenêtre entière fond du transparent au noir, carte comprise.
+           Une feuille qui monte en devenant opaque se lit mal : elle reste
+           pleine, seul le voile fond — et s'éclaircit à mesure qu'on la
+           tire. Elle monte et descend en `transform`, que joue le
+           compositeur ; en mouvement réduit, la règle générale lui ôte sa
+           durée : elle paraît et disparaît d'un coup.
+
+           Sur ordinateur, rien de ceci ne s'applique : la fenêtre reste au
+           centre, la poignée n'existe pas. */
+        .cal-poignee {
+            display: none;
+        }
+
+        @media (max-width: 767px) {
+            #calendar-modal {
+                align-items: flex-end;
+                padding: 0;
+                background: none;
+                -webkit-backdrop-filter: none;
+                backdrop-filter: none;
+                opacity: 1;
+            }
+
+            #calendar-modal .cal-voile {
+                background: rgb(0 0 0 / 0.72);
+                -webkit-backdrop-filter: blur(4px);
+                backdrop-filter: blur(4px);
+                opacity: 0;
+                transition: opacity var(--dur-base) var(--ease-out);
+            }
+
+            #calendar-modal.opacity-100 .cal-voile {
+                opacity: 1;
+            }
+
+            /* Refermée (scale-95, posée par closeModal) : sous le bord de
+               l'écran. Ouverte (scale-100) : à sa place. */
+            #calendar-modal-card {
+                display: flex;
+                flex-direction: column;
+                max-height: calc(100% - 40px - env(safe-area-inset-top, 0px));
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+                border-bottom: 0;
+                border-radius: 20px 20px 0 0;
+                box-shadow: 0 -16px 40px -16px rgb(0 0 0 / 0.55);
+                transform: translateY(100%);
+                transition: transform var(--dur-base) var(--ease-out);
+            }
+
+            #calendar-modal-card.scale-100 {
+                transform: none;
+            }
+
+            /* LA PRISE : la poignée et l'en-tête, du même fond. Ni défilement
+               ni sélection de texte sous le doigt qui tire. */
+            .cal-poignee {
+                display: flex;
+                flex: none;
+                justify-content: center;
+                padding: 10px 0 2px;
+                background: rgb(var(--c-s50));
+            }
+
+            .cal-poignee::before {
+                content: '';
+                width: 40px;
+                height: 5px;
+                border-radius: 3px;
+                background: rgb(var(--c-muted) / 0.55);
+            }
+
+            #calendar-modal [data-feuille-prise] {
+                touch-action: none;
+                -webkit-user-select: none;
+                user-select: none;
+                cursor: grab;
+            }
+
+            #calendar-modal .cal-entete {
+                flex: none;
+                padding-top: 6px;
+                padding-bottom: 6px;
+            }
+
+            /* La croix à la taille du doigt, sans grandir l'en-tête : la
+               marge négative rend la place que prend son cadre. */
+            #calendar-modal .cal-fermer {
+                width: 44px;
+                height: 44px;
+                margin: -2px -12px -2px 0;
+                color: rgb(var(--c-muted));
+                cursor: pointer;
+            }
+
+            #calendar-modal .cal-fermer .ico {
+                font-size: 16px;
+            }
+
+            /* Plus haute que l'écran (un téléphone couché, une longue série
+               de séances), la feuille défile en dedans, sous sa prise, et le
+               défilement ne passe pas à la page. */
+            #calendar-modal .cal-corps {
+                min-height: 0;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+            }
+
+            #calendar-modal .cal-seance {
+                min-height: 44px;
+                padding: 0 14px;
+            }
         }
 
         @media print {
@@ -9654,6 +9847,42 @@
                     <!-- Dates container rendu dynamiquement par renderDates() depuis dates.js -->
                     <div class="dates-liste" id="upcoming-dates-container">
                     </div>
+
+                    <!-- S'ABONNER À L'AGENDA. « Ajouter à l'agenda » pose UNE
+                         date ; l'abonnement les pose toutes, et les tient à
+                         jour : l'application relit dates.ics chaque jour (voir
+                         build/fabriquer-agenda.js). Au pied de la liste, et
+                         discret : c'est le geste de qui vient d'y lire plus
+                         d'une date. webcal:// est l'adresse que Calendrier
+                         (iPhone, Mac) et Outlook ouvrent d'un toucher, en
+                         proposant l'abonnement ; Android et Google Agenda ne la
+                         connaissent pas, mais prennent la même en https,
+                         collée dans « À partir de l'URL » : la phrase dit les
+                         deux gestes, et « Copier » fait le second (voir
+                         « Copier une adresse »). -->
+                    <div class="dates-abonnement no-print">
+                        <a class="dates-abonnement-lien" href="webcal://adrienvada.fr/dates.ics"
+                            data-track="agenda_abonnement" data-track-detail="webcal">
+                            <svg class="ico" aria-hidden="true">
+                                <use href="#i-solid-calendar-days"></use>
+                            </svg>
+                            S’abonner à l’agenda
+                        </a>
+                        <p class="dates-abonnement-aide">Les nouvelles dates y arrivent d’elles-mêmes. Sur
+                            iPhone, Mac ou Outlook, le lien suffit ; avec Google Agenda ou sur Android, ajoutez
+                            l’adresse ci-dessous dans « Autres agendas › À partir de l’URL ».</p>
+                        <p class="dates-abonnement-adresse">
+                            <span translate="no">https://adrienvada.fr/dates.ics</span>
+                            <button type="button" class="contact-outil" data-copier="https://adrienvada.fr/dates.ics"
+                                aria-label="Copier l’adresse de l’agenda" data-track="agenda_abonnement"
+                                data-track-detail="https">
+                                <svg class="ico" aria-hidden="true">
+                                    <use href="#i-solid-copy"></use>
+                                </svg>
+                                <span class="contact-outil-texte">Copier</span>
+                            </button>
+                        </p>
+                    </div>
                 </section>
 
                 <!-- PAST DATES (Accordion list) -->
@@ -10224,16 +10453,25 @@
     </div>
 
     <!-- CALENDAR EXPORT MODAL -->
+    <!-- AU TÉLÉPHONE, UNE FEUILLE QUI MONTE DU BAS (voir « Ajouter à
+         l'agenda » : une feuille au téléphone, dans le <style>) : la même
+         fenêtre, posée au bas de l'écran. La poignée et l'en-tête
+         (data-feuille-prise) sont la prise du pouce : on la referme en la
+         faisant glisser vers le bas (calFeuilleAuDoigt, après
+         openCalendarModal). Le voile (.cal-voile) est alors un calque à lui,
+         pour que la feuille reste opaque pendant qu'elle monte et descend. -->
     <div id="calendar-modal" role="dialog" aria-modal="true" aria-labelledby="cal-modal-title" hidden
         class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 pointer-events-none opacity-0 transition-all duration-300">
         <!-- Close overlay trigger -->
-        <div class="absolute inset-0 z-0" onclick="closeCalendarModal()" aria-hidden="true"></div>
+        <div class="cal-voile absolute inset-0 z-0" onclick="closeCalendarModal()" aria-hidden="true"></div>
 
         <!-- Modal card -->
         <div class="relative z-10 w-full max-w-md bg-luxury-surface rounded-xl overflow-hidden shadow-2xl border border-stone-200 transform scale-95 transition-all duration-300"
             id="calendar-modal-card">
+            <div class="cal-poignee" data-feuille-prise aria-hidden="true"></div>
             <!-- Header -->
-            <div class="bg-stone-50 px-5 py-3.5 border-b border-stone-200 flex justify-between items-center">
+            <div class="cal-entete bg-stone-50 px-5 py-3.5 border-b border-stone-200 flex justify-between items-center"
+                data-feuille-prise>
                 <span
                     class="text-xs font-mono font-bold text-luxury-goldInk tracking-wider uppercase flex items-center gap-2">
                     <svg class="ico text-luxury-goldInk text-sm" aria-hidden="true">
@@ -10241,7 +10479,7 @@
                     </svg> AJOUTER À L’AGENDA
                 </span>
                 <button type="button" onclick="closeCalendarModal()" aria-label="Fermer"
-                    class="text-stone-400 hover:text-stone-700 transition duration-300 w-7 h-7 rounded-full flex items-center justify-center hover:bg-stone-200/50">
+                    class="cal-fermer text-stone-400 hover:text-stone-700 transition duration-300 w-7 h-7 rounded-full flex items-center justify-center hover:bg-stone-200/50">
                     <svg class="ico text-sm" aria-hidden="true">
                         <use href="#i-solid-xmark"></use>
                     </svg>
@@ -10249,7 +10487,7 @@
             </div>
 
             <!-- Body -->
-            <div class="p-5 space-y-4">
+            <div class="cal-corps p-5 space-y-4">
                 <div class="text-left">
                     <h4 class="font-bold text-luxury-textMain text-sm leading-tight" id="cal-modal-title">Spectacle
                     </h4>
@@ -10323,10 +10561,14 @@
                     <button id="cal-option-share" onclick="calOptionClick('share')" style="display:none;"
                         class="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-stone-200 hover:border-luxury-gold/60 hover:bg-stone-50/80 transition-all group text-left">
                         <div class="flex items-center gap-3">
+                            <!-- Un agenda, et non le signe du partage : celui-ci
+                                 est à « Partager cette date », juste dessous —
+                                 deux lignes au même dessin pour deux gestes
+                                 différents se confondaient. -->
                             <div
                                 class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-luxury-goldInk flex-shrink-0">
                                 <svg class="ico text-sm" aria-hidden="true">
-                                    <use href="#i-solid-share-nodes"></use>
+                                    <use href="#i-solid-calendar-days"></use>
                                 </svg>
                             </div>
                             <div>
@@ -10335,6 +10577,36 @@
                             </div>
                         </div>
                         <svg class="ico text-stone-300 group-hover:text-luxury-goldInk text-xs" aria-hidden="true">
+                            <use href="#i-solid-chevron-right"></use>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- PARTAGER CETTE DATE. Un autre geste que les quatre
+                     d'au-dessus : la date ne va pas dans SON agenda, elle part
+                     chez quelqu'un — « Bérénice — jeu. 12 nov. à 20h00, Le
+                     Forum, Falaise (14) » et le lien de la page du spectacle.
+                     Par la feuille de partage du téléphone quand il en a une,
+                     sinon copiée (voir calPartager). Le sous-titre dit lequel
+                     des deux arrivera : il est posé à chaque ouverture. -->
+                <div class="border-t border-stone-100 pt-3">
+                    <button type="button" id="cal-option-partager" onclick="calPartager()"
+                        class="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-stone-200 hover:border-luxury-gold/60 hover:bg-stone-50/80 transition-all group text-left">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-luxury-goldInk flex-shrink-0">
+                                <svg class="ico text-sm" aria-hidden="true">
+                                    <use href="#i-solid-share-nodes"></use>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold text-stone-800">Partager cette date</div>
+                                <div class="text-[12px] text-stone-500" id="cal-partager-aide">Envoyer la date et son
+                                    lien</div>
+                            </div>
+                        </div>
+                        <svg class="ico text-stone-300 group-hover:text-luxury-goldInk text-xs" aria-hidden="true"
+                            id="cal-partager-signe">
                             <use href="#i-solid-chevron-right"></use>
                         </svg>
                     </button>
@@ -10426,6 +10698,12 @@
         //  http, vieux navigateur), le repli par sélection fait le même
         //  travail ; s'il échoue aussi, on lit l'adresse à voix haute plutôt
         //  que de prétendre l'avoir copiée.
+        //
+        //  LA COPIE ET L'ANNONCE SERVENT AUSSI AILLEURS : « Partager cette
+        //  date », sans feuille de partage, copie la date et son lien (voir
+        //  calPartager). Elles sont donc publiées — window.copierTexte, qui
+        //  rend une promesse de réussite, et window.annoncerCopie — plutôt
+        //  que récrites à côté.
         // ════════════════════════════════════════════════════════════════
         (() => {
             const minuteries = new WeakMap();
@@ -10439,7 +10717,11 @@
                 requestAnimationFrame(() => { zone.textContent = texte; });
             }
 
+            // Sélectionner le texte prend le focus : il est rendu ensuite à
+            // qui l'avait — le bouton pressé, dans une fenêtre où le focus
+            // est gardé. Sans cela, il tombait sur la page, sous la fenêtre.
             function copierParSelection(texte) {
+                const avant = document.activeElement;
                 const champ = document.createElement('textarea');
                 champ.value = texte;
                 champ.setAttribute('readonly', '');
@@ -10449,8 +10731,18 @@
                 let ok = false;
                 try { ok = document.execCommand('copy'); } catch (e) { }
                 champ.remove();
+                if (avant && avant !== document.body && avant.isConnected) avant.focus({ preventScroll: true });
                 return ok;
             }
+
+            function copier(texte) {
+                if (navigator.clipboard && window.isSecureContext) {
+                    return navigator.clipboard.writeText(texte).then(() => true, () => copierParSelection(texte));
+                }
+                return Promise.resolve(copierParSelection(texte));
+            }
+            window.copierTexte = copier;
+            window.annoncerCopie = annoncer;
 
             function confirmer(bouton, texte, ok) {
                 if (!ok) {
@@ -10474,13 +10766,7 @@
                 const bouton = e.target.closest?.('[data-copier]');
                 if (!bouton) return;
                 const texte = bouton.getAttribute('data-copier');
-                if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(texte).then(
-                        () => confirmer(bouton, texte, true),
-                        () => confirmer(bouton, texte, copierParSelection(texte)));
-                } else {
-                    confirmer(bouton, texte, copierParSelection(texte));
-                }
+                copier(texte).then((ok) => confirmer(bouton, texte, ok));
             });
         })();
 
@@ -11563,6 +11849,7 @@
             const out = [];
             upcoming.forEach(show => {
                 const reps = (show.type === 'series' && Array.isArray(show.shows)) ? show.shows : [show];
+                const spectacle = dlSpectacle(show.title || '');
                 const perfs = reps.map(r => {
                     const p = {
                         jour: dlJour(r.icsDate),
@@ -11577,9 +11864,13 @@
                         p.jour ? `${DL_JOURS_COURTS[p.jour.js]} ${dlQuantieme(p.jour)} ${DL_MOIS_COURTS[p.jour.m]}` : p.dateLabel,
                         p.heure || 'horaire à confirmer', p.ecole ? 'scolaire' : ''
                     ].filter(Boolean).join(' · ');
+                    // `ecole` et `slug` servent à « Partager cette date » : la
+                    // séance scolaire le dit, et le lien mène à la page du
+                    // spectacle quand il en a une.
                     p.cal = window.renderedEventsData.push({
                         title: show.title, subtitle: show.subtitle || '', location: show.location,
-                        icsDate: r.icsDate, time: r.time, times: r.times, dateLabel: p.dateLabel, seance
+                        icsDate: r.icsDate, time: r.time, times: r.times, dateLabel: p.dateLabel, seance,
+                        ecole: p.ecole, slug: spectacle.slug
                     }) - 1;
                     return p;
                 });
@@ -11588,7 +11879,7 @@
                 jours.sort((x, y) => x.t - y.t);
                 out.push({
                     show, titre: show.title || '', perfs, jours, debut: jours[0] || null,
-                    serie: perfs.length > 1, spectacle: dlSpectacle(show.title || '')
+                    serie: perfs.length > 1, spectacle
                 });
             });
             // L'ordre du calendrier, pas celui de la saisie. Une entrée sans
@@ -12882,6 +13173,7 @@
                 } catch (e) { canShareFile = false; }
                 shareBtn.style.display = canShareFile ? 'flex' : 'none';
             }
+            calPartageAuRepos();
             openModal('calendar-modal', 'calendar-modal-card');
         }
 
@@ -12899,8 +13191,170 @@
         }
 
         function closeCalendarModal() {
+            // Refermée en plein glissement (Échap, retour du navigateur) :
+            // la feuille part de là où le doigt l'a laissée.
+            calFeuilleLacher();
             closeModal('calendar-modal', 'calendar-modal-card');
         }
+
+        // ════════════════════════════════════════════════════════════════
+        //  PARTAGER CETTE DATE
+        //  La fenêtre pose une date dans SON agenda ; ce geste-ci l'envoie à
+        //  quelqu'un — le spectateur qui demande « on y va ? ». Un texte qui
+        //  se lit tel quel dans un message, « Bérénice — jeu. 12 nov. à
+        //  20h00, Le Forum, Falaise (14) », et le lien de la page du
+        //  spectacle (l'onglet Dates, s'il n'en a pas). Les adresses sont
+        //  celles du site public, même depuis un aperçu : c'est là que le
+        //  destinataire doit arriver.
+        //
+        //  La feuille de partage du téléphone quand il en a une (Web Share).
+        //  Sinon — Firefox, un ordinateur sous Linux —, le texte et le lien
+        //  sont copiés par le mécanisme de « Copier une adresse », et la
+        //  ligne le dit deux secondes ; #annonce-copie le dit aux lecteurs
+        //  d'écran. Refermer la feuille de partage sans rien envoyer n'est
+        //  pas un échec : rien ne se passe. La date partie, la fenêtre se
+        //  referme, comme après « Ajouter ».
+        // ════════════════════════════════════════════════════════════════
+        let calPartageMinuterie = 0;
+
+        // La date comme on la dit : le jour abrégé, l'heure — ou ce qui en
+        // tient lieu (« matin », « horaire à confirmer ») —, la séance
+        // scolaire si c'en est une, puis le lieu exact.
+        function calTexteDeLaDate(data) {
+            const j = dlJour(data.icsDate);
+            const quand = j ? `${DL_JOURS_COURTS[j.js]} ${dlQuantieme(j)} ${DL_MOIS_COURTS[j.m]}` : (data.dateLabel || '');
+            const heure = performanceTimeStr(data);
+            const horloge = /^\d{1,2}\s*[hH:]/.test(heure);
+            const notes = [horloge ? '' : (heure || 'horaire à confirmer'), data.ecole ? 'séance scolaire' : ''].filter(Boolean);
+            return `${data.title || ''} — ${quand}${horloge ? ` à ${heure}` : ''}`
+                + (notes.length ? ` (${notes.join(', ')})` : '')
+                + (data.location ? `, ${data.location}` : '');
+        }
+
+        // Le sous-titre dit ce qui va se passer : la feuille de partage, ou
+        // la copie.
+        function calPartageAuRepos() {
+            clearTimeout(calPartageMinuterie);
+            const aide = document.getElementById('cal-partager-aide');
+            if (aide) aide.textContent = typeof navigator.share === 'function'
+                ? 'Envoyer la date et son lien' : 'Copier la date et son lien';
+            setIcon(document.getElementById('cal-partager-signe'), 'solid-chevron-right');
+        }
+
+        function calPartager() {
+            const data = currentCalendarEventData;
+            if (!data) return;
+            // Le geste qui fait venir quelqu'un d'autre. Le détail est le
+            // spectacle, comme pour date_agenda : rien de plus que la page.
+            track('date_partage', { detail: data.title || '' });
+            const texte = calTexteDeLaDate(data);
+            const url = data.slug ? `https://adrienvada.fr/spectacles/${data.slug}/` : 'https://adrienvada.fr/#page_dates';
+            const copier = () => (window.copierTexte ? window.copierTexte(`${texte}\n${url}`) : Promise.resolve(false))
+                .then((ok) => {
+                    const annoncer = window.annoncerCopie || (() => { });
+                    if (!ok) {
+                        annoncer(`Copie impossible. ${texte}, ${url}`);
+                        return;
+                    }
+                    annoncer(`Date copiée : ${texte}`);
+                    const aide = document.getElementById('cal-partager-aide');
+                    if (aide) aide.textContent = 'Copiée : à coller dans un message';
+                    setIcon(document.getElementById('cal-partager-signe'), 'solid-check');
+                    clearTimeout(calPartageMinuterie);
+                    calPartageMinuterie = setTimeout(calPartageAuRepos, 2000);
+                });
+            if (typeof navigator.share !== 'function') {
+                copier();
+                return;
+            }
+            navigator.share({ title: data.title || 'Adrien Vada', text: texte, url }).then(
+                () => { if (openModalEl && openModalEl.id === 'calendar-modal') closeCalendarModal(); },
+                (e) => { if (!e || e.name !== 'AbortError') copier(); });
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  LA FEUILLE SE REFERME AU DOIGT (téléphone)
+        //  Au téléphone, la fenêtre est une feuille posée au bas de l'écran
+        //  (voir « une feuille au téléphone », dans le <style>). Le geste qui
+        //  la renvoie est celui du pouce : la tirer vers le bas, par sa
+        //  poignée ou son en-tête (data-feuille-prise). Elle suit le doigt,
+        //  sans transition, et le voile s'éclaircit à mesure. Lâchée au-delà
+        //  du tiers de sa hauteur (140 px au plus), ou lancée vers le bas
+        //  (plus de 0,45 px/ms sur les 100 dernières ms), elle se referme —
+        //  par closeCalendarModal, comme la croix, Échap ou le voile : même
+        //  focus rendu, même page libérée, même historique. Sinon, elle
+        //  remonte. Dans les deux cas, c'est la transition de la feuille qui
+        //  finit le mouvement, depuis là où le doigt l'a laissée ; en
+        //  mouvement réduit elle n'en a pas : la feuille suit le doigt —
+        //  c'est lui qui bouge, pas une animation —, puis se pose ou
+        //  disparaît d'un coup.
+        //
+        //  La prise ne défile pas (touch-action: none, dans le <style>) :
+        //  sans cela, le navigateur prenait le geste pour un défilement et
+        //  coupait le suivi (pointercancel). La croix, dans l'en-tête, reste
+        //  un bouton : on ne tire pas depuis elle.
+        // ════════════════════════════════════════════════════════════════
+        let calTire = null;
+
+        // La feuille rendue à ses règles : sa transition et sa place
+        // viennent de nouveau du <style> (ouverte, ou refermée).
+        function calFeuilleLacher() {
+            calTire = null;
+            const carte = document.getElementById('calendar-modal-card');
+            const voile = document.querySelector('#calendar-modal .cal-voile');
+            if (carte) carte.style.transition = carte.style.transform = '';
+            if (voile) voile.style.transition = voile.style.opacity = '';
+        }
+
+        (function calFeuilleAuDoigt() {
+            const modale = document.getElementById('calendar-modal');
+            const carte = document.getElementById('calendar-modal-card');
+            if (!modale || !carte || !window.PointerEvent || !window.matchMedia) return;
+            const voile = modale.querySelector('.cal-voile');
+            // La même limite que le <style> : au-delà, la fenêtre d'avant.
+            const feuille = window.matchMedia('(max-width: 767px)');
+
+            carte.addEventListener('pointerdown', (e) => {
+                if (calTire || !feuille.matches || openModalEl !== modale) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                if (!e.target.closest('[data-feuille-prise]') || e.target.closest('button')) return;
+                calTire = {
+                    id: e.pointerId, y0: e.clientY, dy: 0,
+                    h: carte.getBoundingClientRect().height || 1, pas: [[e.timeStamp, e.clientY]]
+                };
+                try { carte.setPointerCapture(e.pointerId); } catch (err) { }
+                carte.style.transition = 'none';
+                if (voile) voile.style.transition = 'none';
+            });
+
+            carte.addEventListener('pointermove', (e) => {
+                const t = calTire;
+                if (!t || e.pointerId !== t.id) return;
+                // Vers le bas seulement : plus haut, la feuille n'a nulle
+                // part où aller.
+                t.dy = Math.max(0, e.clientY - t.y0);
+                t.pas.push([e.timeStamp, e.clientY]);
+                while (t.pas.length > 2 && e.timeStamp - t.pas[0][0] > 100) t.pas.shift();
+                carte.style.transform = `translateY(${t.dy}px)`;
+                if (voile) voile.style.opacity = String(1 - 0.75 * Math.min(1, t.dy / t.h));
+            });
+
+            const lacher = (e) => {
+                const t = calTire;
+                if (!t || e.pointerId !== t.id) return;
+                // La vitesse du doigt sur ses 100 dernières ms, lâcher
+                // compris : un doigt arrêté avant de se lever n'a rien lancé.
+                t.pas.push([e.timeStamp, e.clientY]);
+                const [t0, y0] = t.pas.find(([s]) => e.timeStamp - s <= 100);
+                const vitesse = e.timeStamp > t0 ? (e.clientY - y0) / (e.timeStamp - t0) : 0;
+                const renvoyee = e.type === 'pointerup'
+                    && (t.dy > Math.min(140, t.h / 3) || (vitesse > 0.45 && t.dy > 12));
+                calFeuilleLacher();
+                if (renvoyee) closeCalendarModal();
+            };
+            carte.addEventListener('pointerup', lacher);
+            carte.addEventListener('pointercancel', lacher);
+        })();
 
         function calOptionClick(type) {
             const data = currentCalendarEventData;

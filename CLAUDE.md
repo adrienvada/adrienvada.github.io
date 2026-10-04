@@ -134,15 +134,17 @@ Vérifie que la réponse renvoie bien la ou les lignes attendues. Une erreur
 ```bash
 npm --prefix build ci          # une fois par session, si build/node_modules manque
 npm --prefix build run dates   # Supabase → dates.js
-npm --prefix build run pages   # galerie, pages spectacle, sitemap
+npm --prefix build run pages   # galerie, pages spectacle, sitemap, dates.ics
 npm --prefix build run verifier
 ```
 
 `git diff` ne doit montrer que ce qui était attendu : `dates.js`, les pages
-spectacle concernées, `sitemap.xml`. Si l'export change autre chose, c'est que
-la table et `dates.js` divergeaient déjà : explique à Adrien ce qui diffère
-avant d'aller plus loin. La vérification doit tout passer. En cas d'échec, relis
-le message, et relance seule l'épreuve concernée
+spectacle concernées, `sitemap.xml`, et `dates.ics` — l'agenda auquel on
+s'abonne depuis l'onglet Dates, refait à chaque export (ses `DTSTAMP` suivent
+la ligne « Dernier export » de `dates.js`). Si l'export change autre chose,
+c'est que la table et `dates.js` divergeaient déjà : explique à Adrien ce qui
+diffère avant d'aller plus loin. La vérification doit tout passer. En cas
+d'échec, relis le message, et relance seule l'épreuve concernée
 (`SEUL=mot node build/verifier-site.js`) avant de conclure à un problème de
 timing.
 
@@ -151,6 +153,7 @@ quelle date a changé. Puis réponds à Adrien en quelques lignes :
 
 - ce qui a changé ;
 - que c'est déjà visible sur le site, puisque la base est lue en direct ;
-- que la PR met à jour la copie de repli et les pages spectacle, et qu'elle sera
-  publiée quand il dira « fusionne » (fusionne seulement à sa demande, et quand
-  les tests sont verts).
+- que la PR met à jour la copie de repli, les pages spectacle et l'agenda à
+  s'abonner (les abonnés ne verront la date qu'une fois la PR publiée), et
+  qu'elle sera publiée quand il dira « fusionne » (fusionne seulement à sa
+  demande, et quand les tests sont verts).
