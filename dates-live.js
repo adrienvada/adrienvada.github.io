@@ -98,6 +98,26 @@
     function utc(iso) { const d = decouper(iso); return Date.UTC(d.a, d.m - 1, d.j); }
     function joursEntre(isoA, isoB) { return Math.round((utc(isoB) - utc(isoA)) / 86400000); }
 
+    // ── L'HEURE D'UNE SÉANCE, EN MINUTES ──
+    //  Pour ranger les séances d'un même jour dans l'ordre de la journée.
+    //  Le tri du texte les rangeait par ordre alphabétique : « après-midi »
+    //  passait avant « matin » (Cherbourg, le 15 avril 2027), et « 14h00 »
+    //  serait passé avant « 9h30 ». L'heure écrite (« 9h30 », « 20 h ») vaut
+    //  ce qu'elle dit ; les mots de la saisie valent une heure de la
+    //  journée ; un texte inconnu passe après, une séance sans heure en
+    //  dernier. Partagée par l'accueil, l'admin et l'export de dates.js.
+    function cleHeure(heure) {
+        const s = String(heure ?? '').trim().toLowerCase();
+        if (!s) return 24 * 60;
+        const h = s.match(/(\d{1,2})\s*h\s*(\d{2})?/);
+        if (h) return Number(h[1]) * 60 + Number(h[2] || 0);
+        if (/matin/.test(s)) return 9 * 60;
+        if (/apr[eè]s/.test(s)) return 14 * 60;
+        if (/midi/.test(s)) return 12 * 60;
+        if (/soir/.test(s)) return 20 * 60;
+        return 23 * 60;
+    }
+
     /**
      * Lignes de la table → SHOW_DATA.upcoming.
      *
@@ -111,7 +131,8 @@
             spectacle: typographie(l.spectacle), lieu: typographie(l.lieu), ville: typographie(l.ville)
         })).sort((x, y) =>
             x.jour < y.jour ? -1 : x.jour > y.jour ? 1 :
-                String(x.heure).localeCompare(String(y.heure)) || (x.id || 0) - (y.id || 0));
+                (cleHeure(x.heure) - cleHeure(y.heure))
+                || String(x.heure).localeCompare(String(y.heure)) || (x.id || 0) - (y.id || 0));
         // L'ID DÉPARTAGE LES EX-ÆQUO. Deux spectacles le même jour au même
         // lieu, tous deux sans heure (les scolaires de Saint-Lô, le 29
         // janvier 2027) : la base les rend dans un ordre qu'elle ne
@@ -173,7 +194,7 @@
     const COLONNES = 'id,spectacle,lieu,ville,jour,heure,reservation_url,scolaire';
     const ADRESSE_LECTURE = `${SUPABASE_URL}/rest/v1/${TABLE}?select=${COLONNES}&order=jour.asc,heure.asc`;
 
-    const api = { SUPABASE_URL, SUPABASE_CLE, TABLE, ADRESSE_LECTURE, versShowData, typographie, lienSur, jourCourt, jourLong };
+    const api = { SUPABASE_URL, SUPABASE_CLE, TABLE, ADRESSE_LECTURE, versShowData, typographie, lienSur, jourCourt, jourLong, cleHeure };
 
     // ── Node (build/exporter-dates.js) : on n'exporte que le calcul ──
     if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }

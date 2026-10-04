@@ -157,7 +157,7 @@ def construire_sprite(icones):
             f'        <symbol id="i-{style}-{nom}" viewBox="{vb}">{corps}</symbol>')
     return (
         f'{DEBUT}\n'
-        '    <!-- Les 39 icônes du site, et rien d\'autre. Généré par\n'
+        f'    <!-- Les {len(symboles)} icônes du site, et rien d\'autre. Généré par\n'
         '         build/construire-sprite-icones.py — ne pas modifier à la main.\n'
         '         Icônes FontAwesome Free, licence CC BY 4.0 (fontawesome.com).\n'
         '         `aria-hidden` + `display:none` : ce bloc est une réserve de\n'
@@ -228,9 +228,17 @@ def verifier_couverture(icones):
     for p in RACINE.rglob('*'):
         if p.suffix.lower() not in {'.html', '.js'}: continue
         if any(x in p.parts for x in ('.git', 'node_modules', 'spectacles')): continue
-        for ref in re.findall(r'href="#(i-(?:solid|regular|brands)-[a-z0-9-]+)"',
-                              p.read_text(encoding='utf-8', errors='ignore')):
-            poses.add(ref)
+        texte = p.read_text(encoding='utf-8', errors='ignore')
+        # Une page qui porte SES PROPRES dessins (l'administration a son
+        # petit sprite, écrit à la main) se couvre elle-même : ses icônes ne
+        # dépendent pas de celui d'index.html. Les copies du sprite d'index
+        # (la galerie, entre les mêmes repères) ne comptent pas, elles : ce
+        # sont justement elles que ce contrôle doit couvrir.
+        hors_copie = re.sub(re.escape(DEBUT) + r'.*?' + re.escape(FIN), '', texte, flags=re.S)
+        propres = set(re.findall(r'<symbol id="(i-(?:solid|regular|brands)-[a-z0-9-]+)"', hors_copie))
+        for ref in re.findall(r'href="#(i-(?:solid|regular|brands)-[a-z0-9-]+)"', texte):
+            if ref not in propres:
+                poses.add(ref)
     fournis = {f'i-{style}-{nom}' for style, nom in icones}
     manquants = sorted(poses - fournis)
     if manquants:

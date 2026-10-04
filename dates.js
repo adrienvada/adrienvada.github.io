@@ -36,7 +36,7 @@ const SHOW_DATA = {
   // -------------------------------------------------------------
   upcoming: [
     // ⇊ GÉNÉRÉ — build/exporter-dates.js recopie ici la table Supabase. Ne pas éditer à la main. ⇊
-    // Dernier export : 4 octobre 2026 à 15:51 — 25 soirée(s), 15 entrée(s).
+    // Dernier export : 4 octobre 2026 à 22:02 — 25 soirée(s), 15 entrée(s).
     // ── 22 - 23 oct. 2026 : À la barre, peine perdue ? (Rouen) [Série] ──
     {
       type: "series",
@@ -288,14 +288,14 @@ const SHOW_DATA = {
       shows: [
         {
           dateLabel: "15 avr. 2027",
-          time: "après-midi",
+          time: "matin",
           bookingUrl: "",
           isSchool: true,
           icsDate: "2027-04-15"
         },
         {
           dateLabel: "15 avr. 2027",
-          time: "matin",
+          time: "après-midi",
           bookingUrl: "",
           isSchool: true,
           icsDate: "2027-04-15"

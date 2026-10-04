@@ -3612,6 +3612,22 @@ const SHOW_UNIVERSES = {
             if (window.ouvrirBandeAnnonce && window.ouvrirBandeAnnonce({ ref, titre, image: couverture(uni)?.src })) e.preventDefault();
         });
 
+        // AU TÉLÉPHONE, UNE SECONDE RÉSERVE, SUR LA VIGNETTE. La colonne de
+        // droite prenait 44 px au texte sur chaque ligne, pour une pastille
+        // que deux lignes sur trois n'ont pas : le CV y coupait ses noms
+        // (« Compagnie Crescite — Angelo Jos… »). Sous 768 px, la pastille
+        // devient le bouton de lecture rond posé au milieu de la photo — le
+        // signe de toute vidéo — et la colonne ne garde que la flèche. Le
+        // CSS n'affiche qu'une réserve à la fois ; le lien se pose sur
+        // celle qui a une taille (voir mesurerPastille).
+        const vignette = li.querySelector('.cv-vignette');
+        if (vignette) {
+            const surVignette = document.createElement('span');
+            surVignette.className = 'cv-trailer cv-trailer-place cv-trailer-place--vignette';
+            surVignette.setAttribute('aria-hidden', 'true');
+            vignette.appendChild(surVignette);
+        }
+
         badges.classList.remove('items-center');
         if (badge) {
             // LA PASTILLE S'ALIGNE SUR LE BADGE, PAS SUR LA FLÈCHE. Le badge
@@ -3648,14 +3664,19 @@ const SHOW_UNIVERSES = {
     //  Toutes les lignes d'abord mesurées, puis tous les liens posés : poser
     //  un lien entre deux mesures obligeait le navigateur à refaire sa mise
     //  en page avant la suivante — quatre fois au démarrage.
+    //  DEUX RÉSERVES, UNE SEULE AFFICHÉE (la colonne sur grand écran, la
+    //  vignette au téléphone) : le lien va sur celle qui a une taille, et
+    //  en prend la taille — ronde sur la photo, en 16/9 dans la colonne.
     function mesurerPastille(li) {
-        const place = li.querySelector('.cv-trailer-place');
         const lien = li.querySelector('.cv-trailer-lien');
-        if (!place || !lien) return null;
+        if (!lien) return null;
         const r = li.getBoundingClientRect();
-        const p = place.getBoundingClientRect();
-        if (!r.width || !p.width) return null;
-        return [lien, (p.top - r.top) + 'px', (p.left - r.left) + 'px'];
+        if (!r.width) return null;
+        for (const place of li.querySelectorAll('.cv-trailer-place')) {
+            const p = place.getBoundingClientRect();
+            if (p.width) return [lien, (p.top - r.top) + 'px', (p.left - r.left) + 'px', place.classList.contains('cv-trailer-place--vignette')];
+        }
+        return null;
     }
 
     function placerPastilles(lignes) {
@@ -3663,6 +3684,7 @@ const SHOW_UNIVERSES = {
             if (!pose) return;
             pose[0].style.top = pose[1];
             pose[0].style.left = pose[2];
+            pose[0].classList.toggle('sur-vignette', pose[3]);
         });
     }
 

@@ -919,6 +919,14 @@ function exige(condition, message) {
                 datesMisesAJour();
                 renderNextDate();
             });
+            // Au téléphone, la barre d'onglets flotte en bas de l'écran et
+            // couvre le bas du tableau à l'arrivée : un visiteur fait défiler
+            // un peu, puis touche. Sans ce défilement, Playwright cherche
+            // lui-même où cliquer derrière la barre, et Chromium sans écran
+            // cesse alors de produire des images une à deux secondes — le
+            // passage d'onglet attend sa première image, et la vérification
+            // mesurerait l'outil, pas le site.
+            await p.evaluate(() => document.querySelector('#next-date-banner .td-dep').scrollIntoView({ block: 'center', behavior: 'instant' }));
             await p.click('#next-date-banner .td-dep');
             await p.waitForTimeout(1400);
             const arrivee = await p.evaluate(() => {
@@ -1201,14 +1209,26 @@ function exige(condition, message) {
                         // lecteurs d'écran : c'est dans le texte qu'ils les lisent.
                         parlantes: lignes.filter((li) => li.querySelector('.cv-vignette')
                             && li.querySelector('.cv-vignette').getAttribute('aria-hidden') !== 'true').length,
-                        // La règle de la mise en page : tout le texte tient dans
-                        // la hauteur de la vignette. Un titre qui repasserait à
-                        // la ligne la dépasserait — et c'est ce qui faisait
-                        // varier les hauteurs.
-                        debordent: lignes.filter((li) => {
+                        // Sur grand écran, tout le texte tient dans la hauteur de
+                        // la vignette : un titre qui repasserait à la ligne la
+                        // dépasserait — et c'est ce qui faisait varier les
+                        // hauteurs. Au téléphone, depuis l'expertise d'octobre
+                        // 2026, le texte passe à la ligne plutôt que d'être
+                        // coupé : la ligne grandit, et toute sa liste avec elle.
+                        debordent: innerWidth < 768 ? [] : lignes.filter((li) => {
                             const v = li.querySelector('.cv-vignette'), t = li.querySelector('.cv-row-toggle .min-w-0');
                             return v && t && t.getBoundingClientRect().height > v.getBoundingClientRect().height + 0.5;
                         }).map((li) => li.dataset.cvShow),
+                        // RIEN N'EST COUPÉ : ni « … » ni ligne rognée, sur le
+                        // titre, le rôle, la compagnie ou le genre — « sur un
+                        // CV, une information tronquée est une information
+                        // perdue ».
+                        coupes: lignes.flatMap((li) => ['.cv-title-row', '.cv-role', '.cv-subtitle', '.cv-genre'].map((s) => {
+                            const e = li.querySelector(s);
+                            if (!e || !e.getBoundingClientRect().width) return null;
+                            return e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1
+                                ? `${li.dataset.cvShow} (${s})` : null;
+                        })).filter(Boolean),
                         ecarts: listes.map((l) => {
                             const haut = (li) => li.getBoundingClientRect().top;
                             const h = l.map((li) => li.getBoundingClientRect().height);
@@ -1226,6 +1246,7 @@ function exige(condition, message) {
                 exige(!cv.visibles.length, `${ici} : l’année ou le badge se voient encore dans le texte — ${cv.visibles.join(', ')}`);
                 exige(!cv.parlantes, `${ici} : ${cv.parlantes} vignette(s) lue(s) par les lecteurs d’écran, en double du texte`);
                 exige(!cv.debordent.length, `${ici} : le texte dépasse la hauteur de la vignette — ${cv.debordent.join(', ')}`);
+                exige(!cv.coupes.length, `${ici} : du texte est coupé — ${cv.coupes.join(', ')}`);
                 // Un pixel de jeu : la première ligne d'une liste n'a pas le
                 // filet de séparation des suivantes.
                 cv.ecarts.forEach((e, i) => {
@@ -2214,7 +2235,9 @@ function exige(condition, message) {
                 } else {
                     exige(etat.pointsHaut === 1 && etat.pleineHaut > 0.99, `${nom}, une ligne déjà lue n’est pas pleine avec son point (${etat.pleineHaut}, point × ${etat.pointsHaut})`);
                     exige(etat.pointsBas === 0, `${nom}, le point d’une ligne pas encore atteinte est déjà là (× ${etat.pointsBas})`);
-                    exige(etat.voileBas < 0.5, `${nom}, une ligne pas encore atteinte n’est pas voilée (${etat.voileBas})`);
+                    // Le voile est à .62 depuis l'audit d'octobre 2026 (il était à .38 :
+                    // une ligne voilée passait pour désactivée à l'arrêt).
+                    exige(etat.voileBas < 0.7, `${nom}, une ligne pas encore atteinte n’est pas voilée (${etat.voileBas})`);
                     exige(etat.ecartPointe < 12, `${nom}, la pointe du fil est à ${Math.round(etat.ecartPointe)} px de la ligne de lecture`);
                 }
                 exige(!etat.horloge, 'la guirlande à horloge est revenue');
@@ -2251,10 +2274,18 @@ function exige(condition, message) {
                     const t = getComputedStyle(li, '::before').transform;
                     return { voile: +getComputedStyle(li.querySelector('.cv-row-toggle')).opacity, point: t === 'none' ? 1 : +(t.match(/matrix\(([-\d.e]+)/) || [0, NaN])[1] };
                 });
-                await p.locator('#cv-theatre-list > li.cv-has-universe').nth(5).locator('.cv-vignette').hover();
+                // Au téléphone, la barre d'onglets flotte en bas de l'écran :
+                // le milieu de la vignette, si bas, est sous elle — le survol
+                // de Playwright ferait alors défiler la page pour l'atteindre,
+                // et la ligne passerait la ligne de lecture. Le pointeur va
+                // donc droit sur le haut de la vignette, qui dépasse au-dessus
+                // de la barre, sans rien faire défiler.
+                const vignette = await p.locator('#cv-theatre-list > li.cv-has-universe').nth(5).locator('.cv-vignette').boundingBox();
+                await p.mouse.move(vignette.x + vignette.width / 2, vignette.y + (options.isMobile ? 4 : vignette.height / 2));
                 await p.waitForTimeout(250);
                 const survol = await lire();
-                if (options.isMobile) exige(survol.voile < 0.5, `${appareil}, une ligne touchée avant le fil s’allume (${survol.voile})`);
+                // Voilée à .62 depuis l'audit d'octobre 2026 : pleine, elle serait à 1.
+                if (options.isMobile) exige(survol.voile < 0.7, `${appareil}, une ligne touchée avant le fil s’allume (${survol.voile})`);
                 else exige(survol.voile > 0.99, `${appareil}, la ligne pointée reste voilée (${survol.voile})`);
                 exige(survol.point === 0, `${appareil}, le point d’une ligne désignée éclôt avant le fil (× ${survol.point})`);
                 // Au clavier : depuis la ligne d'après, Maj+Tab.
