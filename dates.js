@@ -36,7 +36,7 @@ const SHOW_DATA = {
   // -------------------------------------------------------------
   upcoming: [
     // ⇊ GÉNÉRÉ — build/exporter-dates.js recopie ici la table Supabase. Ne pas éditer à la main. ⇊
-    // Dernier export : 21 septembre 2026 à 17:42 — 24 soirée(s), 14 entrée(s).
+    // Dernier export : 4 octobre 2026 à 15:51 — 25 soirée(s), 15 entrée(s).
     // ── 22 - 23 oct. 2026 : À la barre, peine perdue ? (Rouen) [Série] ──
     {
       type: "series",
