@@ -31,15 +31,33 @@ dans Supabase, puis on régénère `dates.js`.
 
 ### Accès en écriture
 
-La clé est dans la variable d'environnement `SUPABASE_SECRET_KEY` (une clé
-`sb_secret_…` réglée dans l'environnement cloud).
+La clé d'écriture est une clé `sb_secret_…` du projet Supabase. Elle peut être
+réglée de deux façons dans l'environnement cloud :
 
-- Ne l'affiche jamais, ne l'écris dans aucun fichier, aucun commit, aucun
-  message. Utilise-la seulement via `"$SUPABASE_SECRET_KEY"` dans les commandes.
-- Si la variable est vide, dis-le à Adrien : il peut faire la modification
-  lui-même dans https://adrienvada.fr/admin/, ou ajouter la clé dans les
-  réglages de l'environnement (menu de l'environnement cloud, *Edit*), puis
-  ouvrir une nouvelle session.
+- **En identifiant API** (*API credentials*, la façon recommandée) : le proxy de
+  l'environnement ajoute lui-même l'en-tête `apikey` aux requêtes vers
+  `omekkqjinvppadsoinvj.supabase.co`. La clé n'est jamais visible dans la
+  session ; n'envoie pas d'en-tête `apikey` toi-même.
+- **En variable d'environnement** `SUPABASE_SECRET_KEY` : il faut alors ajouter
+  l'en-tête `apikey` à chaque requête.
+
+Les commandes ci-dessous gèrent les deux cas avec `"${CLE[@]}"`. Commence par
+vérifier que l'accès est là :
+
+```bash
+URL=https://omekkqjinvppadsoinvj.supabase.co/rest/v1/representations
+CLE=(); [ -n "$SUPABASE_SECRET_KEY" ] && CLE=(-H "apikey: $SUPABASE_SECRET_KEY")
+curl -sS -o /dev/null -w '%{http_code}\n' "$URL?select=id&limit=1" "${CLE[@]}"
+# 200 : accès en écriture. 401 : aucune clé n'est réglée.
+```
+
+- Si la réponse est `401`, n'écris rien. Dis à Adrien qu'il peut faire la
+  modification lui-même dans https://adrienvada.fr/admin/, ou régler la clé
+  dans l'environnement (sélecteur d'environnement de la zone de saisie d'une
+  nouvelle session, roue dentée, *API credentials*), puis ouvrir une nouvelle
+  session.
+- N'affiche jamais la clé, ne l'écris dans aucun fichier, aucun commit, aucun
+  message.
 - Cette clé donne tous les droits sur le projet Supabase. Ne touche qu'à la
   table `representations`, et seulement aux lignes concernées par la demande.
 
@@ -78,8 +96,7 @@ confirmer » et « réservations pas encore ouvertes ».
 l'écriture d'un lieu déjà utilisé :
 
 ```bash
-URL=https://omekkqjinvppadsoinvj.supabase.co/rest/v1/representations
-curl -sS "$URL?select=*&order=jour.asc,heure.asc,id.asc" -H "apikey: $SUPABASE_SECRET_KEY"
+curl -sS "$URL?select=*&order=jour.asc,heure.asc,id.asc" "${CLE[@]}"
 ```
 
 **3. Montrer à Adrien la ou les lignes**, dans un petit tableau lisible, et
@@ -87,23 +104,23 @@ curl -sS "$URL?select=*&order=jour.asc,heure.asc,id.asc" -H "apikey: $SUPABASE_S
 ce qu'on y écrit est en ligne aussitôt, avant toute PR. Seule exception : Adrien
 a dit explicitement de ne pas lui demander.
 
-**4. Écrire.** Seulement l'en-tête `apikey`. N'ajoute pas
-`Authorization: Bearer` avec cette clé : ce n'est pas un jeton JWT.
+**4. Écrire.** N'ajoute pas `Authorization: Bearer` avec cette clé : ce n'est
+pas un jeton JWT.
 
 ```bash
 # Ajouter (une ou plusieurs lignes)
-curl -sS -X POST "$URL" -H "apikey: $SUPABASE_SECRET_KEY" \
+curl -sS -X POST "$URL" "${CLE[@]}" \
   -H "Content-Type: application/json" -H "Prefer: return=representation" \
   -d '[{"spectacle":"Bérénice","lieu":"Le Forum, Falaise (14)","ville":"Falaise",
         "jour":"2027-03-05","heure":"20h30","reservation_url":"","scolaire":false}]'
 
 # Modifier une ligne (par son id)
-curl -sS -X PATCH "$URL?id=eq.28" -H "apikey: $SUPABASE_SECRET_KEY" \
+curl -sS -X PATCH "$URL?id=eq.28" "${CLE[@]}" \
   -H "Content-Type: application/json" -H "Prefer: return=representation" \
   -d '{"lieu":"Collège Charles Gounod, Canteleu (76)"}'
 
 # Supprimer une ligne (par son id, jamais sans filtre)
-curl -sS -X DELETE "$URL?id=eq.28" -H "apikey: $SUPABASE_SECRET_KEY" \
+curl -sS -X DELETE "$URL?id=eq.28" "${CLE[@]}" \
   -H "Prefer: return=representation"
 ```
 
