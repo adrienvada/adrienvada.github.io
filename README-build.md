@@ -1231,46 +1231,143 @@ lit en direct.
 
 ### Depuis le téléphone : `/admin/`
 
-1. Ouvrir `/admin/` et entrer par **mot de passe**. La première fois, ou
-   s'il est oublié : « Recevoir un lien de connexion par mail », puis, une
-   fois entré, « Mot de passe » en haut de la page pour le définir. Le lien
-   mail est limité par Supabase à quelques envois par heure sur le compte
-   gratuit — c'est pour ça que le mot de passe existe. La session reste
-   ouverte sur l'appareil.
-2. La page montre les dates **comme sur l'accueil** — mêmes pastilles,
-   mêmes séries dépliables — avec, sur chaque soirée, trois gestes :
-   **Modifier**, **Dupliquer** (même spectacle, même lieu, le lendemain :
-   le geste d'une série), **Supprimer**. Le bouton doré ajoute une date ;
-   au pied d'une série, « Ajouter une soirée à cette série » fait de même
-   sans rien retaper. Chaque enregistrement est **immédiatement visible**
-   sur le site.
+1. Ouvrir `/admin/` et entrer par **mot de passe** (« Afficher » le montre
+   en clair, le temps de le relire). La première fois, ou s'il est oublié :
+   « Recevoir un lien de connexion par mail », puis, une fois entré,
+   « Mot de passe », **en bas de la page**, pour le définir. Le lien mail est
+   limité par Supabase à quelques envois par heure sur le compte gratuit —
+   c'est pour ça que le mot de passe existe. La session reste ouverte sur
+   l'appareil.
+2. **L'installer sur l'écran d'accueil** : sur l'iPhone, Partager → « Sur
+   l'écran d'accueil » ; sur Android, le menu → « Ajouter à l'écran
+   d'accueil ». L'admin a son propre manifeste (`admin/manifest.webmanifest` :
+   portée et ouverture sur `/admin/`, plein écran, fond `#0a0907`) et sa
+   propre icône — le portrait du site et la feuille d'éphéméride dorée des
+   dates —, sous le nom « Dates ». L'appli installée a son propre stockage :
+   on s'y connecte une fois, par mot de passe (un lien mail ouvert depuis
+   Gmail s'ouvrirait ailleurs).
+3. La page montre les dates **comme l'onglet Dates de l'accueil** — mêmes
+   mois, même frise, même feuille d'éphéméride, une puce par séance. **Toucher
+   une carte ou une puce ouvre sa soirée** (une série ouvre sa première
+   soirée, et la fiche montre les autres). « **+ soirée** », au bout d'une
+   rangée, prépare la soirée du lendemain (même spectacle, même lieu, même
+   heure). Le bouton doré ajoute une date ; « **Coller un mail** » aussi, à
+   partir du mail du théâtre (voir plus bas). Chaque enregistrement est
+   **immédiatement visible** sur le site.
 
 Une ligne = une soirée. Deux représentations le même jour, c'est deux
-lignes. Les soirées d'un même spectacle au même lieu, rapprochées, sont
-regroupées en « série » par le site lui-même — rien à saisir pour ça.
+lignes. Les soirées d'un même spectacle au même lieu, rapprochées (une
+semaine au plus entre deux), sont regroupées en « série » par le site
+lui-même — rien à saisir pour ça.
 
-Le **spectacle se choisit parmi des puces**, pas dans un champ libre : les
-spectacles du CV marqués « En tournée » puis « En création », puis ceux
-qui ont déjà des dates, puis « Autre… » pour un titre nouveau. La liste
-est lue dans `index.html` (les `data-cv-show` et leur badge) : une seule
-source, la même que l'accueil. C'est important, parce que le **titre doit
-être exactement celui du CV** — au caractère près, apostrophe comprise :
-c'est lui qui relie une date à sa ligne du CV et à sa page spectacle. La
-page corrige aussi la typographie (espace insécable avant `?`, `!`, `:`).
+#### Pensée pour le train
 
-La page est faite de `admin/index.html`, `admin/admin.css` (les jetons de
-thème y sont **recopiés** depuis le `:root` d'`index.html` — si l'accueil
-change une couleur, la recopier) et `admin/admin.js`. Elle emprunte ses
-classes Tailwind à `styles.css` : `admin/` est déclaré dans
-`tailwind.config.js`, donc **toute classe nouvelle dans admin/ demande de
-régénérer `styles.css`**, comme pour l'accueil. Pour juger de sa mise en
-page sans se connecter, sur la machine de développement seulement :
-`http://localhost:8749/admin/?apercu` (lecture seule, la base refuse
-d'écrire sans session).
+- **La dernière liste connue s'affiche tout de suite**, sans attendre le
+  réseau, en **lecture seule** le temps de la relire (« Mise à jour… · liste
+  de 21 h 14 ») ; toucher une soirée le dit au lieu de l'ouvrir. Sans liste
+  gardée, des lignes d'attente occupent la carte. Sans réseau, la liste
+  reste, marquée « **Hors ligne** · liste de … » ; ajouter reste possible.
+- **L'état de la liste**, sous « À venir » : « À jour · 21 h 14 », « Mise à
+  jour… », « Hors ligne ». Le toucher relit la table. Elle se relit aussi
+  d'elle-même **au retour sur la page** (plus de 20 s après la dernière
+  lecture) et **au retour du réseau** — Claude écrit aussi dans la table
+  (CLAUDE.md), un autre appareil aussi.
+- **Aucune requête n'attend plus de 15 secondes.** Au-delà, elle est
+  abandonnée et la page le dit, avec « Réessayer ». supabase-js relance de
+  lui-même une lecture qui échoue franchement (réseau coupé, base en 503 :
+  trois fois, après 1, 2 puis 4 s) ; un délai dépassé, lui, n'est pas relancé
+  (voir `fetchAvecDelai`).
+- **Les erreurs sont en français** et se lisent **dans le pied de la
+  fiche**, au-dessus d'« Enregistrer » : « Pas de réseau : rien n'est parti.
+  Ta saisie est gardée… », « La base n'a pas répondu en 15 secondes… », « La
+  base ne répond pas (elle est peut-être en pause)… ». Le champ en faute est
+  montré (la fiche défile jusqu'à lui) et désigné (`aria-invalid`).
+- **Le retour du réseau relance** un enregistrement resté en échec « pas de
+  réseau ». Un envoi parti dont la réponse s'est perdue (délai) n'est **pas
+  doublé** : avant de renvoyer, la page relit la table ; si la soirée y est
+  déjà, elle le dit — « Déjà enregistrée ».
+- Si la bibliothèque de connexion ne se charge pas, ou si le chargement
+  dépasse 10 secondes, un bandeau le dit, avec « **Recharger** ».
+
+#### La fiche
+
+- **Le spectacle se choisit parmi des puces**, pas dans un champ libre :
+  les spectacles du CV marqués « En tournée » puis « En création », puis
+  ceux qui ont déjà des dates, puis « Autre… » pour un titre nouveau. La
+  liste est lue dans `index.html` (les `data-cv-show` et leur badge) : une
+  seule source, la même que l'accueil. C'est important, parce que le
+  **titre doit être exactement celui du CV** — au caractère près,
+  apostrophe comprise : c'est lui qui relie une date à sa ligne du CV et à
+  sa page spectacle. La page corrige aussi la typographie (espace
+  insécable avant `?`, `!`, `:`). Une soirée existante ne montre que son
+  titre, et « changer de spectacle ».
+- **Un titre tapé dans « Autre… » se vérifie** pendant la frappe : presque
+  connu, la page propose le bon (« Tu veux dire « Cassandres » ? ») ; absent
+  du CV, elle le signale — la date n'aurait ni page spectacle ni lien depuis
+  le CV.
+- **Le lieu** (« Salle, Ville (dép.) ») se tape sans majuscule forcée à
+  chaque mot ; dès deux lettres, **tous les lieux déjà connus** qui
+  correspondent se proposent (un toucher remplit lieu et ville), et les
+  lieux déjà joués par ce spectacle sont en puces. **La ville se déduit du
+  lieu** (« Le Forum, Falaise (14) » → « Falaise »), en pointillé, tant
+  qu'on ne l'écrit pas soi-même.
+- **L'heure** : le cadran du téléphone, ou les puces des heures habituelles
+  (dans l'ordre de la journée : « matin » avant « 14h00 »), ou « Sans
+  heure ». Un jour déjà passé est accepté (la date ira dans les archives du
+  site), et signalé.
+- **Une série d'un coup** (« Autres jours », pour une soirée nouvelle) :
+  « + lendemain », « + 7 jours », ou un **calendrier** où l'on coche les
+  jours. Un récapitulatif dit ce qui partira (« 5 soirées en un envoi : …
+  — à 20h30 »), le bouton aussi (« Enregistrer les 5 soirées ») : **un seul
+  envoi** de N lignes, refusé en entier si l'une existe déjà (la page le dit
+  avant d'envoyer).
+- **Le lien de réservation** : « Tester » l'ouvre dans un autre onglet ;
+  une adresse incomplète est signalée dès la frappe (voir plus bas).
+- **L'aperçu** montre la ligne telle que le site l'affichera, avec la série
+  dont elle fait partie, les nouvelles séances soulignées.
+- **La touche Entrée passe au champ suivant** ; sur le dernier, elle
+  referme le clavier. **Seul le bouton enregistre.**
+- **La fiche suit le clavier** : sur Android grâce à
+  `interactive-widget=resizes-content` (balise viewport), sur l'iPhone en se
+  calant sur `visualViewport` — « Enregistrer » reste au-dessus des touches.
+- Fermer une fiche modifiée (croix, « Annuler », voile, Échap, geste
+  « retour ») demande confirmation — par `requestClose()` quand le navigateur
+  le connaît, sinon à la main.
+
+**Coller un mail.** Le mail du théâtre, collé tel quel dans « Coller un
+mail » (sur la liste, ou en haut d'une fiche nouvelle). On y cherche : les
+dates en français (« mardi 2 février 2027 », « les 22 et 23 octobre », « du
+18 au 21 mai », « 18-21 mai », « 02/02/2027 » ; sans année, la prochaine
+occurrence ; les dates passées sont ignorées), les heures (« 20h30 »,
+« 20 h », « 14:15 », rattachées à la date qui les précède ; pas avant 7 h,
+« 1h30 » est une durée), le lien de billetterie (le premier qui en a l'air
+— billetterie, réservation, Weezevent, Mapado… —, sinon le premier lien
+https), le spectacle et le lieu parmi ceux déjà connus, et « scolaire » s'il
+n'y a pas aussi de séance publique. Ce qui est trouvé remplit les **champs
+vides**, **surligné en ambre « deviné »** jusqu'à ce qu'on y touche ;
+plusieurs dates font une série. Rien n'est enregistré sans « Enregistrer ».
+
+**Modifier une soirée.** La fiche la nomme (« jeu. 12 nov. 2026 · 20h00 ·
+Saint-Quentin ») et montre les autres soirées de sa série (un toucher pour
+passer de l'une à l'autre). **La base n'écrit que sur ce qu'on a lu** : la
+modification porte la date de dernière modification de la ligne
+(`modifie_le`) ; si la soirée a changé entre-temps (Claude, un autre
+appareil), rien n'est écrit et la page propose « Voir la version en ligne »
+ou « Écraser avec la mienne » ; si elle a été supprimée, « La recréer ».
+
+**Supprimer.** « Supprimer » est en haut de la fiche, loin
+d'« Enregistrer ». Plus de confirmation : la soirée disparaît de la liste,
+et un message propose **« Annuler » pendant 6 secondes**. La base n'est
+touchée qu'ensuite — le site garde la date jusque-là. **Si la page se cache
+avant** (téléphone rangé, autre appli, onglet fermé), **la suppression part
+aussitôt** : c'est ce qui a été demandé. Elle reste notée dans le
+navigateur jusqu'à la réponse de la base ; si l'envoi n'aboutit pas, elle
+s'affiche « en attente » et repart au retour du réseau, au retour sur la
+page, ou à la prochaine ouverture.
 
 Seule l'adresse **adrien.vada@gmail.com** peut écrire : c'est une règle de
 la base (`supabase/schema.sql`), pas de la page. Un autre compte, même
-connecté, est refusé.
+connecté, est refusé (il ne garde que « Se déconnecter »).
 
 **Le lien de réservation doit être une adresse web** (`https://…`, ou
 `www.…` que la page complète) : la page refuse le reste, et le site ne fait
@@ -1282,6 +1379,55 @@ SQL de Supabase (il échoue sans rien changer si une ligne existante ne s'y
 plie pas : la corriger d'abord). Dans le tableau de bord, *Authentication →
 Sign In / Providers* : désactiver « Allow new users to sign up » (seul le
 compte d'Adrien a lieu d'exister) et laisser « Confirm email » activé.
+
+#### Comment la page est faite
+
+- `admin/index.html`, `admin/admin.css` (les jetons de thème y sont
+  **recopiés** depuis le `:root` d'`index.html` — si l'accueil change une
+  couleur, la recopier), `admin/admin.js`. Elle emprunte ses classes
+  Tailwind à `styles.css` : `admin/` est déclaré dans `tailwind.config.js`,
+  donc **toute classe Tailwind nouvelle dans admin/ demande de régénérer
+  `styles.css`**, comme pour l'accueil. Les composants propres à l'admin
+  (`adm-…`) sont écrits dans `admin.css`, sans Tailwind.
+- **supabase-js est servi par le site** : `admin/vendor/supabase.min.js`,
+  version 2.116.0, chargé en `async` (la liste gardée s'affiche sans
+  l'attendre) et **scellé** par son empreinte (`integrity`, la même que
+  celle de la copie du CDN, octet pour octet). Si le fichier changeait, le
+  navigateur refuserait de l'exécuter, et le bandeau le dirait. Changer de
+  version : remplacer le fichier, puis recalculer l'empreinte —
+  `openssl dgst -sha384 -binary admin/vendor/supabase.min.js | openssl base64 -A`.
+- **Une seule lecture de la table.** `dates-live.js` lit la table pour
+  l'accueil dès son chargement ; ici, admin.js la lit de toute façon (avec
+  `modifie_le` et la session). La page le charge donc par son **chemin
+  « Node »** (un `module` défini le temps de son exécution) : il ne rend que
+  ses fonctions de calcul, comme pour `build/exporter-dates.js`. S'il ne le
+  faisait plus un jour, il se poserait lui-même dans `window.DatesLive` : la
+  page marcherait, avec une lecture de trop.
+- **Ce qui n'est pas chargé d'emblée.** `index.html` (184 Ko compressés, pour
+  la liste des spectacles du CV) n'est lu qu'**à la première ouverture d'une
+  fiche**, puis gardé un jour ; `univers.js` et `univers-montage.js` (les
+  couleurs et les photos des spectacles) viennent **après la liste**, et sont
+  gardés un jour. Première visite : environ 360 Ko compressés (contre 518) ;
+  les suivantes, sans eux.
+- **Ce que garde le navigateur** (`localStorage`, un confort, jamais une
+  condition) : `admin.liste` (la dernière liste lue), `admin.univers`,
+  `admin.spectaclesCV`, `admin.suppressions` (celles pas encore confirmées
+  par la base) — et la session de supabase-js. La liste et les suppressions
+  sont oubliées à la déconnexion, et la liste ne s'affiche que si une
+  session est gardée.
+- **Pas de service worker dans `/admin/`** : la vérification du site
+  l'interdit (le mot ne doit pas paraître dans `admin/index.html`, même en
+  commentaire). L'admin hors ligne, c'est la liste gardée, et les
+  suppressions et enregistrements qui repartent au retour du réseau.
+- Les icônes (`admin/icone-192.png`, `icone-512.png`,
+  `icone-masquable-512.png`, `apple-touch-icon.png`) sont dessinées avec
+  Pillow à partir de `favicon_io/android-chrome-512x512.png` : le portrait, et
+  la feuille d'éphéméride des dates (or du site, coche « à venir ») en bas à
+  droite ; la version masquable tient dans la zone sûre. Pour les refaire
+  (un autre portrait) : `python3 build/fabriquer-icones-admin.py`.
+- Pour juger de la mise en page sans se connecter, sur la machine de
+  développement seulement : `http://localhost:8749/admin/?apercu` (la base
+  refuse d'écrire sans session).
 
 ### Sur l'ordinateur, avant un commit : `exporter-dates.js`
 
