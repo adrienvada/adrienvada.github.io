@@ -1008,8 +1008,9 @@ const UniversMontage = (function () {
     //  le montage, la bande-annonce s'il y en a une, les dates (ou le film),
     //  la distribution. Leurs débuts sont marqués sur la barre ; une
     //  pastille, en bas de l'écran, dit le chapitre en cours et s'ouvre sur
-    //  la liste, qu'on touche pour y sauter (voir brancherChapitres, dans
-    //  univers.js, qui trouve chaque chapitre par sa cible).
+    //  la liste, qu'on touche pour y sauter (voir mesurerChapitres et
+    //  suivreChapitre, dans univers.js, qui trouvent chaque chapitre par sa
+    //  cible).
     function chapitresDe(uni, isFilm) {
         const avecVideo = (uni.sequence || []).some(b => b && b.video && videoRef(uni, b.video));
         return [

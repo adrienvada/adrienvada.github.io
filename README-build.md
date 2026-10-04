@@ -298,6 +298,19 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   ni l'autre ; le portrait en AVIF (960 px au téléphone) ; les vignettes du
   CV en 144 × 192 recadrées, celles des Dates (par date, par spectacle) aussi,
   et la couverture de 240 px ne part plus avec l'accueil.
+- l'accueil d'après l'expertise d'octobre 2026 : au téléphone, la barre
+  d'onglets est fixée en bas de l'écran, dit « CV · Dates · Caméra · Voix »,
+  chaque onglet fait au moins 44 px de haut ; sur grand écran, elle est en
+  haut ; « Copier » met l'adresse dans le presse-papiers et l'annonce
+  (« Copiée ») ; la fiche contact se télécharge et se lit (`BEGIN:VCARD`…) ;
+  aucun texte visible sous onze pixels, sur le CV ni sur les Dates ;
+- les univers d'après l'expertise : le premier écran de Bérénice nomme le
+  spectacle et sa ligne de salle ; la pastille des chapitres est là, avec un
+  repère sur la barre de progression par début de chapitre ; « Dates » y
+  mène au pied ; l'agenda d'une série demande la séance ; le pied de
+  Bérénice mène au spectacle suivant du CV ; une page spectacle ouverte
+  depuis un moteur de recherche pose son haut de page, bouton des dates
+  visible ; « Cléophène » laisse au moins 16 px au bord à 360 px.
 
 Pour ne passer que quelques vérifications — celles dont le nom contient un
 mot : `SEUL=planche npm --prefix build run verifier`.
@@ -906,6 +919,11 @@ lever de rideau, le plus long écart entre deux images tombe de 540-590 ms à
 
 ### La sortie : l'iris, et le nom qui rejoint l'en-tête
 
+**« Passer » s'efface quand le sceau paraît** : le sceau dit « Entrer », et
+deux boutons pour le même geste se disputaient l'œil. Le sceau devient le
+bouton de la scène (le focus le suit s'il était sur « Passer », qui sort de
+l'ordre de tabulation et de l'arbre d'accessibilité : `intro-skip-efface`).
+
 Au clic sur le sceau (ou sur « Passer »), le rideau **s'ouvre en iris depuis
 le sceau**, et « Adrien Vada » quitte le centre de la scène pour aller se poser
 à sa place dans l'en-tête (`ouvrirEnIris`, dans `intro.js`) : une View
@@ -1076,6 +1094,32 @@ Il n'y en a qu'un, **sous la prochaine date**, sur téléphone comme
 sur ordinateur : on lit d'abord où Adrien joue, puis on emporte le CV (il
 était auparavant dans la barre d'onglets sur ordinateur, et au-dessus du
 carton sur téléphone).
+
+**À côté, « Partager »** (`#pdf-share-btn`, script `partagerLeCv`), là où le
+navigateur sait partager un *fichier* (téléphones, Safari, Edge) — ailleurs,
+il reste caché : partager l'adresse, un copier-coller le fait déjà. Le CV
+part alors en pièce jointe dans WhatsApp, Mail ou Messages, nommé
+`CV-Adrien-Vada.pdf`, avec une phrase et l'adresse du site. Safari n'ouvre la
+feuille de partage qu'au moment même du toucher : le PDF est demandé dès
+que le doigt se pose (`pointerdown`) ; s'il n'est pas encore arrivé, le
+bouton dit « Toucher encore », et le toucher suivant partage aussitôt. Sans
+réseau ou sans partage, le PDF s'ouvre, comme « Télécharger le CV ». Les
+deux boutons ont le même dessin : un contour d'or, plus de bloc plein qui
+passait devant la prochaine date.
+
+### Le contact : copier l'adresse, emporter la fiche
+
+L'adresse de l'en-tête et du pied s'écrit en minuscules (les capitales se
+lisaient mal et se recopiaient mal). À côté, **« Copier »**
+(`[data-copier]`, script « COPIER UNE ADRESSE ») : sur un ordinateur sans
+logiciel de mail, `mailto:` n'ouvrait rien. Le presse-papiers reçoit
+l'adresse, le bouton dit « Copiée » deux secondes, et une zone `role="status"`
+(`#annonce-copie`) l'annonce aux lecteurs d'écran ; à défaut d'API
+presse-papiers, une copie à l'ancienne (`execCommand`). Dans l'en-tête, une
+**fiche contact** (`/ressources/adrien-vada.vcf` : nom, métier, adresse,
+site, portrait) s'ajoute aux contacts d'un toucher. Elle est fabriquée par
+`python3 build/fabriquer-vcard.py` : à refaire si le portrait ou l'adresse
+change. Sur papier, ni « Copier » ni la fiche.
 
 ```bash
 node build/generer-cv-pdf.js
@@ -1280,6 +1324,13 @@ Une ligne = une soirée. Deux représentations le même jour, c'est deux
 lignes. Les soirées d'un même spectacle au même lieu, rapprochées (une
 semaine au plus entre deux), sont regroupées en « série » par le site
 lui-même — rien à saisir pour ça.
+
+Les séances d'un même jour se rangent **dans l'ordre de la journée**
+(`cleHeure`, dans `dates-live.js`, partagée par l'accueil, l'admin et
+l'export de `dates.js`) : « 9h30 » avant « 14h00 », « matin » avant
+« après-midi ». Le tri du texte rangeait par ordre alphabétique, et la
+séance de l'après-midi passait avant celle du matin (Cherbourg, le 15 avril
+2027). Une séance sans heure vient en dernier.
 
 #### Pensée pour le train
 
@@ -1713,10 +1764,38 @@ elle manque, la page se rabat sur la version de 640 px.
 
 ---
 
-## La barre d'onglets reste en haut (mobile et desktop)
+## La barre d'onglets — en bas au téléphone, en haut sur grand écran
 
-Quelle que soit la taille de l'écran, la barre se colle en haut au moment où
-elle allait sortir de l'écran. En haut de page, elle garde exactement son
+**Au téléphone (sous 768 px), la barre flotte en bas de l'écran**, dans la
+zone du pouce. En haut de page, elle commençait à 789–859 px du haut selon
+le téléphone : sous le bord de l'écran à l'arrivée, si bien que rien ne
+disait qu'il existait une bande démo et des démos voix — ce qu'un directeur
+de casting cherche souvent en premier. Les quatre destinations sont
+désormais visibles avant tout défilement, à un toucher, en un mot court
+sous une icône (CV · Dates · Caméra · Voix : `.onglet-court`, les libellés
+longs `.onglet-long` restant au grand écran). Elle flotte à 8 px des bords
+et au-dessus de la barre d'accueil de l'iPhone (`env(safe-area-inset-bottom)`,
+lisible grâce à `viewport-fit=cover` dans la balise `viewport`), 480 px au
+plus, centrée. Elle a toujours l'aspect « collée » (fond plein, ombre) :
+l'observateur de la sentinelle continue de basculer `.est-collee`, dont le
+cadrage d'un changement d'onglet se sert, sans que rien ne bouge. La page
+garde sa fin visible : `#site` réserve la hauteur de la barre en bas, et
+`scroll-padding-bottom` arrête le défilement au clavier au-dessus d'elle.
+Le haut de page, lui, n'a plus de barre à éviter : `--scroll-haut` (la marge
+que gardent les ancres et `scrollIntoView`) y vaut 16 px, 84 px au grand
+écran. Le CSS est le bloc « AU TÉLÉPHONE, LA BARRE D'ONGLETS EST EN BAS »
+d'`index.html`.
+
+⚠️ **Ne rien cliquer sous la barre dans un test automatique.** Un clic de
+Playwright sur un élément caché par la barre fixe est refusé, réessayé, et
+Chromium sans écran peut alors cesser de produire des images — un passage
+(View Transition) reste figé. Les tests font d'abord défiler la cible au
+milieu de l'écran.
+
+**Sur grand écran, la barre se colle en haut** au moment où elle allait
+sortir de l'écran. Collée, un voile du fond de page (`#nav-barre::before`,
+la même lumière que le `<body>`, fixe) efface les moitiés de lettres qui
+passaient au-dessus d'elle, dans la marge laissée en haut. En haut de page, elle garde exactement son
 aspect habituel ; collée, elle prend un fond opaque et une ombre
 (`#nav-barre.est-collee`). **Opaque, et sans flou** : elle a été presque
 opaque (98,5 %) sur un flou de 16 px, recalculé à chaque image puisque le
@@ -1895,6 +1974,20 @@ La mise en page, à l'écran (`LA LIGNE À VIGNETTE`, dans `index.html`) :
 - **la colonne de droite** — la flèche, la pastille ▶ dessous — a la même
   largeur sur toutes les lignes (44 px, celle de la pastille), pour que le
   texte s'arrête partout au même endroit.
+
+**Au téléphone (sous 768 px), rien ne se coupe.** Les points de suspension y
+mangeaient les rôles et les compagnies (« Compagnie du P’tit B… ») sur la
+moitié des lignes : un directeur de casting ne lisait pas avec qui l'on a
+joué. Le titre, le rôle et la compagnie passent donc à la ligne, et la
+ligne prend la hauteur qu'il faut (la vignette n'en fixe plus que le
+minimum ; le contrôle automatique vérifie qu'aucun texte n'est coupé, et
+ne tient la hauteur commune qu'au grand écran). Pour la place :
+« Compagnie » s'écrit « Cie » (`.cv-cie` : le mot reste dans le texte, à
+corps nul, et l'abréviation est dessinée par-dessus, muette pour un lecteur
+d'écran), et **la bande-annonce passe sur la vignette** — un bouton de
+lecture rond, cerclé de la couleur du spectacle, au milieu de la photo,
+avec une cible de 44 px (`.cv-trailer-place--vignette`, la réserve posée
+par `univers.js`) ; la colonne de droite ne garde que la flèche.
 
 Les **formations** n'ont pas d'illustration : leur année prend seule la
 colonne de la vignette, par le CSS seul (`.cv-formation`, pas de script). Une
@@ -2125,6 +2218,52 @@ l'efface.
 panneau. Les photos de Cléophène sont d'Arnaud Bertereau — le crédit est déjà
 en place ; le renseigner pour toute série qui en demande un.
 
+### Le premier écran, les chapitres, la suite
+
+Ajoutés par l'expertise d'octobre 2026, dans `univers-montage.js` (donc
+partout : panneau de l'accueil et pages spectacle).
+
+- **Le premier écran nomme le spectacle.** Trois secondes après le toucher,
+  il ne montrait qu'une petite photo au loin et « Avancer ». Le titre y est
+  désormais en filigrane, au fond de la scène (`.u-of-repere`), et la ligne
+  de la feuille de salle (« 2022 · Tragédie · En tournée »,
+  `.u-of-invite-sur`) au-dessus d'« Avancer ». Le filigrane s'efface quand
+  le vrai titre quitte le fond du plateau (`--of-repere`, réglé dans
+  `tempoOuverture`), la ligne avec l'invitation. Les deux sont décoratifs
+  pour un lecteur d'écran, qui lit le titre plus loin, et absents du repli
+  sans JavaScript (`univers-statique.css`). Le titre en filigrane et le vrai
+  partagent la même formule de taille (`.u-title, .u-of-repere-titre` :
+  0,66 chasse par signe), qui fait aussi tenir « Cléophène » à 360 px.
+- **Qui arrive d'un moteur de recherche voit le haut de page complet.** Une
+  page spectacle ouverte depuis un autre site (référent d'une autre
+  origine, première navigation : pas un rechargement ni un retour) se pose
+  au point de la scène où tout est écrit — titre, ligne de salle, synopsis,
+  rôle, « Accéder aux dates » — comme en mouvement réduit
+  (`arriveDunAutreSite`, `poserLeHautDePage`, classe `u-arrivee-directe`).
+  Le travelling reste au-dessus. Depuis le site lui-même, un signet ou une
+  adresse tapée, rien ne change.
+- **Les chapitres.** Un univers fait une vingtaine d'écrans au téléphone
+  (17 000 px pour Bérénice). Il se lit en chapitres (`chapitresDe` :
+  Ouverture, Le spectacle — Images pour un film —, Bande-annonce s'il y en
+  a une, Dates — Le film —, Distribution s'il y en a une) : leurs débuts
+  sont marqués sur la barre de progression (`.u-progress-repere`), et une
+  pastille en bas de l'écran (`.u-chapitres`) dit le chapitre en cours et
+  s'ouvre sur la liste, qu'on touche pour y sauter (`mesurerChapitres`,
+  `suivreChapitre`, `allerAuChapitre` dans `univers.js` ; Échap la referme).
+  Événement de mesure : `univers_chapitre`.
+- **La suite.** Le pied finit sur « Spectacle suivant » (« Film suivant »),
+  dans l'ordre des lignes du CV : un vrai lien vers sa page
+  (`suivantHtml`), qui se lit sans JavaScript ; après le dernier, « Tout le
+  répertoire ». L'accueil lit l'ordre dans le CV (`suivantDe`), le
+  générateur aussi (`ordreCv`, `suivantDe`). Événement : `univers_suivant`.
+- **Les dates au dessin de l'onglet Dates.** Le pied prend la ligne de
+  l'onglet Dates : une série sur une ligne (`li.u-dl`), l'éphéméride, la
+  ville et la salle, une puce par séance, et un agenda qui demande la
+  séance quand une série en a plusieurs (`.u-cal-modal-seances`).
+- **Les légendes** des photos deviennent une ligne de programme, en
+  italique, sans pastille (`.u-cap span`) ; sur une photo plein cadre, un
+  dégradé les pose.
+
 ### Fluidité — ce qui a été fait, et pourquoi ne pas le défaire
 
 - Le titre s'affiche **immédiatement** ; les photos n'apparaissent qu'une fois
@@ -2182,7 +2321,7 @@ en place ; le renseigner pour toute série qui en demande un.
   carte graphique, où l'écart sera moindre ; au téléphone à ×4, 1,57 → 0,31 s
   de compositeur. Sur les Dates, avec le reste de ce lot : 36 % → 0 sur
   ordinateur, 1,2 → 0,17 s de compositeur au téléphone. La barre
-  collée n'a plus le sien (voir [La barre d'onglets](#la-barre-donglets-reste-en-haut-mobile-et-desktop)) ;
+  collée n'a plus le sien (voir [La barre d'onglets](#la-barre-donglets--en-bas-au-téléphone-en-haut-sur-grand-écran)) ;
   seules les fenêtres posées sur une page immobile gardent le leur —
   l'agenda de l'accueil, celui d'un univers ; la carte du lecteur vidéo,
   noire et opaque, n'en montrait rien (12/255 au plus, sur 0,05 % des
@@ -2944,6 +3083,11 @@ s'arrête.
   « Bérénice, Compagnie Crescite — avec Adrien Vada (Antiochus). Rome, an
   79… », coupée à 155 signes sur un mot entier (voir `titreDe` et
   `descriptionDe` dans le générateur).
+- **L'écran d'accueil** : le manifeste (`favicon_io/site.webmanifest`) porte
+  le nom complet, la langue, les couleurs du site (le noir de la salle, et
+  non plus du blanc : l'écran de lancement d'Android était blanc), les
+  icônes et trois raccourcis — un appui long sur l'icône mène aux Dates, à
+  la bande démo ou aux démos voix (`/?direct#…`, sans rideau d'ouverture).
 - `sitemap.xml` **n'est plus écrit à la main** : il est régénéré par le script
   des pages spectacle (ci-dessous). Chaque `<lastmod>` est le **jour où la page
   a réellement changé** — la date de son dernier commit si elle ressort
@@ -3376,7 +3520,18 @@ galerie et l'administration. À garder en tête en modifiant le site :
   tout, et chaque scène a alors un état fixe qui a du sens.
 - **Pas de texte sous 11 px**, pas de cible sous 24 px (la piste des démos
   voix et les icônes du pied de page ont une zone de clic agrandie sans
-  changer d'aspect).
+  changer d'aspect). L'expertise d'octobre 2026 avait retrouvé des textes
+  de 8 à 10,5 px — l'état et l'année des vignettes, les éphémérides et
+  leurs bandeaux, la prochaine date, les libellés de la fiche de casting,
+  la bobine, le nom des cartes du répertoire : tous à 11 px. Pour tenir à
+  cette taille, les jours d'une série perdent leur point (« jeu.–ven. » →
+  « jeu–ven », `DL_JOURS_BREFS`, aussi dans l'admin), et la colonne des
+  libellés du profil s'élargit au téléphone (8 em). Le contrôle
+  automatique relève tout texte visible sous 11 px sur le CV et les Dates.
+  Au téléphone, les onglets, les boutons de l'en-tête et les puces de
+  séance ont 44 px de cible.
+- **Le champ de recherche des Dates est en 16 px** : en dessous, Safari
+  agrandit la page quand on le touche, et ne la rend pas.
 - **Le pincement appartient au navigateur** : il agrandit la page. La densité
   du répertoire et de la galerie se règle aux boutons − et +.
 - **Un lien qui ouvre un onglet le dit** (« nouvel onglet », en texte masqué).
@@ -3605,6 +3760,9 @@ plafond (plafonnées à 2, les barres bavaient à DPR 3). La barre garde son rô
 de curseur, son clic, ses flèches et le repli sans en-têtes Range. Sans
 script, la piste d'avant.
 
+Au repos, la barre ne dit que la durée (« 0:39 ») : « 0:00 / 0:39 »
+n'apprenait rien. La position ne paraît qu'une fois la démo lancée.
+
 ## Démos voix — poids des fichiers
 
 Les studios livrent des masters : 320 kbps, stéréo, 48 kHz. C'est ce qu'il faut
@@ -3742,13 +3900,17 @@ Deux façons de relever un geste :
 (jalons 25 / 50 / 75 / 100 %, une seule fois par démo et par visite),
 `dates_vue` (rangement choisi dans l'onglet Dates : `date` ou `spectacle`),
 `date_spectacle` (la page d'un spectacle ouverte depuis l'onglet Dates : son
-nom).
+nom), `univers_chapitre` (un chapitre choisi dans la pastille d'un univers :
+le spectacle et le chapitre), `univers_suivant` (« Spectacle suivant » au
+pied d'un univers : le titre du suivant).
 
 Ce qu'on a **fait** — les gestes qui sortent du site, et les seuls qui disent
 qu'un directeur de casting a fini de regarder :
 
 `contact_mail` (`en-tête` ou `pied` — l'e-mail figure deux fois, et l'on veut
-savoir lequel travaille), `cv_pdf` (`bureau` ou `mobile` : un seul lien,
+savoir lequel travaille), `contact_copie` (« Copier » l'adresse : `en-tête`
+ou `pied`), `contact_vcard` (la fiche contact téléchargée), `cv_partage`
+(« Partager » le CV en fichier, au téléphone), `cv_pdf` (`bureau` ou `mobile` : un seul lien,
 dont le détail suit la largeur de l'écran, 768 px), `fiche_pro`
 (`agences-artistiques`, `filmmakers`), `reseau` (`instagram`, `linkedin`,
 `spotify`), `demo_youtube`, `date_agenda`, `date_booking`, `banner_next_date`
