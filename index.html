@@ -7531,7 +7531,10 @@
                                 <span data-cle="Langues" class="text-luxury-textMain">FR · RU · EN</span>
                                 <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
-                                <span data-cle="Base">Rouen · Paris</span>
+                                <!-- « Paris » pour tout le monde ; « Paris ·
+                                     Rouen » pour qui consulte depuis la
+                                     Normandie (voir le script sous l'en-tête). -->
+                                <span data-cle="Base" id="signature-base">Paris</span>
                                 <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
                                 <span data-cle="Conduite">Permis A/B</span>
@@ -7662,6 +7665,47 @@
                 </a>
             </div>
         </header>
+        <script>
+            // ── LA BASE SELON D'OÙ L'ON REGARDE ──
+            //  Ailleurs qu'en Normandie, Adrien est « Paris » ; en Normandie,
+            //  « Paris · Rouen » — Paris d'abord, toujours. Le HTML porte
+            //  « Paris » : c'est ce que voient les moteurs, le PDF du CV, et
+            //  quiconque bloque la requête ou n'a pas de réponse à temps.
+            //
+            //  Le site est statique : la région ne peut venir que d'une
+            //  géolocalisation par IP, demandée au navigateur du visiteur
+            //  (geojs.io : gratuit, sans clé, CORS ouvert). Aucune
+            //  permission demandée, rien d'envoyé sur le visiteur sinon son
+            //  IP, que ce service voit de toute façon. Sa base de données
+            //  écrit « Normandy » ; on accepte aussi « Normandie » et les
+            //  anciennes Haute- et Basse-Normandie.
+            //
+            //  La réponse est gardée pour la session : un retour d'une page
+            //  spectacle n'interroge pas le service une seconde fois, et
+            //  « Paris · Rouen » s'affiche alors d'emblée, sans saut.
+            (function () {
+                const el = document.getElementById('signature-base');
+                if (!el) return;
+                const CLE = 'av.normandie';
+                const poser = (enNormandie) => { if (enNormandie) el.textContent = 'Paris · Rouen'; };
+                let connu = null;
+                try { connu = sessionStorage.getItem(CLE); } catch (e) { /* stockage indisponible */ }
+                if (connu !== null) return poser(connu === '1');
+                if (typeof fetch !== 'function') return;
+                const arret = typeof AbortController === 'function' ? new AbortController() : null;
+                const delai = arret && setTimeout(() => arret.abort(), 4000);
+                fetch('https://get.geojs.io/v1/ip/geo.json', arret ? { signal: arret.signal } : undefined)
+                    .then((r) => (r.ok ? r.json() : null))
+                    .then((geo) => {
+                        if (!geo) return;
+                        const enNormandie = geo.country_code === 'FR' && /norman/i.test(geo.region || '');
+                        try { sessionStorage.setItem(CLE, enNormandie ? '1' : '0'); } catch (e) { /* idem */ }
+                        poser(enNormandie);
+                    })
+                    .catch(() => { /* bloqué, hors ligne ou trop lent : « Paris » reste */ })
+                    .finally(() => clearTimeout(delai));
+            })();
+        </script>
                 <!-- ── LA PROCHAINE DATE ──
                      Au-dessus de la barre de navigation, mais visible sur le
                      CV seulement (`bio-collapse`, comme la bio et les liens
