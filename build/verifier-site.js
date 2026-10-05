@@ -1936,10 +1936,17 @@ function exige(condition, message) {
             // pose vers 1,5 s après le geste, comme avant le chantier. Au-delà
             // de cinq secondes, c'est un vrai défaut, et les exigences
             // ci-dessous disent lequel.
+            // ET QUE LE GLISSEMENT SOIT FINI : la pastille glisse sur un
+            // ressort (--ease-ressort), qui dépasse sa cible puis y revient.
+            // Mesurée au vol, elle passait par l'onglet pendant le dépassement
+            // — l'attente s'arrêtait là, et la mesure suivante la trouvait
+            // 4 px plus loin, en plein retour.
             await p.waitForFunction(() => {
                 const t = document.getElementById('tab-page_dates').getBoundingClientRect();
-                const pa = document.querySelector('.onglet-pastille').getBoundingClientRect();
+                const pastille = document.querySelector('.onglet-pastille');
+                const pa = pastille.getBoundingClientRect();
                 return document.querySelector('.page.active')?.id === 'page_dates'
+                    && !pastille.getAnimations().some((a) => a.playState === 'running')
                     && Math.abs(t.left - pa.left) + Math.abs(t.width - pa.width) < 2;
             }, null, { timeout: 5000 }).catch(() => { /* voir les exigences */ });
             const onglet = await p.evaluate(() => {
@@ -4125,6 +4132,52 @@ function exige(condition, message) {
             await p.mouse.up();
             await p.waitForTimeout(500);
             exige(await p.evaluate(() => document.getElementById('u-cal-modal').hidden), 'tirée vers le bas, la feuille d’agenda d’un univers ne se referme pas');
+            exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
+            await c.close();
+        });
+
+        // ── LE THÈME À TROIS POSITIONS ──
+        //  Auto (rien en mémoire : le site suit l'appareil, en direct),
+        //  Clair, Sombre (retenus, comme la bascule de la barre). Le groupe
+        //  dit la position courante, les flèches en changent.
+        await verifie('le thème à trois positions : Auto suit l’appareil, même quand il change, Clair et Sombre sont retenus, la bascule de la barre aussi ; le groupe dit la position, les flèches en changent', async () => {
+            const c = await navigateur.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, colorScheme: 'dark' });
+            await c.route((u) => !u.href.startsWith(base), (route) => route.abort());
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/?direct', { waitUntil: 'load' });
+            await p.waitForTimeout(600);
+            const etat = () => p.evaluate(() => ({
+                theme: document.documentElement.dataset.theme, memoire: localStorage.getItem('avTheme'),
+                coche: [...document.querySelectorAll('[data-theme-choix][aria-checked="true"]')].map((b) => b.dataset.themeChoix).join(',')
+            }));
+            const depart = await etat();
+            exige(depart.theme === 'dark' && depart.memoire === null && depart.coche === 'auto', `au départ : ${JSON.stringify(depart)}`);
+            await p.evaluate(() => document.querySelector('.theme-choix').scrollIntoView({ block: 'center' }));
+            await p.tap('[data-theme-choix="light"]');
+            await p.waitForTimeout(900);
+            const clair = await etat();
+            exige(clair.theme === 'light' && clair.memoire === 'light' && clair.coche === 'light', `« Clair » : ${JSON.stringify(clair)}`);
+            await p.tap('[data-theme-choix="auto"]');
+            await p.waitForTimeout(900);
+            const auto = await etat();
+            exige(auto.theme === 'dark' && auto.memoire === null && auto.coche === 'auto', `« Auto » : ${JSON.stringify(auto)}`);
+            await p.emulateMedia({ colorScheme: 'light' });
+            await p.waitForTimeout(300);
+            const suit = await etat();
+            exige(suit.theme === 'light' && suit.coche === 'auto', `en « Auto », le site ne suit pas l’appareil : ${JSON.stringify(suit)}`);
+            await p.tap('#nav-barre [data-theme-toggle]');
+            await p.waitForTimeout(900);
+            const barre = await etat();
+            exige(barre.theme === 'dark' && barre.memoire === 'dark' && barre.coche === 'dark', `la bascule de la barre : ${JSON.stringify(barre)}`);
+            await p.focus('[data-theme-choix][aria-checked="true"]');
+            await p.keyboard.press('ArrowLeft');
+            await p.waitForTimeout(900);
+            const fleche = await etat();
+            const focus = await p.evaluate(() => document.activeElement?.dataset.themeChoix);
+            exige(fleche.coche === 'light' && fleche.theme === 'light' && focus === 'light', `la flèche : ${JSON.stringify(fleche)}, focus ${focus}`);
+            const tab = await p.evaluate(() => [...document.querySelectorAll('[data-theme-choix]')].filter((b) => b.tabIndex === 0).length);
+            exige(tab === 1, `${tab} position(s) atteignables par Tab au lieu d’une`);
             exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
             await c.close();
         });

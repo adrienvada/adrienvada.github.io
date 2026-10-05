@@ -2607,6 +2607,54 @@
             }
         }
 
+        /* LE THÈME À TROIS POSITIONS, au pied de page : trois pastilles
+           dans une gélule, celle qui est choisie posée en relief. */
+        .theme-choix {
+            display: inline-flex;
+            gap: 2px;
+            padding: 2px;
+            border: 1px solid rgb(var(--c-s200));
+            border-radius: 999px;
+            background: rgb(var(--c-s100));
+        }
+
+        .theme-choix button {
+            display: grid;
+            place-items: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            color: rgb(var(--c-muted));
+            font-size: 12px;
+            transition: background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out);
+        }
+
+        .theme-choix button:hover {
+            color: rgb(var(--c-gold-ink));
+        }
+
+        .theme-choix button[aria-checked="true"] {
+            background: rgb(var(--c-surface));
+            color: rgb(var(--c-gold-ink));
+            box-shadow: 0 1px 3px rgb(0 0 0 / .25), inset 0 0 0 1px rgb(var(--c-gold) / .35);
+        }
+
+        /* La lune en bleu nuit, comme la bascule de la barre. */
+        .theme-choix [data-theme-choix="dark"][aria-checked="true"] {
+            color: rgb(79 70 229);
+        }
+
+        :root:not([data-theme="light"]) .theme-choix [data-theme-choix="dark"][aria-checked="true"] {
+            color: rgb(165 180 252);
+        }
+
+        @media (pointer: coarse) {
+            .theme-choix button {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
         /* Le code QR n'existe que sur papier (voir « LE CODE QR » dans
            @media print). */
         .cv-qr {
@@ -8081,7 +8129,7 @@
 <body class="bg-luxury-bg text-luxury-textMain font-inter min-h-screen relative">
 
     <!-- SPRITE-ICONES:DEBUT -->
-    <!-- Les 40 icônes du site, et rien d'autre. Généré par
+    <!-- Les 41 icônes du site, et rien d'autre. Généré par
          build/construire-sprite-icones.py — ne pas modifier à la main.
          Icônes FontAwesome Free, licence CC BY 4.0 (fontawesome.com).
          `aria-hidden` + `display:none` : ce bloc est une réserve de
@@ -8105,6 +8153,7 @@
         <symbol id="i-solid-chevron-left" viewBox="0 0 320 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/></symbol>
         <symbol id="i-solid-chevron-right" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></symbol>
         <symbol id="i-solid-chevron-up" viewBox="0 0 512 512"><path d="M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z"/></symbol>
+        <symbol id="i-solid-circle-half-stroke" viewBox="0 0 512 512"><path d="M448 256c0-106-86-192-192-192V448c106 0 192-86 192-192zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z"/></symbol>
         <symbol id="i-solid-circle-nodes" viewBox="0 0 512 512"><path d="M418.4 157.9c35.3-8.3 61.6-40 61.6-77.9c0-44.2-35.8-80-80-80c-43.4 0-78.7 34.5-80 77.5L136.2 151.1C121.7 136.8 101.9 128 80 128c-44.2 0-80 35.8-80 80s35.8 80 80 80c12.2 0 23.8-2.7 34.1-7.6L259.7 407.8c-2.4 7.6-3.7 15.8-3.7 24.2c0 44.2 35.8 80 80 80s80-35.8 80-80c0-27.7-14-52.1-35.4-66.4l37.8-207.7zM156.3 232.2c2.2-6.9 3.5-14.2 3.7-21.7l183.8-73.5c3.6 3.5 7.4 6.7 11.6 9.5L317.6 354.1c-5.5 1.3-10.8 3.1-15.8 5.5L156.3 232.2z"/></symbol>
         <symbol id="i-solid-clock-rotate-left" viewBox="0 0 512 512"><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></symbol>
         <symbol id="i-solid-compass" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm50.7-186.9L162.4 380.6c-19.4 7.5-38.5-11.6-31-31l55.5-144.3c3.3-8.5 9.9-15.1 18.4-18.4l144.3-55.5c19.4-7.5 38.5 11.6 31 31L325.1 306.7c-3.2 8.5-9.9 15.1-18.4 18.4zM288 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></symbol>
@@ -10595,15 +10644,37 @@
 
                     <li><span class="block w-px h-5 bg-stone-200 mx-0.5" aria-hidden="true"></span></li>
 
-                    <!-- Bascule clair / sombre : libellé et icône sont posés
-                         par le script (voir applyTheme) pour rester cohérents
-                         avec le thème réellement appliqué. -->
-                    <li><button type="button" data-theme-toggle
-                            class="w-7 h-7 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-luxury-textMuted hover:text-luxury-goldInk hover:border-luxury-gold transition-all duration-300">
-                            <svg class="ico text-[12px] text-amber-400" data-theme-toggle-icon aria-hidden="true">
-                                <use href="#i-solid-sun"></use>
-                            </svg>
-                        </button></li>
+                    <!-- LE THÈME A TROIS POSITIONS. La bascule (dans la barre
+                         d'onglets) ne connaît que clair et sombre, et dès
+                         qu'on la touchait, le site cessait de suivre le
+                         téléphone, qui passe en sombre le soir. Ici, on
+                         choisit : Auto (comme l'appareil, et le site le suit
+                         en direct), Clair ou Sombre. Un groupe de boutons
+                         radio : les flèches passent d'une position à
+                         l'autre, une seule s'atteint par Tab (voir
+                         « LE THÈME À TROIS POSITIONS » dans le script). -->
+                    <li>
+                        <div class="theme-choix" role="radiogroup" aria-label="Thème">
+                            <button type="button" role="radio" aria-checked="false" data-theme-choix="auto"
+                                title="Thème automatique, comme l’appareil">
+                                <svg class="ico" aria-hidden="true">
+                                    <use href="#i-solid-circle-half-stroke"></use>
+                                </svg><span class="sr-only">Automatique, comme l’appareil</span>
+                            </button>
+                            <button type="button" role="radio" aria-checked="false" data-theme-choix="light"
+                                title="Thème clair">
+                                <svg class="ico text-amber-500" aria-hidden="true">
+                                    <use href="#i-solid-sun"></use>
+                                </svg><span class="sr-only">Clair</span>
+                            </button>
+                            <button type="button" role="radio" aria-checked="false" data-theme-choix="dark"
+                                title="Thème sombre">
+                                <svg class="ico" aria-hidden="true">
+                                    <use href="#i-solid-moon"></use>
+                                </svg><span class="sr-only">Sombre</span>
+                            </button>
+                        </div>
+                    </li>
                 </ul>
             </div>
         </footer>
@@ -11036,6 +11107,8 @@
             // redessinées ici, dans le même rendu que le reste de la page (la
             // bascule en cercle photographie ce rendu-là).
             if (typeof redessinerOndes === 'function') redessinerOndes();
+            // Le choix du pied de page suit (Auto, Clair, Sombre).
+            majChoixTheme();
         }
 
         // Le cercle part du bouton pressé et grandit jusqu'au coin le plus
@@ -11053,10 +11126,12 @@
         // Son retrait recoûte un recalcul complet (130 ms à ×4) : il attend
         // que le fil principal soit libre, pour ne pas tomber sur un toucher.
         let passageTheme = 0;
-        function basculerTheme(theme, bouton) {
+        //  `retenir` : faux pour « Auto », qui suit l'appareil sans rien
+        //  poser en mémoire.
+        function basculerTheme(theme, bouton, retenir = true) {
             const html = document.documentElement;
             const calme = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (!document.startViewTransition || calme || !bouton) { applyTheme(theme, true); return; }
+            if (!document.startViewTransition || calme || !bouton) { applyTheme(theme, retenir); return; }
             const r = bouton.getBoundingClientRect();
             const x = r.left + r.width / 2, y = r.top + r.height / 2;
             const rayon = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
@@ -11064,7 +11139,7 @@
             const jeton = ++passageTheme;
             const passage = document.startViewTransition(() => {
                 html.classList.add('vt-theme');
-                applyTheme(theme, true);
+                applyTheme(theme, retenir);
             });
             passage.ready.then(() => {
                 html.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${rayon}px at ${x}px ${y}px)`] }, {
@@ -11081,8 +11156,59 @@
             }));
         }
 
+        // ── LE THÈME À TROIS POSITIONS ──
+        //  « Auto », c'est l'absence de choix en mémoire : toutes les pages
+        //  du site (répertoire, galerie, fiches, 404, admin) lisent la même
+        //  clé et suivent alors l'appareil. « Clair » et « Sombre » la
+        //  posent, comme la bascule de la barre.
+        function choixTheme() {
+            let s = null;
+            try { s = localStorage.getItem('avTheme'); } catch (e) { }
+            return s === 'light' || s === 'dark' ? s : 'auto';
+        }
+
+        function themeDeLAppareil() {
+            return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+
+        function majChoixTheme() {
+            const c = choixTheme();
+            document.querySelectorAll('[data-theme-choix]').forEach(b => {
+                const oui = b.dataset.themeChoix === c;
+                b.setAttribute('aria-checked', String(oui));
+                b.tabIndex = oui ? 0 : -1;
+            });
+        }
+
+        function choisirTheme(choix, bouton) {
+            const courant = document.documentElement.getAttribute('data-theme');
+            if (choix === 'auto') {
+                try { localStorage.removeItem('avTheme'); } catch (e) { }
+                const t = themeDeLAppareil();
+                if (t !== courant) basculerTheme(t, bouton, false);
+                else majChoixTheme();
+                return;
+            }
+            if (choix !== courant) basculerTheme(choix, bouton);
+            else applyTheme(choix, true);
+        }
+
         function initThemeToggle() {
             applyTheme(document.documentElement.getAttribute('data-theme') || 'dark', false);
+            document.querySelectorAll('[data-theme-choix]').forEach(btn => {
+                btn.addEventListener('click', () => choisirTheme(btn.dataset.themeChoix, btn));
+                // Les flèches passent d'une position à l'autre, et la
+                // choisissent (le comportement d'un groupe de boutons radio).
+                btn.addEventListener('keydown', (e) => {
+                    const sens = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+                    if (!sens) return;
+                    e.preventDefault();
+                    const tous = [...btn.parentElement.querySelectorAll('[data-theme-choix]')];
+                    const suivant = tous[(tous.indexOf(btn) + sens + tous.length) % tous.length];
+                    suivant.focus();
+                    choisirTheme(suivant.dataset.themeChoix, suivant);
+                });
+            });
             document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const now = document.documentElement.getAttribute('data-theme');

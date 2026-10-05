@@ -318,6 +318,11 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   ni l'autre ; le portrait en AVIF (960 px au téléphone) ; les vignettes du
   CV en 144 × 192 recadrées, celles des Dates (par date, par spectacle) aussi,
   et la couverture de 240 px ne part plus avec l'accueil.
+- le thème à trois positions : au départ, rien en mémoire et « Auto »
+  coché ; « Clair » est retenu ; « Auto » efface la mémoire et suit
+  l'appareil, même quand il change de réglage ; la bascule de la barre est
+  retenue et coche la bonne position ; les flèches changent de position et
+  y portent le focus ; une seule position s'atteint par Tab ;
 - l'accueil d'après l'expertise d'octobre 2026 : au téléphone, la barre
   d'onglets est fixée en bas de l'écran, dit « CV · Dates · Caméra · Voix »,
   chaque onglet fait au moins 44 px de haut ; sur grand écran, elle est en
@@ -700,8 +705,21 @@ définies dans `tailwind.config.js`.
 ## Thèmes sombre / clair
 
 Le site est **sombre par défaut**, dans le prolongement de l'ouverture à
-particules. Un bouton en pied de page bascule vers le thème clair ; le choix est
-mémorisé (`localStorage`, clé `avTheme`).
+particules, et **suit l'appareil** tant qu'on n'a rien choisi (un téléphone
+en clair le voit en clair, et le site change avec lui, en direct, quand il
+passe en sombre le soir). Deux commandes :
+
+- **la bascule de la barre d'onglets** (soleil / lune) : clair ↔ sombre, d'un
+  toucher ; le choix est retenu (`localStorage`, clé `avTheme`) ;
+- **le thème à trois positions, au pied de page** (`.theme-choix`, un groupe
+  de boutons radio : les flèches passent d'une position à l'autre) :
+  **Auto** — rien en mémoire, le site suit l'appareil —, **Clair**,
+  **Sombre**. Avant lui, toucher la bascule une fois faisait cesser pour
+  toujours de suivre l'appareil.
+
+Toutes les pages lisent la même clé — le répertoire, la galerie, les fiches,
+la 404, l'admin — et toutes traitent son absence comme « Auto » : il n'y a
+rien d'autre à faire pour qu'elles suivent.
 
 **Toutes les couleurs passent par des variables CSS** définies en haut du
 `<style>` de `index.html`, sous forme de triplets « R V B » (et non de `#hex`) —

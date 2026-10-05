@@ -227,7 +227,9 @@ def verifier_couverture(icones):
     poses = set()
     for p in RACINE.rglob('*'):
         if p.suffix.lower() not in {'.html', '.js'}: continue
-        if any(x in p.parts for x in ('.git', 'node_modules', 'spectacles')): continue
+        # `.claude` : les copies de travail des outils (worktrees), qui ne
+        # sont pas le site et peuvent porter des icônes pas encore fusionnées.
+        if any(x in p.parts for x in ('.git', '.claude', 'node_modules', 'spectacles')): continue
         texte = p.read_text(encoding='utf-8', errors='ignore')
         # Une page qui porte SES PROPRES dessins (l'administration a son
         # petit sprite, écrit à la main) se couvre elle-même : ses icônes ne
