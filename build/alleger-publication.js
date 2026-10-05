@@ -182,13 +182,14 @@ function verifierHtml(original, allege, nom) {
     while ((m = scripts.exec(allege))) {
         const attributs = m[1], corps = m[2];
         if (/\bsrc=/.test(attributs) || !corps.trim()) continue;
-        // Deux sortes de <script> ne sont pas du JavaScript, mais du JSON :
-        // les données structurées, et les règles de spéculation (voir le
-        // <head> de l'accueil). Compilées comme du JavaScript, les secondes
+        // Trois sortes de <script> ne sont pas du JavaScript, mais du JSON :
+        // les données structurées, les règles de spéculation (voir le
+        // <head> de l'accueil) et les données de la page (la carte de la
+        // saison, `application/json`). Compilées comme du JavaScript, elles
         // levaient « Unexpected token ':' » — et la page partait non
         // allégée, 636 ko au lieu de 240, sans autre bruit qu'un
         // avertissement.
-        if (/application\/ld\+json|speculationrules/.test(attributs)) JSON.parse(corps);
+        if (/application\/(?:ld\+)?json|speculationrules/.test(attributs)) JSON.parse(corps);
         else verifierJs(corps, `${nom} (script en ligne n° ${++n})`);
     }
 }
