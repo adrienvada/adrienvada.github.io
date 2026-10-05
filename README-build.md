@@ -47,8 +47,8 @@ fichiers.
 
 ## Vérifier le site
 
-`build/verifier-site.js` ouvre le site dans Chromium et vérifie, en moins
-de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
+`build/verifier-site.js` ouvre le site dans Chromium et vérifie, en six
+minutes environ, ce qui a déjà cassé ou casserait sans bruit :
 
 - l'accueil se charge sans erreur de script ;
 - un lien direct entre sans rideau ; depuis un autre site, l'ouverture joue une
@@ -385,10 +385,25 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   navigateur a déjà animé le retour — même si seul le `popstate` le dit —,
   l'onglet change sans glisser, l'univers et la fenêtre d'agenda
   disparaissent sans passage ni fondu ; un retour ordinaire garde ses
-  passages ;
+  passages.
 
 Pour ne passer que quelques vérifications — celles dont le nom contient un
 mot : `SEUL=planche npm --prefix build run verifier`.
+
+**Une épreuve bloquée ne bloque pas la vérification.** Une page dont le fil
+principal ne rend plus la main ne répond plus à rien, et certains appels
+(`page.evaluate`, le clavier) l'attendent sans limite : sur la machine des
+demandes de fusion, une épreuve a ainsi tenu le travail jusqu'à son délai de
+quinze minutes, coupé sans un mot. Désormais, une épreuve sans réponse au
+bout de 150 s échoue en disant où en est chaque page ouverte : son adresse,
+si son fil principal répond ou tourne dans un script — il est alors
+interrompu par une session de débogage attachée d'avance à chaque page, et
+qui ne fait rien d'autre (`suivreLesPages`) —, et ce qu'elle montre
+(classes de `<html>`, univers, focus). Ses contextes sont ensuite fermés, et
+les épreuves suivantes passent. Un contexte ouvert par une épreuve passe par
+`visiteur()`, ou appelle `suivreLesPages(c)` lui-même. Y activer le débogueur
+aurait donné la pile du script, mais il change le rythme des pages : le
+voyage du portrait échouait alors une fois sur quatre.
 
 Il tourne sur **chaque demande de fusion** (`.github/workflows/verifier.yml`) :
 une coche verte ou rouge sur la demande, avant que rien ne touche `main`. À la

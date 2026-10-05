@@ -9,8 +9,8 @@
  *  ne faisait rien, et le CV en PDF imprimait les pastilles ▶ des
  *  bandes-annonces. Chacun tenait en une ligne de test.
  *
- *  Ce script ouvre le site dans un vrai navigateur et vérifie, en moins
- *  de quatre minutes, ce qui a déjà cassé ou ce qui casserait sans bruit :
+ *  Ce script ouvre le site dans un vrai navigateur et vérifie, en six
+ *  minutes environ, ce qui a déjà cassé ou ce qui casserait sans bruit :
  *    · l'accueil se charge sans erreur de script ;
  *    · la règle de l'ouverture (lien direct : pas de rideau ; depuis un
  *      autre site : une fois) ;
@@ -125,15 +125,88 @@ let reussies = 0;
 // épreuve sans attendre les autres. Sans lui, toutes passent.
 const SEUL = (process.env.SEUL || '').toLowerCase();
 
+// UNE ÉPREUVE BLOQUÉE NE BLOQUE PAS LA VÉRIFICATION. Une page dont le fil
+// principal ne rend plus la main ne répond plus à rien, et certains appels
+// (page.evaluate, le clavier) l'attendent sans limite : sur la machine des
+// demandes de fusion, une épreuve a ainsi tenu le travail jusqu'à son délai
+// de quinze minutes, coupé sans un mot. Au bout de DELAI_EPREUVE, l'épreuve
+// échoue en disant où en est chaque page ouverte — son adresse, si son fil
+// principal répond ou tourne dans un script, et ce qu'elle montre —, ses
+// contextes sont fermés, et la vérification passe à la suivante.
+const DELAI_EPREUVE = 150000;
+let navigateurEnCours = null;
+
+// Une session de débogage attachée d'avance à chaque page, et qui ne fait
+// rien (suivreLesPages) : pendant un blocage, une session ouverte après coup
+// ne s'établit jamais, alors que celle-ci peut encore interrompre le script
+// en cours. Y activer le débogueur aurait donné la pile de ce script, mais
+// il change le rythme des pages : le voyage du portrait échouait alors une
+// fois sur quatre.
+const sessions = new WeakMap();
+function suivreLesPages(c) {
+    c.on('page', (p) => { c.newCDPSession(p).then((s) => sessions.set(p, s), () => { /* page déjà fermée */ }); });
+}
+
+const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+const auPlus = (ms, promesse) => Promise.race([promesse, attendre(ms).then(() => { throw new Error('sans réponse'); })]);
+
+// Où en est la page, en une ligne : les classes de <html> (passages,
+// panneaux), l'univers, ce qui a le focus.
+const ETAT_DE_LA_PAGE = `(() => {
+    const u = document.getElementById('show-universe'), f = document.activeElement;
+    return '<html> « ' + document.documentElement.className + ' »'
+        + (u ? ', univers ' + (u.hidden ? 'caché' : 'affiché') + (u.classList.contains('is-open') ? ' et ouvert' : '') : '')
+        + ', focus ' + (f ? f.tagName.toLowerCase() + (f.id ? '#' + f.id : '') : 'nulle part');
+})()`;
+
+async function etatDesPages() {
+    const lignes = [];
+    for (const c of navigateurEnCours ? navigateurEnCours.contexts() : []) {
+        for (const p of c.pages()) {
+            const s = sessions.get(p);
+            let etat;
+            if (!s) etat = 'sans session de débogage';
+            else {
+                const lire = () => auPlus(3000, s.send('Runtime.evaluate', { expression: ETAT_DE_LA_PAGE, returnByValue: true }))
+                    .then((r) => r.result.value, () => null);
+                let vu = await lire();
+                if (vu !== null) etat = `fil principal libre ; ${vu}`;
+                else {
+                    // Un script qui ne rend pas la main ne laisse passer
+                    // qu'une demande : l'interrompre. Si la page répond
+                    // ensuite, c'était lui.
+                    await auPlus(3000, s.send('Runtime.terminateExecution')).catch(() => {});
+                    vu = await lire();
+                    etat = vu !== null ? `fil principal pris dans un script, interrompu ; ${vu}`
+                        : 'fil principal pris hors d’un script (mise en page, rendu ou attente du navigateur)';
+                }
+            }
+            lignes.push(`${p.url()} : ${etat}`);
+        }
+    }
+    return lignes.length ? lignes.join(' | ') : 'aucune page ouverte';
+}
+
 async function verifie(nom, epreuve) {
     if (SEUL && !nom.toLowerCase().includes(SEUL)) return;
+    const enCours = Promise.resolve().then(epreuve);
+    enCours.catch(() => { /* lue ci-dessous, ou abandonnée au délai */ });
+    let minuterie;
+    const delai = new Promise((r) => { minuterie = setTimeout(r, DELAI_EPREUVE, 'délai'); });
     try {
-        await epreuve();
+        if (await Promise.race([enCours.then(() => 'faite'), delai]) === 'délai') {
+            const etat = await etatDesPages();
+            await Promise.all((navigateurEnCours ? navigateurEnCours.contexts() : [])
+                .map((c) => auPlus(10000, c.close()).catch(() => {})));
+            throw new Error(`aucune réponse en ${DELAI_EPREUVE / 1000} s — ${etat}`);
+        }
         reussies++;
         console.log(`  ✓ ${nom}`);
     } catch (e) {
         echecs.push(nom);
         console.log(`  ✗ ${nom}\n      ${String(e.message).split('\n')[0]}`);
+    } finally {
+        clearTimeout(minuterie);
     }
 }
 
@@ -145,6 +218,7 @@ function exige(condition, message) {
     const { chromium } = chargerPlaywright();
     const { serveur, base } = await servir(RACINE);
     const navigateur = await chromium.launch();
+    navigateurEnCours = navigateur;
 
     // Un contexte = un visiteur : stockage vide, rien de mémorisé — à une
     // exception près. L'onglet Dates s'ouvre « par spectacle » depuis la
@@ -157,6 +231,7 @@ function exige(condition, message) {
     const visiteur = async (options) => {
         const { neuf, ...reste } = options || {};
         const c = await navigateur.newContext(reste);
+        suivreLesPages(c);
         await c.route((u) => !u.href.startsWith(base), (r) => r.abort());
         if (!neuf) {
             await c.addInitScript(() => {
@@ -4554,6 +4629,7 @@ function exige(condition, message) {
         //  dit la position courante, les flèches en changent.
         await verifie('le thème à trois positions : Auto suit l’appareil, même quand il change, Clair et Sombre sont retenus, la bascule de la barre aussi ; le groupe dit la position, les flèches en changent', async () => {
             const c = await navigateur.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, colorScheme: 'dark' });
+            suivreLesPages(c);
             await c.route((u) => !u.href.startsWith(base), (route) => route.abort());
             const p = await c.newPage();
             const erreurs = guette(p);
