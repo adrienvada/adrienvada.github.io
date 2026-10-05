@@ -147,7 +147,7 @@ const SEUIL_TELEPHONE = 640;
 
 function genererCss() {
     return `/* GALERIE PHOTO (/galerie/) — feuille générée (build/generer-page-galerie.js)
-   Même univers visuel que le répertoire de spectacles : Cinzel, Inter, Montserrat,
+   Même univers visuel que le répertoire de spectacles : Cinzel et Inter,
    or sur noir, grain de pellicule, grille dont la densité se règle aux boutons − et +. */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -179,9 +179,13 @@ html.vt-theme::view-transition-new(root) { z-index: 2; }
        crayon gras, rouge. */
     --num: #d69a3c;
     --crayon: #ff4d5e;
+    /* Les barres de défilement et les champs du navigateur suivent le thème
+       (comme sur l'accueil). */
+    color-scheme: dark;
 }
 
 :root[data-theme="light"] {
+    color-scheme: light;
     --bg: #faf9f5;
     --surface: #ffffff;
     --text: #1a1a1f;
@@ -349,7 +353,7 @@ a { color: var(--accent-ink); }
 
 .sur-titre {
     margin: 0 0 1rem;
-    font: 700 .68rem/1.5 'Montserrat', system-ui, sans-serif;
+    font: 700 .68rem/1.5 'Inter', system-ui, sans-serif;
     letter-spacing: .26em;
     text-transform: uppercase;
     color: var(--accent-ink);
@@ -385,7 +389,7 @@ h1 {
 
 .sous-titre-galerie {
     margin: 1.2rem 0 0;
-    font: 500 .72rem/1.5 'Montserrat', system-ui, sans-serif;
+    font: 500 .72rem/1.5 'Inter', system-ui, sans-serif;
     letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--muted);
@@ -436,7 +440,8 @@ h1 {
 .carte-num {
     display: block;
     margin-top: .45rem;
-    font: 600 .6rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font: 600 .6rem/1 Inter, sans-serif;
+    font-variant-numeric: tabular-nums;
     letter-spacing: .1em;
     color: var(--num);
 }
@@ -774,7 +779,7 @@ html.vt-book .zoom-img {
 }
 
 .zoom-caption {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .74rem;
     font-weight: 600;
     letter-spacing: .18em;
@@ -883,11 +888,25 @@ html.vt-book .zoom-img {
 // (loading="lazy"), la réécriture passait avant les requêtes ; les
 // premières partent désormais avec le HTML, et une seule taille fausse les
 // aurait fait télécharger deux fois (vu : 6 vignettes, +61 Ko).
+//
+// SANS min() : la planche fait toute la largeur jusqu'à 68 rem (1 088 px),
+// puis s'arrête. On le disait `min(100vw, 68rem)`, que les navigateurs
+// d'avant 2020 — et certains lecteurs d'images des moteurs — ne lisent
+// pas dans `sizes` : ils écartaient toute la règle et prenaient la plus
+// grande vignette. Une branche de plus dit la même chose avec des mots
+// que tous comprennent.
 const tailleCase = (r, colonnes) => (r * 1.12 * 1.25 / colonnes).toFixed(3);
+const PLANCHE_MAX = 1088; // 68rem
 function taillesVignette(r) {
     return `(max-width: ${SEUIL_TELEPHONE - 0.02}px) calc(100vw * ${tailleCase(r, 4)}), ` +
-        `calc(min(100vw, 68rem) * ${tailleCase(r, 5)})`;
+        `(max-width: ${PLANCHE_MAX}px) calc(100vw * ${tailleCase(r, 5)}), ${Math.ceil(PLANCHE_MAX * tailleCase(r, 5))}px`;
 }
+
+// `auto, ` EN TÊTE POUR LES VIGNETTES QUI ATTENDENT (loading="lazy") :
+// elles ne partent qu'une fois mises en page, et le navigateur qui le
+// sait (Chrome 126, Firefox 150, Safari 27) prend alors la largeur
+// réelle de la case, au lieu de notre estimation. Les autres ignorent ce
+// mot et lisent la suite.
 
 // CE QUI EST À L'ÉCRAN EN ARRIVANT PART TOUT DE SUITE. Les dix-neuf
 // vignettes étaient paresseuses (loading="lazy"), celles du premier écran
@@ -982,7 +1001,7 @@ function genererHtml() {
             <button type="button" class="carte-btn" data-zoom-photo="${i}" aria-label="Agrandir : ${esc(p.alt)}">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="${esc(p.srcset)}" sizes="${taillesVignette(p.r)}"><img src="${esc(p.full)}" alt="${esc(p.alt)}"${i < VIGNETTES_D_EMBLEE ? '' : ' loading="lazy"'}${devant.has(i) ? ' fetchpriority="high"' : ''} decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="${esc(p.srcset)}" sizes="${i < VIGNETTES_D_EMBLEE ? '' : 'auto, '}${taillesVignette(p.r)}"><img src="${esc(p.full)}" alt="${esc(p.alt)}"${i < VIGNETTES_D_EMBLEE ? '' : ' loading="lazy"'}${devant.has(i) ? ' fetchpriority="high"' : ''} decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1205,6 +1224,8 @@ function genererHtml() {
          PNG de 256 px en base64 — 128 Ko, 20 % de ce que pesait la page. -->
     <link rel="icon" type="image/png" href="../favicon_io/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../favicon_io/favicon-96x96.png" sizes="96x96">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon_io/site.webmanifest">
     <!-- Les polices du site, servies par le site (ressources/polices/). -->
     <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
     <!-- Les polices, puis la feuille de la page, DANS la page : deux
@@ -1779,7 +1800,10 @@ ${JSON.stringify(schemaJson, null, 2)}
             cartes.forEach(function (c) {
                 var r = parseFloat(c.style.getPropertyValue('--r')) || .75;
                 var el = c.querySelector('source');
-                if (el) el.setAttribute('sizes', 'calc(min(100vw, 68rem) * ' + (r * 1.12 * 1.25 / colonnes).toFixed(3) + ')');
+                // Sans min() (voir taillesVignette, dans le générateur).
+                var k = (r * 1.12 * 1.25 / colonnes).toFixed(3);
+                var auto = /^auto,/.test(el && el.getAttribute('sizes') || '') ? 'auto, ' : '';
+                if (el) el.setAttribute('sizes', auto + '(max-width: 1088px) calc(100vw * ' + k + '), ' + Math.ceil(1088 * k) + 'px');
             });
         }
 

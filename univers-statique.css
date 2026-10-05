@@ -137,3 +137,10 @@ figcaption,
     opacity: 1 !important;
     transform: none !important;
 }
+
+/* Les chapitres demandent le script (mesurer, suivre, sauter) : sans lui,
+   la page se lit d'un seul tenant, et « Spectacle suivant », un vrai
+   lien, reste au pied. */
+.u-chapitres {
+    display: none !important;
+}

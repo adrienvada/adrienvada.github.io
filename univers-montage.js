@@ -983,8 +983,63 @@ const UniversMontage = (function () {
         return `<div class="u-hero-fond rg-k" aria-hidden="true"><img src="${escape(base)}-1280.webp" srcset="${escape(base)}-640.webp 640w, ${escape(base)}-1280.webp 1280w" sizes="100vw" alt=""${priorite} decoding="async"${c.pos ? ` style="object-position:${escape(c.pos)}"` : ''}></div>`;
     }
 
+    // ── LES CHAPITRES ────────────────────────────────────────────────
+    //  Un univers fait une vingtaine d'écrans au téléphone (17 000 px pour
+    //  Bérénice), et la barre de 2 px du haut ne disait ni où l'on en était
+    //  ni ce qui restait. Il se lit désormais en chapitres : l'ouverture,
+    //  le montage, la bande-annonce s'il y en a une, les dates (ou le film),
+    //  la distribution. Leurs débuts sont marqués sur la barre ; une
+    //  pastille, en bas de l'écran, dit le chapitre en cours et s'ouvre sur
+    //  la liste, qu'on touche pour y sauter (voir mesurerChapitres et
+    //  suivreChapitre, dans univers.js, qui trouvent chaque chapitre par sa
+    //  cible).
+    function chapitresDe(uni, isFilm) {
+        const avecVideo = (uni.sequence || []).some(b => b && b.video && videoRef(uni, b.video));
+        return [
+            { cle: 'haut', nom: 'Ouverture' },
+            { cle: 'montage', nom: isFilm ? 'Images' : 'Le spectacle' },
+            avecVideo ? { cle: 'video', nom: 'Bande-annonce' } : null,
+            { cle: 'pied', nom: isFilm ? 'Le film' : 'Dates' },
+            uni.cast && uni.cast.length ? { cle: 'distribution', nom: 'Distribution' } : null
+        ].filter(Boolean);
+    }
+
+    function chapitresHtml(uni, isFilm) {
+        const ch = chapitresDe(uni, isFilm);
+        return `<nav class="u-chapitres" aria-label="Chapitres">
+            <ol class="u-chapitres-liste" id="u-chapitres-liste" hidden>
+                ${ch.map((c, i) => `<li><button type="button" data-u-chapitre="${c.cle}"><span class="u-chapitres-n">${i + 1}</span>${escape(c.nom)}</button></li>`).join('')}
+            </ol>
+            <button type="button" class="u-chapitres-bouton" aria-expanded="false" aria-controls="u-chapitres-liste">
+                <span class="u-chapitres-n" data-u-chapitre-n>1/${ch.length}</span>
+                <span class="u-chapitres-courant" data-u-chapitre-nom>${escape(ch[0].nom)}</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-chevron-up"></use></svg>
+            </button>
+        </nav>`;
+    }
+
+    // ── LE SPECTACLE SUIVANT ─────────────────────────────────────────
+    //  Au bout d'un univers, on repartait par le CV pour ouvrir le suivant.
+    //  Le pied finit donc sur la suite, dans l'ordre du CV : un vrai lien
+    //  vers la page du spectacle suivant (/spectacles/…), qui est le même
+    //  univers — il s'ouvre aussi depuis le panneau de l'accueil, et se lit
+    //  sans JavaScript. Après le dernier, le répertoire.
+    //  `suivant` : { titre, slug, film }, ou null après le dernier (posé
+    //  par l'appelant, qui connaît l'ordre du CV : univers.js lit les
+    //  lignes, le générateur aussi). Absent : rien n'est écrit.
+    function suivantHtml(suivant) {
+        if (!suivant) {
+            return `<p class="u-suivant"><a href="/spectacles/"><span class="u-suivant-quoi">Tout le répertoire</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></p>`;
+        }
+        return `<p class="u-suivant"><a href="/spectacles/${escape(suivant.slug)}/" data-track="univers_suivant" data-track-detail="${escape(suivant.titre)}">
+                <span class="u-suivant-quoi">${suivant.film ? 'Film suivant' : 'Spectacle suivant'}</span>
+                <span class="u-suivant-titre">${escape(suivant.titre)}</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></p>`;
+    }
+
     function panelHtml(info, uni, opts) {
-        const { dates = '', enCreation = false, statique = false, montage = true, travellingVu = false } = opts || {};
+        const { dates = '', enCreation = false, statique = false, montage = true, travellingVu = false, suivant } = opts || {};
         // `montage: false` laisse le montage vide : le panneau ouvert par un
         // passage le reçoit ensuite, une fois la vignette devenue la page
         // (voir monterLeMontage dans univers.js). Une page autonome l'a
@@ -1087,6 +1142,7 @@ const UniversMontage = (function () {
         <!-- La barre de progression vaut aussi pour une page autonome : le
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
+        ${chapitresHtml(uni, isFilm)}
 
         ${ouverture ? ouvertureHtml(uni, hero, tempo, travellingVu) : hero}
 
@@ -1102,6 +1158,7 @@ const UniversMontage = (function () {
             ${prixBlock(uni)}
             ${castBlock(uni)}
             ${uni.credit ? `<p class="u-credit">Photographies : ${escape(uni.credit)}</p>` : ''}
+            ${suivant === undefined ? '' : suivantHtml(suivant)}
         </footer>
 
 <!-- Agrandissement : la photo entière, jamais recadrée. C'est le
@@ -1138,55 +1195,149 @@ const UniversMontage = (function () {
     //  le navigateur la tire de dates.js par upcomingPerformances(), le
     //  script de build la lit dans le même fichier. Deux chemins, un seul
     //  dessin — les dates ne sont dupliquées nulle part.
+    //
+    //  LE DESSIN DE L'ONGLET DATES. Le pied des univers avait sa propre
+    //  liste, moins soignée : une séance par ligne, la date en police à
+    //  chasse fixe, « horaire à confirmer » et « séance scolaire » répétés
+    //  quatre fois pour la série du lycée Corneille. L'onglet Dates, lui,
+    //  met une série sur une ligne : l'éphéméride (le mois en bandeau, le
+    //  jour, le jour de la semaine), la ville et la salle, une puce par
+    //  séance. C'est ce dessin que reprend le pied, à la couleur du
+    //  spectacle (univers.css, « Les dates au pied de l'univers »). Une
+    //  série, ce sont les séances d'un même lieu à moins d'une semaine
+    //  d'écart — la règle de dates-live.js.
+    //
+    //  Le bouton d'agenda ferme la ligne. Pour une série, la fenêtre
+    //  demande quelle séance ajouter (voir openAgendaModal, univers.js) :
+    //  `seances` voyage avec les autres données dans data-cal.
+    const MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    const MOIS_BREFS = ['janv', 'févr', 'mars', 'avr', 'mai', 'juin', 'juil', 'août', 'sept', 'oct', 'nov', 'déc'];
+    const MOIS_LONGS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    const JOURS_COURTS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+    const JOURS_BREFS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+    const JOURS_LONGS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+
+    // « 2026-11-12 » → le jour, à midi en temps universel : aucun fuseau ne
+    // le fait basculer la veille.
+    function jourIso(iso) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+        if (!m) return null;
+        const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12));
+        return { iso: m[0], a: +m[1], m: +m[2] - 1, j: +m[3], js: d.getUTCDay(), t: d.getTime() };
+    }
+
+    // « Tribunal judiciaire, Rouen (76) » et « Rouen » → la ville, puis la
+    // salle sans elle, et le département : la même découpe que l'onglet
+    // Dates (dlLieu, index.html).
+    function lieuDecoupe(location, ville) {
+        let salle = String(location || '').trim();
+        const dep = salle.match(/\s*\((\d{2,3}[AB]?)\)$/i);
+        if (dep) salle = salle.slice(0, dep.index).trim();
+        const v = String(ville || '').trim();
+        if (v) {
+            const bas = salle.toLowerCase();
+            const lien = [', ', ' de ', ' du ', ' d’', " d'", ' à '].find(l => bas.endsWith((l + v).toLowerCase()));
+            if (lien) salle = salle.slice(0, salle.length - (lien + v).length).trim();
+            else if (bas === v.toLowerCase()) salle = '';
+        }
+        return { ville: v, salle, dep: dep ? dep[1] : '' };
+    }
+
+    // Les séances d'un même lieu, à moins d'une semaine d'écart, font une
+    // ligne. L'ordre est celui de la liste reçue (par jour, puis par heure).
+    function rangsDeDates(perfs) {
+        const rangs = [];
+        perfs.forEach(p => {
+            const j = jourIso(p.icsDate);
+            const r = rangs[rangs.length - 1];
+            const dernier = r && r.perfs[r.perfs.length - 1];
+            const ecart = r && j && dernier.j ? (j.t - dernier.j.t) / 864e5 : Infinity;
+            const q = Object.assign({}, p, { j });
+            if (r && r.location === (p.location || '') && ecart >= 0 && ecart <= 7) r.perfs.push(q);
+            else rangs.push({ location: p.location || '', city: p.city || '', perfs: [q] });
+        });
+        return rangs;
+    }
+
+    function feuilleHtml(rang) {
+        const jours = [...new Set(rang.perfs.map(q => q.j && q.j.iso).filter(Boolean))].map(jourIso);
+        const d = jours[0], z = jours[jours.length - 1];
+        if (!d) {
+            return '<span class="u-dl-feuille u-dl-feuille--vide" aria-hidden="true"><span class="u-dl-bande">·</span><span class="u-dl-num">?</span></span>';
+        }
+        const plusieurs = z.iso !== d.iso;
+        const deuxMois = plusieurs && (z.m !== d.m || z.a !== d.a);
+        return `<span class="u-dl-feuille${plusieurs ? ' u-dl-feuille--2' : ''}" aria-hidden="true">`
+            + `<span class="u-dl-bande${deuxMois ? ' u-dl-bande--2' : ''}">${deuxMois ? `${MOIS_BREFS[d.m]}–${MOIS_BREFS[z.m]}` : MOIS_COURTS[d.m]}</span>`
+            + `<span class="u-dl-num">${plusieurs ? `${d.j}–${z.j}` : d.j}</span>`
+            + `<span class="u-dl-jour">${plusieurs ? `${JOURS_BREFS[d.js]}–${JOURS_BREFS[z.js]}` : JOURS_COURTS[d.js]}</span></span>`;
+    }
+
+    // « jeudi 12 novembre 2026 », ou « du lundi 18 au jeudi 21 mai 2026 » :
+    // la date entière, pour les lecteurs d'écran (la feuille leur est cachée).
+    function quandEnLettres(rang) {
+        const jours = [...new Set(rang.perfs.map(q => q.j && q.j.iso).filter(Boolean))].map(jourIso);
+        if (!jours.length) return rang.perfs[0].dateLabel || 'Date à préciser';
+        const d = jours[0], z = jours[jours.length - 1];
+        const long = (x, annee) => `${JOURS_LONGS[x.js]} ${x.j === 1 ? '1er' : x.j} ${MOIS_LONGS[x.m]}${annee ? ' ' + x.a : ''}`;
+        return d.iso === z.iso ? long(d, true) : `du ${long(d, d.a !== z.a)} au ${long(z, true)}`;
+    }
+
+    function heuresDe(p) {
+        return Array.isArray(p.times) && p.times.length ? p.times.join(' & ') : String(p.time || '').trim();
+    }
+
+    function puceHtml(p, rang, titre) {
+        const serie = new Set(rang.perfs.map(q => q.j && q.j.iso)).size > 1;
+        const jour = serie && p.j ? `<span class="u-dl-s-jour">${JOURS_COURTS[p.j.js]}</span> ` : '';
+        const h = heuresDe(p);
+        const heure = h ? `<span class="u-dl-s-heure">${escape(h)}</span>` : '';
+        if (p.isSchool) {
+            return `<li><span class="u-dl-puce u-dl-puce--muette">${jour}${heure ? heure + ' ' : ''}<i>scolaire</i></span></li>`;
+        }
+        const billet = lienSur(p.bookingUrl);
+        if (billet) {
+            const quand = [p.j ? `${JOURS_LONGS[p.j.js]} ${p.j.j} ${MOIS_LONGS[p.j.m]}` : p.dateLabel, h].filter(Boolean).join(' à ');
+            return `<li><a class="u-dl-puce u-date-book" href="${escape(billet)}" target="_blank" rel="noopener" data-track="date_booking" data-track-detail="${escape(titre)}">`
+                + `<span class="u-sr">Réserver, </span>${jour}${heure || '<span class="u-dl-s-heure u-dl-s-flou">horaire à confirmer</span>'}`
+                + `<svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg>`
+                + `<span class="u-sr"> : ${escape(quand)}${rang.location ? ', ' + escape(rang.location) : ''} (nouvel onglet)</span></a></li>`;
+        }
+        return `<li><span class="u-dl-puce u-dl-puce--muette">${jour}${heure ? heure + ' · ' : ''}<i>billetterie à venir</i></span></li>`;
+    }
+
+    function agendaHtml(rang, titre) {
+        const perfs = rang.perfs.filter(p => p.icsDate);
+        if (!perfs.length) return '';
+        // La séance proposée d'abord : la première ouverte au public.
+        const p = perfs.find(q => !q.isSchool) || perfs[0];
+        const donnee = (q) => ({
+            title: q.title || '', subtitle: q.subtitle || '', location: q.location || '',
+            dateLabel: q.dateLabel || '', icsDate: q.icsDate, time: q.time || '', times: q.times || null,
+            scolaire: !!q.isSchool, billetterie: lienSur(q.bookingUrl) || ''
+        });
+        const data = donnee(p);
+        if (perfs.length > 1) data.seances = perfs.map(donnee);
+        return `<li class="u-dl-agenda"><button type="button" class="u-date-cal" data-cal="${escape(JSON.stringify(data))}"`
+            + ` aria-label="Ajouter au calendrier : ${escape(titre)}, ${escape(quandEnLettres(rang))}">`
+            + `<svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button></li>`;
+    }
+
     function datesHtml(perfs) {
         if (!perfs || !perfs.length) return '';
-        const rows = perfs.map(p => {
-            const t = Array.isArray(p.times) && p.times.length ? p.times.join(' & ') : (p.time || '');
-            // SUPERPOSÉE, PAS ACCOLÉE : « · séance scolaire » à la suite de
-            // l'horaire allongeait la ligne au point de faire passer les
-            // boutons à la ligne suivante, à un endroit différent d'une
-            // représentation à l'autre. Un second bloc, empilé sous le
-            // premier, tient dans la même largeur quel que soit l'horaire.
-            const school = p.isSchool ? `<span class="u-warn">séance scolaire</span>` : '';
-            // LES DONNÉES VOYAGENT DANS L'ATTRIBUT, PAS L'OUVERTURE DU
-            // CALENDRIER. Ce fichier ne touche pas au DOM (voir l'en-tête) —
-            // c'est univers.js qui lit `data-cal` au clic et construit le
-            // .ics / les liens Google-Outlook. Un bouton sans icsDate ne
-            // mène nulle part, donc on ne le pose pas.
-            // Ce qui distingue cette ligne des autres, pour les libellés.
-            const quand = [p.dateLabel, p.location].filter(Boolean).join(', ');
-            const calBtn = p.icsDate
-                ? `<button type="button" class="u-date-cal" data-cal="${escape(JSON.stringify({
-                    title: p.title || '', subtitle: p.subtitle || '', location: p.location || '',
-                    dateLabel: p.dateLabel || '', icsDate: p.icsDate, time: p.time || '', times: p.times || null
-                }))}" aria-label="Ajouter au calendrier : ${escape(quand)}">
-                    <svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg>
-                </button>` : '';
-            // Le lien ne part que vers une page web (voir lienSur). Son texte
-            // visible est « Réserver », le même sur chaque ligne : la date et
-            // le lieu le complètent pour un lecteur d'écran, qui entendrait
-            // sinon six « Réserver » sans savoir lequel est lequel.
-            // `data-track` : le clic est compté comme ceux de l'onglet Dates
-            // (même nom d'événement), sur l'accueil comme sur les pages
-            // spectacle — voir brancherMesure dans univers.js.
-            const billetterie = lienSur(p.bookingUrl);
-            const bookBtn = billetterie
-                ? `<a href="${escape(billetterie)}" target="_blank" rel="noopener" class="u-date-book" data-track="date_booking" data-track-detail="${escape(p.title || '')}">Réserver<span class="u-sr"> — ${escape(quand)} (nouvel onglet)</span>
-                       <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a>` : '';
-            // DEUX COLONNES, PAS UNE SEULE LIGNE QUI S'ENROULE. .u-date-info
-            // absorbe seule le retour à la ligne (date, lieu, horaire) ;
-            // .u-date-actions ne s'enroule jamais et reste donc toujours au
-            // même endroit à droite, quelle que soit la longueur du reste.
-            return `<li class="u-date">
-                <div class="u-date-info">
-                    <span class="u-date-when">${escape(p.dateLabel)}</span>
-                    <span class="u-date-where">${escape(p.location)}</span>
-                    <span class="u-date-time">${t ? escape(t) : 'horaire à confirmer'}${school}</span>
-                </div>
-                <div class="u-date-actions">${calBtn}${bookBtn}</div>
-            </li>`;
+        const titre = perfs[0].title || '';
+        const rows = rangsDeDates(perfs).map(rang => {
+            const l = lieuDecoupe(rang.location, rang.city);
+            const lieu = (l.ville ? `<span class="u-dl-ville">${escape(l.ville)}</span>` : '')
+                + (l.ville && l.salle ? ' · ' : '') + escape(l.salle) + (l.dep ? ` (${escape(l.dep)})` : '');
+            return `<li class="u-dl${rang.perfs.length > 1 ? ' u-dl--serie' : ''}">`
+                + feuilleHtml(rang)
+                + `<div class="u-dl-corps"><p class="u-sr">${escape(quandEnLettres(rang))}</p>`
+                + `<p class="u-dl-lieu">${lieu || escape(rang.location)}</p>`
+                + `<ul class="u-dl-seances" role="list">${rang.perfs.map(p => puceHtml(p, rang, titre)).join('')}${agendaHtml(rang, titre)}</ul>`
+                + '</div></li>';
         }).join('');
-        return `<ul class="u-dates">${rows}</ul>`;
+        return `<ul class="u-dates" role="list">${rows}</ul>`;
     }
 
     // ── LES REPRÉSENTATIONS POUR LES MOTEURS DE RECHERCHE ─────────────
@@ -1394,8 +1545,150 @@ const UniversMontage = (function () {
             .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
     }
 
+    // ── AJOUTER UNE DATE À SON AGENDA ────────────────────────────────
+    //  Une seule fabrique pour l'accueil (calOptionClick, index.html) et
+    //  les univers (agendaAction, univers.js), qui avaient chacun la leur.
+    //  Elles écrivaient l'heure « flottante » — sans fuseau : 20 h chez qui
+    //  ouvre le fichier, à Montréal comme à Paris —, un identifiant tiré de
+    //  l'horloge (ajouter deux fois la même séance faisait deux
+    //  événements), des lignes ni échappées ni pliées, et un nom de fichier
+    //  qui perdait ses lettres accentuées (« b-r-nice »). Mêmes règles que
+    //  l'agenda auquel on s'abonne (build/fabriquer-agenda.js) : l'heure de
+    //  Paris écrite avec son fuseau, un identifiant tiré de la séance — le
+    //  jour, l'heure, le spectacle, le lieu —, la norme iCalendar
+    //  (RFC 5545). Sans DOM : du texte et des adresses, rien d'autre.
+    //    data : { title, subtitle, location, icsDate (AAAA-MM-JJ), time ou
+    //             times, duree (minutes, facultatif), billetterie, page }
+    //  → null si la date est illisible ; sinon { ics(), google(), outlook(),
+    //    fichier }. Google et Outlook ne prennent qu'une séance : la
+    //    première.
+    const AGENDA_FUSEAU = [
+        'BEGIN:VTIMEZONE', 'TZID:Europe/Paris', 'X-LIC-LOCATION:Europe/Paris',
+        'BEGIN:DAYLIGHT', 'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'TZNAME:CEST',
+        'DTSTART:19700329T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU', 'END:DAYLIGHT',
+        'BEGIN:STANDARD', 'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'TZNAME:CET',
+        'DTSTART:19701025T030000', 'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU', 'END:STANDARD',
+        'END:VTIMEZONE'
+    ];
+    const sansAccents = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    //  Une empreinte courte et stable (FNV-1a, deux passes) : il ne s'agit
+    //  que de distinguer deux séances, pas de chiffrer quoi que ce soit.
+    function empreinte(texte) {
+        let a = 0x811c9dc5, b = 0x01000193 ^ 0x5bd1e995;
+        for (const c of texte) {
+            const n = c.codePointAt(0);
+            a = Math.imul(a ^ n, 0x01000193) >>> 0;
+            b = Math.imul(b ^ n, 0x01000193) >>> 0;
+        }
+        return a.toString(16).padStart(8, '0') + b.toString(16).padStart(8, '0').slice(0, 2);
+    }
+    function icsTexte(s) {
+        return String(s == null ? '' : s)
+            .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,')
+            .replace(/\r\n|\r|\n/g, '\\n').replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, '');
+    }
+    //  75 OCTETS par ligne, au plus ; la suite commence par une espace.
+    const OCTETS = typeof TextEncoder === 'function' ? new TextEncoder() : null;
+    function icsPlier(ligne) {
+        const morceaux = [];
+        let courant = '', octets = 0, limite = 75;
+        for (const c of ligne) {
+            const n = OCTETS ? OCTETS.encode(c).length : (c.codePointAt(0) > 0x7ff ? 3 : c.codePointAt(0) > 0x7f ? 2 : 1);
+            if (octets + n > limite) {
+                morceaux.push(courant);
+                courant = '';
+                octets = 0;
+                limite = 74;
+            }
+            courant += c;
+            octets += n;
+        }
+        morceaux.push(courant);
+        return morceaux.join('\r\n ');
+    }
+    function agendaDe(data) {
+        const jour = String((data && data.icsDate) || '');
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(jour)) return null;
+        const texteHeure = Array.isArray(data.times) ? data.times.join(' & ') : String(data.time || '');
+        const heures = /confirmer/i.test(texteHeure) ? [] : [...texteHeure.matchAll(/(\d{1,2})\s*[hH:]\s*(\d{2})?/g)]
+            .map(h => ({ h: +h[1], m: +(h[2] || 0) })).filter(h => h.h < 24 && h.m < 60);
+        const titre = String(data.title || 'Spectacle');
+        const sommaire = data.subtitle ? `${titre} (${data.subtitle})` : titre;
+        const lieu = String(data.location || '');
+        const duree = data.duree > 0 ? data.duree : 120;
+        const billet = lienSur(data.billetterie);
+        const page = /^https:\/\//.test(data.page || '') ? data.page : `${SITE}/#page_dates`;
+        const deux = (n) => String(n).padStart(2, '0');
+        const [a, mo, j] = jour.split('-').map(Number);
+        const compact = jour.replace(/-/g, '');
+        // L'heure locale de la fin, comptée en UTC pour ne dépendre d'aucun
+        // fuseau : une soirée qui finit après minuit change de jour.
+        const local = (h, plus) => {
+            const f = new Date(Date.UTC(a, mo - 1, j, h.h, h.m + plus));
+            return { jour: `${f.getUTCFullYear()}${deux(f.getUTCMonth() + 1)}${deux(f.getUTCDate())}`, heure: `${deux(f.getUTCHours())}${deux(f.getUTCMinutes())}00`,
+                iso: `${f.getUTCFullYear()}-${deux(f.getUTCMonth() + 1)}-${deux(f.getUTCDate())}T${deux(f.getUTCHours())}:${deux(f.getUTCMinutes())}:00` };
+        };
+        const lendemain = local({ h: 0, m: 0 }, 24 * 60);
+        const description = [
+            'Avec Adrien Vada.',
+            heures.length ? '' : (texteHeure && !/confirmer/i.test(texteHeure) ? `Horaire : ${texteHeure}.` : 'Horaire à confirmer.'),
+            billet ? `Réservations : ${billet}` : 'Réservations pas encore ouvertes.',
+            /#page_dates$/.test(page) ? `Toutes les dates : ${page}` : `Le spectacle : ${page}`
+        ].filter(Boolean).join('\n');
+        const cle = `${sansAccents(titre).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()}|${sansAccents(lieu).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()}`;
+        const fichier = `${sansAccents(titre).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'spectacle'}-${jour}.ics`;
+
+        function ics() {
+            const maintenant = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+            const evenement = (h) => {
+                const uid = `${compact}${h ? `T${deux(h.h)}${deux(h.m)}` : ''}-${empreinte(h ? cle : `${cle}|${texteHeure}`)}@adrienvada.fr`;
+                const lignes = ['BEGIN:VEVENT', `UID:${uid}`, `DTSTAMP:${maintenant}`];
+                if (h) {
+                    const fin = local(h, duree);
+                    lignes.push(`DTSTART;TZID=Europe/Paris:${compact}T${deux(h.h)}${deux(h.m)}00`,
+                        `DTEND;TZID=Europe/Paris:${fin.jour}T${fin.heure}`);
+                } else {
+                    lignes.push(`DTSTART;VALUE=DATE:${compact}`, `DTEND;VALUE=DATE:${lendemain.jour}`, 'TRANSP:TRANSPARENT');
+                }
+                lignes.push(`SUMMARY:${icsTexte(sommaire)}`, `LOCATION:${icsTexte(lieu)}`,
+                    `URL:${/^https:\/\//i.test(billet) ? billet : page}`,
+                    `DESCRIPTION:${icsTexte(description)}`, 'END:VEVENT');
+                return lignes;
+            };
+            const lignes = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Adrien Vada//Spectacles//FR',
+                'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', ...AGENDA_FUSEAU];
+            (heures.length ? heures : [null]).forEach(h => lignes.push(...evenement(h)));
+            lignes.push('END:VCALENDAR');
+            return lignes.map(icsPlier).join('\r\n') + '\r\n';
+        }
+
+        // Google : l'heure de l'affiche, et le fuseau de Paris dit à part
+        // (ctz) — sans lui, Google la plaçait dans le fuseau de l'agenda.
+        function google() {
+            const h = heures[0];
+            const dates = h ? `${compact}T${deux(h.h)}${deux(h.m)}00/${local(h, duree).jour}T${local(h, duree).heure}`
+                : `${compact}/${lendemain.jour}`;
+            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(sommaire)}`
+                + `&dates=${dates}${h ? '&ctz=Europe%2FParis' : ''}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(lieu)}`;
+        }
+
+        // Outlook : l'heure avec son décalage (« +01:00 » l'hiver, « +02:00 »
+        // l'été), lu dans le fuseau de Paris du jour même.
+        function outlook() {
+            const h = heures[0];
+            const base = 'https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent'
+                + `&subject=${encodeURIComponent(sommaire)}&location=${encodeURIComponent(lieu)}&body=${encodeURIComponent(description)}`;
+            if (!h) return `${base}&startdt=${jour}&enddt=${lendemain.iso.slice(0, 10)}&allday=true`;
+            const fin = local(h, duree);
+            return `${base}&startdt=${encodeURIComponent(`${jour}T${deux(h.h)}:${deux(h.m)}:00${decalageParis(jour)}`)}`
+                + `&enddt=${encodeURIComponent(`${fin.iso}${decalageParis(fin.iso.slice(0, 10))}`)}`;
+        }
+
+        return { ics, google, outlook, fichier };
+    }
+
     return {
-        panelHtml, datesHtml, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, photoPrincipale, couverture, organisateurs,
+        panelHtml, datesHtml, chapitresDe, salleDe, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, agendaDe, photoPrincipale, couverture, organisateurs,
         toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
         longestLine, photoSrc, pictureHtml, framePos, figureHtml, overHtml, videoRef, flouSrc,

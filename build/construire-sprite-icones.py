@@ -67,6 +67,91 @@ def paquet():
 
 PAQUET = paquet()
 
+
+# ── LES ICÔNES AU TRAIT ─────────────────────────────────────────────
+#  L'expertise d'octobre 2026 a relevé des icônes pleines et génériques
+#  (une cravate pour le CV, des masques et un calendrier pleins), à côté
+#  de titres éditoriaux et d'une administration déjà dessinée au trait.
+#  Le site passe donc au trait fin, celui de l'administration : Lucide
+#  (licence ISC, lucide.dev), 24 × 24, trait de 2, bouts arrondis. LES
+#  IDENTIFIANTS NE CHANGENT PAS (`i-solid-calendar-days` reste le nom
+#  posé dans le balisage) : seul le dessin du symbole est pris ailleurs.
+#  Restent pleins, et chez FontAwesome : les logos (Apple, Google,
+#  Microsoft, YouTube) et les commandes de lecture (lecture, pause,
+#  précédente, suivante), que le plein fait lire d'un coup d'œil.
+#
+#      npm i lucide-static@1.52.0      (à côté de FontAwesome)
+TRAIT = {
+    ('solid', 'user-tie'): 'file-user',              # l'onglet CV : un CV, pas une cravate
+    ('solid', 'calendar-days'): 'calendar-days',
+    ('solid', 'calendar-check'): 'calendar-check',
+    ('regular', 'calendar-plus'): 'calendar-plus',
+    ('solid', 'film'): 'film',
+    ('solid', 'microphone'): 'mic',
+    ('solid', 'microphone-lines'): 'mic-vocal',
+    ('solid', 'masks-theater'): 'drama',
+    ('solid', 'graduation-cap'): 'graduation-cap',
+    ('solid', 'circle-nodes'): 'user-round',         # « Profil »
+    ('solid', 'clock-rotate-left'): 'history',
+    ('solid', 'compass'): 'compass',
+    ('solid', 'book-open'): 'book-open',
+    ('solid', 'camera'): 'camera',
+    ('solid', 'envelope'): 'mail',
+    ('solid', 'copy'): 'copy',
+    ('solid', 'address-card'): 'contact-round',
+    ('solid', 'file-pdf'): 'file-text',
+    ('solid', 'download'): 'download',
+    ('solid', 'share-nodes'): 'share-2',
+    ('solid', 'magnifying-glass'): 'search',
+    ('solid', 'expand'): 'expand',
+    ('solid', 'check'): 'check',
+    ('solid', 'xmark'): 'x',
+    ('solid', 'arrow-right'): 'arrow-right',
+    ('solid', 'arrow-down'): 'arrow-down',
+    ('solid', 'up-right-from-square'): 'arrow-up-right',
+    ('solid', 'arrow-up-right-from-square'): 'external-link',
+    ('solid', 'chevron-down'): 'chevron-down',
+    ('solid', 'chevron-up'): 'chevron-up',
+    ('solid', 'chevron-left'): 'chevron-left',
+    ('solid', 'chevron-right'): 'chevron-right',
+    ('solid', 'sun'): 'sun',
+    ('solid', 'moon'): 'moon',
+    ('solid', 'circle-half-stroke'): 'sun-moon',     # le thème « Auto »
+}
+
+
+def paquet_trait():
+    for base in (RACINE, RACINE.parent):
+        p = base / 'node_modules' / 'lucide-static' / 'icons'
+        if p.is_dir():
+            return p
+    raise SystemExit(
+        '  ARRÊT — paquet Lucide introuvable (icônes au trait).\n'
+        '  Installez-le à côté de FontAwesome, puis relancez :\n'
+        '      npm i lucide-static@1.52.0\n'
+        '      python3 build/construire-sprite-icones.py'
+    )
+
+
+def trace_trait(nom):
+    fichier = paquet_trait() / f'{nom}.svg'
+    if not fichier.exists():
+        raise SystemExit(f'  ARRÊT — icône au trait introuvable : {nom} ({fichier})')
+    svg = fichier.read_text(encoding='utf-8')
+    corps = re.sub(r'<!--.*?-->', '', svg, flags=re.S)
+    corps = re.sub(r'</?svg[^>]*>', '', corps, flags=re.S)
+    corps = re.sub(r'\s+', ' ', corps).replace('> <', '><').strip()
+    # Le trait est posé sur un groupe, dans le symbole lui-même : le `fill`
+    # que la feuille donne à `.ico` (currentColor, pour les icônes pleines)
+    # ne passe pas devant un attribut posé sur l'élément.
+    # LE CADRE EST RESSERRÉ D'UN POINT (1 1 22 22) : Lucide garde deux
+    # points de marge autour de ses dessins, FontAwesome aucun. À la même
+    # taille de texte, une icône au trait paraissait d'un cinquième plus
+    # petite que la pleine qu'elle remplace. Le trait, épais de deux, ne
+    # descend jamais sous la coordonnée 2 : il tient encore dans le cadre.
+    return '1 1 22 22', (f'<g fill="none" stroke="currentColor" stroke-width="2" '
+                         f'stroke-linecap="round" stroke-linejoin="round">{corps}</g>')
+
 DEBUT = '<!-- SPRITE-ICONES:DEBUT -->'
 FIN = '<!-- SPRITE-ICONES:FIN -->'
 
@@ -152,14 +237,16 @@ def tracé(style, nom):
 def construire_sprite(icones):
     symboles = []
     for style, nom in icones:
-        vb, corps = tracé(style, nom)
+        vb, corps = trace_trait(TRAIT[(style, nom)]) if (style, nom) in TRAIT else tracé(style, nom)
         symboles.append(
             f'        <symbol id="i-{style}-{nom}" viewBox="{vb}">{corps}</symbol>')
     return (
         f'{DEBUT}\n'
-        '    <!-- Les 39 icônes du site, et rien d\'autre. Généré par\n'
+        f'    <!-- Les {len(symboles)} icônes du site, et rien d\'autre. Généré par\n'
         '         build/construire-sprite-icones.py — ne pas modifier à la main.\n'
-        '         Icônes FontAwesome Free, licence CC BY 4.0 (fontawesome.com).\n'
+        '         Icônes au trait : Lucide, licence ISC (lucide.dev) ; logos et\n'
+        '         commandes de lecture : FontAwesome Free, licence CC BY 4.0\n'
+        '         (fontawesome.com).\n'
         '         `aria-hidden` + `display:none` : ce bloc est une réserve de\n'
         '         dessins, jamais du contenu. -->\n'
         '    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">\n'
@@ -227,10 +314,20 @@ def verifier_couverture(icones):
     poses = set()
     for p in RACINE.rglob('*'):
         if p.suffix.lower() not in {'.html', '.js'}: continue
-        if any(x in p.parts for x in ('.git', 'node_modules', 'spectacles')): continue
-        for ref in re.findall(r'href="#(i-(?:solid|regular|brands)-[a-z0-9-]+)"',
-                              p.read_text(encoding='utf-8', errors='ignore')):
-            poses.add(ref)
+        # `.claude` : les copies de travail des outils (worktrees), qui ne
+        # sont pas le site et peuvent porter des icônes pas encore fusionnées.
+        if any(x in p.parts for x in ('.git', '.claude', 'node_modules', 'spectacles')): continue
+        texte = p.read_text(encoding='utf-8', errors='ignore')
+        # Une page qui porte SES PROPRES dessins (l'administration a son
+        # petit sprite, écrit à la main) se couvre elle-même : ses icônes ne
+        # dépendent pas de celui d'index.html. Les copies du sprite d'index
+        # (la galerie, entre les mêmes repères) ne comptent pas, elles : ce
+        # sont justement elles que ce contrôle doit couvrir.
+        hors_copie = re.sub(re.escape(DEBUT) + r'.*?' + re.escape(FIN), '', texte, flags=re.S)
+        propres = set(re.findall(r'<symbol id="(i-(?:solid|regular|brands)-[a-z0-9-]+)"', hors_copie))
+        for ref in re.findall(r'href="#(i-(?:solid|regular|brands)-[a-z0-9-]+)"', texte):
+            if ref not in propres:
+                poses.add(ref)
     fournis = {f'i-{style}-{nom}' for style, nom in icones}
     manquants = sorted(poses - fournis)
     if manquants:

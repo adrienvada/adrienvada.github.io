@@ -147,7 +147,7 @@ const { servir } = require('./serveur-local');
         // l'écran.
         await page.emulateMedia({ media: 'print' });
 
-        // Cinzel et Montserrat sont servies par le site lui-même
+        // Cinzel et Inter sont servies par le site lui-même
         // (ressources/polices/), mais elles arrivent quand même APRÈS la
         // page : le navigateur ne les demande qu'en rencontrant un texte qui
         // les emploie. Imprimer avant leur chargement donnerait un CV en
@@ -192,6 +192,16 @@ const { servir } = require('./serveur-local');
 
         if (erreurs.length) {
             console.warn('⚠ Erreurs JS pendant le rendu :\n  ' + erreurs.join('\n  '));
+        }
+
+        // LE CV TIENT SUR UNE PAGE (voir README-build.md). Une ligne de
+        // trop au CV, ou le code QR du pied, et Chromium ouvrait une
+        // seconde page sans rien dire : on le saurait en recevant le
+        // fichier. Les pages se comptent dans le PDF lui-même (« /Type
+        // /Page », pas « /Pages »).
+        const pages = (fs.readFileSync(SORTIE, 'latin1').match(/\/Type\s*\/Page(?![a-zA-Z])/g) || []).length;
+        if (pages !== 1) {
+            throw new Error(`le CV fait ${pages} pages au lieu d'une : raccourcir le contenu ou resserrer @media print (index.html)`);
         }
 
         const poids = (fs.statSync(SORTIE).size / 1024).toFixed(0);

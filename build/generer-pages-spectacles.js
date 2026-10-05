@@ -32,8 +32,11 @@
  *
  *      node build/generer-pages-spectacles.js
  *
- *  Le script réécrit /spectacles/ et sitemap.xml de bout en bout. Il est
- *  idempotent : le relancer sans rien changer ne produit aucune différence.
+ *  Le script réécrit /spectacles/ et sitemap.xml de bout en bout, et
+ *  l'agenda à s'abonner, dates.ics (voir build/fabriquer-agenda.js), et
+ *  la carte de la saison dans index.html (build/fabriquer-carte.js). Il
+ *  est idempotent : le relancer sans rien changer ne produit aucune
+ *  différence.
  *  Ne modifiez jamais un fichier de /spectacles/ à la main — il sera écrasé.
  */
 
@@ -564,13 +567,20 @@ function spriteUtile(html) {
 }
 
 // ── Gabarit d'une page ──────────────────────────────────────────────
-function pageSpectacle(uni, cle, cv, SHOW_DATA) {
+function pageSpectacle(uni, cle, cv, SHOW_DATA, suivant) {
     const titre = uni.title || cle;
     const dates = datesDe(cle, SHOW_DATA);
     const photos = photosDe(uni);
     const urlPage = `${SITE}/spectacles/${uni.slug}/`;
     const desc = descriptionDe(uni, titre, cv);
-    const photoOg = photos[0] ? `${SITE}/${photos[0].src}` : `${SITE}/ressources/images/og-adrien-vada.jpg`;
+    // L'IMAGE DE PARTAGE : celle que le spectacle a à lui, au format que
+    // les messageries attendent (1200 × 630, avec le titre — voir
+    // build/fabriquer-images-partage.py), sinon sa première photo, sinon
+    // celle du site.
+    const partage = `ressources/images/partage/${uni.slug}.jpg`;
+    const ogPropre = fs.existsSync(path.join(RACINE, partage));
+    const photoOg = ogPropre ? `${SITE}/${partage}`
+        : photos[0] ? `${SITE}/${photos[0].src}` : `${SITE}/ressources/images/og-adrien-vada.jpg`;
     const p = uni.palette || {};
     const titreComplet = titreDe(uni, titre, cv);
 
@@ -600,14 +610,17 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     // icsDate et bookingUrl alimentent les boutons « agenda » et « réserver » ;
     // title/subtitle sont constants pour la page, pas portés par datesDe().
     const perfs = dates.map(d => ({
-        dateLabel: d.label, location: d.lieu, time: d.heure, isSchool: d.scolaire,
+        dateLabel: d.label, location: d.lieu, city: d.ville, time: d.heure, isSchool: d.scolaire,
         icsDate: d.iso, bookingUrl: d.billetterie, title: titre, subtitle: uni.subtitle || ''
     }));
 
     const panneau = MONTAGE.panelHtml(info, uni, {
         dates: MONTAGE.datesHtml(perfs),
         enCreation,
-        statique: true
+        statique: true,
+        // Le spectacle suivant, dans l'ordre du CV (voir main) : null après
+        // le dernier — le pied renvoie alors au répertoire.
+        suivant: suivant || null
     });
 
     // Les chemins d'images du montage sont relatifs à la racine du site ;
@@ -655,6 +668,11 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA) {
     <meta name="description" content="${esc(desc)}">
     <link rel="canonical" href="${urlPage}">
     <meta name="theme-color" content="${esc(p.bg || '#0a0907')}">
+    <!-- LE NAVIGATEUR SAIT QUE LA SALLE EST SOMBRE (ou claire) : ses barres
+         de défilement, ses champs et le fond qu'il peint avant la feuille
+         de style s'y accordent — un éclair blanc avant une salle noire, au
+         téléphone, se voyait. -->
+    <meta name="color-scheme" content="${MONTAGE.salleDe(uni) === 'claire' ? 'light' : 'dark'}">
 
 ${MESURE}${SERVICE_WORKER}${SPECULATION}
     <meta property="og:type" content="article">
@@ -662,7 +680,10 @@ ${MESURE}${SERVICE_WORKER}${SPECULATION}
     <meta property="og:site_name" content="Adrien Vada">
     <meta property="og:title" content="${esc(titreComplet)}">
     <meta property="og:description" content="${esc(desc)}">
-    <meta property="og:image" content="${esc(photoOg)}">
+    <meta property="og:image" content="${esc(photoOg)}">${ogPropre ? `
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="${esc(titreComplet)}">` : ''}
     <meta property="og:url" content="${urlPage}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${esc(titreComplet)}">
@@ -674,6 +695,11 @@ ${MESURE}${SERVICE_WORKER}${SPECULATION}
          index.html). -->
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-96x96.png" sizes="96x96">
+    <!-- L'icône d'écran d'accueil et le manifeste, comme l'accueil : sans
+         eux, « Sur l'écran d'accueil » depuis une page spectacle posait une
+         capture de la page en guise d'icône. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../../favicon_io/site.webmanifest">
 
     <!-- Les polices du site, servies par le site (ressources/polices/). Le
          titre est en Cinzel et le synopsis en Inter : ce sont les deux
@@ -790,7 +816,7 @@ ${MESURE}${SERVICE_WORKER}${SPECULATION}
         /* Le retour au site : la seule chose que la page ajoute au montage. */
         .u-retour {
             position: absolute; top: 1.2rem; left: 1.4rem; z-index: 4;
-            font: 700 .74rem/1 'Montserrat', system-ui, sans-serif;
+            font: 700 .74rem/1 'Inter', system-ui, sans-serif;
             letter-spacing: .16em; text-transform: uppercase;
             color: var(--u-muted); text-decoration: none;
         }
@@ -962,16 +988,26 @@ const couverture = (rel) => {
     return d && d.h ? Math.max(1, 1.5 * d.w / d.h) : 2.25;
 };
 
-//  Au repos : deux colonnes au téléphone, quatre cartes de 240 px au plus
-//  sur grand écran. Le script réécrit ces tailles à chaque changement de
-//  densité (voir majTailles).
-const taillesCarte = (f, colonnesMobile = 2, colonnesEcran = 4) =>
+//  Au repos : TROIS colonnes au téléphone — le répertoire s'y ouvre au
+//  zoom 3, posé avant le premier rendu (voir le script du <head>) — et
+//  quatre cartes de 240 px au plus sur grand écran. Les tailles écrites
+//  ici en annonçaient deux au téléphone : le navigateur y allait chercher
+//  des photos moitié trop grandes (relevé par l'expertise d'octobre 2026).
+//  Le script réécrit ces tailles à chaque changement de densité (voir
+//  majTailles).
+const taillesCarte = (f, colonnesMobile = 3, colonnesEcran = 4) =>
     `(max-width: 640px) ${Math.ceil(f * 100 / colonnesMobile)}vw, ${Math.ceil(f * 960 / colonnesEcran)}px`;
 
-function imageCarte(src, pos, f) {
+//  LA PREMIÈRE RANGÉE PART AVEC LA PAGE. Paresseuses, les trois premières
+//  affiches attendaient que la mise en page dise qu'elles sont à l'écran —
+//  elles le sont toujours : c'est le premier écran. Elles partent donc
+//  d'emblée, la première devant tout le reste ; les suivantes restent
+//  paresseuses.
+function imageCarte(src, pos, f, rang = 99) {
     const base = '../' + src.replace(/\.jpg$/, '');
+    const priorite = rang === 0 ? ' fetchpriority="high"' : rang < 3 ? '' : ' loading="lazy"';
     return `<picture><source type="image/webp" srcset="${esc(base)}-640.webp 640w, ${esc(base)}-1280.webp 1280w" sizes="${taillesCarte(f)}">`
-        + `<img src="../${esc(src)}"${pos ? ` style="--pos:${esc(pos)}"` : ''} alt="" loading="lazy" decoding="async"></picture>`;
+        + `<img src="../${esc(src)}"${pos ? ` style="--pos:${esc(pos)}"` : ''} alt=""${priorite} decoding="async"></picture>`;
 }
 
 function pageRepertoire(fiches, misAJour) {
@@ -991,7 +1027,7 @@ function pageRepertoire(fiches, misAJour) {
         // premier survol, jamais d'avance.
         const f1 = f.vignette ? couverture(f.vignette) : 1;
         const media = f.vignette
-            ? `<span class="media media--photo">${imageCarte(f.vignette, f.vignettePos, f1)}</span>`
+            ? `<span class="media media--photo">${imageCarte(f.vignette, f.vignettePos, f1, i)}</span>`
             : `<span class="media"><span class="carton" style="--cbg:${esc(f.paletteBg || '#171410')};--ctx:${esc(f.paletteText || '#f2ece0')}">
                     <span class="carton-orne" aria-hidden="true">✦</span>
                     <span class="carton-titre">${esc(f.titre)}</span>
@@ -1028,14 +1064,14 @@ function pageRepertoire(fiches, misAJour) {
         { titre: 'Courts-métrages', icone: 'i-solid-film', fiches: fiches.filter(f => f.film) }
     ].filter(g => g.fiches.length);
 
-    const sections = groupes.map(g => `
+    const sections = groupes.map((g, gi) => `
         <section>
             <h2 class="groupe">
                 <span class="groupe-ico" aria-hidden="true"><svg class="ico"><use href="#${g.icone}"></use></svg></span>
                 <span>${esc(g.titre)}</span>
                 <span class="groupe-filet" aria-hidden="true"></span>
             </h2>
-            <ul class="repertoire">${g.fiches.map(carte).join('')}
+            <ul class="repertoire">${g.fiches.map((f, i) => carte(f, gi === 0 ? i : 99)).join('')}
             </ul>
         </section>`).join('');
 
@@ -1101,6 +1137,8 @@ ${MESURE}${SERVICE_WORKER}${SPECULATION}
          déclarait que favicon.svg : 128 Ko pour une icône de 16 px. -->
     <link rel="icon" type="image/png" href="../favicon_io/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../favicon_io/favicon-96x96.png" sizes="96x96">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon_io/site.webmanifest">
     <!-- Les polices du site, servies par le site (ressources/polices/). -->
     <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
     <!-- Les polices, puis la feuille du répertoire, DANS la page : deux
@@ -1284,9 +1322,17 @@ ${JSON.stringify(liste, null, 2)}
                 var reste = doc.scrollHeight - vh - (window.scrollY || doc.scrollTop || 0);
                 var plancher = Math.max(0, Math.min(1, 1 - reste / (vh * .3)));
                 var encore = false;
+                // TOUT LIRE, PUIS TOUT ÉCRIRE. Chaque carte lisait sa place
+                // juste après que la précédente avait écrit ses variables :
+                // le navigateur refaisait le style et la mise en page avant
+                // chaque lecture, une fois par carte et par image — au
+                // téléphone à ×4, des images perdues pendant le défilement
+                // (mesuré par l'expertise d'octobre 2026). Les places sont
+                // donc lues toutes ensemble, avant la première écriture.
+                var places = suivies.map(function (c) { return c.getBoundingClientRect(); });
                 for (var k = 0; k < suivies.length; k++) {
                     var carte = suivies[k];
-                    var r = carte.getBoundingClientRect();
+                    var r = places[k];
                     var base = Math.max(0, Math.min(1, (vh - r.top) / (vh * .75)));
                     // La vague gauche-droite : chaque colonne prend un
                     // retard de phase sur sa voisine. La phase S'ÉTEINT à
@@ -1541,8 +1587,12 @@ html.vt-theme::view-transition-new(root) { z-index: 2; }
     --or-defaut: #bfa98a;
     /* Part d'accent gardée dans l'encre des pastilles d'état — voir .etat. */
     --etat-encre: 65%;
+    /* Les barres de défilement et les champs du navigateur suivent le thème
+       (comme sur l'accueil). */
+    color-scheme: dark;
 }
 :root[data-theme="light"] {
+    color-scheme: light;
     --etat-encre: 45%;
     --bg: #faf9f5; --surface: #ffffff; --text: #1a1a1f; --muted: #575761;
     --accent: #967e5b; --accent-ink: #826c4a; --on-accent: #ffffff;
@@ -1645,7 +1695,7 @@ a { color: var(--accent-ink); }
 /* ── La manchette ── */
 .tete { padding: 3.2rem 0 2.4rem; text-align: center; }
 .sur-titre {
-    margin: 0 0 1rem; font: 700 .68rem/1.5 'Montserrat', system-ui, sans-serif;
+    margin: 0 0 1rem; font: 700 .68rem/1.5 'Inter', system-ui, sans-serif;
     letter-spacing: .26em; text-transform: uppercase; color: var(--accent-ink);
 }
 h1 {
@@ -1668,7 +1718,7 @@ h1 {
 /* ── Intitulés de groupe — les mêmes que le CV, icône comprise ── */
 .groupe {
     display: flex; align-items: center; gap: .8rem; margin: 2.6rem 0 0;
-    font: 700 .72rem/1 'Montserrat', system-ui, sans-serif;
+    font: 700 .72rem/1 'Inter', system-ui, sans-serif;
     letter-spacing: .2em; text-transform: uppercase; color: var(--accent-ink);
 }
 .groupe-ico {
@@ -1950,7 +2000,9 @@ html[data-zoom="6"] { --colonnes: 6; }
 html[data-zoom="1"] .nom { font-size: 1.12rem; }
 @media (max-width: 640px) {
     html[data-zoom="3"] .repertoire { gap: .9rem .5rem; }
-    html[data-zoom="3"] .nom { font-size: .62rem; padding-bottom: .28rem; }
+    /* Onze pixels au plus serré : pas de texte sous onze pixels (il était
+       à .62rem, moins de dix). */
+    html[data-zoom="3"] .nom { font-size: .69rem; padding-bottom: .28rem; }
     html[data-zoom="3"] .fil, html[data-zoom="3"] .role { display: none; }
     html[data-zoom="3"] .txt { padding-top: .35rem; }
     /* Au rang le plus serré, la carte n'est plus qu'une image : un mur
@@ -2028,6 +2080,10 @@ function main() {
     const SHOW_UNIVERSES = chargerUnivers();
     const SHOW_DATA = chargerDates();
     const cvParTitre = lireLignesCv();
+    // L'ORDRE DU CV, relevé avant qu'on n'y ajoute les clés normalisées :
+    // c'est lui que suit « Spectacle suivant », au pied de chaque page —
+    // le même ordre que le panneau de l'accueil, qui lit les lignes.
+    const ordreCv = Object.keys(cvParTitre);
     // Les mêmes lignes, indexées sur leur titre normalisé : c'est ce
     // second jeu de clés qui sauve le rapprochement quand la typographie
     // diffère d'un fichier à l'autre.
@@ -2051,6 +2107,25 @@ function main() {
     fs.rmSync(SORTIE, { recursive: true, force: true });
     fs.mkdirSync(SORTIE, { recursive: true });
 
+    // La suite des pages, dans l'ordre du CV ; un univers sans ligne de CV
+    // vient après, dans l'ordre du fichier.
+    const rangCv = (cle) => {
+        const n = normaliserTitre(cle);
+        const i = ordreCv.findIndex(k => k === cle || normaliserTitre(k) === n);
+        return i < 0 ? Infinity : i;
+    };
+    const suite = Object.keys(SHOW_UNIVERSES)
+        .filter(cle => SHOW_UNIVERSES[cle] && SHOW_UNIVERSES[cle].slug)
+        .map((cle, i) => ({ cle, i, r: rangCv(cle) }))
+        .sort((a, b) => (a.r - b.r) || (a.i - b.i))
+        .map(x => x.cle);
+    const suivantDe = (cle) => {
+        const n = suite[suite.indexOf(cle) + 1];
+        if (!n) return null;
+        const u = SHOW_UNIVERSES[n];
+        return { titre: u.title || n, slug: u.slug, film: u.kind === 'film' };
+    };
+
     const faites = [];
     Object.keys(SHOW_UNIVERSES).forEach(cle => {
         const uni = SHOW_UNIVERSES[cle];
@@ -2063,7 +2138,7 @@ function main() {
         const cv = ligneCv || {};
         const dossier = path.join(SORTIE, uni.slug);
         fs.mkdirSync(dossier, { recursive: true });
-        dates[uni.slug] = ecrirePage(`spectacles/${uni.slug}/index.html`, pageSpectacle(uni, cle, cv, SHOW_DATA), anciens);
+        dates[uni.slug] = ecrirePage(`spectacles/${uni.slug}/index.html`, pageSpectacle(uni, cle, cv, SHOW_DATA, suivantDe(cle)), anciens);
         const photos = photosDe(uni);
         faites.push({
             slug: uni.slug,
@@ -2135,6 +2210,12 @@ function main() {
         .format(new Date(an, mois - 1, 1));
     const dateRepertoire = ecrirePage('spectacles/index.html', pageRepertoire(faites, misAJour), anciens);
 
+    // ── LA CARTE DE LA SAISON (le bloc CARTE-SAISON d'index.html) ──
+    // Faite ici pour la même raison que dates.ics (plus bas), et AVANT le
+    // sitemap, qui date l'accueil d'après ses changements. Voir
+    // build/fabriquer-carte.js.
+    require('./fabriquer-carte.js').ecrire();
+
     // ── sitemap ──
     const url = (loc, lastmod, freq, prio) => `    <url>
         <loc>${loc}</loc>
@@ -2151,11 +2232,20 @@ function main() {
     fs.writeFileSync(path.join(RACINE, 'sitemap.xml'),
         `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`);
 
+    // ── L'AGENDA À S'ABONNER (dates.ics) ──
+    // Fait ICI, et non par une commande à lui : il lit les mêmes dates.js
+    // et univers.js que ces pages, et c'est ce script qu'on relance après
+    // chaque export des dates. Une commande de plus aurait été oubliée au
+    // premier export, et l'agenda des abonnés aurait retardé sans bruit.
+    // Voir build/fabriquer-agenda.js.
+    const agenda = require('./fabriquer-agenda.js').ecrire(RACINE);
+
     console.log(`  ${faites.length} pages spectacle générées dans /spectacles/`);
     faites.forEach(f => console.log(`    /spectacles/${f.slug}/   ${f.titre}${f.cv ? '' : '   (aucune ligne de CV appariée)'}`));
     console.log(`  /spectacles/            répertoire (plaque tournante)`);
     console.log(`  /galerie/               galerie photo`);
     console.log(`  sitemap.xml : ${faites.length + 3} adresses`);
+    console.log(`  dates.ics : ${agenda.evenements} représentation(s) publique(s), depuis le ${agenda.depuis}${agenda.change ? '' : ' (inchangé)'}`);
 }
 
 main();

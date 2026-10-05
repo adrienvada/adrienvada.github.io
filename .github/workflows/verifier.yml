@@ -5,7 +5,7 @@
 #  un vrai navigateur et build/verifier-site.js vérifie ce qui a déjà
 #  cassé ou casserait sans bruit : l'accueil sans erreur, la règle de
 #  l'ouverture, l'agenda des univers, l'impression du CV, le site sans
-#  JavaScript, les pages spectacle, le sitemap. Moins de quatre minutes,
+#  JavaScript, les pages spectacle, le sitemap. Six minutes environ,
 #  et une coche verte ou rouge sur la demande de fusion.
 #
 #  CE N'EST PAS LA PUBLICATION. Rien n'est déployé ici, et ce workflow

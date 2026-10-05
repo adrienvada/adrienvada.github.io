@@ -366,6 +366,188 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     }
 }
 
+/* LES DÉBUTS DE CHAPITRE, SUR LA BARRE (posés par mesurerChapitres, dans
+   univers.js) : un cran de la couleur du fond, qui coupe la barre — on
+   voit où l'on en est, et combien il reste de chapitres. */
+.u-progress .u-progress-repere {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    margin-left: -1px;
+    background: var(--u-bg);
+}
+
+/* ══ LES CHAPITRES : LA PASTILLE DU BAS ══
+   Le chapitre en cours (« 2/5 · Le spectacle »), au bas de l'écran, dans
+   la zone du pouce ; elle s'ouvre vers le haut sur la liste des
+   chapitres. Elle se tait pendant l'ouverture (voir suivreChapitre) et
+   paraît en fondu quand le montage approche. Sans script, pas de
+   pastille : elle n'aurait rien à faire (univers-statique.css). */
+.u-chapitres {
+    position: fixed;
+    left: 50%;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transform: translate(-50%, 8px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out),
+        visibility 0s linear var(--dur-base);
+}
+
+.u-chapitres.est-visible,
+.u-chapitres.est-ouverte {
+    transform: translate(-50%, 0);
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+}
+
+.u-chapitres-bouton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 20px;
+    border: 1px solid color-mix(in srgb, var(--u-accent) 45%, transparent);
+    background: color-mix(in srgb, var(--u-bg) 88%, transparent);
+    color: var(--u-text);
+    font: 600 12px/1 Inter, sans-serif;
+    letter-spacing: .02em;
+    box-shadow: 0 8px 24px -10px rgb(0 0 0 / .55);
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.u-chapitres-bouton .ico {
+    font-size: 10px;
+    color: var(--u-accent-ink);
+    transition: transform var(--dur-base) var(--ease-out);
+}
+
+.u-chapitres-bouton[aria-expanded="true"] .ico {
+    transform: rotate(180deg);
+}
+
+.u-chapitres-n {
+    font-variant-numeric: tabular-nums;
+    color: var(--u-accent-ink);
+    font-weight: 700;
+}
+
+.u-chapitres-liste {
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    min-width: 220px;
+    border-radius: 14px;
+    border: 1px solid var(--u-line);
+    background: var(--u-surface, var(--u-bg));
+    box-shadow: 0 18px 40px -16px rgb(0 0 0 / .6);
+}
+
+.u-chapitres-liste[hidden] {
+    display: none;
+}
+
+.u-chapitres-liste button {
+    border: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--u-text);
+    font: 500 14px/1.2 Inter, sans-serif;
+    text-align: left;
+    cursor: pointer;
+}
+
+.u-chapitres-liste button:hover,
+.u-chapitres-liste button:focus-visible {
+    background: color-mix(in srgb, var(--u-accent) 14%, transparent);
+}
+
+.u-chapitres-liste button[aria-current="step"] {
+    font-weight: 700;
+}
+
+.u-chapitres-liste button[aria-current="step"] .u-chapitres-n {
+    background: var(--u-accent);
+    color: var(--u-on-accent);
+}
+
+.u-chapitres-liste .u-chapitres-n {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--u-line);
+    font-size: 11px;
+}
+
+/* ══ LE SPECTACLE SUIVANT ══
+   Au bout du pied, après la distribution : la suite, dans l'ordre du CV
+   (voir suivantHtml). Un grand lien calme : « Spectacle suivant », puis
+   le titre en Cinzel, et la flèche qui avance au survol. */
+.u-suivant {
+    /* 72 px dessous : la pastille des chapitres ne couvre jamais la suite. */
+    margin: 46px 0 72px;
+    padding-top: 26px;
+    border-top: 1px solid var(--u-line);
+    text-align: center;
+}
+
+.u-suivant a {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    gap: 6px 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: var(--u-text);
+    text-decoration: none;
+}
+
+.u-suivant-quoi {
+    font: 600 11px/1.4 Inter, sans-serif;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--u-muted);
+}
+
+.u-suivant-titre {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: clamp(1.3rem, 5vw, 1.8rem);
+    line-height: 1.1;
+    color: var(--u-accent-ink);
+}
+
+.u-suivant .ico {
+    align-self: center;
+    font-size: 15px;
+    color: var(--u-accent-ink);
+    transition: transform var(--dur-base) var(--ease-out);
+}
+
+.u-suivant a:hover .ico,
+.u-suivant a:focus-visible .ico {
+    transform: translateX(4px);
+}
+
 /* ── Hero ──
    EXACTEMENT un écran, et la première image suit. Le hero a d'abord
    été collé sur près de deux écrans pour laisser au défilement le
@@ -470,7 +652,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 }
 
 .u-eyebrow {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .7rem;
     font-weight: 700;
     letter-spacing: .28em;
@@ -514,11 +696,19 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     font-weight: 700;
     /* 56px : les 2 × 24px de padding du hero, et de quoi respirer. */
     --u-title-space: calc(100vw - 56px);
-    /* 0.58em par signe : la chasse du Cinzel gras, prise large,
-       comme le 0.56 de .u-fit. Un titre plus resserré occupera un
-       peu moins que la place réservée — jamais plus. */
+    /* 0.66em PAR SIGNE POUR LE MOT LE PLUS LONG, 0.58 POUR LA LONGUEUR.
+       Le mot le plus long ne se replie pas : c'est lui qui sort du cadre,
+       et il a donc droit à la chasse de ses lettres les plus larges. Le
+       0.58 d'origine — la chasse moyenne du Cinzel gras — faisait sortir
+       « Cléophène » de 1 à 6 px de l'écran en mouvement réduit et sans
+       script, sur tous les téléphones mesurés (360, 390 et 412 px), et ne
+       lui laissait que 9 à 12 px de marge ailleurs, contre 24 aux autres :
+       ses lettres larges (C, O, P, H, N) en prennent 0.64. La longueur
+       totale, elle, est une moyenne sur tout le titre — elle garde la
+       chasse moyenne. Un titre plus resserré occupera un peu moins que la
+       place réservée — jamais plus. */
     --u-title-size: min(5.6rem, 18vw,
-            calc(var(--u-title-space) / (var(--u-title-chars, 12) * 0.58)),
+            calc(var(--u-title-space) / (var(--u-title-chars, 12) * 0.66)),
             calc(3 * var(--u-title-space) / (var(--u-title-len, 18) * 0.58)));
     --u-title-track: -.015em;
     font-size: var(--u-title-size);
@@ -781,7 +971,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
    du spectacle, et le retrait du curseur. */
 .u-hero-note {
     margin: 0;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .74rem;
     font-weight: 700;
     letter-spacing: .12em;
@@ -1210,14 +1400,21 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     pointer-events: none;
 }
 
+/* Le fond du spectacle monte du bas de la photo jusque sous la légende :
+   un dégradé, pas un bandeau. */
 .u-fig--plein .u-cap {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 8%;
+    bottom: 0;
     z-index: 2;
     text-align: center;
-    padding: 0 24px;
+    /* 52 px de chaque côté : le bouton d'agrandissement, en bas à droite
+       de la photo, ne touche jamais la fin de la légende. */
+    padding: 16vh 52px 8%;
+    background: linear-gradient(to top, color-mix(in srgb, var(--u-bg) 70%, transparent) 0%,
+            color-mix(in srgb, var(--u-bg) 35%, transparent) 55%, transparent 100%);
+    pointer-events: none;
 }
 
 /* ── LA LUMIÈRE QUI MONTE ──
@@ -1639,12 +1836,9 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 }
 
 .u-group .u-cap span {
-    background: none;
-    border: 0;
-    padding: 0;
     color: var(--u-muted);
-    letter-spacing: .12em;
-    font-size: .72rem;
+    font-size: .9rem;
+    text-shadow: none;
 }
 
 /* ── Duo : deux photos, la seconde plus bas ── */
@@ -1990,7 +2184,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 .u-chapter :is(h2, h3) {
     margin: 0;
     max-width: 40ch;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     /* En variable pour que le petit écran puisse la reprendre au
        rapetissement global des titres — voir #show-universe h3. */
     --u-chapter-size: clamp(.7rem, 2.2vw, .92rem);
@@ -2078,7 +2272,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 .u-over cite {
     display: block;
     margin-top: 18px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-style: normal;
     font-size: .7rem;
     font-weight: 700;
@@ -2167,7 +2361,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 .u-quote cite {
     position: relative;
     margin-top: 26px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-style: normal;
     font-size: .7rem;
     font-weight: 700;
@@ -2181,22 +2375,32 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     --e: .5;
 }
 
-/* Pas de backdrop-filter ici, contrairement à la croix : la légende
-   défile, et un flou d'arrière-plan recalculé à chaque image coûte
-   plus cher que tout le reste du panneau réuni. Un aplat semi-opaque
-   donne le même détachement pour rien. */
+/* LES LÉGENDES, EN TYPOGRAPHIE DE PROGRAMME. Elles étaient des
+   pastilles translucides en capitales espacées : posées sur des photos de
+   plateau, elles ressemblaient à des notifications d'application. Elles
+   deviennent une ligne de programme de salle — Inter en italique, à sa
+   casse (celle des données : « Créé en 2024 au palais de justice de
+   Rouen. »), sans capsule. Sur une photo plein cadre, elles se posent sur
+   le fond du spectacle qui monte du bas de l'image (voir
+   .u-fig--plein .u-cap) ; une ombre douce les détache de ce qu'il reste
+   de photo derrière elles.
+
+   Pas de backdrop-filter : la légende défile, et un flou d'arrière-plan
+   recalculé à chaque image coûte plus cher que tout le reste du panneau
+   réuni. */
 .u-cap span {
     display: inline-block;
-    font-family: 'Montserrat', sans-serif;
-    font-size: .74rem;
-    font-weight: 500;
-    letter-spacing: .16em;
-    text-transform: uppercase;
+    max-width: 36ch;
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(.95rem, 3.4vw, 1.12rem);
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.45;
+    letter-spacing: .005em;
+    text-transform: none;
     color: var(--u-text);
-    background: color-mix(in srgb, var(--u-bg) 78%, transparent);
-    border: 1px solid var(--u-line);
-    padding: 8px 16px;
-    border-radius: 999px;
+    text-shadow: 0 1px 14px color-mix(in srgb, var(--u-bg) 85%, transparent),
+        0 0 3px color-mix(in srgb, var(--u-bg) 55%, transparent);
     /* Elle entre quand ELLE arrive à l'écran. Déclenchée par sa figure
        — un seuil de 25 % sur 86 % d'écran —, elle se jouait environ
        440 px sous le bas de l'écran : on ne la voyait jamais arriver.
@@ -2266,63 +2470,221 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     text-align: left;
 }
 
-/* DEUX COLONNES : .u-date-info (date, lieu, horaire) absorbe seule le
-   retour à la ligne ; .u-date-actions ne s'enroule jamais et reste donc
-   toujours au même endroit à droite — avant, une ligne unique en
-   flex-wrap laissait les boutons retomber à un endroit différent d'une
-   représentation à l'autre, selon ce qui débordait. */
-.u-date {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 14px 4px;
+/* ══ LES DATES AU PIED DE L'UNIVERS : LE DESSIN DE L'ONGLET DATES ══
+   Une ligne par lieu (une série tient sur une ligne), écrite par
+   datesHtml (univers-montage.js) : l'éphéméride à gauche — le mois en
+   bandeau, le jour, le jour de la semaine —, puis la ville et la salle,
+   puis une puce par séance et l'agenda. Les mêmes tailles et les mêmes
+   gestes que l'onglet Dates de l'accueil (index.html, « .dl »), à la
+   couleur du spectacle : --u-accent pour le bandeau et les filets,
+   --u-accent-ink pour ce qui s'écrit en couleur. */
+.u-dl {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: center;
+    padding: 10px 2px;
     border-bottom: 1px solid var(--u-line);
 }
 
-.u-date-info {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 4px 12px;
-    min-width: 0;
-    flex: 1 1 auto;
+.u-dl:first-child {
+    border-top: 1px solid var(--u-line);
 }
 
-.u-date-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    /* Aligné sur la date, en tête de ligne, pas sur le centre d'un bloc
-       d'info qui peut compter une ou deux lignes selon la séance. */
-    margin-top: 1px;
+.u-dl-feuille {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 56px;
+    overflow: hidden;
+    overflow: clip;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--u-accent) 12%, var(--u-bg));
+    border: 1px solid color-mix(in srgb, var(--u-accent) 55%, transparent);
+    color: var(--u-text);
 }
 
-.u-date-when {
-    font-family: ui-monospace, monospace;
-    font-size: .74rem;
-    font-weight: 700;
-    color: var(--u-accent-ink);
+.u-dl-bande {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 15px;
+    background: var(--u-accent);
+    color: var(--u-on-accent);
+    font: 700 11px/15px Inter, sans-serif;
+    text-transform: lowercase;
+    text-align: center;
     white-space: nowrap;
 }
 
-.u-date-where {
-    font-size: .84rem;
-    flex: 1 1 12ch;
+/* « janv–févr » : serré, à dix pixels et demi — à onze, le mot déborde de
+   la feuille (voir la même exception dans l'onglet Dates). */
+.u-dl-bande--2 {
+    font-size: 10.5px;
+    letter-spacing: -0.04em;
 }
 
-/* SUPERPOSÉ, PAS ACCOLÉ : quand une séance scolaire ajoute sa mention,
-   elle prend sa propre ligne (voir datesHtml, univers-montage.js) plutôt
-   que de s'accoler à l'horaire avec un « · » — ce qui allongeait la
-   ligne assez pour faire décrocher .u-date-actions. */
-.u-date-time {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    font-family: ui-monospace, monospace;
-    font-size: .72rem;
+.u-dl-num {
+    margin-top: 6px;
+    font: 700 19px/1 Inter, sans-serif;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+}
+
+.u-dl-feuille--2 .u-dl-num {
+    font-size: 14px;
+    letter-spacing: -0.02em;
+}
+
+.u-dl-jour {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 3px;
+    font: 700 11px/1 Inter, sans-serif;
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+    text-align: center;
+    white-space: nowrap;
     color: var(--u-muted);
+}
+
+.u-dl-feuille--2 .u-dl-jour {
+    letter-spacing: -0.05em;
+}
+
+.u-dl-corps {
+    min-width: 0;
+}
+
+.u-dl-lieu {
+    margin: 0;
+    font-size: .84rem;
+    line-height: 1.35;
+    color: var(--u-muted);
+}
+
+.u-dl-ville {
+    font-weight: 700;
+    color: var(--u-text);
+}
+
+.u-dl-seances {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.u-dl-puce {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 26px;
+    padding: 0 9px;
+    border: 1px solid color-mix(in srgb, var(--u-accent) 60%, transparent);
+    border-radius: 13px;
+    font: 600 12px/1.2 Inter, sans-serif;
+    font-variant-numeric: tabular-nums;
+    color: var(--u-text);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
+}
+
+a.u-dl-puce:hover,
+a.u-dl-puce:focus-visible {
+    border-color: var(--u-accent);
+    background: color-mix(in srgb, var(--u-accent) 14%, transparent);
+}
+
+/* La flèche tournée vers le haut : on part ailleurs, à la billetterie —
+   le même signe que dans l'onglet Dates. */
+.u-dl-puce .ico {
+    font-size: 9px;
+    color: var(--u-accent-ink);
+    transform: rotate(-45deg);
+}
+
+.u-dl-s-jour {
+    font-weight: 500;
+    color: var(--u-muted);
+}
+
+.u-dl-puce i,
+.u-dl-s-flou {
+    font-style: italic;
+    font-weight: 500;
+}
+
+.u-dl-puce--muette {
+    border-style: dashed;
+    border-color: var(--u-line);
+    color: var(--u-muted);
+    font-weight: 500;
+}
+
+/* L'agenda ferme la rangée, au bord droit. */
+.u-dl-agenda {
+    margin-left: auto;
+}
+
+.u-date-cal {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    color: var(--u-accent-ink);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background var(--dur-base) var(--ease-out),
+        border-color var(--dur-base) var(--ease-out),
+        color var(--dur-base) var(--ease-out);
+}
+
+.u-date-cal .ico {
+    font-size: 14px;
+}
+
+.u-date-cal:hover,
+.u-date-cal:focus-visible {
+    background: color-mix(in srgb, var(--u-accent) 14%, transparent);
+    border-color: color-mix(in srgb, var(--u-accent) 50%, transparent);
+}
+
+/* AU DOIGT, DES CIBLES À SA TAILLE : 34 px de puce, 40 d'agenda, et la
+   zone qui répond déborde du dessin sans rien pousser. */
+@media (pointer: coarse) {
+    .u-dl-seances {
+        gap: 7px;
+    }
+
+    .u-dl-puce {
+        position: relative;
+        min-height: 34px;
+        padding: 0 11px;
+        border-radius: 17px;
+    }
+
+    a.u-dl-puce::after {
+        content: '';
+        position: absolute;
+        inset: -4px -3px;
+    }
+
+    .u-date-cal {
+        width: 40px;
+        height: 40px;
+    }
 }
 
 /* L'ENCRE, PAS L'ACCENT. L'accent est une couleur de surface — celle des
@@ -2338,51 +2700,6 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     font-size: .85rem;
     font-style: italic;
     margin: 0 0 30px;
-}
-
-/* ── Boutons de représentation : agenda + réservation ──
-   Vivent dans .u-date-actions, à droite, hors du flux qui s'enroule
-   (.u-date-info) — voir plus haut. */
-.u-date-cal {
-    flex-shrink: 0;
-    width: 26px;
-    height: 26px;
-    display: grid;
-    place-items: center;
-    border-radius: 999px;
-    color: var(--u-muted);
-    background: transparent;
-    border: 1px solid var(--u-line);
-    cursor: pointer;
-    transition: background var(--dur-base) var(--ease-out),
-        border-color var(--dur-base) var(--ease-out),
-        color var(--dur-base) var(--ease-out);
-}
-
-.u-date-cal:hover {
-    color: var(--u-on-accent);
-    background: var(--u-accent);
-    border-color: var(--u-accent);
-}
-
-.u-date-book {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 5px 10px;
-    border-radius: 999px;
-    font-size: .72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: var(--u-on-accent);
-    background: var(--u-accent);
-    transition: filter var(--dur-base) var(--ease-out);
-}
-
-.u-date-book:hover {
-    filter: brightness(1.1);
 }
 
 /* ── Fenêtre « Ajouter à l'agenda » ──
@@ -2499,6 +2816,133 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     color: var(--u-on-accent);
 }
 
+/* Les séances d'une série : des puces, celle qu'on emporte pleine. */
+.u-cal-modal-seances {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: -6px 0 16px;
+}
+
+.u-cal-modal-seances[hidden] {
+    display: none;
+}
+
+.u-cal-modal-seances button {
+    min-height: 32px;
+    padding: 0 11px;
+    border-radius: 16px;
+    border: 1px dashed var(--u-line);
+    background: transparent;
+    color: var(--u-text);
+    font: 500 12px/1.2 Inter, sans-serif;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.u-cal-modal-seances button[aria-pressed="true"] {
+    border-style: solid;
+    border-color: var(--u-accent);
+    background: color-mix(in srgb, var(--u-accent) 16%, transparent);
+    font-weight: 700;
+}
+
+/* ── AU TÉLÉPHONE, UNE FEUILLE QUI MONTE DU BAS ──
+   Comme l'agenda de l'accueil (« AJOUTER À L'AGENDA » : UNE FEUILLE AU
+   TÉLÉPHONE, dans index.html) : sous 768 px, la fenêtre quitte le milieu
+   de l'écran, loin du pouce, pour une feuille posée sur le bord du bas,
+   ses coins hauts arrondis, une poignée qui dit qu'elle se tire (voir
+   feuilleAuDoigt, univers.js). Son fond va jusqu'au bord ; son contenu
+   s'arrête au-dessus de la barre d'accueil de l'iPhone. Seul le voile
+   fond : une feuille qui monte en devenant opaque se lit mal. La croix,
+   les choix et les séances à la taille du doigt (44 px). Sur ordinateur,
+   rien ne change. */
+.u-cal-poignee {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .u-cal-modal {
+        place-items: end stretch;
+        padding: 0;
+        opacity: 1;
+        transition: none;
+    }
+
+    .u-cal-modal-backdrop {
+        opacity: 0;
+        transition: opacity var(--dur-base) var(--ease-out);
+    }
+
+    .u-cal-modal.is-open .u-cal-modal-backdrop {
+        opacity: 1;
+    }
+
+    .u-cal-modal-card {
+        /* Les pages spectacle n'ont pas la remise à zéro de Tailwind : sans
+           cela, la largeur pleine s'ajoutait aux marges intérieures. */
+        box-sizing: border-box;
+        max-width: none;
+        max-height: calc(100% - 40px - env(safe-area-inset-top, 0px));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0 20px calc(20px + env(safe-area-inset-bottom, 0px));
+        border-bottom: 0;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -16px 40px -16px rgb(0 0 0 / .55);
+        transform: translateY(100%);
+    }
+
+    .u-cal-modal.is-open .u-cal-modal-card {
+        transform: none;
+    }
+
+    .u-cal-poignee {
+        display: flex;
+        justify-content: center;
+        margin: 0 -20px;
+        padding: 10px 0 14px;
+    }
+
+    .u-cal-poignee::before {
+        content: '';
+        width: 40px;
+        height: 5px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--u-muted) 55%, transparent);
+    }
+
+    /* La prise : ni défilement ni sélection sous le doigt qui tire. */
+    .u-cal-modal [data-u-cal-prise] {
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .u-cal-modal-close {
+        top: 18px;
+        right: 8px;
+        width: 44px;
+        height: 44px;
+        border: 0;
+    }
+
+    .u-cal-modal-options button {
+        min-height: 44px;
+    }
+
+    .u-cal-modal-seances button {
+        min-height: 40px;
+    }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+    .u-cal-modal-card,
+    .u-cal-modal-backdrop {
+        transition: none;
+    }
+}
+
 /* ── Le palmarès ──
    Au générique, juste avant la distribution : ce qui est arrivé au
    film après le tournage, avant ceux qui l'ont fait. La distinction
@@ -2512,7 +2956,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 
 .u-prix :is(h3, h4) {
     margin: 0 0 14px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .7rem;
     font-weight: 700;
     letter-spacing: .18em;
@@ -2563,7 +3007,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 
 .u-cast :is(h3, h4) {
     margin: 0 0 14px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .7rem;
     font-weight: 700;
     letter-spacing: .18em;
@@ -2611,7 +3055,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     gap: 8px;
     padding: 12px 22px;
     border-radius: 8px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .72rem;
     font-weight: 700;
     letter-spacing: .12em;
@@ -3259,7 +3703,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .7rem;
     font-weight: 700;
     letter-spacing: .32em;
@@ -3715,7 +4159,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 }
 
 .u-zoom figcaption {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .74rem;
     letter-spacing: .16em;
     text-transform: uppercase;
@@ -3817,7 +4261,10 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     .u-fig-media,
     .u-fig img,
     .u-of-photo img,
-    .u-cap span {
+    .u-cap span,
+    .u-chapitres,
+    .u-chapitres-bouton .ico,
+    .u-suivant .ico {
         transition: none !important;
         animation: none !important;
         filter: none !important;

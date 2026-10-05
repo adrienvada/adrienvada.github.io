@@ -12,6 +12,11 @@
     <meta name="description" content="Fulguré.e.s, Compagnie Alchimie — avec Adrien Vada (Adrien / Le jeune mec / Jerem). Une fratrie. Un village. Perdu. La foudre y a frappé il y a quelques…">
     <link rel="canonical" href="https://adrienvada.fr/spectacles/fulgurees/">
     <meta name="theme-color" content="#04050d">
+    <!-- LE NAVIGATEUR SAIT QUE LA SALLE EST SOMBRE (ou claire) : ses barres
+         de défilement, ses champs et le fond qu'il peint avant la feuille
+         de style s'y accordent — un éclair blanc avant une salle noire, au
+         téléphone, se voyait. -->
+    <meta name="color-scheme" content="dark">
 
     <!-- Mesure d'audience — Umami, sans cookie ni identifiant persistant.
          Chargeur identique à celui du <head> d'index.html ; il est écrit
@@ -86,18 +91,26 @@
     <meta property="og:site_name" content="Adrien Vada">
     <meta property="og:title" content="Fulguré.e.s · Compagnie Alchimie · Adrien Vada">
     <meta property="og:description" content="Fulguré.e.s, Compagnie Alchimie — avec Adrien Vada (Adrien / Le jeune mec / Jerem). Une fratrie. Un village. Perdu. La foudre y a frappé il y a quelques…">
-    <meta property="og:image" content="https://adrienvada.fr/ressources/images/univers/fulgurees/10.jpg">
+    <meta property="og:image" content="https://adrienvada.fr/ressources/images/partage/fulgurees.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Fulguré.e.s · Compagnie Alchimie · Adrien Vada">
     <meta property="og:url" content="https://adrienvada.fr/spectacles/fulgurees/">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Fulguré.e.s · Compagnie Alchimie · Adrien Vada">
     <meta name="twitter:description" content="Fulguré.e.s, Compagnie Alchimie — avec Adrien Vada (Adrien / Le jeune mec / Jerem). Une fratrie. Un village. Perdu. La foudre y a frappé il y a quelques…">
-    <meta name="twitter:image" content="https://adrienvada.fr/ressources/images/univers/fulgurees/10.jpg">
+    <meta name="twitter:image" content="https://adrienvada.fr/ressources/images/partage/fulgurees.jpg">
 
     <!-- En PNG, comme l'accueil : favicon.svg n'était qu'un PNG de 256 px en
          base64, 128 Ko que Chrome préférait aux PNG déclarés (voir
          index.html). -->
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../../favicon_io/favicon-96x96.png" sizes="96x96">
+    <!-- L'icône d'écran d'accueil et le manifeste, comme l'accueil : sans
+         eux, « Sur l'écran d'accueil » depuis une page spectacle posait une
+         capture de la page en guise d'icône. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../../favicon_io/site.webmanifest">
 
     <!-- Les polices du site, servies par le site (ressources/polices/). Le
          titre est en Cinzel et le synopsis en Inter : ce sont les deux
@@ -215,7 +228,7 @@
         /* Le retour au site : la seule chose que la page ajoute au montage. */
         .u-retour {
             position: absolute; top: 1.2rem; left: 1.4rem; z-index: 4;
-            font: 700 .74rem/1 'Montserrat', system-ui, sans-serif;
+            font: 700 .74rem/1 'Inter', system-ui, sans-serif;
             letter-spacing: .16em; text-transform: uppercase;
             color: var(--u-muted); text-decoration: none;
         }
@@ -264,7 +277,7 @@
   "url": "https://adrienvada.fr/spectacles/fulgurees/",
   "inLanguage": "fr",
   "genre": "Fable contemporaine",
-  "image": "https://adrienvada.fr/ressources/images/univers/fulgurees/10.jpg",
+  "image": "https://adrienvada.fr/ressources/images/partage/fulgurees.jpg",
   "contributor": {
     "@type": "Person",
     "@id": "https://adrienvada.fr/#adrien-vada",
@@ -296,37 +309,10 @@
      Sur l'accueil c'est le badge de la ligne du CV qui tranche ; cette page
      n'a pas de CV, on le lui écrit donc noir sur blanc. -->
 <body class="u-page-spectacle" data-u-show="Fulguré.e.s">
-    <!-- Sprite d'icônes : les 9 dessins dont cette page peut avoir
+    <!-- Sprite d'icônes : les 10 dessins dont cette page peut avoir
          besoin, pris dans celui d'index.html. Icônes FontAwesome Free,
          licence CC BY 4.0 (fontawesome.com). -->
-    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-regular-calendar-plus" viewBox="0 0 512 512">
-            <path
-                d="M184 24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H96c-35.3 0-64 28.7-64 64v16 48V448c0 35.3 28.7 64 64 64H416c35.3 0 64-28.7 64-64V192 144 128c0-35.3-28.7-64-64-64H376V24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H184V24zM80 192H432V448c0 8.8-7.2 16-16 16H96c-8.8 0-16-7.2-16-16V192zm176 40c-13.3 0-24 10.7-24 24v48H184c-13.3 0-24 10.7-24 24s10.7 24 24 24h48v48c0 13.3 10.7 24 24 24s24-10.7 24-24V352h48c13.3 0 24-10.7 24-24s-10.7-24-24-24H280V256c0-13.3-10.7-24-24-24z" />
-        </symbol><symbol id="i-solid-arrow-down" viewBox="0 0 384 512">
-            <path
-                d="M169.4 470.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 370.8 224 64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 306.7L54.6 265.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z" />
-        </symbol><symbol id="i-solid-arrow-right" viewBox="0 0 448 512">
-            <path
-                d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z" />
-        </symbol><symbol id="i-solid-chevron-left" viewBox="0 0 320 512">
-            <path
-                d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z" />
-        </symbol><symbol id="i-solid-chevron-right" viewBox="0 0 320 512">
-            <path
-                d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z" />
-        </symbol><symbol id="i-solid-expand" viewBox="0 0 448 512">
-            <path
-                d="M32 32C14.3 32 0 46.3 0 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V96h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H32zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H64V352zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32h64v64c0 17.7 14.3 32 32 32s32-14.3 32-32V64c0-17.7-14.3-32-32-32H320zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v64H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32V352z" />
-        </symbol><symbol id="i-solid-play" viewBox="0 0 384 512">
-            <path
-                d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z" />
-        </symbol><symbol id="i-solid-up-right-from-square" viewBox="0 0 512 512">
-            <path
-                d="M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z" />
-        </symbol><symbol id="i-solid-xmark" viewBox="0 0 384 512">
-            <path
-                d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
-        </symbol></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-regular-calendar-plus" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18h6" /><path d="M16 2v3" /><path d="M19 15v6" /><path d="M21 11.5V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h8.3" /><path d="M3 9h18" /><path d="M8 2v3" /></g></symbol><symbol id="i-solid-arrow-down" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></g></symbol><symbol id="i-solid-arrow-right" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></g></symbol><symbol id="i-solid-chevron-left" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></g></symbol><symbol id="i-solid-chevron-right" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></g></symbol><symbol id="i-solid-chevron-up" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6" /></g></symbol><symbol id="i-solid-expand" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 15 6 6" /><path d="m15 9 6-6" /><path d="M21 16v5h-5" /><path d="M21 8V3h-5" /><path d="M3 16v5h5" /><path d="m3 21 6-6" /><path d="M3 8V3h5" /><path d="M9 9 3 3" /></g></symbol><symbol id="i-solid-play" viewBox="0 0 384 512"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></symbol><symbol id="i-solid-up-right-from-square" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10" /><path d="M7 17 17 7" /></g></symbol><symbol id="i-solid-xmark" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></g></symbol></svg>
     <!-- <main> : le contenu principal de la page, annoncé comme tel. Un
          lecteur d'écran y saute d'une touche ; un moteur sait où commence
          ce qui compte.
@@ -351,6 +337,16 @@
         <!-- La barre de progression vaut aussi pour une page autonome : le
              panneau y défile dans sa propre boîte, exactement comme ici. -->
         <div class="u-progress" aria-hidden="true"><span></span></div>
+        <nav class="u-chapitres" aria-label="Chapitres">
+            <ol class="u-chapitres-liste" id="u-chapitres-liste" hidden>
+                <li><button type="button" data-u-chapitre="haut"><span class="u-chapitres-n">1</span>Ouverture</button></li><li><button type="button" data-u-chapitre="montage"><span class="u-chapitres-n">2</span>Le spectacle</button></li><li><button type="button" data-u-chapitre="pied"><span class="u-chapitres-n">3</span>Dates</button></li><li><button type="button" data-u-chapitre="distribution"><span class="u-chapitres-n">4</span>Distribution</button></li>
+            </ol>
+            <button type="button" class="u-chapitres-bouton" aria-expanded="false" aria-controls="u-chapitres-liste">
+                <span class="u-chapitres-n" data-u-chapitre-n>1/4</span>
+                <span class="u-chapitres-courant" data-u-chapitre-nom>Ouverture</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-chevron-up"></use></svg>
+            </button>
+        </nav>
 
         <section class="u-ouverture rg-scene" style="--of-hauteur:696.5svh;--of-invite:0.0235;--of-titre:0.3353;--of-fond-s:0.3353;--of-fond-e:0.4107;--of-sur-s:0.3487;--of-sur-e:0.4023;--of-auteur-s:0.3722;--of-auteur-e:0.4225;--of-synopsis-s:0.3956;--of-synopsis-e:0.4225;--of-meta-s:0.6312;--of-meta-e:0.6815;--of-actions-s:0.6513;--of-actions-e:0.6982;--of-fleche-s:0.6781;--of-fleche-e:0.7117;--of-lettre-s:0.3252;--of-lettre-e:0.3856;--of-zoom-s:0.7318;--of-zoom-e:0.9497" data-u-src="../../ressources/images/univers/fulgurees/2-1920.webp" data-lettre-pos="72% 30%">
             <div class="u-of-scene">
@@ -629,6 +625,10 @@
             
         </div>
             <p class="u-credit">Photographies : Thypa Photographie</p>
+            <p class="u-suivant"><a href="/spectacles/berenice/" data-track="univers_suivant" data-track-detail="Bérénice">
+                <span class="u-suivant-quoi">Spectacle suivant</span>
+                <span class="u-suivant-titre">Bérénice</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></p>
         </footer>
 
 <!-- Agrandissement : la photo entière, jamais recadrée. C'est le

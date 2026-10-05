@@ -31,7 +31,7 @@ Ensuite, depuis la racine du dépôt :
 | Commande | Ce qu'elle fait |
 |---|---|
 | `npm --prefix build run css` | régénère `styles.css` |
-| `npm --prefix build run pages` | régénère la galerie **puis** les pages spectacle et le sitemap (dans cet ordre) |
+| `npm --prefix build run pages` | régénère la galerie **puis** les pages spectacle, le sitemap, [l'agenda à s'abonner](#lagenda-à-sabonner-datesics) (`dates.ics`) et [la carte de la saison](#la-carte-de-la-saison) (bloc `CARTE-SAISON` d'`index.html`) |
 | `npm --prefix build run pdf` | refait le CV en PDF |
 | `npm --prefix build run dates` | recopie les dates de Supabase dans `dates.js` |
 | `npm --prefix build run ondes` | écrit [les ondes des démos voix](#démos-voix--les-ondes) dans `index.html` |
@@ -47,8 +47,8 @@ fichiers.
 
 ## Vérifier le site
 
-`build/verifier-site.js` ouvre le site dans Chromium et vérifie, en moins
-de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
+`build/verifier-site.js` ouvre le site dans Chromium et vérifie, en six
+minutes environ, ce qui a déjà cassé ou casserait sans bruit :
 
 - l'accueil se charge sans erreur de script ;
 - un lien direct entre sans rideau ; depuis un autre site, l'ouverture joue une
@@ -102,6 +102,15 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
 - les démos voix : toucher la barre de lecture mène au point touché, même
   servi par un hôte qui ne découpe pas les fichiers (en-têtes Range : c'est
   le cas du serveur de vérification comme de l'aperçu Cloudflare) ;
+- les démos voix suivent (voir [le mini-lecteur](#démos-voix--le-mini-lecteur-lenchaînement-lécran-verrouillé)) :
+  aucun mini-lecteur avant qu'une démo joue ; ensuite une région nommée, ses
+  quatre boutons nommés de 44 px, posée 4 à 16 px au-dessus de la barre
+  d'onglets du bas au téléphone, et à 16 px du coin bas droit sur
+  ordinateur ; l'écran verrouillé a le titre, « Adrien Vada », « Démos
+  voix » et le portrait en 192 et 384 ; la démo continue sur l'onglet CV ;
+  à sa fin la suivante joue, annoncée et mesurée (`demo_suivante`), mais
+  rien après la dernière, où le lecteur reste en pause ; la croix arrête
+  tout et oublie la démo ; le lecteur ne s'imprime pas ;
 - les pastilles ▶ ne s'impriment pas ;
 - la ligne à vignette du CV : chaque spectacle et chaque film ont leur
   vignette, qui dit l'année et l'état de la ligne (cachée aux lecteurs
@@ -176,6 +185,29 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   devient inerte et cesse de défiler une image après, tout revient à la
   fermeture (focus sur le bouton) ; rouverte pendant son fondu de sortie,
   elle n'est pas cachée par lui ;
+- la même fenêtre au téléphone (voir [une feuille qui monte du
+  bas](#-ajouter-à-lagenda---au-téléphone-une-feuille-qui-monte-du-bas)) :
+  une feuille collée au bas de l'écran, d'un bord à l'autre, coins hauts
+  arrondis, au-dessus de la barre d'onglets, sa poignée et son en-tête en
+  `touch-action: none`, la croix à 44 px ; de vrais touchers sur la poignée —
+  un petit glissement lent la rend à sa place, tirée loin elle se referme et
+  rend focus et page, un lancer bref la renvoie ; « Partager cette date »
+  envoie « Bérénice — jeu. 12 nov. à 20h00, Le Forum, Falaise (14) » et la
+  page du spectacle, ou les copie (presse-papiers relu, copie annoncée, focus
+  resté dans la fenêtre) ; en mouvement réduit elle est posée d'emblée et
+  disparaît d'un coup ; sur ordinateur, la fenêtre reste au centre, sans
+  poignée ;
+- l'agenda à s'abonner (`dates.ics`) : exactement celui que donnent
+  `dates.js` et `univers.js` (sinon : `npm --prefix build run pages`), fins de
+  ligne CRLF, lignes de 75 octets au plus, chaque `BEGIN` fermé par son `END`,
+  un UID par événement, les champs attendus, chaque séance publique de la
+  copie (relue à part, une par heure) et aucune scolaire, servi en
+  `text/calendar` ; l'onglet Dates y mène (webcal, Google Agenda, l'adresse
+  https à copier, la mesure), et rien ne s'en imprime ;
+- s'abonner à l'agenda : sur ordinateur, le lien webcal et celui de Google
+  Agenda (`cid=webcal://…`, dans un nouvel onglet) ; sur Android, ni l'un ni
+  l'autre, mais « M'envoyer le lien d'abonnement », qui confie le lien de
+  Google Agenda à la feuille de partage, et le copie quand le partage échoue ;
 - le book : fermer puis rouvrir aussitôt ne laisse pas une page morte ;
 - la frise du CV, comme le prototype de l'audit, avec les deux pilotes : la
   ligne de lecture aux trois quarts de l'écran, la pointe du fil dessus
@@ -215,7 +247,7 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   est en Cinzel, la fiche a ses six cases étiquetées ; sur un autre onglet,
   le médaillon rond d'avant — dès le premier rendu quand on arrive sur un
   autre onglet ; sur papier, l'en-tête d'avant (médaillon de 68 px, nom en
-  Montserrat) ;
+  Inter) ;
 - arriver par un lien vers un onglet (`/#page_dates`) : la page visée dès le
   premier rendu, sans CV ni repli qui glisse — et le CV revient si le script
   de la page ne démarre pas (voir [Le portrait d'affiche](#le-portrait-daffiche)) ;
@@ -224,6 +256,21 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   éteint la salle et lance le lecteur à 1:21 avec son API de messages, la
   bobine de la salle noire montre l'extrait en cours et suit ce que le lecteur
   annonce, Échap rallume et arrête le lecteur ;
+- la salle de projection, en chapitres : la durée sous l'écran est celle de
+  `DUREE`, chaque chapitre va de son début (`data-salle-debut`) au début du
+  suivant, le dernier jusqu'à la durée ; le bouton de l'écran dit « Lancer
+  la projection » et la durée ;
+- l'aperçu de la bande démo : aucune de ses photos ne part avec l'accueil,
+  ni sur un écran à moins de moitié dans la fenêtre ; ouvert, il passe deux
+  fois ses cinq photos (chacune demandée une fois, après l'ouverture de
+  l'onglet), revient à l'affiche entre deux et s'y pose, en n'animant que
+  transformation et opacité, puis ses photos quittent la page ; il ne
+  rejoue pas ensuite ; quitter l'onglet
+  rend l'affiche, le bouton « Arrêter l'aperçu » (44 px) l'arrête et rend le
+  focus à l'écran ; rien en mouvement réduit ni en économie de données ;
+- la salle noire au téléphone couché (844 × 390) : le lecteur fait toute la
+  hauteur, en 16:9 centré, sans bobine ni halo, la croix de 44 px dans
+  l'écran ; le plein écran ne fait pas d'erreur ;
 - les bandes-annonces du CV : la pastille ▶ garde son lien vers YouTube ou
   Vimeo, mais son clic joue la vidéo dans la salle noire, sur la page (pas
   de nouvel onglet), sans la bobine de la bande démo, avec un halo et le
@@ -272,7 +319,8 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   galerie ne nomme rien ;
 - la galerie : les neuf premières vues partent avec la page et les suivantes
   attendent, une ou deux en priorité haute, des tailles à deux branches
-  (quatre colonnes au téléphone, cinq au-delà) ; à 390 px (×3), 412 px
+  (quatre colonnes au téléphone, cinq au-delà) écrites sans `min()`, et
+  `auto, ` en tête des seules vignettes paresseuses ; à 390 px (×3), 412 px
   (×1,75) et 1 440 px, aucune vignette téléchargée deux fois, et les vues du
   premier écran allumées ; sans JavaScript, aucune n'est cachée ;
 - le service worker : inscrit par chaque page publique, pas par `/admin/` ni
@@ -298,9 +346,68 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   ni l'autre ; le portrait en AVIF (960 px au téléphone) ; les vignettes du
   CV en 144 × 192 recadrées, celles des Dates (par date, par spectacle) aussi,
   et la couverture de 240 px ne part plus avec l'accueil.
+- le grand écran (1 440 px) : l'affiche à gauche du site, d'au moins
+  330 px, et le site à droite d'au moins 840 ; sur le CV, l'affiche entière
+  dans l'écran ; sur l'onglet Dates, elle n'est pas repliée, la prochaine
+  date si, et en défilant l'affiche reste collée en haut ; arriver par
+  `/#page_dates` ne pose pas `arrivee-hors-cv` au premier rendu, et rien ne
+  se replie ensuite ;
+- la carte de la saison : le bloc `CARTE-SAISON` d'`index.html` est
+  exactement celui que donne `fabriquer-carte.js` avec le `dates.js` du
+  moment, chaque ville de la saison y a sa place ; au téléphone, dans la
+  saison d'un regard, au moins trois points, « Rouen et alentours » regroupé,
+  aucun bouton n'en couvre un autre, chacun d'au moins 24 px, et un point
+  mène à une date de la liste ;
+- le thème à trois positions : au départ, rien en mémoire et « Auto »
+  coché ; « Clair » est retenu ; « Auto » efface la mémoire et suit
+  l'appareil, même quand il change de réglage ; la bascule de la barre est
+  retenue et coche la bonne position ; les flèches changent de position et
+  y portent le focus ; une seule position s'atteint par Tab ;
+- l'accueil d'après l'expertise d'octobre 2026 : au téléphone, la barre
+  d'onglets est fixée en bas de l'écran, dit « CV · Dates · Caméra · Voix »,
+  chaque onglet fait au moins 44 px de haut ; sur grand écran, elle est en
+  haut ; « Copier » met l'adresse dans le presse-papiers et l'annonce
+  (« Copiée ») ; la fiche contact se télécharge et se lit (`BEGIN:VCARD`…) ;
+  aucun texte visible sous onze pixels, sur le CV ni sur les Dates ; le
+  sigle TIOR ouvre au doigt une bulle dans l'écran, avec son lien, qu'Échap
+  referme et qui ne s'imprime pas ;
+- les univers d'après l'expertise : le premier écran de Bérénice est celui du
+  travelling, sans titre en filigrane ni ligne de salle, et une page
+  spectacle ouverte depuis un moteur de recherche le joue depuis le début ;
+  la pastille des chapitres est là, avec un repère sur la barre de
+  progression par début de chapitre ; « Dates » y mène au pied ; l'agenda
+  d'une série demande la séance ; le pied de Bérénice mène au spectacle
+  suivant du CV ; « Cléophène » laisse au moins 16 px au bord à 360 px.
+- l'agenda d'une date (`agendaDe`) : l'heure de Paris avec son fuseau
+  (`VTIMEZONE`, `TZID`), une soirée de 23 h 30 qui finit le lendemain, le
+  même identifiant d'un ajout à l'autre, des lignes de 75 octets au plus, la
+  virgule du lieu échappée, un nom de fichier qui garde ses lettres
+  (« berenice-… »), le fuseau passé à Google et à Outlook, une séance
+  « matin » en journée entière ; au téléphone, la fenêtre d'agenda d'un
+  univers est une feuille posée en bas, qui se referme quand on la tire.
+- le geste de retour de l'iPhone (`hasUAVisualTransition`) : quand le
+  navigateur a déjà animé le retour — même si seul le `popstate` le dit —,
+  l'onglet change sans glisser, l'univers et la fenêtre d'agenda
+  disparaissent sans passage ni fondu ; un retour ordinaire garde ses
+  passages.
 
 Pour ne passer que quelques vérifications — celles dont le nom contient un
 mot : `SEUL=planche npm --prefix build run verifier`.
+
+**Une épreuve bloquée ne bloque pas la vérification.** Une page dont le fil
+principal ne rend plus la main ne répond plus à rien, et certains appels
+(`page.evaluate`, le clavier) l'attendent sans limite : sur la machine des
+demandes de fusion, une épreuve a ainsi tenu le travail jusqu'à son délai de
+quinze minutes, coupé sans un mot. Désormais, une épreuve sans réponse au
+bout de 150 s échoue en disant où en est chaque page ouverte : son adresse,
+si son fil principal répond ou tourne dans un script — il est alors
+interrompu par une session de débogage attachée d'avance à chaque page, et
+qui ne fait rien d'autre (`suivreLesPages`) —, et ce qu'elle montre
+(classes de `<html>`, univers, focus). Ses contextes sont ensuite fermés, et
+les épreuves suivantes passent. Un contexte ouvert par une épreuve passe par
+`visiteur()`, ou appelle `suivreLesPages(c)` lui-même. Y activer le débogueur
+aurait donné la pile du script, mais il change le rythme des pages : le
+voyage du portrait échouait alors une fois sur quatre.
 
 Il tourne sur **chaque demande de fusion** (`.github/workflows/verifier.yml`) :
 une coche verte ou rouge sur la demande, avant que rien ne touche `main`. À la
@@ -313,19 +420,24 @@ ici : c'est ce qui l'empêche de revenir.
 |---|---|---|
 | une classe Tailwind dans `index.html`, `404.html`, `dates.js`, `galerie.js`, `admin/` | [la commande Tailwind](#régénérer-stylescss-obligatoire-après-modification-des-classes) | `styles.css` |
 | **`galerie.js`** — ajout ou ordre des photos du book, texte `alt` | [`python3 build/variantes-images.py`](#ajouter-une-photo-au-book), puis `node build/generer-page-galerie.js` | les vignettes, puis `/galerie/…` |
-| **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml` |
+| **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml`, `dates.ics` (le nom, la page et la durée d'un spectacle, voir [l'agenda à s'abonner](#lagenda-à-sabonner-datesics)) |
 | une **ligne du CV** dans `index.html` — titre, auteur, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
 | le **vocabulaire du mouvement** dans `index.html` (`--ease-*`, `--dur-*`) | `npm --prefix build run pages` (la galerie, puis les pages spectacle) | `/galerie/…`, `/spectacles/…` : les pages spectacle, le répertoire et la galerie le relisent (voir [Un seul moteur](#un-seul-moteur-un-seul-visage) et [Le vocabulaire](#le-vocabulaire)) |
 | **`ressources/polices/polices.css`** — une police ajoutée, une adresse | `npm --prefix build run pages` | `/spectacles/index.html` et `/galerie/index.html`, qui en portent une copie dans leur page (voir [Polices](#polices--servies-par-le-site)) ; l'accueil publié la recopie de lui-même |
-| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis `node build/generer-pages-spectacles.js` | `dates.js`, puis `/spectacles/…` |
+| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis `node build/generer-pages-spectacles.js` | `dates.js`, puis `/spectacles/…`, `sitemap.xml`, `dates.ics` et, pour une ville nouvelle, le bloc `CARTE-SAISON` d'`index.html` |
+| une saison qui **sort de la Normandie, des Hauts-de-France et de l'Île-de-France** | ajouter la région et ses départements dans `build/preparer-fond-de-carte.py`, puis `python3 build/preparer-fond-de-carte.py` (réseau) et la commande des pages | `build/donnees/carte-base.json`, puis la carte |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
 | le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées, copies floues (`-flou.webp`), versions écran large (`-2400.webp`) et vignettes (`-v.webp`) comprises — et la liste `ECRAN_LARGE` d'`univers-montage.js` : s'il annonce qu'elle a changé, la commande des pages |
 | le **`cadre` de la couverture** d'un univers (celui de la première photo de son montage) | `python3 build/variantes-images.py`, en plus de la commande des pages | sa vignette du CV recadrée (`<nom>-v.webp`) et `variantes.json` — le [contrôle automatique](#vérifier-le-site) le rappelle si on l'oublie |
 | une **scène** d'un univers — `lumiere`, `ouverture`, `poursuite`, une césure ` \| ` | `node build/generer-pages-spectacles.js` | `/spectacles/…` (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) |
 | une **démo voix** ajoutée ou remplacée (`<audio>` de l'onglet Démos voix) | `node build/ondes.js` | les ondes (`data-onde`, `data-duree`) dans `index.html` — voir [Les ondes](#démos-voix--les-ondes) |
 | le **portrait** de l'en-tête (la première photo de `galerie.js`) | `python3 build/variantes-images.py --tout`, ou effacer `portrait-affiche-*` puis le relancer | `ressources/images/portrait-affiche-*` (WebP, AVIF et JPEG) |
-| une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
+| une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py`, puis `npm --prefix build run pages` | le sprite, dans `index.html`, puis sa copie dans `/galerie/` |
+| la **bande démo** remplacée sur YouTube | rien à fabriquer — tout est à récrire à la main : les débuts des extraits, la durée, les plans de la bobine (voir [La salle de projection](#la-salle-de-projection)) | `DEBUTS`, `DUREE`, la bobine et « 3:01 » dans `index.html` ; le vérificateur les confronte |
 | la **signature** — un nouvel export reMarkable | `python3 build/signature-vers-svg.py <export.pdf>` | `signature.webp` + le bloc SVG à coller |
+| la **couverture**, le titre, le genre ou la palette d'un univers | `python3 build/fabriquer-images-partage.py` (il faut `pip install fonttools brotli`), puis la commande des pages | `ressources/images/partage/<slug>.jpg`, l'image de partage de chaque page spectacle (voir [Les images de partage](#les-images-de-partage)) |
+| le **portrait** ou l'**adresse mail** | `python3 build/fabriquer-vcard.py` | `ressources/adrien-vada.vcf`, la fiche contact de l'en-tête |
+| le **portrait du site** (`favicon_io/`) | `python3 build/fabriquer-icones-admin.py` | les icônes de `/admin/` |
 
 Chacune a sa section plus bas, avec ce qu'elle fait et pourquoi.
 
@@ -650,8 +762,21 @@ définies dans `tailwind.config.js`.
 ## Thèmes sombre / clair
 
 Le site est **sombre par défaut**, dans le prolongement de l'ouverture à
-particules. Un bouton en pied de page bascule vers le thème clair ; le choix est
-mémorisé (`localStorage`, clé `avTheme`).
+particules, et **suit l'appareil** tant qu'on n'a rien choisi (un téléphone
+en clair le voit en clair, et le site change avec lui, en direct, quand il
+passe en sombre le soir). Deux commandes :
+
+- **la bascule de la barre d'onglets** (soleil / lune) : clair ↔ sombre, d'un
+  toucher ; le choix est retenu (`localStorage`, clé `avTheme`) ;
+- **le thème à trois positions, au pied de page** (`.theme-choix`, un groupe
+  de boutons radio : les flèches passent d'une position à l'autre) :
+  **Auto** — rien en mémoire, le site suit l'appareil —, **Clair**,
+  **Sombre**. Avant lui, toucher la bascule une fois faisait cesser pour
+  toujours de suivre l'appareil.
+
+Toutes les pages lisent la même clé — le répertoire, la galerie, les fiches,
+la 404, l'admin — et toutes traitent son absence comme « Auto » : il n'y a
+rien d'autre à faire pour qu'elles suivent.
 
 **Toutes les couleurs passent par des variables CSS** définies en haut du
 `<style>` de `index.html`, sous forme de triplets « R V B » (et non de `#hex`) —
@@ -701,9 +826,34 @@ l'ancien état, où elle ne sert à rien : au téléphone à ×4, la bascule
 répondait en 152 à 184 ms au lieu de 80 à 88, et le cercle partait 60 à
 120 ms plus tard. Même chose au répertoire (104-112 → 72-80 ms) et au book.
 
+**Les capitales au milieu de leur case.** Sur les onglets et les boutons du
+CV et du contact, le texte est rogné à la hauteur des capitales et à la ligne
+de base (`text-box: trim-both cap alphabetic`, dans un `@supports`) : centré
+sur sa ligne entière, accents et jambages compris, il tombait un peu bas.
+Leur hauteur ne change pas (`min-height`). Ailleurs (Safari d'avant 18.2,
+Firefox d'avant 154), rien ne change.
+
 **L'impression reste toujours claire**, même quand le site est affiché en
 sombre : le bloc `@media print` réimpose la palette claire à la racine. Un CV
 imprimé sur fond noir gâcherait l'encre et passerait mal en photocopie.
+
+**La barre du navigateur suit le thème choisi, pas celui du système.** Les
+balises `theme-color` de l'en-tête portent une condition
+(`prefers-color-scheme`) : un visiteur qui avait choisi le clair sur un
+téléphone réglé en sombre voyait une barre d'adresse noire au-dessus d'une
+page claire. Un petit script, juste après ces balises, leur donne à toutes la
+couleur du thème posé par le tout premier script, et `applyTheme` les
+réaccorde à chaque bascule. Un univers ouvert prend la couleur de sa salle
+le temps de la visite (`data-u-prev` garde l'ancienne) ; la bascule efface
+cette mémoire, pour qu'il ne rende pas à la fermeture la couleur d'avant.
+Même règle à la page 404.
+
+**Les pages générées disent leur couleur au navigateur** (`color-scheme`,
+en balise dans chaque page spectacle selon sa salle, en CSS au répertoire et
+au book, qui suivent le thème) : les barres de défilement, les champs et le
+fond d'avant le premier rendu y sont de la bonne couleur — sans cela, une
+salle sombre s'ouvrait sur un éclair blanc et des barres de défilement
+claires.
 
 ---
 
@@ -885,6 +1035,11 @@ lever de rideau, le plus long écart entre deux images tombe de 540-590 ms à
 
 ### La sortie : l'iris, et le nom qui rejoint l'en-tête
 
+**« Passer » s'efface quand le sceau paraît** : le sceau dit « Entrer », et
+deux boutons pour le même geste se disputaient l'œil. Le sceau devient le
+bouton de la scène (le focus le suit s'il était sur « Passer », qui sort de
+l'ordre de tabulation et de l'arbre d'accessibilité : `intro-skip-efface`).
+
 Au clic sur le sceau (ou sur « Passer »), le rideau **s'ouvre en iris depuis
 le sceau**, et « Adrien Vada » quitte le centre de la scène pour aller se poser
 à sa place dans l'en-tête (`ouvrirEnIris`, dans `intro.js`) : une View
@@ -1056,6 +1211,32 @@ sur ordinateur : on lit d'abord où Adrien joue, puis on emporte le CV (il
 était auparavant dans la barre d'onglets sur ordinateur, et au-dessus du
 carton sur téléphone).
 
+**À côté, « Partager »** (`#pdf-share-btn`, script `partagerLeCv`), là où le
+navigateur sait partager un *fichier* (téléphones, Safari, Edge) — ailleurs,
+il reste caché : partager l'adresse, un copier-coller le fait déjà. Le CV
+part alors en pièce jointe dans WhatsApp, Mail ou Messages, nommé
+`CV-Adrien-Vada.pdf`, avec une phrase et l'adresse du site. Safari n'ouvre la
+feuille de partage qu'au moment même du toucher : le PDF est demandé dès
+que le doigt se pose (`pointerdown`) ; s'il n'est pas encore arrivé, le
+bouton dit « Toucher encore », et le toucher suivant partage aussitôt. Sans
+réseau ou sans partage, le PDF s'ouvre, comme « Télécharger le CV ». Les
+deux boutons ont le même dessin : un contour d'or, plus de bloc plein qui
+passait devant la prochaine date.
+
+### Le contact : copier l'adresse, emporter la fiche
+
+L'adresse de l'en-tête et du pied s'écrit en minuscules (les capitales se
+lisaient mal et se recopiaient mal). À côté, **« Copier »**
+(`[data-copier]`, script « COPIER UNE ADRESSE ») : sur un ordinateur sans
+logiciel de mail, `mailto:` n'ouvrait rien. Le presse-papiers reçoit
+l'adresse, le bouton dit « Copiée » deux secondes, et une zone `role="status"`
+(`#annonce-copie`) l'annonce aux lecteurs d'écran ; à défaut d'API
+presse-papiers, une copie à l'ancienne (`execCommand`). Dans l'en-tête, une
+**fiche contact** (`/ressources/adrien-vada.vcf` : nom, métier, adresse,
+site, portrait) s'ajoute aux contacts d'un toucher. Elle est fabriquée par
+`python3 build/fabriquer-vcard.py` : à refaire si le portrait ou l'adresse
+change. Sur papier, ni « Copier » ni la fiche.
+
 ```bash
 node build/generer-cv-pdf.js
 ```
@@ -1078,7 +1259,7 @@ moteur d'impression.
   premier, on attendrait cinq secondes de rideau et le canevas des particules
   tournerait pendant l'impression ; sans le second, le rendu à l'écran qui
   précède le tirage chargerait les variables sombres.
-- **`document.fonts.ready`** : imprimer avant l'arrivée de Cinzel et Montserrat
+- **`document.fonts.ready`** : imprimer avant l'arrivée de Cinzel et Inter
   donnerait un CV en police de repli, aux césures — donc à la pagination —
   différentes.
 - **Le titre du document est réécrit** juste avant le tirage. Chromium recopie
@@ -1159,6 +1340,20 @@ compte.
 > pas `:has()` ignore la règle et retombe sur deux lignes : le CV déborde d'un
 > cheveu, il ne casse pas.
 
+**Le script s'arrête si le PDF fait plus d'une page** : il compte les pages
+dans le fichier produit, et une seconde page (une ligne de trop, un pied
+trop haut) n'est plus une surprise découverte en recevant le fichier.
+
+**Un code QR au pied du CV imprimé** (`.cv-qr`, sur papier seulement : à
+l'écran, il n'existe pas) mène à `adrienvada.fr/?direct` — la bande démo,
+les démos voix et les dates d'un geste du téléphone, sans rideau
+d'ouverture. L'adresse est écrite en clair à côté, pour qui n'a pas
+d'appareil photo sous la main, et le bloc est un lien dans le PDF. Il tient
+dans la marge du bas (22 mm, plus 3 mm de blanc autour, la marge que les
+lecteurs attendent). Fabriqué une fois avec segno (le commentaire du
+balisage donne la commande, à refaire seulement si l'adresse change), et
+relu par OpenCV sur le PDF rendu à 200 dpi.
+
 ### « Profil » : la fiche de casting, à l'écran comme sur le papier
 
 Le profil était une grille de sept cadres, dont plusieurs à moitié vides
@@ -1177,6 +1372,16 @@ largeur ; au téléphone, 559 px au lieu de 787, sans rien retirer.
   cherche pour un rôle.
 - Les précisions (le niveau d'une langue, le lieu d'un employeur) sont dans
   un `<em>`, en gris de service à l'écran.
+- **Le sigle « TIOR » s'explique au doigt** : il n'avait qu'une bulle
+  `title`, que seule une souris fait paraître. C'est un bouton
+  (`.sigle`, `popovertarget`) qui ouvre une bulle (`popover`, sans script :
+  Échap, un toucher à côté et le premier plan sont l'affaire du navigateur),
+  posée au-dessus du sigle là où le positionnement par ancre existe
+  (`position-area: top span-all`, `justify-self: anchor-center`, 16 px des
+  bords, dessous s'il n'y a pas la place), au centre ailleurs. Le lien
+  Wikipédia est dedans. Sur papier, ni bulle ni pointillé : la règle qui
+  met la fiche en ligne (`display: inline !important`) l'aurait imprimée
+  par-dessus la fiche, d'où une règle plus précise qui la cache.
 
 Le papier avait déjà cette mise en page (`.cv-fiche` en `display: block`) :
 une rubrique par ligne, l'intitulé dans une gouttière, la valeur en regard.
@@ -1231,46 +1436,150 @@ lit en direct.
 
 ### Depuis le téléphone : `/admin/`
 
-1. Ouvrir `/admin/` et entrer par **mot de passe**. La première fois, ou
-   s'il est oublié : « Recevoir un lien de connexion par mail », puis, une
-   fois entré, « Mot de passe » en haut de la page pour le définir. Le lien
-   mail est limité par Supabase à quelques envois par heure sur le compte
-   gratuit — c'est pour ça que le mot de passe existe. La session reste
-   ouverte sur l'appareil.
-2. La page montre les dates **comme sur l'accueil** — mêmes pastilles,
-   mêmes séries dépliables — avec, sur chaque soirée, trois gestes :
-   **Modifier**, **Dupliquer** (même spectacle, même lieu, le lendemain :
-   le geste d'une série), **Supprimer**. Le bouton doré ajoute une date ;
-   au pied d'une série, « Ajouter une soirée à cette série » fait de même
-   sans rien retaper. Chaque enregistrement est **immédiatement visible**
-   sur le site.
+1. Ouvrir `/admin/` et entrer par **mot de passe** (« Afficher » le montre
+   en clair, le temps de le relire). La première fois, ou s'il est oublié :
+   « Recevoir un lien de connexion par mail », puis, une fois entré,
+   « Mot de passe », **en bas de la page**, pour le définir. Le lien mail est
+   limité par Supabase à quelques envois par heure sur le compte gratuit —
+   c'est pour ça que le mot de passe existe. La session reste ouverte sur
+   l'appareil.
+2. **L'installer sur l'écran d'accueil** : sur l'iPhone, Partager → « Sur
+   l'écran d'accueil » ; sur Android, le menu → « Ajouter à l'écran
+   d'accueil ». L'admin a son propre manifeste (`admin/manifest.webmanifest` :
+   portée et ouverture sur `/admin/`, plein écran, fond `#0a0907`) et sa
+   propre icône — le portrait du site et la feuille d'éphéméride dorée des
+   dates —, sous le nom « Dates ». L'appli installée a son propre stockage :
+   on s'y connecte une fois, par mot de passe (un lien mail ouvert depuis
+   Gmail s'ouvrirait ailleurs).
+3. La page montre les dates **comme l'onglet Dates de l'accueil** — mêmes
+   mois, même frise, même feuille d'éphéméride, une puce par séance. **Toucher
+   une carte ou une puce ouvre sa soirée** (une série ouvre sa première
+   soirée, et la fiche montre les autres). « **+ soirée** », au bout d'une
+   rangée, prépare la soirée du lendemain (même spectacle, même lieu, même
+   heure). Le bouton doré ajoute une date ; « **Coller un mail** » aussi, à
+   partir du mail du théâtre (voir plus bas). Chaque enregistrement est
+   **immédiatement visible** sur le site.
 
 Une ligne = une soirée. Deux représentations le même jour, c'est deux
-lignes. Les soirées d'un même spectacle au même lieu, rapprochées, sont
-regroupées en « série » par le site lui-même — rien à saisir pour ça.
+lignes. Les soirées d'un même spectacle au même lieu, rapprochées (une
+semaine au plus entre deux), sont regroupées en « série » par le site
+lui-même — rien à saisir pour ça.
 
-Le **spectacle se choisit parmi des puces**, pas dans un champ libre : les
-spectacles du CV marqués « En tournée » puis « En création », puis ceux
-qui ont déjà des dates, puis « Autre… » pour un titre nouveau. La liste
-est lue dans `index.html` (les `data-cv-show` et leur badge) : une seule
-source, la même que l'accueil. C'est important, parce que le **titre doit
-être exactement celui du CV** — au caractère près, apostrophe comprise :
-c'est lui qui relie une date à sa ligne du CV et à sa page spectacle. La
-page corrige aussi la typographie (espace insécable avant `?`, `!`, `:`).
+Les séances d'un même jour se rangent **dans l'ordre de la journée**
+(`cleHeure`, dans `dates-live.js`, partagée par l'accueil, l'admin et
+l'export de `dates.js`) : « 9h30 » avant « 14h00 », « matin » avant
+« après-midi ». Le tri du texte rangeait par ordre alphabétique, et la
+séance de l'après-midi passait avant celle du matin (Cherbourg, le 15 avril
+2027). Une séance sans heure vient en dernier.
 
-La page est faite de `admin/index.html`, `admin/admin.css` (les jetons de
-thème y sont **recopiés** depuis le `:root` d'`index.html` — si l'accueil
-change une couleur, la recopier) et `admin/admin.js`. Elle emprunte ses
-classes Tailwind à `styles.css` : `admin/` est déclaré dans
-`tailwind.config.js`, donc **toute classe nouvelle dans admin/ demande de
-régénérer `styles.css`**, comme pour l'accueil. Pour juger de sa mise en
-page sans se connecter, sur la machine de développement seulement :
-`http://localhost:8749/admin/?apercu` (lecture seule, la base refuse
-d'écrire sans session).
+#### Pensée pour le train
+
+- **La dernière liste connue s'affiche tout de suite**, sans attendre le
+  réseau, en **lecture seule** le temps de la relire (« Mise à jour… · liste
+  de 21 h 14 ») ; toucher une soirée le dit au lieu de l'ouvrir. Sans liste
+  gardée, des lignes d'attente occupent la carte. Sans réseau, la liste
+  reste, marquée « **Hors ligne** · liste de … » ; ajouter reste possible.
+- **L'état de la liste**, sous « À venir » : « À jour · 21 h 14 », « Mise à
+  jour… », « Hors ligne ». Le toucher relit la table. Elle se relit aussi
+  d'elle-même **au retour sur la page** (plus de 20 s après la dernière
+  lecture) et **au retour du réseau** — Claude écrit aussi dans la table
+  (CLAUDE.md), un autre appareil aussi.
+- **Aucune requête n'attend plus de 15 secondes.** Au-delà, elle est
+  abandonnée et la page le dit, avec « Réessayer ». supabase-js relance de
+  lui-même une lecture qui échoue franchement (réseau coupé, base en 503 :
+  trois fois, après 1, 2 puis 4 s) ; un délai dépassé, lui, n'est pas relancé
+  (voir `fetchAvecDelai`).
+- **Les erreurs sont en français** et se lisent **dans le pied de la
+  fiche**, au-dessus d'« Enregistrer » : « Pas de réseau : rien n'est parti.
+  Ta saisie est gardée… », « La base n'a pas répondu en 15 secondes… », « La
+  base ne répond pas (elle est peut-être en pause)… ». Le champ en faute est
+  montré (la fiche défile jusqu'à lui) et désigné (`aria-invalid`).
+- **Le retour du réseau relance** un enregistrement resté en échec « pas de
+  réseau ». Un envoi parti dont la réponse s'est perdue (délai) n'est **pas
+  doublé** : avant de renvoyer, la page relit la table ; si la soirée y est
+  déjà, elle le dit — « Déjà enregistrée ».
+- Si la bibliothèque de connexion ne se charge pas, ou si le chargement
+  dépasse 10 secondes, un bandeau le dit, avec « **Recharger** ».
+
+#### La fiche
+
+- **Le spectacle se choisit parmi des puces**, pas dans un champ libre :
+  les spectacles du CV marqués « En tournée » puis « En création », puis
+  ceux qui ont déjà des dates, puis « Autre… » pour un titre nouveau. La
+  liste est lue dans `index.html` (les `data-cv-show` et leur badge) : une
+  seule source, la même que l'accueil. C'est important, parce que le
+  **titre doit être exactement celui du CV** — au caractère près,
+  apostrophe comprise : c'est lui qui relie une date à sa ligne du CV et à
+  sa page spectacle. La page corrige aussi la typographie (espace
+  insécable avant `?`, `!`, `:`). Une soirée existante ne montre que son
+  titre, et « changer de spectacle ».
+- **Un titre tapé dans « Autre… » se vérifie** pendant la frappe : presque
+  connu, la page propose le bon (« Tu veux dire « Cassandres » ? ») ; absent
+  du CV, elle le signale — la date n'aurait ni page spectacle ni lien depuis
+  le CV.
+- **Le lieu** (« Salle, Ville (dép.) ») se tape sans majuscule forcée à
+  chaque mot ; dès deux lettres, **tous les lieux déjà connus** qui
+  correspondent se proposent (un toucher remplit lieu et ville), et les
+  lieux déjà joués par ce spectacle sont en puces. **La ville se déduit du
+  lieu** (« Le Forum, Falaise (14) » → « Falaise »), en pointillé, tant
+  qu'on ne l'écrit pas soi-même.
+- **L'heure** : le cadran du téléphone, ou les puces des heures habituelles
+  (dans l'ordre de la journée : « matin » avant « 14h00 »), ou « Sans
+  heure ». Un jour déjà passé est accepté (la date ira dans les archives du
+  site), et signalé.
+- **Une série d'un coup** (« Autres jours », pour une soirée nouvelle) :
+  « + lendemain », « + 7 jours », ou un **calendrier** où l'on coche les
+  jours. Un récapitulatif dit ce qui partira (« 5 soirées en un envoi : …
+  — à 20h30 »), le bouton aussi (« Enregistrer les 5 soirées ») : **un seul
+  envoi** de N lignes, refusé en entier si l'une existe déjà (la page le dit
+  avant d'envoyer).
+- **Le lien de réservation** : « Tester » l'ouvre dans un autre onglet ;
+  une adresse incomplète est signalée dès la frappe (voir plus bas).
+- **L'aperçu** montre la ligne telle que le site l'affichera, avec la série
+  dont elle fait partie, les nouvelles séances soulignées.
+- **La touche Entrée passe au champ suivant** ; sur le dernier, elle
+  referme le clavier. **Seul le bouton enregistre.**
+- **La fiche suit le clavier** : sur Android grâce à
+  `interactive-widget=resizes-content` (balise viewport), sur l'iPhone en se
+  calant sur `visualViewport` — « Enregistrer » reste au-dessus des touches.
+- Fermer une fiche modifiée (croix, « Annuler », voile, Échap, geste
+  « retour ») demande confirmation — par `requestClose()` quand le navigateur
+  le connaît, sinon à la main.
+
+**Coller un mail.** Le mail du théâtre, collé tel quel dans « Coller un
+mail » (sur la liste, ou en haut d'une fiche nouvelle). On y cherche : les
+dates en français (« mardi 2 février 2027 », « les 22 et 23 octobre », « du
+18 au 21 mai », « 18-21 mai », « 02/02/2027 » ; sans année, la prochaine
+occurrence ; les dates passées sont ignorées), les heures (« 20h30 »,
+« 20 h », « 14:15 », rattachées à la date qui les précède ; pas avant 7 h,
+« 1h30 » est une durée), le lien de billetterie (le premier qui en a l'air
+— billetterie, réservation, Weezevent, Mapado… —, sinon le premier lien
+https), le spectacle et le lieu parmi ceux déjà connus, et « scolaire » s'il
+n'y a pas aussi de séance publique. Ce qui est trouvé remplit les **champs
+vides**, **surligné en ambre « deviné »** jusqu'à ce qu'on y touche ;
+plusieurs dates font une série. Rien n'est enregistré sans « Enregistrer ».
+
+**Modifier une soirée.** La fiche la nomme (« jeu. 12 nov. 2026 · 20h00 ·
+Saint-Quentin ») et montre les autres soirées de sa série (un toucher pour
+passer de l'une à l'autre). **La base n'écrit que sur ce qu'on a lu** : la
+modification porte la date de dernière modification de la ligne
+(`modifie_le`) ; si la soirée a changé entre-temps (Claude, un autre
+appareil), rien n'est écrit et la page propose « Voir la version en ligne »
+ou « Écraser avec la mienne » ; si elle a été supprimée, « La recréer ».
+
+**Supprimer.** « Supprimer » est en haut de la fiche, loin
+d'« Enregistrer ». Plus de confirmation : la soirée disparaît de la liste,
+et un message propose **« Annuler » pendant 6 secondes**. La base n'est
+touchée qu'ensuite — le site garde la date jusque-là. **Si la page se cache
+avant** (téléphone rangé, autre appli, onglet fermé), **la suppression part
+aussitôt** : c'est ce qui a été demandé. Elle reste notée dans le
+navigateur jusqu'à la réponse de la base ; si l'envoi n'aboutit pas, elle
+s'affiche « en attente » et repart au retour du réseau, au retour sur la
+page, ou à la prochaine ouverture.
 
 Seule l'adresse **adrien.vada@gmail.com** peut écrire : c'est une règle de
 la base (`supabase/schema.sql`), pas de la page. Un autre compte, même
-connecté, est refusé.
+connecté, est refusé (il ne garde que « Se déconnecter »).
 
 **Le lien de réservation doit être une adresse web** (`https://…`, ou
 `www.…` que la page complète) : la page refuse le reste, et le site ne fait
@@ -1282,6 +1591,55 @@ SQL de Supabase (il échoue sans rien changer si une ligne existante ne s'y
 plie pas : la corriger d'abord). Dans le tableau de bord, *Authentication →
 Sign In / Providers* : désactiver « Allow new users to sign up » (seul le
 compte d'Adrien a lieu d'exister) et laisser « Confirm email » activé.
+
+#### Comment la page est faite
+
+- `admin/index.html`, `admin/admin.css` (les jetons de thème y sont
+  **recopiés** depuis le `:root` d'`index.html` — si l'accueil change une
+  couleur, la recopier), `admin/admin.js`. Elle emprunte ses classes
+  Tailwind à `styles.css` : `admin/` est déclaré dans `tailwind.config.js`,
+  donc **toute classe Tailwind nouvelle dans admin/ demande de régénérer
+  `styles.css`**, comme pour l'accueil. Les composants propres à l'admin
+  (`adm-…`) sont écrits dans `admin.css`, sans Tailwind.
+- **supabase-js est servi par le site** : `admin/vendor/supabase.min.js`,
+  version 2.116.0, chargé en `async` (la liste gardée s'affiche sans
+  l'attendre) et **scellé** par son empreinte (`integrity`, la même que
+  celle de la copie du CDN, octet pour octet). Si le fichier changeait, le
+  navigateur refuserait de l'exécuter, et le bandeau le dirait. Changer de
+  version : remplacer le fichier, puis recalculer l'empreinte —
+  `openssl dgst -sha384 -binary admin/vendor/supabase.min.js | openssl base64 -A`.
+- **Une seule lecture de la table.** `dates-live.js` lit la table pour
+  l'accueil dès son chargement ; ici, admin.js la lit de toute façon (avec
+  `modifie_le` et la session). La page le charge donc par son **chemin
+  « Node »** (un `module` défini le temps de son exécution) : il ne rend que
+  ses fonctions de calcul, comme pour `build/exporter-dates.js`. S'il ne le
+  faisait plus un jour, il se poserait lui-même dans `window.DatesLive` : la
+  page marcherait, avec une lecture de trop.
+- **Ce qui n'est pas chargé d'emblée.** `index.html` (184 Ko compressés, pour
+  la liste des spectacles du CV) n'est lu qu'**à la première ouverture d'une
+  fiche**, puis gardé un jour ; `univers.js` et `univers-montage.js` (les
+  couleurs et les photos des spectacles) viennent **après la liste**, et sont
+  gardés un jour. Première visite : environ 360 Ko compressés (contre 518) ;
+  les suivantes, sans eux.
+- **Ce que garde le navigateur** (`localStorage`, un confort, jamais une
+  condition) : `admin.liste` (la dernière liste lue), `admin.univers`,
+  `admin.spectaclesCV`, `admin.suppressions` (celles pas encore confirmées
+  par la base) — et la session de supabase-js. La liste et les suppressions
+  sont oubliées à la déconnexion, et la liste ne s'affiche que si une
+  session est gardée.
+- **Pas de service worker dans `/admin/`** : la vérification du site
+  l'interdit (le mot ne doit pas paraître dans `admin/index.html`, même en
+  commentaire). L'admin hors ligne, c'est la liste gardée, et les
+  suppressions et enregistrements qui repartent au retour du réseau.
+- Les icônes (`admin/icone-192.png`, `icone-512.png`,
+  `icone-masquable-512.png`, `apple-touch-icon.png`) sont dessinées avec
+  Pillow à partir de `favicon_io/android-chrome-512x512.png` : le portrait, et
+  la feuille d'éphéméride des dates (or du site, coche « à venir ») en bas à
+  droite ; la version masquable tient dans la zone sûre. Pour les refaire
+  (un autre portrait) : `python3 build/fabriquer-icones-admin.py`.
+- Pour juger de la mise en page sans se connecter, sur la machine de
+  développement seulement : `http://localhost:8749/admin/?apercu` (la base
+  refuse d'écrire sans session).
 
 ### Sur l'ordinateur, avant un commit : `exporter-dates.js`
 
@@ -1298,9 +1656,11 @@ prochain export :
   JavaScript, et ce que lisent les robots d'indexation, `TheaterEvent`
   compris — une date absente de `dates.js` ne remontera pas dans les
   résultats enrichis de Google, même si la page l'affiche ;
+- l'**agenda à s'abonner**, `dates.ics` (voir [plus bas](#lagenda-à-sabonner-datesics)) :
+  les agendas abonnés ne voient une date qu'une fois la PR fusionnée ;
 - le **PDF du CV**.
 
-Aucun des trois n'est urgent, aucun ne doit être oublié. Avant le prochain
+Aucun des quatre n'est urgent, aucun ne doit être oublié. Avant le prochain
 commit, donc :
 
 ```bash
@@ -1310,7 +1670,8 @@ node build/generer-pages-spectacles.js
 
 Le premier recopie la base entre les repères `⇊ ⇈` de `dates.js` ; tout ce
 qui est hors des repères (titre de saison, archives) reste à la main. Le
-second refait les pages spectacle avec les nouvelles dates.
+second refait les pages spectacle avec les nouvelles dates, et `dates.ics`
+avec elles.
 
 **Ne modifiez plus la partie `upcoming` de `dates.js` à la main** : le
 prochain export l'écraserait sans prévenir. Le bon endroit, c'est `/admin/`.
@@ -1464,6 +1825,114 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   bascule de rangement 220 → 164 ms (sous le seuil de 200), frappe 80 → 72
   ms, première frappe 192 → 144 ms.
 
+### « Ajouter à l'agenda » : au téléphone, une feuille qui monte du bas
+
+Au téléphone, la fenêtre d'agenda (`#calendar-modal`, ouverte par
+`openCalendarModal`) s'ouvrait au milieu de l'écran, loin du pouce, et se
+fermait par une croix de 28 px dans son coin haut. **Sous 768 px** — la
+limite où la barre d'onglets passe en bas —, c'est maintenant une **feuille
+posée au bas de l'écran** : coins hauts arrondis, une poignée en tête, le
+fond jusqu'au bord et le contenu au-dessus de la barre d'accueil de l'iPhone
+(`env(safe-area-inset-bottom)`, que `viewport-fit=cover` rend lisible). Elle
+passe au-dessus de la barre d'onglets (la fenêtre est à `z-index` 10 000, la
+barre à 40). Plus haute que l'écran — un téléphone couché —, elle laisse
+40 px de voile en haut et défile en dedans, sous sa prise.
+
+**On la renvoie au pouce** : en la tirant vers le bas par sa poignée ou son
+en-tête (`data-feuille-prise`, `calFeuilleAuDoigt`). Elle suit le doigt sans
+transition, le voile s'éclaircit à mesure ; lâchée au-delà du tiers de sa
+hauteur (140 px au plus) ou lancée vers le bas (plus de 0,45 px/ms sur les
+100 dernières ms), elle se referme, sinon elle remonte — la transition part
+de là où le doigt l'a laissée. La prise est en `touch-action: none` : sans
+cela, le navigateur prend le geste pour un défilement et coupe le suivi
+(`pointercancel`). Restent la croix — 44 px au doigt désormais —, Échap et
+le voile. **Rien d'autre ne change** : c'est la même fenêtre, que
+`openModal` et `closeModal` ouvrent et referment — focus gardé dedans puis
+rendu au bouton, page inerte, entrée d'historique, mesure `date_agenda`. Le
+voile est alors un calque à lui (`.cal-voile`) : la feuille reste pleine
+pendant qu'elle monte et descend, seul le voile fond. En mouvement réduit,
+elle paraît et disparaît d'un coup ; tirée, elle suit encore le doigt (c'est
+lui qui bouge, pas une animation). **Sur ordinateur, rien ne change** : la
+fenêtre reste au centre, sans poignée.
+
+**La fenêtre d'agenda d'un univers fait de même** (`#u-cal-modal`, sur
+l'accueil comme sur les pages spectacle) : feuille au bas de l'écran sous
+768 px, poignée et titre comme prise (`data-u-cal-prise`), mêmes seuils pour
+la renvoyer (`feuilleAuDoigt`, univers.js, délégué à `#show-universe`
+puisque la fenêtre est réécrite à chaque ouverture), choix et croix à
+44 px. Elle n'est plus cachée sous les yeux quand on la rouvre aussitôt
+refermée.
+
+**Les fichiers et les adresses d'agenda sortent d'une seule fabrique**
+(`agendaDe`, univers-montage.js), pour l'accueil comme pour les univers,
+qui avaient chacun la leur. Elles écrivaient l'heure « flottante » (sans
+fuseau : 20 h chez qui ouvre le fichier, à Montréal comme à Paris), un
+identifiant tiré de l'horloge (ajouter deux fois la même séance faisait
+deux événements), des lignes ni échappées ni pliées, et un nom de fichier
+qui perdait ses lettres accentuées (« b-r-nice »). Désormais : l'heure de
+Paris avec son fuseau (`TZID=Europe/Paris` et le bloc `VTIMEZONE` de
+`dates.ics`), la fin d'après la durée du spectacle (deux heures sinon), un
+identifiant tiré du jour, de l'heure, du spectacle et du lieu, le texte
+échappé et plié à 75 octets, la billetterie et la page du spectacle dans la
+description. Google reçoit le fuseau à part (`ctz=Europe/Paris`), Outlook
+l'heure avec son décalage du jour (« +01:00 », « +02:00 »).
+
+**« Partager cette date »**, une ligne de plus sous les agendas
+(`calPartager`) : la date part chez quelqu'un, et non dans son propre agenda.
+Un texte qui se lit tel quel dans un message — « Bérénice — jeu. 12 nov. à
+20h00, Le Forum, Falaise (14) » (« horaire à confirmer », « séance
+scolaire » quand c'est le cas) — et le lien de la page du spectacle,
+`https://adrienvada.fr/spectacles/<slug>/`, ou de l'onglet Dates s'il n'en a
+pas : les adresses du site public, même depuis un aperçu. Par la feuille de
+partage du téléphone (`navigator.share`) ; sans elle — Firefox, un
+ordinateur sous Linux —, le texte et le lien sont copiés par le mécanisme de
+« Copier une adresse » (`window.copierTexte`, `window.annoncerCopie`), la ligne
+dit « Copiée » deux secondes et `#annonce-copie` le dit aux lecteurs d'écran.
+Son sous-titre annonce lequel des deux arrivera. Partagée, la date est
+partie : la fenêtre se referme ; une feuille de partage refermée sans rien
+envoyer ne fait rien. Mesure : `date_partage`, le spectacle en détail. La
+ligne « Autre application mobile… » (le fichier `.ics` confié à une autre
+application) a pris un dessin d'agenda : deux lignes au même signe de
+partage, pour deux gestes différents, se confondaient.
+
+### La carte de la saison
+
+Sous le tableau de « la saison d'un regard » (onglet Dates, en touchant les
+années de la saison), une carte dit **où** se joue la saison : les contours
+de la Normandie (en or), des Hauts-de-France et de l'Île-de-France, un point
+par ville, d'autant plus grand qu'on y joue souvent, son nom et le nombre de
+représentations. **Aucun service de carte** : ni tuiles, ni clé, ni adresse
+IP envoyée à qui que ce soit — un SVG dans la page.
+
+- **Le fond et la place des villes sont écrits dans `index.html`**, entre les
+  repères `CARTE-SAISON` (un bloc JSON de 9 Ko : les trois contours projetés,
+  et la place de chaque ville de `dates.js`), par `build/fabriquer-carte.js`,
+  que la commande des pages appelle comme `dates.ics`. Il relit
+  `build/donnees/carte-base.json` — les contours simplifiés (≈ 500 m) et le
+  centre de chacune des 7 793 communes des trois régions —, préparé une fois
+  pour toutes par `python3 build/preparer-fond-de-carte.py` (IGN, Admin
+  Express, via le projet france-geojson, **Licence ouverte** : la source est
+  écrite sous la carte). Une ville se cherche par son nom et son département
+  (« Cherbourg (50) » trouve Cherbourg-en-Cotentin, la commune nouvelle).
+- **La page y pose les dates du moment** (`dlCarte`), celles de Supabase
+  comprises : une ville déjà dans le bloc a son point aussitôt ; une ville
+  nouvelle l'aura à la prochaine régénération, comme `dates.ics`.
+- **Les communes voisines se regroupent** (moins de 20 points, ≈ 15 km) sous
+  la plus jouée : « Rouen et alentours », sinon les sept communes de
+  l'agglomération rouennaise s'empilaient.
+- **Les noms ne se chevauchent pas** : chaque point, avec son nom, est un
+  bouton (24 px de haut au moins), qui **mène à la première date de sa
+  ville**, comme le reste du sommaire (`data-dl-aller`). Le nom se pose à
+  droite, à gauche, au-dessus ou au-dessous du point : toutes les
+  combinaisons sont essayées (une dizaine de villes au plus, une recherche
+  qui abandonne une branche dès qu'elle coûte plus que la meilleure), à la
+  largeur où la carte sera dessinée — lue sur la fenêtre, pas mesurée, pour ne
+  pas forcer de mise en page pendant le dessin de l'onglet. Au téléphone,
+  Saint-Lô écrit son nom sous son point, Pont-Audemer à gauche du sien.
+- La carte est **hors du `<nav>`** du tableau : la règle des boutons de
+  navigation du téléphone (corps et marges en `!important`) gonflait ses
+  points. Elle ne s'imprime pas (le sommaire est `no-print`).
+
 ### La prochaine date, en tête du CV
 
 `renderNextDate()`, dans le script écrit juste après son emplacement : la
@@ -1544,12 +2013,129 @@ elle manque, la page se rabat sur la version de 640 px.
   `supabase/import-initial.sql` ; les deux ont déjà été joués et servent de
   mémoire.
 
+### L'agenda à s'abonner (`dates.ics`)
+
+« Ajouter à l'agenda » pose **une** date, **une** fois : que la salle change
+l'heure, qu'une date s'ajoute, et l'agenda du visiteur n'en sait rien.
+`dates.ics`, à la racine, est un agenda **publié** : on s'y abonne une fois,
+et l'application le relit d'elle-même, chaque jour (`REFRESH-INTERVAL` et
+`X-PUBLISHED-TTL` à `P1D`). Le lien est au pied de la liste de l'onglet
+Dates, « S'abonner à l'agenda » :
+
+- **`webcal://adrienvada.fr/dates.ics`** — Calendrier (iPhone, Mac) et
+  Outlook l'ouvrent d'un toucher et proposent l'abonnement ;
+- **« Dans Google Agenda »** —
+  `https://calendar.google.com/calendar/render?cid=webcal%3A%2F%2Fadrienvada.fr%2Fdates.ics`,
+  dans un nouvel onglet : Google Agenda demande de confirmer, et l'agenda
+  suit ensuite sur le téléphone. `cid` ne prend que `webcal://` (une adresse
+  en `https://` y est refusée ; Google la relit en `http://`, que GitHub
+  Pages renvoie vers `https://`). **Google n'accepte un abonnement que depuis
+  le navigateur d'un ordinateur** : ni son application, ni un téléphone ;
+- **l'adresse en `https://`**, avec un bouton « Copier » (celui de
+  « Copier une adresse »), pour les autres applications (*À partir de
+  l'URL*).
+
+**Sur Android**, aucune application n'ouvre `webcal://` : sur un Pixel, le
+toucher ne faisait rien (octobre 2026). Le script « S'abonner à l'agenda,
+sur Android » (`index.html`) retire donc ce lien, et fait de celui de Google
+Agenda un bouton, « M'envoyer le lien d'abonnement » : la feuille de partage
+l'envoie par mail ou par message, pour l'ouvrir sur un ordinateur ; sans
+feuille de partage (ou si elle échoue, hors annulation), le lien est copié,
+et la phrase d'aide le dit — elle explique aussi pourquoi un ordinateur.
+
+Mesure : `agenda_abonnement`, détail `webcal`, `google`, `android` ou
+`https` (l'adresse copiée).
+
+**Ce qu'il contient.** Les représentations **publiques** de `dates.js`, jamais
+une séance scolaire (même règle que les données structurées) ; celles à
+venir, et celles jouées depuis **moins de 60 jours** — un agenda abonné efface
+ce que le flux ne contient plus, et une date jouée la veille ne doit pas
+disparaître du jour au lendemain. **Un événement par séance** : deux séances
+le même jour, deux événements ; « 14h30 & 19h00 » sur une ligne, deux aussi.
+L'heure est celle de l'affiche, en heure de Paris (`DTSTART;TZID=Europe/Paris`,
+avec le fuseau `VTIMEZONE` écrit une fois : l'agenda place lui-même l'heure
+d'été, rien n'est calculé à la fabrication). Sans heure lisible — vide,
+« matin », « à confirmer » —, l'événement tient la journée, « transparent »
+(la journée n'est pas marquée prise). Le nom est celui du spectacle, comme
+dans la fenêtre d'agenda d'un univers (« Cléophène (d'après Rodogune, de
+Corneille) ») ; la fin, le début plus la durée annoncée dans l'univers, deux
+heures sinon ; `URL` mène à la billetterie si elle est en `https`, à la page du
+spectacle sinon ; la description, courte, porte les deux liens en clair
+(Google Agenda ne montre pas `URL`). Lignes pliées à 75 octets, fins de ligne
+CRLF, texte échappé selon la RFC 5545.
+
+**L'identifiant (UID) est tiré de la représentation**, pas de la base :
+le jour, l'heure, et une empreinte du spectacle et du lieu
+(`20261022T1900-930d4fedcf@adrienvada.fr`). C'est par lui qu'un agenda
+reconnaît, d'une lecture à l'autre, le même événement. L'identifiant de la
+ligne Supabase n'est pas dans `dates.js`, et il change quand une ligne est
+effacée puis ressaisie pour corriger une faute — la soirée, elle, n'a pas
+bougé. Le lien de billetterie n'en fait pas partie : quand les réservations
+ouvrent, l'événement se met à jour au lieu de se doubler. Une heure, un jour
+ou une salle qui changent font un autre événement : l'ancien disparaît des
+agendas, le nouveau y paraît — c'est ce qui est arrivé à la soirée. La
+typographie (accents, apostrophes, espaces, ponctuation) n'y compte pas :
+soigner l'écriture d'une salle ne retire ni ne rajoute rien chez personne.
+Sans heure d'horloge, ce qui en tient lieu (« matin », « après-midi ») entre
+dans l'empreinte : deux séances, deux événements.
+
+**Le même fichier pour la même entrée.** Rien ne lit la date du jour : un flux
+daté de sa fabrication changerait à chaque passage sans qu'une date ait
+bougé, et la vérification ne saurait plus dire s'il est à jour. Le seul
+« maintenant » est celui de la **copie** : la ligne « `Dernier export : …` »
+que `exporter-dates.js` écrit en tête des dates. Elle borne le passé gardé
+(60 jours avant elle) et donne `DTSTAMP`, que la norme exige sur chaque
+événement. Illisible, elle arrête la fabrication avec un message : mieux vaut
+qu'elle le dise que de publier autre chose en silence. Conséquence à
+connaître : chaque export redate tous les `DTSTAMP`, et `dates.ics` change
+avec `dates.js`.
+
+**Quand il est refait.** Par `build/fabriquer-agenda.js`, qu'appelle
+`build/generer-pages-spectacles.js` à chaque passage — donc par
+`npm --prefix build run pages`, la commande qu'on relance déjà après un export
+des dates : une commande à part aurait été oubliée. Seul :
+`node build/fabriquer-agenda.js`. Il lit `dates.js` et `univers.js` (le nom, la
+page, la durée) : après un changement de l'un ou de l'autre, il faut le
+refaire, et la [vérification](#vérifier-le-site) refuse un `dates.ics` qui
+n'est pas exactement celui qu'ils donnent. **Il n'est pas en direct** : le
+site lit la base à chaque visite, les abonnés ne voient une date nouvelle
+qu'une fois la PR fusionnée et publiée. GitHub Pages le sert en
+`text/calendar`, comme le serveur local.
+
 ---
 
-## La barre d'onglets reste en haut (mobile et desktop)
+## La barre d'onglets — en bas au téléphone, en haut sur grand écran
 
-Quelle que soit la taille de l'écran, la barre se colle en haut au moment où
-elle allait sortir de l'écran. En haut de page, elle garde exactement son
+**Au téléphone (sous 768 px), la barre flotte en bas de l'écran**, dans la
+zone du pouce. En haut de page, elle commençait à 789–859 px du haut selon
+le téléphone : sous le bord de l'écran à l'arrivée, si bien que rien ne
+disait qu'il existait une bande démo et des démos voix — ce qu'un directeur
+de casting cherche souvent en premier. Les quatre destinations sont
+désormais visibles avant tout défilement, à un toucher, en un mot court
+sous une icône (CV · Dates · Caméra · Voix : `.onglet-court`, les libellés
+longs `.onglet-long` restant au grand écran). Elle flotte à 8 px des bords
+et au-dessus de la barre d'accueil de l'iPhone (`env(safe-area-inset-bottom)`,
+lisible grâce à `viewport-fit=cover` dans la balise `viewport`), 480 px au
+plus, centrée. Elle a toujours l'aspect « collée » (fond plein, ombre) :
+l'observateur de la sentinelle continue de basculer `.est-collee`, dont le
+cadrage d'un changement d'onglet se sert, sans que rien ne bouge. La page
+garde sa fin visible : `#site` réserve la hauteur de la barre en bas, et
+`scroll-padding-bottom` arrête le défilement au clavier au-dessus d'elle.
+Le haut de page, lui, n'a plus de barre à éviter : `--scroll-haut` (la marge
+que gardent les ancres et `scrollIntoView`) y vaut 16 px, 84 px au grand
+écran. Le CSS est le bloc « AU TÉLÉPHONE, LA BARRE D'ONGLETS EST EN BAS »
+d'`index.html`.
+
+⚠️ **Ne rien cliquer sous la barre dans un test automatique.** Un clic de
+Playwright sur un élément caché par la barre fixe est refusé, réessayé, et
+Chromium sans écran peut alors cesser de produire des images — un passage
+(View Transition) reste figé. Les tests font d'abord défiler la cible au
+milieu de l'écran.
+
+**Sur grand écran, la barre se colle en haut** au moment où elle allait
+sortir de l'écran. Collée, un voile du fond de page (`#nav-barre::before`,
+la même lumière que le `<body>`, fixe) efface les moitiés de lettres qui
+passaient au-dessus d'elle, dans la marge laissée en haut. En haut de page, elle garde exactement son
 aspect habituel ; collée, elle prend un fond opaque et une ombre
 (`#nav-barre.est-collee`). **Opaque, et sans flou** : elle a été presque
 opaque (98,5 %) sur un flou de 16 px, recalculé à chaque image puisque le
@@ -1728,6 +2314,20 @@ La mise en page, à l'écran (`LA LIGNE À VIGNETTE`, dans `index.html`) :
 - **la colonne de droite** — la flèche, la pastille ▶ dessous — a la même
   largeur sur toutes les lignes (44 px, celle de la pastille), pour que le
   texte s'arrête partout au même endroit.
+
+**Au téléphone (sous 768 px), rien ne se coupe.** Les points de suspension y
+mangeaient les rôles et les compagnies (« Compagnie du P’tit B… ») sur la
+moitié des lignes : un directeur de casting ne lisait pas avec qui l'on a
+joué. Le titre, le rôle et la compagnie passent donc à la ligne, et la
+ligne prend la hauteur qu'il faut (la vignette n'en fixe plus que le
+minimum ; le contrôle automatique vérifie qu'aucun texte n'est coupé, et
+ne tient la hauteur commune qu'au grand écran). Pour la place :
+« Compagnie » s'écrit « Cie » (`.cv-cie` : le mot reste dans le texte, à
+corps nul, et l'abréviation est dessinée par-dessus, muette pour un lecteur
+d'écran), et **la bande-annonce passe sur la vignette** — un bouton de
+lecture rond, cerclé de la couleur du spectacle, au milieu de la photo,
+avec une cible de 44 px (`.cv-trailer-place--vignette`, la réserve posée
+par `univers.js`) ; la colonne de droite ne garde que la flèche.
 
 Les **formations** n'ont pas d'illustration : leur année prend seule la
 colonne de la vignette, par le CSS seul (`.cv-formation`, pas de script). Une
@@ -1958,6 +2558,43 @@ l'efface.
 panneau. Les photos de Cléophène sont d'Arnaud Bertereau — le crédit est déjà
 en place ; le renseigner pour toute série qui en demande un.
 
+### Les chapitres, la suite, les dates du pied
+
+Ajoutés par l'expertise d'octobre 2026, dans `univers-montage.js` (donc
+partout : panneau de l'accueil et pages spectacle).
+
+- **Le premier écran reste celui du travelling.** On avance au milieu des
+  photos jusqu'au titre, qui n'est pas nommé d'avance — depuis le site comme
+  depuis un moteur de recherche. L'expertise y avait posé le titre en
+  filigrane et la ligne de la feuille de salle au-dessus d'« Avancer », et
+  posé directement au titre qui arrivait de Google : Adrien a préféré
+  l'ouverture d'avant (octobre 2026). La vérification le garde (« les
+  univers d'après l'expertise »).
+- **Le titre tient dans l'écran.** Sa taille réserve 0,66 chasse par signe
+  au mot le plus long (`.u-title`) : « Cléophène » sortait de 1 à 6 px à
+  360 px en mouvement réduit et sans script.
+- **Les chapitres.** Un univers fait une vingtaine d'écrans au téléphone
+  (17 000 px pour Bérénice). Il se lit en chapitres (`chapitresDe` :
+  Ouverture, Le spectacle — Images pour un film —, Bande-annonce s'il y en
+  a une, Dates — Le film —, Distribution s'il y en a une) : leurs débuts
+  sont marqués sur la barre de progression (`.u-progress-repere`), et une
+  pastille en bas de l'écran (`.u-chapitres`) dit le chapitre en cours et
+  s'ouvre sur la liste, qu'on touche pour y sauter (`mesurerChapitres`,
+  `suivreChapitre`, `allerAuChapitre` dans `univers.js` ; Échap la referme).
+  Événement de mesure : `univers_chapitre`.
+- **La suite.** Le pied finit sur « Spectacle suivant » (« Film suivant »),
+  dans l'ordre des lignes du CV : un vrai lien vers sa page
+  (`suivantHtml`), qui se lit sans JavaScript ; après le dernier, « Tout le
+  répertoire ». L'accueil lit l'ordre dans le CV (`suivantDe`), le
+  générateur aussi (`ordreCv`, `suivantDe`). Événement : `univers_suivant`.
+- **Les dates au dessin de l'onglet Dates.** Le pied prend la ligne de
+  l'onglet Dates : une série sur une ligne (`li.u-dl`), l'éphéméride, la
+  ville et la salle, une puce par séance, et un agenda qui demande la
+  séance quand une série en a plusieurs (`.u-cal-modal-seances`).
+- **Les légendes** des photos deviennent une ligne de programme, en
+  italique, sans pastille (`.u-cap span`) ; sur une photo plein cadre, un
+  dégradé les pose.
+
 ### Fluidité — ce qui a été fait, et pourquoi ne pas le défaire
 
 - Le titre s'affiche **immédiatement** ; les photos n'apparaissent qu'une fois
@@ -2015,7 +2652,7 @@ en place ; le renseigner pour toute série qui en demande un.
   carte graphique, où l'écart sera moindre ; au téléphone à ×4, 1,57 → 0,31 s
   de compositeur. Sur les Dates, avec le reste de ce lot : 36 % → 0 sur
   ordinateur, 1,2 → 0,17 s de compositeur au téléphone. La barre
-  collée n'a plus le sien (voir [La barre d'onglets](#la-barre-donglets-reste-en-haut-mobile-et-desktop)) ;
+  collée n'a plus le sien (voir [La barre d'onglets](#la-barre-donglets--en-bas-au-téléphone-en-haut-sur-grand-écran)) ;
   seules les fenêtres posées sur une page immobile gardent le leur —
   l'agenda de l'accueil, celui d'un univers ; la carte du lecteur vidéo,
   noire et opaque, n'en montrait rien (12/255 au plus, sur 0,05 % des
@@ -2038,6 +2675,12 @@ en place ; le renseigner pour toute série qui en demande un.
   [Les passages](#les-passages-view-transitions)). La lumière se mesure une
   fois, en lisant tout avant d'écrire (voir
   [L'écriture à la lumière](#lécriture-à-la-lumière)).
+  **Sans passage non plus** : un univers qui se déplie depuis sa ligne
+  (navigateur sans View Transitions) ne mesure sa lumière et son titre
+  détouré qu'**à la fin du dépliement** (`finDuDepliement`). Mesurées
+  pendant, elles recalculaient le panneau et peignaient le titre au milieu
+  de l'animation — des images perdues au téléphone. Rien de ce qu'elles
+  posent ne se voit avant qu'on défile.
 - **Le CV démarre en une mesure.** `univers.js` lit le fond (`--c-bg`, pour
   la crête du lavis) avant d'écrire quoi que ce soit dans les lignes ; il
   égalise leurs hauteurs en trois temps, toutes listes confondues (tout
@@ -2431,6 +3074,16 @@ ordinateur, il finit à 1,1-1,2 s au lieu de 1,6 s. Vérifié : le panneau, la
 lumière, la lettre et la page refermée sont identiques au pixel, et les
 quatre chemins de fermeture rendent la page à la même position qu'avant.
 
+**Le geste de retour du téléphone a déjà son passage.** Sur iPhone, glisser
+depuis le bord de l'écran fait passer la page d'avant sous le doigt ; le
+navigateur le dit (`hasUAVisualTransition` sur `popstate` et `hashchange`).
+Le site rejouait ensuite le sien — le glissement des onglets dans l'autre
+sens, le retour de l'univers dans sa ligne, le fondu de la lettre. Dans ce
+cas, l'onglet change d'un coup (`showPage(…, { sansPassage })`), l'univers
+et la lettre disparaissent sans passage ni fondu
+(`closeShowUniverse({ sansPassage, instantane })`, `fermerLeRecit(true)`).
+Un navigateur qui ne le dit pas garde les passages.
+
 ### Le vocabulaire
 
 `--ease-out` pour ce qui apparaît, `--ease-panel` pour ce qui se replie,
@@ -2636,7 +3289,37 @@ passage. C'était la seule navigation du site sans passage.
 
 ---
 
+**Des tailles que tous les navigateurs lisent.** La largeur des vignettes
+(`sizes`, écrite par `taillesVignette` et réécrite par `majTailles` quand la
+densité change) passait par `min(100vw, 68rem)`, que Safari ne lit dans
+`sizes` que depuis 26.4 : avant, toute la règle tombait, et le navigateur
+prenait la plus grande vignette. Elle est écrite en paliers (jusqu'au
+téléphone, jusqu'à 1 088 px, au-delà), et les vignettes paresseuses
+commencent par `auto, ` : le navigateur qui le sait (Chrome 126, Firefox
+150, Safari 27) prend la largeur réelle de leur case, les autres lisent la
+suite.
+
 ## Images générées (à ne pas écraser sans les régénérer)
+
+### Les images de partage
+
+Une page spectacle envoyée par WhatsApp, Messages, LinkedIn ou un mail
+s'annonce par son image de partage (`og:image`). C'était la première photo
+du montage, telle quelle : au format du fichier, chaque application la
+recadrait à sa façon, souvent sur un bout de décor, et rien n'y disait de
+quel spectacle il s'agissait. Chaque spectacle a désormais la sienne,
+`ressources/images/partage/<slug>.jpg`, au format que toutes attendent
+(1200 × 630) : sa couverture recadrée sur le point du montage, le titre en
+Cinzel, la ligne de salle (sous-titre · genre), le filet à la couleur du
+spectacle et « Adrien Vada · comédien ». L'affiche d'un film, qui porte déjà
+son titre, est posée entière à droite. Le générateur des pages l'annonce
+(`og:image`, avec sa taille et son texte de remplacement) dès qu'elle
+existe, sinon il garde l'ancienne règle.
+
+    pip install fonttools brotli          # une fois : Pillow ne lit pas le WOFF2
+    python3 build/fabriquer-images-partage.py
+    npm --prefix build run pages
+
 
 | Fichier | Rôle |
 |---|---|
@@ -2751,6 +3434,11 @@ s'arrête.
   « Bérénice, Compagnie Crescite — avec Adrien Vada (Antiochus). Rome, an
   79… », coupée à 155 signes sur un mot entier (voir `titreDe` et
   `descriptionDe` dans le générateur).
+- **L'écran d'accueil** : le manifeste (`favicon_io/site.webmanifest`) porte
+  le nom complet, la langue, les couleurs du site (le noir de la salle, et
+  non plus du blanc : l'écran de lancement d'Android était blanc), les
+  icônes et trois raccourcis — un appui long sur l'icône mène aux Dates, à
+  la bande démo ou aux démos voix (`/?direct#…`, sans rideau d'ouverture).
 - `sitemap.xml` **n'est plus écrit à la main** : il est régénéré par le script
   des pages spectacle (ci-dessous). Chaque `<lastmod>` est le **jour où la page
   a réellement changé** — la date de son dernier commit si elle ressort
@@ -2795,6 +3483,23 @@ change pas.
 `polices.css` reste
 la déclaration de référence. Les fiches gardent `univers.css` en `<link>`,
 partagée par les onze.
+
+**Le premier écran du répertoire part avec la page.** Au téléphone, il
+s'ouvre au zoom 3 (trois colonnes) : les tailles d'image (`taillesCarte`)
+l'annoncent, au lieu des deux colonnes d'avant qui faisaient venir des photos
+moitié trop grandes. Les trois premières affiches ne sont plus paresseuses
+— elles sont toujours à l'écran —, la première passe devant tout
+(`fetchpriority="high"`), les autres attendent leur tour (`imageCarte`).
+Au défilement, la vague lit la place de toutes les cartes **avant** d'écrire
+la première variable : lire après chaque écriture refaisait la mise en page
+une fois par carte et par image. Le nom de carte, au zoom le plus serré,
+passe de 9,9 à 11 px.
+
+**Chaque page dit qui elle est hors du site** : son image de partage (voir
+[Les images de partage](#les-images-de-partage)), son icône d'écran d'accueil
+et le manifeste (`apple-touch-icon`, `manifest`, comme l'accueil ; sans eux,
+« Sur l'écran d'accueil » posait une capture de la page), sa couleur
+(`color-scheme`, voir [Thèmes sombre / clair](#thèmes-sombre--clair)).
 
 **À relancer après toute modification de `univers.js`, `dates.js`, ou d'une
 ligne de CV dans `index.html`.** Rien n'y est ressaisi : tout est relu depuis
@@ -2987,7 +3692,22 @@ conservé.
 
 ## Polices — servies par le site
 
-Inter, Montserrat, Cinzel et Caveat sont dans `ressources/polices/`, déclarées
+**Trois familles, et pas une de plus** : Cinzel pour le nom et les titres,
+Inter pour tout le reste, Caveat pour la lettre. Il y en avait cinq —
+Montserrat pour les onglets, les boutons et les capitales espacées, et la
+police à chasse fixe du système pour les années, les heures et les
+éphémérides, qui valait SF Mono sur iPhone, Consolas sous Windows, autre
+chose sous Android : le même site n'avait pas le même visage partout.
+L'expertise d'octobre 2026 les a remplacées par Inter : les capitales
+espacées gardent leur dessin (graisse, espacement), et les chiffres alignés
+en colonne le restent par les chiffres tabulaires (`tabular-nums`, la classe
+Tailwind du même nom à la place de `font-mono`, et `font-variant-numeric`
+dans les règles écrites à la main — **après** un `font:` raccourci, qui le
+remet à zéro). Une famille de moins à télécharger (38 Ko au premier écran).
+Ne pas réintroduire `font-mono` : `tailwind.config.js` n'a plus de famille
+« montserrat », et le contrôle du papier attend Inter dans l'en-tête imprimé.
+
+Inter, Cinzel et Caveat sont dans `ressources/polices/`, déclarées
 par `polices.css` ; licence SIL OFL 1.1 (voir `LISEZMOI.txt`). Elles venaient
 de Google Fonts : une feuille bloquante sur un autre domaine, deux connexions
 de plus avant le premier rendu, et l'adresse de chaque visiteur transmise à
@@ -2995,8 +3715,8 @@ Google. Chaque famille tient en deux fichiers (`latin`, `latin-ext`, ce
 dernier ne se chargeant que pour un caractère qu'il est seul à avoir).
 Pour changer de version : voir `LISEZMOI.txt`.
 
-- **Demandées d'avance** (`preload`) : sur l'accueil, Cinzel, Montserrat et
-  Inter ; sur les pages spectacle, Cinzel et Inter. Cinzel manquait à
+- **Demandées d'avance** (`preload`) : Cinzel et Inter, sur l'accueil comme
+  sur les pages spectacle. Cinzel manquait à
   l'accueil — le préchargement datait d'un nom en Montserrat, et le nom est
   passé en Cinzel sans lui : le texte le plus en vue de la page s'affichait
   en serif de secours, puis changeait de forme 0,6 à 0,8 s plus tard. Inter
@@ -3161,12 +3881,30 @@ galerie et l'administration. À garder en tête en modifiant le site :
   tous les titres du montage montent d'un cran (voir la fin de `panelHtml`).
 - **Rien ne bouge sans fin** : voyant de la prochaine date, halo des univers, sceau de
   l'ouverture, fleuron et dorures du répertoire jouent une fois (ou trois)
-  puis se taisent (WCAG 2.2.2) ; la frise du CV et les scènes des univers ne
-  bougent qu'avec le défilement. Le réglage « réduire les animations » coupe
-  tout, et chaque scène a alors un état fixe qui a du sens.
+  puis se taisent (WCAG 2.2.2) ; l'aperçu de la bande démo fait deux tours
+  et se pose sur l'affiche — et, comme il bouge près d'une minute, un
+  bouton l'arrête avant (voir [L'aperçu](#laperçu--lécran-vit-sans-vidéo)) ;
+  la frise du CV et les scènes des univers ne bougent qu'avec le défilement.
+  Le réglage « réduire les animations » coupe tout, et chaque scène a alors
+  un état fixe qui a du sens.
 - **Pas de texte sous 11 px**, pas de cible sous 24 px (la piste des démos
   voix et les icônes du pied de page ont une zone de clic agrandie sans
-  changer d'aspect).
+  changer d'aspect). L'expertise d'octobre 2026 avait retrouvé des textes
+  de 8 à 10,5 px — l'état et l'année des vignettes, les éphémérides et
+  leurs bandeaux, la prochaine date, les libellés de la fiche de casting,
+  la bobine, le nom des cartes du répertoire, la bulle du temps sur l'onde
+  des démos voix : tous à 11 px. Pour tenir à cette taille, les jours
+  d'une série perdent leur point (« jeu.–ven. » → « jeu–ven »,
+  `DL_JOURS_BREFS`, aussi dans l'admin), et la colonne des libellés du
+  profil s'élargit au téléphone (8 em). Le contrôle automatique relève tout
+  texte visible sous 11 px sur le CV et les Dates. Au téléphone, les
+  onglets, les boutons de l'en-tête et les puces de séance ont 44 px de
+  cible ; au doigt, la feuille d'agenda (sa croix, ses séances, ses lignes)
+  et l'abonnement à l'agenda aussi ; 44 px encore pour les boutons du
+  mini-lecteur, l'arrêt de l'aperçu, le carré YouTube de la salle et la
+  croix de la salle noire couchée.
+- **Le champ de recherche des Dates est en 16 px** : en dessous, Safari
+  agrandit la page quand on le touche, et ne la rend pas.
 - **Le pincement appartient au navigateur** : il agrandit la page. La densité
   du répertoire et de la galerie se règle aux boutons − et +.
 - **Un lien qui ouvre un onglet le dit** (« nouvel onglet », en texte masqué).
@@ -3189,13 +3927,38 @@ sprite `<symbol>` inséré juste après `<body>`, entre les repères
 `SPRITE-ICONES:DEBUT` / `SPRITE-ICONES:FIN`.
 
 ```bash
-npm i @fortawesome/fontawesome-free@6.4.0     # une fois
+npm i @fortawesome/fontawesome-free@6.4.0 lucide-static@1.52.0   # une fois, ensemble
 python3 build/construire-sprite-icones.py
 ```
+
+(Les deux paquets dans la même commande : un `npm i` de l'un seul, dans un
+dossier sans `package.json`, peut retirer l'autre comme « en trop ».)
 
 Le script relève les icônes employées, va chercher leur tracé dans le paquet,
 réécrit le sprite et convertit les éventuelles balises `<i class="fa-…">`
 restantes. Il est **rejouable** : un second passage ne change rien.
+
+**Les icônes sont au trait** depuis l'expertise d'octobre 2026 : les pleines
+de FontAwesome — une cravate pour le CV, des masques et un calendrier pleins
+— avaient l'allure d'une application de gestion, à côté des titres
+éditoriaux et d'une administration déjà dessinée au trait. Le script prend
+donc le dessin de Lucide (licence ISC, 24 × 24, trait de 2, bouts arrondis :
+le jeu de l'admin) pour toutes les icônes de la table `TRAIT`, **sous le même
+identifiant** : `i-solid-calendar-days` reste le nom posé dans le balisage,
+seul le symbole change. Le trait est écrit sur un groupe dans le symbole (le
+`fill: currentColor` de `.ico` ne passe pas devant un attribut posé sur
+l'élément), et le cadre est resserré d'un point (`viewBox="1 1 22 22"`) : sans
+cela, à la même taille de texte, une icône au trait paraissait d'un cinquième
+plus petite que la pleine qu'elle remplaçait. Restent pleins, chez
+FontAwesome : les logos (Apple, Google, Microsoft, YouTube) et les commandes
+de lecture (lecture, pause, précédente, suivante). **Une nouvelle icône**
+s'ajoute à `TRAIT` avec son équivalent Lucide (voir lucide.dev), sinon elle
+sort pleine.
+
+**Les titres de rubrique** (« Théâtre », « Profil », « Formation », « Saison
+2026 - 2027 »…) prennent le dessin de ceux du répertoire : capitales espacées à
+l'encre d'or, l'icône dans un écrin à peine dessiné, un filet fin qui s'efface
+vers la droite (`.rubrique-titre`, posée sur leur `div`).
 
 **Poser une icône dans le balisage :**
 
@@ -3325,22 +4088,72 @@ répertoire, à la galerie et à la 404.
   Quelques règles de l'affiche portent `!important` : elles répondent à celles
   de la mise à l'échelle du téléphone (« Global text scale-down »).
 
+### Sur un grand écran : l'affiche à gauche, le site à droite
+
+Tout tenait dans une colonne de 896 px : sur un écran de 1 440 px, 41 % de
+la largeur restait vide, et l'affiche se repliait en médaillon dès qu'on
+quittait le CV. **À partir de 1 360 px**, le site se pose en deux colonnes
+(« LE GRAND ÉCRAN » dans `index.html`) : à gauche, l'affiche, **collée**
+(`position: sticky`) et **entière sur tous les onglets** ; à droite, la
+prochaine date (sur le CV), la barre d'onglets et les pages, aussi larges
+que la colonne d'avant. L'affiche y reprend la forme du téléphone : le
+portrait sur toute la largeur de sa colonne (440 px de haut au plus, et
+jamais plus de 48 % de l'écran : sur un portable de 768 px de haut, elle
+tient encore entière), le nom posé sur le bas de la photo, la fiche en deux
+colonnes.
+
+Pourquoi 1 360 et non 1 280 : en dessous, la colonne de droite serait plus
+étroite que celle d'avant (848 px), et les lignes du CV s'y serreraient.
+Entre 1 280 et 1 360, la mise en page d'avant reste la meilleure — et les
+vingt-deux vérifications écrites à 1 280 px la gardent.
+
+Le script fait sa part : `poserLAffiche` ne replie plus l'en-tête hors du CV
+quand `DEUX_COLONNES` est vrai (seule la prochaine date, propre au CV, se
+replie), le portrait ne voyage plus vers un médaillon qui n'existe pas, la
+limite franchie en redimensionnant la fenêtre repose l'affiche d'un coup, et
+l'arrivée sur un autre onglet ne pose plus `arrivee-hors-cv` (le `<head>`
+le vérifie avec la même requête de média).
+
 ## La salle de projection
 
 La bande démo était une vignette dans une carte, et rien ne disait ce
 qu'elle contenait. Elle est posée dans **une salle** (`#salle`, noire dans
 les deux thèmes) : l'écran au milieu, sa lumière qui déborde autour, et
-dessous **la bobine** — un plan par extrait, qui lance le film à ce moment-là :
+dessous **la bobine** — un plan par extrait, qui lance le film à ce
+moment-là. Les extraits y sont présentés en **chapitres** — le numéro, le
+titre, le début et la fin —, et la **durée** de la bande démo est écrite sous
+l'écran (3:01) :
 
-| Extrait | Début (`data-salle-debut`) |
-|---|---|
-| L'Homme moderne | 0 s |
-| Le rapt | 81 s (1:21) |
+| Chapitre | Début (`data-salle-debut`) | Fin |
+|---|---|---|
+| 1 · L'Homme moderne | 0 s | 1:21 (le début du suivant) |
+| 2 · Le rapt | 81 s (1:21) | 3:01 (la durée) |
 
+- **La durée, 181 s, n'était écrite nulle part** dans le dépôt — ni dans les
+  données structurées, ni sur la page —, et la fin du dernier extrait non
+  plus. Elle a été lue le 4 octobre 2026 dans ce que YouTube répond à son
+  lecteur intégré pour cette vidéo (« VADA - Démo caméra 2026 », champ
+  `videoDurationSeconds` de l'aperçu d'intégration,
+  `youtube-nocookie.com/embed/GOeL5AMGb_s`), et posée en constante :
+  `DUREE`, à côté de `DEBUTS` (`index.html`, « LA SALLE DE PROJECTION »),
+  avec ce commentaire. Elle est écrite à trois endroits : la constante, le
+  « 3:01 » sous l'écran, la fin du dernier chapitre — **le vérificateur les
+  confronte**, et confronte chaque chapitre à son début.
+- Le bouton de l'écran dit ce qu'il lance et combien de temps : « Lancer la
+  projection : bande démo caméra d'Adrien Vada, 3 min 01 » — le mot qu'on
+  voit sur l'écran est dans son nom.
+- **La légende est sur le halo.** Sous une photo claire de l'aperçu, la
+  lumière qui déborde de l'écran monte, au téléphone, jusqu'à une luminance
+  de 0,16 sous le titre : le crème d'avant n'y tenait que 3,5:1. Le titre et
+  la durée sont passés à un blanc chaud (`#f8f3ea`, 4,5:1 au pire, mesuré),
+  avec une ombre douce ; le carré YouTube, une icône, à 3,3:1 ; le numéro et
+  le minutage des chapitres à 5,8:1 sur le noir.
 - **Le halo** : le plan réduit à 32 × 14 points dans un canevas, agrandi et
   flouté une fois pour toutes par la feuille (`.salle-halo`) — le flou n'est
   jamais animé, seule l'opacité l'est, en passant d'un canevas à l'autre. Sur
-  la page, il peint l'affiche au repos et l'extrait survolé sur la bobine.
+  la page, il peint ce que montre l'écran — l'affiche au repos, la photo que
+  l'aperçu y fait passer (peinte depuis l'image déjà là, sans la redemander)
+  — et l'extrait survolé sur la bobine.
   L'affiche de l'écran est en `loading="lazy"` : l'onglet est caché au
   chargement, et ses 16 Ko ne passent plus devant le portrait ; le halo
   attend son arrivée et se peint à la première ouverture de l'onglet.
@@ -3354,8 +4167,9 @@ dessous **la bobine** — un plan par extrait, qui lance le film à ce moment-l�
 - Les deux plans de la bobine sont des images que YouTube tire lui-même de la
   vidéo, bandes noires ôtées. **Si la bande démo change**, les refaire
   (`https://i.ytimg.com/vi/<id>/maxres1.jpg` à `maxres3.jpg`, au quart, à la
-  moitié et aux trois quarts), et remettre les débuts des extraits dans la
-  bobine et dans `DEBUTS` (`index.html`, « LA SALLE DE PROJECTION »).
+  moitié et aux trois quarts), remettre les débuts des extraits dans la
+  bobine et dans `DEBUTS` (`index.html`, « LA SALLE DE PROJECTION »), et la
+  durée dans `DUREE`, sous l'écran et à la fin du dernier chapitre.
 
 **Les bandes-annonces du CV** passent dans la même salle noire. La pastille ▶
 d'une ligne (`addTrailerPill`, `univers.js`) appelle `ouvrirBandeAnnonce`
@@ -3365,6 +4179,94 @@ prend alors la classe `.bande-annonce` : pas de bobine, le halo pris à la
 photo de couverture du spectacle (celle de sa vignette), et « Bande-annonce ·
 titre » en tête. La pastille reste un vrai lien : clic du milieu, Ctrl-clic
 ou « ouvrir dans un nouvel onglet » mènent toujours à la plateforme.
+
+### L'aperçu — l'écran vit, sans vidéo
+
+L'écran montrait une image fixe : rien ne disait qu'un film attendait
+derrière. Il n'y a aucun fichier vidéo dans le dépôt, et l'on n'en ajoutera
+pas : **l'écran vit avec les photos des deux films**. Un fondu enchaîné lent
+de cinq photos — Arthur à la table, la chanson de Melvin, la tête sur la
+table (L'Homme moderne) ; Steven ligoté, puis riant sur la plage (Le rapt) —,
+chacune dans un léger travelling, puis le retour à l'affiche. Le bouton
+« Lancer la projection » reste au centre, et ouvre la salle noire comme
+avant. Pendant qu'une photo passe, la bobine éclaire son chapitre, et le
+halo prend sa lumière.
+
+- **Deux tours, puis l'affiche, pour de bon** : rien ne bouge sans fin sur ce
+  site. Et comme deux tours font près d'une minute de mouvement à côté du
+  reste de la page, un bouton **« Arrêter l'aperçu »** (le rond ❚❚ dans le
+  coin de l'écran, cible de 44 px) l'arrête tout de suite (WCAG 2.2.2) ; il
+  n'existe que pendant l'aperçu, et rend le focus à l'écran. Lancer la
+  projection l'arrête aussi : il a fait son office. Posé pour de bon, il
+  rend sa mémoire : ses photos quittent la page (décodées, les cinq
+  occupaient une quinzaine de mégaoctets).
+- **Il ne joue que si l'on peut le voir** : l'onglet Caméra ouvert, l'écran à
+  moitié au moins dans la fenêtre (un `IntersectionObserver` — aucun travail
+  au défilement), la page au premier plan. Sorti du champ, il attend, son
+  travelling figé, et reprend où il en était. Quitter l'onglet l'arrête et
+  rend l'affiche ; y revenir rejoue les tours qui restent — pas ceux qui sont
+  faits.
+- **Ses photos ne partent qu'à sa première projection** : jamais avec
+  l'accueil, et, quand on arrive par un lien sur l'onglet Caméra, après la
+  fin du chargement de la page. Elles sont fabriquées à ce moment-là (le
+  balisage n'en contient aucune : `.apercu` est vide), en 640 ou 1280 px
+  selon la hauteur de l'écran et sa densité (`srcset`, et un `sizes` calculé
+  sur la photo telle qu'elle s'affiche, plus large que l'écran) : 54 à
+  131 Ko pour les cinq, une requête chacune.
+- **Il ne joue pas du tout** en mouvement réduit, ni quand le navigateur
+  demande d'économiser les données (`navigator.connection.saveData`, et
+  `prefers-reduced-data`) : pas une photo demandée, l'affiche reste. Le
+  réglage changé pendant l'aperçu le rend à l'affiche.
+- **Transformation et opacité, rien d'autre.** Le travelling est un
+  `transform: scale()` de 1,01 à 1,11 (ou l'inverse, une photo sur deux),
+  autour du point que cadre l'univers du film (son `cadre`, dans
+  `univers.js`) ; le fondu, l'opacité. Le survol de l'écran assombrissait
+  l'affiche par un filtre (`brightness`) en transition : c'est désormais un
+  voile noir à 15 %, même rendu, et seule son opacité bouge. Une photo qui
+  arrive se pose **sur** la précédente, restée pleine dessous, qui disparaît
+  d'un coup une fois couverte : deux fondus croisés laisseraient voir
+  l'affiche à travers les deux.
+- **Le zoom ne montre jamais un bord** : une mise à l'échelle supérieure à 1
+  autour d'un point de l'image garde l'écran couvert. Les photos de L'Homme
+  moderne ont leurs bandes noires de cinémascope dans le fichier (7,34 % en
+  haut et en bas) : `.a-barres` agrandit leur boîte pour qu'elles tombent
+  hors de l'écran.
+- **Régler l'aperçu** : le rythme est dans la feuille, `--apercu-plan`
+  (4,6 s par photo) et `--apercu-fondu` (1,6 s) sur `.salle` ; le script les
+  lit et le travelling les reprend. Les photos et le nombre de tours sont
+  dans `PLANS` et `TOURS` (« L'APERÇU », dans le script) : une photo est
+  désignée par son dossier et son numéro dans `ressources/images/univers/`
+  — ses versions 640 et 1280 existent déjà, `variantes-images.py` les fait
+  pour tout le montage —, avec son point de cadrage et le chapitre qu'elle
+  éclaire.
+
+### Le téléphone couché
+
+On couche son téléphone pour regarder un film. La salle noire y gardait sa
+carte, son bandeau, sa bobine et ses marges : sur 390 px de haut, la vidéo
+n'en avait plus que 220. Couché et bas (`orientation: landscape` et 500 px
+de haut au plus — pas une tablette), **le lecteur prend toute la hauteur**
+(100dvh), au format 16:9 tant que la largeur le permet, centré dans le noir.
+La page est en `viewport-fit=cover` : le lecteur reste dans la zone sûre
+(`env(safe-area-inset-*)`), hors de l'encoche et de la barre d'accueil. Le
+titre, la bobine et le halo disparaissent ; la croix reste, seule dans le
+coin haut droit, sur le noir de côté (presque tous les téléphones sont plus
+larges que 16:9), et Échap ou le geste de retour referment la salle.
+
+Le plein écran de YouTube (son bouton, dans l'iframe) fait de l'iframe
+l'élément plein écran de la page : au doigt, on demande alors l'écran couché
+(`screen.orientation.lock('landscape')`) et on le rend à la sortie.
+L'API n'existe pas partout et ne s'accorde qu'en plein écran (sur iPhone, ou
+hors plein écran, la promesse est refusée) : on ne la demande qu'en plein
+écran, et un refus ne dit rien.
+
+### Un seul son à la fois
+
+La salle noire — bande démo ou bande-annonce — met en pause la démo voix qui
+joue (voir [le mini-lecteur](#démos-voix--le-mini-lecteur-lenchaînement-lécran-verrouillé)) :
+elle reste dans le mini-lecteur, prête à reprendre. C'est la coupure que
+faisait autrefois tout changement d'onglet, gardée là où deux sons se
+recouvriraient vraiment.
 
 ## Démos voix — les ondes
 
@@ -3394,6 +4296,9 @@ qui est lu, `--c-s300` pour ce qui reste), à la densité de l'écran, sans
 plafond (plafonnées à 2, les barres bavaient à DPR 3). La barre garde son rôle
 de curseur, son clic, ses flèches et le repli sans en-têtes Range. Sans
 script, la piste d'avant.
+
+Au repos, la barre ne dit que la durée (« 0:39 ») : « 0:00 / 0:39 »
+n'apprenait rien. La position ne paraît qu'une fois la démo lancée.
 
 ## Démos voix — poids des fichiers
 
@@ -3432,6 +4337,64 @@ clavier qui y arrive. Mesuré en 4G lente simulée (trois passes) :
 l'ouverture tire 127 Ko au lieu de 821 ; toucher la quatrième démo 0,3 s
 après l'ouverture fait entendre la voix en 0,47 s au lieu de 0,69 ; le
 revers — une démo jamais approchée, touchée tard — 0,35 s au lieu de 0,15.
+
+## Démos voix — le mini-lecteur, l'enchaînement, l'écran verrouillé
+
+Changer d'onglet **coupait la démo** et la remettait au début (`poserPage`) :
+on ne pouvait pas écouter une voix en lisant le CV — ce que fait justement
+un directeur de casting. La lecture continue désormais d'un onglet à
+l'autre, et un **mini-lecteur** (`#lecteur-voix`, `lecteurVoix` dans
+`index.html`) la suit.
+
+- **Il paraît dès qu'une démo joue** : le nom de la démo et sa nuance, le
+  temps (« 0:12 / 0:39 »), précédente, lecture/pause, suivante, et une piste
+  fine qui avance par une transformation (`scaleX`) — rien à remettre en
+  page quatre fois par seconde. La croix arrête la démo, la remet au début,
+  et le referme. Les cartes ne changent pas : au repos, la durée seule
+  (« 0:39 ») ; pendant la lecture, « 0:12 / 0:39 ».
+- **Sa place.** Au téléphone, juste au-dessus de la barre d'onglets du bas,
+  8 px plus haut, sur la même largeur : la hauteur de la barre est
+  **mesurée** (un `ResizeObserver`, jamais au défilement), pas devinée — elle
+  suit la taille du texte. Sur grand écran, en bas à droite (420 px). La
+  page garde sa fin visible au-dessus de lui (`.lecteur-ouvert` : la place
+  réservée en bas de `#site` grandit de 64 px, et le défilement au clavier
+  s'arrête au-dessus). Le changement d'onglet ne l'emporte pas avec la
+  page : il a son propre groupe dans la View Transition, comme la barre.
+- **Ce qui est peint suit l'élément `<audio>`, pas le geste** : le bouton
+  d'une carte et le mini-lecteur se repeignent sur `play` et `pause`. Une
+  démo peut s'arrêter ou partir sans qu'on touche sa carte — l'écran
+  verrouillé, un casque, la salle noire, l'enchaînement —, et tout le dit
+  pareil. `activeAudioId` est la démo du mini-lecteur, en pause comprise ;
+  elle ne redevient `null` qu'à la croix.
+- **L'enchaînement** : à la fin d'une démo, la suivante démarre, dans
+  l'ordre de la page — sauf après la dernière, où le lecteur reste sur
+  elle, en pause, revenu au début. La suivante est amorcée aux trois quarts
+  de celle qui joue (`amorcerDemo`) : elle part sans attendre son fichier.
+  Elle est lancée dans l'événement `ended` lui-même, sans délai : Safari ne
+  laisse partir un son sans geste que dans la seconde où le précédent, lancé
+  d'un geste, vient de finir. Si un navigateur la refuse quand même, elle
+  attend dans le mini-lecteur, prête (« Reprendre la lecture »), et
+  l'annonce dit « En pause : … » au lieu de « Lecture : … ».
+- **L'écran verrouillé, le casque, les touches multimédia** passent par
+  l'API Media Session : titre (« L'Oréal — Grave, doux, sincère (home
+  studio) »), « Adrien Vada », « Démos voix », et le portrait
+  (`profil-192.jpg`, `profil-384.jpg`) ; lecture, pause, arrêt, précédente
+  et suivante (absentes sur la première et la dernière démo), aller à un
+  point, reculer et avancer de dix secondes. La position est posée à chaque
+  départ, pause, saut ou changement de vitesse ; le système l'extrapole
+  entre deux.
+- **Accessibilité** : une région nommée (« Lecteur des démos voix »), quatre
+  boutons nommés de 44 px, le focus visible. « Lecture : L'Oréal, grave,
+  doux, sincère… » est annoncé à chaque démo qui part vraiment — celle qu'on
+  touche comme celle qui s'enchaîne —, par une région discrète (`polite`)
+  posée **à côté** du lecteur : une région qui paraît en même temps que son
+  texte n'est pas toujours lue. La précédente et la suivante absentes sont
+  `aria-disabled`, pas `disabled` : le bouton qu'on vient de presser garde
+  le focus. Fermé au clavier, le lecteur rend le focus au bouton de la démo
+  s'il est à l'écran, sinon à l'onglet affiché. Rien ne s'imprime
+  (`no-print`).
+- **Un seul son à la fois** : la salle noire met la démo en pause (voir
+  [Un seul son à la fois](#un-seul-son-à-la-fois)).
 
 ---
 
@@ -3529,20 +4492,35 @@ Deux façons de relever un geste :
 
 `entree` (onglet d'arrivée), `intro` (coupée ou menée au sceau, et durée),
 `univers_ouvert` / `univers_ferme` (spectacle, durée de lecture), `demo_ecoute`
-(jalons 25 / 50 / 75 / 100 %, une seule fois par démo et par visite),
+(jalons 25 / 50 / 75 / 100 %, une seule fois par démo et par visite — une
+démo enchaînée compte comme une autre), `demo_suivante` (une démo voix a
+démarré sans qu'on la choisisse dans la liste : son nom, et `par` —
+`enchainement` quand la précédente a fini, `lecteur` pour le bouton
+« suivante » du mini-lecteur, `systeme` pour l'écran verrouillé, le casque
+ou le clavier ; il dit si l'on reste écouter la démo d'après),
 `dates_vue` (rangement choisi dans l'onglet Dates : `date` ou `spectacle`),
 `date_spectacle` (la page d'un spectacle ouverte depuis l'onglet Dates : son
-nom).
+nom), `univers_chapitre` (un chapitre choisi dans la pastille d'un univers :
+le spectacle et le chapitre), `univers_suivant` (« Spectacle suivant » au
+pied d'un univers : le titre du suivant).
 
 Ce qu'on a **fait** — les gestes qui sortent du site, et les seuls qui disent
 qu'un directeur de casting a fini de regarder :
 
 `contact_mail` (`en-tête` ou `pied` — l'e-mail figure deux fois, et l'on veut
-savoir lequel travaille), `cv_pdf` (`bureau` ou `mobile` : un seul lien,
+savoir lequel travaille), `contact_copie` (« Copier » l'adresse : `en-tête`
+ou `pied`), `contact_vcard` (la fiche contact téléchargée), `cv_partage`
+(« Partager » le CV en fichier, au téléphone), `cv_pdf` (`bureau` ou `mobile` : un seul lien,
 dont le détail suit la largeur de l'écran, 768 px), `fiche_pro`
 (`agences-artistiques`, `filmmakers`), `reseau` (`instagram`, `linkedin`,
 `spotify`), `demo_youtube`, `date_agenda`, `date_booking`, `banner_next_date`
-(la prochaine date du CV, ouverte dans l'onglet Dates : le nom du spectacle).
+(la prochaine date du CV, ouverte dans l'onglet Dates : le nom du spectacle),
+`date_partage` (« Partager cette date », dans la fenêtre d'agenda : le nom du
+spectacle — qu'elle parte par la feuille de partage ou par le
+presse-papiers), `agenda_abonnement` (« S'abonner à l'agenda », au pied de
+l'onglet Dates : `webcal` pour le lien, `google` pour Google Agenda,
+`android` pour « M'envoyer le lien d'abonnement », `https` pour l'adresse
+copiée).
 
 **Ne jamais transmettre autre chose que ce que la page affiche déjà** : noms de
 spectacle, noms de démo. Rien qui identifie qui que ce soit.

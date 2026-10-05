@@ -188,6 +188,8 @@
          PNG de 256 px en base64 — 128 Ko, 20 % de ce que pesait la page. -->
     <link rel="icon" type="image/png" href="../favicon_io/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="../favicon_io/favicon-96x96.png" sizes="96x96">
+    <link rel="apple-touch-icon" sizes="180x180" href="../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../favicon_io/site.webmanifest">
     <!-- Les polices du site, servies par le site (ressources/polices/). -->
     <link rel="preload" href="../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
     <!-- Les polices, puis la feuille de la page, DANS la page : deux
@@ -210,24 +212,6 @@
     font-weight: 100 900;
     font-display: swap;
     src: url(../ressources/polices/inter-latin.woff2) format('woff2');
-    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
-    font-family: 'Montserrat';
-    font-style: normal;
-    font-weight: 100 900;
-    font-display: swap;
-    src: url(../ressources/polices/montserrat-latin-ext.woff2) format('woff2');
-    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-@font-face {
-    font-family: 'Montserrat';
-    font-style: normal;
-    font-weight: 100 900;
-    font-display: swap;
-    src: url(../ressources/polices/montserrat-latin.woff2) format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -269,7 +253,7 @@
     </style>
     <style>
 /* GALERIE PHOTO (/galerie/) — feuille générée (build/generer-page-galerie.js)
-   Même univers visuel que le répertoire de spectacles : Cinzel, Inter, Montserrat,
+   Même univers visuel que le répertoire de spectacles : Cinzel et Inter,
    or sur noir, grain de pellicule, grille dont la densité se règle aux boutons − et +. */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -301,9 +285,13 @@ html.vt-theme::view-transition-new(root) { z-index: 2; }
        crayon gras, rouge. */
     --num: #d69a3c;
     --crayon: #ff4d5e;
+    /* Les barres de défilement et les champs du navigateur suivent le thème
+       (comme sur l'accueil). */
+    color-scheme: dark;
 }
 
 :root[data-theme="light"] {
+    color-scheme: light;
     --bg: #faf9f5;
     --surface: #ffffff;
     --text: #1a1a1f;
@@ -471,7 +459,7 @@ a { color: var(--accent-ink); }
 
 .sur-titre {
     margin: 0 0 1rem;
-    font: 700 .68rem/1.5 'Montserrat', system-ui, sans-serif;
+    font: 700 .68rem/1.5 'Inter', system-ui, sans-serif;
     letter-spacing: .26em;
     text-transform: uppercase;
     color: var(--accent-ink);
@@ -507,7 +495,7 @@ h1 {
 
 .sous-titre-galerie {
     margin: 1.2rem 0 0;
-    font: 500 .72rem/1.5 'Montserrat', system-ui, sans-serif;
+    font: 500 .72rem/1.5 'Inter', system-ui, sans-serif;
     letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--muted);
@@ -558,7 +546,8 @@ h1 {
 .carte-num {
     display: block;
     margin-top: .45rem;
-    font: 600 .6rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font: 600 .6rem/1 Inter, sans-serif;
+    font-variant-numeric: tabular-nums;
     letter-spacing: .1em;
     color: var(--num);
 }
@@ -896,7 +885,7 @@ html.vt-book .zoom-img {
 }
 
 .zoom-caption {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .74rem;
     font-weight: 600;
     letter-spacing: .18em;
@@ -1149,176 +1138,57 @@ html.vt-book .zoom-img {
 
 <body>
     <!-- SPRITE-ICONES:DEBUT -->
-    <!-- Les 39 icônes du site, et rien d'autre. Généré par
+    <!-- Les 43 icônes du site, et rien d'autre. Généré par
          build/construire-sprite-icones.py — ne pas modifier à la main.
-         Icônes FontAwesome Free, licence CC BY 4.0 (fontawesome.com).
+         Icônes au trait : Lucide, licence ISC (lucide.dev) ; logos et
+         commandes de lecture : FontAwesome Free, licence CC BY 4.0
+         (fontawesome.com).
          `aria-hidden` + `display:none` : ce bloc est une réserve de
          dessins, jamais du contenu. -->
     <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
-        <symbol id="i-brands-apple" viewBox="0 0 384 512">
-            <path
-                d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
-        </symbol>
-        <symbol id="i-brands-google" viewBox="0 0 488 512">
-            <path
-                d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
-        </symbol>
-        <symbol id="i-brands-microsoft" viewBox="0 0 448 512">
-            <path
-                d="M0 32h214.6v214.6H0V32zm233.4 0H448v214.6H233.4V32zM0 265.4h214.6V480H0V265.4zm233.4 0H448V480H233.4V265.4z" />
-        </symbol>
-        <symbol id="i-brands-youtube" viewBox="0 0 576 512">
-            <path
-                d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z" />
-        </symbol>
-        <symbol id="i-regular-calendar-plus" viewBox="0 0 512 512">
-            <path
-                d="M184 24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H96c-35.3 0-64 28.7-64 64v16 48V448c0 35.3 28.7 64 64 64H416c35.3 0 64-28.7 64-64V192 144 128c0-35.3-28.7-64-64-64H376V24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H184V24zM80 192H432V448c0 8.8-7.2 16-16 16H96c-8.8 0-16-7.2-16-16V192zm176 40c-13.3 0-24 10.7-24 24v48H184c-13.3 0-24 10.7-24 24s10.7 24 24 24h48v48c0 13.3 10.7 24 24 24s24-10.7 24-24V352h48c13.3 0 24-10.7 24-24s-10.7-24-24-24H280V256c0-13.3-10.7-24-24-24z" />
-        </symbol>
-        <symbol id="i-solid-arrow-down" viewBox="0 0 384 512">
-            <path
-                d="M169.4 470.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 370.8 224 64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 306.7L54.6 265.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z" />
-        </symbol>
-        <symbol id="i-solid-arrow-right" viewBox="0 0 448 512">
-            <path
-                d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z" />
-        </symbol>
-        <symbol id="i-solid-arrow-up-right-from-square" viewBox="0 0 512 512">
-            <path
-                d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z" />
-        </symbol>
-        <symbol id="i-solid-book-open" viewBox="0 0 576 512">
-            <path
-                d="M249.6 471.5c10.8 3.8 22.4-4.1 22.4-15.5V78.6c0-4.2-1.6-8.4-5-11C247.4 52 202.4 32 144 32C93.5 32 46.3 45.3 18.1 56.1C6.8 60.5 0 71.7 0 83.8V454.1c0 11.9 12.8 20.2 24.1 16.5C55.6 460.1 105.5 448 144 448c33.9 0 79 14 105.6 23.5zm76.8 0C353 462 398.1 448 432 448c38.5 0 88.4 12.1 119.9 22.6c11.3 3.8 24.1-4.6 24.1-16.5V83.8c0-12.1-6.8-23.3-18.1-27.6C529.7 45.3 482.5 32 432 32c-58.4 0-103.4 20-123 35.6c-3.3 2.6-5 6.8-5 11V456c0 11.4 11.7 19.3 22.4 15.5z" />
-        </symbol>
-        <symbol id="i-solid-calendar-check" viewBox="0 0 448 512">
-            <path
-                d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zM329 305c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-95 95-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L329 305z" />
-        </symbol>
-        <symbol id="i-solid-calendar-days" viewBox="0 0 448 512">
-            <path
-                d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zm64 80v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm128 0v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H208c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H336zM64 400v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H208zm112 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H336c-8.8 0-16 7.2-16 16z" />
-        </symbol>
-        <symbol id="i-solid-camera" viewBox="0 0 512 512">
-            <path
-                d="M149.1 64.8L138.7 96H64C28.7 96 0 124.7 0 160V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H373.3L362.9 64.8C356.4 45.2 338.1 32 317.4 32H194.6c-20.7 0-39 13.2-45.5 32.8zM256 192a96 96 0 1 1 0 192 96 96 0 1 1 0-192z" />
-        </symbol>
-        <symbol id="i-solid-car" viewBox="0 0 512 512">
-            <path
-                d="M135.2 117.4L109.1 192H402.9l-26.1-74.6C372.3 104.6 360.2 96 346.6 96H165.4c-13.6 0-25.7 8.6-30.2 21.4zM39.6 196.8L74.8 96.3C88.3 57.8 124.6 32 165.4 32H346.6c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2V400v48c0 17.7-14.3 32-32 32H448c-17.7 0-32-14.3-32-32V400H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V400 256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z" />
-        </symbol>
-        <symbol id="i-solid-chevron-down" viewBox="0 0 512 512">
-            <path
-                d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z" />
-        </symbol>
-        <symbol id="i-solid-chevron-left" viewBox="0 0 320 512">
-            <path
-                d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z" />
-        </symbol>
-        <symbol id="i-solid-chevron-right" viewBox="0 0 320 512">
-            <path
-                d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z" />
-        </symbol>
-        <symbol id="i-solid-circle-info" viewBox="0 0 512 512">
-            <path
-                d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
-        </symbol>
-        <symbol id="i-solid-circle-nodes" viewBox="0 0 512 512">
-            <path
-                d="M418.4 157.9c35.3-8.3 61.6-40 61.6-77.9c0-44.2-35.8-80-80-80c-43.4 0-78.7 34.5-80 77.5L136.2 151.1C121.7 136.8 101.9 128 80 128c-44.2 0-80 35.8-80 80s35.8 80 80 80c12.2 0 23.8-2.7 34.1-7.6L259.7 407.8c-2.4 7.6-3.7 15.8-3.7 24.2c0 44.2 35.8 80 80 80s80-35.8 80-80c0-27.7-14-52.1-35.4-66.4l37.8-207.7zM156.3 232.2c2.2-6.9 3.5-14.2 3.7-21.7l183.8-73.5c3.6 3.5 7.4 6.7 11.6 9.5L317.6 354.1c-5.5 1.3-10.8 3.1-15.8 5.5L156.3 232.2z" />
-        </symbol>
-        <symbol id="i-solid-clock-rotate-left" viewBox="0 0 512 512">
-            <path
-                d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z" />
-        </symbol>
-        <symbol id="i-solid-compass" viewBox="0 0 512 512">
-            <path
-                d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm50.7-186.9L162.4 380.6c-19.4 7.5-38.5-11.6-31-31l55.5-144.3c3.3-8.5 9.9-15.1 18.4-18.4l144.3-55.5c19.4-7.5 38.5 11.6 31 31L325.1 306.7c-3.2 8.5-9.9 15.1-18.4 18.4zM288 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z" />
-        </symbol>
-        <symbol id="i-solid-download" viewBox="0 0 512 512">
-            <path
-                d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z" />
-        </symbol>
-        <symbol id="i-solid-envelope" viewBox="0 0 512 512">
-            <path
-                d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48H48zM0 176V384c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V176L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z" />
-        </symbol>
-        <symbol id="i-solid-expand" viewBox="0 0 448 512">
-            <path
-                d="M32 32C14.3 32 0 46.3 0 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V96h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H32zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H64V352zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32h64v64c0 17.7 14.3 32 32 32s32-14.3 32-32V64c0-17.7-14.3-32-32-32H320zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v64H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32V352z" />
-        </symbol>
-        <symbol id="i-solid-file-pdf" viewBox="0 0 512 512">
-            <path
-                d="M0 64C0 28.7 28.7 0 64 0H224V128c0 17.7 14.3 32 32 32H384V304H176c-35.3 0-64 28.7-64 64V512H64c-35.3 0-64-28.7-64-64V64zm384 64H256V0L384 128zM176 352h32c30.9 0 56 25.1 56 56s-25.1 56-56 56H192v32c0 8.8-7.2 16-16 16s-16-7.2-16-16V448 368c0-8.8 7.2-16 16-16zm32 80c13.3 0 24-10.7 24-24s-10.7-24-24-24H192v48h16zm96-80h32c26.5 0 48 21.5 48 48v64c0 26.5-21.5 48-48 48H304c-8.8 0-16-7.2-16-16V368c0-8.8 7.2-16 16-16zm32 128c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H320v96h16zm80-112c0-8.8 7.2-16 16-16h48c8.8 0 16 7.2 16 16s-7.2 16-16 16H448v32h32c8.8 0 16 7.2 16 16s-7.2 16-16 16H448v48c0 8.8-7.2 16-16 16s-16-7.2-16-16V432 368z" />
-        </symbol>
-        <symbol id="i-solid-film" viewBox="0 0 512 512">
-            <path
-                d="M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM48 368v32c0 8.8 7.2 16 16 16H96c8.8 0 16-7.2 16-16V368c0-8.8-7.2-16-16-16H64c-8.8 0-16 7.2-16 16zm368-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V368c0-8.8-7.2-16-16-16H416zM48 240v32c0 8.8 7.2 16 16 16H96c8.8 0 16-7.2 16-16V240c0-8.8-7.2-16-16-16H64c-8.8 0-16 7.2-16 16zm368-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V240c0-8.8-7.2-16-16-16H416zM48 112v32c0 8.8 7.2 16 16 16H96c8.8 0 16-7.2 16-16V112c0-8.8-7.2-16-16-16H64c-8.8 0-16 7.2-16 16zM416 96c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V112c0-8.8-7.2-16-16-16H416zM160 128v64c0 17.7 14.3 32 32 32H320c17.7 0 32-14.3 32-32V128c0-17.7-14.3-32-32-32H192c-17.7 0-32 14.3-32 32zm32 160c-17.7 0-32 14.3-32 32v64c0 17.7 14.3 32 32 32H320c17.7 0 32-14.3 32-32V320c0-17.7-14.3-32-32-32H192z" />
-        </symbol>
-        <symbol id="i-solid-graduation-cap" viewBox="0 0 640 512">
-            <path
-                d="M320 32c-8.1 0-16.1 1.4-23.7 4.1L15.8 137.4C6.3 140.9 0 149.9 0 160s6.3 19.1 15.8 22.6l57.9 20.9C57.3 229.3 48 259.8 48 291.9v28.1c0 28.4-10.8 57.7-22.3 80.8c-6.5 13-13.9 25.8-22.5 37.6C0 442.7-.9 448.3 .9 453.4s6 8.9 11.2 10.2l64 16c4.2 1.1 8.7 .3 12.4-2s6.3-6.1 7.1-10.4c8.6-42.8 4.3-81.2-2.1-108.7C90.3 344.3 86 329.8 80 316.5V291.9c0-30.2 10.2-58.7 27.9-81.5c12.9-15.5 29.6-28 49.2-35.7l157-61.7c8.2-3.2 17.5 .8 20.7 9s-.8 17.5-9 20.7l-157 61.7c-12.4 4.9-23.3 12.4-32.2 21.6l159.6 57.6c7.6 2.7 15.6 4.1 23.7 4.1s16.1-1.4 23.7-4.1L624.2 182.6c9.5-3.4 15.8-12.5 15.8-22.6s-6.3-19.1-15.8-22.6L343.7 36.1C336.1 33.4 328.1 32 320 32zM128 408c0 35.3 86 72 192 72s192-36.7 192-72L496.7 262.6 354.5 314c-11.1 4-22.8 6-34.5 6s-23.5-2-34.5-6L143.3 262.6 128 408z" />
-        </symbol>
-        <symbol id="i-solid-location-dot" viewBox="0 0 384 512">
-            <path
-                d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" />
-        </symbol>
-        <symbol id="i-solid-lock" viewBox="0 0 448 512">
-            <path
-                d="M144 144v48H304V144c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192V144C80 64.5 144.5 0 224 0s144 64.5 144 144v48h16c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64H80z" />
-        </symbol>
-        <symbol id="i-solid-magnifying-glass" viewBox="0 0 512 512">
-            <path
-                d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z" />
-        </symbol>
-        <symbol id="i-solid-masks-theater" viewBox="0 0 640 512">
-            <path
-                d="M74.6 373.2c41.7 36.1 108 82.5 166.1 73.7c6.1-.9 12.1-2.5 18-4.5c-9.2-12.3-17.3-24.4-24.2-35.4c-21.9-35-28.8-75.2-25.9-113.6c-20.6 4.1-39.2 13-54.7 25.4c-6.5 5.2-16.3 1.3-14.8-7c6.4-33.5 33-60.9 68.2-66.3c2.6-.4 5.3-.7 7.9-.8l19.4-131.3c2-13.8 8-32.7 25-45.9C278.2 53.2 310.5 37 363.2 32.2c-.8-.7-1.6-1.4-2.4-2.1C340.6 14.5 288.4-11.5 175.7 5.6S20.5 63 5.7 83.9C0 91.9-.8 102 .6 111.8L24.8 276.1c5.5 37.3 21.5 72.6 49.8 97.2zm87.7-219.6c4.4-3.1 10.8-2 11.8 3.3c.1 .5 .2 1.1 .3 1.6c3.2 21.8-11.6 42-33.1 45.3s-41.5-11.8-44.7-33.5c-.1-.5-.1-1.1-.2-1.6c-.6-5.4 5.2-8.4 10.3-6.7c9 3 18.8 3.9 28.7 2.4s19.1-5.3 26.8-10.8zM261.6 390c29.4 46.9 79.5 110.9 137.6 119.7s124.5-37.5 166.1-73.7c28.3-24.5 44.3-59.8 49.8-97.2l24.2-164.3c1.4-9.8 .6-19.9-5.1-27.9c-14.8-20.9-57.3-61.2-170-78.3S299.4 77.2 279.2 92.8c-7.8 6-11.5 15.4-12.9 25.2L242.1 282.3c-5.5 37.3-.4 75.8 19.6 107.7zM404.5 235.3c-7.7-5.5-16.8-9.3-26.8-10.8s-19.8-.6-28.7 2.4c-5.1 1.7-10.9-1.3-10.3-6.7c.1-.5 .1-1.1 .2-1.6c3.2-21.8 23.2-36.8 44.7-33.5s36.3 23.5 33.1 45.3c-.1 .5-.2 1.1-.3 1.6c-1 5.3-7.4 6.4-11.8 3.3zm136.2 15.5c-1 5.3-7.4 6.4-11.8 3.3c-7.7-5.5-16.8-9.3-26.8-10.8s-19.8-.6-28.7 2.4c-5.1 1.7-10.9-1.3-10.3-6.7c.1-.5 .1-1.1 .2-1.6c3.2-21.8 23.2-36.8 44.7-33.5s36.3 23.5 33.1 45.3c-.1 .5-.2 1.1-.3 1.6zM530 350.2c-19.6 44.7-66.8 72.5-116.8 64.9s-87.1-48.2-93-96.7c-1-8.3 8.9-12.1 15.2-6.7c23.9 20.8 53.6 35.3 87 40.3s66.1 .1 94.9-12.8c7.6-3.4 16 3.2 12.6 10.9z" />
-        </symbol>
-        <symbol id="i-solid-microphone" viewBox="0 0 384 512">
-            <path
-                d="M192 0C139 0 96 43 96 96V256c0 53 43 96 96 96s96-43 96-96V96c0-53-43-96-96-96zM64 216c0-13.3-10.7-24-24-24s-24 10.7-24 24v40c0 89.1 66.2 162.7 152 174.4V464H120c-13.3 0-24 10.7-24 24s10.7 24 24 24h72 72c13.3 0 24-10.7 24-24s-10.7-24-24-24H216V430.4c85.8-11.7 152-85.3 152-174.4V216c0-13.3-10.7-24-24-24s-24 10.7-24 24v40c0 70.7-57.3 128-128 128s-128-57.3-128-128V216z" />
-        </symbol>
-        <symbol id="i-solid-microphone-lines" viewBox="0 0 384 512">
-            <path
-                d="M96 96V256c0 53 43 96 96 96s96-43 96-96H208c-8.8 0-16-7.2-16-16s7.2-16 16-16h80V192H208c-8.8 0-16-7.2-16-16s7.2-16 16-16h80V128H208c-8.8 0-16-7.2-16-16s7.2-16 16-16h80c0-53-43-96-96-96S96 43 96 96zM320 240v16c0 70.7-57.3 128-128 128s-128-57.3-128-128V216c0-13.3-10.7-24-24-24s-24 10.7-24 24v40c0 89.1 66.2 162.7 152 174.4V464H120c-13.3 0-24 10.7-24 24s10.7 24 24 24h72 72c13.3 0 24-10.7 24-24s-10.7-24-24-24H216V430.4c85.8-11.7 152-85.3 152-174.4V216c0-13.3-10.7-24-24-24s-24 10.7-24 24v24z" />
-        </symbol>
-        <symbol id="i-solid-moon" viewBox="0 0 384 512">
-            <path
-                d="M223.5 32C100 32 0 132.3 0 256S100 480 223.5 480c60.6 0 115.5-24.2 155.8-63.4c5-4.9 6.3-12.5 3.1-18.7s-10.1-9.7-17-8.5c-9.8 1.7-19.8 2.6-30.1 2.6c-96.9 0-175.5-78.8-175.5-176c0-65.8 36-123.1 89.3-153.3c6.1-3.5 9.2-10.5 7.7-17.3s-7.3-11.9-14.3-12.5c-6.3-.5-12.6-.8-19-.8z" />
-        </symbol>
-        <symbol id="i-solid-motorcycle" viewBox="0 0 640 512">
-            <path
-                d="M280 32c-13.3 0-24 10.7-24 24s10.7 24 24 24h57.7l16.4 30.3L256 192l-45.3-45.3c-12-12-28.3-18.7-45.3-18.7H64c-17.7 0-32 14.3-32 32v32h96c88.4 0 160 71.6 160 160c0 11-1.1 21.7-3.2 32h70.4c-2.1-10.3-3.2-21-3.2-32c0-52.2 25-98.6 63.7-127.8l15.4 28.6C402.4 276.3 384 312 384 352c0 70.7 57.3 128 128 128s128-57.3 128-128s-57.3-128-128-128c-13.5 0-26.5 2.1-38.7 6L418.2 128H480c17.7 0 32-14.3 32-32V64c0-17.7-14.3-32-32-32H459.6c-7.5 0-14.7 2.6-20.5 7.4L391.7 78.9l-14-26c-7-12.9-20.5-21-35.2-21H280zM462.7 311.2l28.2 52.2c6.3 11.7 20.9 16 32.5 9.7s16-20.9 9.7-32.5l-28.2-52.2c2.3-.3 4.7-.4 7.1-.4c35.3 0 64 28.7 64 64s-28.7 64-64 64s-64-28.7-64-64c0-15.5 5.5-29.7 14.7-40.8zM187.3 376c-9.5 23.5-32.5 40-59.3 40c-35.3 0-64-28.7-64-64s28.7-64 64-64c26.9 0 49.9 16.5 59.3 40h66.4C242.5 268.8 190.5 224 128 224C57.3 224 0 281.3 0 352s57.3 128 128 128c62.5 0 114.5-44.8 125.8-104H187.3zM128 384a32 32 0 1 0 0-64 32 32 0 1 0 0 64z" />
-        </symbol>
-        <symbol id="i-solid-pause" viewBox="0 0 320 512">
-            <path
-                d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z" />
-        </symbol>
-        <symbol id="i-solid-play" viewBox="0 0 384 512">
-            <path
-                d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z" />
-        </symbol>
-        <symbol id="i-solid-share-nodes" viewBox="0 0 448 512">
-            <path
-                d="M352 224c53 0 96-43 96-96s-43-96-96-96s-96 43-96 96c0 4 .2 8 .7 11.9l-94.1 47C145.4 170.2 121.9 160 96 160c-53 0-96 43-96 96s43 96 96 96c25.9 0 49.4-10.2 66.6-26.9l94.1 47c-.5 3.9-.7 7.8-.7 11.9c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-25.9 0-49.4 10.2-66.6 26.9l-94.1-47c.5-3.9 .7-7.8 .7-11.9s-.2-8-.7-11.9l94.1-47C302.6 213.8 326.1 224 352 224z" />
-        </symbol>
-        <symbol id="i-solid-sun" viewBox="0 0 512 512">
-            <path
-                d="M361.5 1.2c5 2.1 8.6 6.6 9.6 11.9L391 121l107.9 19.8c5.3 1 9.8 4.6 11.9 9.6s1.5 10.7-1.6 15.2L446.9 256l62.3 90.3c3.1 4.5 3.7 10.2 1.6 15.2s-6.6 8.6-11.9 9.6L391 391 371.1 498.9c-1 5.3-4.6 9.8-9.6 11.9s-10.7 1.5-15.2-1.6L256 446.9l-90.3 62.3c-4.5 3.1-10.2 3.7-15.2 1.6s-8.6-6.6-9.6-11.9L121 391 13.1 371.1c-5.3-1-9.8-4.6-11.9-9.6s-1.5-10.7 1.6-15.2L65.1 256 2.8 165.7c-3.1-4.5-3.7-10.2-1.6-15.2s6.6-8.6 11.9-9.6L121 121 140.9 13.1c1-5.3 4.6-9.8 9.6-11.9s10.7-1.5 15.2 1.6L256 65.1 346.3 2.8c4.5-3.1 10.2-3.7 15.2-1.6zM160 256a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zm224 0a128 128 0 1 0 -256 0 128 128 0 1 0 256 0z" />
-        </symbol>
-        <symbol id="i-solid-up-right-from-square" viewBox="0 0 512 512">
-            <path
-                d="M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z" />
-        </symbol>
-        <symbol id="i-solid-user-tie" viewBox="0 0 448 512">
-            <path
-                d="M224 256A128 128 0 1 1 224 0a128 128 0 1 1 0 256zM209.1 359.2l-18.6-31c-6.4-10.7 1.3-24.2 13.7-24.2H224h19.7c12.4 0 20.1 13.6 13.7 24.2l-18.6 31 33.4 123.9 36-146.9c2-8.1 9.8-13.4 17.9-11.3c70.1 17.6 121.9 81 121.9 156.4c0 17-13.8 30.7-30.7 30.7H285.5c-2.1 0-4-.4-5.8-1.1l.3 1.1H168l.3-1.1c-1.8 .7-3.8 1.1-5.8 1.1H30.7C13.8 512 0 498.2 0 481.3c0-75.5 51.9-138.9 121.9-156.4c8.1-2 15.9 3.3 17.9 11.3l36 146.9 33.4-123.9z" />
-        </symbol>
-        <symbol id="i-solid-xmark" viewBox="0 0 384 512">
-            <path
-                d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
-        </symbol>
+        <symbol id="i-brands-apple" viewBox="0 0 384 512"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></symbol>
+        <symbol id="i-brands-google" viewBox="0 0 488 512"><path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"/></symbol>
+        <symbol id="i-brands-microsoft" viewBox="0 0 448 512"><path d="M0 32h214.6v214.6H0V32zm233.4 0H448v214.6H233.4V32zM0 265.4h214.6V480H0V265.4zm233.4 0H448V480H233.4V265.4z"/></symbol>
+        <symbol id="i-brands-youtube" viewBox="0 0 576 512"><path d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"/></symbol>
+        <symbol id="i-regular-calendar-plus" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18h6" /><path d="M16 2v3" /><path d="M19 15v6" /><path d="M21 11.5V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h8.3" /><path d="M3 9h18" /><path d="M8 2v3" /></g></symbol>
+        <symbol id="i-solid-address-card" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 2v2" /><path d="M17.915 21a6 6 0 10-12 0" /><path d="M8 2v2" /><circle cx="12" cy="11" r="4" /><rect x="3" y="3" width="18" height="18" rx="2" /></g></symbol>
+        <symbol id="i-solid-arrow-down" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></g></symbol>
+        <symbol id="i-solid-arrow-right" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></g></symbol>
+        <symbol id="i-solid-arrow-up-right-from-square" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></g></symbol>
+        <symbol id="i-solid-backward-step" viewBox="0 0 320 512"><path d="M267.5 440.6c9.5 7.9 22.8 9.7 34.1 4.4s18.4-16.6 18.4-29V96c0-12.4-7.2-23.7-18.4-29s-24.5-3.6-34.1 4.4l-192 160L64 241V96c0-17.7-14.3-32-32-32S0 78.3 0 96V416c0 17.7 14.3 32 32 32s32-14.3 32-32V271l11.5 9.6 192 160z"/></symbol>
+        <symbol id="i-solid-book-open" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v16" /><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z" /></g></symbol>
+        <symbol id="i-solid-calendar-check" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3" /><path d="M16 2v3" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="m9 15 2 2 4-4" /></g></symbol>
+        <symbol id="i-solid-calendar-days" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v3" /><path d="M16 2v3" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M8 13h.01" /><path d="M12 13h.01" /><path d="M16 13h.01" /><path d="M8 17h.01" /><path d="M12 17h.01" /><path d="M16 17h.01" /></g></symbol>
+        <symbol id="i-solid-camera" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" /><circle cx="12" cy="13" r="3" /></g></symbol>
+        <symbol id="i-solid-check" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></g></symbol>
+        <symbol id="i-solid-chevron-down" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></g></symbol>
+        <symbol id="i-solid-chevron-left" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></g></symbol>
+        <symbol id="i-solid-chevron-right" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></g></symbol>
+        <symbol id="i-solid-chevron-up" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6" /></g></symbol>
+        <symbol id="i-solid-circle-half-stroke" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2" /><path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715" /><path d="M16 12a4 4 0 0 0-4-4" /><path d="m19 5-1.256 1.256" /><path d="M20 12h2" /></g></symbol>
+        <symbol id="i-solid-circle-nodes" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5" /><path d="M20 21a8 8 0 0 0-16 0" /></g></symbol>
+        <symbol id="i-solid-clock-rotate-left" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></g></symbol>
+        <symbol id="i-solid-compass" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /></g></symbol>
+        <symbol id="i-solid-copy" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></g></symbol>
+        <symbol id="i-solid-download" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /></g></symbol>
+        <symbol id="i-solid-envelope" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /><rect x="2" y="4" width="20" height="16" rx="2" /></g></symbol>
+        <symbol id="i-solid-expand" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 15 6 6" /><path d="m15 9 6-6" /><path d="M21 16v5h-5" /><path d="M21 8V3h-5" /><path d="M3 16v5h5" /><path d="m3 21 6-6" /><path d="M3 8V3h5" /><path d="M9 9 3 3" /></g></symbol>
+        <symbol id="i-solid-file-pdf" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" /></g></symbol>
+        <symbol id="i-solid-film" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 3v18" /><path d="M3 7.5h4" /><path d="M3 12h18" /><path d="M3 16.5h4" /><path d="M17 3v18" /><path d="M17 7.5h4" /><path d="M17 16.5h4" /></g></symbol>
+        <symbol id="i-solid-forward-step" viewBox="0 0 320 512"><path d="M52.5 440.6c-9.5 7.9-22.8 9.7-34.1 4.4S0 428.4 0 416V96C0 83.6 7.2 72.3 18.4 67s24.5-3.6 34.1 4.4l192 160L256 241V96c0-17.7 14.3-32 32-32s32 14.3 32 32V416c0 17.7-14.3 32-32 32s-32-14.3-32-32V271l-11.5 9.6-192 160z"/></symbol>
+        <symbol id="i-solid-graduation-cap" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" /><path d="M22 10v6" /><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" /></g></symbol>
+        <symbol id="i-solid-magnifying-glass" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.34-4.34" /><circle cx="11" cy="11" r="8" /></g></symbol>
+        <symbol id="i-solid-masks-theater" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11h.01" /><path d="M14 6h.01" /><path d="M18 6h.01" /><path d="M6.5 13.1h.01" /><path d="M22 5c0 9-4 12-6 12s-6-3-6-12c0-2 2-3 6-3s6 1 6 3" /><path d="M17.4 9.9c-.8.8-2 .8-2.8 0" /><path d="M10.1 7.1C9 7.2 7.7 7.7 6 8.6c-3.5 2-4.7 3.9-3.7 5.6 4.5 7.8 9.5 8.4 11.2 7.4.9-.5 1.9-2.1 1.9-4.7" /><path d="M9.1 16.5c.3-1.1 1.4-1.7 2.4-1.4" /></g></symbol>
+        <symbol id="i-solid-microphone" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19v3" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><rect x="9" y="2" width="6" height="13" rx="3" /></g></symbol>
+        <symbol id="i-solid-microphone-lines" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12" /><path d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5" /><circle cx="16" cy="7" r="5" /></g></symbol>
+        <symbol id="i-solid-moon" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></g></symbol>
+        <symbol id="i-solid-pause" viewBox="0 0 320 512"><path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z"/></symbol>
+        <symbol id="i-solid-play" viewBox="0 0 384 512"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></symbol>
+        <symbol id="i-solid-share-nodes" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></g></symbol>
+        <symbol id="i-solid-sun" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></g></symbol>
+        <symbol id="i-solid-up-right-from-square" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10" /><path d="M7 17 17 7" /></g></symbol>
+        <symbol id="i-solid-user-tie" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M16 22a4 4 0 0 0-8 0" /><circle cx="12" cy="15" r="3" /></g></symbol>
+        <symbol id="i-solid-xmark" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></g></symbol>
     </svg>
     <!-- SPRITE-ICONES:FIN -->
 
@@ -1353,7 +1223,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="0" aria-label="Agrandir : Portrait serré en pull gris, regard étonné vers l’objectif, sur fond gris clair">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/vignette_principale-320.webp 320w, ../ressources/images/galerie/vignettes/vignette_principale-640.webp 640w, ../ressources/images/galerie/vignettes/vignette_principale-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.261), calc(min(100vw, 68rem) * 0.209)"><img src="../ressources/images/galerie/vignette_principale.jpeg" alt="Portrait serré en pull gris, regard étonné vers l’objectif, sur fond gris clair" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/vignette_principale-320.webp 320w, ../ressources/images/galerie/vignettes/vignette_principale-640.webp 640w, ../ressources/images/galerie/vignettes/vignette_principale-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.261), (max-width: 1088px) calc(100vw * 0.209), 228px"><img src="../ressources/images/galerie/vignette_principale.jpeg" alt="Portrait serré en pull gris, regard étonné vers l’objectif, sur fond gris clair" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1368,7 +1238,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="1" aria-label="Agrandir : Portrait en pied, chemise bleue ouverte et jean, devant un mur de pierre">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo1-320.webp 320w, ../ressources/images/galerie/vignettes/photo1-640.webp 640w, ../ressources/images/galerie/vignettes/photo1-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.212), calc(min(100vw, 68rem) * 0.169)"><img src="../ressources/images/galerie/photo1.jpeg" alt="Portrait en pied, chemise bleue ouverte et jean, devant un mur de pierre" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo1-320.webp 320w, ../ressources/images/galerie/vignettes/photo1-640.webp 640w, ../ressources/images/galerie/vignettes/photo1-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.212), (max-width: 1088px) calc(100vw * 0.169), 184px"><img src="../ressources/images/galerie/photo1.jpeg" alt="Portrait en pied, chemise bleue ouverte et jean, devant un mur de pierre" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1383,7 +1253,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="2" aria-label="Agrandir : Portrait de face, regard grave, sur fond bleu nuit">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/profil_1000x1000-320.webp 320w, ../ressources/images/galerie/vignettes/profil_1000x1000-640.webp 640w, ../ressources/images/galerie/vignettes/profil_1000x1000-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.350), calc(min(100vw, 68rem) * 0.280)"><img src="../ressources/images/profil_1000x1000.jpg" alt="Portrait de face, regard grave, sur fond bleu nuit" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/profil_1000x1000-320.webp 320w, ../ressources/images/galerie/vignettes/profil_1000x1000-640.webp 640w, ../ressources/images/galerie/vignettes/profil_1000x1000-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.350), (max-width: 1088px) calc(100vw * 0.280), 305px"><img src="../ressources/images/profil_1000x1000.jpg" alt="Portrait de face, regard grave, sur fond bleu nuit" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1398,7 +1268,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="3" aria-label="Agrandir : Dans une salle d’audience tapissée de fleurs de lys, un comédien en robe d’avocat plaide devant le public">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo2-320.webp 320w, ../ressources/images/galerie/vignettes/photo2-640.webp 640w, ../ressources/images/galerie/vignettes/photo2-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.466), calc(min(100vw, 68rem) * 0.373)"><img src="../ressources/images/galerie/photo2.jpeg" alt="Dans une salle d’audience tapissée de fleurs de lys, un comédien en robe d’avocat plaide devant le public" fetchpriority="high" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo2-320.webp 320w, ../ressources/images/galerie/vignettes/photo2-640.webp 640w, ../ressources/images/galerie/vignettes/photo2-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.466), (max-width: 1088px) calc(100vw * 0.373), 406px"><img src="../ressources/images/galerie/photo2.jpeg" alt="Dans une salle d’audience tapissée de fleurs de lys, un comédien en robe d’avocat plaide devant le public" fetchpriority="high" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1413,7 +1283,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="4" aria-label="Agrandir : Même salle d’audience : un comédien en tee-shirt noir, bras ouverts, s’adresse au public">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo4-320.webp 320w, ../ressources/images/galerie/vignettes/photo4-640.webp 640w, ../ressources/images/galerie/vignettes/photo4-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.466), calc(min(100vw, 68rem) * 0.373)"><img src="../ressources/images/galerie/photo4.jpeg" alt="Même salle d’audience : un comédien en tee-shirt noir, bras ouverts, s’adresse au public" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo4-320.webp 320w, ../ressources/images/galerie/vignettes/photo4-640.webp 640w, ../ressources/images/galerie/vignettes/photo4-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.466), (max-width: 1088px) calc(100vw * 0.373), 406px"><img src="../ressources/images/galerie/photo4.jpeg" alt="Même salle d’audience : un comédien en tee-shirt noir, bras ouverts, s’adresse au public" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1428,7 +1298,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="5" aria-label="Agrandir : Seul en scène dans un halo de lumière, casquette rouge et pull bordeaux">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo8-320.webp 320w, ../ressources/images/galerie/vignettes/photo8-640.webp 640w, ../ressources/images/galerie/vignettes/photo8-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.526), calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo8.jpeg" alt="Seul en scène dans un halo de lumière, casquette rouge et pull bordeaux" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo8-320.webp 320w, ../ressources/images/galerie/vignettes/photo8-640.webp 640w, ../ressources/images/galerie/vignettes/photo8-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.526), (max-width: 1088px) calc(100vw * 0.421), 459px"><img src="../ressources/images/galerie/photo8.jpeg" alt="Seul en scène dans un halo de lumière, casquette rouge et pull bordeaux" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1443,7 +1313,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="6" aria-label="Agrandir : Plateau couvert de sable sous des voilages violets : un roi couronné à genoux, entre deux comédiens">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo10-320.webp 320w, ../ressources/images/galerie/vignettes/photo10-640.webp 640w, ../ressources/images/galerie/vignettes/photo10-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.525), calc(min(100vw, 68rem) * 0.420)"><img src="../ressources/images/galerie/photo10.jpeg" alt="Plateau couvert de sable sous des voilages violets : un roi couronné à genoux, entre deux comédiens" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo10-320.webp 320w, ../ressources/images/galerie/vignettes/photo10-640.webp 640w, ../ressources/images/galerie/vignettes/photo10-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.525), (max-width: 1088px) calc(100vw * 0.420), 457px"><img src="../ressources/images/galerie/photo10.jpeg" alt="Plateau couvert de sable sous des voilages violets : un roi couronné à genoux, entre deux comédiens" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1458,7 +1328,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="7" aria-label="Agrandir : Étreinte sur un sol de sable : un comédien en manteau et une comédienne en robe claire">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo11-320.webp 320w, ../ressources/images/galerie/vignettes/photo11-640.webp 640w, ../ressources/images/galerie/vignettes/photo11-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.526), calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo11.jpeg" alt="Étreinte sur un sol de sable : un comédien en manteau et une comédienne en robe claire" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo11-320.webp 320w, ../ressources/images/galerie/vignettes/photo11-640.webp 640w, ../ressources/images/galerie/vignettes/photo11-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.526), (max-width: 1088px) calc(100vw * 0.421), 459px"><img src="../ressources/images/galerie/photo11.jpeg" alt="Étreinte sur un sol de sable : un comédien en manteau et une comédienne en robe claire" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1473,7 +1343,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="8" aria-label="Agrandir : Deux comédiens devant un décor de bois, l’un en bleu de travail et bonnet, l’autre en casquette et veste de survêtement">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo12-320.webp 320w, ../ressources/images/galerie/vignettes/photo12-640.webp 640w, ../ressources/images/galerie/vignettes/photo12-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.521), calc(min(100vw, 68rem) * 0.417)"><img src="../ressources/images/galerie/photo12.jpeg" alt="Deux comédiens devant un décor de bois, l’un en bleu de travail et bonnet, l’autre en casquette et veste de survêtement" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo12-320.webp 320w, ../ressources/images/galerie/vignettes/photo12-640.webp 640w, ../ressources/images/galerie/vignettes/photo12-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.521), (max-width: 1088px) calc(100vw * 0.417), 454px"><img src="../ressources/images/galerie/photo12.jpeg" alt="Deux comédiens devant un décor de bois, l’un en bleu de travail et bonnet, l’autre en casquette et veste de survêtement" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1488,7 +1358,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="9" aria-label="Agrandir : Deux comédiens vêtus de blanc, face à face, l’un tenant l’autre par le bras">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo13-320.webp 320w, ../ressources/images/galerie/vignettes/photo13-640.webp 640w, ../ressources/images/galerie/vignettes/photo13-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.301), calc(min(100vw, 68rem) * 0.241)"><img src="../ressources/images/galerie/photo13.jpeg" alt="Deux comédiens vêtus de blanc, face à face, l’un tenant l’autre par le bras" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo13-320.webp 320w, ../ressources/images/galerie/vignettes/photo13-640.webp 640w, ../ressources/images/galerie/vignettes/photo13-960.webp 960w" sizes="auto, (max-width: 639.98px) calc(100vw * 0.301), (max-width: 1088px) calc(100vw * 0.241), 263px"><img src="../ressources/images/galerie/photo13.jpeg" alt="Deux comédiens vêtus de blanc, face à face, l’un tenant l’autre par le bras" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1503,7 +1373,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="10" aria-label="Agrandir : Image de film : sur une plage, un homme en costume rit au téléphone près d’une jeune femme aux cheveux au vent">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo14-320.webp 320w, ../ressources/images/galerie/vignettes/photo14-640.webp 640w, ../ressources/images/galerie/vignettes/photo14-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.622), calc(min(100vw, 68rem) * 0.498)"><img src="../ressources/images/galerie/photo14.jpeg" alt="Image de film : sur une plage, un homme en costume rit au téléphone près d’une jeune femme aux cheveux au vent" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo14-320.webp 320w, ../ressources/images/galerie/vignettes/photo14-640.webp 640w, ../ressources/images/galerie/vignettes/photo14-960.webp 960w" sizes="auto, (max-width: 639.98px) calc(100vw * 0.622), (max-width: 1088px) calc(100vw * 0.498), 542px"><img src="../ressources/images/galerie/photo14.jpeg" alt="Image de film : sur une plage, un homme en costume rit au téléphone près d’une jeune femme aux cheveux au vent" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1518,7 +1388,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="11" aria-label="Agrandir : Portrait à lunettes, col roulé noir, sur fond clair">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo15-320.webp 320w, ../ressources/images/galerie/vignettes/photo15-640.webp 640w, ../ressources/images/galerie/vignettes/photo15-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.233), calc(min(100vw, 68rem) * 0.187)"><img src="../ressources/images/galerie/photo15.jpeg" alt="Portrait à lunettes, col roulé noir, sur fond clair" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo15-320.webp 320w, ../ressources/images/galerie/vignettes/photo15-640.webp 640w, ../ressources/images/galerie/vignettes/photo15-960.webp 960w" sizes="auto, (max-width: 639.98px) calc(100vw * 0.233), (max-width: 1088px) calc(100vw * 0.187), 204px"><img src="../ressources/images/galerie/photo15.jpeg" alt="Portrait à lunettes, col roulé noir, sur fond clair" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1533,7 +1403,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="12" aria-label="Agrandir : Portrait en blouson de cuir marron, sur fond sombre">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo16-320.webp 320w, ../ressources/images/galerie/vignettes/photo16-640.webp 640w, ../ressources/images/galerie/vignettes/photo16-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.263), calc(min(100vw, 68rem) * 0.210)"><img src="../ressources/images/galerie/photo16.jpeg" alt="Portrait en blouson de cuir marron, sur fond sombre" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo16-320.webp 320w, ../ressources/images/galerie/vignettes/photo16-640.webp 640w, ../ressources/images/galerie/vignettes/photo16-960.webp 960w" sizes="auto, (max-width: 639.98px) calc(100vw * 0.263), (max-width: 1088px) calc(100vw * 0.210), 229px"><img src="../ressources/images/galerie/photo16.jpeg" alt="Portrait en blouson de cuir marron, sur fond sombre" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1548,7 +1418,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="13" aria-label="Agrandir : Portrait en chemise verte, la main contre la tempe, sur fond bleu">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo17-320.webp 320w, ../ressources/images/galerie/vignettes/photo17-640.webp 640w, ../ressources/images/galerie/vignettes/photo17-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.375), calc(min(100vw, 68rem) * 0.300)"><img src="../ressources/images/galerie/photo17.jpeg" alt="Portrait en chemise verte, la main contre la tempe, sur fond bleu" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo17-320.webp 320w, ../ressources/images/galerie/vignettes/photo17-640.webp 640w, ../ressources/images/galerie/vignettes/photo17-960.webp 960w" sizes="auto, (max-width: 639.98px) calc(100vw * 0.375), (max-width: 1088px) calc(100vw * 0.300), 327px"><img src="../ressources/images/galerie/photo17.jpeg" alt="Portrait en chemise verte, la main contre la tempe, sur fond bleu" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1563,7 +1433,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="14" aria-label="Agrandir : Crâne rasé et barbe, en extérieur devant un canyon rocheux">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo18-320.webp 320w, ../ressources/images/galerie/vignettes/photo18-640.webp 640w, ../ressources/images/galerie/vignettes/photo18-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.622), calc(min(100vw, 68rem) * 0.498)"><img src="../ressources/images/galerie/photo18.jpeg" alt="Crâne rasé et barbe, en extérieur devant un canyon rocheux" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo18-320.webp 320w, ../ressources/images/galerie/vignettes/photo18-640.webp 640w, ../ressources/images/galerie/vignettes/photo18-960.webp 960w" sizes="auto, (max-width: 639.98px) calc(100vw * 0.622), (max-width: 1088px) calc(100vw * 0.498), 542px"><img src="../ressources/images/galerie/photo18.jpeg" alt="Crâne rasé et barbe, en extérieur devant un canyon rocheux" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1578,7 +1448,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="15" aria-label="Agrandir : Portrait éclatant de rire, chemisette beige, sur fond gris">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo19-320.webp 320w, ../ressources/images/galerie/vignettes/photo19-640.webp 640w, ../ressources/images/galerie/vignettes/photo19-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.233), calc(min(100vw, 68rem) * 0.187)"><img src="../ressources/images/galerie/photo19.jpeg" alt="Portrait éclatant de rire, chemisette beige, sur fond gris" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo19-320.webp 320w, ../ressources/images/galerie/vignettes/photo19-640.webp 640w, ../ressources/images/galerie/vignettes/photo19-960.webp 960w" sizes="auto, (max-width: 639.98px) calc(100vw * 0.233), (max-width: 1088px) calc(100vw * 0.187), 204px"><img src="../ressources/images/galerie/photo19.jpeg" alt="Portrait éclatant de rire, chemisette beige, sur fond gris" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1593,7 +1463,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="16" aria-label="Agrandir : Image de film : gros plan en tee-shirt marron, regard inquiet vers un interlocuteur">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo20-320.webp 320w, ../ressources/images/galerie/vignettes/photo20-640.webp 640w, ../ressources/images/galerie/vignettes/photo20-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.622), calc(min(100vw, 68rem) * 0.498)"><img src="../ressources/images/galerie/photo20.jpeg" alt="Image de film : gros plan en tee-shirt marron, regard inquiet vers un interlocuteur" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo20-320.webp 320w, ../ressources/images/galerie/vignettes/photo20-640.webp 640w, ../ressources/images/galerie/vignettes/photo20-960.webp 960w" sizes="auto, (max-width: 639.98px) calc(100vw * 0.622), (max-width: 1088px) calc(100vw * 0.498), 542px"><img src="../ressources/images/galerie/photo20.jpeg" alt="Image de film : gros plan en tee-shirt marron, regard inquiet vers un interlocuteur" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1608,7 +1478,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="17" aria-label="Agrandir : Salle d’audience lambrissée : en robe d’avocat, mains jointes devant un micro, l’air pensif">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo21-320.webp 320w, ../ressources/images/galerie/vignettes/photo21-640.webp 640w, ../ressources/images/galerie/vignettes/photo21-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.526), calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo21.jpeg" alt="Salle d’audience lambrissée : en robe d’avocat, mains jointes devant un micro, l’air pensif" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo21-320.webp 320w, ../ressources/images/galerie/vignettes/photo21-640.webp 640w, ../ressources/images/galerie/vignettes/photo21-960.webp 960w" sizes="auto, (max-width: 639.98px) calc(100vw * 0.526), (max-width: 1088px) calc(100vw * 0.421), 459px"><img src="../ressources/images/galerie/photo21.jpeg" alt="Salle d’audience lambrissée : en robe d’avocat, mains jointes devant un micro, l’air pensif" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -1623,7 +1493,7 @@ html.vt-book .zoom-img {
             <button type="button" class="carte-btn" data-zoom-photo="18" aria-label="Agrandir : Salle d’audience lambrissée : en tee-shirt noir, debout devant un micro, la main tendue">
                 <span class="cadre">
                     <span class="media media--photo">
-                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo22-320.webp 320w, ../ressources/images/galerie/vignettes/photo22-640.webp 640w, ../ressources/images/galerie/vignettes/photo22-960.webp 960w" sizes="(max-width: 639.98px) calc(100vw * 0.526), calc(min(100vw, 68rem) * 0.421)"><img src="../ressources/images/galerie/photo22.jpeg" alt="Salle d’audience lambrissée : en tee-shirt noir, debout devant un micro, la main tendue" loading="lazy" decoding="async"></picture>
+                        <picture><source type="image/webp" srcset="../ressources/images/galerie/vignettes/photo22-320.webp 320w, ../ressources/images/galerie/vignettes/photo22-640.webp 640w, ../ressources/images/galerie/vignettes/photo22-960.webp 960w" sizes="auto, (max-width: 639.98px) calc(100vw * 0.526), (max-width: 1088px) calc(100vw * 0.421), 459px"><img src="../ressources/images/galerie/photo22.jpeg" alt="Salle d’audience lambrissée : en tee-shirt noir, debout devant un micro, la main tendue" loading="lazy" decoding="async"></picture>
                     </span>
                     <span class="lueur" aria-hidden="true"></span>
                     <span class="zoom-indic" aria-hidden="true">
@@ -2157,7 +2027,10 @@ html.vt-book .zoom-img {
             cartes.forEach(function (c) {
                 var r = parseFloat(c.style.getPropertyValue('--r')) || .75;
                 var el = c.querySelector('source');
-                if (el) el.setAttribute('sizes', 'calc(min(100vw, 68rem) * ' + (r * 1.12 * 1.25 / colonnes).toFixed(3) + ')');
+                // Sans min() (voir taillesVignette, dans le générateur).
+                var k = (r * 1.12 * 1.25 / colonnes).toFixed(3);
+                var auto = /^auto,/.test(el && el.getAttribute('sizes') || '') ? 'auto, ' : '';
+                if (el) el.setAttribute('sizes', auto + '(max-width: 1088px) calc(100vw * ' + k + '), ' + Math.ceil(1088 * k) + 'px');
             });
         }
 

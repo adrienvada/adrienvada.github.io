@@ -44,7 +44,9 @@ const TYPES = {
     '.mp3': 'audio/mpeg',
     '.m4a': 'audio/mp4',
     '.pdf': 'application/pdf',
-    '.webmanifest': 'application/manifest+json'
+    '.webmanifest': 'application/manifest+json',
+    '.vcf': 'text/vcard; charset=utf-8',
+    '.ics': 'text/calendar; charset=utf-8'
 };
 
 function servir(racine) {

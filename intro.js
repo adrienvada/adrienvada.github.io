@@ -1371,6 +1371,14 @@
         if (isDismissed) return;
         sceauMontre = true;
         ctaEl.classList.add('intro-cta-visible');
+        // « Passer » s'efface : le sceau dit « Entrer », et c'est lui qui
+        // devient le bouton de la scène (voir « Le sceau posé, Passer
+        // s'efface », dans index.html). Le focus suit, s'il était sur lui.
+        ctaEl.tabIndex = 0;
+        if (document.activeElement === skipBtn) ctaEl.focus({ preventScroll: true });
+        skipBtn.classList.add('intro-skip-efface');
+        skipBtn.tabIndex = -1;
+        skipBtn.setAttribute('aria-hidden', 'true');
         sealRing.style.transition = 'stroke-dashoffset ' + SEAL_DRAW_MS + 'ms cubic-bezier(0.4,0,0.2,1)';
         sealRingInner.style.transition = 'stroke-dashoffset ' + (SEAL_DRAW_MS - 150) + 'ms cubic-bezier(0.4,0,0.2,1) 0.18s';
         requestAnimationFrame(function () {

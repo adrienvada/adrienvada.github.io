@@ -888,7 +888,7 @@ const SHOW_UNIVERSES = {
         panelHtml, datesHtml, escape, toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
         longestLine, photoSrc, framePos, figureHtml, overHtml, videoRef,
-        videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock, couverture, photosOuverture, imagesDuPlan,
+        videoHtml, afficheHtml, beatsHtml, prixBlock, castBlock, couverture, photosOuverture, imagesDuPlan, agendaDe,
         FRAMES, FRAME_PAIR, YT_ID, VIMEO_ID, VIDEO_REF, JAQUETTE_OK, LAYOUT_BY_COUNT
     } = UniversMontage;
 
@@ -1263,9 +1263,20 @@ const SHOW_UNIVERSES = {
     // /spectacles/ : c'est ce qui garantit qu'un univers et sa page ont le
     // même visage. Ici on ne fournit que ce qui vient du DOM et de l'état
     // du site — la ligne de CV, les dates du moment, le badge de création.
+    //  LE SPECTACLE SUIVANT, dans l'ordre des lignes du CV (voir
+    //  suivantHtml, univers-montage.js) : la ligne d'après qui ouvre un
+    //  univers ; null après la dernière.
+    function suivantDe(li) {
+        const lignes = [...document.querySelectorAll('#page_cv li.cv-has-universe[data-cv-show]')];
+        const apres = lignes[lignes.indexOf(li) + 1];
+        const uni = apres && universeFor(apres);
+        return uni && uni.slug ? { titre: uni.title || apres.dataset.cvShow, slug: uni.slug, film: uni.kind === 'film' } : null;
+    }
+
     function render(li, uni, parPassage) {
         const info = rowInfo(li, uni);
         overlay.innerHTML = panelHtml(info, uni, {
+            suivant: suivantDe(li),
             dates: datesBlock(info.key, uni),
             // Sans date à venir, un spectacle peut être arrêté OU pas encore
             // créé : le badge de la ligne du CV est ce qui les distingue.
@@ -1304,9 +1315,12 @@ const SHOW_UNIVERSES = {
         });
     }
 
+    // La couleur d'avant est oubliée une fois rendue : gardée, elle aurait
+    // servi à la fermeture suivante même après un changement de thème.
     function restoreThemeColor() {
         document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
             if (m.dataset.uPrev) m.content = m.dataset.uPrev;
+            delete m.dataset.uPrev;
         });
     }
 
@@ -1325,12 +1339,103 @@ const SHOW_UNIVERSES = {
     let lastScrollTop = 0;
     const BARRE_NATIVE = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
 
+    // ── LES CHAPITRES (voir chapitresHtml, univers-montage.js) ─────────
+    //  Chaque chapitre est retrouvé par sa cible dans le panneau, mesuré
+    //  une fois (et de nouveau quand la page change de hauteur : le montage
+    //  qui arrive après le passage, une police, un pivotement) ; au
+    //  défilement, on ne fait que comparer une position à cette liste.
+    let chapitres = [];
+    let chapitresHauteur = 0;
+    let chapitreCourant = -1;
+
+    function cibleDuChapitre(zone, cle) {
+        if (cle === 'montage') return zone.querySelector('.u-figs > *');
+        if (cle === 'video') return zone.querySelector('.u-figs .u-video');
+        if (cle === 'pied') return zone.querySelector('#u-foot');
+        if (cle === 'distribution') return zone.querySelector('.u-cast');
+        return null;
+    }
+
+    function mesurerChapitres(zone) {
+        const nav = zone && zone.querySelector('.u-chapitres');
+        chapitres = [];
+        chapitreCourant = -1;
+        if (!nav) return;
+        const origine = zone.getBoundingClientRect().top - zone.scrollTop;
+        nav.querySelectorAll('[data-u-chapitre]').forEach(b => {
+            const cle = b.dataset.uChapitre;
+            const el = cle === 'haut' ? null : cibleDuChapitre(zone, cle);
+            if (cle !== 'haut' && !el) return;   // pas encore posé (le montage arrive après le passage)
+            chapitres.push({
+                cle, bouton: b,
+                nom: b.lastChild ? b.lastChild.textContent : '',
+                haut: el ? Math.max(0, Math.round(el.getBoundingClientRect().top - origine)) : 0
+            });
+        });
+        chapitresHauteur = zone.scrollHeight;
+        // Les débuts de chapitre, marqués sur la barre de progression.
+        const barre = zone.querySelector('.u-progress');
+        const total = zone.scrollHeight - zone.clientHeight;
+        if (barre) {
+            barre.querySelectorAll('.u-progress-repere').forEach(n => n.remove());
+            if (total > 0) chapitres.slice(1).forEach(c => {
+                const i = document.createElement('i');
+                i.className = 'u-progress-repere';
+                i.style.left = `${(Math.min(1, c.haut / total) * 100).toFixed(2)}%`;
+                barre.appendChild(i);
+            });
+        }
+        suivreChapitre(zone);
+    }
+
+    function suivreChapitre(zone) {
+        if (!chapitres.length) return;
+        if (zone.scrollHeight !== chapitresHauteur) { mesurerChapitres(zone); return; }
+        const y = zone.scrollTop + zone.clientHeight * 0.35;
+        let k = 0;
+        chapitres.forEach((c, i) => { if (c.haut <= y) k = i; });
+        const nav = zone.querySelector('.u-chapitres');
+        // La pastille se tait pendant l'ouverture : le premier écran reste
+        // au titre et à « Avancer ». Elle paraît quand le montage approche.
+        const seuil = chapitres[1] ? chapitres[1].haut - zone.clientHeight * 0.6 : Infinity;
+        if (nav) nav.classList.toggle('est-visible', zone.scrollTop > seuil);
+        if (k === chapitreCourant) return;
+        chapitreCourant = k;
+        if (!nav) return;
+        const n = nav.querySelector('[data-u-chapitre-n]');
+        const nom = nav.querySelector('[data-u-chapitre-nom]');
+        if (n) n.textContent = `${k + 1}/${chapitres.length}`;
+        if (nom) nom.textContent = chapitres[k].nom;
+        chapitres.forEach((c, i) => c.bouton.setAttribute('aria-current', i === k ? 'step' : 'false'));
+    }
+
+    function ouvrirChapitres(zone, ouvrir) {
+        const nav = zone && zone.querySelector('.u-chapitres');
+        if (!nav) return;
+        const bouton = nav.querySelector('.u-chapitres-bouton');
+        const liste = nav.querySelector('.u-chapitres-liste');
+        if (!bouton || !liste) return;
+        bouton.setAttribute('aria-expanded', String(ouvrir));
+        liste.hidden = !ouvrir;
+        nav.classList.toggle('est-ouverte', ouvrir);
+        if (ouvrir) (liste.querySelector('[aria-current="step"]') || liste.querySelector('button'))?.focus({ preventScroll: true });
+    }
+
+    function allerAuChapitre(zone, cle) {
+        if (!chapitres.length || zone.scrollHeight !== chapitresHauteur) mesurerChapitres(zone);
+        const c = chapitres.find(x => x.cle === cle);
+        if (!c) return;
+        zone.scrollTo({ top: c.haut, behavior: REDUCED ? 'auto' : 'smooth' });
+        window.track?.('univers_chapitre', { spectacle: overlay?.dataset.slug || document.body.dataset.uShow || '', chapitre: cle });
+    }
+
     function onScroll() {
         // Le geste pousse l'écriture avant même d'avoir bougé la page :
         // c'est ce qui donne l'impression que le récit répond à la main.
         const moved = Math.abs(overlay.scrollTop - lastScrollTop);
         lastScrollTop = overlay.scrollTop;
         if (moved) nudgeWriting(moved / 90);
+        suivreChapitre(overlay);
 
         if (BARRE_NATIVE || rafId) return;
         rafId = requestAnimationFrame(() => {
@@ -1900,6 +2005,7 @@ const SHOW_UNIVERSES = {
             if (!isOpen) return;
             ecrireALaLumiere(overlay);
             detourerLeTitre(overlay);
+            mesurerChapitres(overlay);
             if (document.fonts && document.fonts.status === 'loading') document.fonts.ready.then(mesurerLesLignes);
         });
     }
@@ -2056,7 +2162,9 @@ const SHOW_UNIVERSES = {
         box.querySelector('.u-zoom-close')?.focus({ preventScroll: true });
     }
 
-    function closeZoom() {
+    //  `instantane` : sans le fondu (le geste de retour du téléphone a déjà
+    //  montré la page d'avant, voir le popstate d'index.html).
+    function closeZoom(instantane) {
         const box = zoomEl();
         if (!box || box.hidden) return;
         box.classList.remove('is-open');
@@ -2073,7 +2181,7 @@ const SHOW_UNIVERSES = {
             box.hidden = true;
             box.querySelector('img').src = '';
         };
-        if (REDUCED) done(); else setTimeout(done, 300);
+        if (REDUCED || instantane === true) done(); else setTimeout(done, 300);
     }
 
     function zoomIsOpen() {
@@ -2427,6 +2535,13 @@ const SHOW_UNIVERSES = {
                 overlay.style.clipPath = '';
                 overlay.style.willChange = '';
                 cacherLaPage();
+                // Les mesures de la lumière et du titre détouré, APRÈS le
+                // dépliement : faites pendant, elles recalculaient le
+                // panneau et peignaient le titre dans une image au milieu de
+                // l'animation — des images perdues au téléphone (relevé par
+                // l'expertise d'octobre 2026). Rien de ce qu'elles posent ne
+                // se voit avant qu'on défile.
+                mesurerLesLignes();
             };
             depliement = (e) => {
                 if (e.target === overlay && e.propertyName === 'clip-path') finDuDepliement();
@@ -2481,7 +2596,7 @@ const SHOW_UNIVERSES = {
         // Dans le passage, le montage et les mesures l'attendent (voir
         // monterLeMontage) ; sans lui, tout est déjà là.
         if (parPassage) (passageCourant ? passageCourant.finished : Promise.resolve()).catch(() => { }).finally(monterLeMontage);
-        else mesurerLesLignes();
+        else if (!deplie) mesurerLesLignes();   // déplié : à la fin du dépliement (voir finDuDepliement)
         lastScrollTop = 0;
         playWriting({ titrePose: parPassage && !titreAuFond() });
         // LA PAGE DERRIÈRE DEVIENT INERTE. Le panneau couvre l'écran, mais le
@@ -2505,7 +2620,9 @@ const SHOW_UNIVERSES = {
         if (!isOpen) return;
         const li = ligneOuverte;
         const avecPassage = PASSAGE && !(opts && opts.sansPassage) && !passageEnCours && li && li.isConnected;
-        if (!avecPassage) { fermer(false); return; }
+        // `instantane` : sans le fondu de sortie non plus (le geste de retour
+        // du téléphone a déjà montré la page d'avant, voir index.html).
+        if (!avecPassage) { fermer(!!(opts && opts.instantane)); return; }
         passageEnCours = true;
         const racine = document.documentElement;
         const heroVu = overlay.scrollTop < window.innerHeight * 0.5 && !titreAuFond();
@@ -2721,11 +2838,17 @@ const SHOW_UNIVERSES = {
         <div id="u-cal-modal" class="u-cal-modal" hidden>
             <div class="u-cal-modal-backdrop" data-u-cal-close></div>
             <div class="u-cal-modal-card" role="dialog" aria-modal="true" aria-labelledby="u-cal-modal-title">
+                <!-- Au téléphone, une feuille qu'on tire vers le bas (voir
+                     feuilleAuDoigt) : la poignée et le titre sont la prise. -->
+                <div class="u-cal-poignee" data-u-cal-prise aria-hidden="true"></div>
                 <button type="button" class="u-cal-modal-close" data-u-cal-close aria-label="Fermer">
                     <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
                 </button>
-                <h3 id="u-cal-modal-title">Ajouter à l'agenda</h3>
+                <h3 id="u-cal-modal-title" data-u-cal-prise>Ajouter à l'agenda</h3>
                 <p class="u-cal-modal-subtitle"></p>
+                <!-- Les séances d'une série (voir openAgendaModal) : on
+                     choisit laquelle emporter, la première publique d'abord. -->
+                <div class="u-cal-modal-seances" role="group" aria-label="Séance à ajouter" hidden></div>
                 <div class="u-cal-modal-options">
                     <button type="button" data-cal-type="google">Google Agenda</button>
                     <button type="button" data-cal-type="outlook">Outlook</button>
@@ -2748,17 +2871,37 @@ const SHOW_UNIVERSES = {
     // sort pas par Tab, et le focus revient au bouton qui l'a ouverte.
     let agendaDepuis = null, agendaLibere = null;
 
+    //  UNE SÉRIE SUR UNE LIGNE, UNE SÉANCE DANS L'AGENDA. Le pied d'un
+    //  univers range une série sur une ligne, avec un seul bouton
+    //  d'agenda (voir datesHtml) : la fenêtre demande alors laquelle
+    //  emporter — une puce par séance, la première publique choisie
+    //  d'emblée, comme dans l'onglet Dates de l'accueil.
+    function sousTitreAgenda(modal, data) {
+        const sub = modal.querySelector('.u-cal-modal-subtitle');
+        if (!sub) return;
+        const cleanSubtitle = data.subtitle ? ` (${data.subtitle})` : '';
+        // La date telle qu'on la lit (« Vendredi 29 janvier 2027 »), et
+        // non « 2027-01-29 » : l'ISO ne sert qu'à fabriquer l'agenda.
+        sub.textContent = `${data.dateLabel || data.icsDate || ''}${cleanSubtitle} • ${data.location || ''}`;
+    }
+
     function openAgendaModal(data, depuis) {
         calModalData = data;
         const modal = overlay.querySelector('#u-cal-modal');
         if (!modal) return;
         agendaDepuis = depuis || null;
-        const sub = modal.querySelector('.u-cal-modal-subtitle');
-        if (sub) {
-            const cleanSubtitle = data.subtitle ? ` (${data.subtitle})` : '';
-            // La date telle qu'on la lit (« Vendredi 29 janvier 2027 »), et
-            // non « 2027-01-29 » : l'ISO ne sert qu'à fabriquer l'agenda.
-            sub.textContent = `${data.dateLabel || data.icsDate || ''}${cleanSubtitle} • ${data.location || ''}`;
+        sousTitreAgenda(modal, data);
+        const choix = modal.querySelector('.u-cal-modal-seances');
+        if (choix) {
+            const seances = Array.isArray(data.seances) ? data.seances : [];
+            choix.hidden = seances.length < 2;
+            choix.innerHTML = seances.length < 2 ? '' : seances.map((s, i) => {
+                const heure = Array.isArray(s.times) && s.times.length ? s.times.join(' & ') : (s.time || '');
+                const choisie = s.icsDate === data.icsDate && (s.time || '') === (data.time || '');
+                return `<button type="button" data-u-cal-seance="${i}" aria-pressed="${choisie}">`
+                    + `${escape(s.dateLabel || s.icsDate)}${heure ? ' · ' + escape(heure) : ''}${s.scolaire ? ' · <i>scolaire</i>' : ''}</button>`;
+            }).join('');
+            choix._seances = seances;
         }
         const shareBtn = modal.querySelector('[data-cal-type="share"]');
         if (shareBtn) {
@@ -2778,112 +2921,99 @@ const SHOW_UNIVERSES = {
     function closeAgendaModal() {
         const modal = overlay?.querySelector('#u-cal-modal');
         if (!modal || modal.hidden) return;
+        // Refermée en plein glissement (Échap, retour du navigateur) : la
+        // feuille part de là où le doigt l'a laissée.
+        if (feuilleTiree) {
+            feuilleTiree.carte.style.transition = feuilleTiree.carte.style.transform = '';
+            if (feuilleTiree.voile) feuilleTiree.voile.style.transition = feuilleTiree.voile.style.opacity = '';
+            feuilleTiree = null;
+        }
         modal.classList.remove('is-open');
         calModalData = null;
         if (agendaLibere) { agendaLibere(); agendaLibere = null; }
         if (agendaDepuis && agendaDepuis.isConnected) agendaDepuis.focus({ preventScroll: true });
         agendaDepuis = null;
-        setTimeout(() => { modal.hidden = true; }, 240);
+        // Cachée à la fin de son départ (--dur-base : 320 ms — la feuille
+        // du téléphone descend jusque-là), et seulement si personne ne l'a
+        // rouverte entre-temps : rouverte aussitôt, elle disparaissait sous
+        // les yeux.
+        setTimeout(() => { if (!calModalData) modal.hidden = true; }, 320);
     }
 
-    // Porte le même calcul que calOptionClick() dans index.html — ics,
-    // Google et Outlook lus depuis le même vocabulaire (icsDate, time ou
-    // times). Dupliqué plutôt que partagé : univers-montage.js doit rester
-    // sans DOM pour servir aussi au script de build (voir son en-tête).
+    // ── LA FEUILLE AU DOIGT ──
+    //  Au téléphone (sous 768 px, comme l'agenda de l'accueil), la fenêtre
+    //  est une feuille posée en bas de l'écran (voir univers.css). Elle se
+    //  renvoie comme celle de l'accueil (calFeuilleAuDoigt, index.html) :
+    //  tirée par sa poignée ou son titre, elle suit le doigt ; lâchée
+    //  au-delà du tiers de sa hauteur (140 px au plus) ou lancée vers le
+    //  bas (plus de 0,45 px/ms sur les 100 dernières ms), elle se referme
+    //  par closeAgendaModal ; sinon, elle remonte. Délégué à #show-universe :
+    //  la fenêtre est réécrite à chaque ouverture d'un univers.
+    let feuilleTiree = null;
+    function feuilleAuDoigt() {
+        if (!window.PointerEvent || !window.matchMedia) return;
+        const feuille = window.matchMedia('(max-width: 767px)');
+        const lacher = (e) => {
+            const t = feuilleTiree;
+            if (!t || e.pointerId !== t.id) return;
+            t.pas.push([e.timeStamp, e.clientY]);
+            const [t0, y0] = t.pas.find(([s]) => e.timeStamp - s <= 100);
+            const vitesse = e.timeStamp > t0 ? (e.clientY - y0) / (e.timeStamp - t0) : 0;
+            const renvoyee = e.type === 'pointerup' && (t.dy > Math.min(140, t.h / 3) || (vitesse > 0.45 && t.dy > 12));
+            feuilleTiree = null;
+            t.carte.style.transition = t.carte.style.transform = '';
+            if (t.voile) t.voile.style.transition = t.voile.style.opacity = '';
+            if (renvoyee) closeAgendaModal();
+        };
+        overlay.addEventListener('pointerdown', (e) => {
+            if (feuilleTiree || !feuille.matches || !calModalData) return;
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            if (!e.target.closest('#u-cal-modal [data-u-cal-prise]') || e.target.closest('button')) return;
+            const carte = e.target.closest('.u-cal-modal-card');
+            if (!carte) return;
+            feuilleTiree = {
+                id: e.pointerId, y0: e.clientY, dy: 0, carte,
+                voile: overlay.querySelector('#u-cal-modal .u-cal-modal-backdrop'),
+                h: carte.getBoundingClientRect().height || 1, pas: [[e.timeStamp, e.clientY]]
+            };
+            try { carte.setPointerCapture(e.pointerId); } catch (err) { }
+            carte.style.transition = 'none';
+            if (feuilleTiree.voile) feuilleTiree.voile.style.transition = 'none';
+        });
+        overlay.addEventListener('pointermove', (e) => {
+            const t = feuilleTiree;
+            if (!t || e.pointerId !== t.id) return;
+            t.dy = Math.max(0, e.clientY - t.y0);
+            t.pas.push([e.timeStamp, e.clientY]);
+            while (t.pas.length > 2 && e.timeStamp - t.pas[0][0] > 100) t.pas.shift();
+            t.carte.style.transform = `translateY(${t.dy}px)`;
+            if (t.voile) t.voile.style.opacity = String(1 - 0.75 * Math.min(1, t.dy / t.h));
+        });
+        overlay.addEventListener('pointerup', lacher);
+        overlay.addEventListener('pointercancel', lacher);
+    }
+
+    // La même fabrique que calOptionClick(), dans index.html : agendaDe
+    // (univers-montage.js) écrit le fichier et les adresses — l'heure de
+    // Paris, un identifiant tiré de la séance, la norme iCalendar.
     function agendaAction(type, data) {
         if (!data) return;
-        const parts = String(data.icsDate || '').split('-');
-        if (parts.length !== 3) return;
-        const y = parts[0], m = parts[1], d = parts[2];
-
-        const now = new Date();
-        const dtstamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-        const cleanTitle = (data.title || '').replace(/[,;\\]/g, ' ');
-        const cleanSubtitle = data.subtitle ? ` (${data.subtitle.replace(/[,;\\]/g, ' ')})` : '';
-        const summary = `${cleanTitle}${cleanSubtitle}`;
-        const location = (data.location || '').replace(/[,;\\]/g, ' ');
-        const timeStr = Array.isArray(data.times) ? data.times.join(' & ') : String(data.time || '');
-        const description = `Représentation : ${summary}\\nLieu : ${location}\\n${timeStr ? 'Horaire : ' + timeStr : 'Horaire à confirmer'}`;
-
         if (typeof track === 'function') track('date_agenda', { spectacle: data.title || '', par: type });
+        const slug = overlay?.dataset.slug || document.body.dataset.uShow || '';
+        const agenda = agendaDe(Object.assign({}, data, {
+            page: slug ? `https://adrienvada.fr/spectacles/${slug}/` : ''
+        }));
+        if (!agenda) return;
 
-        if (type === 'google') {
-            let datesParam = '';
-            const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
-            if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
-                const tm = timeMatches[0];
-                const hour = String(tm[1]).padStart(2, '0');
-                const min = String(tm[2] || '00').padStart(2, '0');
-                const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
-                datesParam = `${y}${m}${d}T${hour}${min}00/${y}${m}${d}T${endHour}${min}00`;
-            } else {
-                const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-                dateObj.setDate(dateObj.getDate() + 1);
-                datesParam = `${y}${m}${d}/${dateObj.getFullYear()}${String(dateObj.getMonth() + 1).padStart(2, '0')}${String(dateObj.getDate()).padStart(2, '0')}`;
-            }
-            window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(summary)}&dates=${datesParam}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`, '_blank', 'noopener');
-            closeAgendaModal();
-            return;
-        }
-
-        if (type === 'outlook') {
-            let startISO = '', endISO = '', isAllDay = false;
-            const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
-            if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
-                const tm = timeMatches[0];
-                const hour = String(tm[1]).padStart(2, '0');
-                const min = String(tm[2] || '00').padStart(2, '0');
-                const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
-                startISO = `${y}-${m}-${d}T${hour}:${min}:00`;
-                endISO = `${y}-${m}-${d}T${endHour}:${min}:00`;
-            } else {
-                isAllDay = true;
-                startISO = `${y}-${m}-${d}T09:00:00`;
-                endISO = `${y}-${m}-${d}T18:00:00`;
-            }
-            window.open(`https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=${encodeURIComponent(summary)}&startdt=${encodeURIComponent(startISO)}&enddt=${encodeURIComponent(endISO)}&location=${encodeURIComponent(location)}&body=${encodeURIComponent(description)}${isAllDay ? '&allday=true' : ''}`, '_blank', 'noopener');
+        if (type === 'google' || type === 'outlook') {
+            window.open(type === 'google' ? agenda.google() : agenda.outlook(), '_blank', 'noopener');
             closeAgendaModal();
             return;
         }
 
         // Fichier .ics standard ('ics' ou 'share')
-        const timeMatches = [...timeStr.matchAll(/(\d{1,2})[hH:](\d{2})?/g)];
-        const vevents = [];
-        if (timeMatches.length > 0 && !timeStr.toLowerCase().includes('confirmer')) {
-            timeMatches.forEach((tm, idx) => {
-                const hour = String(tm[1]).padStart(2, '0');
-                const min = String(tm[2] || '00').padStart(2, '0');
-                const endHour = String((parseInt(hour, 10) + 2) % 24).padStart(2, '0');
-                vevents.push([
-                    'BEGIN:VEVENT',
-                    `UID:event-${y}${m}${d}-${hour}${min}-${Date.now()}-${idx}@adrienvada.fr`,
-                    `DTSTAMP:${dtstamp}`,
-                    `DTSTART:${y}${m}${d}T${hour}${min}00`,
-                    `DTEND:${y}${m}${d}T${endHour}${min}00`,
-                    `SUMMARY:${summary}`, `LOCATION:${location}`, `DESCRIPTION:${description}`,
-                    'END:VEVENT'
-                ].join('\r\n'));
-            });
-        } else {
-            const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-            dateObj.setDate(dateObj.getDate() + 1);
-            const nextY = dateObj.getFullYear();
-            const nextM = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const nextD = String(dateObj.getDate()).padStart(2, '0');
-            vevents.push([
-                'BEGIN:VEVENT',
-                `UID:event-${y}${m}${d}-${Date.now()}@adrienvada.fr`,
-                `DTSTAMP:${dtstamp}`,
-                `DTSTART;VALUE=DATE:${y}${m}${d}`,
-                `DTEND;VALUE=DATE:${nextY}${nextM}${nextD}`,
-                `SUMMARY:${summary}`, `LOCATION:${location}`, `DESCRIPTION:${description}`,
-                'END:VEVENT'
-            ].join('\r\n'));
-        }
-
-        const icsContent = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Adrien Vada//Spectacles//FR',
-            ...vevents, 'END:VCALENDAR'].join('\r\n');
-        const filename = `${cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'spectacle'}-${y}-${m}-${d}.ics`;
+        const icsContent = agenda.ics();
+        const filename = agenda.fichier;
 
         if (type === 'share' && navigator.canShare) {
             try {
@@ -2918,6 +3048,7 @@ const SHOW_UNIVERSES = {
         // Une seule fenêtre pour tout le panneau : le CV comme les pages
         // /spectacles/ passent par ce même #show-universe (voir demarrerStatique).
         poserFenetreAgenda();
+        feuilleAuDoigt();
 
         // AU CLAVIER, LE TITRE VIENT À SOI. Au bout du travelling (voir
         // ouvertureHtml), le bouton « Accéder aux dates » n'est pas encore
@@ -2933,6 +3064,21 @@ const SHOW_UNIVERSES = {
         });
 
         overlay.addEventListener('click', (e) => {
+            // Les chapitres : la pastille ouvre la liste, une entrée y mène.
+            // Un clic ailleurs referme la liste ouverte.
+            const versChapitre = e.target.closest('[data-u-chapitre]');
+            if (versChapitre) {
+                ouvrirChapitres(overlay, false);
+                overlay.querySelector('.u-chapitres-bouton')?.focus({ preventScroll: true });
+                allerAuChapitre(overlay, versChapitre.dataset.uChapitre);
+                return;
+            }
+            if (e.target.closest('.u-chapitres-bouton')) {
+                const ouverte = overlay.querySelector('.u-chapitres-bouton').getAttribute('aria-expanded') === 'true';
+                ouvrirChapitres(overlay, !ouverte);
+                return;
+            }
+            if (overlay.querySelector('.u-chapitres.est-ouverte')) ouvrirChapitres(overlay, false);
             // La fenêtre « ajouter à l'agenda » d'abord : elle vit dans ce même
             // conteneur, ses propres clics ne doivent pas retomber plus bas.
             const calBtn = e.target.closest('.u-date-cal');
@@ -2940,6 +3086,17 @@ const SHOW_UNIVERSES = {
                 let data = null;
                 try { data = JSON.parse(calBtn.dataset.cal || '{}'); } catch (err) { }
                 if (data) openAgendaModal(data, calBtn);
+                return;
+            }
+            const seance = e.target.closest('[data-u-cal-seance]');
+            if (seance) {
+                const groupe = seance.parentElement;
+                const s = groupe && groupe._seances && groupe._seances[+seance.dataset.uCalSeance];
+                if (s) {
+                    calModalData = Object.assign({}, s, { seances: groupe._seances });
+                    groupe.querySelectorAll('[data-u-cal-seance]').forEach(b => b.setAttribute('aria-pressed', String(b === seance)));
+                    sousTitreAgenda(overlay.querySelector('#u-cal-modal'), calModalData);
+                }
                 return;
             }
             const calOption = e.target.closest('[data-cal-type]');
@@ -3023,6 +3180,12 @@ const SHOW_UNIVERSES = {
         document.addEventListener('keydown', (e) => {
             if (!isOpen) return;
             if (calModalData && e.key === 'Escape') { e.stopPropagation(); closeAgendaModal(); return; }
+            if (e.key === 'Escape' && overlay.querySelector('.u-chapitres.est-ouverte')) {
+                e.stopPropagation();
+                ouvrirChapitres(overlay, false);
+                overlay.querySelector('.u-chapitres-bouton')?.focus({ preventScroll: true });
+                return;
+            }
             if (zoomIsOpen()) {
                 if (e.key === 'Escape') { e.stopPropagation(); closeZoom(); }
                 else if (e.key === 'ArrowLeft') showZoom(zoomIndex - 1);
@@ -3612,6 +3775,22 @@ const SHOW_UNIVERSES = {
             if (window.ouvrirBandeAnnonce && window.ouvrirBandeAnnonce({ ref, titre, image: couverture(uni)?.src })) e.preventDefault();
         });
 
+        // AU TÉLÉPHONE, UNE SECONDE RÉSERVE, SUR LA VIGNETTE. La colonne de
+        // droite prenait 44 px au texte sur chaque ligne, pour une pastille
+        // que deux lignes sur trois n'ont pas : le CV y coupait ses noms
+        // (« Compagnie Crescite — Angelo Jos… »). Sous 768 px, la pastille
+        // devient le bouton de lecture rond posé au milieu de la photo — le
+        // signe de toute vidéo — et la colonne ne garde que la flèche. Le
+        // CSS n'affiche qu'une réserve à la fois ; le lien se pose sur
+        // celle qui a une taille (voir mesurerPastille).
+        const vignette = li.querySelector('.cv-vignette');
+        if (vignette) {
+            const surVignette = document.createElement('span');
+            surVignette.className = 'cv-trailer cv-trailer-place cv-trailer-place--vignette';
+            surVignette.setAttribute('aria-hidden', 'true');
+            vignette.appendChild(surVignette);
+        }
+
         badges.classList.remove('items-center');
         if (badge) {
             // LA PASTILLE S'ALIGNE SUR LE BADGE, PAS SUR LA FLÈCHE. Le badge
@@ -3648,14 +3827,19 @@ const SHOW_UNIVERSES = {
     //  Toutes les lignes d'abord mesurées, puis tous les liens posés : poser
     //  un lien entre deux mesures obligeait le navigateur à refaire sa mise
     //  en page avant la suivante — quatre fois au démarrage.
+    //  DEUX RÉSERVES, UNE SEULE AFFICHÉE (la colonne sur grand écran, la
+    //  vignette au téléphone) : le lien va sur celle qui a une taille, et
+    //  en prend la taille — ronde sur la photo, en 16/9 dans la colonne.
     function mesurerPastille(li) {
-        const place = li.querySelector('.cv-trailer-place');
         const lien = li.querySelector('.cv-trailer-lien');
-        if (!place || !lien) return null;
+        if (!lien) return null;
         const r = li.getBoundingClientRect();
-        const p = place.getBoundingClientRect();
-        if (!r.width || !p.width) return null;
-        return [lien, (p.top - r.top) + 'px', (p.left - r.left) + 'px'];
+        if (!r.width) return null;
+        for (const place of li.querySelectorAll('.cv-trailer-place')) {
+            const p = place.getBoundingClientRect();
+            if (p.width) return [lien, (p.top - r.top) + 'px', (p.left - r.left) + 'px', place.classList.contains('cv-trailer-place--vignette')];
+        }
+        return null;
     }
 
     function placerPastilles(lignes) {
@@ -3663,6 +3847,7 @@ const SHOW_UNIVERSES = {
             if (!pose) return;
             pose[0].style.top = pose[1];
             pose[0].style.left = pose[2];
+            pose[0].classList.toggle('sur-vignette', pose[3]);
         });
     }
 

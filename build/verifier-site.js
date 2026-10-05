@@ -9,12 +9,16 @@
  *  ne faisait rien, et le CV en PDF imprimait les pastilles ▶ des
  *  bandes-annonces. Chacun tenait en une ligne de test.
  *
- *  Ce script ouvre le site dans un vrai navigateur et vérifie, en moins
- *  de quatre minutes, ce qui a déjà cassé ou ce qui casserait sans bruit :
+ *  Ce script ouvre le site dans un vrai navigateur et vérifie, en six
+ *  minutes environ, ce qui a déjà cassé ou ce qui casserait sans bruit :
  *    · l'accueil se charge sans erreur de script ;
  *    · la règle de l'ouverture (lien direct : pas de rideau ; depuis un
  *      autre site : une fois) ;
  *    · la fenêtre d'agenda d'un univers ouvert depuis le CV ;
+ *    · celle de l'onglet Dates, au téléphone une feuille posée en bas qu'on
+ *      renvoie en la tirant, et « Partager cette date » ;
+ *    · l'agenda à s'abonner (dates.ics) : à jour avec dates.js, lisible par
+ *      tous les agendas, sans séance scolaire ;
  *    · le même univers ne charge que son panneau : la page couverte
  *      cesse d'être rendue, le montage suit le passage, la lumière est
  *      posée une fois — et la fermeture rend la page où elle était ;
@@ -31,6 +35,13 @@
  *    · « Télécharger le CV », un seul lien, sous la prochaine date ;
  *    · la barre de lecture des démos voix, qui va au point touché même
  *      sans en-têtes Range ;
+ *    · les démos voix qui suivent d'un onglet à l'autre : le mini-lecteur
+ *      au-dessus de la barre du bas, l'enchaînement (sauf après la
+ *      dernière), l'écran verrouillé, la croix ;
+ *    · la salle de projection : sa durée et ses chapitres, l'aperçu qui
+ *      ne charge rien avant l'onglet, fait deux tours et se pose (et ne
+ *      joue pas en mouvement réduit ni en économie de données), la salle
+ *      noire plein écran au téléphone couché ;
  *    · l'impression sans les pastilles ▶ ;
  *    · la ligne à vignette du CV : l'année et l'état sur chaque vignette,
  *      l'année lisible même au bas de l'écran, des lignes de même
@@ -114,15 +125,88 @@ let reussies = 0;
 // épreuve sans attendre les autres. Sans lui, toutes passent.
 const SEUL = (process.env.SEUL || '').toLowerCase();
 
+// UNE ÉPREUVE BLOQUÉE NE BLOQUE PAS LA VÉRIFICATION. Une page dont le fil
+// principal ne rend plus la main ne répond plus à rien, et certains appels
+// (page.evaluate, le clavier) l'attendent sans limite : sur la machine des
+// demandes de fusion, une épreuve a ainsi tenu le travail jusqu'à son délai
+// de quinze minutes, coupé sans un mot. Au bout de DELAI_EPREUVE, l'épreuve
+// échoue en disant où en est chaque page ouverte — son adresse, si son fil
+// principal répond ou tourne dans un script, et ce qu'elle montre —, ses
+// contextes sont fermés, et la vérification passe à la suivante.
+const DELAI_EPREUVE = 150000;
+let navigateurEnCours = null;
+
+// Une session de débogage attachée d'avance à chaque page, et qui ne fait
+// rien (suivreLesPages) : pendant un blocage, une session ouverte après coup
+// ne s'établit jamais, alors que celle-ci peut encore interrompre le script
+// en cours. Y activer le débogueur aurait donné la pile de ce script, mais
+// il change le rythme des pages : le voyage du portrait échouait alors une
+// fois sur quatre.
+const sessions = new WeakMap();
+function suivreLesPages(c) {
+    c.on('page', (p) => { c.newCDPSession(p).then((s) => sessions.set(p, s), () => { /* page déjà fermée */ }); });
+}
+
+const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+const auPlus = (ms, promesse) => Promise.race([promesse, attendre(ms).then(() => { throw new Error('sans réponse'); })]);
+
+// Où en est la page, en une ligne : les classes de <html> (passages,
+// panneaux), l'univers, ce qui a le focus.
+const ETAT_DE_LA_PAGE = `(() => {
+    const u = document.getElementById('show-universe'), f = document.activeElement;
+    return '<html> « ' + document.documentElement.className + ' »'
+        + (u ? ', univers ' + (u.hidden ? 'caché' : 'affiché') + (u.classList.contains('is-open') ? ' et ouvert' : '') : '')
+        + ', focus ' + (f ? f.tagName.toLowerCase() + (f.id ? '#' + f.id : '') : 'nulle part');
+})()`;
+
+async function etatDesPages() {
+    const lignes = [];
+    for (const c of navigateurEnCours ? navigateurEnCours.contexts() : []) {
+        for (const p of c.pages()) {
+            const s = sessions.get(p);
+            let etat;
+            if (!s) etat = 'sans session de débogage';
+            else {
+                const lire = () => auPlus(3000, s.send('Runtime.evaluate', { expression: ETAT_DE_LA_PAGE, returnByValue: true }))
+                    .then((r) => r.result.value, () => null);
+                let vu = await lire();
+                if (vu !== null) etat = `fil principal libre ; ${vu}`;
+                else {
+                    // Un script qui ne rend pas la main ne laisse passer
+                    // qu'une demande : l'interrompre. Si la page répond
+                    // ensuite, c'était lui.
+                    await auPlus(3000, s.send('Runtime.terminateExecution')).catch(() => {});
+                    vu = await lire();
+                    etat = vu !== null ? `fil principal pris dans un script, interrompu ; ${vu}`
+                        : 'fil principal pris hors d’un script (mise en page, rendu ou attente du navigateur)';
+                }
+            }
+            lignes.push(`${p.url()} : ${etat}`);
+        }
+    }
+    return lignes.length ? lignes.join(' | ') : 'aucune page ouverte';
+}
+
 async function verifie(nom, epreuve) {
     if (SEUL && !nom.toLowerCase().includes(SEUL)) return;
+    const enCours = Promise.resolve().then(epreuve);
+    enCours.catch(() => { /* lue ci-dessous, ou abandonnée au délai */ });
+    let minuterie;
+    const delai = new Promise((r) => { minuterie = setTimeout(r, DELAI_EPREUVE, 'délai'); });
     try {
-        await epreuve();
+        if (await Promise.race([enCours.then(() => 'faite'), delai]) === 'délai') {
+            const etat = await etatDesPages();
+            await Promise.all((navigateurEnCours ? navigateurEnCours.contexts() : [])
+                .map((c) => auPlus(10000, c.close()).catch(() => {})));
+            throw new Error(`aucune réponse en ${DELAI_EPREUVE / 1000} s — ${etat}`);
+        }
         reussies++;
         console.log(`  ✓ ${nom}`);
     } catch (e) {
         echecs.push(nom);
         console.log(`  ✗ ${nom}\n      ${String(e.message).split('\n')[0]}`);
+    } finally {
+        clearTimeout(minuterie);
     }
 }
 
@@ -134,6 +218,7 @@ function exige(condition, message) {
     const { chromium } = chargerPlaywright();
     const { serveur, base } = await servir(RACINE);
     const navigateur = await chromium.launch();
+    navigateurEnCours = navigateur;
 
     // Un contexte = un visiteur : stockage vide, rien de mémorisé — à une
     // exception près. L'onglet Dates s'ouvre « par spectacle » depuis la
@@ -146,6 +231,7 @@ function exige(condition, message) {
     const visiteur = async (options) => {
         const { neuf, ...reste } = options || {};
         const c = await navigateur.newContext(reste);
+        suivreLesPages(c);
         await c.route((u) => !u.href.startsWith(base), (r) => r.abort());
         if (!neuf) {
             await c.addInitScript(() => {
@@ -919,6 +1005,14 @@ function exige(condition, message) {
                 datesMisesAJour();
                 renderNextDate();
             });
+            // Au téléphone, la barre d'onglets flotte en bas de l'écran et
+            // couvre le bas du tableau à l'arrivée : un visiteur fait défiler
+            // un peu, puis touche. Sans ce défilement, Playwright cherche
+            // lui-même où cliquer derrière la barre, et Chromium sans écran
+            // cesse alors de produire des images une à deux secondes — le
+            // passage d'onglet attend sa première image, et la vérification
+            // mesurerait l'outil, pas le site.
+            await p.evaluate(() => document.querySelector('#next-date-banner .td-dep').scrollIntoView({ block: 'center', behavior: 'instant' }));
             await p.click('#next-date-banner .td-dep');
             await p.waitForTimeout(1400);
             const arrivee = await p.evaluate(() => {
@@ -1142,6 +1236,106 @@ function exige(condition, message) {
             await c.close();
         });
 
+        await verifie('les démos voix suivent : la lecture continue d’un onglet à l’autre, le mini-lecteur juste au-dessus de la barre du bas au téléphone (en bas à droite sur ordinateur), la suivante s’enchaîne et se dit, sauf après la dernière ; l’écran verrouillé a le titre, l’artiste, l’album et le portrait ; la croix arrête tout ; rien ne s’imprime', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#demos_voix', { waitUntil: 'load' });
+            await p.waitForTimeout(1200);
+            exige(await p.evaluate(() => document.getElementById('lecteur-voix').hidden), 'le mini-lecteur paraît avant qu’une démo joue');
+            await p.locator('#btn-audio-loreal').tap();
+            await p.waitForFunction(() => document.getElementById('audio-loreal').currentTime > 0.3, null, { timeout: 10000 });
+            const etat = () => p.evaluate(() => {
+                const lv = document.getElementById('lecteur-voix');
+                const r = lv.getBoundingClientRect();
+                const barre = document.getElementById('nav-barre').getBoundingClientRect();
+                const m = navigator.mediaSession && navigator.mediaSession.metadata;
+                return {
+                    visible: !lv.hidden && r.height > 0, role: lv.getAttribute('role'), nom: lv.getAttribute('aria-label'),
+                    haut: r.top, bas: r.bottom, gauche: r.left, droite: r.right, barre: barre.top, vw: innerWidth, vh: innerHeight,
+                    titre: lv.querySelector('[data-lv-nom]').textContent,
+                    boutons: [...lv.querySelectorAll('button')].map((b) => ({ nom: b.getAttribute('aria-label'), l: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height, off: b.getAttribute('aria-disabled') })),
+                    annonce: document.getElementById('lecteur-voix-annonce').textContent,
+                    session: m ? { titre: m.title, artiste: m.artist, album: m.album, portraits: m.artwork.map((a) => [a.src.replace(/^.*\//, ''), a.sizes]) } : null,
+                    lecture: navigator.mediaSession ? navigator.mediaSession.playbackState : null,
+                    joue: [...document.querySelectorAll('#demos_voix audio')].filter((a) => !a.paused).map((a) => a.id)
+                };
+            });
+            let e = await etat();
+            exige(e.visible && e.role === 'region' && /démos voix/i.test(e.nom || ''), `pas de mini-lecteur nommé pendant la lecture (${JSON.stringify({ visible: e.visible, role: e.role, nom: e.nom })})`);
+            exige(e.bas <= e.barre - 4 && e.bas >= e.barre - 16 && e.gauche >= 0 && e.droite <= e.vw,
+                `le mini-lecteur n’est pas posé juste au-dessus de la barre du bas (bas ${Math.round(e.bas)}, barre ${Math.round(e.barre)})`);
+            exige(e.boutons.length === 4 && e.boutons.every((b) => b.nom && b.l >= 44 && b.h >= 44), `les boutons du mini-lecteur : ${JSON.stringify(e.boutons)}`);
+            exige(e.titre === 'L’Oréal' && /^Lecture : L’Oréal/.test(e.annonce), `le mini-lecteur ne dit pas la démo (${e.titre}, « ${e.annonce} »)`);
+            exige(e.session && /^L’Oréal/.test(e.session.titre) && e.session.artiste === 'Adrien Vada' && e.session.album === 'Démos voix'
+                && JSON.stringify(e.session.portraits) === JSON.stringify([['profil-192.jpg', '192x192'], ['profil-384.jpg', '384x384']]) && e.lecture === 'playing',
+                `l’écran verrouillé n’a pas la démo : ${JSON.stringify(e.session)} (${e.lecture})`);
+            // Rien de tout cela sur papier.
+            await p.emulateMedia({ media: 'print' });
+            exige(await p.evaluate(() => getComputedStyle(document.getElementById('lecteur-voix')).display === 'none'), 'le mini-lecteur s’imprime');
+            await p.emulateMedia({ media: 'screen' });
+            // Le CV pendant que la voix continue.
+            const avant = await p.evaluate(() => document.getElementById('audio-loreal').currentTime);
+            await p.locator('#tab-page_cv').tap();
+            await p.waitForTimeout(1200);
+            e = await etat();
+            const apres = await p.evaluate(() => document.getElementById('audio-loreal').currentTime);
+            exige(JSON.stringify(e.joue) === '["audio-loreal"]' && apres > avant + 0.5, `changer d’onglet coupe la démo (${avant.toFixed(1)} → ${apres.toFixed(1)} s, ${JSON.stringify(e.joue)})`);
+            exige(e.visible && e.bas <= e.barre - 4, 'le mini-lecteur ne suit pas sur l’onglet CV');
+            // La fin d'une démo : la suivante, dans l'ordre de la page. Le
+            // serveur ne sert pas de morceaux de fichier : on y va par le
+            // chemin du site (voir allerDansLaDemo).
+            await p.evaluate(() => allerDansLaDemo('audio-loreal', dureeDemo('audio-loreal') - 0.5));
+            await p.waitForFunction(() => !document.getElementById('audio-nexity').paused, null, { timeout: 12000 }).catch(() => { });
+            // L'annonce est vidée puis réécrite (voir annoncer) : on lui
+            // laisse le temps d'être dite.
+            await p.waitForTimeout(300);
+            e = await etat();
+            exige(JSON.stringify(e.joue) === '["audio-nexity"]' && e.titre === 'Nexity' && /^Lecture : Nexity/.test(e.annonce) && /^Nexity/.test(e.session && e.session.titre),
+                `la suivante ne s’enchaîne pas (${JSON.stringify({ joue: e.joue, titre: e.titre, annonce: e.annonce })})`);
+            exige(await p.evaluate(() => (window.avMesureEnAttente || []).some(([n, d]) => n === 'demo_suivante' && d && d.par === 'enchainement' && /^Nexity/.test(d.demo))),
+                'l’enchaînement n’est pas mesuré (demo_suivante)');
+            // La dernière ne s'enchaîne sur rien : le lecteur reste, en pause.
+            await p.evaluate(() => toggleAudio('audio-doublage-nathan'));
+            await p.waitForFunction(() => document.getElementById('audio-doublage-nathan').currentTime > 0.2, null, { timeout: 10000 });
+            await p.evaluate(() => allerDansLaDemo('audio-doublage-nathan', dureeDemo('audio-doublage-nathan') - 0.5));
+            await p.waitForFunction(() => document.getElementById('audio-doublage-nathan').paused, null, { timeout: 12000 }).catch(() => { });
+            await p.waitForTimeout(1200);
+            e = await etat();
+            const lecture = e.boutons.find((b) => /lecture|pause/i.test(b.nom || ''));
+            const suivante = e.boutons.find((b) => /suivante/i.test(b.nom || ''));
+            exige(!e.joue.length && e.visible && e.titre === '3, 2, 1 Go !' && /Reprendre/.test(lecture && lecture.nom) && suivante && suivante.off === 'true',
+                `après la dernière démo : ${JSON.stringify({ joue: e.joue, titre: e.titre, lecture, suivante })}`);
+            // La croix arrête tout et referme le lecteur.
+            await p.locator('#lecteur-voix [data-lv="fermer"]').tap();
+            await p.waitForTimeout(500);
+            e = await etat();
+            exige(!e.visible && !e.joue.length && !e.session, `la croix n’arrête pas tout (${JSON.stringify({ visible: e.visible, joue: e.joue, session: e.session })})`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+
+            // Sur ordinateur, en bas à droite.
+            const o = await visiteur({ viewport: { width: 1440, height: 900 } });
+            const q = await o.newPage();
+            await q.goto(base + '/#demos_voix', { waitUntil: 'load' });
+            await q.waitForTimeout(1000);
+            await q.click('#btn-audio-nexity');
+            await q.waitForFunction(() => !document.getElementById('lecteur-voix').hidden, null, { timeout: 5000 });
+            await q.waitForTimeout(500);
+            // Le coin de l'écran tel que le voit un élément fixe : la barre de
+            // défilement (6 px, toujours réservée) n'en fait pas partie.
+            const r = await q.evaluate(() => {
+                const coin = document.createElement('div');
+                coin.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px';
+                document.body.append(coin);
+                const c = coin.getBoundingClientRect(), b = document.getElementById('lecteur-voix').getBoundingClientRect();
+                coin.remove();
+                return { d: c.right - b.right, b: c.bottom - b.bottom, l: b.width };
+            });
+            exige(Math.abs(r.d - 16) <= 2 && Math.abs(r.b - 16) <= 2, `le mini-lecteur n’est pas en bas à droite sur ordinateur (${JSON.stringify(r)})`);
+            await o.close();
+        });
+
         await verifie('les pastilles ▶ des bandes-annonces ne sont pas imprimées', async () => {
             const c = await visiteur();
             const p = await c.newPage();
@@ -1201,14 +1395,26 @@ function exige(condition, message) {
                         // lecteurs d'écran : c'est dans le texte qu'ils les lisent.
                         parlantes: lignes.filter((li) => li.querySelector('.cv-vignette')
                             && li.querySelector('.cv-vignette').getAttribute('aria-hidden') !== 'true').length,
-                        // La règle de la mise en page : tout le texte tient dans
-                        // la hauteur de la vignette. Un titre qui repasserait à
-                        // la ligne la dépasserait — et c'est ce qui faisait
-                        // varier les hauteurs.
-                        debordent: lignes.filter((li) => {
+                        // Sur grand écran, tout le texte tient dans la hauteur de
+                        // la vignette : un titre qui repasserait à la ligne la
+                        // dépasserait — et c'est ce qui faisait varier les
+                        // hauteurs. Au téléphone, depuis l'expertise d'octobre
+                        // 2026, le texte passe à la ligne plutôt que d'être
+                        // coupé : la ligne grandit, et toute sa liste avec elle.
+                        debordent: innerWidth < 768 ? [] : lignes.filter((li) => {
                             const v = li.querySelector('.cv-vignette'), t = li.querySelector('.cv-row-toggle .min-w-0');
                             return v && t && t.getBoundingClientRect().height > v.getBoundingClientRect().height + 0.5;
                         }).map((li) => li.dataset.cvShow),
+                        // RIEN N'EST COUPÉ : ni « … » ni ligne rognée, sur le
+                        // titre, le rôle, la compagnie ou le genre — « sur un
+                        // CV, une information tronquée est une information
+                        // perdue ».
+                        coupes: lignes.flatMap((li) => ['.cv-title-row', '.cv-role', '.cv-subtitle', '.cv-genre'].map((s) => {
+                            const e = li.querySelector(s);
+                            if (!e || !e.getBoundingClientRect().width) return null;
+                            return e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1
+                                ? `${li.dataset.cvShow} (${s})` : null;
+                        })).filter(Boolean),
                         ecarts: listes.map((l) => {
                             const haut = (li) => li.getBoundingClientRect().top;
                             const h = l.map((li) => li.getBoundingClientRect().height);
@@ -1226,6 +1432,7 @@ function exige(condition, message) {
                 exige(!cv.visibles.length, `${ici} : l’année ou le badge se voient encore dans le texte — ${cv.visibles.join(', ')}`);
                 exige(!cv.parlantes, `${ici} : ${cv.parlantes} vignette(s) lue(s) par les lecteurs d’écran, en double du texte`);
                 exige(!cv.debordent.length, `${ici} : le texte dépasse la hauteur de la vignette — ${cv.debordent.join(', ')}`);
+                exige(!cv.coupes.length, `${ici} : du texte est coupé — ${cv.coupes.join(', ')}`);
                 // Un pixel de jeu : la première ligne d'une liste n'a pas le
                 // filet de séparation des suivantes.
                 cv.ecarts.forEach((e, i) => {
@@ -1391,6 +1598,11 @@ function exige(condition, message) {
                 // s'ouvre par le passage : son montage n'est posé qu'après.
                 await p.waitForFunction(() => !document.documentElement.classList.contains('vt-univers'), null, { timeout: 8000 });
                 await p.waitForTimeout(400);
+                // Ouvert sans passage, le panneau se déplie depuis la ligne ;
+                // la lumière et le titre détouré ne sont mesurés qu'à la fin
+                // du dépliement (voir finDuDepliement, univers.js).
+                await p.waitForFunction(() => !document.getElementById('show-universe').style.clipPath, null, { timeout: 3000 }).catch(() => { });
+                await p.waitForTimeout(150);
                 await nette();
                 const panneau = await p.evaluate(releve);
                 await p.goto(`${base}/spectacles/${slug}/`, { waitUntil: 'load' });
@@ -1906,10 +2118,17 @@ function exige(condition, message) {
             // pose vers 1,5 s après le geste, comme avant le chantier. Au-delà
             // de cinq secondes, c'est un vrai défaut, et les exigences
             // ci-dessous disent lequel.
+            // ET QUE LE GLISSEMENT SOIT FINI : la pastille glisse sur un
+            // ressort (--ease-ressort), qui dépasse sa cible puis y revient.
+            // Mesurée au vol, elle passait par l'onglet pendant le dépassement
+            // — l'attente s'arrêtait là, et la mesure suivante la trouvait
+            // 4 px plus loin, en plein retour.
             await p.waitForFunction(() => {
                 const t = document.getElementById('tab-page_dates').getBoundingClientRect();
-                const pa = document.querySelector('.onglet-pastille').getBoundingClientRect();
+                const pastille = document.querySelector('.onglet-pastille');
+                const pa = pastille.getBoundingClientRect();
                 return document.querySelector('.page.active')?.id === 'page_dates'
+                    && !pastille.getAnimations().some((a) => a.playState === 'running')
                     && Math.abs(t.left - pa.left) + Math.abs(t.width - pa.width) < 2;
             }, null, { timeout: 5000 }).catch(() => { /* voir les exigences */ });
             const onglet = await p.evaluate(() => {
@@ -2074,6 +2293,356 @@ function exige(condition, message) {
             await c.close();
         });
 
+        // ── LA FEUILLE D'AGENDA, AU TÉLÉPHONE ──
+        // Sous 768 px, la fenêtre d'agenda est une feuille posée au bas de
+        // l'écran, au-dessus de la barre d'onglets, qu'on referme en la
+        // tirant vers le bas par sa poignée (de vrais touchers : la prise ne
+        // doit pas défiler, sans quoi le navigateur coupe le suivi). Un petit
+        // glissement la rend à sa place ; un lancer bref la renvoie, même
+        // court. « Partager cette date » envoie le texte de la date et le lien
+        // de la page du spectacle, ou les copie sans partage du navigateur.
+        // En mouvement réduit, elle paraît sans glisser ; sur ordinateur, la
+        // fenêtre reste au centre, sans poignée. La date fictive, un jeudi
+        // 12 novembre lointain, ne dépend pas de la saison.
+        await verifie('la fenêtre d’agenda au téléphone : une feuille collée en bas, au-dessus de la barre d’onglets, qu’on referme en la tirant vers le bas — un petit glissement la rend, un lancer la renvoie ; « Partager cette date » partage, ou copie ; sans glissement en mouvement réduit, et au centre sur ordinateur', async () => {
+            const preparer = async (options) => {
+                const c = await visiteur(Object.assign({ permissions: ['clipboard-read', 'clipboard-write'] }, options));
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.goto(base + '/#page_dates', { waitUntil: 'load' });
+                await p.waitForTimeout(800);
+                await p.evaluate(() => {
+                    SHOW_DATA.upcoming = [{
+                        type: 'single', title: 'Bérénice', location: 'Le Forum, Falaise (14)', city: 'Falaise',
+                        dateLabel: '12 nov. 2099', icsDate: '2099-11-12', time: '20h00', bookingUrl: '', isSchool: false
+                    }];
+                    datesMisesAJour();
+                });
+                const bouton = p.locator('#page_dates .dl-agenda').first();
+                await bouton.scrollIntoViewIfNeeded();
+                await p.waitForTimeout(300);
+                return { c, p, erreurs, bouton };
+            };
+            const lire = (p) => p.evaluate(() => {
+                const m = document.getElementById('calendar-modal');
+                const k = document.getElementById('calendar-modal-card');
+                const r = k.getBoundingClientRect();
+                return {
+                    cachee: m.hidden, haut: r.top, bas: r.bottom, gauche: r.left, droite: r.right,
+                    vh: innerHeight, vw: innerWidth,
+                    surLeBouton: !!document.activeElement?.classList.contains('dl-agenda'),
+                    inertes: [...document.body.children].filter((e) => e.inert).length,
+                    fige: getComputedStyle(document.documentElement).overflowY === 'hidden'
+                };
+            });
+
+            // ── Au téléphone ──
+            const { c, p, erreurs, bouton } = await preparer({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            await bouton.tap();
+            await p.waitForTimeout(600);
+            const feuille = await p.evaluate(() => {
+                const m = document.getElementById('calendar-modal');
+                const k = document.getElementById('calendar-modal-card');
+                const s = getComputedStyle(k);
+                const poignee = k.querySelector('.cal-poignee');
+                const croix = k.querySelector('.cal-fermer').getBoundingClientRect();
+                const partage = document.getElementById('cal-option-partager');
+                // Ce qui est au-dessus, là où est la barre d'onglets : la
+                // page sous la feuille est inerte, et un élément inerte
+                // échappe au test de position — on la rend vivante le temps
+                // de regarder.
+                const barre = document.getElementById('nav-barre').getBoundingClientRect();
+                const inertes = [...document.body.children].filter((e) => e.inert);
+                inertes.forEach((e) => { e.inert = false; });
+                const dessus = document.elementFromPoint(barre.left + barre.width / 2, barre.top + barre.height / 2);
+                inertes.forEach((e) => { e.inert = true; });
+                return {
+                    dialogue: m.getAttribute('role') === 'dialog' && m.getAttribute('aria-modal') === 'true'
+                        && !!document.getElementById(m.getAttribute('aria-labelledby'))?.textContent.trim(),
+                    coins: [s.borderTopLeftRadius, s.borderTopRightRadius, s.borderBottomLeftRadius, s.borderBottomRightRadius].map(parseFloat),
+                    poignee: !!poignee && poignee.getBoundingClientRect().height > 0,
+                    prise: [...k.querySelectorAll('[data-feuille-prise]')].map((x) => getComputedStyle(x).touchAction),
+                    croix: [croix.width, croix.height],
+                    auDessus: !!dessus && k.contains(dessus),
+                    partage: !!partage && partage.getBoundingClientRect().height >= 44 && /Partager cette date/.test(partage.textContent),
+                    dedans: !!document.activeElement?.closest('#calendar-modal')
+                };
+            });
+            const ouverte = await lire(p);
+            exige(feuille.dialogue && feuille.dedans, `la feuille n’est plus une fenêtre accessible (rôle, nom, focus) : ${JSON.stringify(feuille)}`);
+            exige(!ouverte.cachee && Math.abs(ouverte.bas - ouverte.vh) <= 1 && ouverte.gauche <= 1 && Math.abs(ouverte.droite - ouverte.vw) <= 1,
+                `la feuille n’est pas posée au bas de l’écran, d’un bord à l’autre : ${JSON.stringify(ouverte)}`);
+            exige(feuille.coins[0] >= 12 && feuille.coins[1] >= 12 && !feuille.coins[2] && !feuille.coins[3], `les coins de la feuille : ${feuille.coins.join(', ')}`);
+            exige(feuille.poignee && feuille.prise.length >= 2 && feuille.prise.every((x) => x === 'none'),
+                `la poignée manque, ou la prise défile au lieu de suivre le doigt : ${JSON.stringify(feuille.prise)}`);
+            exige(feuille.croix[0] >= 44 && feuille.croix[1] >= 44, `la croix fait ${feuille.croix.join(' × ')} px au doigt (44 au moins)`);
+            exige(feuille.auDessus, 'la barre d’onglets passe au-dessus de la feuille');
+            exige(feuille.partage, '« Partager cette date » manque à la feuille, ou fait moins de 44 px');
+
+            // De vrais touchers sur la poignée.
+            const cdp = await c.newCDPSession(p);
+            const toucher = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] });
+            const prise = await p.evaluate(() => {
+                const r = document.querySelector('#calendar-modal .cal-poignee').getBoundingClientRect();
+                return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+            });
+            const glisser = async (pas, ecart, attente) => {
+                await toucher('touchStart', prise.x, prise.y);
+                for (let i = 1; i <= pas; i++) {
+                    await toucher('touchMove', prise.x, prise.y + i * ecart);
+                    await p.waitForTimeout(attente);
+                }
+            };
+            // Un petit glissement, lent : la feuille suit, puis revient.
+            await glisser(4, 10, 40);
+            const suivie = await lire(p);
+            await toucher('touchEnd');
+            await p.waitForTimeout(600);
+            const rendue = await lire(p);
+            exige(suivie.bas > suivie.vh + 30, `la feuille ne suit pas le doigt (${Math.round(suivie.bas - suivie.vh)} px pour 40)`);
+            exige(!rendue.cachee && Math.abs(rendue.bas - rendue.vh) <= 1, `un petit glissement ne rend pas la feuille à sa place : ${JSON.stringify(rendue)}`);
+            // Tirée loin : elle se referme, et tout revient comme à la croix.
+            await glisser(16, 20, 20);
+            await toucher('touchEnd');
+            await p.waitForTimeout(700);
+            const tiree = await lire(p);
+            exige(tiree.cachee && tiree.surLeBouton && !tiree.inertes && !tiree.fige,
+                `tirée vers le bas, la feuille ne se referme pas, ou ne rend pas la page : ${JSON.stringify(tiree)}`);
+            // Un lancer bref (60 px en une quinzaine de millisecondes) : en
+            // dessous du seuil de distance, c'est la vitesse qui la renvoie.
+            await bouton.tap();
+            await p.waitForTimeout(600);
+            await p.evaluate(() => {
+                const poignee = document.querySelector('#calendar-modal .cal-poignee');
+                const r = poignee.getBoundingClientRect();
+                const x = r.left + r.width / 2, y = r.top + r.height / 2;
+                const patienter = (ms) => { const f = performance.now() + ms; while (performance.now() < f) { /* l'horloge avance */ } };
+                const pousser = (type, dy) => poignee.dispatchEvent(new PointerEvent(type, {
+                    bubbles: true, cancelable: true, pointerId: 7, pointerType: 'touch', isPrimary: true, clientX: x, clientY: y + dy
+                }));
+                pousser('pointerdown', 0);
+                [20, 40, 60].forEach((dy) => { patienter(5); pousser('pointermove', dy); });
+                patienter(3);
+                pousser('pointerup', 60);
+            });
+            await p.waitForTimeout(700);
+            const lancee = await lire(p);
+            exige(lancee.cachee && lancee.surLeBouton, `un lancer bref vers le bas ne renvoie pas la feuille : ${JSON.stringify(lancee)}`);
+
+            // « Partager cette date » : le texte de la date et la page du
+            // spectacle, à la feuille de partage du téléphone…
+            await bouton.tap();
+            await p.waitForTimeout(600);
+            await p.evaluate(() => {
+                window.__partage = null;
+                Object.defineProperty(navigator, 'share', {
+                    configurable: true, value: (d) => { window.__partage = d; return Promise.resolve(); }
+                });
+            });
+            await p.locator('#cal-option-partager').tap();
+            await p.waitForTimeout(700);
+            const partage = await p.evaluate(() => window.__partage);
+            const apresPartage = await lire(p);
+            exige(partage && partage.text === 'Bérénice — jeu. 12 nov. à 20h00, Le Forum, Falaise (14)'
+                && partage.url === 'https://adrienvada.fr/spectacles/berenice/',
+                `« Partager cette date » n’envoie pas la date et la page du spectacle : ${JSON.stringify(partage)}`);
+            exige(apresPartage.cachee && apresPartage.surLeBouton, 'la date partagée, la fenêtre reste ouverte');
+            // … ou copiés, sans partage du navigateur, et la ligne le dit.
+            await p.evaluate(() => Object.defineProperty(navigator, 'share', { configurable: true, value: undefined }));
+            await bouton.tap();
+            await p.waitForTimeout(600);
+            const aideAvant = await p.evaluate(() => document.getElementById('cal-partager-aide').textContent.trim());
+            await p.locator('#cal-option-partager').tap();
+            await p.waitForTimeout(400);
+            const copie = await p.evaluate(async () => ({
+                presse: await navigator.clipboard.readText().catch(() => ''),
+                aide: document.getElementById('cal-partager-aide').textContent.trim(),
+                annonce: document.getElementById('annonce-copie').textContent,
+                dedans: !!document.activeElement?.closest('#calendar-modal')
+            }));
+            exige(/^Copier/.test(aideAvant), `sans partage du navigateur, la ligne ne dit pas qu’elle copie : « ${aideAvant} »`);
+            exige(copie.presse === 'Bérénice — jeu. 12 nov. à 20h00, Le Forum, Falaise (14)\nhttps://adrienvada.fr/spectacles/berenice/',
+                `le texte copié : ${JSON.stringify(copie.presse)}`);
+            exige(/^Copiée/.test(copie.aide) && /^Date copiée : Bérénice/.test(copie.annonce) && copie.dedans,
+                `la copie n’est pas dite, ou le focus a quitté la fenêtre : ${JSON.stringify(copie)}`);
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(600);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+
+            // ── En mouvement réduit : posée d'emblée, sans glisser ──
+            const calme = await preparer({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
+            await calme.bouton.tap();
+            await calme.p.waitForTimeout(100);
+            const posee = await lire(calme.p);
+            exige(!posee.cachee && Math.abs(posee.bas - posee.vh) <= 1 && posee.haut > posee.vh / 3,
+                `en mouvement réduit, la feuille glisse encore (100 ms après le toucher : ${JSON.stringify(posee)})`);
+            await calme.p.keyboard.press('Escape');
+            await calme.p.waitForTimeout(150);
+            exige((await lire(calme.p)).cachee, 'en mouvement réduit, la feuille ne disparaît pas d’un coup');
+            exige(!calme.erreurs.length, calme.erreurs.join(' | '));
+            await calme.c.close();
+
+            // ── Sur ordinateur : la fenêtre d'avant, au centre ──
+            const ordi = await preparer({ viewport: { width: 1440, height: 900 } });
+            await ordi.bouton.click();
+            await ordi.p.waitForTimeout(600);
+            const centre = await ordi.p.evaluate(() => {
+                const r = document.getElementById('calendar-modal-card').getBoundingClientRect();
+                return {
+                    ecart: Math.abs((r.top + r.bottom) / 2 - innerHeight / 2), largeur: r.width,
+                    poignee: getComputedStyle(document.querySelector('#calendar-modal .cal-poignee')).display,
+                    partage: !!document.getElementById('cal-option-partager')?.offsetParent
+                };
+            });
+            exige(centre.ecart < 30 && centre.largeur <= 448 && centre.poignee === 'none' && centre.partage,
+                `sur ordinateur, la fenêtre d’agenda n’est plus celle d’avant (au centre, sans poignée) : ${JSON.stringify(centre)}`);
+            exige(!ordi.erreurs.length, ordi.erreurs.join(' | '));
+            await ordi.c.close();
+        });
+
+        // ── L'AGENDA À S'ABONNER ──
+        // dates.ics est fabriqué par build/fabriquer-agenda.js, que lance le
+        // générateur des pages. Il doit être refait après chaque export des
+        // dates (sinon les abonnés retardent sans bruit), et rester un
+        // iCalendar que tous les agendas lisent : lignes CRLF de 75 octets
+        // au plus, blocs appariés, un UID par événement. Il annonce chaque
+        // séance publique de dates.js (passée de moins de 60 jours au jour
+        // de la copie, ou à venir), et jamais une séance scolaire.
+        await verifie('l’agenda à s’abonner (dates.ics) : à jour avec dates.js, des lignes CRLF de 75 octets au plus, chaque BEGIN fermé par son END, des UID uniques, chaque séance publique et aucune scolaire — et l’onglet Dates y mène', async () => {
+            const AGENDA = require('./fabriquer-agenda.js');
+            const texte = fs.readFileSync(path.join(RACINE, 'dates.ics'), 'utf8');
+            exige(texte === AGENDA.fabriquer(RACINE).texte, 'dates.ics n’est pas à jour avec dates.js et univers.js : npm --prefix build run pages');
+            exige(!/(^|[^\r])\n/.test(texte) && !/\r(?!\n)/.test(texte) && texte.endsWith('\r\n'), 'dates.ics : une fin de ligne n’est pas CRLF');
+            const physiques = texte.slice(0, -2).split('\r\n');
+            const longues = physiques.filter((l) => Buffer.byteLength(l, 'utf8') > 75);
+            exige(!longues.length, `dates.ics : ${longues.length} ligne(s) de plus de 75 octets, dont « ${(longues[0] || '').slice(0, 40)}… »`);
+            const lignes = texte.slice(0, -2).replace(/\r\n[ \t]/g, '').split('\r\n');
+            const pile = [];
+            lignes.forEach((l) => {
+                const m = l.match(/^(BEGIN|END):(.+)$/);
+                if (!m) return;
+                if (m[1] === 'BEGIN') pile.push(m[2]);
+                else exige(pile.pop() === m[2], `dates.ics : END:${m[2]} ne ferme pas le bloc ouvert`);
+            });
+            exige(!pile.length && lignes[0] === 'BEGIN:VCALENDAR' && lignes[lignes.length - 1] === 'END:VCALENDAR',
+                `dates.ics : des blocs restent ouverts (${pile.join(', ')})`);
+            ['VERSION:2.0', 'X-WR-CALNAME:Adrien Vada — dates', 'REFRESH-INTERVAL;VALUE=DURATION:P1D', 'X-PUBLISHED-TTL:P1D', 'TZID:Europe/Paris']
+                .forEach((x) => exige(lignes.includes(x), `dates.ics : « ${x} » manque`));
+
+            const evenements = [];
+            let ev = null;
+            lignes.forEach((l) => {
+                if (l === 'BEGIN:VEVENT') ev = {};
+                else if (l === 'END:VEVENT') { evenements.push(ev); ev = null; }
+                else if (ev) {
+                    const i = l.indexOf(':');
+                    ev[l.slice(0, i).split(';')[0]] = { tete: l.slice(0, i), valeur: l.slice(i + 1) };
+                }
+            });
+            const lisible = (v) => v.replace(/\\n/gi, '\n').replace(/\\([,;\\])/g, '$1');
+            evenements.forEach((e) => {
+                exige(e.UID && e.DTSTAMP && e.DTSTART && e.DTEND && e.SUMMARY && e.LOCATION && e.URL,
+                    `dates.ics : un événement incomplet (${Object.keys(e).join(', ')})`);
+                exige(/^\d{8}T\d{6}Z$/.test(e.DTSTAMP.valeur), `dates.ics : DTSTAMP « ${e.DTSTAMP.valeur} »`);
+                exige(/^DTSTART(;TZID=Europe\/Paris|;VALUE=DATE)$/.test(e.DTSTART.tete), `dates.ics : « ${e.DTSTART.tete} » — l’heure de Paris, ou le jour seul`);
+                exige(/^https:\/\//.test(e.URL.valeur), `dates.ics : URL « ${e.URL.valeur} »`);
+            });
+            const uids = evenements.map((e) => e.UID.valeur);
+            exige(new Set(uids).size === uids.length, 'dates.ics : deux événements portent le même UID');
+
+            // Ce que la copie annonce, relu ici à part : chaque séance
+            // publique — une par heure —, et aucune scolaire.
+            const source = fs.readFileSync(path.join(RACINE, 'dates.js'), 'utf8');
+            const copie = AGENDA.dateDeLaCopie(source);
+            exige(copie, 'dates.js : la ligne « Dernier export : … » ne se lit plus, et c’est elle qui date dates.ics (voir build/fabriquer-agenda.js)');
+            const depuis = AGENDA.decaler(copie.jour, -AGENDA.JOURS_GARDES);
+            const donnees = new Function(source + '; return SHOW_DATA;')();
+            const publiques = [], scolaires = [];
+            donnees.upcoming.forEach((e) => (e.type === 'series' ? e.shows : [e]).forEach((r) => {
+                if (!r.icsDate || r.icsDate < depuis) return;
+                const brute = Array.isArray(r.times) ? r.times.join(' & ') : String(r.time || '');
+                const heures = /confirmer/i.test(brute) ? [] : [...brute.matchAll(/(\d{1,2})\s*[hH:]\s*(\d{2})?/g)];
+                const jour = r.icsDate.replace(/-/g, '');
+                const debuts = heures.length ? heures.map((h) => `${jour}T${h[1].padStart(2, '0')}${h[2] || '00'}00`) : [jour];
+                debuts.forEach((debut) => ((r.isSchool || e.isSchool) ? scolaires : publiques).push({ debut, lieu: e.location, titre: e.title }));
+            }));
+            const annonce = (s) => evenements.some((x) => x.DTSTART.valeur === s.debut && lisible(x.LOCATION.valeur) === s.lieu);
+            const manquantes = publiques.filter((s) => !annonce(s));
+            exige(!manquantes.length, `dates.ics n’annonce pas : ${manquantes.map((s) => `${s.titre} ${s.debut}`).join(', ')}`);
+            exige(evenements.length === publiques.length, `dates.ics annonce ${evenements.length} événement(s) pour ${publiques.length} séance(s) publique(s)`);
+            const intruses = scolaires.filter((s) => annonce(s) && !publiques.some((x) => x.debut === s.debut && x.lieu === s.lieu));
+            exige(!intruses.length, `dates.ics annonce une séance scolaire : ${intruses.map((s) => `${s.titre} ${s.debut}`).join(', ')}`);
+
+            // Servi comme un agenda, et l'onglet Dates y mène : webcal pour
+            // Calendrier et Outlook, l'adresse d'abonnement de Google Agenda
+            // (cid=webcal://…), et l'adresse https à copier.
+            const servi = await fetch(base + '/dates.ics');
+            exige(servi.ok && /^text\/calendar/.test(servi.headers.get('content-type') || ''), `dates.ics servi en « ${servi.headers.get('content-type')} »`);
+            const accueil = fs.readFileSync(path.join(RACINE, 'index.html'), 'utf8');
+            const bloc = (accueil.match(/<div class="dates-abonnement[^"]*"[\s\S]*?<\/div>/) || [''])[0];
+            exige(/no-print/.test(bloc) && /href="webcal:\/\/adrienvada\.fr\/dates\.ics"/.test(bloc)
+                && bloc.includes('href="https://calendar.google.com/calendar/render?cid=webcal%3A%2F%2Fadrienvada.fr%2Fdates.ics"')
+                && /data-copier="https:\/\/adrienvada\.fr\/dates\.ics"/.test(bloc)
+                && (bloc.match(/data-track="agenda_abonnement"/g) || []).length === 3,
+                'l’onglet Dates ne propose pas l’abonnement (webcal, Google Agenda, l’adresse https à copier, la mesure agenda_abonnement), ou l’imprime');
+        });
+
+        // ── S'ABONNER SUR ANDROID ──
+        //  Aucune application d'Android n'ouvre webcal:// (sur un Pixel, le
+        //  toucher ne faisait rien), et Google Agenda n'accepte un abonnement
+        //  que depuis un ordinateur. Sur Android, le lien webcal s'efface, et
+        //  celui de Google Agenda devient un bouton qui envoie le lien (la
+        //  feuille de partage), ou le copie quand le partage échoue.
+        await verifie('s’abonner à l’agenda : webcal et Google Agenda sur ordinateur ; sur Android, un bouton qui envoie le lien Google Agenda, ou le copie', async () => {
+            const GOOGLE = 'https://calendar.google.com/calendar/render?cid=webcal%3A%2F%2Fadrienvada.fr%2Fdates.ics';
+            const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await p.waitForTimeout(400);
+            const bureau = await p.evaluate(() => [...document.querySelectorAll('.dates-abonnement [data-abonnement]')]
+                .map((e) => `${e.getAttribute('data-abonnement')} ${e.getAttribute('href')} ${e.getAttribute('target') || ''}`.trim()));
+            exige(bureau.join(' | ') === `webcal webcal://adrienvada.fr/dates.ics | google ${GOOGLE} _blank`, `sur ordinateur, l’abonnement propose : ${bureau.join(' | ')}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+
+            const ca = await visiteur({
+                viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2,
+                userAgent: 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36'
+            });
+            const pa = await ca.newPage();
+            const erreursA = guette(pa);
+            await pa.addInitScript(() => {
+                Object.defineProperty(Navigator.prototype, 'share', { configurable: true, value(d) { window.__partage = d; return Promise.resolve(); } });
+            });
+            await pa.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await pa.waitForTimeout(400);
+            const android = await pa.evaluate(() => ({
+                liens: [...document.querySelectorAll('.dates-abonnement [data-abonnement]')].map((e) => `${e.tagName.toLowerCase()} ${e.getAttribute('data-abonnement')}`).join(' | '),
+                texte: document.querySelector('[data-abonnement="android"]')?.textContent.trim(),
+                aide: document.querySelector('.dates-abonnement-aide').textContent
+            }));
+            exige(android.liens === 'button android' && /lien d’abonnement/.test(android.texte || '') && /ordinateur/.test(android.aide),
+                `sur Android, l’abonnement propose « ${android.liens} » (« ${android.texte} »)`);
+            await pa.locator('[data-abonnement="android"]').scrollIntoViewIfNeeded();
+            await pa.tap('[data-abonnement="android"]');
+            await pa.waitForTimeout(200);
+            const partage = await pa.evaluate(() => window.__partage || null);
+            exige(partage && partage.url === GOOGLE && /ordinateur/.test(partage.text || ''), `le bouton d’Android ne partage pas le lien de Google Agenda (${JSON.stringify(partage)})`);
+            // Quand le partage échoue (autre chose qu'une annulation), le lien est copié.
+            await pa.evaluate(() => {
+                Object.defineProperty(Navigator.prototype, 'share', { configurable: true, value() { return Promise.reject(new DOMException('refusé', 'NotAllowedError')); } });
+                window.copierTexte = (texte) => { window.__copie = texte; return Promise.resolve(true); };
+            });
+            await pa.tap('[data-abonnement="android"]');
+            await pa.waitForTimeout(200);
+            const copie = await pa.evaluate(() => ({ texte: window.__copie || '', aide: document.querySelector('.dates-abonnement-aide').textContent }));
+            exige(copie.texte === GOOGLE && /Lien copié/.test(copie.aide), `sans partage, le lien n’est pas copié (« ${copie.texte} », « ${copie.aide} »)`);
+            exige(!erreursA.length, erreursA.join(' | '));
+            await ca.close();
+        });
+
         await verifie('le book : fermer puis rouvrir aussitôt ne laisse pas une page morte', async () => {
             const c = await visiteur({ viewport: { width: 1100, height: 760 } });
             const p = await c.newPage();
@@ -2214,7 +2783,9 @@ function exige(condition, message) {
                 } else {
                     exige(etat.pointsHaut === 1 && etat.pleineHaut > 0.99, `${nom}, une ligne déjà lue n’est pas pleine avec son point (${etat.pleineHaut}, point × ${etat.pointsHaut})`);
                     exige(etat.pointsBas === 0, `${nom}, le point d’une ligne pas encore atteinte est déjà là (× ${etat.pointsBas})`);
-                    exige(etat.voileBas < 0.5, `${nom}, une ligne pas encore atteinte n’est pas voilée (${etat.voileBas})`);
+                    // Le voile est à .62 depuis l'audit d'octobre 2026 (il était à .38 :
+                    // une ligne voilée passait pour désactivée à l'arrêt).
+                    exige(etat.voileBas < 0.7, `${nom}, une ligne pas encore atteinte n’est pas voilée (${etat.voileBas})`);
                     exige(etat.ecartPointe < 12, `${nom}, la pointe du fil est à ${Math.round(etat.ecartPointe)} px de la ligne de lecture`);
                 }
                 exige(!etat.horloge, 'la guirlande à horloge est revenue');
@@ -2251,10 +2822,18 @@ function exige(condition, message) {
                     const t = getComputedStyle(li, '::before').transform;
                     return { voile: +getComputedStyle(li.querySelector('.cv-row-toggle')).opacity, point: t === 'none' ? 1 : +(t.match(/matrix\(([-\d.e]+)/) || [0, NaN])[1] };
                 });
-                await p.locator('#cv-theatre-list > li.cv-has-universe').nth(5).locator('.cv-vignette').hover();
+                // Au téléphone, la barre d'onglets flotte en bas de l'écran :
+                // le milieu de la vignette, si bas, est sous elle — le survol
+                // de Playwright ferait alors défiler la page pour l'atteindre,
+                // et la ligne passerait la ligne de lecture. Le pointeur va
+                // donc droit sur le haut de la vignette, qui dépasse au-dessus
+                // de la barre, sans rien faire défiler.
+                const vignette = await p.locator('#cv-theatre-list > li.cv-has-universe').nth(5).locator('.cv-vignette').boundingBox();
+                await p.mouse.move(vignette.x + vignette.width / 2, vignette.y + (options.isMobile ? 4 : vignette.height / 2));
                 await p.waitForTimeout(250);
                 const survol = await lire();
-                if (options.isMobile) exige(survol.voile < 0.5, `${appareil}, une ligne touchée avant le fil s’allume (${survol.voile})`);
+                // Voilée à .62 depuis l'audit d'octobre 2026 : pleine, elle serait à 1.
+                if (options.isMobile) exige(survol.voile < 0.7, `${appareil}, une ligne touchée avant le fil s’allume (${survol.voile})`);
                 else exige(survol.voile > 0.99, `${appareil}, la ligne pointée reste voilée (${survol.voile})`);
                 exige(survol.point === 0, `${appareil}, le point d’une ligne désignée éclôt avant le fil (× ${survol.point})`);
                 // Au clavier : depuis la ligne d'après, Maj+Tab.
@@ -2706,7 +3285,7 @@ function exige(condition, message) {
                 l: document.querySelector('#en-tete .affiche-cadre').getBoundingClientRect().width,
                 police: getComputedStyle(document.querySelector('#en-tete h1')).fontFamily
             }));
-            exige(papier.l <= 72 && /Montserrat/.test(papier.police), `l’en-tête imprimé a changé (${papier.l.toFixed(0)} px, ${papier.police})`);
+            exige(papier.l <= 72 && /Inter/.test(papier.police), `l’en-tête imprimé a changé (${papier.l.toFixed(0)} px, ${papier.police})`);
             await c.close();
         });
 
@@ -2896,6 +3475,205 @@ function exige(condition, message) {
             exige(suit === 'true', 'le halo ne suit pas l’extrait que le lecteur annonce');
             await p.keyboard.press('Escape');
             await p.waitForTimeout(600);
+            exige(await p.evaluate(() => !document.getElementById('video-iframe').getAttribute('src')), 'le lecteur continue une fois la salle rallumée');
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        await verifie('la salle de projection : la durée de la bande démo sous l’écran, et ses extraits en chapitres, chacun de son début à sa fin', async () => {
+            // La durée (DUREE, dans le script) n'est écrite nulle part
+            // ailleurs : si la bande démo change, ces trois endroits doivent
+            // changer ensemble — le texte sous l'écran, la fin du dernier
+            // chapitre, la constante.
+            const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#demos_camera', { waitUntil: 'load' });
+            await p.waitForTimeout(600);
+            const r = await p.evaluate(() => ({
+                duree: salle.DUREE, debuts: salle.DEBUTS,
+                affichee: document.querySelector('#salle [data-salle-duree]').textContent.trim(),
+                datetime: document.querySelector('#salle [data-salle-duree]').getAttribute('datetime'),
+                chapitres: [...document.querySelectorAll('#salle .bobine [data-salle-debut]')].map((b) => ({
+                    debut: +b.dataset.salleDebut,
+                    numero: b.querySelector('.chapitre-numero')?.textContent.trim(),
+                    titre: b.querySelector('b')?.textContent.trim(),
+                    temps: [...b.querySelectorAll('.chapitre-temps time')].map((t) => t.textContent.trim())
+                })),
+                nom: document.querySelector('#salle .salle-ecran').getAttribute('aria-label')
+            }));
+            const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+            exige(r.duree > (r.debuts[r.debuts.length - 1] || 0), `la durée de la bande démo (${r.duree} s) ne dépasse pas le début du dernier extrait`);
+            exige(r.affichee === mmss(r.duree) && r.datetime === `PT${Math.floor(r.duree / 60)}M${r.duree % 60}S`,
+                `la durée sous l’écran (${r.affichee}, ${r.datetime}) n’est pas celle de DUREE (${mmss(r.duree)})`);
+            exige(r.chapitres.length === r.debuts.length, `${r.chapitres.length} chapitre(s) pour ${r.debuts.length} extraits`);
+            r.chapitres.forEach((ch, i) => {
+                const fin = i + 1 < r.debuts.length ? r.debuts[i + 1] : r.duree;
+                exige(ch.debut === r.debuts[i] && ch.numero === `Chapitre ${i + 1}` && ch.titre
+                    && JSON.stringify(ch.temps) === JSON.stringify([mmss(r.debuts[i]), mmss(fin)]),
+                    `le chapitre ${i + 1} ne va pas de son début à sa fin (${JSON.stringify(ch)})`);
+            });
+            exige(/Lancer la projection/.test(r.nom) && /3 min 01/.test(r.nom), `l’écran ne dit pas ce qu’il lance, ni sa durée (« ${r.nom} »)`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        await verifie('l’aperçu de la bande démo : rien avant l’onglet Caméra ni avant que l’écran soit à l’écran ; deux tours de photos en fondu, en transformation et opacité seulement, puis l’affiche, et plus rien ; arrêté par son bouton, rendu à l’affiche quand on quitte l’onglet ; immobile en mouvement réduit et en économie de données', async () => {
+            const photos = (urls) => urls.filter((u) => /\/univers\/(hommemoderne\/[456]|lerapt\/[28])-\d+\.webp$/.test(u));
+            // ── Les tours, au rythme raccourci (--apercu-plan, dans la
+            //    feuille : le script le lit). ──
+            {
+                const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                const demandes = [];
+                p.on('request', (q) => demandes.push({ url: q.url(), t: Date.now() }));
+                await p.goto(base + '/', { waitUntil: 'load' });
+                await p.waitForTimeout(1200);
+                exige(!photos(demandes.map((d) => d.url)).length, 'les photos de l’aperçu partent avec l’accueil');
+                exige(await p.evaluate(() => !document.querySelector('#salle .apercu-plan') && document.getElementById('salle').dataset.apercu === 'repos'),
+                    'l’aperçu est fabriqué avant l’ouverture de l’onglet Caméra');
+                await p.addStyleTag({ content: '#salle { --apercu-plan: 350ms; --apercu-fondu: 120ms; }' });
+                // Ce que l'écran montre, dans l'ordre : le halo est prévenu à
+                // chaque photo (son index), et au retour à l'affiche (-1).
+                await p.evaluate(() => {
+                    window.__ecran = [];
+                    window.__mouvements = new Set();
+                    const vers = salle.montrerSurEcran;
+                    salle.montrerSurEcran = (img) => {
+                        window.__ecran.push(img ? [...document.querySelectorAll('#salle .apercu-plan img')].indexOf(img) : -1);
+                        // Ce qui bouge dans l'aperçu : seulement transformation et opacité.
+                        document.getAnimations().forEach((a) => {
+                            const cible = a.effect && a.effect.target;
+                            if (!cible || !cible.closest || !cible.closest('#salle .apercu')) return;
+                            if (a.transitionProperty) window.__mouvements.add(a.transitionProperty);
+                            else a.effect.getKeyframes().forEach((k) => Object.keys(k)
+                                .filter((x) => !['offset', 'easing', 'composite', 'computedOffset'].includes(x))
+                                .forEach((x) => window.__mouvements.add(x)));
+                        });
+                        return vers(img);
+                    };
+                });
+                const ouverture = Date.now();
+                await p.click('#tab-demos_camera');
+                await p.waitForFunction(() => document.getElementById('salle').dataset.apercu === 'fini', null, { timeout: 25000 });
+                await p.waitForTimeout(1500);
+                const r = await p.evaluate(() => ({
+                    ecran: window.__ecran, mouvements: [...window.__mouvements],
+                    plans: apercu.PLANS.length, tours: apercu.TOURS,
+                    vus: document.querySelectorAll('#salle .apercu-plan.est-vu, #salle .apercu-plan.en-mouvement').length,
+                    restent: document.querySelectorAll('#salle .apercu-plan').length,
+                    arret: document.querySelector('#salle .apercu-arret').hidden
+                }));
+                const attendu = [];
+                for (let t = 0; t < r.tours; t++) { for (let i = 0; i < r.plans; i++) attendu.push(i); attendu.push(-1); }
+                exige(r.tours >= 2 && r.tours <= 3, `l’aperçu joue ${r.tours} tour(s) : deux ou trois, pas plus`);
+                exige(JSON.stringify(r.ecran) === JSON.stringify(attendu),
+                    `l’écran ne passe pas ${r.tours} fois les ${r.plans} photos avant de revenir à l’affiche : ${JSON.stringify(r.ecran)}`);
+                exige(!r.vus && r.arret, `l’aperçu ne se pose pas sur l’affiche (${r.vus} photo(s) encore visibles ou en mouvement, bouton d’arrêt ${r.arret ? 'caché' : 'visible'})`);
+                exige(!r.restent, `posé, l’aperçu garde ses ${r.restent} photo(s) dans la page (et leur mémoire)`);
+                exige(r.mouvements.length && r.mouvements.every((m) => m === 'transform' || m === 'opacity'),
+                    `l’aperçu anime autre chose que la transformation et l’opacité : ${r.mouvements.join(', ')}`);
+                const parties = demandes.filter((d) => photos([d.url]).length);
+                exige(parties.length === r.plans && parties.every((d) => d.t >= ouverture),
+                    `les photos de l’aperçu partent ${parties.length} fois pour ${r.plans} photos, ou avant l’ouverture de l’onglet`);
+                // Revenir sur l'onglet ne rejoue pas l'aperçu.
+                await p.click('#tab-demos_voix');
+                await p.waitForTimeout(400);
+                await p.click('#tab-demos_camera');
+                await p.waitForTimeout(1500);
+                exige(await p.evaluate(() => window.__ecran.length) === attendu.length, 'l’aperçu rejoue alors qu’il s’est posé');
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+            // ── L'écran hors du champ, puis dedans ; quitter l'onglet ;
+            //    le bouton d'arrêt. ──
+            {
+                const c = await visiteur({ viewport: { width: 1280, height: 420 } });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                const demandes = [];
+                p.on('request', (q) => demandes.push(q.url()));
+                await p.goto(base + '/#demos_camera', { waitUntil: 'load' });
+                await p.waitForTimeout(1800);
+                const avant = await p.evaluate(() => {
+                    const r = document.querySelector('#salle .salle-ecran').getBoundingClientRect();
+                    return { vu: Math.max(0, Math.min(innerHeight, r.bottom) - Math.max(0, r.top)) / r.height, plans: document.querySelectorAll('#salle .apercu-plan').length };
+                });
+                exige(avant.vu < 0.5 && !avant.plans && !photos(demandes).length,
+                    `l’aperçu démarre sur un écran à ${Math.round(avant.vu * 100)} % dans la fenêtre`);
+                await p.evaluate(() => document.querySelector('#salle .salle-ecran').scrollIntoView({ block: 'center' }));
+                await p.waitForFunction(() => document.querySelector('#salle .apercu-plan.est-vu'), null, { timeout: 10000 });
+                await p.click('#tab-page_cv');
+                await p.waitForTimeout(400);
+                const quitte = await p.evaluate(() => ({ etat: document.getElementById('salle').dataset.apercu, vus: document.querySelectorAll('#salle .apercu-plan.est-vu').length, arret: document.querySelector('#salle .apercu-arret').hidden }));
+                exige(quitte.etat === 'repos' && !quitte.vus && quitte.arret, `quitter l’onglet ne rend pas l’affiche (${JSON.stringify(quitte)})`);
+                await p.click('#tab-demos_camera');
+                await p.evaluate(() => document.querySelector('#salle .salle-ecran').scrollIntoView({ block: 'center' }));
+                await p.waitForFunction(() => document.querySelector('#salle .apercu-plan.est-vu'), null, { timeout: 10000 });
+                const bouton = await p.evaluate(() => {
+                    const b = document.querySelector('#salle .apercu-arret');
+                    const r = b.getBoundingClientRect();
+                    return { nom: b.getAttribute('aria-label'), l: r.width, h: r.height, visible: !b.hidden };
+                });
+                exige(bouton.visible && /Arrêter/.test(bouton.nom) && bouton.l >= 44 && bouton.h >= 44, `pas de bouton pour arrêter l’aperçu (${JSON.stringify(bouton)})`);
+                await p.focus('#salle .apercu-arret');
+                await p.keyboard.press('Enter');
+                await p.waitForTimeout(300);
+                const arrete = await p.evaluate(() => ({
+                    etat: document.getElementById('salle').dataset.apercu,
+                    vus: document.querySelectorAll('#salle .apercu-plan.est-vu').length,
+                    focus: document.activeElement && document.activeElement.classList.contains('salle-ecran')
+                }));
+                exige(arrete.etat === 'fini' && !arrete.vus && arrete.focus, `le bouton n’arrête pas l’aperçu, ou perd le focus (${JSON.stringify(arrete)})`);
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+            // ── Ni en mouvement réduit, ni en économie de données. ──
+            const econome = () => Object.defineProperty(navigator, 'connection', { configurable: true, get: () => ({ saveData: true }) });
+            for (const [mode, options, init] of [['mouvement réduit', { reducedMotion: 'reduce' }, null], ['économie de données', {}, econome]]) {
+                const c = await visiteur({ viewport: { width: 1280, height: 900 }, ...options });
+                if (init) await c.addInitScript(init);
+                const p = await c.newPage();
+                const demandes = [];
+                p.on('request', (q) => demandes.push(q.url()));
+                await p.goto(base + '/#demos_camera', { waitUntil: 'load' });
+                await p.waitForTimeout(3000);
+                const r = await p.evaluate(() => ({ plans: document.querySelectorAll('#salle .apercu-plan').length, arret: document.querySelector('#salle .apercu-arret').hidden }));
+                exige(!r.plans && r.arret && !photos(demandes).length, `${mode} : l’aperçu joue (${r.plans} plan(s), ${photos(demandes).length} photo(s) demandée(s))`);
+                await c.close();
+            }
+        });
+
+        await verifie('la salle noire au téléphone couché : le lecteur prend toute la hauteur, au format 16:9, sans bobine ni halo, la croix à portée ; le plein écran ne fait pas d’erreur', async () => {
+            const c = await visiteur({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#demos_camera', { waitUntil: 'load' });
+            await p.waitForTimeout(800);
+            await p.locator('#salle .salle-ecran').tap();
+            await p.waitForTimeout(1300);
+            const r = await p.evaluate(() => {
+                const f = document.getElementById('video-iframe').getBoundingClientRect();
+                const x = document.querySelector('#video-modal-card button[aria-label="Fermer la vidéo"]').getBoundingClientRect();
+                const m = document.getElementById('video-modal');
+                return {
+                    ouverte: !m.hidden, f: { l: f.width, h: f.height, x: f.left, y: f.top }, vh: innerHeight, vw: innerWidth,
+                    x: { l: x.width, h: x.height, d: x.right, b: x.bottom },
+                    bobine: getComputedStyle(m.querySelector('.bobine--noire')).display,
+                    halo: getComputedStyle(m.querySelector('.salle-scene > .salle-halo')).display
+                };
+            });
+            exige(r.ouverte && r.f.h >= r.vh * 0.95, `le lecteur ne prend pas la hauteur de l’écran couché (${Math.round(r.f.h)} px sur ${r.vh})`);
+            exige(Math.abs(r.f.l / r.f.h - 16 / 9) < 0.02 && Math.abs(r.f.x + r.f.l / 2 - r.vw / 2) < 2, `le lecteur n’est pas un 16:9 centré (${JSON.stringify(r.f)})`);
+            exige(r.bobine === 'none' && r.halo === 'none', 'la bobine ou le halo restent dans la salle couchée');
+            exige(r.x.l >= 44 && r.x.h >= 44 && r.x.d <= r.vw && r.x.b <= r.vh, `la croix n’est pas à portée (${JSON.stringify(r.x)})`);
+            // Le plein écran (le bouton de YouTube, dans l'iframe) demande
+            // l'écran couché ; ailleurs, rien — et surtout pas d'erreur.
+            await p.evaluate(() => document.dispatchEvent(new Event('fullscreenchange')));
+            await p.waitForTimeout(100);
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(700);
             exige(await p.evaluate(() => !document.getElementById('video-iframe').getAttribute('src')), 'le lecteur continue une fois la salle rallumée');
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
@@ -3278,7 +4056,13 @@ function exige(condition, message) {
             exige(imgs.length >= 10 && paresseuses.slice(0, 9).every((x) => !x) && paresseuses.slice(9).every((x) => x), 'les neuf premières vues ne partent pas avec la page, ou les suivantes n’attendent pas');
             const devant = imgs.filter((m) => /fetchpriority="high"/.test(m[2])).length;
             exige(devant >= 1 && devant <= 2, `${devant} vue(s) en priorité haute`);
-            exige(imgs.every((m) => /^\(max-width: [\d.]+px\) calc\(100vw \* [\d.]+\), calc\(min\(100vw, 68rem\) \* [\d.]+\)$/.test(m[1])), 'les tailles écrites ne disent pas les deux planches (quatre colonnes au téléphone, cinq au-delà)');
+            // Les deux planches — quatre colonnes au téléphone, cinq au-delà —,
+            // et la largeur bornée à 68 rem SANS min(), que des navigateurs ne
+            // lisent pas dans `sizes` (ils prenaient la plus grande vignette).
+            // `auto, ` en tête pour les vignettes paresseuses, et pour elles
+            // seules (sizes="auto" n'a de sens qu'en loading="lazy").
+            exige(imgs.every((m, i) => new RegExp(`^${i < 9 ? '' : 'auto, '}\\(max-width: [\\d.]+px\\) calc\\(100vw \\* [\\d.]+\\), \\(max-width: 1088px\\) calc\\(100vw \\* [\\d.]+\\), \\d+px$`).test(m[1])),
+                'les tailles écrites ne disent pas les deux planches (quatre colonnes au téléphone, cinq au-delà), passent par min(), ou mettent « auto » ailleurs que sur les vignettes paresseuses');
             for (const [vue, dpr, mobile] of [[{ width: 390, height: 844 }, 3, true], [{ width: 412, height: 915 }, 1.75, true], [{ width: 1440, height: 900 }, 1, false]]) {
                 const c = await visiteur({ viewport: vue, deviceScaleFactor: dpr, isMobile: mobile, hasTouch: mobile });
                 const p = await c.newPage();
@@ -3563,6 +4347,453 @@ function exige(condition, message) {
             exige(!autres.length, `onglet Dates : ${autres.map((u) => u.split('/').slice(-2).join('/')).join(', ')} au lieu de la vignette recadrée`);
             exige(!couvertures.length, `l’accueil télécharge encore la couverture de 240 px : ${couvertures.join(', ')}`);
             exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        // ── L'EXPERTISE D'OCTOBRE 2026, CÔTÉ ACCUEIL ──
+        // Au téléphone, la barre d'onglets flotte en bas de l'écran, dans la
+        // zone du pouce, ses quatre destinations visibles dès l'arrivée, en
+        // mots courts ; sur grand écran elle reste en haut, en mots longs.
+        // L'adresse se copie, la fiche contact se télécharge, et plus aucun
+        // texte de l'accueil n'est sous les onze pixels.
+        await verifie('l’accueil d’après l’expertise : la barre d’onglets en bas au téléphone, en haut sur grand écran ; « Copier » l’adresse, la fiche contact ; rien sous onze pixels', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+            await c.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/', { waitUntil: 'load' });
+            await p.waitForTimeout(600);
+            const barre = await p.evaluate(() => {
+                const n = document.getElementById('nav-barre');
+                const r = n.getBoundingClientRect();
+                const visibles = (a) => [...a.querySelectorAll('span')].filter((s) => getComputedStyle(s).display !== 'none').map((s) => s.textContent.trim()).join('');
+                return {
+                    position: getComputedStyle(n).position, bas: innerHeight - r.bottom, haut: r.top,
+                    mots: [...document.querySelectorAll('#nav-tabs-container a')].map(visibles),
+                    cibles: [...document.querySelectorAll('#nav-tabs-container a')].map((a) => Math.round(a.getBoundingClientRect().height))
+                };
+            });
+            exige(barre.position === 'fixed' && barre.bas >= 0 && barre.bas < 40 && barre.haut > 600,
+                `au téléphone, la barre d’onglets n’est pas en bas de l’écran (${barre.position}, à ${Math.round(barre.haut)} px du haut)`);
+            exige(barre.mots.join('·') === 'CV·Dates·Caméra·Voix', `au téléphone, les onglets ne disent pas « CV · Dates · Caméra · Voix » (${barre.mots.join(' · ')})`);
+            exige(barre.cibles.every((h) => h >= 44), `au téléphone, un onglet fait moins de 44 px de haut (${barre.cibles.join(', ')})`);
+            // « Copier » met l'adresse dans le presse-papiers et le dit.
+            await p.locator('header [data-copier]').scrollIntoViewIfNeeded();
+            await p.click('header [data-copier]');
+            await p.waitForTimeout(300);
+            const copie = await p.evaluate(async () => ({
+                presse: await navigator.clipboard.readText(),
+                annonce: document.getElementById('annonce-copie')?.textContent || '',
+                vcard: document.querySelector('header a[href$=".vcf"]')?.getAttribute('href') || ''
+            }));
+            exige(copie.presse === 'adrien.vada@gmail.com' && /copiée/i.test(copie.annonce), `« Copier » : presse-papiers « ${copie.presse} », annonce « ${copie.annonce} »`);
+            const vcf = await p.evaluate(async (h) => { const r = await fetch(h); return { ok: r.ok, texte: await r.text() }; }, copie.vcard);
+            exige(vcf.ok && /^BEGIN:VCARD\r\n/.test(vcf.texte) && /FN:Adrien Vada/.test(vcf.texte) && /END:VCARD\r\n$/.test(vcf.texte),
+                'la fiche contact (.vcf) est absente ou mal formée');
+            // Rien sous onze pixels, dans les onglets CV et Dates (la seule
+            // exception écrite : « janv–févr », à dix et demi).
+            const petits = async () => p.evaluate(() => [...document.querySelectorAll('body *')].filter((e) => {
+                if (!e.offsetParent && getComputedStyle(e).position !== 'fixed') return false;
+                // .cv-cie : le mot « Compagnie », gardé à corps nul pour les
+                // lecteurs d'écran ; l'œil lit « Cie », dessiné à 12 px.
+                if (e.closest('svg, .sr-only, [aria-hidden="true"] .sr-only, .dl-bande--2, #intro-overlay, .td-fl, .cv-cie')) return false;
+                const texte = [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+                return texte && parseFloat(getComputedStyle(e).fontSize) < 10.99;
+            }).map((e) => `${e.className || e.tagName} (${getComputedStyle(e).fontSize})`).slice(0, 6));
+            const cv = await petits();
+            await p.click('#tab-page_dates');
+            await p.waitForTimeout(1200);
+            const dates = await petits();
+            exige(!cv.length && !dates.length, `du texte sous onze pixels : ${[...cv, ...dates].join(', ')}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+            // Sur grand écran, la barre reste en haut, en mots longs.
+            const c2 = await visiteur({ viewport: { width: 1280, height: 860 } });
+            const p2 = await c2.newPage();
+            await p2.goto(base + '/', { waitUntil: 'load' });
+            await p2.waitForTimeout(400);
+            const grand = await p2.evaluate(() => ({
+                position: getComputedStyle(document.getElementById('nav-barre')).position,
+                mots: [...document.querySelectorAll('#nav-tabs-container a')].map((a) => [...a.querySelectorAll('span')]
+                    .filter((s) => getComputedStyle(s).display !== 'none').map((s) => s.textContent.trim()).join(''))
+            }));
+            exige(grand.position === 'sticky' && grand.mots.join('·') === 'CV·Dates théâtres·Démos caméra·Démos voix',
+                `sur grand écran, la barre d’onglets a changé (${grand.position}, ${grand.mots.join(' · ')})`);
+            await c2.close();
+            // Le sigle TIOR s'explique au doigt : une bulle dans l'écran,
+            // qu'Échap referme, et qui n'existe pas sur papier.
+            const c3 = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const p3 = await c3.newPage();
+            await p3.goto(base + '/?direct', { waitUntil: 'load' });
+            await p3.waitForTimeout(500);
+            await p3.evaluate(() => document.querySelector('.sigle').scrollIntoView({ block: 'center' }));
+            await p3.waitForTimeout(200);
+            await p3.tap('.sigle');
+            await p3.waitForTimeout(200);
+            const bulle = await p3.evaluate(() => {
+                const e = document.getElementById('sigle-tior');
+                const r = e.getBoundingClientRect();
+                return { ouverte: e.matches(':popover-open'), dedans: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, lien: !!e.querySelector('a[href*="wikipedia"]') };
+            });
+            exige(bulle.ouverte && bulle.dedans && bulle.lien, `le sigle TIOR ne s’explique pas au doigt (${JSON.stringify(bulle)})`);
+            await p3.keyboard.press('Escape');
+            exige(await p3.evaluate(() => !document.getElementById('sigle-tior').matches(':popover-open')), 'Échap ne referme pas la bulle du sigle');
+            await p3.emulateMedia({ media: 'print' });
+            exige(await p3.evaluate(() => getComputedStyle(document.getElementById('sigle-tior')).display === 'none'), 'la bulle du sigle s’imprime');
+            await c3.close();
+        });
+
+        // ── L'EXPERTISE D'OCTOBRE 2026, CÔTÉ UNIVERS ──
+        // Le premier écran reste celui du travelling : on avance au milieu
+        // des photos jusqu'au titre, sans qu'il soit nommé d'avance — pour
+        // qui arrive d'un moteur de recherche comme pour qui vient du site.
+        // L'expertise y avait posé le titre en filigrane et la ligne de
+        // salle, et sauté le travelling depuis Google : Adrien a préféré
+        // l'ouverture d'avant. Ensuite, les dates du pied
+        // ont le dessin de l'onglet Dates, une série sur une ligne et un
+        // agenda qui demande la séance ; les chapitres se suivent et se
+        // touchent ; le pied finit sur le spectacle suivant ; et « Cléophène »
+        // tient dans l'écran du plus petit téléphone.
+        await verifie('les univers d’après l’expertise : le travelling d’abord, sans titre d’avance, même depuis un moteur de recherche ; les dates au dessin de l’onglet Dates, des chapitres qu’on touche, le spectacle suivant, un titre qui tient', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/spectacles/berenice/', { waitUntil: 'load' });
+            await p.waitForTimeout(900);
+            const premier = await p.evaluate(() => {
+                const scene = document.querySelector('.u-of-scene');
+                return {
+                    // Le fond, le titre (au fond du plateau), les plans, « Avancer »,
+                    // et la lettre de la fin (detourerLeTitre) : rien d'autre.
+                    filigrane: scene ? [...scene.children].filter((e) => !e.matches('.u-of-fond, .u-of-titre, .u-of-plans, .u-of-invite, .u-lettre'))
+                        .map((e) => e.getAttribute('class')).join(', ') : 'pas de travelling',
+                    invite: document.querySelector('.u-of-invite')?.textContent.trim() || '',
+                    pastille: document.querySelector('.u-chapitres')?.classList.contains('est-visible')
+                };
+            });
+            exige(!premier.filigrane && premier.invite === 'Avancer', `le premier écran nomme le spectacle d’avance (en plus du travelling : « ${premier.filigrane} » ; invitation « ${premier.invite} »)`);
+            exige(premier.pastille === false, 'la pastille des chapitres paraît dès le premier écran');
+            // Les chapitres : la pastille paraît avec le montage, et « Dates » mène au pied.
+            const chap = await p.evaluate(async () => {
+                const o = document.getElementById('show-universe');
+                o.scrollTop = o.scrollHeight * 0.4;
+                await new Promise((r) => setTimeout(r, 400));
+                const nav = document.querySelector('.u-chapitres');
+                return { visible: nav.classList.contains('est-visible'), n: nav.querySelectorAll('[data-u-chapitre]').length, reperes: document.querySelectorAll('.u-progress-repere').length };
+            });
+            exige(chap.visible && chap.n >= 4 && chap.reperes === chap.n - 1, `les chapitres : pastille ${chap.visible ? 'visible' : 'absente'}, ${chap.n} chapitre(s), ${chap.reperes} repère(s) sur la barre`);
+            await p.tap('.u-chapitres-bouton');
+            await p.tap('[data-u-chapitre="pied"]');
+            await p.waitForTimeout(1600);
+            const pied = await p.evaluate(() => {
+                const f = document.getElementById('u-foot').getBoundingClientRect();
+                return { haut: Math.round(f.top), nom: document.querySelector('[data-u-chapitre-nom]').textContent };
+            });
+            exige(Math.abs(pied.haut) < 40 && pied.nom === 'Dates', `« Dates » ne mène pas au pied (${pied.haut} px, chapitre « ${pied.nom} »)`);
+            // Les dates : une série sur une ligne, l'agenda demande la séance.
+            const serie = p.locator('#u-foot .u-dl--serie .u-date-cal').first();
+            exige(await serie.count(), 'aucune série sur une ligne au pied de Bérénice');
+            await serie.click();
+            await p.waitForTimeout(400);
+            const seances = await p.locator('#u-cal-modal [data-u-cal-seance]').count();
+            exige(seances >= 2, `l’agenda d’une série ne demande pas la séance (${seances} choix)`);
+            await p.keyboard.press('Escape');
+            // Le spectacle suivant, dans l'ordre du CV : As You Like It.
+            const suite = await p.evaluate(() => document.querySelector('.u-suivant a')?.getAttribute('href'));
+            exige(suite === '/spectacles/asyoulikeit/', `le pied de Bérénice ne mène pas à As You Like It (${suite})`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            // Depuis un moteur de recherche aussi, le travelling joue depuis le début.
+            const p2 = await c.newPage();
+            await p2.goto(base + '/spectacles/berenice/', { waitUntil: 'load', referer: 'https://www.google.com/' });
+            await p2.waitForTimeout(900);
+            const g = await p2.evaluate(() => document.getElementById('show-universe').scrollTop);
+            exige(g === 0, `depuis un moteur de recherche, la page saute le travelling (défilement ${g} px)`);
+            await c.close();
+            // Le titre le plus large tient dans le plus petit téléphone.
+            const c3 = await visiteur({ viewport: { width: 360, height: 740 }, isMobile: true, reducedMotion: 'reduce' });
+            const p3 = await c3.newPage();
+            await p3.goto(base + '/spectacles/cleophene/', { waitUntil: 'load' });
+            await p3.evaluate(() => document.fonts.ready);
+            const marge = await p3.evaluate(() => {
+                let g = 1e9, d = 0;
+                document.querySelectorAll('.u-title .u-word').forEach((w) => { const r = w.getBoundingClientRect(); g = Math.min(g, r.left); d = Math.max(d, r.right); });
+                return Math.round(Math.min(g, innerWidth - d));
+            });
+            exige(marge >= 16, `« Cléophène » ne laisse que ${marge} px au bord de l’écran à 360 px`);
+            await c3.close();
+        });
+
+        // ── L'AGENDA D'UNE DATE ──
+        //  Une seule fabrique (agendaDe, univers-montage.js) pour l'accueil
+        //  et les univers : l'heure de Paris avec son fuseau, un identifiant
+        //  tiré de la séance (deux ajouts, un seul événement), des lignes de
+        //  75 octets au plus, une soirée qui finit après minuit le lendemain.
+        //  Et, au téléphone, la fenêtre d'agenda d'un univers est une feuille
+        //  posée en bas, qu'on renvoie en la tirant.
+        await verifie('l’agenda d’une date : l’heure de Paris avec son fuseau, un identifiant tiré de la séance, des lignes pliées ; dans un univers au téléphone, une feuille qu’on renvoie en la tirant', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/spectacles/berenice/', { waitUntil: 'load' });
+            await p.waitForTimeout(600);
+            const f = await p.evaluate(() => {
+                const d = { title: 'Bérénice', subtitle: 'Racine', location: 'Le Forum, Falaise (14)', icsDate: '2026-12-31', times: ['23h30'], duree: 90, billetterie: 'https://exemple.fr/billets' };
+                const a = UniversMontage.agendaDe(d), b = UniversMontage.agendaDe(d);
+                const ics = a.ics();
+                const uid = (s) => (s.match(/^UID:(.*)$/m) || [])[1];
+                const octets = Math.max(...ics.split('\r\n').map((l) => new TextEncoder().encode(l).length));
+                return {
+                    ics, uidStable: uid(ics) === uid(b.ics()), octets, fichier: a.fichier,
+                    google: a.google(), outlook: a.outlook(),
+                    sansHeure: UniversMontage.agendaDe({ title: 'X', location: 'Y', icsDate: '2027-04-15', time: 'matin' }).ics()
+                };
+            });
+            exige(/\r\nBEGIN:VTIMEZONE\r\nTZID:Europe\/Paris\r\n/.test(f.ics), 'le fichier d’agenda n’a pas le fuseau de Paris');
+            exige(/\r\nDTSTART;TZID=Europe\/Paris:20261231T233000\r\n/.test(f.ics) && /\r\nDTEND;TZID=Europe\/Paris:20270101T010000\r\n/.test(f.ics),
+                'la séance n’est pas à l’heure de Paris, ou la fin d’une soirée après minuit n’est pas le lendemain');
+            exige(f.uidStable && !/Date\.now|NaN|undefined/.test(f.ics), 'l’identifiant de l’événement change d’un ajout à l’autre');
+            exige(f.octets <= 75, `une ligne du fichier d’agenda fait ${f.octets} octets (75 au plus)`);
+            exige(/LOCATION:Le Forum\\, Falaise \(14\)/.test(f.ics), 'la virgule du lieu n’est pas échappée');
+            exige(f.fichier === 'berenice-2026-12-31.ics', `le nom du fichier perd ses accents (${f.fichier})`);
+            exige(/[?&]ctz=Europe%2FParis/.test(f.google) && /startdt=2026-12-31T23%3A30%3A00%2B01%3A00/.test(f.outlook),
+                'Google ou Outlook ne reçoivent pas le fuseau de Paris');
+            exige(/DTSTART;VALUE=DATE:20270415/.test(f.sansHeure) && /Horaire : matin\./.test(f.sansHeure), 'une séance sans heure d’horloge n’est pas une journée');
+            // La feuille d'un univers, au téléphone.
+            await p.evaluate(() => document.querySelector('#show-universe .u-date-cal').scrollIntoView({ block: 'center' }));
+            await p.waitForTimeout(400);
+            await p.tap('#show-universe .u-date-cal');
+            await p.waitForTimeout(600);
+            const feuille = await p.evaluate(() => {
+                const r = document.querySelector('#u-cal-modal .u-cal-modal-card').getBoundingClientRect();
+                return { bas: Math.round(r.bottom), gauche: Math.round(r.left), large: Math.round(r.width), vh: innerHeight, vw: innerWidth };
+            });
+            exige(Math.abs(feuille.bas - feuille.vh) <= 1 && feuille.gauche === 0 && feuille.large === feuille.vw,
+                `au téléphone, la fenêtre d’agenda d’un univers n’est pas une feuille posée en bas (${JSON.stringify(feuille)})`);
+            const prise = await (await p.$('#u-cal-modal .u-cal-poignee')).boundingBox();
+            const x = prise.x + prise.width / 2, y = prise.y + prise.height / 2;
+            await p.mouse.move(x, y);
+            await p.mouse.down();
+            for (let i = 1; i <= 10; i++) { await p.mouse.move(x, y + i * 25); await p.waitForTimeout(16); }
+            await p.mouse.up();
+            await p.waitForTimeout(500);
+            exige(await p.evaluate(() => document.getElementById('u-cal-modal').hidden), 'tirée vers le bas, la feuille d’agenda d’un univers ne se referme pas');
+            exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
+            await c.close();
+        });
+
+        // ── LE GRAND ÉCRAN ──
+        //  À partir de 1 360 px, deux colonnes : l'affiche à gauche, collée
+        //  et entière sur tous les onglets ; à droite, le site, aussi large
+        //  que la colonne d'avant. Arriver sur un autre onglet ne la replie
+        //  pas non plus.
+        await verifie('le grand écran : l’affiche à gauche, collée et entière sur tous les onglets, le site à droite aussi large qu’avant — et l’arrivée sur un autre onglet ne la replie pas', async () => {
+            const c = await visiteur({ viewport: { width: 1440, height: 900 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/?direct', { waitUntil: 'load' });
+            await p.waitForTimeout(800);
+            const place = () => p.evaluate(() => {
+                const r = (s) => document.querySelector(s).getBoundingClientRect();
+                const tete = document.getElementById('en-tete');
+                return {
+                    tete: { g: Math.round(r('#en-tete').left), d: Math.round(r('#en-tete').right), h: Math.round(r('#en-tete').top), bas: Math.round(r('#en-tete').bottom) },
+                    barre: { g: Math.round(r('#nav-barre').left), l: Math.round(r('#nav-barre').width) },
+                    replie: tete.classList.contains('replie'),
+                    fiche: !document.getElementById('header-signature').classList.contains('bio-hidden'),
+                    date: document.getElementById('next-date-banner').classList.contains('bio-hidden'),
+                    vh: innerHeight
+                };
+            });
+            const cv = await place();
+            exige(cv.tete.d < cv.barre.g && cv.tete.d - cv.tete.g >= 330 && cv.barre.l >= 840,
+                `sur un grand écran, l’affiche n’est pas à gauche du site, ou le site est plus étroit qu’avant (${JSON.stringify(cv)})`);
+            exige(!cv.replie && cv.fiche && cv.tete.bas <= cv.vh, `sur le CV, l’affiche n’est pas entière dans l’écran (${JSON.stringify(cv)})`);
+            await p.evaluate(() => document.querySelector('#tab-page_dates').scrollIntoView({ block: 'center' }));
+            await p.click('#tab-page_dates');
+            await p.waitForFunction(() => document.querySelector('.page.active')?.id === 'page_dates' && !document.documentElement.classList.contains('vt-onglet'), null, { timeout: 5000 });
+            await p.evaluate(() => window.scrollTo({ top: 1600, behavior: 'instant' }));
+            await p.waitForTimeout(300);
+            const dates = await place();
+            exige(!dates.replie && dates.fiche && dates.date, `sur l’onglet Dates, l’affiche s’est repliée, ou la prochaine date reste dépliée (${JSON.stringify(dates)})`);
+            exige(dates.tete.h >= 0 && dates.tete.h <= 40, `en défilant, l’affiche ne reste pas collée en haut (${JSON.stringify(dates.tete)})`);
+            exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
+            await c.close();
+            // Arriver sur un autre onglet : rien ne se replie, et la prochaine
+            // date (propre au CV) attend repliée.
+            const c2 = await visiteur({ viewport: { width: 1440, height: 900 } });
+            const p2 = await c2.newPage();
+            await p2.goto(base + '/#page_dates', { waitUntil: 'commit' });
+            const premier = await p2.evaluate(() => new Promise((ok) => requestAnimationFrame(() => ok({
+                horsCv: document.documentElement.classList.contains('arrivee-hors-cv'),
+                arrivee: document.documentElement.getAttribute('data-arrivee')
+            }))));
+            exige(!premier.horsCv && premier.arrivee === 'page_dates', `l’arrivée sur l’onglet Dates replie encore l’affiche au premier rendu (${JSON.stringify(premier)})`);
+            await p2.waitForLoadState('load');
+            await p2.waitForTimeout(800);
+            const arrivee = await p2.evaluate(() => ({
+                page: document.querySelector('.page.active')?.id,
+                replie: document.getElementById('en-tete').classList.contains('replie'),
+                date: document.getElementById('next-date-banner').classList.contains('bio-hidden')
+            }));
+            exige(arrivee.page === 'page_dates' && !arrivee.replie && arrivee.date, `après l’arrivée sur l’onglet Dates : ${JSON.stringify(arrivee)}`);
+            await c2.close();
+        });
+
+        // ── LA CARTE DE LA SAISON ──
+        //  Le bloc CARTE-SAISON d'index.html suit dates.js (comme dates.ics),
+        //  chaque ville de la saison y a sa place ; dans la saison d'un
+        //  regard, les points ne se chevauchent pas, les communes de
+        //  l'agglomération rouennaise se regroupent, et un point mène à sa
+        //  date.
+        await verifie('la carte de la saison : à jour avec dates.js, chaque ville placée ; des points qui ne se chevauchent pas, l’agglomération regroupée, et un point qui mène à sa date', async () => {
+            const { bloc } = require('./fabriquer-carte.js');
+            const attendu = bloc();
+            const html = fs.readFileSync(path.join(RACINE, 'index.html'), 'utf8');
+            const m = html.match(/<script type="application\/json" id="carte-saison">([^<]*)<\/script>/);
+            exige(m, 'le bloc CARTE-SAISON est absent d’index.html');
+            exige(m[1] === JSON.stringify(attendu.donnees).replace(/</g, '\\u003c'),
+                'le bloc CARTE-SAISON n’est pas à jour avec dates.js : relancer npm --prefix build run pages');
+            exige(!attendu.manquantes.length, `des villes de la saison n’ont pas de place sur la carte : ${attendu.manquantes.join(', ')}`);
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/?direct#page_dates', { waitUntil: 'load' });
+            await p.waitForTimeout(1200);
+            await p.evaluate(() => document.getElementById('dates-saison-bouton').click());
+            await p.waitForTimeout(800);
+            const carte = await p.evaluate(() => {
+                const boutons = [...document.querySelectorAll('.dl-carte-ville')];
+                const boites = boutons.map((b) => b.getBoundingClientRect());
+                let chevauche = 0;
+                boites.forEach((a, i) => boites.forEach((b, j) => {
+                    if (j > i && a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) chevauche++;
+                }));
+                const fond = document.querySelector('.dl-carte-fond')?.getBoundingClientRect();
+                return {
+                    n: boutons.length, chevauche, petits: boites.filter((r) => r.height < 24).length,
+                    dehors: fond ? boites.filter((r) => r.left < fond.left - 60 || r.right > fond.right + 60).length : -1,
+                    rouen: boutons.some((b) => /Rouen et alentours/.test(b.getAttribute('aria-label')))
+                };
+            });
+            exige(carte.n >= 3 && carte.rouen, `la carte ne montre pas la saison (${JSON.stringify(carte)})`);
+            exige(!carte.chevauche, `${carte.chevauche} paire(s) de points de la carte se chevauchent`);
+            exige(!carte.petits, `${carte.petits} point(s) de la carte sous 24 px de cible`);
+            await p.evaluate(() => document.querySelector('.dl-carte-ville').scrollIntoView({ block: 'center' }));
+            await p.tap('.dl-carte-ville');
+            await p.waitForTimeout(1200);
+            const arrivee = await p.evaluate(() => document.activeElement?.closest('[id^="dl-e"]')?.id || '');
+            exige(/^dl-e\d+$/.test(arrivee), `un point de la carte ne mène pas à sa date (${arrivee || 'rien'})`);
+            exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
+            await c.close();
+        });
+
+        // ── LE THÈME À TROIS POSITIONS ──
+        //  Auto (rien en mémoire : le site suit l'appareil, en direct),
+        //  Clair, Sombre (retenus, comme la bascule de la barre). Le groupe
+        //  dit la position courante, les flèches en changent.
+        await verifie('le thème à trois positions : Auto suit l’appareil, même quand il change, Clair et Sombre sont retenus, la bascule de la barre aussi ; le groupe dit la position, les flèches en changent', async () => {
+            const c = await navigateur.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, colorScheme: 'dark' });
+            suivreLesPages(c);
+            await c.route((u) => !u.href.startsWith(base), (route) => route.abort());
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/?direct', { waitUntil: 'load' });
+            await p.waitForTimeout(600);
+            const etat = () => p.evaluate(() => ({
+                theme: document.documentElement.dataset.theme, memoire: localStorage.getItem('avTheme'),
+                coche: [...document.querySelectorAll('[data-theme-choix][aria-checked="true"]')].map((b) => b.dataset.themeChoix).join(',')
+            }));
+            const depart = await etat();
+            exige(depart.theme === 'dark' && depart.memoire === null && depart.coche === 'auto', `au départ : ${JSON.stringify(depart)}`);
+            await p.evaluate(() => document.querySelector('.theme-choix').scrollIntoView({ block: 'center' }));
+            await p.tap('[data-theme-choix="light"]');
+            await p.waitForTimeout(900);
+            const clair = await etat();
+            exige(clair.theme === 'light' && clair.memoire === 'light' && clair.coche === 'light', `« Clair » : ${JSON.stringify(clair)}`);
+            await p.tap('[data-theme-choix="auto"]');
+            await p.waitForTimeout(900);
+            const auto = await etat();
+            exige(auto.theme === 'dark' && auto.memoire === null && auto.coche === 'auto', `« Auto » : ${JSON.stringify(auto)}`);
+            await p.emulateMedia({ colorScheme: 'light' });
+            await p.waitForTimeout(300);
+            const suit = await etat();
+            exige(suit.theme === 'light' && suit.coche === 'auto', `en « Auto », le site ne suit pas l’appareil : ${JSON.stringify(suit)}`);
+            await p.tap('#nav-barre [data-theme-toggle]');
+            await p.waitForTimeout(900);
+            const barre = await etat();
+            exige(barre.theme === 'dark' && barre.memoire === 'dark' && barre.coche === 'dark', `la bascule de la barre : ${JSON.stringify(barre)}`);
+            await p.focus('[data-theme-choix][aria-checked="true"]');
+            await p.keyboard.press('ArrowLeft');
+            await p.waitForTimeout(900);
+            const fleche = await etat();
+            const focus = await p.evaluate(() => document.activeElement?.dataset.themeChoix);
+            exige(fleche.coche === 'light' && fleche.theme === 'light' && focus === 'light', `la flèche : ${JSON.stringify(fleche)}, focus ${focus}`);
+            const tab = await p.evaluate(() => [...document.querySelectorAll('[data-theme-choix]')].filter((b) => b.tabIndex === 0).length);
+            exige(tab === 1, `${tab} position(s) atteignables par Tab au lieu d’une`);
+            exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
+            await c.close();
+        });
+
+        // ── LE GESTE DE RETOUR DE L'IPHONE ──
+        //  Glisser depuis le bord fait passer la page d'avant sous le doigt
+        //  (hasUAVisualTransition) : le site ne rejoue pas son passage par-
+        //  dessus. Safari ne le dit qu'au popstate : le hashchange qui suit
+        //  doit s'en souvenir. Un retour ordinaire garde ses passages.
+        await verifie('le geste de retour de l’iPhone : l’onglet, l’univers et la fenêtre d’agenda changent d’un coup quand le navigateur a déjà animé le retour — même si seul le popstate le dit —, et un retour ordinaire garde ses passages', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/?direct', { waitUntil: 'load' });
+            await p.waitForTimeout(800);
+            const onglet = (cible, drapeau) => p.evaluate(async ({ cible, drapeau }) => {
+                history.pushState(null, '', '#' + cible);
+                let vt = false;
+                const obs = new MutationObserver(() => { if (document.documentElement.classList.contains('vt-onglet')) vt = true; });
+                obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+                if (drapeau) {
+                    const pe = new PopStateEvent('popstate', { state: null });
+                    Object.defineProperty(pe, 'hasUAVisualTransition', { value: true });
+                    window.dispatchEvent(pe);
+                }
+                window.dispatchEvent(new HashChangeEvent('hashchange'));
+                await new Promise((r) => setTimeout(r, 700));
+                obs.disconnect();
+                return { actif: document.querySelector('.page.active')?.id, vt };
+            }, { cible, drapeau });
+            const ua = await onglet('page_dates', true);
+            exige(ua.actif === 'page_dates' && !ua.vt, `après un retour déjà animé, l’onglet glisse encore (${JSON.stringify(ua)})`);
+            const ordinaire = await onglet('demos_voix', false);
+            exige(ordinaire.actif === 'demos_voix' && ordinaire.vt, `un retour ordinaire ne fait plus glisser l’onglet (${JSON.stringify(ordinaire)})`);
+            // La fenêtre d'agenda de l'onglet Dates
+            await onglet('page_dates', false);
+            await p.waitForTimeout(800);
+            await p.evaluate(() => { const bt = document.querySelector('#page_dates [data-cal-index]'); bt.scrollIntoView({ block: 'center' }); bt.click(); });
+            await p.waitForTimeout(600);
+            const agenda = await p.evaluate(() => {
+                const m = document.getElementById('calendar-modal');
+                const ouvert = !m.hidden;
+                const pe = new PopStateEvent('popstate', { state: null });
+                Object.defineProperty(pe, 'hasUAVisualTransition', { value: true });
+                window.dispatchEvent(pe);
+                return { ouvert, cache: m.hidden };
+            });
+            exige(agenda.ouvert && agenda.cache, `après un retour déjà animé, la fenêtre d’agenda joue encore son fondu (${JSON.stringify(agenda)})`);
+            // Un univers
+            await onglet('page_cv', false);
+            await p.waitForTimeout(600);
+            await p.evaluate(() => { const li = document.querySelector('#page_cv li.cv-has-universe[data-cv-show]'); li.scrollIntoView({ block: 'center' }); li.querySelector('.cv-row-toggle').click(); });
+            await p.waitForTimeout(1800);
+            const univers = await p.evaluate(async () => {
+                const o = document.getElementById('show-universe');
+                const ouvert = o.classList.contains('is-open');
+                const pe = new PopStateEvent('popstate', { state: null });
+                Object.defineProperty(pe, 'hasUAVisualTransition', { value: true });
+                window.dispatchEvent(pe);
+                await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+                return { ouvert, cache: o.hidden, passage: document.documentElement.classList.contains('vt-univers-retour') };
+            });
+            exige(univers.ouvert && univers.cache && !univers.passage, `après un retour déjà animé, l’univers rejoue sa fermeture (${JSON.stringify(univers)})`);
+            exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
             await c.close();
         });
     } finally {

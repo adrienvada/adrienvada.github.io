@@ -1,7 +1,28 @@
 {
-  "name": "Adrien Vada",
+  "id": "/",
+  "name": "Adrien Vada — comédien",
   "short_name": "Adrien Vada",
+  "description": "CV, dates de représentation, bande démo et démos voix d’Adrien Vada, comédien.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/?direct",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0907",
+  "theme_color": "#0a0907",
   "icons": [
+    {
+      "src": "/favicon_io/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon_io/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/favicon_io/web-app-manifest-192x192.png",
       "sizes": "192x192",
@@ -15,7 +36,24 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  "shortcuts": [
+    {
+      "name": "Dates de représentation",
+      "short_name": "Dates",
+      "url": "/?direct#page_dates",
+      "icons": [{ "src": "/favicon_io/favicon-96x96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Bande démo caméra",
+      "short_name": "Bande démo",
+      "url": "/?direct#demos_camera",
+      "icons": [{ "src": "/favicon_io/favicon-96x96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Démos voix",
+      "short_name": "Voix",
+      "url": "/?direct#demos_voix",
+      "icons": [{ "src": "/favicon_io/favicon-96x96.png", "sizes": "96x96", "type": "image/png" }]
+    }
+  ]
 }
