@@ -342,6 +342,12 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   ni l'autre ; le portrait en AVIF (960 px au téléphone) ; les vignettes du
   CV en 144 × 192 recadrées, celles des Dates (par date, par spectacle) aussi,
   et la couverture de 240 px ne part plus avec l'accueil.
+- le grand écran (1 440 px) : l'affiche à gauche du site, d'au moins
+  330 px, et le site à droite d'au moins 840 ; sur le CV, l'affiche entière
+  dans l'écran ; sur l'onglet Dates, elle n'est pas repliée, la prochaine
+  date si, et en défilant l'affiche reste collée en haut ; arriver par
+  `/#page_dates` ne pose pas `arrivee-hors-cv` au premier rendu, et rien ne
+  se replie ensuite ;
 - le thème à trois positions : au départ, rien en mémoire et « Auto »
   coché ; « Clair » est retenu ; « Auto » efface la mémoire et suit
   l'appareil, même quand il change de réglage ; la bascule de la barre est
@@ -3971,6 +3977,32 @@ répertoire, à la galerie et à la 404.
   `<source media="print">`) — le PDF garde son poids (259 Ko) et sa page.
   Quelques règles de l'affiche portent `!important` : elles répondent à celles
   de la mise à l'échelle du téléphone (« Global text scale-down »).
+
+### Sur un grand écran : l'affiche à gauche, le site à droite
+
+Tout tenait dans une colonne de 896 px : sur un écran de 1 440 px, 41 % de
+la largeur restait vide, et l'affiche se repliait en médaillon dès qu'on
+quittait le CV. **À partir de 1 360 px**, le site se pose en deux colonnes
+(« LE GRAND ÉCRAN » dans `index.html`) : à gauche, l'affiche, **collée**
+(`position: sticky`) et **entière sur tous les onglets** ; à droite, la
+prochaine date (sur le CV), la barre d'onglets et les pages, aussi larges
+que la colonne d'avant. L'affiche y reprend la forme du téléphone : le
+portrait sur toute la largeur de sa colonne (440 px de haut au plus, et
+jamais plus de 48 % de l'écran : sur un portable de 768 px de haut, elle
+tient encore entière), le nom posé sur le bas de la photo, la fiche en deux
+colonnes.
+
+Pourquoi 1 360 et non 1 280 : en dessous, la colonne de droite serait plus
+étroite que celle d'avant (848 px), et les lignes du CV s'y serreraient.
+Entre 1 280 et 1 360, la mise en page d'avant reste la meilleure — et les
+vingt-deux vérifications écrites à 1 280 px la gardent.
+
+Le script fait sa part : `poserLAffiche` ne replie plus l'en-tête hors du CV
+quand `DEUX_COLONNES` est vrai (seule la prochaine date, propre au CV, se
+replie), le portrait ne voyage plus vers un médaillon qui n'existe pas, la
+limite franchie en redimensionnant la fenêtre repose l'affiche d'un coup, et
+l'arrivée sur un autre onglet ne pose plus `arrivee-hors-cv` (le `<head>`
+le vérifie avec la même requête de média).
 
 ## La salle de projection
 

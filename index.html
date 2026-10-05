@@ -403,8 +403,14 @@
         // Et la page visée paraît d'emblée, la bio déjà repliée : le CV ne
         // passe plus devant (voir « L'arrivée sur un autre onglet »). Le
         // premier poserPage retire les deux drapeaux.
+        //  Sur un grand écran (1 360 px et plus), l'affiche ne se replie
+        //  sur aucun onglet (voir « LE GRAND ÉCRAN ») : seule la page
+        //  visée change, et la prochaine date, propre au CV, attend
+        //  repliée (data-arrivee suffit à la replier).
         if (/^(page_dates|demos_camera|demos_voix)$/.test(window.__ancreArrivee)) {
-            document.documentElement.classList.add('arrivee-hors-cv');
+            if (!(window.matchMedia && window.matchMedia('screen and (min-width: 1360px)').matches)) {
+                document.documentElement.classList.add('arrivee-hors-cv');
+            }
             document.documentElement.setAttribute('data-arrivee', window.__ancreArrivee);
         }
         if (window.__ancreArrivee) {
@@ -1190,7 +1196,8 @@
             color: rgb(var(--c-gold-ink));
         }
 
-        html.arrivee-hors-cv .bio-collapse {
+        html.arrivee-hors-cv .bio-collapse,
+        html[data-arrivee] #next-date-banner.bio-collapse {
             grid-template-rows: 0fr;
             opacity: 0;
             margin-bottom: 0;
@@ -1198,7 +1205,7 @@
             transition: none;
         }
 
-        html.arrivee-hors-cv #next-date-banner.bio-collapse {
+        html[data-arrivee] #next-date-banner.bio-collapse {
             margin-top: 0;
             padding-top: 0;
             padding-bottom: 0;
@@ -5926,6 +5933,129 @@
                     justify-content: start;
                     column-gap: 28px;
                 }
+            }
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           LE GRAND ÉCRAN : L'AFFICHE À GAUCHE, LE SITE À DROITE
+           ══════════════════════════════════════════════════════════════
+           Tout tenait dans une colonne de 896 px : sur un écran de
+           1 440 px, 41 % de la largeur restait vide, et l'affiche — le
+           visage, le nom, la fiche, le contact — disparaissait dès qu'on
+           quittait le CV. Les directeurs de casting et les programmateurs
+           travaillent souvent sur ordinateur.
+
+           À partir de 1 360 px, le site se pose en deux colonnes : à
+           gauche, l'affiche, COLLÉE (elle reste à l'écran quand on
+           défile) et ENTIÈRE sur tous les onglets — elle ne se replie
+           plus en médaillon, il y a la place ; à droite, la prochaine
+           date (sur le CV), la barre d'onglets et les pages, aussi larges
+           que la colonne d'avant. L'affiche reprend la forme qu'elle a au
+           téléphone : le portrait sur toute la largeur de sa colonne, le
+           nom posé sur le bas de la photo, la fiche en deux colonnes
+           dessous.
+
+           Pourquoi 1 360 et non 1 280 : sous 1 360 px, la colonne de
+           droite serait plus étroite que celle d'avant (848 px), et le CV
+           y perdrait ses lignes. Entre 1 280 et 1 360, la mise en page
+           d'avant reste la meilleure.
+
+           Le script fait sa part : l'en-tête ne se replie plus hors du CV
+           (`DEUX_COLONNES`, dans poserPage), le portrait ne voyage plus
+           vers un médaillon qui n'existe pas, et l'arrivée sur un autre
+           onglet ne pose plus `arrivee-hors-cv` (voir le <head>). */
+        @media screen and (min-width: 1360px) {
+            #site {
+                display: grid;
+                grid-template-columns: clamp(340px, 26vw, 400px) minmax(0, 1fr);
+                grid-auto-rows: auto;
+                column-gap: 40px;
+                align-items: start;
+                max-width: 1400px;
+                padding-left: max(2rem, env(safe-area-inset-left, 0px));
+                padding-right: max(2rem, env(safe-area-inset-right, 0px));
+            }
+
+            #site>* {
+                grid-column: 2;
+            }
+
+            /* L'affiche occupe toute la hauteur de sa colonne et s'y colle :
+               elle reste à l'écran pendant qu'on lit à droite. Plus haute
+               que l'écran (un portable de 720 px de haut), c'est le portrait
+               qui cède (voir plus bas), jamais la fiche. */
+            #site>#en-tete {
+                grid-column: 1;
+                grid-row: 1 / span 20;
+                position: sticky;
+                top: 24px;
+                margin-bottom: 0;
+            }
+
+            #site>main {
+                min-width: 0;
+            }
+
+            /* LA FORME DU TÉLÉPHONE, DANS SA COLONNE : une seule colonne, le
+               portrait en haut, le nom posé sur le bas de la photo, la
+               fiche en deux colonnes. Les règles de 768 px et plus (le
+               portrait à gauche, le texte à droite) sont reprises ici. */
+            #en-tete.affiche .affiche-grille,
+            html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) .affiche-grille {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) .affiche-cadre {
+                aspect-ratio: auto;
+                height: min(440px, 48vh);
+            }
+
+            html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) .affiche-poursuite {
+                background:
+                    linear-gradient(to top, rgb(0 0 0 / .78), rgb(0 0 0 / 0) 46%),
+                    radial-gradient(circle at var(--x, 50%) var(--y, 32%),
+                        rgb(0 0 0 / 0) 0, rgb(0 0 0 / 0) 20%, rgb(0 0 0 / .42) 64%, rgb(0 0 0 / .62) 100%);
+            }
+
+            html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) .affiche-galerie {
+                top: 12px;
+                right: 12px;
+                bottom: auto;
+                left: auto;
+            }
+
+            /* Le nom tient tout entier sur la photo : en thème clair, le
+               bas de « Vada » débordait sur la carte blanche. */
+            html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) .affiche-texte {
+                justify-content: flex-start;
+                gap: 14px;
+                margin-top: -134px;
+                padding: 0 22px 22px;
+            }
+
+            html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) .metier {
+                color: #e7d6b8;
+            }
+
+            html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) .affiche-nom {
+                margin-top: -8px;
+                font-size: 54px !important;
+                color: #fff;
+                text-shadow: 0 2px 18px rgb(0 0 0 / .55);
+            }
+
+            html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) .affiche-nom span {
+                color: rgb(var(--c-gold-light));
+            }
+
+            html:not(.arrivee-hors-cv) #en-tete.affiche:not(.replie) .signature-casting {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                column-gap: 20px;
+            }
+
+            /* Le contact sur deux lignes : l'adresse, puis ses deux gestes. */
+            #en-tete .contact-rang {
+                justify-content: flex-start;
             }
         }
 
@@ -14530,6 +14660,30 @@
         //  de la gauche (voir « Le changement d'onglet » dans le <style>).
         const ORDRE_ONGLETS = ['page_cv', 'page_dates', 'demos_camera', 'demos_voix'];
         const ONGLETS_IMMOBILES = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+        //  LE GRAND ÉCRAN (voir « LE GRAND ÉCRAN » dans le <style>) :
+        //  l'affiche reste entière sur tous les onglets.
+        const DEUX_COLONNES = window.matchMedia ? window.matchMedia('screen and (min-width: 1360px)') : { matches: false };
+
+        //  Ce qui n'a de sens qu'en regard du CV (la bio, la fiche, les
+        //  liens, la prochaine date) se replie ailleurs, et l'affiche
+        //  devient la carte compacte : le portrait en médaillon, le nom sur
+        //  une ligne (voir « Le portrait d'affiche »). Sur un grand écran,
+        //  seule la prochaine date se replie : l'affiche a sa colonne.
+        function poserLAffiche(pageId) {
+            const surLeCv = pageId === 'page_cv';
+            const entiere = surLeCv || DEUX_COLONNES.matches;
+            document.querySelectorAll('.bio-collapse').forEach(el =>
+                el.classList.toggle('bio-hidden', el.id === 'next-date-banner' ? !surLeCv : !entiere));
+            document.getElementById('en-tete')?.classList.toggle('replie', !entiere);
+        }
+
+        //  La fenêtre passe la limite (on l'élargit, on la rétrécit) :
+        //  l'affiche suit, d'un coup.
+        if (DEUX_COLONNES.addEventListener) {
+            DEUX_COLONNES.addEventListener('change', () => {
+                poserLAffiche(document.querySelector('.page.active')?.id || 'page_cv');
+            });
+        }
         let passageOnglet = 0;
 
         //  `opts.sansPassage` : la page change d'un coup, sans glissement —
@@ -14553,7 +14707,7 @@
             // qu'on y revient — ailleurs, il reste médaillon —, et s'il est
             // à l'écran : sinon il arriverait de l'extérieur. Nommé juste
             // avant, le nom retiré à la fin du passage.
-            const portrait = (avant.id === 'page_cv') !== (pageId === 'page_cv')
+            const portrait = (avant.id === 'page_cv') !== (pageId === 'page_cv') && !DEUX_COLONNES.matches
                 ? document.querySelector('#en-tete .affiche-cadre') : null;
             const vu = portrait && portrait.getBoundingClientRect();
             const voyage = !!vu && vu.width > 0 && vu.bottom > 0 && vu.top < innerHeight;
@@ -14757,10 +14911,7 @@
             // une seule fois, sur des valeurs définitives.
             const replis = document.querySelectorAll('.bio-collapse');
             if (recadrer) replis.forEach(el => el.classList.add('bio-sans-transition'));
-            replis.forEach(el => el.classList.toggle('bio-hidden', pageId !== 'page_cv'));
-            // L'affiche, elle, devient la carte compacte : le portrait en
-            // médaillon, le nom sur une ligne (voir « Le portrait d'affiche »).
-            document.getElementById('en-tete')?.classList.toggle('replie', pageId !== 'page_cv');
+            poserLAffiche(pageId);
             // Les drapeaux de l'arrivée (voir « L'arrivée sur un autre
             // onglet ») tombent dans le même calcul que les vraies classes.
             document.documentElement.classList.remove('arrivee-hors-cv');

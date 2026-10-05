@@ -4442,6 +4442,64 @@ function exige(condition, message) {
             await c.close();
         });
 
+        // ── LE GRAND ÉCRAN ──
+        //  À partir de 1 360 px, deux colonnes : l'affiche à gauche, collée
+        //  et entière sur tous les onglets ; à droite, le site, aussi large
+        //  que la colonne d'avant. Arriver sur un autre onglet ne la replie
+        //  pas non plus.
+        await verifie('le grand écran : l’affiche à gauche, collée et entière sur tous les onglets, le site à droite aussi large qu’avant — et l’arrivée sur un autre onglet ne la replie pas', async () => {
+            const c = await visiteur({ viewport: { width: 1440, height: 900 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/?direct', { waitUntil: 'load' });
+            await p.waitForTimeout(800);
+            const place = () => p.evaluate(() => {
+                const r = (s) => document.querySelector(s).getBoundingClientRect();
+                const tete = document.getElementById('en-tete');
+                return {
+                    tete: { g: Math.round(r('#en-tete').left), d: Math.round(r('#en-tete').right), h: Math.round(r('#en-tete').top), bas: Math.round(r('#en-tete').bottom) },
+                    barre: { g: Math.round(r('#nav-barre').left), l: Math.round(r('#nav-barre').width) },
+                    replie: tete.classList.contains('replie'),
+                    fiche: !document.getElementById('header-signature').classList.contains('bio-hidden'),
+                    date: document.getElementById('next-date-banner').classList.contains('bio-hidden'),
+                    vh: innerHeight
+                };
+            });
+            const cv = await place();
+            exige(cv.tete.d < cv.barre.g && cv.tete.d - cv.tete.g >= 330 && cv.barre.l >= 840,
+                `sur un grand écran, l’affiche n’est pas à gauche du site, ou le site est plus étroit qu’avant (${JSON.stringify(cv)})`);
+            exige(!cv.replie && cv.fiche && cv.tete.bas <= cv.vh, `sur le CV, l’affiche n’est pas entière dans l’écran (${JSON.stringify(cv)})`);
+            await p.evaluate(() => document.querySelector('#tab-page_dates').scrollIntoView({ block: 'center' }));
+            await p.click('#tab-page_dates');
+            await p.waitForFunction(() => document.querySelector('.page.active')?.id === 'page_dates' && !document.documentElement.classList.contains('vt-onglet'), null, { timeout: 5000 });
+            await p.evaluate(() => window.scrollTo({ top: 1600, behavior: 'instant' }));
+            await p.waitForTimeout(300);
+            const dates = await place();
+            exige(!dates.replie && dates.fiche && dates.date, `sur l’onglet Dates, l’affiche s’est repliée, ou la prochaine date reste dépliée (${JSON.stringify(dates)})`);
+            exige(dates.tete.h >= 0 && dates.tete.h <= 40, `en défilant, l’affiche ne reste pas collée en haut (${JSON.stringify(dates.tete)})`);
+            exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
+            await c.close();
+            // Arriver sur un autre onglet : rien ne se replie, et la prochaine
+            // date (propre au CV) attend repliée.
+            const c2 = await visiteur({ viewport: { width: 1440, height: 900 } });
+            const p2 = await c2.newPage();
+            await p2.goto(base + '/#page_dates', { waitUntil: 'commit' });
+            const premier = await p2.evaluate(() => new Promise((ok) => requestAnimationFrame(() => ok({
+                horsCv: document.documentElement.classList.contains('arrivee-hors-cv'),
+                arrivee: document.documentElement.getAttribute('data-arrivee')
+            }))));
+            exige(!premier.horsCv && premier.arrivee === 'page_dates', `l’arrivée sur l’onglet Dates replie encore l’affiche au premier rendu (${JSON.stringify(premier)})`);
+            await p2.waitForLoadState('load');
+            await p2.waitForTimeout(800);
+            const arrivee = await p2.evaluate(() => ({
+                page: document.querySelector('.page.active')?.id,
+                replie: document.getElementById('en-tete').classList.contains('replie'),
+                date: document.getElementById('next-date-banner').classList.contains('bio-hidden')
+            }));
+            exige(arrivee.page === 'page_dates' && !arrivee.replie && arrivee.date, `après l’arrivée sur l’onglet Dates : ${JSON.stringify(arrivee)}`);
+            await c2.close();
+        });
+
         // ── LE THÈME À TROIS POSITIONS ──
         //  Auto (rien en mémoire : le site suit l'appareil, en direct),
         //  Clair, Sombre (retenus, comme la bascule de la barre). Le groupe
