@@ -3857,13 +3857,38 @@ sprite `<symbol>` inséré juste après `<body>`, entre les repères
 `SPRITE-ICONES:DEBUT` / `SPRITE-ICONES:FIN`.
 
 ```bash
-npm i @fortawesome/fontawesome-free@6.4.0     # une fois
+npm i @fortawesome/fontawesome-free@6.4.0 lucide-static@1.52.0   # une fois, ensemble
 python3 build/construire-sprite-icones.py
 ```
+
+(Les deux paquets dans la même commande : un `npm i` de l'un seul, dans un
+dossier sans `package.json`, peut retirer l'autre comme « en trop ».)
 
 Le script relève les icônes employées, va chercher leur tracé dans le paquet,
 réécrit le sprite et convertit les éventuelles balises `<i class="fa-…">`
 restantes. Il est **rejouable** : un second passage ne change rien.
+
+**Les icônes sont au trait** depuis l'expertise d'octobre 2026 : les pleines
+de FontAwesome — une cravate pour le CV, des masques et un calendrier pleins
+— avaient l'allure d'une application de gestion, à côté des titres
+éditoriaux et d'une administration déjà dessinée au trait. Le script prend
+donc le dessin de Lucide (licence ISC, 24 × 24, trait de 2, bouts arrondis :
+le jeu de l'admin) pour toutes les icônes de la table `TRAIT`, **sous le même
+identifiant** : `i-solid-calendar-days` reste le nom posé dans le balisage,
+seul le symbole change. Le trait est écrit sur un groupe dans le symbole (le
+`fill: currentColor` de `.ico` ne passe pas devant un attribut posé sur
+l'élément), et le cadre est resserré d'un point (`viewBox="1 1 22 22"`) : sans
+cela, à la même taille de texte, une icône au trait paraissait d'un cinquième
+plus petite que la pleine qu'elle remplaçait. Restent pleins, chez
+FontAwesome : les logos (Apple, Google, Microsoft, YouTube) et les commandes
+de lecture (lecture, pause, précédente, suivante). **Une nouvelle icône**
+s'ajoute à `TRAIT` avec son équivalent Lucide (voir lucide.dev), sinon elle
+sort pleine.
+
+**Les titres de rubrique** (« Théâtre », « Profil », « Formation », « Saison
+2026 - 2027 »…) prennent le dessin de ceux du répertoire : capitales espacées à
+l'encre d'or, l'icône dans un écrin à peine dessiné, un filet fin qui s'efface
+vers la droite (`.rubrique-titre`, posée sur leur `div`).
 
 **Poser une icône dans le balisage :**
 
