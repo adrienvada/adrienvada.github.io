@@ -31,6 +31,13 @@
  *    · « Télécharger le CV », un seul lien, sous la prochaine date ;
  *    · la barre de lecture des démos voix, qui va au point touché même
  *      sans en-têtes Range ;
+ *    · les démos voix qui suivent d'un onglet à l'autre : le mini-lecteur
+ *      au-dessus de la barre du bas, l'enchaînement (sauf après la
+ *      dernière), l'écran verrouillé, la croix ;
+ *    · la salle de projection : sa durée et ses chapitres, l'aperçu qui
+ *      ne charge rien avant l'onglet, fait deux tours et se pose (et ne
+ *      joue pas en mouvement réduit ni en économie de données), la salle
+ *      noire plein écran au téléphone couché ;
  *    · l'impression sans les pastilles ▶ ;
  *    · la ligne à vignette du CV : l'année et l'état sur chaque vignette,
  *      l'année lisible même au bas de l'écran, des lignes de même
@@ -1148,6 +1155,106 @@ function exige(condition, message) {
                 `toucher le milieu de la barre mène à ${r.t.toFixed(1)} s sur ${r.d.toFixed(1)} (barre à ${r.largeur} %)`);
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();
+        });
+
+        await verifie('les démos voix suivent : la lecture continue d’un onglet à l’autre, le mini-lecteur juste au-dessus de la barre du bas au téléphone (en bas à droite sur ordinateur), la suivante s’enchaîne et se dit, sauf après la dernière ; l’écran verrouillé a le titre, l’artiste, l’album et le portrait ; la croix arrête tout ; rien ne s’imprime', async () => {
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#demos_voix', { waitUntil: 'load' });
+            await p.waitForTimeout(1200);
+            exige(await p.evaluate(() => document.getElementById('lecteur-voix').hidden), 'le mini-lecteur paraît avant qu’une démo joue');
+            await p.locator('#btn-audio-loreal').tap();
+            await p.waitForFunction(() => document.getElementById('audio-loreal').currentTime > 0.3, null, { timeout: 10000 });
+            const etat = () => p.evaluate(() => {
+                const lv = document.getElementById('lecteur-voix');
+                const r = lv.getBoundingClientRect();
+                const barre = document.getElementById('nav-barre').getBoundingClientRect();
+                const m = navigator.mediaSession && navigator.mediaSession.metadata;
+                return {
+                    visible: !lv.hidden && r.height > 0, role: lv.getAttribute('role'), nom: lv.getAttribute('aria-label'),
+                    haut: r.top, bas: r.bottom, gauche: r.left, droite: r.right, barre: barre.top, vw: innerWidth, vh: innerHeight,
+                    titre: lv.querySelector('[data-lv-nom]').textContent,
+                    boutons: [...lv.querySelectorAll('button')].map((b) => ({ nom: b.getAttribute('aria-label'), l: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height, off: b.getAttribute('aria-disabled') })),
+                    annonce: document.getElementById('lecteur-voix-annonce').textContent,
+                    session: m ? { titre: m.title, artiste: m.artist, album: m.album, portraits: m.artwork.map((a) => [a.src.replace(/^.*\//, ''), a.sizes]) } : null,
+                    lecture: navigator.mediaSession ? navigator.mediaSession.playbackState : null,
+                    joue: [...document.querySelectorAll('#demos_voix audio')].filter((a) => !a.paused).map((a) => a.id)
+                };
+            });
+            let e = await etat();
+            exige(e.visible && e.role === 'region' && /démos voix/i.test(e.nom || ''), `pas de mini-lecteur nommé pendant la lecture (${JSON.stringify({ visible: e.visible, role: e.role, nom: e.nom })})`);
+            exige(e.bas <= e.barre - 4 && e.bas >= e.barre - 16 && e.gauche >= 0 && e.droite <= e.vw,
+                `le mini-lecteur n’est pas posé juste au-dessus de la barre du bas (bas ${Math.round(e.bas)}, barre ${Math.round(e.barre)})`);
+            exige(e.boutons.length === 4 && e.boutons.every((b) => b.nom && b.l >= 44 && b.h >= 44), `les boutons du mini-lecteur : ${JSON.stringify(e.boutons)}`);
+            exige(e.titre === 'L’Oréal' && /^Lecture : L’Oréal/.test(e.annonce), `le mini-lecteur ne dit pas la démo (${e.titre}, « ${e.annonce} »)`);
+            exige(e.session && /^L’Oréal/.test(e.session.titre) && e.session.artiste === 'Adrien Vada' && e.session.album === 'Démos voix'
+                && JSON.stringify(e.session.portraits) === JSON.stringify([['profil-192.jpg', '192x192'], ['profil-384.jpg', '384x384']]) && e.lecture === 'playing',
+                `l’écran verrouillé n’a pas la démo : ${JSON.stringify(e.session)} (${e.lecture})`);
+            // Rien de tout cela sur papier.
+            await p.emulateMedia({ media: 'print' });
+            exige(await p.evaluate(() => getComputedStyle(document.getElementById('lecteur-voix')).display === 'none'), 'le mini-lecteur s’imprime');
+            await p.emulateMedia({ media: 'screen' });
+            // Le CV pendant que la voix continue.
+            const avant = await p.evaluate(() => document.getElementById('audio-loreal').currentTime);
+            await p.locator('#tab-page_cv').tap();
+            await p.waitForTimeout(1200);
+            e = await etat();
+            const apres = await p.evaluate(() => document.getElementById('audio-loreal').currentTime);
+            exige(JSON.stringify(e.joue) === '["audio-loreal"]' && apres > avant + 0.5, `changer d’onglet coupe la démo (${avant.toFixed(1)} → ${apres.toFixed(1)} s, ${JSON.stringify(e.joue)})`);
+            exige(e.visible && e.bas <= e.barre - 4, 'le mini-lecteur ne suit pas sur l’onglet CV');
+            // La fin d'une démo : la suivante, dans l'ordre de la page. Le
+            // serveur ne sert pas de morceaux de fichier : on y va par le
+            // chemin du site (voir allerDansLaDemo).
+            await p.evaluate(() => allerDansLaDemo('audio-loreal', dureeDemo('audio-loreal') - 0.5));
+            await p.waitForFunction(() => !document.getElementById('audio-nexity').paused, null, { timeout: 12000 }).catch(() => { });
+            // L'annonce est vidée puis réécrite (voir annoncer) : on lui
+            // laisse le temps d'être dite.
+            await p.waitForTimeout(300);
+            e = await etat();
+            exige(JSON.stringify(e.joue) === '["audio-nexity"]' && e.titre === 'Nexity' && /^Lecture : Nexity/.test(e.annonce) && /^Nexity/.test(e.session && e.session.titre),
+                `la suivante ne s’enchaîne pas (${JSON.stringify({ joue: e.joue, titre: e.titre, annonce: e.annonce })})`);
+            exige(await p.evaluate(() => (window.avMesureEnAttente || []).some(([n, d]) => n === 'demo_suivante' && d && d.par === 'enchainement' && /^Nexity/.test(d.demo))),
+                'l’enchaînement n’est pas mesuré (demo_suivante)');
+            // La dernière ne s'enchaîne sur rien : le lecteur reste, en pause.
+            await p.evaluate(() => toggleAudio('audio-doublage-nathan'));
+            await p.waitForFunction(() => document.getElementById('audio-doublage-nathan').currentTime > 0.2, null, { timeout: 10000 });
+            await p.evaluate(() => allerDansLaDemo('audio-doublage-nathan', dureeDemo('audio-doublage-nathan') - 0.5));
+            await p.waitForFunction(() => document.getElementById('audio-doublage-nathan').paused, null, { timeout: 12000 }).catch(() => { });
+            await p.waitForTimeout(1200);
+            e = await etat();
+            const lecture = e.boutons.find((b) => /lecture|pause/i.test(b.nom || ''));
+            const suivante = e.boutons.find((b) => /suivante/i.test(b.nom || ''));
+            exige(!e.joue.length && e.visible && e.titre === '3, 2, 1 Go !' && /Reprendre/.test(lecture && lecture.nom) && suivante && suivante.off === 'true',
+                `après la dernière démo : ${JSON.stringify({ joue: e.joue, titre: e.titre, lecture, suivante })}`);
+            // La croix arrête tout et referme le lecteur.
+            await p.locator('#lecteur-voix [data-lv="fermer"]').tap();
+            await p.waitForTimeout(500);
+            e = await etat();
+            exige(!e.visible && !e.joue.length && !e.session, `la croix n’arrête pas tout (${JSON.stringify({ visible: e.visible, joue: e.joue, session: e.session })})`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+
+            // Sur ordinateur, en bas à droite.
+            const o = await visiteur({ viewport: { width: 1440, height: 900 } });
+            const q = await o.newPage();
+            await q.goto(base + '/#demos_voix', { waitUntil: 'load' });
+            await q.waitForTimeout(1000);
+            await q.click('#btn-audio-nexity');
+            await q.waitForFunction(() => !document.getElementById('lecteur-voix').hidden, null, { timeout: 5000 });
+            await q.waitForTimeout(500);
+            // Le coin de l'écran tel que le voit un élément fixe : la barre de
+            // défilement (6 px, toujours réservée) n'en fait pas partie.
+            const r = await q.evaluate(() => {
+                const coin = document.createElement('div');
+                coin.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px';
+                document.body.append(coin);
+                const c = coin.getBoundingClientRect(), b = document.getElementById('lecteur-voix').getBoundingClientRect();
+                coin.remove();
+                return { d: c.right - b.right, b: c.bottom - b.bottom, l: b.width };
+            });
+            exige(Math.abs(r.d - 16) <= 2 && Math.abs(r.b - 16) <= 2, `le mini-lecteur n’est pas en bas à droite sur ordinateur (${JSON.stringify(r)})`);
+            await o.close();
         });
 
         await verifie('les pastilles ▶ des bandes-annonces ne sont pas imprimées', async () => {
@@ -2927,6 +3034,205 @@ function exige(condition, message) {
             exige(suit === 'true', 'le halo ne suit pas l’extrait que le lecteur annonce');
             await p.keyboard.press('Escape');
             await p.waitForTimeout(600);
+            exige(await p.evaluate(() => !document.getElementById('video-iframe').getAttribute('src')), 'le lecteur continue une fois la salle rallumée');
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        await verifie('la salle de projection : la durée de la bande démo sous l’écran, et ses extraits en chapitres, chacun de son début à sa fin', async () => {
+            // La durée (DUREE, dans le script) n'est écrite nulle part
+            // ailleurs : si la bande démo change, ces trois endroits doivent
+            // changer ensemble — le texte sous l'écran, la fin du dernier
+            // chapitre, la constante.
+            const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#demos_camera', { waitUntil: 'load' });
+            await p.waitForTimeout(600);
+            const r = await p.evaluate(() => ({
+                duree: salle.DUREE, debuts: salle.DEBUTS,
+                affichee: document.querySelector('#salle [data-salle-duree]').textContent.trim(),
+                datetime: document.querySelector('#salle [data-salle-duree]').getAttribute('datetime'),
+                chapitres: [...document.querySelectorAll('#salle .bobine [data-salle-debut]')].map((b) => ({
+                    debut: +b.dataset.salleDebut,
+                    numero: b.querySelector('.chapitre-numero')?.textContent.trim(),
+                    titre: b.querySelector('b')?.textContent.trim(),
+                    temps: [...b.querySelectorAll('.chapitre-temps time')].map((t) => t.textContent.trim())
+                })),
+                nom: document.querySelector('#salle .salle-ecran').getAttribute('aria-label')
+            }));
+            const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+            exige(r.duree > (r.debuts[r.debuts.length - 1] || 0), `la durée de la bande démo (${r.duree} s) ne dépasse pas le début du dernier extrait`);
+            exige(r.affichee === mmss(r.duree) && r.datetime === `PT${Math.floor(r.duree / 60)}M${r.duree % 60}S`,
+                `la durée sous l’écran (${r.affichee}, ${r.datetime}) n’est pas celle de DUREE (${mmss(r.duree)})`);
+            exige(r.chapitres.length === r.debuts.length, `${r.chapitres.length} chapitre(s) pour ${r.debuts.length} extraits`);
+            r.chapitres.forEach((ch, i) => {
+                const fin = i + 1 < r.debuts.length ? r.debuts[i + 1] : r.duree;
+                exige(ch.debut === r.debuts[i] && ch.numero === `Chapitre ${i + 1}` && ch.titre
+                    && JSON.stringify(ch.temps) === JSON.stringify([mmss(r.debuts[i]), mmss(fin)]),
+                    `le chapitre ${i + 1} ne va pas de son début à sa fin (${JSON.stringify(ch)})`);
+            });
+            exige(/Lancer la projection/.test(r.nom) && /3 min 01/.test(r.nom), `l’écran ne dit pas ce qu’il lance, ni sa durée (« ${r.nom} »)`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+        });
+
+        await verifie('l’aperçu de la bande démo : rien avant l’onglet Caméra ni avant que l’écran soit à l’écran ; deux tours de photos en fondu, en transformation et opacité seulement, puis l’affiche, et plus rien ; arrêté par son bouton, rendu à l’affiche quand on quitte l’onglet ; immobile en mouvement réduit et en économie de données', async () => {
+            const photos = (urls) => urls.filter((u) => /\/univers\/(hommemoderne\/[456]|lerapt\/[28])-\d+\.webp$/.test(u));
+            // ── Les tours, au rythme raccourci (--apercu-plan, dans la
+            //    feuille : le script le lit). ──
+            {
+                const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                const demandes = [];
+                p.on('request', (q) => demandes.push({ url: q.url(), t: Date.now() }));
+                await p.goto(base + '/', { waitUntil: 'load' });
+                await p.waitForTimeout(1200);
+                exige(!photos(demandes.map((d) => d.url)).length, 'les photos de l’aperçu partent avec l’accueil');
+                exige(await p.evaluate(() => !document.querySelector('#salle .apercu-plan') && document.getElementById('salle').dataset.apercu === 'repos'),
+                    'l’aperçu est fabriqué avant l’ouverture de l’onglet Caméra');
+                await p.addStyleTag({ content: '#salle { --apercu-plan: 350ms; --apercu-fondu: 120ms; }' });
+                // Ce que l'écran montre, dans l'ordre : le halo est prévenu à
+                // chaque photo (son index), et au retour à l'affiche (-1).
+                await p.evaluate(() => {
+                    window.__ecran = [];
+                    window.__mouvements = new Set();
+                    const vers = salle.montrerSurEcran;
+                    salle.montrerSurEcran = (img) => {
+                        window.__ecran.push(img ? [...document.querySelectorAll('#salle .apercu-plan img')].indexOf(img) : -1);
+                        // Ce qui bouge dans l'aperçu : seulement transformation et opacité.
+                        document.getAnimations().forEach((a) => {
+                            const cible = a.effect && a.effect.target;
+                            if (!cible || !cible.closest || !cible.closest('#salle .apercu')) return;
+                            if (a.transitionProperty) window.__mouvements.add(a.transitionProperty);
+                            else a.effect.getKeyframes().forEach((k) => Object.keys(k)
+                                .filter((x) => !['offset', 'easing', 'composite', 'computedOffset'].includes(x))
+                                .forEach((x) => window.__mouvements.add(x)));
+                        });
+                        return vers(img);
+                    };
+                });
+                const ouverture = Date.now();
+                await p.click('#tab-demos_camera');
+                await p.waitForFunction(() => document.getElementById('salle').dataset.apercu === 'fini', null, { timeout: 25000 });
+                await p.waitForTimeout(1500);
+                const r = await p.evaluate(() => ({
+                    ecran: window.__ecran, mouvements: [...window.__mouvements],
+                    plans: apercu.PLANS.length, tours: apercu.TOURS,
+                    vus: document.querySelectorAll('#salle .apercu-plan.est-vu, #salle .apercu-plan.en-mouvement').length,
+                    restent: document.querySelectorAll('#salle .apercu-plan').length,
+                    arret: document.querySelector('#salle .apercu-arret').hidden
+                }));
+                const attendu = [];
+                for (let t = 0; t < r.tours; t++) { for (let i = 0; i < r.plans; i++) attendu.push(i); attendu.push(-1); }
+                exige(r.tours >= 2 && r.tours <= 3, `l’aperçu joue ${r.tours} tour(s) : deux ou trois, pas plus`);
+                exige(JSON.stringify(r.ecran) === JSON.stringify(attendu),
+                    `l’écran ne passe pas ${r.tours} fois les ${r.plans} photos avant de revenir à l’affiche : ${JSON.stringify(r.ecran)}`);
+                exige(!r.vus && r.arret, `l’aperçu ne se pose pas sur l’affiche (${r.vus} photo(s) encore visibles ou en mouvement, bouton d’arrêt ${r.arret ? 'caché' : 'visible'})`);
+                exige(!r.restent, `posé, l’aperçu garde ses ${r.restent} photo(s) dans la page (et leur mémoire)`);
+                exige(r.mouvements.length && r.mouvements.every((m) => m === 'transform' || m === 'opacity'),
+                    `l’aperçu anime autre chose que la transformation et l’opacité : ${r.mouvements.join(', ')}`);
+                const parties = demandes.filter((d) => photos([d.url]).length);
+                exige(parties.length === r.plans && parties.every((d) => d.t >= ouverture),
+                    `les photos de l’aperçu partent ${parties.length} fois pour ${r.plans} photos, ou avant l’ouverture de l’onglet`);
+                // Revenir sur l'onglet ne rejoue pas l'aperçu.
+                await p.click('#tab-demos_voix');
+                await p.waitForTimeout(400);
+                await p.click('#tab-demos_camera');
+                await p.waitForTimeout(1500);
+                exige(await p.evaluate(() => window.__ecran.length) === attendu.length, 'l’aperçu rejoue alors qu’il s’est posé');
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+            // ── L'écran hors du champ, puis dedans ; quitter l'onglet ;
+            //    le bouton d'arrêt. ──
+            {
+                const c = await visiteur({ viewport: { width: 1280, height: 420 } });
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                const demandes = [];
+                p.on('request', (q) => demandes.push(q.url()));
+                await p.goto(base + '/#demos_camera', { waitUntil: 'load' });
+                await p.waitForTimeout(1800);
+                const avant = await p.evaluate(() => {
+                    const r = document.querySelector('#salle .salle-ecran').getBoundingClientRect();
+                    return { vu: Math.max(0, Math.min(innerHeight, r.bottom) - Math.max(0, r.top)) / r.height, plans: document.querySelectorAll('#salle .apercu-plan').length };
+                });
+                exige(avant.vu < 0.5 && !avant.plans && !photos(demandes).length,
+                    `l’aperçu démarre sur un écran à ${Math.round(avant.vu * 100)} % dans la fenêtre`);
+                await p.evaluate(() => document.querySelector('#salle .salle-ecran').scrollIntoView({ block: 'center' }));
+                await p.waitForFunction(() => document.querySelector('#salle .apercu-plan.est-vu'), null, { timeout: 10000 });
+                await p.click('#tab-page_cv');
+                await p.waitForTimeout(400);
+                const quitte = await p.evaluate(() => ({ etat: document.getElementById('salle').dataset.apercu, vus: document.querySelectorAll('#salle .apercu-plan.est-vu').length, arret: document.querySelector('#salle .apercu-arret').hidden }));
+                exige(quitte.etat === 'repos' && !quitte.vus && quitte.arret, `quitter l’onglet ne rend pas l’affiche (${JSON.stringify(quitte)})`);
+                await p.click('#tab-demos_camera');
+                await p.evaluate(() => document.querySelector('#salle .salle-ecran').scrollIntoView({ block: 'center' }));
+                await p.waitForFunction(() => document.querySelector('#salle .apercu-plan.est-vu'), null, { timeout: 10000 });
+                const bouton = await p.evaluate(() => {
+                    const b = document.querySelector('#salle .apercu-arret');
+                    const r = b.getBoundingClientRect();
+                    return { nom: b.getAttribute('aria-label'), l: r.width, h: r.height, visible: !b.hidden };
+                });
+                exige(bouton.visible && /Arrêter/.test(bouton.nom) && bouton.l >= 44 && bouton.h >= 44, `pas de bouton pour arrêter l’aperçu (${JSON.stringify(bouton)})`);
+                await p.focus('#salle .apercu-arret');
+                await p.keyboard.press('Enter');
+                await p.waitForTimeout(300);
+                const arrete = await p.evaluate(() => ({
+                    etat: document.getElementById('salle').dataset.apercu,
+                    vus: document.querySelectorAll('#salle .apercu-plan.est-vu').length,
+                    focus: document.activeElement && document.activeElement.classList.contains('salle-ecran')
+                }));
+                exige(arrete.etat === 'fini' && !arrete.vus && arrete.focus, `le bouton n’arrête pas l’aperçu, ou perd le focus (${JSON.stringify(arrete)})`);
+                exige(!erreurs.length, erreurs.join(' | '));
+                await c.close();
+            }
+            // ── Ni en mouvement réduit, ni en économie de données. ──
+            const econome = () => Object.defineProperty(navigator, 'connection', { configurable: true, get: () => ({ saveData: true }) });
+            for (const [mode, options, init] of [['mouvement réduit', { reducedMotion: 'reduce' }, null], ['économie de données', {}, econome]]) {
+                const c = await visiteur({ viewport: { width: 1280, height: 900 }, ...options });
+                if (init) await c.addInitScript(init);
+                const p = await c.newPage();
+                const demandes = [];
+                p.on('request', (q) => demandes.push(q.url()));
+                await p.goto(base + '/#demos_camera', { waitUntil: 'load' });
+                await p.waitForTimeout(3000);
+                const r = await p.evaluate(() => ({ plans: document.querySelectorAll('#salle .apercu-plan').length, arret: document.querySelector('#salle .apercu-arret').hidden }));
+                exige(!r.plans && r.arret && !photos(demandes).length, `${mode} : l’aperçu joue (${r.plans} plan(s), ${photos(demandes).length} photo(s) demandée(s))`);
+                await c.close();
+            }
+        });
+
+        await verifie('la salle noire au téléphone couché : le lecteur prend toute la hauteur, au format 16:9, sans bobine ni halo, la croix à portée ; le plein écran ne fait pas d’erreur', async () => {
+            const c = await visiteur({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#demos_camera', { waitUntil: 'load' });
+            await p.waitForTimeout(800);
+            await p.locator('#salle .salle-ecran').tap();
+            await p.waitForTimeout(1300);
+            const r = await p.evaluate(() => {
+                const f = document.getElementById('video-iframe').getBoundingClientRect();
+                const x = document.querySelector('#video-modal-card button[aria-label="Fermer la vidéo"]').getBoundingClientRect();
+                const m = document.getElementById('video-modal');
+                return {
+                    ouverte: !m.hidden, f: { l: f.width, h: f.height, x: f.left, y: f.top }, vh: innerHeight, vw: innerWidth,
+                    x: { l: x.width, h: x.height, d: x.right, b: x.bottom },
+                    bobine: getComputedStyle(m.querySelector('.bobine--noire')).display,
+                    halo: getComputedStyle(m.querySelector('.salle-scene > .salle-halo')).display
+                };
+            });
+            exige(r.ouverte && r.f.h >= r.vh * 0.95, `le lecteur ne prend pas la hauteur de l’écran couché (${Math.round(r.f.h)} px sur ${r.vh})`);
+            exige(Math.abs(r.f.l / r.f.h - 16 / 9) < 0.02 && Math.abs(r.f.x + r.f.l / 2 - r.vw / 2) < 2, `le lecteur n’est pas un 16:9 centré (${JSON.stringify(r.f)})`);
+            exige(r.bobine === 'none' && r.halo === 'none', 'la bobine ou le halo restent dans la salle couchée');
+            exige(r.x.l >= 44 && r.x.h >= 44 && r.x.d <= r.vw && r.x.b <= r.vh, `la croix n’est pas à portée (${JSON.stringify(r.x)})`);
+            // Le plein écran (le bouton de YouTube, dans l'iframe) demande
+            // l'écran couché ; ailleurs, rien — et surtout pas d'erreur.
+            await p.evaluate(() => document.dispatchEvent(new Event('fullscreenchange')));
+            await p.waitForTimeout(100);
+            await p.keyboard.press('Escape');
+            await p.waitForTimeout(700);
             exige(await p.evaluate(() => !document.getElementById('video-iframe').getAttribute('src')), 'le lecteur continue une fois la salle rallumée');
             exige(!erreurs.length, erreurs.join(' | '));
             await c.close();

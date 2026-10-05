@@ -4568,7 +4568,7 @@
             border-radius: 4px;
             background: rgb(var(--c-text));
             color: rgb(var(--c-bg));
-            font: 600 10.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+            font: 600 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
             white-space: nowrap;
             pointer-events: none;
             opacity: 0;
@@ -4579,6 +4579,244 @@
             .onde:hover .onde-bulle {
                 opacity: 1;
             }
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           LE MINI-LECTEUR DES DÉMOS VOIX
+           ──────────────────────────────────────────────────────────────
+           Il flotte comme la barre d'onglets, et lui ressemble : même
+           surface, même arrondi, même ombre — un objet de l'interface, pas
+           une carte de la page. Au téléphone, il se pose 8 px au-dessus de
+           la barre du bas (--lv-barre, sa hauteur MESURÉE par le script ;
+           60 px en attendant), sur la même largeur ; sur grand écran, en bas
+           à droite, 420 px.
+
+           CINQUANTE-SIX PIXELS DE HAUT, pour des cibles de 44 : précédente,
+           lecture, suivante, croix. Le bouton de lecture porte l'or, comme
+           celui d'une carte qui joue. La piste est un trait de 2 px au pied,
+           qui avance par une transformation (scaleX) : rien à remettre en
+           page quatre fois par seconde.
+
+           LE TEXTE : le nom de la démo dans la police des titres de carte,
+           sa nuance en italique, le temps « 0:12 / 0:39 » en chiffres à
+           chasse fixe, qui ne dansent pas. Rien sous 11 px.
+
+           Il entre en montant et sort en descendant, en transformation et
+           opacité ; en mouvement réduit, il paraît et disparaît, net. Une
+           animation d'entrée plutôt que @starting-style, comme le
+           changement d'onglet : elle se rejoue d'elle-même chaque fois que
+           `hidden` tombe. */
+        .lecteur-voix {
+            --lv-barre: 60px;
+            position: fixed;
+            z-index: 39;
+            left: max(calc(8px + env(safe-area-inset-left, 0px)), calc(50% - 240px));
+            right: max(calc(8px + env(safe-area-inset-right, 0px)), calc(50% - 240px));
+            bottom: calc(8px + var(--lv-barre) + 8px + env(safe-area-inset-bottom, 0px));
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            height: 56px;
+            padding: 0 4px 0 14px;
+            border-radius: 16px;
+            border: 1px solid color-mix(in srgb, rgb(var(--c-gold)) 22%, transparent);
+            background: rgb(var(--c-surface));
+            box-shadow: 0 12px 30px -10px rgb(0 0 0 / 0.55);
+            color: rgb(var(--c-text));
+        }
+
+        .lecteur-voix[hidden] {
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .lecteur-voix {
+                left: auto;
+                right: max(16px, env(safe-area-inset-right, 0px));
+                bottom: max(16px, env(safe-area-inset-bottom, 0px));
+                width: 420px;
+            }
+        }
+
+        .lv-texte {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .lv-titre,
+        .lv-temps {
+            margin: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .lv-nom {
+            font: 700 11px/1.4 'Montserrat', sans-serif;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .lv-nuance {
+            font: italic 400 12px/1.4 'Inter', sans-serif;
+            text-transform: lowercase;
+            color: rgb(var(--c-muted));
+        }
+
+        .lv-temps {
+            font: 500 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            letter-spacing: .02em;
+            color: rgb(var(--c-muted));
+            font-variant-numeric: tabular-nums;
+        }
+
+        .lv-boutons {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .lv-bouton {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: none;
+            color: rgb(var(--c-text));
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .lv-bouton::before {
+            content: '';
+            position: absolute;
+            inset: 5px;
+            border-radius: 50%;
+            background: transparent;
+            transition: background var(--dur-quick) var(--ease-out);
+        }
+
+        .lv-bouton .ico {
+            position: relative;
+        }
+
+        @media (hover: hover) {
+            .lv-bouton:hover::before {
+                background: rgb(var(--c-s100));
+            }
+        }
+
+        .lv-bouton[aria-disabled="true"] {
+            color: rgb(var(--c-s400));
+            cursor: default;
+        }
+
+        .lv-bouton[aria-disabled="true"]::before {
+            background: transparent;
+        }
+
+        /* La lecture : un rond d'or plein, comme le bouton d'une carte qui
+           joue — le geste principal se voit d'abord. */
+        .lv-lecture {
+            color: rgb(var(--c-on-gold));
+            font-size: 13px;
+        }
+
+        .lv-lecture::before,
+        .lv-lecture:hover::before {
+            inset: 4px;
+            background: rgb(var(--c-gold));
+        }
+
+        .lv-fermer {
+            color: rgb(var(--c-muted));
+            font-size: 15px;
+        }
+
+        .lv-piste {
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            bottom: 5px;
+            height: 2px;
+            border-radius: 1px;
+            background: rgb(var(--c-s200));
+            overflow: hidden;
+        }
+
+        .lv-lu {
+            display: block;
+            height: 100%;
+            background: rgb(var(--c-gold));
+            transform: scaleX(0);
+            transform-origin: left;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            .lecteur-voix:not([hidden]) {
+                animation: lv-entre var(--dur-base) var(--ease-out) both;
+            }
+
+            .lecteur-voix.s-ferme {
+                animation: lv-sort 200ms ease-in both;
+            }
+
+            .lv-lu:not(.net) {
+                transition: transform 250ms linear;
+            }
+        }
+
+        @keyframes lv-entre {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+        }
+
+        @keyframes lv-sort {
+            to {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+        }
+
+        /* LA FIN DE LA PAGE RESTE AU-DESSUS DU LECTEUR. Au téléphone, #site
+           réserve déjà la place de la barre (86 px) ; il y ajoute celle du
+           lecteur, 56 + 8. Le défilement au clavier s'arrête au-dessus des
+           deux. Sur grand écran, le lecteur couvrirait le pied de page. */
+        @media (max-width: 767px) {
+            html.lecteur-ouvert #site {
+                padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+            }
+
+            html.lecteur-ouvert {
+                scroll-padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
+            }
+        }
+
+        @media (min-width: 768px) {
+            html.lecteur-ouvert #site {
+                padding-bottom: calc(1.5rem + 56px + 16px);
+            }
+        }
+
+        /* Le changement d'onglet ne l'emporte pas avec la page : il a son
+           propre groupe, vivant, sans double image — comme la barre. */
+        html.vt-onglet #lecteur-voix {
+            view-transition-name: lecteur-voix;
+        }
+
+        html.vt-onglet::view-transition-old(lecteur-voix) {
+            display: none;
+        }
+
+        html.vt-onglet::view-transition-group(lecteur-voix),
+        html.vt-onglet::view-transition-new(lecteur-voix) {
+            animation: none;
         }
 
         /* ── La salle de projection (Démos caméra) ──
@@ -4628,22 +4866,210 @@
             cursor: pointer;
         }
 
-        .salle-ecran img {
+        /* L'affiche. Les photos de l'aperçu, posées dessus, ont leurs
+           propres règles (.apercu-plan) : celles-ci ne visent qu'elle. */
+        .salle-ecran picture img {
             position: absolute;
             inset: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform .7s var(--ease-out), filter .4s ease;
+            transition: transform .7s var(--ease-out);
         }
 
-        .salle-ecran:hover img {
+        .salle-ecran:hover picture img {
             transform: scale(1.02);
-            filter: brightness(.85);
+        }
+
+        /* LE SURVOL ASSOMBRIT PAR UN VOILE, ET NON PLUS PAR UN FILTRE. Un
+           `brightness(.85)` en transition sur l'affiche, c'était un filtre
+           animé ; sur les photos de l'aperçu, cinq. Un voile noir à 15 %
+           d'opacité donne exactement le même assombrissement (0,85 fois
+           chaque couleur), sur l'affiche comme sur la photo qui passe, et
+           seule son opacité bouge. Il est sous le bouton « Lancer la
+           projection », qui reste net. */
+        .salle-ecran::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            background: #000;
+            opacity: 0;
+            transition: opacity .4s ease;
+            pointer-events: none;
+        }
+
+        .salle-ecran:hover::after {
+            opacity: .15;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           L'APERÇU — la bande démo vivante, sans vidéo
+           ──────────────────────────────────────────────────────────────
+           Il n'y a aucun fichier vidéo dans le dépôt, et l'on n'en
+           ajoutera pas : l'écran vit avec les photos des deux films de la
+           bande démo. Un fondu enchaîné lent, chaque photo dans un léger
+           travelling — un zoom vers le visage, qui avance ou recule d'une
+           photo à l'autre —, puis le retour à l'affiche. Deux tours, et
+           l'écran s'y pose (voir L'APERÇU, dans le script).
+
+           TRANSFORMATION ET OPACITÉ, RIEN D'AUTRE. Le travelling est un
+           `transform: scale()` autour du point que cadre l'univers du film
+           (--x, --y, son `cadre` dans univers.js) ; le fondu, l'opacité.
+           Jamais de filtre animé : sur une photo plein écran, chaque image
+           du fondu le recalculerait.
+
+           LE ZOOM NE MONTRE JAMAIS CE QU'IL NE FAUT PAS. Une mise à
+           l'échelle supérieure à 1 autour d'un point de l'image garde
+           l'écran couvert, quel que soit ce point : aucun bord ne peut
+           entrer. Les photos de L'Homme moderne portent leurs bandes
+           noires de cinémascope (47 px en haut et en bas sur 640, 7,34 %) :
+           .a-barres agrandit leur boîte d'autant, pour que les bandes
+           tombent hors de l'écran, et le zoom les en éloigne encore.
+
+           LE RYTHME SE RÈGLE ICI : --apercu-plan, le temps de chaque
+           photo, et --apercu-fondu, celui du fondu. Le script les lit (il
+           mène la suite des photos), le travelling les reprend. Le
+           vérificateur les raccourcit pour compter les tours sans attendre
+           une minute. */
+        .salle {
+            --apercu-plan: 4.6s;
+            --apercu-fondu: 1.6s;
+        }
+
+        .salle-cadre {
+            position: relative;
+        }
+
+        .apercu {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .apercu-plan {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        /* Le fondu ne joue qu'à l'entrée : la photo qui arrive se pose
+           SUR la précédente, restée pleine dessous, qui disparaît d'un
+           coup une fois couverte (voir L'APERÇU). Deux fondus croisés
+           laisseraient voir l'affiche à travers les deux, à mi-course.
+           Seul le retour à l'affiche s'efface en fondu (.s-efface). */
+        .apercu-plan.est-vu,
+        .apercu-plan.s-efface {
+            transition: opacity var(--apercu-fondu) ease-in-out;
+        }
+
+        .apercu-plan.est-vu {
+            opacity: 1;
+        }
+
+        .apercu-plan img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            object-fit: cover;
+            object-position: var(--x, 50%) var(--y, 50%);
+            transform-origin: var(--x, 50%) var(--y, 50%);
+        }
+
+        /* Bandes de 7,34 % : la boîte est haute de 1 / (1 − 2 × 7,5 %),
+           et remonte de la moitié du surplus. */
+        .apercu-plan.a-barres img {
+            top: -8.82%;
+            height: 117.65%;
+        }
+
+        .apercu-plan.en-mouvement img {
+            animation: apercu-avance calc(var(--apercu-plan) + var(--apercu-fondu)) linear both;
+        }
+
+        .apercu-plan.en-mouvement:nth-child(even) img {
+            animation-name: apercu-recule;
+        }
+
+        .apercu.est-suspendu .apercu-plan img {
+            animation-play-state: paused;
+        }
+
+        @keyframes apercu-avance {
+            from {
+                transform: scale(1.01);
+            }
+
+            to {
+                transform: scale(1.11);
+            }
+        }
+
+        @keyframes apercu-recule {
+            from {
+                transform: scale(1.11);
+            }
+
+            to {
+                transform: scale(1.01);
+            }
+        }
+
+        /* « ARRÊTER L'APERÇU » — 2.2.2 des règles d'accessibilité : ce qui
+           bouge seul plus de cinq secondes, à côté du reste de la page, doit
+           pouvoir s'arrêter. Deux tours, c'est près d'une minute. Le
+           bouton tient dans le coin de l'écran, hors du bouton qui lance la
+           projection (on n'imbrique pas deux boutons) : un rond de 32 px au
+           centre d'une cible de 44. Il n'existe que pendant l'aperçu. */
+        .apercu-arret {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            z-index: 4;
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: none;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .apercu-arret[hidden] {
+            display: none;
+        }
+
+        .apercu-arret::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            background: rgb(0 0 0 / .5);
+            border: 1px solid rgb(255 255 255 / .24);
+            transition: background var(--dur-base) var(--ease-out);
+        }
+
+        .apercu-arret:hover::before {
+            background: rgb(0 0 0 / .72);
+        }
+
+        .apercu-arret .ico {
+            position: relative;
         }
 
         .salle-lancer {
             position: absolute;
+            z-index: 3;
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
@@ -4668,12 +5094,20 @@
             color: #0c0a08;
         }
 
+        /* LA LÉGENDE EST SUR LE HALO. La lumière qui déborde de l'écran
+           éclaire le bas de la salle, et l'aperçu y fait passer des photos
+           claires : mesuré au téléphone, le fond sous le titre monte jusqu'à
+           une luminance de 0,16. Le crème d'avant (#e7d6b8) n'y tenait que
+           3,5:1, le gris de la durée 1,5:1. Les deux passent à un blanc
+           chaud, 4,5:1 au pire (6,4 sur ordinateur, 18 sur le noir), avec
+           une ombre douce qui détache chaque lettre de la lumière. Le carré
+           YouTube, une icône, demande 3:1 : 3,3 au pire. */
         .salle-legende {
             display: flex;
-            justify-content: space-between;
             align-items: center;
             gap: 12px;
             margin-top: 12px;
+            text-shadow: 0 1px 3px rgb(0 0 0 / .5), 0 0 12px rgb(0 0 0 / .35);
         }
 
         .salle-legende h4 {
@@ -4681,18 +5115,37 @@
             font: 700 11px/1.3 'Montserrat', sans-serif;
             letter-spacing: .16em;
             text-transform: uppercase;
-            color: #e7d6b8;
+            color: #f8f3ea;
         }
 
+        /* La durée, dans la police des minutages de la bobine : c'est la
+           fin du dernier chapitre. */
+        .salle-duree {
+            margin: 0;
+            font: 500 11px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            letter-spacing: .04em;
+            color: #f8f3ea;
+        }
+
+        /* Le petit carré YouTube garde son dessin (28 px) ; sa cible fait
+           44 px, pour le doigt. */
         .salle-youtube {
+            position: relative;
             display: grid;
             place-items: center;
             width: 28px;
             height: 28px;
+            margin-left: auto;
             border-radius: 6px;
             border: 1px solid rgb(255 255 255 / .14);
-            color: #8c8272;
+            color: #b7ab96;
             font-size: 12px;
+        }
+
+        .salle-youtube::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
         }
 
         .salle-youtube:hover {
@@ -4731,18 +5184,42 @@
 
         .bobine button:hover img,
         .bobine button:focus-visible img,
-        .bobine button[aria-current="true"] img {
+        .bobine button[aria-current="true"] img,
+        .bobine button.est-apercu img {
             opacity: 1;
         }
 
-        .bobine span {
+        /* Le numéro et le minutage, en gris de salle : 5,8:1 sur son noir
+           (le gris d'avant, #8c8272, n'y tenait que 4,1:1). */
+        .bobine button>span {
             display: flex;
             justify-content: space-between;
             gap: 8px;
             font: 600 11px/1.3 'Montserrat', sans-serif;
             letter-spacing: .1em;
             text-transform: uppercase;
-            color: #8c8272;
+            color: #a89c88;
+        }
+
+        /* LES EXTRAITS, EN CHAPITRES. Le numéro, au-dessus ; le titre et
+           le minutage — début et fin — dessous, côte à côte quand la carte
+           est assez large, l'un sous l'autre au téléphone. Le retour à la
+           ligne se fait de lui-même (flex-wrap), sans point de rupture à
+           tenir. Le minutage ne se coupe jamais. */
+        .bobine--chapitres .chapitre {
+            flex-wrap: wrap;
+            align-items: baseline;
+            column-gap: 10px;
+            row-gap: 1px;
+        }
+
+        .chapitre-numero {
+            flex-basis: 100%;
+            font-weight: 600;
+        }
+
+        .chapitre-temps {
+            white-space: nowrap;
         }
 
         .bobine b {
@@ -4810,10 +5287,105 @@
             inset: 4%;
         }
 
+        /* ══════════════════════════════════════════════════════════════
+           LE TÉLÉPHONE COUCHÉ : LA SALLE NOIRE PREND TOUT L'ÉCRAN
+           ──────────────────────────────────────────────────────────────
+           On couche son téléphone pour regarder un film. La salle noire y
+           gardait sa carte, son bandeau, sa bobine et ses marges : sur
+           390 px de haut, la vidéo n'en avait plus que 220. Couché (et
+           bas : 500 px au plus, pour ne pas toucher une tablette), le
+           lecteur prend toute la hauteur — 100dvh, la hauteur visible,
+           barre d'adresse comprise ou non —, au format 16:9 tant que la
+           largeur le permet. Le noir autour est celui de la salle.
+
+           L'ENCOCHE. La page est en `viewport-fit=cover` : couchée, elle
+           s'étend sous l'encoche et sous la barre d'accueil. Le lecteur
+           reste dans la zone sûre (env(safe-area-inset-*)), le noir
+           remplit le reste.
+
+           CE QUI DISPARAÎT : le titre du bandeau, la bobine, le halo (il
+           n'y a plus de bord où déborder). LA CROIX RESTE, seule dans le
+           coin haut droit, sur le noir de côté quand l'écran est plus
+           large que 16:9 — c'est le cas de presque tous les téléphones —,
+           et Échap ou le geste de retour referment la salle, comme
+           toujours. Le plein écran de YouTube reste là pour qui le veut ;
+           voir plein écran et orientation, dans le script. */
+        @media (orientation: landscape) and (max-height: 500px) {
+            #video-modal.salle-noire {
+                padding: 0;
+                background: #000;
+            }
+
+            #video-modal.salle-noire .salle-scene {
+                width: 100%;
+                max-width: none;
+                height: 100dvh;
+            }
+
+            #video-modal.salle-noire .salle-scene>.salle-halo,
+            #video-modal.salle-noire .bobine--noire {
+                display: none;
+            }
+
+            #video-modal.salle-noire #video-modal-card {
+                position: relative;
+                width: 100%;
+                max-width: none;
+                height: 100%;
+                border: 0;
+                border-radius: 0;
+                box-shadow: none;
+                background: #000;
+                transform: none;
+            }
+
+            #video-modal.salle-noire #video-modal-card>div:first-child {
+                position: absolute;
+                z-index: 2;
+                top: max(4px, env(safe-area-inset-top, 0px));
+                right: max(4px, env(safe-area-inset-right, 0px));
+                padding: 0;
+                border: 0;
+                background: none;
+            }
+
+            #video-modal.salle-noire #video-modal-card>div:first-child>span {
+                display: none;
+            }
+
+            #video-modal.salle-noire #video-modal-card>div:first-child>button {
+                display: grid;
+                place-items: center;
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                background: rgb(255 255 255 / .08);
+                color: rgb(255 255 255 / .85);
+            }
+
+            #video-modal.salle-noire #video-modal-card .aspect-video {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                aspect-ratio: auto;
+                padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+            }
+
+            #video-modal.salle-noire #video-iframe {
+                width: auto;
+                height: 100%;
+                max-width: 100%;
+                aspect-ratio: 16 / 9;
+            }
+        }
+
         @media (prefers-reduced-motion: reduce) {
 
             .salle-halo canvas,
-            .salle-ecran img,
+            .salle-ecran picture img,
+            .salle-ecran::after,
+            .apercu-arret::before,
             .bobine img,
             #video-modal.salle-noire {
                 transition: none;
@@ -7706,7 +8278,7 @@
 <body class="bg-luxury-bg text-luxury-textMain font-inter min-h-screen relative">
 
     <!-- SPRITE-ICONES:DEBUT -->
-    <!-- Les 39 icônes du site, et rien d'autre. Généré par
+    <!-- Les 41 icônes du site, et rien d'autre. Généré par
          build/construire-sprite-icones.py — ne pas modifier à la main.
          Icônes FontAwesome Free, licence CC BY 4.0 (fontawesome.com).
          `aria-hidden` + `display:none` : ce bloc est une réserve de
@@ -7721,6 +8293,7 @@
         <symbol id="i-solid-arrow-down" viewBox="0 0 384 512"><path d="M169.4 470.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 370.8 224 64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 306.7L54.6 265.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z"/></symbol>
         <symbol id="i-solid-arrow-right" viewBox="0 0 448 512"><path d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"/></symbol>
         <symbol id="i-solid-arrow-up-right-from-square" viewBox="0 0 512 512"><path d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z"/></symbol>
+        <symbol id="i-solid-backward-step" viewBox="0 0 320 512"><path d="M267.5 440.6c9.5 7.9 22.8 9.7 34.1 4.4s18.4-16.6 18.4-29V96c0-12.4-7.2-23.7-18.4-29s-24.5-3.6-34.1 4.4l-192 160L64 241V96c0-17.7-14.3-32-32-32S0 78.3 0 96V416c0 17.7 14.3 32 32 32s32-14.3 32-32V271l11.5 9.6 192 160z"/></symbol>
         <symbol id="i-solid-book-open" viewBox="0 0 576 512"><path d="M249.6 471.5c10.8 3.8 22.4-4.1 22.4-15.5V78.6c0-4.2-1.6-8.4-5-11C247.4 52 202.4 32 144 32C93.5 32 46.3 45.3 18.1 56.1C6.8 60.5 0 71.7 0 83.8V454.1c0 11.9 12.8 20.2 24.1 16.5C55.6 460.1 105.5 448 144 448c33.9 0 79 14 105.6 23.5zm76.8 0C353 462 398.1 448 432 448c38.5 0 88.4 12.1 119.9 22.6c11.3 3.8 24.1-4.6 24.1-16.5V83.8c0-12.1-6.8-23.3-18.1-27.6C529.7 45.3 482.5 32 432 32c-58.4 0-103.4 20-123 35.6c-3.3 2.6-5 6.8-5 11V456c0 11.4 11.7 19.3 22.4 15.5z"/></symbol>
         <symbol id="i-solid-calendar-check" viewBox="0 0 448 512"><path d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zM329 305c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-95 95-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L329 305z"/></symbol>
         <symbol id="i-solid-calendar-days" viewBox="0 0 448 512"><path d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zm64 80v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm128 0v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H208c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H336zM64 400v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H208zm112 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H336c-8.8 0-16 7.2-16 16z"/></symbol>
@@ -7738,6 +8311,7 @@
         <symbol id="i-solid-expand" viewBox="0 0 448 512"><path d="M32 32C14.3 32 0 46.3 0 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V96h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H32zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H64V352zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32h64v64c0 17.7 14.3 32 32 32s32-14.3 32-32V64c0-17.7-14.3-32-32-32H320zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32v64H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32V352z"/></symbol>
         <symbol id="i-solid-file-pdf" viewBox="0 0 512 512"><path d="M0 64C0 28.7 28.7 0 64 0H224V128c0 17.7 14.3 32 32 32H384V304H176c-35.3 0-64 28.7-64 64V512H64c-35.3 0-64-28.7-64-64V64zm384 64H256V0L384 128zM176 352h32c30.9 0 56 25.1 56 56s-25.1 56-56 56H192v32c0 8.8-7.2 16-16 16s-16-7.2-16-16V448 368c0-8.8 7.2-16 16-16zm32 80c13.3 0 24-10.7 24-24s-10.7-24-24-24H192v48h16zm96-80h32c26.5 0 48 21.5 48 48v64c0 26.5-21.5 48-48 48H304c-8.8 0-16-7.2-16-16V368c0-8.8 7.2-16 16-16zm32 128c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H320v96h16zm80-112c0-8.8 7.2-16 16-16h48c8.8 0 16 7.2 16 16s-7.2 16-16 16H448v32h32c8.8 0 16 7.2 16 16s-7.2 16-16 16H448v48c0 8.8-7.2 16-16 16s-16-7.2-16-16V432 368z"/></symbol>
         <symbol id="i-solid-film" viewBox="0 0 512 512"><path d="M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM48 368v32c0 8.8 7.2 16 16 16H96c8.8 0 16-7.2 16-16V368c0-8.8-7.2-16-16-16H64c-8.8 0-16 7.2-16 16zm368-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V368c0-8.8-7.2-16-16-16H416zM48 240v32c0 8.8 7.2 16 16 16H96c8.8 0 16-7.2 16-16V240c0-8.8-7.2-16-16-16H64c-8.8 0-16 7.2-16 16zm368-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V240c0-8.8-7.2-16-16-16H416zM48 112v32c0 8.8 7.2 16 16 16H96c8.8 0 16-7.2 16-16V112c0-8.8-7.2-16-16-16H64c-8.8 0-16 7.2-16 16zM416 96c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V112c0-8.8-7.2-16-16-16H416zM160 128v64c0 17.7 14.3 32 32 32H320c17.7 0 32-14.3 32-32V128c0-17.7-14.3-32-32-32H192c-17.7 0-32 14.3-32 32zm32 160c-17.7 0-32 14.3-32 32v64c0 17.7 14.3 32 32 32H320c17.7 0 32-14.3 32-32V320c0-17.7-14.3-32-32-32H192z"/></symbol>
+        <symbol id="i-solid-forward-step" viewBox="0 0 320 512"><path d="M52.5 440.6c-9.5 7.9-22.8 9.7-34.1 4.4S0 428.4 0 416V96C0 83.6 7.2 72.3 18.4 67s24.5-3.6 34.1 4.4l192 160L256 241V96c0-17.7 14.3-32 32-32s32 14.3 32 32V416c0 17.7-14.3 32-32 32s-32-14.3-32-32V271l-11.5 9.6-192 160z"/></symbol>
         <symbol id="i-solid-graduation-cap" viewBox="0 0 640 512"><path d="M320 32c-8.1 0-16.1 1.4-23.7 4.1L15.8 137.4C6.3 140.9 0 149.9 0 160s6.3 19.1 15.8 22.6l57.9 20.9C57.3 229.3 48 259.8 48 291.9v28.1c0 28.4-10.8 57.7-22.3 80.8c-6.5 13-13.9 25.8-22.5 37.6C0 442.7-.9 448.3 .9 453.4s6 8.9 11.2 10.2l64 16c4.2 1.1 8.7 .3 12.4-2s6.3-6.1 7.1-10.4c8.6-42.8 4.3-81.2-2.1-108.7C90.3 344.3 86 329.8 80 316.5V291.9c0-30.2 10.2-58.7 27.9-81.5c12.9-15.5 29.6-28 49.2-35.7l157-61.7c8.2-3.2 17.5 .8 20.7 9s-.8 17.5-9 20.7l-157 61.7c-12.4 4.9-23.3 12.4-32.2 21.6l159.6 57.6c7.6 2.7 15.6 4.1 23.7 4.1s16.1-1.4 23.7-4.1L624.2 182.6c9.5-3.4 15.8-12.5 15.8-22.6s-6.3-19.1-15.8-22.6L343.7 36.1C336.1 33.4 328.1 32 320 32zM128 408c0 35.3 86 72 192 72s192-36.7 192-72L496.7 262.6 354.5 314c-11.1 4-22.8 6-34.5 6s-23.5-2-34.5-6L143.3 262.6 128 408z"/></symbol>
         <symbol id="i-solid-magnifying-glass" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></symbol>
         <symbol id="i-solid-masks-theater" viewBox="0 0 640 512"><path d="M74.6 373.2c41.7 36.1 108 82.5 166.1 73.7c6.1-.9 12.1-2.5 18-4.5c-9.2-12.3-17.3-24.4-24.2-35.4c-21.9-35-28.8-75.2-25.9-113.6c-20.6 4.1-39.2 13-54.7 25.4c-6.5 5.2-16.3 1.3-14.8-7c6.4-33.5 33-60.9 68.2-66.3c2.6-.4 5.3-.7 7.9-.8l19.4-131.3c2-13.8 8-32.7 25-45.9C278.2 53.2 310.5 37 363.2 32.2c-.8-.7-1.6-1.4-2.4-2.1C340.6 14.5 288.4-11.5 175.7 5.6S20.5 63 5.7 83.9C0 91.9-.8 102 .6 111.8L24.8 276.1c5.5 37.3 21.5 72.6 49.8 97.2zm87.7-219.6c4.4-3.1 10.8-2 11.8 3.3c.1 .5 .2 1.1 .3 1.6c3.2 21.8-11.6 42-33.1 45.3s-41.5-11.8-44.7-33.5c-.1-.5-.1-1.1-.2-1.6c-.6-5.4 5.2-8.4 10.3-6.7c9 3 18.8 3.9 28.7 2.4s19.1-5.3 26.8-10.8zM261.6 390c29.4 46.9 79.5 110.9 137.6 119.7s124.5-37.5 166.1-73.7c28.3-24.5 44.3-59.8 49.8-97.2l24.2-164.3c1.4-9.8 .6-19.9-5.1-27.9c-14.8-20.9-57.3-61.2-170-78.3S299.4 77.2 279.2 92.8c-7.8 6-11.5 15.4-12.9 25.2L242.1 282.3c-5.5 37.3-.4 75.8 19.6 107.7zM404.5 235.3c-7.7-5.5-16.8-9.3-26.8-10.8s-19.8-.6-28.7 2.4c-5.1 1.7-10.9-1.3-10.3-6.7c.1-.5 .1-1.1 .2-1.6c3.2-21.8 23.2-36.8 44.7-33.5s36.3 23.5 33.1 45.3c-.1 .5-.2 1.1-.3 1.6c-1 5.3-7.4 6.4-11.8 3.3zm136.2 15.5c-1 5.3-7.4 6.4-11.8 3.3c-7.7-5.5-16.8-9.3-26.8-10.8s-19.8-.6-28.7 2.4c-5.1 1.7-10.9-1.3-10.3-6.7c.1-.5 .1-1.1 .2-1.6c3.2-21.8 23.2-36.8 44.7-33.5s36.3 23.5 33.1 45.3c-.1 .5-.2 1.1-.3 1.6zM530 350.2c-19.6 44.7-66.8 72.5-116.8 64.9s-87.1-48.2-93-96.7c-1-8.3 8.9-12.1 15.2-6.7c23.9 20.8 53.6 35.3 87 40.3s66.1 .1 94.9-12.8c7.6-3.4 16 3.2 12.6 10.9z"/></symbol>
@@ -9707,27 +10281,54 @@
                          est caché au chargement, et ses 16 Ko partaient en même
                          temps que le portrait, qu'on voit, lui. Le halo attend
                          son arrivée (voir « repos » plus bas) : il se peint à la
-                         première ouverture de l'onglet. -->
+                         première ouverture de l'onglet.
+
+                         L'ÉCRAN VIT, SANS VIDÉO. Une image fixe ne disait pas
+                         qu'il y avait un film derrière. L'aperçu (.apercu, vide
+                         ici) passe en fondu enchaîné cinq photos des deux films,
+                         chacune dans un lent travelling, puis revient à
+                         l'affiche — deux tours, et il s'y pose (voir L'APERÇU,
+                         dans le script). Ses photos ne sont demandées qu'une
+                         fois l'onglet ouvert et l'écran à l'écran. Le bouton
+                         « Arrêter l'aperçu » ne paraît que pendant qu'il joue.
+
+                         LA DURÉE ET LES CHAPITRES. Sous l'écran, la durée de la
+                         bande démo (3:01) et ses deux extraits, en chapitres :
+                         titre, début et fin. La durée n'était écrite nulle part
+                         dans le dépôt ; d'où elle vient est dit à DUREE, dans le
+                         script (LA SALLE DE PROJECTION). La fin d'un chapitre
+                         est le début du suivant, celle du dernier la durée. -->
                     <div class="salle" id="salle">
                         <div class="salle-halo" aria-hidden="true"><canvas width="32" height="14"></canvas><canvas
                                 width="32" height="14"></canvas></div>
-                        <button type="button" class="salle-ecran group" data-salle-debut="0"
-                            aria-label="Lire la bande démo caméra d’Adrien Vada">
-                            <picture>
-                                <source srcset="ressources/images/miniatures/bande-demo-camera.webp" type="image/webp">
-                                <img src="ressources/images/miniatures/bande-demo-camera.jpg"
-                                    alt="Image extraite de la bande démo caméra d’Adrien Vada" width="1280" height="720"
-                                    loading="lazy" decoding="async" data-salle-plan-image>
-                            </picture>
-                            <span class="salle-lancer" aria-hidden="true">
+                        <div class="salle-cadre">
+                            <button type="button" class="salle-ecran group" data-salle-debut="0"
+                                aria-label="Lancer la projection : bande démo caméra d’Adrien Vada, 3 min 01">
+                                <picture>
+                                    <source srcset="ressources/images/miniatures/bande-demo-camera.webp" type="image/webp">
+                                    <img src="ressources/images/miniatures/bande-demo-camera.jpg"
+                                        alt="Image extraite de la bande démo caméra d’Adrien Vada" width="1280" height="720"
+                                        loading="lazy" decoding="async" data-salle-plan-image>
+                                </picture>
+                                <span class="apercu" aria-hidden="true"></span>
+                                <span class="salle-lancer" aria-hidden="true">
+                                    <svg class="ico" aria-hidden="true">
+                                        <use href="#i-solid-play"></use>
+                                    </svg>
+                                    Lancer la projection
+                                </span>
+                            </button>
+                            <button type="button" class="apercu-arret" aria-label="Arrêter l’aperçu de la bande démo"
+                                hidden>
                                 <svg class="ico" aria-hidden="true">
-                                    <use href="#i-solid-play"></use>
+                                    <use href="#i-solid-pause"></use>
                                 </svg>
-                                Lancer la projection
-                            </span>
-                        </button>
+                            </button>
+                        </div>
                         <div class="salle-legende">
                             <h4>Bande démo cinéma</h4>
+                            <p class="salle-duree"><span class="sr-only">Durée : </span><time
+                                    datetime="PT3M1S" data-salle-duree>3:01</time></p>
                             <a href="https://www.youtube.com/watch?v=GOeL5AMGb_s" target="_blank" rel="noopener"
                                 data-track="demo_youtube" aria-label="Voir la bande démo sur YouTube (nouvel onglet)"
                                 class="salle-youtube">
@@ -9736,16 +10337,22 @@
                                 </svg>
                             </a>
                         </div>
-                        <div class="bobine" role="group" aria-label="Lancer la bande démo à un extrait">
+                        <div class="bobine bobine--chapitres" role="group" aria-label="Chapitres de la bande démo">
                             <button type="button" data-salle-debut="0" data-salle-plan="0">
                                 <img src="ressources/images/miniatures/bande-demo-hommemoderne-640.webp" alt="" width="640"
                                     height="270" loading="lazy">
-                                <span><b>L’Homme moderne</b> <time>0:00</time></span>
+                                <span class="chapitre"><span class="chapitre-numero">Chapitre 1</span>
+                                    <b>L’Homme moderne</b> <span class="chapitre-temps"><time
+                                            datetime="PT0S">0:00</time><span aria-hidden="true"> – </span><span
+                                            class="sr-only"> à </span><time datetime="PT1M21S">1:21</time></span></span>
                             </button>
                             <button type="button" data-salle-debut="81" data-salle-plan="1">
                                 <img src="ressources/images/miniatures/bande-demo-lerapt-640.webp" alt="" width="640"
                                     height="270" loading="lazy">
-                                <span><b>Le rapt</b> <time>1:21</time></span>
+                                <span class="chapitre"><span class="chapitre-numero">Chapitre 2</span>
+                                    <b>Le rapt</b> <span class="chapitre-temps"><time
+                                            datetime="PT1M21S">1:21</time><span aria-hidden="true"> – </span><span
+                                            class="sr-only"> à </span><time datetime="PT3M1S">3:01</time></span></span>
                             </button>
                         </div>
                     </div>
@@ -10080,6 +10687,56 @@
 
         </main>
 
+        <!-- LE MINI-LECTEUR DES DÉMOS VOIX. Changer d'onglet coupait la
+             démo : on ne pouvait pas écouter une voix en lisant le CV, ce
+             qui est exactement ce que fait un directeur de casting. Il
+             paraît dès qu'une démo joue, et reste d'un onglet à l'autre :
+             le titre, lecture et pause, la précédente et la suivante, une
+             piste fine. Au téléphone, il se pose juste au-dessus de la
+             barre d'onglets du bas (sa hauteur est mesurée, voir
+             lecteurVoix) ; sur grand écran, en bas à droite. La croix
+             arrête la démo et le referme.
+
+             Hors du <main> : il n'appartient à aucun onglet. Dans #site :
+             une fenêtre ouverte (salle noire, agenda, univers) le rend
+             inerte avec le reste de la page. L'annonce « Lecture : … » est
+             À CÔTÉ de lui, pas dedans : une région annoncée qui paraît en
+             même temps que son texte n'est pas toujours lue. Rien de tout
+             cela ne s'imprime. -->
+        <div id="lecteur-voix" class="lecteur-voix no-print" role="region" aria-label="Lecteur des démos voix"
+            hidden>
+            <div class="lv-piste" aria-hidden="true"><span class="lv-lu"></span></div>
+            <div class="lv-texte">
+                <p class="lv-titre"><span class="lv-nom" data-lv-nom></span><span class="lv-nuance"
+                        data-lv-nuance></span></p>
+                <p class="lv-temps" data-lv-temps></p>
+            </div>
+            <div class="lv-boutons">
+                <button type="button" class="lv-bouton" data-lv="precedente" aria-label="Démo précédente">
+                    <svg class="ico" aria-hidden="true">
+                        <use href="#i-solid-backward-step"></use>
+                    </svg>
+                </button>
+                <button type="button" class="lv-bouton lv-lecture" data-lv="lecture" aria-label="Mettre en pause">
+                    <svg class="ico" aria-hidden="true" data-lv-icone>
+                        <use href="#i-solid-pause"></use>
+                    </svg>
+                </button>
+                <button type="button" class="lv-bouton" data-lv="suivante" aria-label="Démo suivante">
+                    <svg class="ico" aria-hidden="true">
+                        <use href="#i-solid-forward-step"></use>
+                    </svg>
+                </button>
+                <button type="button" class="lv-bouton lv-fermer" data-lv="fermer"
+                    aria-label="Fermer le lecteur et arrêter la démo">
+                    <svg class="ico" aria-hidden="true">
+                        <use href="#i-solid-xmark"></use>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <p id="lecteur-voix-annonce" class="sr-only no-print" aria-live="polite"></p>
+
         <!-- FOOTER : contact + fiches professionnelles -->
         <footer
             class="glass-card rounded-xl p-4 mt-5 border border-stone-200/50 bg-luxury-surface/70 shadow-sm no-print">
@@ -10353,6 +11010,8 @@
         // ════════════════════════════════════════════════════════════════
         //  ÉTAT GLOBAL
         // ════════════════════════════════════════════════════════════════
+        // La démo voix du mini-lecteur, qu'elle joue ou soit en pause ;
+        // `null` quand il est fermé (voir LE MINI-LECTEUR DES DÉMOS VOIX).
         let activeAudioId = null;
 
         // ════════════════════════════════════════════════════════════════
@@ -13276,11 +13935,13 @@
         });
 
         function poserPage(pageId, animate) {
-            if (activeAudioId) {
-                const audio = document.getElementById(activeAudioId);
-                if (audio) { audio.pause(); audio.currentTime = 0; resetAudioPlayer(activeAudioId); }
-                activeAudioId = null;
-            }
+            // LA VOIX SUIT, L'IMAGE S'ARRÊTE. Changer d'onglet coupait la
+            // démo voix en cours et la remettait au début. Elle continue
+            // désormais, et le mini-lecteur la suit d'un onglet à l'autre
+            // (voir lecteurVoix). Ce qui s'arrête, c'est ce qui ne se voit
+            // plus : l'aperçu de la bande démo, qui rend l'affiche quand on
+            // quitte l'onglet Caméra et rejoue en y revenant (voir L'APERÇU).
+            if (pageId === 'demos_camera') apercu.ouvrir(); else apercu.quitter();
 
             // L'onglet Dates se dessine avant de paraître (voir « L'onglet
             // n'est dessiné que quand il sert ») ; dans le passage animé, nous
@@ -13418,6 +14079,11 @@
             document.getElementById('video-modal-titre').textContent = bande ? `BANDE-ANNONCE · ${titre}` : 'LECTURE VIDÉO';
         }
 
+        // UN SEUL SON À LA FOIS. La voix suit d'un onglet à l'autre (voir le
+        // mini-lecteur) ; la salle noire, elle, la met en pause — la démo
+        // reste dans le mini-lecteur, prête à reprendre à la sortie.
+        // C'est la coupure que faisait autrefois tout changement d'onglet,
+        // gardée là où deux sons se recouvriraient vraiment.
         function openVideoModal(videoId, debut) {
             habillerSalle(false);
             // enablejsapi : le lecteur accepte qu'on lui parle (aller à un
@@ -13425,6 +14091,10 @@
             document.getElementById('video-iframe').src =
                 `${YOUTUBE}/embed/${videoId}?autoplay=1&rel=0&enablejsapi=1&start=${Math.floor(debut || 0)}`;
             salle.plan(salle.planA(debut || 0), true);
+            // L'aperçu a fait son office : on regarde le film. Il ne
+            // rejouera pas de la visite (voir L'APERÇU).
+            apercu.arreter();
+            lecteurVoix.taire();
             openModal('video-modal', 'video-modal-card');
         }
 
@@ -13443,6 +14113,7 @@
                 ? `${YOUTUBE}/embed/${m[2]}?autoplay=1&rel=0`
                 : `https://player.vimeo.com/video/${m[2]}?autoplay=1&dnt=1`;
             salle.eclairer(image);
+            lecteurVoix.taire();
             openModal('video-modal', 'video-modal-card');
             return true;
         };
@@ -13469,6 +14140,18 @@
         //  plusieurs fois par seconde dès qu'on s'annonce.
         const salle = (() => {
             const DEBUTS = [0, 81];   // L'Homme moderne, Le rapt — en secondes
+            // LA DURÉE DE LA BANDE DÉMO : 181 s, 3:01. Elle n'était écrite
+            // nulle part dans le dépôt — ni dans les données structurées,
+            // ni sur la page — et l'on ne pouvait pas la déduire des
+            // extraits : la fin du dernier n'était notée nulle part non
+            // plus. Elle a été lue le 4 octobre 2026 dans ce que YouTube
+            // répond à son lecteur intégré pour cette vidéo (« VADA - Démo
+            // caméra 2026 », champ `videoDurationSeconds` de l'aperçu
+            // d'intégration, youtube-nocookie.com/embed/GOeL5AMGb_s). Le
+            // second chapitre finit avec elle. SI LA BANDE DÉMO CHANGE, la
+            // relire là et la récrire ici, sous l'écran (« 3:01 ») et à la
+            // fin du dernier chapitre — le vérificateur confronte les trois.
+            const DUREE = 181;
             const images = [...document.querySelectorAll('#salle .bobine img')].map(i => i.getAttribute('src'));
             const cache = {};
             const halos = [...document.querySelectorAll('.salle-halo')].map(h => ({ toiles: [...h.querySelectorAll('canvas')], face: 0 }));
@@ -13477,6 +14160,10 @@
             const planA = (t) => { let p = 0; DEBUTS.forEach((d, i) => { if (t >= d) p = i; }); return p; };
 
             function charger(src) {
+                // Une image déjà là — une photo de l'aperçu, décodée — se
+                // peint telle quelle : la redemander par son adresse, c'était
+                // une seconde requête pour la même photo.
+                if (typeof src !== 'string') return Promise.resolve(src && src.naturalWidth ? src : null);
                 if (!cache[src]) {
                     cache[src] = new Promise((ok) => {
                         const im = new Image();
@@ -13488,9 +14175,12 @@
                 return cache[src];
             }
 
+            // La dernière lumière demandée l'emporte : une photo de l'aperçu
+            // arrivée après la suivante ne doit pas la recouvrir.
             function peindreHalo(halo, src) {
+                halo.voulu = src;
                 charger(src).then((im) => {
-                    if (!im) return;
+                    if (!im || halo.voulu !== src) return;
                     const suivant = halo.toiles[1 - halo.face];
                     const c = suivant.getContext('2d');
                     // Le centre de l'image : ses bords, bandes noires comprises,
@@ -13523,9 +14213,24 @@
                     b.setAttribute('aria-current', String(+b.dataset.sallePlan === p)));
             }
 
+            // Au repos, le halo de la page prend la lumière de ce que montre
+            // l'écran : l'affiche, ou la photo que l'aperçu y fait passer
+            // (montrerSurEcran, qui reçoit l'image elle-même). Quitter la
+            // bobine le rend à celle-là.
             const affiche = document.querySelector('#salle [data-salle-plan-image]');
-            const repos = () => { if (halos[0] && affiche) peindreHalo(halos[0], affiche.currentSrc || affiche.src); };
+            let surEcran = null;
+            const repos = () => {
+                const src = surEcran || (affiche && (affiche.currentSrc || affiche.src));
+                if (halos[0] && src) peindreHalo(halos[0], src);
+            };
             if (affiche) { affiche.complete ? repos() : affiche.addEventListener('load', repos, { once: true }); }
+            function montrerSurEcran(src) {
+                if (src === surEcran) return;
+                surEcran = src;
+                // L'affiche est paresseuse : tant qu'elle n'est pas là, son
+                // `load` peindra le halo.
+                if (src || (affiche && affiche.complete)) repos();
+            }
 
             document.querySelectorAll('#salle .bobine [data-salle-plan]').forEach((b) => {
                 const survol = () => halos[0] && peindreHalo(halos[0], images[+b.dataset.sallePlan]);
@@ -13565,7 +14270,321 @@
                 if (typeof t === 'number') plan(planA(t));
             });
 
-            return { plan, planA, eclairer };
+            return { plan, planA, eclairer, montrerSurEcran, DEBUTS, DUREE };
+        })();
+
+        // ── PLEIN ÉCRAN ET ORIENTATION ──
+        //  Le plein écran du lecteur YouTube (son bouton, dans l'iframe) fait
+        //  de l'iframe l'élément plein écran de la page. Au téléphone tenu
+        //  droit, la vidéo y restait petite au milieu du noir : on demande
+        //  alors l'écran couché (screen.orientation.lock), et on le rend à
+        //  la sortie. L'API n'existe pas partout, et ne s'accorde qu'en
+        //  plein écran (ailleurs, et sur iPhone, la promesse est refusée) :
+        //  on ne la demande donc qu'en plein écran, et un refus ne dit
+        //  rien. Couché sans plein écran, la salle noire prend déjà tout
+        //  l'écran (voir « Le téléphone couché », dans le <style>).
+        document.addEventListener('fullscreenchange', () => {
+            const o = screen.orientation;
+            if (!o || typeof o.lock !== 'function') return;
+            const plein = document.fullscreenElement;
+            if (plein && plein.id === 'video-iframe') {
+                if (matchMedia('(pointer: coarse)').matches) {
+                    try { o.lock('landscape').catch(() => { }); } catch (e) { /* refus synchrone : rien à dire */ }
+                }
+            } else if (typeof o.unlock === 'function') {
+                try { o.unlock(); } catch (e) { /* jamais verrouillée */ }
+            }
+        });
+
+        // ════════════════════════════════════════════════════════════════
+        //  L'APERÇU — la bande démo vivante, sans vidéo
+        // ════════════════════════════════════════════════════════════════
+        //  Cinq photos des deux films passent sur l'écran de la salle, en
+        //  fondu enchaîné, chacune dans un lent travelling (voir L'APERÇU,
+        //  dans le <style>) ; puis l'écran revient à l'affiche. DEUX
+        //  TOURS, et il s'y pose : rien ne bouge sans fin sur ce site
+        //  (WCAG 2.2.2), et le bouton « Arrêter l'aperçu » coupe court
+        //  avant. Lancer la projection l'arrête aussi.
+        //
+        //  IL NE JOUE QUE SI L'ON PEUT LE VOIR : l'onglet Caméra ouvert,
+        //  l'écran au moins à moitié dans la fenêtre (un observateur
+        //  d'intersection, aucun travail au défilement), la page au premier
+        //  plan. Sorti du champ, il attend, son travelling figé ; revenu,
+        //  il reprend où il en était. Quitter l'onglet l'arrête et rend
+        //  l'affiche ; y revenir rejoue les tours qui restent.
+        //
+        //  SES PHOTOS NE PARTENT QU'À SA PREMIÈRE PROJECTION — jamais au
+        //  chargement de l'accueil, ni avant la fin du chargement de la
+        //  page quand on arrive sur l'onglet : elles passeraient devant ce
+        //  qu'on voit déjà. 640 ou 1280 px selon la hauteur de l'écran et
+        //  sa densité (srcset), soit 54 à 131 Ko pour les cinq.
+        //
+        //  IL NE JOUE PAS DU TOUT en mouvement réduit, ni quand le
+        //  navigateur demande d'économiser les données (Save-Data) : pas une
+        //  photo n'est demandée, l'affiche reste. Sans script, de même.
+        const apercu = (() => {
+            const scene = document.querySelector('#salle .apercu');
+            const ecran = scene && scene.closest('.salle-ecran');
+            const arret = document.querySelector('#salle .apercu-arret');
+            const salleEl = document.getElementById('salle');
+            if (!scene || !ecran || !arret || !salleEl) return { ouvrir() { }, quitter() { }, arreter() { } };
+
+            // LES PHOTOS — les plus parlantes des deux montages, Adrien à
+            // l'image : Arthur à la table, la chanson de Melvin, la tête
+            // sur la table ; Steven ligoté, puis riant sur la plage. Dans
+            // l'ordre de la bande démo (L'Homme moderne, puis Le rapt),
+            // et l'affiche, qui est une image du Rapt, entre deux tours.
+            // `x` et `y` : le point que cadre l'univers du film (son
+            // `cadre`, dans univers.js) — l'écran est moins large que les
+            // photos, et le travelling va vers ce point. `film` : le
+            // chapitre de la bobine qu'elle éclaire. `barres` : les bandes
+            // noires du cinémascope, dans le fichier (voir .a-barres).
+            const PLANS = [
+                { photo: 'hommemoderne/4', film: 0, x: 80, y: 30, barres: true },
+                { photo: 'hommemoderne/5', film: 0, x: 42, y: 20, barres: true },
+                { photo: 'hommemoderne/6', film: 0, x: 33, y: 55, barres: true },
+                { photo: 'lerapt/2', film: 1, x: 58, y: 30 },
+                { photo: 'lerapt/8', film: 1, x: 65, y: 30 }
+            ];
+            const TOURS = 2;
+
+            const calme = matchMedia('(prefers-reduced-motion: reduce)');
+            const econome = () => !!(navigator.connection && navigator.connection.saveData)
+                || matchMedia('(prefers-reduced-data: reduce)').matches;
+
+            let plans = null;       // fabriqués à la première projection
+            let rang = -1;          // le plan atteint dans le tour (-1 : l'affiche)
+            let dessus = -1;        // le plan qui couvre l'écran (-1 : aucun)
+            let tours = 0;          // tours achevés
+            let fini = false;       // joué jusqu'au bout, ou arrêté : plus de la visite
+            let ouvert = false;     // l'onglet Caméra est affiché
+            let vu = false;         // l'écran est à moitié dans la fenêtre
+            let minuteur = 0, echeance = 0, reste = 0, jeton = 0;
+            let attenteChargement = false;
+
+            // Le rythme est dans la feuille de style (--apercu-plan,
+            // --apercu-fondu) : le script le lit, une fois par projection.
+            function duree(nom, defaut) {
+                const v = getComputedStyle(salleEl).getPropertyValue(nom).trim();
+                const n = parseFloat(v);
+                if (!isFinite(n)) return defaut;
+                return /ms$/.test(v) ? n : n * 1000;
+            }
+            let PLAN = 4600, FONDU = 1600;
+
+            function etat(nom) { salleEl.dataset.apercu = nom; }
+
+            function fabriquer() {
+                // La photo occupe toute la hauteur de l'écran, et le dépasse
+                // en largeur (≈ 2,4 fois sa hauteur), travelling compris :
+                // c'est ce que `sizes` doit annoncer, pas la largeur de
+                // l'écran — une version trop petite serait floue.
+                const largeur = Math.ceil((ecran.clientHeight || 360) * 2.6);
+                plans = PLANS.map((d) => {
+                    const el = document.createElement('span');
+                    el.className = 'apercu-plan' + (d.barres ? ' a-barres' : '');
+                    el.style.setProperty('--x', d.x + '%');
+                    el.style.setProperty('--y', d.y + '%');
+                    const img = document.createElement('img');
+                    img.alt = '';
+                    img.decoding = 'async';
+                    const base = `ressources/images/univers/${d.photo}`;
+                    img.sizes = largeur + 'px';
+                    img.srcset = `${base}-640.webp 640w, ${base}-1280.webp 1280w`;
+                    img.src = `${base}-640.webp`;
+                    el.append(img);
+                    scene.append(el);
+                    // Prête quand elle est décodée ; une photo qui manque
+                    // est sautée, sans trou dans le fondu.
+                    const pret = img.decode ? img.decode().then(() => true, () => false)
+                        : new Promise((ok) => { img.onload = () => ok(true); img.onerror = () => ok(false); });
+                    return { el, img, film: d.film, pret };
+                });
+            }
+
+            function eclairerBobine(film) {
+                salleEl.querySelectorAll('.bobine [data-salle-plan]').forEach((b) =>
+                    b.classList.toggle('est-apercu', +b.dataset.sallePlan === film));
+            }
+
+            // Tout ce qui ne couvre pas l'écran disparaît d'un coup : couvert,
+            // personne ne le voit partir. Le plan du dessus, lui, s'efface en
+            // fondu quand l'écran revient à l'affiche.
+            function cacherSauf(garde) {
+                plans.forEach((p, i) => {
+                    if (i === garde) return;
+                    p.el.classList.remove('est-vu', 's-efface', 'en-mouvement');
+                });
+            }
+
+            function programmer(ms) {
+                clearTimeout(minuteur);
+                echeance = performance.now() + ms;
+                minuteur = setTimeout(pas, ms);
+            }
+
+            function pas() {
+                minuteur = 0;
+                const j = rang + 1;
+                if (j >= plans.length) {
+                    // Retour à l'affiche : le dernier plan s'efface sur elle.
+                    cacherSauf(dessus);
+                    if (dessus >= 0) {
+                        const p = plans[dessus].el;
+                        p.classList.add('s-efface');
+                        p.classList.remove('est-vu');
+                    }
+                    dessus = -1;
+                    rang = -1;
+                    tours++;
+                    salle.montrerSurEcran(null);
+                    eclairerBobine(-1);
+                    if (tours >= TOURS) { poser(); return; }
+                    programmer(PLAN);
+                    return;
+                }
+                const p = plans[j];
+                const moi = jeton;
+                p.pret.then((ok) => {
+                    if (moi !== jeton) return;      // suspendu ou arrêté entre-temps
+                    rang = j;
+                    if (!ok) { pas(); return; }
+                    cacherSauf(dessus);
+                    p.el.classList.add('en-mouvement', 'est-vu');
+                    dessus = j;
+                    salle.montrerSurEcran(p.img);
+                    eclairerBobine(p.film);
+                    programmer(PLAN);
+                });
+            }
+
+            // Tout ce qui fait jouer l'aperçu, réuni : on le demande à
+            // chaque changement (onglet, champ, page cachée).
+            function peutJouer() {
+                return ouvert && vu && !fini && !document.hidden && !calme.matches && !econome();
+            }
+
+            function decider() {
+                if (peutJouer()) jouer(); else suspendre();
+            }
+
+            function jouer() {
+                if (minuteur || salleEl.dataset.apercu === 'joue') return;
+                // Arrivé sur l'onglet par un lien : la page finit d'abord de
+                // charger ce qu'on voit déjà.
+                if (document.readyState !== 'complete') {
+                    if (!attenteChargement) {
+                        attenteChargement = true;
+                        addEventListener('load', () => { attenteChargement = false; decider(); }, { once: true });
+                    }
+                    return;
+                }
+                if (!plans) {
+                    PLAN = duree('--apercu-plan', 4600);
+                    FONDU = duree('--apercu-fondu', 1600);
+                    fabriquer();
+                }
+                jeton++;
+                scene.classList.remove('est-suspendu');
+                arret.hidden = false;
+                etat('joue');
+                // Le premier fondu attend le temps d'un fondu : l'onglet
+                // finit d'entrer, la première photo arrive.
+                programmer(reste || (rang === -1 && dessus === -1 ? FONDU : PLAN));
+                reste = 0;
+            }
+
+            function suspendre() {
+                if (salleEl.dataset.apercu !== 'joue') return;
+                jeton++;
+                if (minuteur) reste = Math.max(0, echeance - performance.now());
+                clearTimeout(minuteur);
+                minuteur = 0;
+                scene.classList.add('est-suspendu');
+                etat('suspendu');
+            }
+
+            // Rendre l'affiche, sans fondu : l'onglet n'est plus là, ou l'on
+            // a demandé l'arrêt.
+            function rendreAffiche() {
+                jeton++;
+                clearTimeout(minuteur);
+                minuteur = 0;
+                reste = 0;
+                rang = -1;
+                dessus = -1;
+                if (plans) cacherSauf(-1);
+                scene.classList.remove('est-suspendu');
+                salle.montrerSurEcran(null);
+                eclairerBobine(-1);
+                cacherArret();
+            }
+
+            // Le bouton d'arrêt disparaît avec l'aperçu. S'il avait le
+            // focus, celui-ci passe à l'écran, juste à côté — jamais au
+            // fond de la page.
+            function cacherArret() {
+                const avait = document.activeElement === arret;
+                arret.hidden = true;
+                if (avait) ecran.focus({ preventScroll: true });
+            }
+
+            // POSÉ POUR DE BON, L'APERÇU REND SA MÉMOIRE : ses photos
+            // quittent la page. Décodées, les cinq occupaient une quinzaine
+            // de mégaoctets, pour une couche que plus rien ne montrera.
+            function vider() {
+                if (!plans) return;
+                plans.forEach((p) => p.el.remove());
+                plans = null;
+            }
+
+            // Deux tours faits : l'écran se pose sur l'affiche, pour de bon.
+            function poser() {
+                fini = true;
+                jeton++;
+                etat('fini');
+                cacherArret();
+                // Le dernier plan finit de s'effacer, puis la couche se vide.
+                setTimeout(vider, FONDU + 50);
+            }
+
+            function arreter() {
+                if (fini && salleEl.dataset.apercu === 'fini') return;
+                rendreAffiche();
+                vider();
+                fini = true;
+                etat('fini');
+            }
+
+            function ouvrir() {
+                ouvert = true;
+                decider();
+            }
+
+            function quitter() {
+                ouvert = false;
+                if (salleEl.dataset.apercu === 'joue' || salleEl.dataset.apercu === 'suspendu') {
+                    rendreAffiche();
+                    etat(fini ? 'fini' : 'repos');
+                }
+            }
+
+            arret.addEventListener('click', arreter);
+            // `isIntersecting` est vrai dès le premier pixel : c'est la part
+            // visible qu'on lit. La dernière entrée est la plus récente.
+            new IntersectionObserver((entrees) => {
+                const e = entrees[entrees.length - 1];
+                vu = e.isIntersecting && e.intersectionRatio >= 0.5;
+                decider();
+            }, { threshold: [0, 0.5] }).observe(ecran);
+            document.addEventListener('visibilitychange', decider);
+            // Le réglage change pendant l'aperçu : l'affiche, tout de suite.
+            const auCalme = () => { if (calme.matches) arreter(); };
+            if (calme.addEventListener) calme.addEventListener('change', auCalme);
+            else if (calme.addListener) calme.addListener(auCalme);
+            etat('repos');
+
+            return { ouvrir, quitter, arreter, PLANS, TOURS };
         })();
 
         // ════════════════════════════════════════════════════════════════
@@ -13573,6 +14592,17 @@
         // ════════════════════════════════════════════════════════════════
         // Les écouteurs sont posés en JS : les attributs inline se déclenchaient
         // parfois avant que le script ne soit analysé, laissant « 0:00 / 0:00 ».
+        //
+        // CE QUI EST PEINT SUIT L'ÉLÉMENT <audio>, PAS LE GESTE. Le bouton
+        // d'une carte et le mini-lecteur se repeignent sur `play` et `pause`,
+        // et non plus au clic : une démo peut désormais s'arrêter ou partir
+        // sans qu'on touche la carte — l'écran verrouillé, un casque, la
+        // salle noire, l'enchaînement — et tout doit le dire pareil.
+        //
+        // LA DÉMO EN COURS (activeAudioId) est celle du mini-lecteur. Elle le
+        // reste en pause ; elle ne redevient `null` qu'à sa croix.
+        const DEMOS = [];   // dans l'ordre de la page : celui de l'enchaînement
+
         function initAudioPlayers() {
             document.querySelectorAll('[data-audio-toggle]').forEach(btn => {
                 const id = btn.dataset.audioToggle;
@@ -13581,6 +14611,15 @@
 
                 const title = btn.closest('.glass-panel')?.querySelector('.audio-title');
                 const label = title ? title.textContent.replace(/\s+/g, ' ').trim() : 'la démo';
+                // Le nom (« L’Oréal ») et sa nuance (« Grave, doux, sincère
+                // (home studio) »), séparés pour le mini-lecteur et l'écran
+                // verrouillé ; `label`, les deux ensemble, reste le nom que
+                // lit la mesure.
+                const nom = title ? [...title.childNodes].filter(n => n.nodeType === 3)
+                    .map(n => n.textContent).join(' ').replace(/\s+/g, ' ').trim() : label;
+                const nuance = title && title.querySelector('span')
+                    ? title.querySelector('span').textContent.replace(/\s+/g, ' ').replace(/^\s*-\s*/, '').trim() : '';
+                DEMOS.push({ id, audio, label, nom: nom || label, nuance });
                 btn.setAttribute('aria-label', `Écouter ${label}`);
                 // Bouton à bascule dès le départ, et pas seulement après la
                 // première écoute : « Écouter …, non enfoncé » dit d'emblée
@@ -13594,18 +14633,25 @@
                 if (carte) ['pointerdown', 'pointerenter', 'focusin'].forEach(type =>
                     carte.addEventListener(type, () => amorcerDemo(audio), { passive: true }));
 
-                audio.addEventListener('loadedmetadata', () => initAudioMetadata(id));
+                audio.addEventListener('loadedmetadata', () => { initAudioMetadata(id); lecteurVoix.position(id); });
+                audio.addEventListener('play', () => { peindreBoutonDemo(id); lecteurVoix.suivre(id); });
+                audio.addEventListener('pause', () => { peindreBoutonDemo(id); lecteurVoix.suivre(id); });
+                audio.addEventListener('seeked', () => lecteurVoix.position(id));
+                audio.addEventListener('ratechange', () => lecteurVoix.position(id));
                 audio.addEventListener('timeupdate', () => {
                     updateAudioProgress(id);
                     suivreEcoute(id, label, audio);
+                    lecteurVoix.avancer(id);
                 });
                 audio.addEventListener('ended', () => {
                     // `timeupdate` ne tombe pas toujours pile sur la dernière
                     // fraction de seconde : c'est ici que le jalon « écoutée
                     // en entier » est certain.
                     suivreEcoute(id, label, audio);
-                    activeAudioId = null;
                     resetAudioPlayer(id);
+                    // La suivante, dans l'ordre de la page — sauf après la
+                    // dernière (voir lecteurVoix).
+                    lecteurVoix.finie(id);
                 });
                 // Rattrapage si les métadonnées sont déjà là
                 if (audio.readyState >= 1) initAudioMetadata(id);
@@ -13809,35 +14855,328 @@
             return (bar && bar.__onde && bar.__onde.duree) || 0;
         }
 
+        // Le bouton d'une carte : un second appui sur la démo qui joue la met
+        // en pause ; sinon, elle part (ou reprend).
         function toggleAudio(audioId) {
+            const audio = document.getElementById(audioId);
+            if (!audio) return;
+            if (audioId === activeAudioId && !audio.paused) { audio.pause(); return; }
+            jouerDemo(audioId);
+        }
+
+        // Lancer une démo. Celle d'avant s'arrête et revient au début, comme
+        // toujours ; le mini-lecteur paraît, ou change de titre ; l'élément
+        // <audio> dit le reste (`play`, voir initAudioPlayers).
+        function jouerDemo(audioId) {
+            const audio = document.getElementById(audioId);
+            if (!audio) return;
+            if (activeAudioId && activeAudioId !== audioId) {
+                const avant = document.getElementById(activeAudioId);
+                if (avant) avant.pause();
+                resetAudioPlayer(activeAudioId);
+            }
+            const nouvelle = activeAudioId !== audioId;
+            activeAudioId = audioId;
+            lecteurVoix.montrer(audioId, nouvelle);
+            const essai = audio.play();
+            // Refusée — sur iPhone, une démo lancée sans geste (l'enchaînement,
+            // une touche de l'écran verrouillé) peut l'être : le mini-lecteur
+            // reste sur elle, en pause, et « Reprendre la lecture » la lance.
+            if (essai && essai.catch) essai.catch(() => lecteurVoix.refusee(audioId));
+        }
+
+        // Le bouton d'une carte dit ce que fait SA démo : les deux barres
+        // pendant qu'elle joue, le triangle sinon — quoi qui l'ait lancée.
+        function peindreBoutonDemo(audioId) {
             const audio = document.getElementById(audioId);
             const icon = document.getElementById('icon-' + audioId);
             const btn = document.getElementById('btn-' + audioId);
-
-            if (activeAudioId && activeAudioId !== audioId) {
-                const prevAudio = document.getElementById(activeAudioId);
-                if (prevAudio) prevAudio.pause();
-                resetAudioPlayer(activeAudioId);
-            }
-
-            if (audio.paused) {
-                audio.play().catch(() => { });
-                activeAudioId = audioId;
-                // `className` ne s'écrit pas sur un SVG (SVGAnimatedString,
-                // en lecture seule) : l'affectation serait ignorée en silence,
-                // et le décalage `pl-0.5` du triangle de lecture resterait
-                // sous les deux barres de pause, qui sont symétriques.
-                icon.setAttribute('class', 'ico text-xs');
-                setIcon(icon, 'solid-pause');
-                if (btn) btn.setAttribute('aria-pressed', 'true');
-            } else {
-                audio.pause();
-                activeAudioId = null;
-                icon.setAttribute('class', 'ico text-xs pl-0.5');
-                setIcon(icon, 'solid-play');
-                if (btn) btn.setAttribute('aria-pressed', 'false');
-            }
+            if (!audio || !icon) return;
+            const joue = !audio.paused;
+            // `className` ne s'écrit pas sur un SVG (SVGAnimatedString,
+            // en lecture seule) : l'affectation serait ignorée en silence,
+            // et le décalage `pl-0.5` du triangle de lecture resterait
+            // sous les deux barres de pause, qui sont symétriques.
+            icon.setAttribute('class', joue ? 'ico text-xs' : 'ico text-xs pl-0.5');
+            setIcon(icon, joue ? 'solid-pause' : 'solid-play');
+            if (btn) btn.setAttribute('aria-pressed', String(joue));
         }
+
+        // ════════════════════════════════════════════════════════════════
+        //  LE MINI-LECTEUR DES DÉMOS VOIX
+        // ════════════════════════════════════════════════════════════════
+        //  Il paraît dès qu'une démo joue et reste d'un onglet à l'autre :
+        //  la lecture ne s'arrête plus quand on va lire le CV (voir
+        //  poserPage). Le titre, lecture et pause, la précédente et la
+        //  suivante, une piste fine ; la croix arrête la démo et le referme.
+        //
+        //  L'ENCHAÎNEMENT : à la fin d'une démo, la suivante démarre, dans
+        //  l'ordre de la page — sauf après la dernière, où le lecteur reste,
+        //  en pause, sur elle. La suivante est amorcée aux trois quarts de
+        //  celle qui joue : elle part sans attendre son fichier.
+        //
+        //  L'ÉCRAN VERROUILLÉ, LE CASQUE, LES TOUCHES MULTIMÉDIA passent par
+        //  l'API Media Session : le titre, « Adrien Vada », « Démos voix »
+        //  et le portrait ; lecture, pause, précédente, suivante, aller à un
+        //  point, reculer et avancer de dix secondes ; la position, posée à
+        //  chaque départ, pause, saut ou changement de vitesse — le système
+        //  l'extrapole entre deux.
+        //
+        //  LA MESURE : `demo_ecoute` ne change pas (ses jalons comptent pour
+        //  chaque démo, enchaînée ou non). `demo_suivante` dit qu'une démo a
+        //  démarré sans qu'on la choisisse dans la liste : son nom, et `par`
+        //  — `enchainement` (la précédente a fini), `lecteur` (le bouton du
+        //  mini-lecteur), `systeme` (écran verrouillé, casque, clavier).
+        const lecteurVoix = (() => {
+            const boite = document.getElementById('lecteur-voix');
+            const annonce = document.getElementById('lecteur-voix-annonce');
+            const rien = () => { };
+            if (!boite) return { montrer: rien, suivre: rien, refusee: rien, avancer: rien, position: rien, finie: rien, taire: rien, fermer: rien };
+            const nomEl = boite.querySelector('[data-lv-nom]');
+            const nuanceEl = boite.querySelector('[data-lv-nuance]');
+            const tempsEl = boite.querySelector('[data-lv-temps]');
+            const lu = boite.querySelector('.lv-lu');
+            const icone = boite.querySelector('[data-lv-icone]');
+            const bLecture = boite.querySelector('[data-lv="lecture"]');
+            const bPrecedente = boite.querySelector('[data-lv="precedente"]');
+            const bSuivante = boite.querySelector('[data-lv="suivante"]');
+            const barre = document.getElementById('nav-barre');
+            const session = 'mediaSession' in navigator ? navigator.mediaSession : null;
+            const calme = matchMedia('(prefers-reduced-motion: reduce)');
+            let ouvert = false, fermeture = 0, actionsPosees = false;
+
+            const rangDe = (id) => DEMOS.findIndex(d => d.id === id);
+            const courant = () => (activeAudioId && document.getElementById(activeAudioId)) || null;
+
+            // SA PLACE AU TÉLÉPHONE : juste au-dessus de la barre d'onglets
+            // du bas, qui flotte à 8 px du bord (et de la barre d'accueil de
+            // l'iPhone). Sa hauteur est MESURÉE, pas devinée : elle suit la
+            // taille du texte, et un réglage d'agrandissement la change.
+            // Elle n'est relue que quand elle change (un observateur), jamais
+            // au défilement.
+            function mesurerBarre() {
+                if (!barre) return;
+                const h = Math.round(barre.getBoundingClientRect().height);
+                if (h) boite.style.setProperty('--lv-barre', h + 'px');
+            }
+            if (barre && 'ResizeObserver' in window) new ResizeObserver(() => { if (ouvert) mesurerBarre(); }).observe(barre);
+
+            function ouvrir() {
+                ouvert = true;
+                clearTimeout(fermeture);
+                boite.classList.remove('s-ferme');
+                mesurerBarre();
+                boite.hidden = false;
+                // La page garde sa fin visible au-dessus du lecteur (voir
+                // .lecteur-ouvert, dans le <style>).
+                document.documentElement.classList.add('lecteur-ouvert');
+            }
+
+            function cacher() {
+                if (!ouvert) return;
+                ouvert = false;
+                document.documentElement.classList.remove('lecteur-ouvert');
+                if (calme.matches) { boite.hidden = true; return; }
+                boite.classList.add('s-ferme');
+                fermeture = setTimeout(() => { boite.hidden = true; boite.classList.remove('s-ferme'); }, 220);
+            }
+
+            // « Lecture : … », une fois par démo qui commence — celle qu'on
+            // touche comme celle qui s'enchaîne —, et seulement quand elle
+            // part vraiment (`play`) : refusée, elle est dite « en pause ».
+            // Vidée puis réécrite : la même annonce deux fois de suite est
+            // relue.
+            let aAnnoncer = null;
+            const titreDit = (d) => `${d.nom}${d.nuance ? ', ' + d.nuance : ''}`;
+            function annoncer(texte) {
+                if (!annonce) return;
+                annonce.textContent = '';
+                setTimeout(() => { annonce.textContent = texte; }, 60);
+            }
+
+            function montrer(id, nouvelle) {
+                const i = rangDe(id);
+                const d = DEMOS[i];
+                if (!d) return;
+                nomEl.textContent = d.nom;
+                nuanceEl.textContent = d.nuance ? ` · ${d.nuance}` : '';
+                // `aria-disabled`, et non `disabled` : le bouton qu'on vient de
+                // presser (la précédente, jusqu'à la première) garde le focus
+                // au clavier — un bouton désactivé le perdrait au fond de la
+                // page.
+                bPrecedente.setAttribute('aria-disabled', String(i <= 0));
+                bSuivante.setAttribute('aria-disabled', String(i >= DEMOS.length - 1));
+                if (!ouvert) ouvrir();
+                if (nouvelle) {
+                    aAnnoncer = id;
+                    poserSession(d, i);
+                }
+                avancer(id, true);
+                suivre(id);
+            }
+
+            // `play`, `pause` : le bouton de lecture, et l'état que lit le
+            // système.
+            function suivre(id) {
+                if (id !== activeAudioId) return;
+                const a = courant();
+                const joue = !!a && !a.paused;
+                setIcon(icone, joue ? 'solid-pause' : 'solid-play');
+                bLecture.setAttribute('aria-label', joue ? 'Mettre en pause' : 'Reprendre la lecture');
+                boite.classList.toggle('joue', joue);
+                if (session) { try { session.playbackState = joue ? 'playing' : 'paused'; } catch (e) { /* ancien navigateur */ } }
+                if (joue && aAnnoncer === id) {
+                    aAnnoncer = null;
+                    annoncer(`Lecture : ${titreDit(DEMOS[rangDe(id)])}`);
+                }
+                position(id);
+            }
+
+            // La lecture a été refusée (voir jouerDemo).
+            function refusee(id) {
+                if (id !== activeAudioId) return;
+                if (aAnnoncer === id) {
+                    aAnnoncer = null;
+                    annoncer(`En pause : ${titreDit(DEMOS[rangDe(id)])}`);
+                }
+                suivre(id);
+            }
+
+            // `timeupdate` : le temps et la piste. La piste avance par une
+            // transformation (rien à remettre en page) ; le texte n'est récrit
+            // que quand il change, une fois par seconde.
+            function avancer(id, net) {
+                if (id !== activeAudioId) return;
+                const a = courant();
+                const duree = dureeDemo(id);
+                const t = a ? a.currentTime : 0;
+                const texte = `${formatDuration(t)} / ${formatDuration(duree)}`;
+                if (tempsEl.textContent !== texte) tempsEl.textContent = texte;
+                // Un changement de démo ne fait pas reculer la piste en
+                // glissant : elle se pose.
+                if (net) {
+                    lu.classList.add('net');
+                    requestAnimationFrame(() => lu.classList.remove('net'));
+                }
+                lu.style.transform = `scaleX(${duree ? Math.min(1, t / duree) : 0})`;
+                if (duree && t / duree > 0.75) {
+                    const suivante = DEMOS[rangDe(id) + 1];
+                    if (suivante) amorcerDemo(suivante.audio);
+                }
+            }
+
+            // `ended`. La démo finie est déjà revenue au début (resetAudioPlayer).
+            // LA SUIVANTE PART DANS L'ÉVÉNEMENT MÊME, sans rien attendre :
+            // Safari ne laisse un son partir sans geste que dans la seconde
+            // où le précédent, lancé d'un geste, vient de finir — c'est sa
+            // façon de permettre l'enchaînement.
+            function finie(id) {
+                if (id !== activeAudioId) return;
+                const suivante = DEMOS[rangDe(id) + 1];
+                if (!suivante) { avancer(id, true); suivre(id); return; }
+                track('demo_suivante', { demo: suivante.label, par: 'enchainement' });
+                jouerDemo(suivante.id);
+            }
+
+            function aller(sens, par) {
+                const d = DEMOS[rangDe(activeAudioId) + sens];
+                if (!d) return;
+                if (sens > 0) track('demo_suivante', { demo: d.label, par });
+                jouerDemo(d.id);
+            }
+
+            // La salle noire s'ouvre : la voix se tait, et attend.
+            function taire() {
+                const a = courant();
+                if (a && !a.paused) a.pause();
+            }
+
+            // LA CROIX : la démo s'arrête et revient au début, le lecteur
+            // part, l'écran verrouillé oublie la démo. Le focus, s'il était
+            // dans le lecteur, va au bouton de la démo si on le voit, sinon
+            // à l'onglet affiché — jamais au fond de la page.
+            function fermer() {
+                const id = activeAudioId;
+                const avaitFocus = boite.contains(document.activeElement);
+                const a = courant();
+                if (a) a.pause();
+                if (id) resetAudioPlayer(id);
+                activeAudioId = null;
+                cacher();
+                if (session) {
+                    try { session.metadata = null; session.playbackState = 'none'; } catch (e) { /* ancien navigateur */ }
+                }
+                if (!avaitFocus) return;
+                const btn = id && document.getElementById('btn-' + id);
+                const r = btn && btn.getBoundingClientRect();
+                if (r && r.width && r.top >= 0 && r.bottom <= innerHeight) { btn.focus({ preventScroll: true }); return; }
+                const onglet = document.querySelector('#nav-tabs-container a[aria-current="page"]');
+                if (onglet) onglet.focus({ preventScroll: true });
+            }
+
+            // ── L'API Media Session ──
+            function action(nom, f) {
+                try { session.setActionHandler(nom, f); } catch (e) { /* action inconnue de ce navigateur */ }
+            }
+
+            function decaler(dt) {
+                const a = courant();
+                if (a) allerDansLaDemo(activeAudioId, (a.__visee != null ? a.__visee : a.currentTime) + dt);
+            }
+
+            function poserSession(d, i) {
+                if (!session) return;
+                try {
+                    if ('MediaMetadata' in window) {
+                        session.metadata = new MediaMetadata({
+                            title: d.nuance ? `${d.nom} — ${d.nuance}` : d.nom,
+                            artist: 'Adrien Vada',
+                            album: 'Démos voix',
+                            artwork: [192, 384].map(t => ({
+                                src: new URL(`ressources/images/profil-${t}.jpg`, document.baseURI).href,
+                                sizes: `${t}x${t}`,
+                                type: 'image/jpeg'
+                            }))
+                        });
+                    }
+                } catch (e) { /* ancien navigateur */ }
+                if (!actionsPosees) {
+                    actionsPosees = true;
+                    action('play', () => { if (activeAudioId) jouerDemo(activeAudioId); });
+                    action('pause', () => { const a = courant(); if (a) a.pause(); });
+                    action('stop', () => fermer());
+                    action('seekto', (e) => { if (activeAudioId && e && isFinite(e.seekTime)) allerDansLaDemo(activeAudioId, e.seekTime); });
+                    action('seekbackward', (e) => decaler(-((e && e.seekOffset) || 10)));
+                    action('seekforward', (e) => decaler((e && e.seekOffset) || 10));
+                }
+                // Sans précédente ni suivante, pas d'action : l'écran
+                // verrouillé n'en montre pas le bouton.
+                action('previoustrack', i > 0 ? () => aller(-1, 'systeme') : null);
+                action('nexttrack', i < DEMOS.length - 1 ? () => aller(1, 'systeme') : null);
+            }
+
+            function position(id) {
+                if (!session || id !== activeAudioId || typeof session.setPositionState !== 'function') return;
+                const a = courant();
+                const d = a && a.duration;
+                if (!d || !isFinite(d)) return;
+                try {
+                    session.setPositionState({ duration: d, playbackRate: a.playbackRate || 1, position: Math.min(Math.max(0, a.currentTime), d) });
+                } catch (e) { /* position hors bornes : la suivante la corrigera */ }
+            }
+
+            boite.addEventListener('click', (e) => {
+                const b = e.target.closest('[data-lv]');
+                if (!b || b.getAttribute('aria-disabled') === 'true') return;
+                const quoi = b.dataset.lv;
+                if (quoi === 'lecture') { if (activeAudioId) toggleAudio(activeAudioId); }
+                else if (quoi === 'precedente') aller(-1, 'lecteur');
+                else if (quoi === 'suivante') aller(1, 'lecteur');
+                else if (quoi === 'fermer') fermer();
+            });
+
+            return { montrer, suivre, refusee, avancer, position, finie, taire, fermer };
+        })();
 
         function updateAudioProgress(audioId) {
             const audio = document.getElementById(audioId);

@@ -102,6 +102,15 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
 - les démos voix : toucher la barre de lecture mène au point touché, même
   servi par un hôte qui ne découpe pas les fichiers (en-têtes Range : c'est
   le cas du serveur de vérification comme de l'aperçu Cloudflare) ;
+- les démos voix suivent (voir [le mini-lecteur](#démos-voix--le-mini-lecteur-lenchaînement-lécran-verrouillé)) :
+  aucun mini-lecteur avant qu'une démo joue ; ensuite une région nommée, ses
+  quatre boutons nommés de 44 px, posée 4 à 16 px au-dessus de la barre
+  d'onglets du bas au téléphone, et à 16 px du coin bas droit sur
+  ordinateur ; l'écran verrouillé a le titre, « Adrien Vada », « Démos
+  voix » et le portrait en 192 et 384 ; la démo continue sur l'onglet CV ;
+  à sa fin la suivante joue, annoncée et mesurée (`demo_suivante`), mais
+  rien après la dernière, où le lecteur reste en pause ; la croix arrête
+  tout et oublie la démo ; le lecteur ne s'imprime pas ;
 - les pastilles ▶ ne s'impriment pas ;
 - la ligne à vignette du CV : chaque spectacle et chaque film ont leur
   vignette, qui dit l'année et l'état de la ligne (cachée aux lecteurs
@@ -224,6 +233,21 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   éteint la salle et lance le lecteur à 1:21 avec son API de messages, la
   bobine de la salle noire montre l'extrait en cours et suit ce que le lecteur
   annonce, Échap rallume et arrête le lecteur ;
+- la salle de projection, en chapitres : la durée sous l'écran est celle de
+  `DUREE`, chaque chapitre va de son début (`data-salle-debut`) au début du
+  suivant, le dernier jusqu'à la durée ; le bouton de l'écran dit « Lancer
+  la projection » et la durée ;
+- l'aperçu de la bande démo : aucune de ses photos ne part avec l'accueil,
+  ni sur un écran à moins de moitié dans la fenêtre ; ouvert, il passe deux
+  fois ses cinq photos (chacune demandée une fois, après l'ouverture de
+  l'onglet), revient à l'affiche entre deux et s'y pose, en n'animant que
+  transformation et opacité, puis ses photos quittent la page ; il ne
+  rejoue pas ensuite ; quitter l'onglet
+  rend l'affiche, le bouton « Arrêter l'aperçu » (44 px) l'arrête et rend le
+  focus à l'écran ; rien en mouvement réduit ni en économie de données ;
+- la salle noire au téléphone couché (844 × 390) : le lecteur fait toute la
+  hauteur, en 16:9 centré, sans bobine ni halo, la croix de 44 px dans
+  l'écran ; le plein écran ne fait pas d'erreur ;
 - les bandes-annonces du CV : la pastille ▶ garde son lien vers YouTube ou
   Vimeo, mais son clic joue la vidéo dans la salle noire, sur la page (pas
   de nouvel onglet), sans la bobine de la bande démo, avec un halo et le
@@ -324,7 +348,8 @@ ici : c'est ce qui l'empêche de revenir.
 | une **scène** d'un univers — `lumiere`, `ouverture`, `poursuite`, une césure ` \| ` | `node build/generer-pages-spectacles.js` | `/spectacles/…` (voir [Le mouvement](#le-mouvement--la-régie-les-scènes-les-passages)) |
 | une **démo voix** ajoutée ou remplacée (`<audio>` de l'onglet Démos voix) | `node build/ondes.js` | les ondes (`data-onde`, `data-duree`) dans `index.html` — voir [Les ondes](#démos-voix--les-ondes) |
 | le **portrait** de l'en-tête (la première photo de `galerie.js`) | `python3 build/variantes-images.py --tout`, ou effacer `portrait-affiche-*` puis le relancer | `ressources/images/portrait-affiche-*` (WebP, AVIF et JPEG) |
-| une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py` | le sprite, dans `index.html` |
+| une **icône** ajoutée quelque part | `python3 build/construire-sprite-icones.py`, puis `npm --prefix build run pages` | le sprite, dans `index.html`, puis sa copie dans `/galerie/` |
+| la **bande démo** remplacée sur YouTube | rien à fabriquer — tout est à récrire à la main : les débuts des extraits, la durée, les plans de la bobine (voir [La salle de projection](#la-salle-de-projection)) | `DEBUTS`, `DUREE`, la bobine et « 3:01 » dans `index.html` ; le vérificateur les confronte |
 | la **signature** — un nouvel export reMarkable | `python3 build/signature-vers-svg.py <export.pdf>` | `signature.webp` + le bloc SVG à coller |
 
 Chacune a sa section plus bas, avec ce qu'elle fait et pourquoi.
@@ -3161,12 +3186,17 @@ galerie et l'administration. À garder en tête en modifiant le site :
   tous les titres du montage montent d'un cran (voir la fin de `panelHtml`).
 - **Rien ne bouge sans fin** : voyant de la prochaine date, halo des univers, sceau de
   l'ouverture, fleuron et dorures du répertoire jouent une fois (ou trois)
-  puis se taisent (WCAG 2.2.2) ; la frise du CV et les scènes des univers ne
-  bougent qu'avec le défilement. Le réglage « réduire les animations » coupe
-  tout, et chaque scène a alors un état fixe qui a du sens.
-- **Pas de texte sous 11 px**, pas de cible sous 24 px (la piste des démos
-  voix et les icônes du pied de page ont une zone de clic agrandie sans
-  changer d'aspect).
+  puis se taisent (WCAG 2.2.2) ; l'aperçu de la bande démo fait deux tours
+  et se pose sur l'affiche — et, comme il bouge près d'une minute, un
+  bouton l'arrête avant (voir [L'aperçu](#laperçu--lécran-vit-sans-vidéo)) ;
+  la frise du CV et les scènes des univers ne bougent qu'avec le défilement.
+  Le réglage « réduire les animations » coupe tout, et chaque scène a alors
+  un état fixe qui a du sens.
+- **Pas de texte sous 11 px** (la bulle du temps sur l'onde des démos voix
+  était à 10,5), pas de cible sous 24 px (la piste des démos voix et les
+  icônes du pied de page ont une zone de clic agrandie sans changer
+  d'aspect) ; 44 px pour les boutons du mini-lecteur, l'arrêt de l'aperçu,
+  le carré YouTube de la salle et la croix de la salle noire couchée.
 - **Le pincement appartient au navigateur** : il agrandit la page. La densité
   du répertoire et de la galerie se règle aux boutons − et +.
 - **Un lien qui ouvre un onglet le dit** (« nouvel onglet », en texte masqué).
@@ -3330,17 +3360,41 @@ répertoire, à la galerie et à la 404.
 La bande démo était une vignette dans une carte, et rien ne disait ce
 qu'elle contenait. Elle est posée dans **une salle** (`#salle`, noire dans
 les deux thèmes) : l'écran au milieu, sa lumière qui déborde autour, et
-dessous **la bobine** — un plan par extrait, qui lance le film à ce moment-là :
+dessous **la bobine** — un plan par extrait, qui lance le film à ce
+moment-là. Les extraits y sont présentés en **chapitres** — le numéro, le
+titre, le début et la fin —, et la **durée** de la bande démo est écrite sous
+l'écran (3:01) :
 
-| Extrait | Début (`data-salle-debut`) |
-|---|---|
-| L'Homme moderne | 0 s |
-| Le rapt | 81 s (1:21) |
+| Chapitre | Début (`data-salle-debut`) | Fin |
+|---|---|---|
+| 1 · L'Homme moderne | 0 s | 1:21 (le début du suivant) |
+| 2 · Le rapt | 81 s (1:21) | 3:01 (la durée) |
 
+- **La durée, 181 s, n'était écrite nulle part** dans le dépôt — ni dans les
+  données structurées, ni sur la page —, et la fin du dernier extrait non
+  plus. Elle a été lue le 4 octobre 2026 dans ce que YouTube répond à son
+  lecteur intégré pour cette vidéo (« VADA - Démo caméra 2026 », champ
+  `videoDurationSeconds` de l'aperçu d'intégration,
+  `youtube-nocookie.com/embed/GOeL5AMGb_s`), et posée en constante :
+  `DUREE`, à côté de `DEBUTS` (`index.html`, « LA SALLE DE PROJECTION »),
+  avec ce commentaire. Elle est écrite à trois endroits : la constante, le
+  « 3:01 » sous l'écran, la fin du dernier chapitre — **le vérificateur les
+  confronte**, et confronte chaque chapitre à son début.
+- Le bouton de l'écran dit ce qu'il lance et combien de temps : « Lancer la
+  projection : bande démo caméra d'Adrien Vada, 3 min 01 » — le mot qu'on
+  voit sur l'écran est dans son nom.
+- **La légende est sur le halo.** Sous une photo claire de l'aperçu, la
+  lumière qui déborde de l'écran monte, au téléphone, jusqu'à une luminance
+  de 0,16 sous le titre : le crème d'avant n'y tenait que 3,5:1. Le titre et
+  la durée sont passés à un blanc chaud (`#f8f3ea`, 4,5:1 au pire, mesuré),
+  avec une ombre douce ; le carré YouTube, une icône, à 3,3:1 ; le numéro et
+  le minutage des chapitres à 5,8:1 sur le noir.
 - **Le halo** : le plan réduit à 32 × 14 points dans un canevas, agrandi et
   flouté une fois pour toutes par la feuille (`.salle-halo`) — le flou n'est
   jamais animé, seule l'opacité l'est, en passant d'un canevas à l'autre. Sur
-  la page, il peint l'affiche au repos et l'extrait survolé sur la bobine.
+  la page, il peint ce que montre l'écran — l'affiche au repos, la photo que
+  l'aperçu y fait passer (peinte depuis l'image déjà là, sans la redemander)
+  — et l'extrait survolé sur la bobine.
   L'affiche de l'écran est en `loading="lazy"` : l'onglet est caché au
   chargement, et ses 16 Ko ne passent plus devant le portrait ; le halo
   attend son arrivée et se peint à la première ouverture de l'onglet.
@@ -3354,8 +3408,9 @@ dessous **la bobine** — un plan par extrait, qui lance le film à ce moment-l�
 - Les deux plans de la bobine sont des images que YouTube tire lui-même de la
   vidéo, bandes noires ôtées. **Si la bande démo change**, les refaire
   (`https://i.ytimg.com/vi/<id>/maxres1.jpg` à `maxres3.jpg`, au quart, à la
-  moitié et aux trois quarts), et remettre les débuts des extraits dans la
-  bobine et dans `DEBUTS` (`index.html`, « LA SALLE DE PROJECTION »).
+  moitié et aux trois quarts), remettre les débuts des extraits dans la
+  bobine et dans `DEBUTS` (`index.html`, « LA SALLE DE PROJECTION »), et la
+  durée dans `DUREE`, sous l'écran et à la fin du dernier chapitre.
 
 **Les bandes-annonces du CV** passent dans la même salle noire. La pastille ▶
 d'une ligne (`addTrailerPill`, `univers.js`) appelle `ouvrirBandeAnnonce`
@@ -3365,6 +3420,94 @@ prend alors la classe `.bande-annonce` : pas de bobine, le halo pris à la
 photo de couverture du spectacle (celle de sa vignette), et « Bande-annonce ·
 titre » en tête. La pastille reste un vrai lien : clic du milieu, Ctrl-clic
 ou « ouvrir dans un nouvel onglet » mènent toujours à la plateforme.
+
+### L'aperçu — l'écran vit, sans vidéo
+
+L'écran montrait une image fixe : rien ne disait qu'un film attendait
+derrière. Il n'y a aucun fichier vidéo dans le dépôt, et l'on n'en ajoutera
+pas : **l'écran vit avec les photos des deux films**. Un fondu enchaîné lent
+de cinq photos — Arthur à la table, la chanson de Melvin, la tête sur la
+table (L'Homme moderne) ; Steven ligoté, puis riant sur la plage (Le rapt) —,
+chacune dans un léger travelling, puis le retour à l'affiche. Le bouton
+« Lancer la projection » reste au centre, et ouvre la salle noire comme
+avant. Pendant qu'une photo passe, la bobine éclaire son chapitre, et le
+halo prend sa lumière.
+
+- **Deux tours, puis l'affiche, pour de bon** : rien ne bouge sans fin sur ce
+  site. Et comme deux tours font près d'une minute de mouvement à côté du
+  reste de la page, un bouton **« Arrêter l'aperçu »** (le rond ❚❚ dans le
+  coin de l'écran, cible de 44 px) l'arrête tout de suite (WCAG 2.2.2) ; il
+  n'existe que pendant l'aperçu, et rend le focus à l'écran. Lancer la
+  projection l'arrête aussi : il a fait son office. Posé pour de bon, il
+  rend sa mémoire : ses photos quittent la page (décodées, les cinq
+  occupaient une quinzaine de mégaoctets).
+- **Il ne joue que si l'on peut le voir** : l'onglet Caméra ouvert, l'écran à
+  moitié au moins dans la fenêtre (un `IntersectionObserver` — aucun travail
+  au défilement), la page au premier plan. Sorti du champ, il attend, son
+  travelling figé, et reprend où il en était. Quitter l'onglet l'arrête et
+  rend l'affiche ; y revenir rejoue les tours qui restent — pas ceux qui sont
+  faits.
+- **Ses photos ne partent qu'à sa première projection** : jamais avec
+  l'accueil, et, quand on arrive par un lien sur l'onglet Caméra, après la
+  fin du chargement de la page. Elles sont fabriquées à ce moment-là (le
+  balisage n'en contient aucune : `.apercu` est vide), en 640 ou 1280 px
+  selon la hauteur de l'écran et sa densité (`srcset`, et un `sizes` calculé
+  sur la photo telle qu'elle s'affiche, plus large que l'écran) : 54 à
+  131 Ko pour les cinq, une requête chacune.
+- **Il ne joue pas du tout** en mouvement réduit, ni quand le navigateur
+  demande d'économiser les données (`navigator.connection.saveData`, et
+  `prefers-reduced-data`) : pas une photo demandée, l'affiche reste. Le
+  réglage changé pendant l'aperçu le rend à l'affiche.
+- **Transformation et opacité, rien d'autre.** Le travelling est un
+  `transform: scale()` de 1,01 à 1,11 (ou l'inverse, une photo sur deux),
+  autour du point que cadre l'univers du film (son `cadre`, dans
+  `univers.js`) ; le fondu, l'opacité. Le survol de l'écran assombrissait
+  l'affiche par un filtre (`brightness`) en transition : c'est désormais un
+  voile noir à 15 %, même rendu, et seule son opacité bouge. Une photo qui
+  arrive se pose **sur** la précédente, restée pleine dessous, qui disparaît
+  d'un coup une fois couverte : deux fondus croisés laisseraient voir
+  l'affiche à travers les deux.
+- **Le zoom ne montre jamais un bord** : une mise à l'échelle supérieure à 1
+  autour d'un point de l'image garde l'écran couvert. Les photos de L'Homme
+  moderne ont leurs bandes noires de cinémascope dans le fichier (7,34 % en
+  haut et en bas) : `.a-barres` agrandit leur boîte pour qu'elles tombent
+  hors de l'écran.
+- **Régler l'aperçu** : le rythme est dans la feuille, `--apercu-plan`
+  (4,6 s par photo) et `--apercu-fondu` (1,6 s) sur `.salle` ; le script les
+  lit et le travelling les reprend. Les photos et le nombre de tours sont
+  dans `PLANS` et `TOURS` (« L'APERÇU », dans le script) : une photo est
+  désignée par son dossier et son numéro dans `ressources/images/univers/`
+  — ses versions 640 et 1280 existent déjà, `variantes-images.py` les fait
+  pour tout le montage —, avec son point de cadrage et le chapitre qu'elle
+  éclaire.
+
+### Le téléphone couché
+
+On couche son téléphone pour regarder un film. La salle noire y gardait sa
+carte, son bandeau, sa bobine et ses marges : sur 390 px de haut, la vidéo
+n'en avait plus que 220. Couché et bas (`orientation: landscape` et 500 px
+de haut au plus — pas une tablette), **le lecteur prend toute la hauteur**
+(100dvh), au format 16:9 tant que la largeur le permet, centré dans le noir.
+La page est en `viewport-fit=cover` : le lecteur reste dans la zone sûre
+(`env(safe-area-inset-*)`), hors de l'encoche et de la barre d'accueil. Le
+titre, la bobine et le halo disparaissent ; la croix reste, seule dans le
+coin haut droit, sur le noir de côté (presque tous les téléphones sont plus
+larges que 16:9), et Échap ou le geste de retour referment la salle.
+
+Le plein écran de YouTube (son bouton, dans l'iframe) fait de l'iframe
+l'élément plein écran de la page : au doigt, on demande alors l'écran couché
+(`screen.orientation.lock('landscape')`) et on le rend à la sortie.
+L'API n'existe pas partout et ne s'accorde qu'en plein écran (sur iPhone, ou
+hors plein écran, la promesse est refusée) : on ne la demande qu'en plein
+écran, et un refus ne dit rien.
+
+### Un seul son à la fois
+
+La salle noire — bande démo ou bande-annonce — met en pause la démo voix qui
+joue (voir [le mini-lecteur](#démos-voix--le-mini-lecteur-lenchaînement-lécran-verrouillé)) :
+elle reste dans le mini-lecteur, prête à reprendre. C'est la coupure que
+faisait autrefois tout changement d'onglet, gardée là où deux sons se
+recouvriraient vraiment.
 
 ## Démos voix — les ondes
 
@@ -3432,6 +3575,64 @@ clavier qui y arrive. Mesuré en 4G lente simulée (trois passes) :
 l'ouverture tire 127 Ko au lieu de 821 ; toucher la quatrième démo 0,3 s
 après l'ouverture fait entendre la voix en 0,47 s au lieu de 0,69 ; le
 revers — une démo jamais approchée, touchée tard — 0,35 s au lieu de 0,15.
+
+## Démos voix — le mini-lecteur, l'enchaînement, l'écran verrouillé
+
+Changer d'onglet **coupait la démo** et la remettait au début (`poserPage`) :
+on ne pouvait pas écouter une voix en lisant le CV — ce que fait justement
+un directeur de casting. La lecture continue désormais d'un onglet à
+l'autre, et un **mini-lecteur** (`#lecteur-voix`, `lecteurVoix` dans
+`index.html`) la suit.
+
+- **Il paraît dès qu'une démo joue** : le nom de la démo et sa nuance, le
+  temps (« 0:12 / 0:39 »), précédente, lecture/pause, suivante, et une piste
+  fine qui avance par une transformation (`scaleX`) — rien à remettre en
+  page quatre fois par seconde. La croix arrête la démo, la remet au début,
+  et le referme. Les cartes ne changent pas : au repos, la durée seule
+  (« 0:39 ») ; pendant la lecture, « 0:12 / 0:39 ».
+- **Sa place.** Au téléphone, juste au-dessus de la barre d'onglets du bas,
+  8 px plus haut, sur la même largeur : la hauteur de la barre est
+  **mesurée** (un `ResizeObserver`, jamais au défilement), pas devinée — elle
+  suit la taille du texte. Sur grand écran, en bas à droite (420 px). La
+  page garde sa fin visible au-dessus de lui (`.lecteur-ouvert` : la place
+  réservée en bas de `#site` grandit de 64 px, et le défilement au clavier
+  s'arrête au-dessus). Le changement d'onglet ne l'emporte pas avec la
+  page : il a son propre groupe dans la View Transition, comme la barre.
+- **Ce qui est peint suit l'élément `<audio>`, pas le geste** : le bouton
+  d'une carte et le mini-lecteur se repeignent sur `play` et `pause`. Une
+  démo peut s'arrêter ou partir sans qu'on touche sa carte — l'écran
+  verrouillé, un casque, la salle noire, l'enchaînement —, et tout le dit
+  pareil. `activeAudioId` est la démo du mini-lecteur, en pause comprise ;
+  elle ne redevient `null` qu'à la croix.
+- **L'enchaînement** : à la fin d'une démo, la suivante démarre, dans
+  l'ordre de la page — sauf après la dernière, où le lecteur reste sur
+  elle, en pause, revenu au début. La suivante est amorcée aux trois quarts
+  de celle qui joue (`amorcerDemo`) : elle part sans attendre son fichier.
+  Elle est lancée dans l'événement `ended` lui-même, sans délai : Safari ne
+  laisse partir un son sans geste que dans la seconde où le précédent, lancé
+  d'un geste, vient de finir. Si un navigateur la refuse quand même, elle
+  attend dans le mini-lecteur, prête (« Reprendre la lecture »), et
+  l'annonce dit « En pause : … » au lieu de « Lecture : … ».
+- **L'écran verrouillé, le casque, les touches multimédia** passent par
+  l'API Media Session : titre (« L'Oréal — Grave, doux, sincère (home
+  studio) »), « Adrien Vada », « Démos voix », et le portrait
+  (`profil-192.jpg`, `profil-384.jpg`) ; lecture, pause, arrêt, précédente
+  et suivante (absentes sur la première et la dernière démo), aller à un
+  point, reculer et avancer de dix secondes. La position est posée à chaque
+  départ, pause, saut ou changement de vitesse ; le système l'extrapole
+  entre deux.
+- **Accessibilité** : une région nommée (« Lecteur des démos voix »), quatre
+  boutons nommés de 44 px, le focus visible. « Lecture : L'Oréal, grave,
+  doux, sincère… » est annoncé à chaque démo qui part vraiment — celle qu'on
+  touche comme celle qui s'enchaîne —, par une région discrète (`polite`)
+  posée **à côté** du lecteur : une région qui paraît en même temps que son
+  texte n'est pas toujours lue. La précédente et la suivante absentes sont
+  `aria-disabled`, pas `disabled` : le bouton qu'on vient de presser garde
+  le focus. Fermé au clavier, le lecteur rend le focus au bouton de la démo
+  s'il est à l'écran, sinon à l'onglet affiché. Rien ne s'imprime
+  (`no-print`).
+- **Un seul son à la fois** : la salle noire met la démo en pause (voir
+  [Un seul son à la fois](#un-seul-son-à-la-fois)).
 
 ---
 
@@ -3529,7 +3730,12 @@ Deux façons de relever un geste :
 
 `entree` (onglet d'arrivée), `intro` (coupée ou menée au sceau, et durée),
 `univers_ouvert` / `univers_ferme` (spectacle, durée de lecture), `demo_ecoute`
-(jalons 25 / 50 / 75 / 100 %, une seule fois par démo et par visite),
+(jalons 25 / 50 / 75 / 100 %, une seule fois par démo et par visite — une
+démo enchaînée compte comme une autre), `demo_suivante` (une démo voix a
+démarré sans qu'on la choisisse dans la liste : son nom, et `par` —
+`enchainement` quand la précédente a fini, `lecteur` pour le bouton
+« suivante » du mini-lecteur, `systeme` pour l'écran verrouillé, le casque
+ou le clavier ; il dit si l'on reste écouter la démo d'après),
 `dates_vue` (rangement choisi dans l'onglet Dates : `date` ou `spectacle`),
 `date_spectacle` (la page d'un spectacle ouverte depuis l'onglet Dates : son
 nom).
