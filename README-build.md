@@ -33,7 +33,7 @@ Ensuite, depuis la racine du dépôt :
 | `npm --prefix build run css` | régénère `styles.css` |
 | `npm --prefix build run pages` | régénère la galerie **puis** les pages spectacle, le sitemap, [l'agenda à s'abonner](#lagenda-à-sabonner-datesics) (`dates.ics`) et [la carte de la saison](#la-carte-de-la-saison) (bloc `CARTE-SAISON` d'`index.html`) |
 | `npm --prefix build run pdf` | refait le CV en PDF |
-| `npm --prefix build run dates` | recopie les dates de Supabase dans `dates.js` |
+| `npm --prefix build run dates` | recopie les dates de Supabase dans `dates.js` — ce que fait aussi, chaque nuit, [la copie de la nuit](#la-copie-de-la-nuit-recopier-datesyml) |
 | `npm --prefix build run ondes` | écrit [les ondes des démos voix](#démos-voix--les-ondes) dans `index.html` |
 | `npm --prefix build run verifier` | [vérifie le site](#vérifier-le-site) dans un vrai navigateur |
 
@@ -209,6 +209,10 @@ minutes environ, ce qui a déjà cassé ou casserait sans bruit :
   Agenda (`cid=webcal://…`, dans un nouvel onglet) ; sur Android, ni l'un ni
   l'autre, mais « M'envoyer le lien d'abonnement », qui confie le lien de
   Google Agenda à la feuille de partage, et le copie quand le partage échoue ;
+- la note du bas de `/admin/` (table simulée, mode aperçu) : « à jour » quand
+  la copie publiée est celle de la table, « dans la nuit » après un
+  changement, en retard passé 30 heures — et seulement alors le lien vers le
+  workflow de [la copie de la nuit](#la-copie-de-la-nuit-recopier-datesyml) ;
 - le book : fermer puis rouvrir aussitôt ne laisse pas une page morte ;
 - la frise du CV, comme le prototype de l'audit, avec les deux pilotes : la
   ligne de lecture aux trois quarts de l'écran, la pointe du fil dessus
@@ -427,7 +431,7 @@ ici : c'est ce qui l'empêche de revenir.
 | une **ligne du CV** dans `index.html` — titre, auteur, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
 | le **vocabulaire du mouvement** dans `index.html` (`--ease-*`, `--dur-*`) | `npm --prefix build run pages` (la galerie, puis les pages spectacle) | `/galerie/…`, `/spectacles/…` : les pages spectacle, le répertoire et la galerie le relisent (voir [Un seul moteur](#un-seul-moteur-un-seul-visage) et [Le vocabulaire](#le-vocabulaire)) |
 | **`ressources/polices/polices.css`** — une police ajoutée, une adresse | `npm --prefix build run pages` | `/spectacles/index.html` et `/galerie/index.html`, qui en portent une copie dans leur page (voir [Polices](#polices--servies-par-le-site)) ; l'accueil publié la recopie de lui-même |
-| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis `node build/generer-pages-spectacles.js` | `dates.js`, puis `/spectacles/…`, `sitemap.xml`, `dates.ics` et, pour une ville nouvelle, le bloc `CARTE-SAISON` d'`index.html` |
+| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien — le site l'affiche déjà, et [la copie de la nuit](#la-copie-de-la-nuit-recopier-datesyml) fait le reste (tout de suite : la lancer à la main). Sur une machine : `node build/exporter-dates.js`, puis `npm --prefix build run pages` | `dates.js`, puis `/spectacles/…`, `sitemap.xml`, `dates.ics` et, pour une ville nouvelle, le bloc `CARTE-SAISON` d'`index.html` |
 | une saison qui **sort de la Normandie, des Hauts-de-France et de l'Île-de-France** | ajouter la région et ses départements dans `build/preparer-fond-de-carte.py`, puis `python3 build/preparer-fond-de-carte.py` (réseau) et la commande des pages | `build/donnees/carte-base.json`, puis la carte |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
 | le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées, copies floues (`-flou.webp`), versions écran large (`-2400.webp`) et vignettes (`-v.webp`) comprises — et la liste `ECRAN_LARGE` d'`univers-montage.js` : s'il annonce qu'elle a changé, la commande des pages |
@@ -482,7 +486,8 @@ npx --yes serve -l 8080 .
 
 ## Publier
 
-Pousser sur `main` déclenche `.github/workflows/publier.yml`, qui refait le
+Pousser sur `main` déclenche `.github/workflows/publier.yml` ([la copie de
+la nuit](#la-copie-de-la-nuit-recopier-datesyml) le lance elle-même après sa poussée), qui refait le
 [CV en PDF](#le-cv-en-pdf-ressourcescv-adrien-vadapdf), allège la copie à
 publier (ci-dessous) puis la dépose sur GitHub Pages. Une minute environ, dont l'essentiel pour installer
 Chromium — et cette étape-là ne peut pas faire échouer la publication.
@@ -616,6 +621,8 @@ laisse deviner pourquoi.
 quota — six par heure laisse une marge confortable pour les imprévus. Committez
 autant que vous voulez, mais **groupez les poussées** : dix commits partent
 aussi vite qu'un seul, alors que dix poussées coûtent dix publications.
+[La copie de la nuit](#la-copie-de-la-nuit-recopier-datesyml) en compte une par passage, au plus : une par
+nuit, plus les lancements à la main.
 
 Le 6 août 2026, quatorze publications en une heure ont bloqué le site pendant
 plus de deux heures. Le code partait bien à chaque fois ; il n'était
@@ -1644,40 +1651,100 @@ compte d'Adrien a lieu d'exister) et laisser « Confirm email » activé.
   développement seulement : `http://localhost:8749/admin/?apercu` (la base
   refuse d'écrire sans session).
 
-### Sur l'ordinateur, avant un commit : `exporter-dates.js`
+### La copie de la nuit (`recopier-dates.yml`)
 
 **Une date saisie dans `/admin/` est en ligne tout de suite**, sur l'accueil
 comme sur les pages `/spectacles/…` : les deux lisent la base en direct. Il
-n'y a rien à relancer dans l'urgence, et surtout rien à committer pour
-qu'une date paraisse.
+n'y a rien à relancer, et rien à committer pour qu'une date paraisse.
 
-Ce qui lit encore la COPIE de `dates.js` — et qui vieillit donc jusqu'au
-prochain export :
+Ce qui lit encore la COPIE de `dates.js` :
 
 - le **repli** quand la base ne répond pas (projet en pause, réseau coupé) ;
 - le **HTML généré** des pages spectacle : ce que voit un visiteur sans
   JavaScript, et ce que lisent les robots d'indexation, `TheaterEvent`
-  compris — une date absente de `dates.js` ne remontera pas dans les
-  résultats enrichis de Google, même si la page l'affiche ;
-- l'**agenda à s'abonner**, `dates.ics` (voir [plus bas](#lagenda-à-sabonner-datesics)) :
-  les agendas abonnés ne voient une date qu'une fois la PR fusionnée ;
+  compris — une date absente de `dates.js` ne remonte pas dans les résultats
+  enrichis de Google, même si la page l'affiche ;
+- l'**agenda à s'abonner**, `dates.ics` (voir [plus bas](#lagenda-à-sabonner-datesics)) ;
+- la **carte de la saison**, pour une ville nouvelle ;
 - le **PDF du CV**.
 
-Aucun des quatre n'est urgent, aucun ne doit être oublié. Avant le prochain
-commit, donc :
+**Chaque nuit, le workflow « Recopier les dates »**
+(`.github/workflows/recopier-dates.yml`, à 3 h 47 UTC) les remet à jour. Il
+relit la base avec la clé publique, comme un visiteur ; si rien n'a changé
+— le cas ordinaire —, il s'arrête là, sans rien écrire. Sinon,
+`build/recopier-dates.sh` :
+
+1. recopie la base dans `dates.js` (`exporter-dates.js`) ;
+2. refait la galerie, les pages spectacle, le sitemap, `dates.ics` et la
+   carte (`npm --prefix build run pages`) — les générateurs n'ont besoin que
+   de Node : rien n'est installé ;
+3. s'arrête si autre chose que ces fichiers a bougé ;
+4. committe sur `main`, au nom de `github-actions[bot]`, avec la liste des
+   soirées ajoutées, modifiées ou retirées, que donne `exporter-dates.js` ;
+5. pousse, puis lance « Publier le site » — une poussée faite avec le jeton
+   d'un workflow ne déclenche pas les autres workflows.
+
+**Sans PR, à dessein** : c'est le choix d'Adrien (octobre 2026), une fois par
+jour plutôt que toutes les heures. Les dates sont déjà en ligne par la base :
+la copie n'en est que l'écho. La [vérification](#vérifier-le-site) complète
+(six minutes, un navigateur) n'y passe pas ; chaque générateur relit ce qu'il
+écrit, et elle repasse sur chaque PR.
+
+**Tout de suite, sans attendre la nuit** : Actions → « Recopier les dates » →
+*Run workflow* (l'application GitHub le permet aussi). C'est ce que fait
+Claude après avoir écrit une date (CLAUDE.md).
+
+Ce qui peut arriver :
+
+- **la base ne répond pas** : rien n'est recopié, un avertissement le dit, le
+  passage suivant réessaiera — ce n'est pas un échec ;
+- **une ville sans place sur la carte** (faute de frappe dans la base, ou
+  ville hors des trois régions) : un avertissement, et la copie part quand
+  même — la date est en ligne, seule la carte ne la montre pas ; la
+  vérification de la PR suivante le rappellera ;
+- **une PR fusionnée pendant la copie** : la poussée est refusée, le passage
+  suivant refait la copie par-dessus — pas un échec non plus ;
+- **autre chose** (un générateur qui casse, un fichier inattendu) : le
+  workflow échoue et GitHub envoie un mail ; rien n'est poussé, et il
+  réessaie chaque nuit tant que la cause reste ;
+- **GitHub endort un workflow planifié après 60 jours sans activité dans le
+  dépôt.** La note du bas de `/admin/` le voit (ci-dessous) et mène à la
+  page du workflow, où *Enable workflow* le réveille.
+
+**La note du bas de `/admin/`** dit où en est la copie : elle compare la copie
+publiée (`../dates.js`) à la liste lue, avec l'empreinte de `dates-live.js`
+(identifiants de la base mis à part). « À jour » ; ou « dans la nuit », après
+un changement ; ou, si un changement attend depuis plus de 30 heures, la nuit
+est passée sans copie — workflow en échec ou endormi — et la note mène à la
+page du workflow (*Run workflow* le relance, *Enable workflow* le réveille).
+Le moment du dernier changement : le plus récent `modifie_le` de la table, ou
+la dernière écriture faite depuis la page — une suppression ne laisse aucun
+`modifie_le` derrière elle.
+
+**L'export ne réécrit rien si la base n'a pas changé** — pas même la ligne
+« `Dernier export : …` », qui date `dates.ics` : relancé chaque nuit, il aurait
+redaté l'agenda à chaque passage. Il sort en 0 (la copie est à jour, refaite
+ou déjà bonne), en 2 (la base n'a pas répondu) ou en 1 (repères perdus, table
+vide, résultat illisible : une personne doit regarder).
+
+Sur une machine, c'est la même chose, à la main :
 
 ```bash
 node build/exporter-dates.js
-node build/generer-pages-spectacles.js
+npm --prefix build run pages
 ```
 
 Le premier recopie la base entre les repères `⇊ ⇈` de `dates.js` ; tout ce
-qui est hors des repères (titre de saison, archives) reste à la main. Le
-second refait les pages spectacle avec les nouvelles dates, et `dates.ics`
-avec elles.
+qui est hors des repères (titre de saison, archives) reste à la main.
 
-**Ne modifiez plus la partie `upcoming` de `dates.js` à la main** : le
-prochain export l'écraserait sans prévenir. Le bon endroit, c'est `/admin/`.
+**Un essai à blanc** tourne sur chaque PR qui touche le workflow, son script
+ou l'export : la copie y est vidée exprès, refaite et committée sur place —
+ni poussée, ni publiée. Sur une machine, dans une copie de travail jetable
+(il committe) : `ESSAI=1 build/recopier-dates.sh exporter`, puis `fabriquer`
+et `publier`.
+
+**Ne modifiez plus la partie `upcoming` de `dates.js` à la main** : la
+prochaine copie l'écraserait sans prévenir. Le bon endroit, c'est `/admin/`.
 
 ### Pourquoi les pages spectacle lisent les dates elles aussi
 
@@ -1698,7 +1765,7 @@ les quatre fragments viennent d'`univers-montage.js`, les mêmes qui ont servi
 Deux effets à connaître :
 
 - le HTML généré reste **le repli sans JavaScript**, et c'est à ce titre
-  qu'il faut continuer de le régénérer (voir ci-dessus) ;
+  que la copie de la nuit le refait (voir ci-dessus) ;
 - une date **passée** disparaît d'elle-même du pied le lendemain, sans
   régénération : « à venir » se calcule désormais au jour de la visite, plus
   au jour de la génération.
@@ -2009,7 +2076,8 @@ elle manque, la page se rabat sur la version de 640 px.
   requête.** Le workflow `.github/workflows/reveiller-supabase.yml` fait une
   lecture deux fois par semaine pour l'en empêcher. Si malgré tout le site
   retombe sur `dates.js` (dates figées), c'est là qu'il faut regarder : le
-  tableau de bord Supabase propose de relancer le projet en un clic.
+  tableau de bord Supabase propose de relancer le projet en un clic. [La
+  copie de la nuit](#la-copie-de-la-nuit-recopier-datesyml) lit aussi la table, chaque nuit.
 - Le projet s'appelle **adrienvada-site**, dans l'organisation
   « adrienvada's Org » — distinct du projet du jeu Godot. La table est
   décrite dans `supabase/schema.sql`, l'import initial dans
@@ -2089,9 +2157,9 @@ bougé, et la vérification ne saurait plus dire s'il est à jour. Le seul
 que `exporter-dates.js` écrit en tête des dates. Elle borne le passé gardé
 (60 jours avant elle) et donne `DTSTAMP`, que la norme exige sur chaque
 événement. Illisible, elle arrête la fabrication avec un message : mieux vaut
-qu'elle le dise que de publier autre chose en silence. Conséquence à
-connaître : chaque export redate tous les `DTSTAMP`, et `dates.ics` change
-avec `dates.js`.
+qu'elle le dise que de publier autre chose en silence. Un export qui ne
+change rien n'écrit rien : la ligne, et avec elle les `DTSTAMP`, ne bougent
+qu'avec les dates.
 
 **Quand il est refait.** Par `build/fabriquer-agenda.js`, qu'appelle
 `build/generer-pages-spectacles.js` à chaque passage — donc par
@@ -2101,8 +2169,9 @@ des dates : une commande à part aurait été oubliée. Seul :
 page, la durée) : après un changement de l'un ou de l'autre, il faut le
 refaire, et la [vérification](#vérifier-le-site) refuse un `dates.ics` qui
 n'est pas exactement celui qu'ils donnent. **Il n'est pas en direct** : le
-site lit la base à chaque visite, les abonnés ne voient une date nouvelle
-qu'une fois la PR fusionnée et publiée. GitHub Pages le sert en
+site lit la base à chaque visite, `dates.ics` suit [la copie de la
+nuit](#la-copie-de-la-nuit-recopier-datesyml), et chaque application le relit à son rythme — une fois par
+jour environ ; Google Agenda ne se presse pas. GitHub Pages le sert en
 `text/calendar`, comme le serveur local.
 
 ---

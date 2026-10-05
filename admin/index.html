@@ -211,15 +211,18 @@
             </section>
 
             <!-- CE QUI EST EN LIGNE, ET QUAND. L'accueil ET les pages
-                 spectacle lisent la table en direct (dates-live.js) ; seuls le
-                 HTML de repli, le référencement, dates.ics et la place d'une
-                 ville nouvelle sur la carte de la saison attendent l'export de
-                 dates.js — l'affaire de la prochaine publication,
-                 pas d'Adrien au téléphone (README-build.md). -->
-            <p class="text-[12px] text-luxury-textMuted leading-relaxed px-1">
+                 spectacle lisent la table en direct (dates-live.js) ; le HTML
+                 de repli, le référencement, dates.ics et la place d'une ville
+                 nouvelle sur la carte de la saison suivent la COPIE, dates.js,
+                 que le workflow « Recopier les dates » refait chaque nuit
+                 (README-build.md). La seconde phrase est réécrite par admin.js
+                 (« LA COPIE DU SITE ») : à jour, cette nuit, ou en retard —
+                 avec alors le lien vers le workflow. -->
+            <p id="copie" class="text-[12px] text-luxury-textMuted leading-relaxed px-1">
                 Tout ce qui est enregistré ici est <strong class="font-semibold text-luxury-textMain">en ligne immédiatement</strong> sur
                 <a class="text-luxury-goldInk hover:underline" href="../#page_dates">adrienvada.fr</a> : l'accueil comme les pages spectacle lisent les dates en direct.
-                Seuls la version de secours sans JavaScript, le référencement (Google), l’agenda auquel on s’abonne et, pour une ville nouvelle, la carte de la saison attendent la prochaine publication du site — rien à faire de ton côté.
+                <span id="copie-etat">L’agenda auquel on s’abonne, la version de secours sans JavaScript, le référencement (Google) et la carte de la saison suivent chaque nuit, tout seuls — rien à faire de ton côté.</span>
+                <a id="copie-lien" class="text-luxury-goldInk hover:underline" href="https://github.com/adrienvada/adrienvada.github.io/actions/workflows/recopier-dates.yml" target="_blank" rel="noopener" hidden>La relancer sur GitHub</a>
             </p>
         </div>
 
