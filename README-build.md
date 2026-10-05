@@ -31,7 +31,7 @@ Ensuite, depuis la racine du dépôt :
 | Commande | Ce qu'elle fait |
 |---|---|
 | `npm --prefix build run css` | régénère `styles.css` |
-| `npm --prefix build run pages` | régénère la galerie **puis** les pages spectacle, le sitemap et [l'agenda à s'abonner](#lagenda-à-sabonner-datesics) (`dates.ics`) |
+| `npm --prefix build run pages` | régénère la galerie **puis** les pages spectacle, le sitemap, [l'agenda à s'abonner](#lagenda-à-sabonner-datesics) (`dates.ics`) et [la carte de la saison](#la-carte-de-la-saison) (bloc `CARTE-SAISON` d'`index.html`) |
 | `npm --prefix build run pdf` | refait le CV en PDF |
 | `npm --prefix build run dates` | recopie les dates de Supabase dans `dates.js` |
 | `npm --prefix build run ondes` | écrit [les ondes des démos voix](#démos-voix--les-ondes) dans `index.html` |
@@ -348,6 +348,12 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   date si, et en défilant l'affiche reste collée en haut ; arriver par
   `/#page_dates` ne pose pas `arrivee-hors-cv` au premier rendu, et rien ne
   se replie ensuite ;
+- la carte de la saison : le bloc `CARTE-SAISON` d'`index.html` est
+  exactement celui que donne `fabriquer-carte.js` avec le `dates.js` du
+  moment, chaque ville de la saison y a sa place ; au téléphone, dans la
+  saison d'un regard, au moins trois points, « Rouen et alentours » regroupé,
+  aucun bouton n'en couvre un autre, chacun d'au moins 24 px, et un point
+  mène à une date de la liste ;
 - le thème à trois positions : au départ, rien en mémoire et « Auto »
   coché ; « Clair » est retenu ; « Auto » efface la mémoire et suit
   l'appareil, même quand il change de réglage ; la bascule de la barre est
@@ -399,7 +405,8 @@ ici : c'est ce qui l'empêche de revenir.
 | une **ligne du CV** dans `index.html` — titre, auteur, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
 | le **vocabulaire du mouvement** dans `index.html` (`--ease-*`, `--dur-*`) | `npm --prefix build run pages` (la galerie, puis les pages spectacle) | `/galerie/…`, `/spectacles/…` : les pages spectacle, le répertoire et la galerie le relisent (voir [Un seul moteur](#un-seul-moteur-un-seul-visage) et [Le vocabulaire](#le-vocabulaire)) |
 | **`ressources/polices/polices.css`** — une police ajoutée, une adresse | `npm --prefix build run pages` | `/spectacles/index.html` et `/galerie/index.html`, qui en portent une copie dans leur page (voir [Polices](#polices--servies-par-le-site)) ; l'accueil publié la recopie de lui-même |
-| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis `node build/generer-pages-spectacles.js` | `dates.js`, puis `/spectacles/…`, `sitemap.xml` et `dates.ics` |
+| une **date** dans [`/admin/`](#mettre-à-jour-les-dates-de-représentation) (base Supabase) | rien d'urgent — le site l'affiche déjà. Avant un commit : `node build/exporter-dates.js`, puis `node build/generer-pages-spectacles.js` | `dates.js`, puis `/spectacles/…`, `sitemap.xml`, `dates.ics` et, pour une ville nouvelle, le bloc `CARTE-SAISON` d'`index.html` |
+| une saison qui **sort de la Normandie, des Hauts-de-France et de l'Île-de-France** | ajouter la région et ses départements dans `build/preparer-fond-de-carte.py`, puis `python3 build/preparer-fond-de-carte.py` (réseau) et la commande des pages | `build/donnees/carte-base.json`, puis la carte |
 | une **ligne du CV**, ou une règle `@media print` | `node build/generer-cv-pdf.js` | `ressources/cv-adrien-vada.pdf` |
 | le **montage photo** d'un univers (les `p: [...]`) | `python3 build/prepare-univers-photos.py` | `ressources/images/univers/…`, versions allégées, copies floues (`-flou.webp`), versions écran large (`-2400.webp`) et vignettes (`-v.webp`) comprises — et la liste `ECRAN_LARGE` d'`univers-montage.js` : s'il annonce qu'elle a changé, la commande des pages |
 | le **`cadre` de la couverture** d'un univers (celui de la première photo de son montage) | `python3 build/variantes-images.py`, en plus de la commande des pages | sa vignette du CV recadrée (`<nom>-v.webp`) et `variantes.json` — le [contrôle automatique](#vérifier-le-site) le rappelle si on l'oublie |
@@ -1868,6 +1875,44 @@ envoyer ne fait rien. Mesure : `date_partage`, le spectacle en détail. La
 ligne « Autre application mobile… » (le fichier `.ics` confié à une autre
 application) a pris un dessin d'agenda : deux lignes au même signe de
 partage, pour deux gestes différents, se confondaient.
+
+### La carte de la saison
+
+Sous le tableau de « la saison d'un regard » (onglet Dates, en touchant les
+années de la saison), une carte dit **où** se joue la saison : les contours
+de la Normandie (en or), des Hauts-de-France et de l'Île-de-France, un point
+par ville, d'autant plus grand qu'on y joue souvent, son nom et le nombre de
+représentations. **Aucun service de carte** : ni tuiles, ni clé, ni adresse
+IP envoyée à qui que ce soit — un SVG dans la page.
+
+- **Le fond et la place des villes sont écrits dans `index.html`**, entre les
+  repères `CARTE-SAISON` (un bloc JSON de 9 Ko : les trois contours projetés,
+  et la place de chaque ville de `dates.js`), par `build/fabriquer-carte.js`,
+  que la commande des pages appelle comme `dates.ics`. Il relit
+  `build/donnees/carte-base.json` — les contours simplifiés (≈ 500 m) et le
+  centre de chacune des 7 793 communes des trois régions —, préparé une fois
+  pour toutes par `python3 build/preparer-fond-de-carte.py` (IGN, Admin
+  Express, via le projet france-geojson, **Licence ouverte** : la source est
+  écrite sous la carte). Une ville se cherche par son nom et son département
+  (« Cherbourg (50) » trouve Cherbourg-en-Cotentin, la commune nouvelle).
+- **La page y pose les dates du moment** (`dlCarte`), celles de Supabase
+  comprises : une ville déjà dans le bloc a son point aussitôt ; une ville
+  nouvelle l'aura à la prochaine régénération, comme `dates.ics`.
+- **Les communes voisines se regroupent** (moins de 20 points, ≈ 15 km) sous
+  la plus jouée : « Rouen et alentours », sinon les sept communes de
+  l'agglomération rouennaise s'empilaient.
+- **Les noms ne se chevauchent pas** : chaque point, avec son nom, est un
+  bouton (24 px de haut au moins), qui **mène à la première date de sa
+  ville**, comme le reste du sommaire (`data-dl-aller`). Le nom se pose à
+  droite, à gauche, au-dessus ou au-dessous du point : toutes les
+  combinaisons sont essayées (une dizaine de villes au plus, une recherche
+  qui abandonne une branche dès qu'elle coûte plus que la meilleure), à la
+  largeur où la carte sera dessinée — lue sur la fenêtre, pas mesurée, pour ne
+  pas forcer de mise en page pendant le dessin de l'onglet. Au téléphone,
+  Saint-Lô écrit son nom sous son point, Pont-Audemer à gauche du sien.
+- La carte est **hors du `<nav>`** du tableau : la règle des boutons de
+  navigation du téléphone (corps et marges en `!important`) gonflait ses
+  points. Elle ne s'imprime pas (le sommaire est `no-print`).
 
 ### La prochaine date, en tête du CV
 

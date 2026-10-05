@@ -4500,6 +4500,54 @@ function exige(condition, message) {
             await c2.close();
         });
 
+        // ── LA CARTE DE LA SAISON ──
+        //  Le bloc CARTE-SAISON d'index.html suit dates.js (comme dates.ics),
+        //  chaque ville de la saison y a sa place ; dans la saison d'un
+        //  regard, les points ne se chevauchent pas, les communes de
+        //  l'agglomération rouennaise se regroupent, et un point mène à sa
+        //  date.
+        await verifie('la carte de la saison : à jour avec dates.js, chaque ville placée ; des points qui ne se chevauchent pas, l’agglomération regroupée, et un point qui mène à sa date', async () => {
+            const { bloc } = require('./fabriquer-carte.js');
+            const attendu = bloc();
+            const html = fs.readFileSync(path.join(RACINE, 'index.html'), 'utf8');
+            const m = html.match(/<script type="application\/json" id="carte-saison">([^<]*)<\/script>/);
+            exige(m, 'le bloc CARTE-SAISON est absent d’index.html');
+            exige(m[1] === JSON.stringify(attendu.donnees).replace(/</g, '\\u003c'),
+                'le bloc CARTE-SAISON n’est pas à jour avec dates.js : relancer npm --prefix build run pages');
+            exige(!attendu.manquantes.length, `des villes de la saison n’ont pas de place sur la carte : ${attendu.manquantes.join(', ')}`);
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/?direct#page_dates', { waitUntil: 'load' });
+            await p.waitForTimeout(1200);
+            await p.evaluate(() => document.getElementById('dates-saison-bouton').click());
+            await p.waitForTimeout(800);
+            const carte = await p.evaluate(() => {
+                const boutons = [...document.querySelectorAll('.dl-carte-ville')];
+                const boites = boutons.map((b) => b.getBoundingClientRect());
+                let chevauche = 0;
+                boites.forEach((a, i) => boites.forEach((b, j) => {
+                    if (j > i && a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) chevauche++;
+                }));
+                const fond = document.querySelector('.dl-carte-fond')?.getBoundingClientRect();
+                return {
+                    n: boutons.length, chevauche, petits: boites.filter((r) => r.height < 24).length,
+                    dehors: fond ? boites.filter((r) => r.left < fond.left - 60 || r.right > fond.right + 60).length : -1,
+                    rouen: boutons.some((b) => /Rouen et alentours/.test(b.getAttribute('aria-label')))
+                };
+            });
+            exige(carte.n >= 3 && carte.rouen, `la carte ne montre pas la saison (${JSON.stringify(carte)})`);
+            exige(!carte.chevauche, `${carte.chevauche} paire(s) de points de la carte se chevauchent`);
+            exige(!carte.petits, `${carte.petits} point(s) de la carte sous 24 px de cible`);
+            await p.evaluate(() => document.querySelector('.dl-carte-ville').scrollIntoView({ block: 'center' }));
+            await p.tap('.dl-carte-ville');
+            await p.waitForTimeout(1200);
+            const arrivee = await p.evaluate(() => document.activeElement?.closest('[id^="dl-e"]')?.id || '');
+            exige(/^dl-e\d+$/.test(arrivee), `un point de la carte ne mène pas à sa date (${arrivee || 'rien'})`);
+            exige(!erreurs.length, `erreurs : ${erreurs.join(' | ')}`);
+            await c.close();
+        });
+
         // ── LE THÈME À TROIS POSITIONS ──
         //  Auto (rien en mémoire : le site suit l'appareil, en direct),
         //  Clair, Sombre (retenus, comme la bascule de la barre). Le groupe

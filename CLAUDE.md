@@ -141,7 +141,11 @@ npm --prefix build run verifier
 `git diff` ne doit montrer que ce qui était attendu : `dates.js`, les pages
 spectacle concernées, `sitemap.xml`, et `dates.ics` — l'agenda auquel on
 s'abonne depuis l'onglet Dates, refait à chaque export (ses `DTSTAMP` suivent
-la ligne « Dernier export » de `dates.js`). Si l'export change autre chose,
+la ligne « Dernier export » de `dates.js`). Une ville jouée pour la première
+fois ajoute aussi sa place à la carte de la saison : le bloc `CARTE-SAISON`
+d'`index.html`. Si la commande signale une ville « introuvable » (faute de
+frappe, ou hors de Normandie, des Hauts-de-France et de l'Île-de-France),
+dis-le à Adrien : la date est en ligne, seule la carte ne la montre pas. Si l'export change autre chose,
 c'est que la table et `dates.js` divergeaient déjà : explique à Adrien ce qui
 diffère avant d'aller plus loin. La vérification doit tout passer. En cas
 d'échec, relis le message, et relance seule l'épreuve concernée

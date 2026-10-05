@@ -33,7 +33,8 @@
  *      node build/generer-pages-spectacles.js
  *
  *  Le script réécrit /spectacles/ et sitemap.xml de bout en bout, et
- *  l'agenda à s'abonner, dates.ics (voir build/fabriquer-agenda.js). Il
+ *  l'agenda à s'abonner, dates.ics (voir build/fabriquer-agenda.js), et
+ *  la carte de la saison dans index.html (build/fabriquer-carte.js). Il
  *  est idempotent : le relancer sans rien changer ne produit aucune
  *  différence.
  *  Ne modifiez jamais un fichier de /spectacles/ à la main — il sera écrasé.
@@ -2208,6 +2209,12 @@ function main() {
     const misAJour = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' })
         .format(new Date(an, mois - 1, 1));
     const dateRepertoire = ecrirePage('spectacles/index.html', pageRepertoire(faites, misAJour), anciens);
+
+    // ── LA CARTE DE LA SAISON (le bloc CARTE-SAISON d'index.html) ──
+    // Faite ici pour la même raison que dates.ics (plus bas), et AVANT le
+    // sitemap, qui date l'accueil d'après ses changements. Voir
+    // build/fabriquer-carte.js.
+    require('./fabriquer-carte.js').ecrire();
 
     // ── sitemap ──
     const url = (loc, lastmod, freq, prio) => `    <url>
