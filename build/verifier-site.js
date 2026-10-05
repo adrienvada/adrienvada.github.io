@@ -4386,24 +4386,34 @@ function exige(condition, message) {
         });
 
         // ── L'EXPERTISE D'OCTOBRE 2026, CÔTÉ UNIVERS ──
-        // Le premier écran nomme le spectacle ; qui arrive d'un moteur de
-        // recherche voit d'abord le haut de page complet ; les dates du pied
+        // Le premier écran reste celui du travelling : on avance au milieu
+        // des photos jusqu'au titre, sans qu'il soit nommé d'avance — pour
+        // qui arrive d'un moteur de recherche comme pour qui vient du site.
+        // L'expertise y avait posé le titre en filigrane et la ligne de
+        // salle, et sauté le travelling depuis Google : Adrien a préféré
+        // l'ouverture d'avant. Ensuite, les dates du pied
         // ont le dessin de l'onglet Dates, une série sur une ligne et un
         // agenda qui demande la séance ; les chapitres se suivent et se
         // touchent ; le pied finit sur le spectacle suivant ; et « Cléophène »
         // tient dans l'écran du plus petit téléphone.
-        await verifie('les univers d’après l’expertise : un repère au premier écran, le haut de page complet depuis un moteur de recherche, les dates au dessin de l’onglet Dates, des chapitres qu’on touche, le spectacle suivant, un titre qui tient', async () => {
+        await verifie('les univers d’après l’expertise : le travelling d’abord, sans titre d’avance, même depuis un moteur de recherche ; les dates au dessin de l’onglet Dates, des chapitres qu’on touche, le spectacle suivant, un titre qui tient', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
             const p = await c.newPage();
             const erreurs = guette(p);
             await p.goto(base + '/spectacles/berenice/', { waitUntil: 'load' });
             await p.waitForTimeout(900);
-            const premier = await p.evaluate(() => ({
-                titre: document.querySelector('.u-of-repere-titre')?.textContent.trim() || '',
-                ligne: document.querySelector('.u-of-invite-sur')?.textContent.trim() || '',
-                pastille: document.querySelector('.u-chapitres')?.classList.contains('est-visible')
-            }));
-            exige(premier.titre === 'Bérénice' && /2022/.test(premier.ligne), `le premier écran ne nomme pas le spectacle (« ${premier.titre} », « ${premier.ligne} »)`);
+            const premier = await p.evaluate(() => {
+                const scene = document.querySelector('.u-of-scene');
+                return {
+                    // Le fond, le titre (au fond du plateau), les plans, « Avancer »,
+                    // et la lettre de la fin (detourerLeTitre) : rien d'autre.
+                    filigrane: scene ? [...scene.children].filter((e) => !e.matches('.u-of-fond, .u-of-titre, .u-of-plans, .u-of-invite, .u-lettre'))
+                        .map((e) => e.getAttribute('class')).join(', ') : 'pas de travelling',
+                    invite: document.querySelector('.u-of-invite')?.textContent.trim() || '',
+                    pastille: document.querySelector('.u-chapitres')?.classList.contains('est-visible')
+                };
+            });
+            exige(!premier.filigrane && premier.invite === 'Avancer', `le premier écran nomme le spectacle d’avance (en plus du travelling : « ${premier.filigrane} » ; invitation « ${premier.invite} »)`);
             exige(premier.pastille === false, 'la pastille des chapitres paraît dès le premier écran');
             // Les chapitres : la pastille paraît avec le montage, et « Dates » mène au pied.
             const chap = await p.evaluate(async () => {
@@ -4434,16 +4444,12 @@ function exige(condition, message) {
             const suite = await p.evaluate(() => document.querySelector('.u-suivant a')?.getAttribute('href'));
             exige(suite === '/spectacles/asyoulikeit/', `le pied de Bérénice ne mène pas à As You Like It (${suite})`);
             exige(!erreurs.length, erreurs.join(' | '));
-            // Depuis un moteur de recherche : le haut de page complet.
+            // Depuis un moteur de recherche aussi, le travelling joue depuis le début.
             const p2 = await c.newPage();
             await p2.goto(base + '/spectacles/berenice/', { waitUntil: 'load', referer: 'https://www.google.com/' });
             await p2.waitForTimeout(900);
-            const g = await p2.evaluate(() => {
-                const b = document.querySelector('.u-hero-actions .u-btn');
-                const r = b.getBoundingClientRect();
-                return { y: document.getElementById('show-universe').scrollTop, dedans: r.top >= 0 && r.bottom <= innerHeight };
-            });
-            exige(g.y > 0 && g.dedans, `depuis un moteur de recherche, le haut de page n’est pas posé (défilement ${g.y}, bouton ${g.dedans ? 'visible' : 'hors de l’écran'})`);
+            const g = await p2.evaluate(() => document.getElementById('show-universe').scrollTop);
+            exige(g === 0, `depuis un moteur de recherche, la page saute le travelling (défilement ${g} px)`);
             await c.close();
             // Le titre le plus large tient dans le plus petit téléphone.
             const c3 = await visiteur({ viewport: { width: 360, height: 740 }, isMobile: true, reducedMotion: 'reduce' });

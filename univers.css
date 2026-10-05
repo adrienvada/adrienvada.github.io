@@ -691,8 +691,9 @@ html.vt-univers-retour::view-transition-new(u-titre) {
          chasse le synopsis de l'écran. On lui accorde trois lignes :
          à trois lignes de texte pleines, la taille ne peut pas
          dépasser 3 × l'espace disponible divisé par le titre. */
-.u-title,
-.u-of-repere-titre {
+.u-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
     /* 56px : les 2 × 24px de padding du hero, et de quoi respirer. */
     --u-title-space: calc(100vw - 56px);
     /* 0.66em PAR SIGNE POUR LE MOT LE PLUS LONG, 0.58 POUR LA LONGUEUR.
@@ -710,11 +711,6 @@ html.vt-univers-retour::view-transition-new(u-titre) {
             calc(var(--u-title-space) / (var(--u-title-chars, 12) * 0.66)),
             calc(3 * var(--u-title-space) / (var(--u-title-len, 18) * 0.58)));
     --u-title-track: -.015em;
-}
-
-.u-title {
-    font-family: 'Cinzel', serif;
-    font-weight: 700;
     font-size: var(--u-title-size);
     line-height: 1.02;
     letter-spacing: var(--u-title-track);
@@ -3757,56 +3753,6 @@ a.u-dl-puce:focus-visible {
     }
 }
 
-/* LE REPÈRE DU PREMIER ÉCRAN (voir ouvertureHtml). Le titre, en
-   filigrane, au milieu de la scène : la taille même du vrai titre, une
-   encre à peine posée — on le lit sans qu'il fasse écran aux photos, qui
-   passent devant lui. Il recule et s'éteint dès le premier geste, avant
-   que le vrai titre ne parte du fond du plateau (--of-repere). */
-.u-of-repere {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    padding: 0 28px;
-    pointer-events: none;
-    --rg-anim: u-of-repere;
-    --s: 0;
-    --e: var(--of-repere, .12);
-}
-
-.u-of-repere-titre {
-    max-width: 14ch;
-    font-family: 'Cinzel', serif;
-    font-weight: 700;
-    font-size: var(--u-title-size);
-    line-height: 1.02;
-    letter-spacing: var(--u-title-track);
-    text-align: center;
-    color: color-mix(in srgb, var(--u-text) 15%, transparent);
-}
-
-@keyframes u-of-repere {
-    to {
-        opacity: 0;
-        transform: scale(.86);
-    }
-}
-
-/* La ligne de la feuille de salle, au-dessus d'« Avancer » : l'année, le
-   genre, l'état de la tournée. Dans l'encre du spectacle, plus petite et
-   moins espacée que l'invitation : c'est une information, pas un geste. */
-.u-of-invite-sur {
-    margin-bottom: 4px;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: .14em;
-    color: var(--u-text);
-    opacity: .82;
-    text-align: center;
-    padding: 0 24px;
-}
-
 /* ══ LE CARTON DU CHAPITRE, PLEIN ÉCRAN ══
    Le premier carton — la durée, une phrase — dans sa propre scène tenue,
    entre le haut de la page et la première photo (voir cartonHtml dans
@@ -4387,7 +4333,6 @@ a.u-dl-puce:focus-visible {
 
     .u-of-plans,
     .u-of-invite,
-    .u-of-repere,
     .u-carton-noir,
     .u-pa-faisceau,
     .u-voile,

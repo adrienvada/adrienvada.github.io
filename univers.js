@@ -3273,46 +3273,6 @@ const SHOW_UNIVERSES = {
         }, true);
     }
 
-    // ── QUI ARRIVE D'UN AUTRE SITE VOIT D'ABORD LE HAUT DE PAGE COMPLET ──
-    //  Une page spectacle trouvée sur un moteur de recherche s'ouvrait sur
-    //  le travelling : une petite photo au loin, « Avancer », et le titre
-    //  seulement après plusieurs écrans de défilement. Or celui qui arrive
-    //  de Google cherche une information — le titre, le rôle, les dates —,
-    //  pas une ouverture de spectacle. Il arrive donc au point de la scène
-    //  où tout est posé : le titre, sa ligne de salle, le synopsis écrit, le
-    //  rôle et « Accéder aux dates », comme en mouvement réduit. Le
-    //  travelling reste là, au-dessus : il suffit de remonter pour le voir.
-    //
-    //  « Un autre site », c'est un référent d'une autre origine, à la
-    //  première navigation (pas un rechargement ni un retour). Sans
-    //  référent — une adresse tapée, un signet, un lien ouvert depuis une
-    //  application —, ni depuis le site lui-même (le répertoire, l'onglet
-    //  Dates), rien ne change : le travelling joue depuis le début.
-    function arriveDunAutreSite() {
-        try {
-            const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
-            if (nav && nav.type && nav.type !== 'navigate') return false;
-            return !!document.referrer && new URL(document.referrer).origin !== location.origin;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    //  Le point où tout est posé : la fin de l'arrivée de la flèche
-    //  (--of-fleche-e), avant que la lettre ne s'ouvre sur la photo. La
-    //  scène est une course « contain » : sa fraction p tombe à
-    //  haut de la scène + p × (sa hauteur − l'écran).
-    function poserLeHautDePage() {
-        if (REDUCED) return false;
-        const scene = overlay.querySelector('.u-ouverture');
-        if (!scene) return false;
-        const p = parseFloat(getComputedStyle(scene).getPropertyValue('--of-fleche-e'));
-        const course = scene.offsetHeight - overlay.clientHeight;
-        if (!(p > 0) || course <= 0) return false;
-        overlay.scrollTop = Math.round(scene.offsetTop + p * course);
-        return true;
-    }
-
     function demarrerStatique() {
         brancherMesure();
         scroller = overlay;
@@ -3324,9 +3284,6 @@ const SHOW_UNIVERSES = {
         wireVideoPosters();
         animerLeMontage(overlay);
         mesurerLesLignes();
-        if (arriveDunAutreSite() && poserLeHautDePage()) {
-            document.documentElement.classList.add('u-arrivee-directe');
-        }
         lastScrollTop = 0;
         // AVANT l'écriture : le pied se refait en silence, la page n'a pas
         // encore bougé. Si rien n'a changé depuis la génération, l'opération

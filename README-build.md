@@ -367,13 +367,13 @@ minutes environ, ce qui a déjà cassé ou casserait sans bruit :
   aucun texte visible sous onze pixels, sur le CV ni sur les Dates ; le
   sigle TIOR ouvre au doigt une bulle dans l'écran, avec son lien, qu'Échap
   referme et qui ne s'imprime pas ;
-- les univers d'après l'expertise : le premier écran de Bérénice nomme le
-  spectacle et sa ligne de salle ; la pastille des chapitres est là, avec un
-  repère sur la barre de progression par début de chapitre ; « Dates » y
-  mène au pied ; l'agenda d'une série demande la séance ; le pied de
-  Bérénice mène au spectacle suivant du CV ; une page spectacle ouverte
-  depuis un moteur de recherche pose son haut de page, bouton des dates
-  visible ; « Cléophène » laisse au moins 16 px au bord à 360 px.
+- les univers d'après l'expertise : le premier écran de Bérénice est celui du
+  travelling, sans titre en filigrane ni ligne de salle, et une page
+  spectacle ouverte depuis un moteur de recherche le joue depuis le début ;
+  la pastille des chapitres est là, avec un repère sur la barre de
+  progression par début de chapitre ; « Dates » y mène au pied ; l'agenda
+  d'une série demande la séance ; le pied de Bérénice mène au spectacle
+  suivant du CV ; « Cléophène » laisse au moins 16 px au bord à 360 px.
 - l'agenda d'une date (`agendaDe`) : l'heure de Paris avec son fuseau
   (`VTIMEZONE`, `TZID`), une soirée de 23 h 30 qui finit le lendemain, le
   même identifiant d'un ajout à l'autre, des lignes de 75 octets au plus, la
@@ -2539,30 +2539,21 @@ l'efface.
 panneau. Les photos de Cléophène sont d'Arnaud Bertereau — le crédit est déjà
 en place ; le renseigner pour toute série qui en demande un.
 
-### Le premier écran, les chapitres, la suite
+### Les chapitres, la suite, les dates du pied
 
 Ajoutés par l'expertise d'octobre 2026, dans `univers-montage.js` (donc
 partout : panneau de l'accueil et pages spectacle).
 
-- **Le premier écran nomme le spectacle.** Trois secondes après le toucher,
-  il ne montrait qu'une petite photo au loin et « Avancer ». Le titre y est
-  désormais en filigrane, au fond de la scène (`.u-of-repere`), et la ligne
-  de la feuille de salle (« 2022 · Tragédie · En tournée »,
-  `.u-of-invite-sur`) au-dessus d'« Avancer ». Le filigrane s'efface quand
-  le vrai titre quitte le fond du plateau (`--of-repere`, réglé dans
-  `tempoOuverture`), la ligne avec l'invitation. Les deux sont décoratifs
-  pour un lecteur d'écran, qui lit le titre plus loin, et absents du repli
-  sans JavaScript (`univers-statique.css`). Le titre en filigrane et le vrai
-  partagent la même formule de taille (`.u-title, .u-of-repere-titre` :
-  0,66 chasse par signe), qui fait aussi tenir « Cléophène » à 360 px.
-- **Qui arrive d'un moteur de recherche voit le haut de page complet.** Une
-  page spectacle ouverte depuis un autre site (référent d'une autre
-  origine, première navigation : pas un rechargement ni un retour) se pose
-  au point de la scène où tout est écrit — titre, ligne de salle, synopsis,
-  rôle, « Accéder aux dates » — comme en mouvement réduit
-  (`arriveDunAutreSite`, `poserLeHautDePage`, classe `u-arrivee-directe`).
-  Le travelling reste au-dessus. Depuis le site lui-même, un signet ou une
-  adresse tapée, rien ne change.
+- **Le premier écran reste celui du travelling.** On avance au milieu des
+  photos jusqu'au titre, qui n'est pas nommé d'avance — depuis le site comme
+  depuis un moteur de recherche. L'expertise y avait posé le titre en
+  filigrane et la ligne de la feuille de salle au-dessus d'« Avancer », et
+  posé directement au titre qui arrivait de Google : Adrien a préféré
+  l'ouverture d'avant (octobre 2026). La vérification le garde (« les
+  univers d'après l'expertise »).
+- **Le titre tient dans l'écran.** Sa taille réserve 0,66 chasse par signe
+  au mot le plus long (`.u-title`) : « Cléophène » sortait de 1 à 6 px à
+  360 px en mouvement réduit et sans script.
 - **Les chapitres.** Un univers fait une vingtaine d'écrans au téléphone
   (17 000 px pour Bérénice). Il se lit en chapitres (`chapitresDe` :
   Ouverture, Le spectacle — Images pour un film —, Bande-annonce s'il y en

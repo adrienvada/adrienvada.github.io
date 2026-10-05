@@ -528,7 +528,7 @@ const UniversMontage = (function () {
             // Les plages des couches du haut de la page (voir « Le récit
             // s'écrit sur la scène » dans univers.css).
             vars: {
-                invite: f(14), repere: f(42), titre: f(A),
+                invite: f(14), titre: f(A),
                 'fond-s': f(A), 'fond-e': f(A + 45),
                 'sur-s': f(A + 8), 'sur-e': f(A + 40),
                 'auteur-s': f(A + 22), 'auteur-e': f(A + 52),
@@ -599,19 +599,7 @@ const UniversMontage = (function () {
     // attendent, et ne partent jamais. La page générée ne peut pas le
     // savoir en s'écrivant : ses photos attendent, et son en-tête précharge
     // la première, seulement si le mouvement n'est pas réduit.
-    //
-    // `repere` : { sur, titre, chars, len } — LE REPÈRE DU PREMIER ÉCRAN.
-    // Trois secondes après le toucher, l'écran ne montrait qu'une petite
-    // photo au loin et « Avancer » : rien ne nommait le spectacle avant
-    // qu'on défile — et une page trouvée sur un moteur de recherche
-    // s'ouvrait de même. Le titre est donc là dès l'ouverture, en
-    // filigrane au fond de la scène, et la ligne de la feuille de salle
-    // (« 2024 · Tragédie · En tournée ») au-dessus d'« Avancer ». Le
-    // filigrane s'efface dès que le vrai titre part du fond du plateau
-    // (--of-repere) ; la ligne, avec l'invitation. Décoratifs pour les
-    // lecteurs d'écran : le titre et la ligne sont écrits plus loin, dans
-    // le haut de la page.
-    function ouvertureHtml(uni, titre, tempo, vu, repere) {
+    function ouvertureHtml(uni, titre, tempo, vu) {
         const photos = photosOuverture(uni);
         if (photos.length < 2) return '';
         const plans = photos.map((n, i) => {
@@ -633,18 +621,12 @@ const UniversMontage = (function () {
         // La photo de la lettre, lue par detourerLeTitre (univers.js).
         const lettre = photoLettre(uni);
         const attrLettre = lettre ? ` data-u-src="${escape(lettre.src)}"${lettre.pos ? ` data-lettre-pos="${escape(lettre.pos)}"` : ''}` : '';
-        const r = repere || {};
-        const filigrane = r.titre
-            ? `<span class="u-of-repere rg-k" aria-hidden="true"><span class="u-of-repere-titre" style="--u-title-chars:${r.chars || 12};--u-title-len:${r.len || 18}">${escape(r.titre)}</span></span>`
-            : '';
-        const surInvite = r.sur ? `<span class="u-of-invite-sur">${r.sur}</span>` : '';
         return `<section class="u-ouverture rg-scene" style="${reglage}"${attrLettre}>
             <div class="u-of-scene">
                 <span class="u-of-fond" aria-hidden="true"></span>
-                ${filigrane}
                 <div class="u-of-titre rg-k">${titre}</div>
                 <span class="u-of-plans" aria-hidden="true">${plans}</span>
-                <p class="u-of-invite rg-k" aria-hidden="true">${surInvite}<span>Avancer</span><span class="u-of-rail"></span></p>
+                <p class="u-of-invite rg-k" aria-hidden="true"><span>Avancer</span><span class="u-of-rail"></span></p>
             </div>
         </section>`;
     }
@@ -1162,7 +1144,7 @@ const UniversMontage = (function () {
         <div class="u-progress" aria-hidden="true"><span></span></div>
         ${chapitresHtml(uni, isFilm)}
 
-        ${ouverture ? ouvertureHtml(uni, hero, tempo, travellingVu, { sur: surtitre, titre: info.title, chars: tm.chars, len: tm.len }) : hero}
+        ${ouverture ? ouvertureHtml(uni, hero, tempo, travellingVu) : hero}
 
         <div class="u-figs">${figures}</div>
 
