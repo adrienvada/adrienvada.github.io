@@ -424,6 +424,7 @@
             }
             majSynchro('ok');
             relancerSuppressions();
+            verifierCopie();
             return true;
         })().finally(() => { lectureEnCours = null; });
         return lectureEnCours;
@@ -448,6 +449,64 @@
         b.setAttribute('aria-label', `${texte}. Toucher pour relire la liste.`);
     }
     $('synchro').addEventListener('click', () => { if (peutLire()) charger(); });
+
+    /**
+     * LA COPIE DU SITE, EN BAS DE PAGE. Ce qui est enregistré ici est en
+     * ligne aussitôt ; l'agenda à s'abonner (dates.ics), la version de
+     * secours, le référencement et la carte suivent la copie (dates.js),
+     * que le workflow « Recopier les dates » refait CHAQUE NUIT. La note dit
+     * où elle en est, en comparant la copie publiée à la liste lue — avec
+     * l'empreinte de dates-live.js : identifiants de la base mis à part,
+     * deux listes de même empreinte donnent le même site.
+     *
+     * À jour ; ou « dans la nuit » ; ou, si un changement attend depuis plus
+     * de 30 heures, EN RETARD : la nuit est passée sans copie — workflow en
+     * échec, ou endormi par GitHub après 60 jours sans activité dans le
+     * dépôt. Le lien mène alors à sa page, où « Run workflow » le relance et
+     * « Enable workflow » le réveille.
+     *
+     * Le moment du dernier changement : le plus récent modifie_le de la
+     * table, ou la dernière écriture faite d'ici — une suppression ne laisse
+     * aucun modifie_le derrière elle.
+     */
+    const COPIE_RETARD = 30 * 3600 * 1000;
+    const empreinte = liste => JSON.stringify(liste, (cle, v) => cle === 'id' ? undefined : v);
+    let derniereEcriture = 0;
+    let copieEnCours = null, copieARevoir = false;
+    function verifierCopie() {
+        // Un changement pendant la comparaison : elle sera refaite après.
+        if (copieEnCours) { copieARevoir = true; return copieEnCours; }
+        if (lectureSeule || !derniereLecture || !lignes.length) return null;
+        copieEnCours = (async () => {
+            let publiee;
+            try {
+                const r = await fetchAvecDelai(`../dates.js?copie=${Date.now()}`, { cache: 'no-store' });
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                publiee = new Function(`${await r.text()}\nreturn SHOW_DATA;`)().upcoming;
+            } catch (e) { return; }   // hors ligne : la phrase générale reste
+            const suite = 'L’agenda auquel on s’abonne, la version de secours sans JavaScript, le référencement (Google) et la carte de la saison';
+            let etat, texte;
+            if (empreinte(publiee) === empreinte(L.versShowData(lignes))) {
+                etat = 'a-jour'; texte = `${suite} sont à jour.`;
+            } else {
+                const change = Math.max(derniereEcriture, ...lignes.map(l => Date.parse(l.modifie_le) || 0));
+                if (change && Date.now() - change > COPIE_RETARD) {
+                    etat = 'en-retard'; texte = `${suite} n’ont pas encore les derniers changements : la mise à jour de la nuit ne s’est pas faite.`;
+                } else {
+                    etat = 'en-attente'; texte = `${suite} prendront les derniers changements dans la nuit, tout seuls.`;
+                }
+            }
+            $('copie').dataset.etat = etat;
+            $('copie-etat').textContent = texte;
+            $('copie-etat').classList.toggle('adm-erreur', etat === 'en-retard');
+            $('copie-lien').hidden = etat !== 'en-retard';
+        })().finally(() => {
+            copieEnCours = null;
+            if (copieARevoir) { copieARevoir = false; verifierCopie(); }
+        });
+        return copieEnCours;
+    }
+    const copieChangee = () => { derniereEcriture = Date.now(); verifierCopie(); };
 
     // Les lignes d'attente, tant que la première lecture n'est pas revenue.
     function afficherAttente() {
@@ -797,6 +856,7 @@
             memoriserListe();
             rendre();
             majSynchro(etatSynchro.etat, etatSynchro.info);
+            copieChangee();
             if (s.reprise) toast(`Suppression terminée : ${s.ligne.spectacle}, ${jourBref(s.ligne.jour)}`);
             return true;
         })();
@@ -1830,6 +1890,7 @@
     function reussite(ecrites, texte) {
         fusionner(ecrites);
         memoriserListe();
+        copieChangee();
         fermerFiche(true);
         rendre();
         surligner(ecrites.map(x => x.id));

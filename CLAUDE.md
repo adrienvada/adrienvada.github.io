@@ -22,12 +22,14 @@ Demande typique : « J'ai une date en plus, voilà le mail, ajoute-la au site. �
   lit en direct à chaque visite (`dates-live.js`). Schéma et règles :
   `supabase/schema.sql`.
 - **`dates.js`**, une copie de la table, enregistrée dans le dépôt. Elle sert de
-  repli si Supabase ne répond pas, et c'est d'elle que sont fabriquées les pages
-  spectacle (`/spectacles/…`). Elle doit être **identique** à la table : sinon la
-  page se redessine à chaque visite, et la vérification du site échoue.
+  repli si Supabase ne répond pas, et c'est d'elle que sont fabriqués les pages
+  spectacle (`/spectacles/…`), l'agenda à s'abonner (`dates.ics`) et la carte de
+  la saison. **Le workflow « Recopier les dates » la refait chaque nuit** et
+  publie seul, sans PR, si la table a changé : c'est le choix d'Adrien
+  (`README-build.md`, « La copie de la nuit »).
 
 On n'édite donc **jamais `dates.js` à la main** pour une date à venir. On écrit
-dans Supabase, puis on régénère `dates.js`.
+dans Supabase ; la copie suit.
 
 ### Accès en écriture
 
@@ -129,35 +131,29 @@ Vérifie que la réponse renvoie bien la ou les lignes attendues. Une erreur
 `23505` signale un doublon, `23514` une règle de contenu (lien qui n'est pas en
 `https://`, texte trop long…).
 
-**5. Régénérer la copie, les pages et vérifier.**
+**5. Lancer la copie tout de suite**, sans attendre la nuit : le workflow
+« Recopier les dates », sur `main` — outil GitHub `actions_run_trigger`, méthode
+`run_workflow`, `workflow_id` `recopier-dates.yml`, `ref` `main`. Il recopie la
+table dans `dates.js`, refait les pages spectacle, `sitemap.xml`, `dates.ics` et
+la carte de la saison, committe sur `main` et publie. **Pas de commit ni de PR
+de ta part pour une date.**
 
-```bash
-npm --prefix build ci          # une fois par session, si build/node_modules manque
-npm --prefix build run dates   # Supabase → dates.js
-npm --prefix build run pages   # galerie, pages spectacle, sitemap, dates.ics
-npm --prefix build run verifier
-```
+Suis la course jusqu'au bout (`actions_list`, `list_workflow_runs`, puis
+`actions_get`) — deux minutes environ, la publication ensuite :
 
-`git diff` ne doit montrer que ce qui était attendu : `dates.js`, les pages
-spectacle concernées, `sitemap.xml`, et `dates.ics` — l'agenda auquel on
-s'abonne depuis l'onglet Dates, refait à chaque export (ses `DTSTAMP` suivent
-la ligne « Dernier export » de `dates.js`). Une ville jouée pour la première
-fois ajoute aussi sa place à la carte de la saison : le bloc `CARTE-SAISON`
-d'`index.html`. Si la commande signale une ville « introuvable » (faute de
-frappe, ou hors de Normandie, des Hauts-de-France et de l'Île-de-France),
-dis-le à Adrien : la date est en ligne, seule la carte ne la montre pas. Si l'export change autre chose,
-c'est que la table et `dates.js` divergeaient déjà : explique à Adrien ce qui
-diffère avant d'aller plus loin. La vérification doit tout passer. En cas
-d'échec, relis le message, et relance seule l'épreuve concernée
-(`SEUL=mot node build/verifier-site.js`) avant de conclure à un problème de
-timing.
+- son résumé liste les soirées ajoutées, modifiées ou retirées : ce doit être
+  ce que tu viens d'écrire. S'il en montre d'autres, la table avait changé
+  ailleurs (Adrien dans `/admin/`) : dis-le à Adrien ;
+- un avertissement « Sans place sur la carte » (faute de frappe, ou ville hors
+  de Normandie, des Hauts-de-France et de l'Île-de-France) : dis-le à Adrien —
+  la date est en ligne, seule la carte ne la montre pas ;
+- un échec : lis le journal (`get_job_logs`) et explique-le à Adrien. Rien
+  n'est poussé ; la copie réessaie chaque nuit.
 
-**6. Committer, pousser, ouvrir la PR.** Message de commit en français, qui dit
-quelle date a changé. Puis réponds à Adrien en quelques lignes :
+**6. Répondre à Adrien**, en quelques lignes :
 
 - ce qui a changé ;
 - que c'est déjà visible sur le site, puisque la base est lue en direct ;
-- que la PR met à jour la copie de repli, les pages spectacle et l'agenda à
-  s'abonner (les abonnés ne verront la date qu'une fois la PR publiée), et
-  qu'elle sera publiée quand il dira « fusionne » (fusionne seulement à sa
-  demande, et quand les tests sont verts).
+- que l'agenda à s'abonner, la version de secours et les pages spectacle ont
+  suivi (ou suivront cette nuit, si la copie a échoué), et que les applications
+  d'agenda des abonnés relisent l'agenda environ une fois par jour.

@@ -1,0 +1,82 @@
+# ============================================================
+#  RECOPIER LES DATES — chaque nuit, la base → dates.js → dates.ics
+# ============================================================
+#  La table Supabase `representations` fait foi : le site la lit en
+#  direct à chaque visite. Quatre choses lisent pourtant la COPIE,
+#  dates.js : l'agenda auquel on s'abonne (dates.ics), la version sans
+#  JavaScript des pages et ce qu'en lisent les moteurs, la carte de la
+#  saison (pour une ville nouvelle), le CV en PDF. Elles attendaient
+#  qu'on relance l'export à la main, puis une PR.
+#
+#  CHAQUE NUIT, ce workflow relit la base (avec la clé publique, comme
+#  un visiteur). Si rien n'a changé, il s'arrête là, sans rien écrire.
+#  Sinon il refait dates.js, les pages spectacle, le sitemap, dates.ics
+#  et la carte, committe sur main et lance la publication — sans PR :
+#  c'est le choix d'Adrien (octobre 2026), les dates étant déjà en ligne
+#  par la base. Le détail : build/recopier-dates.sh.
+#
+#  TOUT DE SUITE : Actions → « Recopier les dates » → Run workflow. C'est
+#  ce que fait Claude après avoir écrit une date (CLAUDE.md).
+#
+#  PAS DE VÉRIFICATION COMPLÈTE ICI. Elle prend six minutes et un
+#  navigateur, pour un passage qui ne change que des données déjà
+#  affichées en direct ; chaque générateur relit ce qu'il écrit, et la
+#  vérification complète repasse sur chaque PR.
+#
+#  UNE PUBLICATION PAR NUIT AU PLUS : GitHub Pages en accepte dix par
+#  heure (README-build.md, « Une poussée toutes les dix minutes »).
+#
+#  ESSAI À BLANC sur une PR qui touche ce fichier, le script ou l'export :
+#  la copie est vieillie exprès, puis refaite et committée sur place —
+#  ni poussée, ni publiée.
+#
+#  ⚠ GITHUB ENDORT un workflow planifié après 60 jours sans activité dans
+#  le dépôt. /admin/ le voit (une date qui attend depuis plus d'un jour)
+#  et mène à la page du workflow, où « Enable workflow » le réveille.
+# ============================================================
+name: Recopier les dates
+on:
+  schedule:
+    # 3 h 47 UTC : 5 h 47 à Paris l'été, 4 h 47 l'hiver. Pas à l'heure
+    # pile, où l'ordonnanceur de GitHub est le plus chargé.
+    - cron: '47 3 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/recopier-dates.yml
+      - build/recopier-dates.sh
+      - build/exporter-dates.js
+permissions:
+  contents: write   # pousser la copie sur main
+  actions: write    # lancer « Publier le site »
+concurrency:
+  group: recopier-dates-${{ github.event_name == 'pull_request' && github.head_ref || 'main' }}
+  cancel-in-progress: false
+jobs:
+  recopier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ESSAI: ${{ github.event_name == 'pull_request' && '1' || '' }}
+    steps:
+      - name: Récupérer main (le dernier commit seulement)
+        uses: actions/checkout@v4
+        with:
+          # Lancé à la main depuis une autre branche, il recopie quand même
+          # sur main. Sur une PR : le commit de la PR.
+          ref: ${{ github.event_name != 'pull_request' && 'main' || '' }}
+
+      - name: La base → dates.js
+        id: exporter
+        run: build/recopier-dates.sh exporter
+
+      - name: Pages spectacle, sitemap, dates.ics, carte
+        if: steps.exporter.outputs.etat == 'changee'
+        run: build/recopier-dates.sh fabriquer
+
+      - name: Commit sur main, publication
+        if: steps.exporter.outputs.etat == 'changee'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: build/recopier-dates.sh publier

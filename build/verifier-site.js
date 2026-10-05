@@ -2649,6 +2649,56 @@ function exige(condition, message) {
             await ca.close();
         });
 
+        // ── LA COPIE DU SITE, VUE DE /admin/ ──
+        //  Une date enregistrée est en ligne aussitôt ; dates.ics et ce qui
+        //  suit dates.js attendent la copie de la nuit (workflow « Recopier
+        //  les dates »). La note du bas de l'admin compare la copie publiée à
+        //  la liste lue, comme dates-live.js : à jour, « dans la nuit », ou en
+        //  retard passé 30 heures — et seulement alors, le lien vers le
+        //  workflow. La table est simulée (mode aperçu) : ses lignes sont
+        //  celles de dates.js, puis l'une d'elles change d'heure.
+        await verifie('l’admin dit où en est la copie du site : à jour, « dans la nuit », ou en retard passé 30 heures, avec le lien vers le workflow', async () => {
+            const D = new Function(fs.readFileSync(path.join(RACINE, 'dates.js'), 'utf8') + '\nreturn SHOW_DATA;')();
+            const lignes = [];
+            D.upcoming.forEach((e) => (e.type === 'series' ? e.shows : [e]).forEach((s) => lignes.push({
+                id: lignes.length + 1, spectacle: e.title, lieu: e.location, ville: e.city, jour: s.icsDate,
+                heure: s.time || '', reservation_url: s.bookingUrl || '', scolaire: !!s.isSchool,
+                cree_le: '2026-09-01T08:00:00+00:00', modifie_le: '2026-09-01T08:00:00+00:00'
+            })));
+            const ilYa = (heures) => new Date(Date.now() - heures * 3600e3).toISOString();
+            const changee = (heures) => lignes.map((l, i) => (i ? l : Object.assign({}, l, { heure: '23h59', modifie_le: ilYa(heures) })));
+            const WORKFLOW = 'https://github.com/adrienvada/adrienvada.github.io/actions/workflows/recopier-dates.yml';
+            const cas = [
+                { nom: 'la table telle que la copie', lignes, etat: 'a-jour', texte: /sont à jour\.$/ },
+                { nom: 'une heure changée il y a une heure', lignes: changee(1), etat: 'en-attente', texte: /dans la nuit, tout seuls\.$/ },
+                { nom: 'une heure changée il y a deux jours', lignes: changee(48), etat: 'en-retard', texte: /ne s’est pas faite\.$/ }
+            ];
+            const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            for (const k of cas) {
+                const p = await c.newPage();
+                const erreurs = guette(p);
+                await p.route(/supabase\.co\/rest\/v1\/representations/, (r) => r.fulfill(r.request().method() === 'OPTIONS'
+                    ? { status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, OPTIONS' } }
+                    : { status: 200, contentType: 'application/json', body: JSON.stringify(k.lignes), headers: { 'access-control-allow-origin': '*' } }));
+                await p.goto(base + '/admin/?apercu', { waitUntil: 'load' });
+                await p.waitForFunction(() => document.getElementById('copie').dataset.etat, null, { timeout: 15000 })
+                    .catch(() => { throw new Error(`${k.nom} : la note n’a pas dit où en est la copie`); });
+                const vu = await p.evaluate(() => {
+                    const lien = document.getElementById('copie-lien');
+                    return {
+                        etat: document.getElementById('copie').dataset.etat,
+                        texte: document.getElementById('copie-etat').textContent.trim(),
+                        lien: lien.hidden ? '' : lien.getAttribute('href')
+                    };
+                });
+                exige(vu.etat === k.etat && k.texte.test(vu.texte), `${k.nom} : « ${vu.etat} », « ${vu.texte} »`);
+                exige(vu.lien === (k.etat === 'en-retard' ? WORKFLOW : ''), `${k.nom} : le lien vers le workflow ${vu.lien ? `est montré (${vu.lien})` : 'manque'}`);
+                exige(!erreurs.length, `${k.nom} : ${erreurs.join(' | ')}`);
+                await p.close();
+            }
+            await c.close();
+        });
+
         await verifie('le book : fermer puis rouvrir aussitôt ne laisse pas une page morte', async () => {
             const c = await visiteur({ viewport: { width: 1100, height: 760 } });
             const p = await c.newPage();
