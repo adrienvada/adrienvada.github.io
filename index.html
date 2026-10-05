@@ -4874,10 +4874,13 @@
            ──────────────────────────────────────────────────────────────
            Il flotte comme la barre d'onglets, et lui ressemble : même
            surface, même arrondi, même ombre — un objet de l'interface, pas
-           une carte de la page. Au téléphone, il se pose 8 px au-dessus de
-           la barre du bas (--lv-barre, sa hauteur MESURÉE par le script ;
-           60 px en attendant), sur la même largeur ; sur grand écran, en bas
-           à droite, 420 px.
+           une carte de la page. Au téléphone, il se pose en bas de l'écran,
+           à 8 px du bord, sur la largeur de la barre d'onglets — et 8 px
+           AU-DESSUS d'elle tant qu'elle attend en bas (html.barre-en-bas ;
+           --lv-barre, sa hauteur MESURÉE par le script, 60 px en
+           attendant). Le déplacement passe par `translate`, qui s'ajoute
+           sans les gêner aux animations d'entrée et de sortie (transform).
+           Sur grand écran, en bas à droite, 420 px.
 
            CINQUANTE-SIX PIXELS DE HAUT, pour des cibles de 44 : précédente,
            lecture, suivante, croix. Le bouton de lecture porte l'or, comme
@@ -4900,7 +4903,7 @@
             z-index: 39;
             left: max(calc(8px + env(safe-area-inset-left, 0px)), calc(50% - 240px));
             right: max(calc(8px + env(safe-area-inset-right, 0px)), calc(50% - 240px));
-            bottom: calc(8px + var(--lv-barre) + 8px + env(safe-area-inset-bottom, 0px));
+            bottom: calc(8px + env(safe-area-inset-bottom, 0px));
             display: flex;
             align-items: center;
             gap: 2px;
@@ -4915,6 +4918,18 @@
 
         .lecteur-voix[hidden] {
             display: none;
+        }
+
+        @media (max-width: 767px) {
+            html.barre-en-bas .lecteur-voix {
+                translate: 0 calc(-1 * (var(--lv-barre) + 8px));
+            }
+        }
+
+        @media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+            .lecteur-voix {
+                transition: translate 240ms var(--ease-out);
+            }
         }
 
         @media (min-width: 768px) {
@@ -5074,12 +5089,13 @@
         }
 
         /* LA FIN DE LA PAGE RESTE AU-DESSUS DU LECTEUR. Au téléphone, #site
-           réserve déjà la place de la barre (86 px) ; il y ajoute celle du
-           lecteur, 56 + 8. Le défilement au clavier s'arrête au-dessus des
-           deux. Sur grand écran, le lecteur couvrirait le pied de page. */
+           lui réserve sa place (56 + 8 + 8) : à la fin de la page, la barre
+           d'onglets est collée en haut. Le défilement au clavier s'arrête
+           au-dessus du lecteur, et de la barre quand elle attend en bas.
+           Sur grand écran, le lecteur couvrirait le pied de page. */
         @media (max-width: 767px) {
             html.lecteur-ouvert #site {
-                padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+                padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
             }
 
             html.lecteur-ouvert {
@@ -8489,44 +8505,50 @@
         }
 
         /* ══════════════════════════════════════════════════════════════
-           AU TÉLÉPHONE, LA BARRE D'ONGLETS EST EN BAS — DANS LA ZONE DU POUCE
+           AU TÉLÉPHONE, LA BARRE D'ONGLETS COMMENCE EN BAS, PUIS SE RANGE
+           SOUS LA PROCHAINE DATE, PUIS SE COLLE EN HAUT
            ══════════════════════════════════════════════════════════════
-           Elle commençait à 829 px du haut sur un iPhone (789 à 859 sur les
-           téléphones mesurés, de 360 à 412 px de large) : sous le bord de
-           l'écran à l'arrivée. Rien n'y disait qu'il existait une bande démo
-           et des démos voix — ce qu'un directeur de casting cherche souvent
-           en premier. Sous 768 px, elle quitte donc le flux et flotte en bas
-           de l'écran, là où tombe le pouce : les quatre destinations sont
-           visibles avant tout défilement, à un toucher. Un mot court sous
-           une icône (CV · Dates · Caméra · Voix) ; les libellés longs
-           restent au grand écran, où la barre reste en haut.
+           Sa place, dans la page, est sous le bandeau de la prochaine date :
+           à 829 px du haut sur un iPhone (789 à 859 sur les téléphones
+           mesurés, de 360 à 412 px de large), sous le bord de l'écran à
+           l'arrivée. Rien n'y disait qu'il existait une bande démo et des
+           démos voix — ce qu'un directeur de casting cherche souvent en
+           premier. Trois temps, donc, d'un seul `position: sticky` collé EN
+           HAUT ET EN BAS à la fois (top et bottom) :
+             · tant que sa place est sous l'écran, la barre attend EN BAS,
+               dans la zone du pouce : les quatre destinations sont visibles
+               avant tout défilement ;
+             · quand sa place arrive, elle la rejoint et monte avec la page,
+               rangée sous la prochaine date ;
+             · quand sa place atteint le haut, elle s'y colle, comme au
+               grand écran (le voile, la sentinelle, .est-collee).
+           Le navigateur fait tout : aucun calcul au défilement. Il le peut
+           parce que son bloc conteneur, #site, part du haut de la page (une
+           barre collée ne sort pas de son conteneur). Sur un autre onglet
+           que le CV, l'en-tête se replie : sa place est près du haut, et
+           elle y est dès l'arrivée.
 
-           ELLE FLOTTE, COMME EN HAUT : huit pixels d'air sur les côtés et
-           au-dessus de la barre d'accueil de l'iPhone
-           (env(safe-area-inset-bottom), que `viewport-fit=cover` rend
-           lisible). Elle est toujours « collée » : le fond plein et l'ombre
-           de .est-collee sont posés ici pour les deux états — l'observateur
-           de la sentinelle continue de basculer la classe (le cadrage d'un
-           changement d'onglet s'en sert), et rien ne doit bouger quand il
-           le fait.
+           ELLE FLOTTE PARTOUT : huit pixels d'air au-dessus de la barre
+           d'accueil de l'iPhone (env(safe-area-inset-bottom), que
+           `viewport-fit=cover` rend lisible), sous l'encoche en haut
+           (safe-area-inset-top), et toujours le fond plein et l'ombre de
+           .est-collee — rangée sous la prochaine date, elle reste un objet
+           de l'interface, et rien ne bouge quand l'état change. Un mot
+           court sous une icône (CV · Dates · Caméra · Voix) ; les libellés
+           longs restent au grand écran.
 
-           LA PAGE GARDE SA FIN VISIBLE : #site réserve en bas la hauteur de
-           la barre, et le défilement au clavier s'arrête au-dessus d'elle
-           (scroll-padding-bottom). La pastille de l'onglet actif glisse
-           comme en haut : elle suit les boîtes des onglets, quelle que soit
-           leur forme. */
+           Qui la suit : le mini-lecteur des démos voix, qui se pose
+           au-dessus d'elle tant qu'elle est en bas (html.barre-en-bas,
+           posée par suivreBarreCollante), et au bord de l'écran sinon. La
+           page n'a plus de place à lui réserver en bas : à la fin de la
+           page, la barre est collée en haut. */
         @media (max-width: 767px) {
 
             #nav-barre,
             #nav-barre.est-collee {
-                position: fixed;
-                top: auto;
-                /* 8 px des bords (et de l'encoche) ; 480 px au plus, centrée,
-                   sur une petite tablette tenue debout. */
-                left: max(calc(8px + env(safe-area-inset-left, 0px)), calc(50% - 240px));
-                right: max(calc(8px + env(safe-area-inset-right, 0px)), calc(50% - 240px));
+                position: sticky;
+                top: calc(8px + env(safe-area-inset-top, 0px));
                 bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-                margin: 0;
                 padding: 4px;
                 border-radius: 16px;
                 background: rgb(var(--c-surface));
@@ -8538,9 +8560,10 @@
                 transform: none;
             }
 
-            /* Rien ne défile au-dessus d'elle : pas de voile. */
+            /* Le voile, collée en haut : le jour au-dessus d'elle, encoche
+               comprise. */
             #nav-barre::before {
-                display: none;
+                height: calc(10px + env(safe-area-inset-top, 0px));
             }
 
             #nav-tabs-container {
@@ -8576,12 +8599,11 @@
                 display: none;
             }
 
-            #site {
-                padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px));
-            }
-
+            /* Les ancres et `scrollIntoView` s'arrêtent sous la barre collée
+               en haut (60 px, plus son retrait) ; le défilement au clavier,
+               au-dessus d'elle quand elle attend en bas. */
             html {
-                --scroll-haut: 16px;
+                --scroll-haut: calc(84px + env(safe-area-inset-top, 0px));
                 scroll-padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
             }
         }
@@ -10082,12 +10104,12 @@
              coûteux que d'écouter le défilement pour comparer des coordonnées. -->
         <div id="nav-sentinelle" aria-hidden="true"></div>
 
-        <!-- Au téléphone, cette barre quitte le flux et flotte EN BAS de
-             l'écran, dans la zone du pouce (voir « Au téléphone, la barre
-             d'onglets est en bas ») ; chaque onglet y porte son mot court
-             (.onglet-court), le long restant au grand écran. Un seul
-             exemplaire des deux : le nom de l'onglet est toujours le mot
-             qu'on voit. -->
+        <!-- Au téléphone, cette barre attend EN BAS de l'écran tant que sa
+             place est plus bas, la rejoint sous la prochaine date, puis se
+             colle en haut (voir « Au téléphone, la barre d'onglets commence
+             en bas ») ; chaque onglet y porte son mot court (.onglet-court),
+             le long restant au grand écran. Un seul exemplaire des deux : le
+             nom de l'onglet est toujours le mot qu'on voit. -->
         <nav aria-label="Sections du site" id="nav-barre"
             class="glass-card rounded-lg p-1 mb-5 flex flex-row items-center justify-between border border-stone-200/50 shadow-sm relative no-print">
             <div class="flex items-center gap-0.5 flex-1 min-w-0 md:flex-none md:w-auto relative" id="nav-tabs-container">
@@ -12674,6 +12696,20 @@
         //  loin sous l'écran (10 000 px, bien plus que tout ce qui précède la
         //  barre) : la sentinelle n'en sort que par le haut, et chaque passage
         //  du haut de l'écran, dans un sens ou dans l'autre, est signalé.
+        //
+        //  ET EN BAS, AU TÉLÉPHONE. La barre y attend tant que sa place est
+        //  sous l'écran (voir « Au téléphone, la barre d'onglets commence en
+        //  bas ») ; le mini-lecteur des démos voix se pose alors au-dessus
+        //  d'elle. La même sentinelle le dit, par une autre zone : l'écran,
+        //  prolongé loin vers le haut, et raccourci en bas de la hauteur de
+        //  la barre et de son retrait. Tant que la sentinelle y est, la
+        //  barre est à sa place ou plus haut ; dès qu'elle en sort, par le
+        //  bas, la barre attend en bas : html.barre-en-bas. La hauteur
+        //  change avec la largeur et le texte : la zone est refaite quand la
+        //  barre change de taille (un observateur), jamais au défilement.
+        //  Sur grand écran, la barre n'a pas de `bottom` : la classe n'y
+        //  sert à rien, et les règles qui la lisent sont celles du
+        //  téléphone.
         // ════════════════════════════════════════════════════════════════
         function suivreBarreCollante() {
             const barre = document.getElementById('nav-barre');
@@ -12684,6 +12720,30 @@
                 ([e]) => barre.classList.toggle('est-collee', !e.isIntersecting),
                 { threshold: 0, rootMargin: '0px 0px 10000px 0px' }
             ).observe(sentinelle);
+
+            const html = document.documentElement;
+            let enBas = null, zone = '';
+            const suivreLeBas = () => {
+                const retrait = parseFloat(getComputedStyle(barre).bottom);
+                if (!(retrait >= 0)) {
+                    enBas?.disconnect();
+                    enBas = null;
+                    zone = '';
+                    html.classList.remove('barre-en-bas');
+                    return;
+                }
+                const marge = `10000px 0px -${Math.round(barre.getBoundingClientRect().height + retrait)}px 0px`;
+                if (marge === zone) return;
+                zone = marge;
+                enBas?.disconnect();
+                enBas = new IntersectionObserver(
+                    ([e]) => html.classList.toggle('barre-en-bas', !e.isIntersecting),
+                    { threshold: 0, rootMargin: marge }
+                );
+                enBas.observe(sentinelle);
+            };
+            suivreLeBas();
+            if ('ResizeObserver' in window) new ResizeObserver(suivreLeBas).observe(barre);
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -13807,17 +13867,19 @@
         });
 
         // Les intercalaires s'accrochent juste sous la barre d'onglets, qui
-        // flotte à 8 px du haut (voir #nav-barre) et change de hauteur avec
-        // la largeur de l'écran : on la mesure plutôt que de la deviner. Au
-        // téléphone, la barre est en bas : ils s'accrochent au haut de
-        // l'écran (sous l'encoche, s'il y en a une).
+        // flotte à 8 px du haut (voir #nav-barre ; au téléphone, sous
+        // l'encoche) et change de hauteur avec la largeur de l'écran : on la
+        // mesure plutôt que de la deviner. Une barre posée en `position:
+        // fixed` (aucune ne l'est aujourd'hui) ne couvrirait pas le haut :
+        // ils s'y accrocheraient, sous l'encoche.
         function dlMesurerBarre() {
             const barre = document.getElementById('nav-barre');
             const page = document.getElementById('page_dates');
             if (!barre || !page) return;
-            page.style.setProperty('--dl-colle', getComputedStyle(barre).position === 'fixed'
+            const style = getComputedStyle(barre);
+            page.style.setProperty('--dl-colle', style.position === 'fixed'
                 ? 'env(safe-area-inset-top, 0px)'
-                : `${Math.round(barre.getBoundingClientRect().height) + 8 + 6}px`);
+                : `${Math.round(barre.getBoundingClientRect().height + (parseFloat(style.top) || 8)) + 6}px`);
         }
 
         window.renderedEventsData = [];
@@ -15007,11 +15069,12 @@
         // collée. Le recadrage ne la déplace donc pas d'un pixel, et c'est ce
         // qui rend le changement d'onglet invisible.
         //
-        // AU TÉLÉPHONE, LA BARRE EST EN BAS (position: fixed) : il n'y a
-        // plus de retrait à retrancher — et surtout pas son `top`, que le
-        // navigateur résout alors en pixels depuis le haut de l'écran (788
-        // sur un iPhone). Le seuil est la sentinelle elle-même : le haut de
-        // la page d'onglet, amené en haut de l'écran.
+        // Au téléphone aussi, la barre est collante (en bas, puis en haut :
+        // voir « Au téléphone, la barre d'onglets commence en bas ») : son
+        // `top` y compte l'encoche. Si elle était un jour posée en
+        // `position: fixed`, il n'y aurait plus de retrait à retrancher — et
+        // surtout pas son `top`, que le navigateur résout alors en pixels
+        // depuis le haut de l'écran : le seuil serait la sentinelle même.
         function seuilBarre() {
             const barre = document.getElementById('nav-barre');
             const sentinelle = document.getElementById('nav-sentinelle');

@@ -1236,7 +1236,7 @@ function exige(condition, message) {
             await c.close();
         });
 
-        await verifie('les démos voix suivent : la lecture continue d’un onglet à l’autre, le mini-lecteur juste au-dessus de la barre du bas au téléphone (en bas à droite sur ordinateur), la suivante s’enchaîne et se dit, sauf après la dernière ; l’écran verrouillé a le titre, l’artiste, l’album et le portrait ; la croix arrête tout ; rien ne s’imprime', async () => {
+        await verifie('les démos voix suivent : la lecture continue d’un onglet à l’autre, le mini-lecteur en bas de l’écran au téléphone — juste au-dessus de la barre d’onglets quand elle y attend — (en bas à droite sur ordinateur), la suivante s’enchaîne et se dit, sauf après la dernière ; l’écran verrouillé a le titre, l’artiste, l’album et le portrait ; la croix arrête tout ; rien ne s’imprime', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
             const p = await c.newPage();
             const erreurs = guette(p);
@@ -1252,7 +1252,8 @@ function exige(condition, message) {
                 const m = navigator.mediaSession && navigator.mediaSession.metadata;
                 return {
                     visible: !lv.hidden && r.height > 0, role: lv.getAttribute('role'), nom: lv.getAttribute('aria-label'),
-                    haut: r.top, bas: r.bottom, gauche: r.left, droite: r.right, barre: barre.top, vw: innerWidth, vh: innerHeight,
+                    haut: r.top, bas: r.bottom, gauche: r.left, droite: r.right, barre: barre.top, barreBas: barre.bottom, vw: innerWidth, vh: innerHeight,
+                    barreEnBas: document.documentElement.classList.contains('barre-en-bas'),
                     titre: lv.querySelector('[data-lv-nom]').textContent,
                     boutons: [...lv.querySelectorAll('button')].map((b) => ({ nom: b.getAttribute('aria-label'), l: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height, off: b.getAttribute('aria-disabled') })),
                     annonce: document.getElementById('lecteur-voix-annonce').textContent,
@@ -1263,8 +1264,10 @@ function exige(condition, message) {
             });
             let e = await etat();
             exige(e.visible && e.role === 'region' && /démos voix/i.test(e.nom || ''), `pas de mini-lecteur nommé pendant la lecture (${JSON.stringify({ visible: e.visible, role: e.role, nom: e.nom })})`);
-            exige(e.bas <= e.barre - 4 && e.bas >= e.barre - 16 && e.gauche >= 0 && e.droite <= e.vw,
-                `le mini-lecteur n’est pas posé juste au-dessus de la barre du bas (bas ${Math.round(e.bas)}, barre ${Math.round(e.barre)})`);
+            // Sur l'onglet Voix, l'en-tête est replié : la barre d'onglets
+            // est rangée près du haut, et le lecteur se pose au bord de l'écran.
+            exige(!e.barreEnBas && Math.abs(e.vh - e.bas - 8) <= 4 && e.haut > e.barreBas && e.gauche >= 0 && e.droite <= e.vw,
+                `le mini-lecteur n’est pas posé au bas de l’écran (bas ${Math.round(e.bas)} sur ${e.vh}, barre ${Math.round(e.barre)}${e.barreEnBas ? ', en bas' : ''})`);
             exige(e.boutons.length === 4 && e.boutons.every((b) => b.nom && b.l >= 44 && b.h >= 44), `les boutons du mini-lecteur : ${JSON.stringify(e.boutons)}`);
             exige(e.titre === 'L’Oréal' && /^Lecture : L’Oréal/.test(e.annonce), `le mini-lecteur ne dit pas la démo (${e.titre}, « ${e.annonce} »)`);
             exige(e.session && /^L’Oréal/.test(e.session.titre) && e.session.artiste === 'Adrien Vada' && e.session.album === 'Démos voix'
@@ -1281,7 +1284,10 @@ function exige(condition, message) {
             e = await etat();
             const apres = await p.evaluate(() => document.getElementById('audio-loreal').currentTime);
             exige(JSON.stringify(e.joue) === '["audio-loreal"]' && apres > avant + 0.5, `changer d’onglet coupe la démo (${avant.toFixed(1)} → ${apres.toFixed(1)} s, ${JSON.stringify(e.joue)})`);
-            exige(e.visible && e.bas <= e.barre - 4, 'le mini-lecteur ne suit pas sur l’onglet CV');
+            // En haut du CV, la barre attend en bas de l'écran : le lecteur
+            // se pose juste au-dessus d'elle.
+            exige(e.visible && e.barreEnBas && e.bas <= e.barre - 4 && e.bas >= e.barre - 16,
+                `le mini-lecteur ne suit pas sur l’onglet CV, juste au-dessus de la barre qui attend en bas (bas ${Math.round(e.bas)}, barre ${Math.round(e.barre)}${e.barreEnBas ? '' : ', pas en bas'})`);
             // La fin d'une démo : la suivante, dans l'ordre de la page. Le
             // serveur ne sert pas de morceaux de fichier : on y va par le
             // chemin du site (voir allerDansLaDemo).
@@ -2363,7 +2369,7 @@ function exige(condition, message) {
                     poignee: !!poignee && poignee.getBoundingClientRect().height > 0,
                     prise: [...k.querySelectorAll('[data-feuille-prise]')].map((x) => getComputedStyle(x).touchAction),
                     croix: [croix.width, croix.height],
-                    auDessus: !!dessus && k.contains(dessus),
+                    auDessus: !!dessus && m.contains(dessus),
                     partage: !!partage && partage.getBoundingClientRect().height >= 44 && /Partager cette date/.test(partage.textContent),
                     dedans: !!document.activeElement?.closest('#calendar-modal')
                 };
@@ -2376,7 +2382,7 @@ function exige(condition, message) {
             exige(feuille.poignee && feuille.prise.length >= 2 && feuille.prise.every((x) => x === 'none'),
                 `la poignée manque, ou la prise défile au lieu de suivre le doigt : ${JSON.stringify(feuille.prise)}`);
             exige(feuille.croix[0] >= 44 && feuille.croix[1] >= 44, `la croix fait ${feuille.croix.join(' × ')} px au doigt (44 au moins)`);
-            exige(feuille.auDessus, 'la barre d’onglets passe au-dessus de la feuille');
+            exige(feuille.auDessus, 'la barre d’onglets passe au-dessus de la fenêtre d’agenda');
             exige(feuille.partage, '« Partager cette date » manque à la feuille, ou fait moins de 44 px');
 
             // De vrais touchers sur la poignée.
@@ -3255,7 +3261,17 @@ function exige(condition, message) {
                     };
                     requestAnimationFrame(pas);
                 });
-                await p.click('#tab-page_dates');
+                // Là où l'onglet est à l'écran, comme un visiteur. Au téléphone,
+                // la barre attend en bas, et un clic de Playwright faisait
+                // d'abord défiler la page jusqu'à sa place (voir « La barre
+                // d'onglets » dans README-build.md), puis attendait qu'elle se
+                // pose : sur la machine des demandes de fusion, le passage
+                // tombait alors après la fenêtre observée (1,5 s).
+                const onglet = await p.evaluate(() => {
+                    const r = document.getElementById('tab-page_dates').getBoundingClientRect();
+                    return [r.left + r.width / 2, r.top + r.height / 2];
+                });
+                await p.mouse.click(onglet[0], onglet[1]);
                 // La fin du passage, et non un délai fixe : sur une machine
                 // chargée, 900 ms ne suffisaient pas toujours à le finir.
                 await p.waitForFunction(() => !document.documentElement.classList.contains('vt-onglet'), null, { timeout: 5000 }).catch(() => { });
@@ -4351,12 +4367,14 @@ function exige(condition, message) {
         });
 
         // ── L'EXPERTISE D'OCTOBRE 2026, CÔTÉ ACCUEIL ──
-        // Au téléphone, la barre d'onglets flotte en bas de l'écran, dans la
+        // Au téléphone, la barre d'onglets attend en bas de l'écran, dans la
         // zone du pouce, ses quatre destinations visibles dès l'arrivée, en
-        // mots courts ; sur grand écran elle reste en haut, en mots longs.
+        // mots courts ; en défilant, elle rejoint sa place sous la prochaine
+        // date, puis se colle en haut. Sur grand écran, elle est en haut, en
+        // mots longs.
         // L'adresse se copie, la fiche contact se télécharge, et plus aucun
         // texte de l'accueil n'est sous les onze pixels.
-        await verifie('l’accueil d’après l’expertise : la barre d’onglets en bas au téléphone, en haut sur grand écran ; « Copier » l’adresse, la fiche contact ; rien sous onze pixels', async () => {
+        await verifie('l’accueil d’après l’expertise : au téléphone, la barre d’onglets attend en bas, se range sous la prochaine date, puis se colle en haut ; en haut sur grand écran ; « Copier » l’adresse, la fiche contact ; rien sous onze pixels', async () => {
             const c = await visiteur({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
             await c.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
             const p = await c.newPage();
@@ -4373,8 +4391,37 @@ function exige(condition, message) {
                     cibles: [...document.querySelectorAll('#nav-tabs-container a')].map((a) => Math.round(a.getBoundingClientRect().height))
                 };
             });
-            exige(barre.position === 'fixed' && barre.bas >= 0 && barre.bas < 40 && barre.haut > 600,
-                `au téléphone, la barre d’onglets n’est pas en bas de l’écran (${barre.position}, à ${Math.round(barre.haut)} px du haut)`);
+            exige(barre.position === 'sticky' && barre.bas >= 0 && barre.bas < 40 && barre.haut > 600,
+                `au téléphone, à l’arrivée, la barre d’onglets n’attend pas en bas de l’écran (${barre.position}, à ${Math.round(barre.haut)} px du haut)`);
+            // Puis à sa place, sous la prochaine date ; puis collée en haut.
+            const temps = await p.evaluate(async () => {
+                const s = document.getElementById('nav-sentinelle');
+                const n = document.getElementById('nav-barre');
+                const ban = document.getElementById('next-date-banner');
+                const images = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 50))));
+                const lire = () => {
+                    const b = n.getBoundingClientRect();
+                    return {
+                        haut: Math.round(b.top), place: Math.round(b.top - s.getBoundingClientRect().top),
+                        sousBandeau: ban && !ban.hidden ? Math.round(b.top - ban.getBoundingClientRect().bottom) : null,
+                        enBas: document.documentElement.classList.contains('barre-en-bas'), collee: n.classList.contains('est-collee')
+                    };
+                };
+                // `instant` : <html> défile en douceur (.scroll-smooth).
+                window.scrollTo({ top: s.getBoundingClientRect().top + scrollY - innerHeight / 2, behavior: 'instant' });
+                await images();
+                const milieu = lire();
+                window.scrollTo({ top: s.getBoundingClientRect().top + scrollY + 400, behavior: 'instant' });
+                await images();
+                return { milieu, haut: lire() };
+            });
+            exige(!temps.milieu.enBas && !temps.milieu.collee && Math.abs(temps.milieu.place) <= 1
+                && (temps.milieu.sousBandeau === null || (temps.milieu.sousBandeau >= 0 && temps.milieu.sousBandeau <= 40)),
+                `en défilant, la barre d’onglets ne se range pas sous la prochaine date (${JSON.stringify(temps.milieu)})`);
+            exige(Math.abs(temps.haut.haut - 8) <= 1 && temps.haut.collee && !temps.haut.enBas,
+                `plus bas, la barre d’onglets ne se colle pas en haut (${JSON.stringify(temps.haut)})`);
+            await p.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+            await p.waitForTimeout(200);
             exige(barre.mots.join('·') === 'CV·Dates·Caméra·Voix', `au téléphone, les onglets ne disent pas « CV · Dates · Caméra · Voix » (${barre.mots.join(' · ')})`);
             exige(barre.cibles.every((h) => h >= 44), `au téléphone, un onglet fait moins de 44 px de haut (${barre.cibles.join(', ')})`);
             // « Copier » met l'adresse dans le presse-papiers et le dit.

@@ -104,9 +104,10 @@ minutes environ, ce qui a déjà cassé ou casserait sans bruit :
   le cas du serveur de vérification comme de l'aperçu Cloudflare) ;
 - les démos voix suivent (voir [le mini-lecteur](#démos-voix--le-mini-lecteur-lenchaînement-lécran-verrouillé)) :
   aucun mini-lecteur avant qu'une démo joue ; ensuite une région nommée, ses
-  quatre boutons nommés de 44 px, posée 4 à 16 px au-dessus de la barre
-  d'onglets du bas au téléphone, et à 16 px du coin bas droit sur
-  ordinateur ; l'écran verrouillé a le titre, « Adrien Vada », « Démos
+  quatre boutons nommés de 44 px, posée au bas de l'écran au téléphone — 4 à
+  16 px au-dessus de la barre d'onglets quand elle y attend (en haut du CV),
+  à 8 px du bord sinon (sur l'onglet Voix) —, et à 16 px du coin bas droit
+  sur ordinateur ; l'écran verrouillé a le titre, « Adrien Vada », « Démos
   voix » et le portrait en 192 et 384 ; la démo continue sur l'onglet CV ;
   à sa fin la suivante joue, annoncée et mesurée (`demo_suivante`), mais
   rien après la dernière, où le lecteur reste en pause ; la croix arrête
@@ -364,7 +365,9 @@ minutes environ, ce qui a déjà cassé ou casserait sans bruit :
   retenue et coche la bonne position ; les flèches changent de position et
   y portent le focus ; une seule position s'atteint par Tab ;
 - l'accueil d'après l'expertise d'octobre 2026 : au téléphone, la barre
-  d'onglets est fixée en bas de l'écran, dit « CV · Dates · Caméra · Voix »,
+  d'onglets attend en bas de l'écran à l'arrivée, se range sous la prochaine
+  date quand sa place arrive (pile sur la sentinelle), puis se colle à 8 px
+  du haut (`.est-collee`) ; elle dit « CV · Dates · Caméra · Voix »,
   chaque onglet fait au moins 44 px de haut ; sur grand écran, elle est en
   haut ; « Copier » met l'adresse dans le presse-papiers et l'annonce
   (« Copiée ») ; la fiche contact se télécharge et se lit (`BEGIN:VCARD`…) ;
@@ -1830,12 +1833,12 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
 Au téléphone, la fenêtre d'agenda (`#calendar-modal`, ouverte par
 `openCalendarModal`) s'ouvrait au milieu de l'écran, loin du pouce, et se
 fermait par une croix de 28 px dans son coin haut. **Sous 768 px** — la
-limite où la barre d'onglets passe en bas —, c'est maintenant une **feuille
+limite où la barre d'onglets commence en bas —, c'est maintenant une **feuille
 posée au bas de l'écran** : coins hauts arrondis, une poignée en tête, le
 fond jusqu'au bord et le contenu au-dessus de la barre d'accueil de l'iPhone
 (`env(safe-area-inset-bottom)`, que `viewport-fit=cover` rend lisible). Elle
-passe au-dessus de la barre d'onglets (la fenêtre est à `z-index` 10 000, la
-barre à 40). Plus haute que l'écran — un téléphone couché —, elle laisse
+passe au-dessus de la barre d'onglets, en bas comme collée en haut (la
+fenêtre est à `z-index` 10 000, la barre à 40). Plus haute que l'écran — un téléphone couché —, elle laisse
 40 px de voile en haut et défile en dedans, sous sa prise.
 
 **On la renvoie au pouce** : en la tirant vers le bas par sa poignée ou son
@@ -2104,30 +2107,53 @@ qu'une fois la PR fusionnée et publiée. GitHub Pages le sert en
 
 ---
 
-## La barre d'onglets — en bas au téléphone, en haut sur grand écran
+## La barre d'onglets — en bas, puis à sa place, puis en haut au téléphone ; en haut sur grand écran
 
-**Au téléphone (sous 768 px), la barre flotte en bas de l'écran**, dans la
-zone du pouce. En haut de page, elle commençait à 789–859 px du haut selon
-le téléphone : sous le bord de l'écran à l'arrivée, si bien que rien ne
-disait qu'il existait une bande démo et des démos voix — ce qu'un directeur
-de casting cherche souvent en premier. Les quatre destinations sont
-désormais visibles avant tout défilement, à un toucher, en un mot court
-sous une icône (CV · Dates · Caméra · Voix : `.onglet-court`, les libellés
-longs `.onglet-long` restant au grand écran). Elle flotte à 8 px des bords
-et au-dessus de la barre d'accueil de l'iPhone (`env(safe-area-inset-bottom)`,
-lisible grâce à `viewport-fit=cover` dans la balise `viewport`), 480 px au
-plus, centrée. Elle a toujours l'aspect « collée » (fond plein, ombre) :
-l'observateur de la sentinelle continue de basculer `.est-collee`, dont le
-cadrage d'un changement d'onglet se sert, sans que rien ne bouge. La page
-garde sa fin visible : `#site` réserve la hauteur de la barre en bas, et
-`scroll-padding-bottom` arrête le défilement au clavier au-dessus d'elle.
-Le haut de page, lui, n'a plus de barre à éviter : `--scroll-haut` (la marge
-que gardent les ancres et `scrollIntoView`) y vaut 16 px, 84 px au grand
-écran. Le CSS est le bloc « AU TÉLÉPHONE, LA BARRE D'ONGLETS EST EN BAS »
-d'`index.html`.
+**Au téléphone (sous 768 px), la barre a trois temps**, d'un seul
+`position: sticky` collé en haut **et** en bas (`top` et `bottom`) :
+
+1. **À l'arrivée, elle attend en bas de l'écran**, dans la zone du pouce. Sa
+   place, sous la prochaine date, commence à 789–859 px du haut selon le
+   téléphone : sous le bord de l'écran, si bien que rien ne disait qu'il
+   existait une bande démo et des démos voix — ce qu'un directeur de casting
+   cherche souvent en premier. Les quatre destinations sont visibles avant
+   tout défilement.
+2. **Quand sa place arrive, elle la rejoint** et monte avec la page, rangée
+   sous la prochaine date (le « bandeau Prochainement »).
+3. **Quand sa place atteint le haut, elle s'y colle**, comme au grand écran
+   (le voile, la sentinelle, `.est-collee`).
+
+Le navigateur fait tout : aucun calcul au défilement. Il le peut parce que son
+bloc conteneur, `#site`, part du haut de la page (une barre collée ne sort pas
+de son conteneur). Sur les autres onglets, l'en-tête se replie : sa place est
+près du haut, et elle y est dès l'arrivée ; revenir au CV la renvoie en bas.
+Voulu par Adrien en octobre 2026, à la place d'une barre fixée en bas en
+permanence.
+
+Elle flotte partout : 8 px d'air au-dessus de la barre d'accueil de l'iPhone
+(`env(safe-area-inset-bottom)`, lisible grâce à `viewport-fit=cover`), sous
+l'encoche en haut (`safe-area-inset-top`), et toujours le fond plein et
+l'ombre de `.est-collee` — rangée à sa place, elle reste un objet de
+l'interface, et rien ne bouge quand l'état change. Un mot court sous une icône
+(CV · Dates · Caméra · Voix : `.onglet-court`, les libellés longs
+`.onglet-long` restant au grand écran). `--scroll-haut` (la marge que gardent
+les ancres et `scrollIntoView`) vaut 84 px, plus l'encoche ;
+`scroll-padding-bottom` arrête le défilement au clavier au-dessus d'elle quand
+elle attend en bas. Le mini-lecteur des démos voix se pose au-dessus d'elle
+tant qu'elle attend en bas (`html.barre-en-bas`, posée par
+`suivreBarreCollante` : la même sentinelle, observée dans l'écran raccourci de
+la hauteur de la barre). Le CSS est le bloc « AU TÉLÉPHONE, LA BARRE
+D'ONGLETS COMMENCE EN BAS » d'`index.html`.
+
+⚠️ **Une barre collée en bas est, pour Chrome, encore à sa place.** Faire
+défiler un onglet « à l'écran » — un clic de Playwright, le focus au clavier —
+vise sa place dans la page, sous l'écran, et fait défiler la page de près de
+300 px avant le toucher. Un vrai doigt ne fait rien défiler. Dans les tests,
+toucher la barre en haut du CV par ses coordonnées
+(`page.touchscreen.tap`) quand le défilement compte.
 
 ⚠️ **Ne rien cliquer sous la barre dans un test automatique.** Un clic de
-Playwright sur un élément caché par la barre fixe est refusé, réessayé, et
+Playwright sur un élément caché par la barre est refusé, réessayé, et
 Chromium sans écran peut alors cesser de produire des images — un passage
 (View Transition) reste figé. Les tests font d'abord défiler la cible au
 milieu de l'écran.
@@ -4352,13 +4378,16 @@ l'autre, et un **mini-lecteur** (`#lecteur-voix`, `lecteurVoix` dans
   page quatre fois par seconde. La croix arrête la démo, la remet au début,
   et le referme. Les cartes ne changent pas : au repos, la durée seule
   (« 0:39 ») ; pendant la lecture, « 0:12 / 0:39 ».
-- **Sa place.** Au téléphone, juste au-dessus de la barre d'onglets du bas,
-  8 px plus haut, sur la même largeur : la hauteur de la barre est
-  **mesurée** (un `ResizeObserver`, jamais au défilement), pas devinée — elle
-  suit la taille du texte. Sur grand écran, en bas à droite (420 px). La
-  page garde sa fin visible au-dessus de lui (`.lecteur-ouvert` : la place
-  réservée en bas de `#site` grandit de 64 px, et le défilement au clavier
-  s'arrête au-dessus). Le changement d'onglet ne l'emporte pas avec la
+- **Sa place.** Au téléphone, au bas de l'écran, à 8 px du bord — et 8 px
+  au-dessus de la barre d'onglets tant qu'elle y attend (en haut du CV :
+  `html.barre-en-bas`, posée par `suivreBarreCollante`). La hauteur de la
+  barre est **mesurée** (un `ResizeObserver`, jamais au défilement), pas
+  devinée — elle suit la taille du texte ; le lecteur monte et descend par
+  `translate`, qui ne gêne pas ses animations d'entrée et de sortie
+  (`transform`). Sur grand écran, en bas à droite (420 px). La page garde sa
+  fin visible au-dessus de lui (`.lecteur-ouvert` : `#site` lui réserve
+  80 px en bas — à la fin de la page, la barre est collée en haut —, et le
+  défilement au clavier s'arrête au-dessus). Le changement d'onglet ne l'emporte pas avec la
   page : il a son propre groupe dans la View Transition, comme la barre.
 - **Ce qui est peint suit l'élément `<audio>`, pas le geste** : le bouton
   d'une carte et le mini-lecteur se repeignent sur `play` et `pause`. Une
