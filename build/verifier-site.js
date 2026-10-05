@@ -3152,7 +3152,7 @@ function exige(condition, message) {
                 l: document.querySelector('#en-tete .affiche-cadre').getBoundingClientRect().width,
                 police: getComputedStyle(document.querySelector('#en-tete h1')).fontFamily
             }));
-            exige(papier.l <= 72 && /Montserrat/.test(papier.police), `l’en-tête imprimé a changé (${papier.l.toFixed(0)} px, ${papier.police})`);
+            exige(papier.l <= 72 && /Inter/.test(papier.police), `l’en-tête imprimé a changé (${papier.l.toFixed(0)} px, ${papier.police})`);
             await c.close();
         });
 

@@ -216,24 +216,6 @@
 }
 
 @font-face {
-    font-family: 'Montserrat';
-    font-style: normal;
-    font-weight: 100 900;
-    font-display: swap;
-    src: url(../ressources/polices/montserrat-latin-ext.woff2) format('woff2');
-    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-@font-face {
-    font-family: 'Montserrat';
-    font-style: normal;
-    font-weight: 100 900;
-    font-display: swap;
-    src: url(../ressources/polices/montserrat-latin.woff2) format('woff2');
-    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
     font-family: 'Cinzel';
     font-style: normal;
     font-weight: 400 900;
@@ -271,7 +253,7 @@
     </style>
     <style>
 /* GALERIE PHOTO (/galerie/) — feuille générée (build/generer-page-galerie.js)
-   Même univers visuel que le répertoire de spectacles : Cinzel, Inter, Montserrat,
+   Même univers visuel que le répertoire de spectacles : Cinzel et Inter,
    or sur noir, grain de pellicule, grille dont la densité se règle aux boutons − et +. */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -477,7 +459,7 @@ a { color: var(--accent-ink); }
 
 .sur-titre {
     margin: 0 0 1rem;
-    font: 700 .68rem/1.5 'Montserrat', system-ui, sans-serif;
+    font: 700 .68rem/1.5 'Inter', system-ui, sans-serif;
     letter-spacing: .26em;
     text-transform: uppercase;
     color: var(--accent-ink);
@@ -513,7 +495,7 @@ h1 {
 
 .sous-titre-galerie {
     margin: 1.2rem 0 0;
-    font: 500 .72rem/1.5 'Montserrat', system-ui, sans-serif;
+    font: 500 .72rem/1.5 'Inter', system-ui, sans-serif;
     letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--muted);
@@ -564,7 +546,8 @@ h1 {
 .carte-num {
     display: block;
     margin-top: .45rem;
-    font: 600 .6rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font: 600 .6rem/1 Inter, sans-serif;
+    font-variant-numeric: tabular-nums;
     letter-spacing: .1em;
     color: var(--num);
 }
@@ -902,7 +885,7 @@ html.vt-book .zoom-img {
 }
 
 .zoom-caption {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .74rem;
     font-weight: 600;
     letter-spacing: .18em;

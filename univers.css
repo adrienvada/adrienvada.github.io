@@ -652,7 +652,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 }
 
 .u-eyebrow {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .7rem;
     font-weight: 700;
     letter-spacing: .28em;
@@ -975,7 +975,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
    du spectacle, et le retrait du curseur. */
 .u-hero-note {
     margin: 0;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .74rem;
     font-weight: 700;
     letter-spacing: .12em;
@@ -2188,7 +2188,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 .u-chapter :is(h2, h3) {
     margin: 0;
     max-width: 40ch;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     /* En variable pour que le petit écran puisse la reprendre au
        rapetissement global des titres — voir #show-universe h3. */
     --u-chapter-size: clamp(.7rem, 2.2vw, .92rem);
@@ -2276,7 +2276,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 .u-over cite {
     display: block;
     margin-top: 18px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-style: normal;
     font-size: .7rem;
     font-weight: 700;
@@ -2365,7 +2365,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 .u-quote cite {
     position: relative;
     margin-top: 26px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-style: normal;
     font-size: .7rem;
     font-weight: 700;
@@ -2960,7 +2960,7 @@ a.u-dl-puce:focus-visible {
 
 .u-prix :is(h3, h4) {
     margin: 0 0 14px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .7rem;
     font-weight: 700;
     letter-spacing: .18em;
@@ -3011,7 +3011,7 @@ a.u-dl-puce:focus-visible {
 
 .u-cast :is(h3, h4) {
     margin: 0 0 14px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .7rem;
     font-weight: 700;
     letter-spacing: .18em;
@@ -3059,7 +3059,7 @@ a.u-dl-puce:focus-visible {
     gap: 8px;
     padding: 12px 22px;
     border-radius: 8px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .72rem;
     font-weight: 700;
     letter-spacing: .12em;
@@ -3707,7 +3707,7 @@ a.u-dl-puce:focus-visible {
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .7rem;
     font-weight: 700;
     letter-spacing: .32em;
@@ -4213,7 +4213,7 @@ a.u-dl-puce:focus-visible {
 }
 
 .u-zoom figcaption {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .74rem;
     letter-spacing: .16em;
     text-transform: uppercase;

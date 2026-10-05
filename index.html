@@ -184,7 +184,7 @@
                 // pour trois secondes et demie par visite.
                 d.setAttribute('style', 'position:fixed;left:12px;bottom:calc(84px + env(safe-area-inset-bottom, 0px));z-index:2147483647;'
                     + 'background:#17140f;color:#bfa98a;border:1px solid rgba(191,169,138,.35);'
-                    + 'border-radius:6px;padding:6px 10px;font:500 11px/1.3 Montserrat,system-ui,sans-serif;'
+                    + 'border-radius:6px;padding:6px 10px;font:500 11px/1.3 Inter,system-ui,sans-serif;'
                     + 'letter-spacing:.04em;box-shadow:0 4px 14px rgba(0,0,0,.35);pointer-events:none;'
                     + 'opacity:0;transition:opacity .4s ease');
                 document.body.appendChild(d);
@@ -460,12 +460,17 @@
          connexions à ouvrir avant le premier rendu, et l'adresse IP de chaque
          visiteur transmise à Google. Même domaine désormais : la feuille part
          en même temps que styles.css, sans connexion de plus.
-         Les trois familles du premier écran sont demandées d'avance :
+         Les deux familles du premier écran sont demandées d'avance :
          sans cela le navigateur ne les découvre qu'en lisant la feuille, puis
          en mettant la page en forme — un aller-retour plus tard, au moins.
-         Cinzel pour le nom, Montserrat pour les onglets et l'en-tête, Inter
-         pour les libellés et le texte courant. `crossorigin` est exigé pour
-         une police, même servie par le site lui-même.
+         Cinzel pour le nom et les titres, Inter pour tout le reste — les
+         onglets, les capitales espacées, les chiffres (en tabulaires) et le
+         texte courant. Montserrat, et la police à chasse fixe du système
+         pour les années et les heures (SF Mono sur iPhone, Consolas sous
+         Windows : le site n'avait pas le même visage partout), sont parties
+         avec l'expertise d'octobre 2026 : une famille de moins à télécharger.
+         `crossorigin` est exigé pour une police, même servie par le site
+         lui-même.
 
          CINZEL EN ÉTAIT ABSENTE, et c'était la seule vraie cassure du
          chargement : le préchargement datait d'un nom en Montserrat, et le
@@ -480,7 +485,6 @@
 
          En réseau lent, la bascule reste : ce que le secours peut encore
          faire, c'est tenir la même place — voir « Cinzel repli ». -->
-    <link rel="preload" href="/ressources/polices/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
 
@@ -2106,7 +2110,7 @@
             gap: 6px;
             padding: 6px 10px;
             border-radius: 6px;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.1em;
@@ -4790,7 +4794,8 @@
             border-radius: 4px;
             background: rgb(var(--c-text));
             color: rgb(var(--c-bg));
-            font: 600 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+            font: 600 11px/1.5 Inter, sans-serif;
+            font-variant-numeric: tabular-nums;
             white-space: nowrap;
             pointer-events: none;
             opacity: 0;
@@ -4874,7 +4879,7 @@
         }
 
         .lv-nom {
-            font: 700 11px/1.4 'Montserrat', sans-serif;
+            font: 700 11px/1.4 'Inter', sans-serif;
             letter-spacing: .08em;
             text-transform: uppercase;
         }
@@ -4886,7 +4891,8 @@
         }
 
         .lv-temps {
-            font: 500 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font: 500 11px/1.4 Inter, sans-serif;
+            font-variant-numeric: tabular-nums;
             letter-spacing: .02em;
             color: rgb(var(--c-muted));
             font-variant-numeric: tabular-nums;
@@ -5303,7 +5309,7 @@
             background: rgb(0 0 0 / .5);
             border: 1px solid rgb(255 255 255 / .24);
             color: #fff;
-            font: 700 11px/1 'Montserrat', sans-serif;
+            font: 700 11px/1 'Inter', sans-serif;
             letter-spacing: .18em;
             text-transform: uppercase;
             white-space: nowrap;
@@ -5334,7 +5340,7 @@
 
         .salle-legende h4 {
             margin: 0;
-            font: 700 11px/1.3 'Montserrat', sans-serif;
+            font: 700 11px/1.3 'Inter', sans-serif;
             letter-spacing: .16em;
             text-transform: uppercase;
             color: #f8f3ea;
@@ -5344,7 +5350,8 @@
            fin du dernier chapitre. */
         .salle-duree {
             margin: 0;
-            font: 500 11px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font: 500 11px/1.3 Inter, sans-serif;
+            font-variant-numeric: tabular-nums;
             letter-spacing: .04em;
             color: #f8f3ea;
         }
@@ -5417,7 +5424,7 @@
             display: flex;
             justify-content: space-between;
             gap: 8px;
-            font: 600 11px/1.3 'Montserrat', sans-serif;
+            font: 600 11px/1.3 'Inter', sans-serif;
             letter-spacing: .1em;
             text-transform: uppercase;
             color: #a89c88;
@@ -5450,7 +5457,8 @@
         }
 
         .bobine time {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-family: Inter, sans-serif;
+            font-variant-numeric: tabular-nums;
             letter-spacing: .04em;
         }
 
@@ -6141,7 +6149,7 @@
         }
 
         .fiche dt {
-            font: 700 11px/1.75 'Montserrat', sans-serif;
+            font: 700 11px/1.75 'Inter', sans-serif;
             letter-spacing: .1em;
             text-transform: uppercase;
             color: rgb(var(--c-gold-ink));
@@ -6702,7 +6710,7 @@
         }
 
         .dl-intercalaire h4 {
-            font: 700 12px/1.25 Montserrat, sans-serif;
+            font: 700 12px/1.25 Inter, sans-serif;
             letter-spacing: 0.16em;
             text-transform: uppercase;
             color: rgb(var(--c-gold-ink));
@@ -7533,7 +7541,7 @@
             padding: 0 0.75rem;
             border-radius: 999px;
             color: rgb(var(--c-muted));
-            font: 700 11px/1 Montserrat, sans-serif;
+            font: 700 11px/1 Inter, sans-serif;
             letter-spacing: 0.1em;
             text-transform: uppercase;
             white-space: nowrap;
@@ -7707,7 +7715,7 @@
         }
 
         .dl-saison-titre {
-            font: 700 11px/1.2 Montserrat, sans-serif;
+            font: 700 11px/1.2 Inter, sans-serif;
             letter-spacing: 0.14em;
             text-transform: uppercase;
             color: rgb(var(--c-gold-ink));
@@ -7930,7 +7938,7 @@
         .intro-cell,
         .intro-name-fade {
             margin: 0;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-weight: 700;
             /* Calibré sur le rôle le plus long (« INSPECTEUR TOUTOU »,
                17 caractères) pour tenir sur une seule ligne dès 320 px : il y
@@ -8045,7 +8053,7 @@
 
         .intro-seal text {
             fill: #bfa98a;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 6.2px;
             font-weight: 700;
             letter-spacing: 0.12em;
@@ -8073,7 +8081,7 @@
         }
 
         .intro-cta-hint {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.22em;
@@ -8090,7 +8098,7 @@
             align-items: center;
             gap: 6px;
             padding: 8px 14px;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 11px;
             font-weight: 600;
             letter-spacing: 0.08em;
@@ -8506,7 +8514,7 @@
             align-items: center;
             gap: 8px;
             margin-bottom: 8px;
-            font: 700 11px/1.3 Montserrat, sans-serif;
+            font: 700 11px/1.3 Inter, sans-serif;
             letter-spacing: 0.22em;
             text-transform: uppercase;
             color: var(--td-blanc);
@@ -8646,7 +8654,7 @@
         }
 
         .td-lib {
-            font: 600 11px/1.2 Montserrat, sans-serif;
+            font: 600 11px/1.2 Inter, sans-serif;
             letter-spacing: 0.14em;
             text-transform: uppercase;
             color: #8b8272;
@@ -8720,7 +8728,7 @@
             height: calc(var(--w) * 1.5);
             contain: strict;
             perspective: calc(var(--w) * 10);
-            font: 600 calc(var(--w) * 0.88)/calc(var(--w) * 1.5) Montserrat, sans-serif;
+            font: 600 calc(var(--w) * 0.88)/calc(var(--w) * 1.5) Inter, sans-serif;
             color: var(--td-blanc);
             text-align: center;
         }
@@ -9118,13 +9126,13 @@
             <div class="affiche-grille flex flex-col-reverse md:flex-row items-center md:items-start justify-between gap-4">
                 <!-- Info column -->
                 <div class="affiche-texte w-full md:flex-1 text-center md:text-left">
-                    <h1 class="affiche-nom text-3xl md:text-4xl font-extrabold font-montserrat tracking-tight text-luxury-textMain">
+                    <h1 class="affiche-nom text-3xl md:text-4xl font-extrabold font-inter tracking-tight text-luxury-textMain">
                         Adrien <span class="text-luxury-gold font-cinzel uppercase">Vada</span>
                     </h1>
                     <div class="bio-collapse" id="header-metier">
                         <div class="bio-collapse-inner">
                             <p
-                                class="metier text-sm font-normal font-montserrat tracking-[0.2em] text-luxury-textMuted uppercase mt-0.5 mb-2">
+                                class="metier text-sm font-normal font-inter tracking-[0.2em] text-luxury-textMuted uppercase mt-0.5 mb-2">
                                 Artiste interprète
                             </p>
                         </div>
@@ -9147,7 +9155,7 @@
                     <div class="bio-collapse" id="header-signature">
                         <div class="bio-collapse-inner">
                             <div
-                                class="signature-casting flex flex-wrap items-center justify-center md:justify-start gap-x-1.5 sm:gap-x-2 gap-y-1 mb-2 text-[12px] font-montserrat tracking-normal sm:tracking-wide text-luxury-textMuted">
+                                class="signature-casting flex flex-wrap items-center justify-center md:justify-start gap-x-1.5 sm:gap-x-2 gap-y-1 mb-2 text-[12px] font-inter tracking-normal sm:tracking-wide text-luxury-textMuted">
                                 <span data-cle="Taille" class="text-luxury-textMain">187 cm</span>
                                 <span class="text-stone-300 hidden sm:inline" aria-hidden="true">|</span>
 
@@ -9224,7 +9232,7 @@
                              build/fabriquer-vcard.py). -->
                         <div class="contact-rang">
                             <a href="mailto:adrien.vada@gmail.com" data-track="contact_mail" data-track-detail="en-tête"
-                                class="contact-mail inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-luxury-goldInk text-luxury-onGold text-xs font-bold font-montserrat tracking-wide hover:bg-luxury-goldDeep transition">
+                                class="contact-mail inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-luxury-goldInk text-luxury-onGold text-xs font-bold font-inter tracking-wide hover:bg-luxury-goldDeep transition">
                                 <svg class="ico text-[11px]" aria-hidden="true">
                                     <use href="#i-solid-envelope"></use>
                                 </svg>
@@ -9895,25 +9903,25 @@
             <div class="flex items-center gap-0.5 flex-1 min-w-0 md:flex-none md:w-auto relative" id="nav-tabs-container">
                 <span class="onglet-pastille sans-transition" aria-hidden="true"></span>
                 <a href="#page_cv" id="tab-page_cv"
-                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase text-luxury-goldInk flex items-center justify-center gap-1.5 border border-transparent">
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-inter uppercase text-luxury-goldInk flex items-center justify-center gap-1.5 border border-transparent">
                     <svg class="ico text-[10px]" aria-hidden="true">
                         <use href="#i-solid-user-tie"></use>
                     </svg> <span>CV</span>
                 </a>
                 <a href="#page_dates" id="tab-page_dates"
-                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase text-stone-500 flex items-center justify-center gap-1.5 border border-transparent">
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-inter uppercase text-stone-500 flex items-center justify-center gap-1.5 border border-transparent">
                     <svg class="ico text-[10px]" aria-hidden="true">
                         <use href="#i-solid-calendar-days"></use>
                     </svg> <span class="onglet-long">Dates théâtres</span><span class="onglet-court">Dates</span>
                 </a>
                 <a href="#demos_camera" id="tab-demos_camera"
-                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase text-stone-500 flex items-center justify-center gap-1.5 border border-transparent">
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-inter uppercase text-stone-500 flex items-center justify-center gap-1.5 border border-transparent">
                     <svg class="ico text-[10px]" aria-hidden="true">
                         <use href="#i-solid-film"></use>
                     </svg> <span class="onglet-long">Démos caméra</span><span class="onglet-court">Caméra</span>
                 </a>
                 <a href="#demos_voix" id="tab-demos_voix"
-                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-montserrat uppercase text-stone-500 flex items-center justify-center gap-1.5 border border-transparent">
+                    class="flex-1 md:flex-none px-3.5 py-1.5 rounded text-xs font-bold tracking-wider font-inter uppercase text-stone-500 flex items-center justify-center gap-1.5 border border-transparent">
                     <svg class="ico text-[10px]" aria-hidden="true">
                         <use href="#i-solid-microphone"></use>
                     </svg> <span class="onglet-long">Démos voix</span><span class="onglet-court">Voix</span>
@@ -10071,7 +10079,7 @@
                                 <use href="#i-solid-masks-theater"></use>
                             </svg>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Théâtre</h3>
+                        <h3 class="text-base font-bold font-inter tracking-wide text-luxury-textMain">Théâtre</h3>
                     </div>
                     <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight" id="cv-theatre-list">
                         <li class="cv-item py-2 px-2 rounded transition group odd:bg-luxury-stripe even:bg-transparent"
@@ -10082,7 +10090,7 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2027</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2027</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Cassandres
                                                 <span
@@ -10098,7 +10106,7 @@
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span
-                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
+                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-inter tabular-nums whitespace-nowrap">En
                                             création</span>
                                         <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true">
                                             <use href="#i-solid-chevron-down"></use>
@@ -10122,7 +10130,7 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">L’Imaginaire
                                                 Forcé <span
@@ -10137,7 +10145,7 @@
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span
-                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
+                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-inter tabular-nums whitespace-nowrap">En
                                             création</span>
                                         <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true">
                                             <use href="#i-solid-chevron-down"></use>
@@ -10162,7 +10170,7 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2026</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">À
                                                 la barre, peine perdue ? <span
@@ -10178,7 +10186,7 @@
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span
-                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
+                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-inter tabular-nums whitespace-nowrap">En
                                             tournée</span>
                                         <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true">
                                             <use href="#i-solid-chevron-down"></use>
@@ -10203,7 +10211,7 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Audiences<span
                                                     class="text-luxury-textMuted italic font-normal normal-case">
@@ -10240,7 +10248,7 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Cléophène,
                                                 d’après Rodogune <span
@@ -10254,7 +10262,7 @@
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span
-                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
+                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-inter tabular-nums whitespace-nowrap">En
                                             tournée</span>
                                         <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true">
                                             <use href="#i-solid-chevron-down"></use>
@@ -10278,7 +10286,7 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2023</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2023</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Fulguré.e.s
                                                 <span
@@ -10315,7 +10323,7 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Bérénice
                                                 <span
@@ -10329,7 +10337,7 @@
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span
-                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-mono whitespace-nowrap">En
+                                            class="cv-badge flex-shrink-0 text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 font-inter tabular-nums whitespace-nowrap">En
                                             tournée</span>
                                         <svg class="ico cv-chevron text-[10px] text-stone-400" aria-hidden="true">
                                             <use href="#i-solid-chevron-down"></use>
@@ -10354,7 +10362,7 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">As
                                                 You Like It <span
@@ -10393,7 +10401,7 @@
                                 <use href="#i-solid-film"></use>
                             </svg>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">
+                        <h3 class="text-base font-bold font-inter tracking-wide text-luxury-textMain">
                             Courts-métrages</h3>
                     </div>
                     <ul class="divide-y divide-stone-200/50 font-inter text-sm leading-tight">
@@ -10411,7 +10419,7 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2023</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2023</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">L’Homme
                                                 moderne <span
@@ -10437,7 +10445,7 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2022</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">La
                                                 peau des anges n’est pas si douce</span>
@@ -10461,7 +10469,7 @@
                                     <div class="min-w-0">
                                         <div class="cv-title-row">
                                             <span
-                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2019</span>
+                                                class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2019</span>
                                             <span
                                                 class="cv-title inline align-middle font-bold text-luxury-textMain uppercase group-hover:text-luxury-goldInk transition text-xs">Le
                                                 rapt</span>
@@ -10494,7 +10502,7 @@
                                 <use href="#i-solid-circle-nodes"></use>
                             </svg>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Profil</h3>
+                        <h3 class="text-base font-bold font-inter tracking-wide text-luxury-textMain">Profil</h3>
                     </div>
 
                     <!-- LA FICHE DE CASTING. C'était une grille de sept cadres,
@@ -10572,7 +10580,7 @@
                                 <use href="#i-solid-graduation-cap"></use>
                             </svg>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Formation
+                        <h3 class="text-base font-bold font-inter tracking-wide text-luxury-textMain">Formation
                         </h3>
                     </div>
                     <ul class="cv-formation divide-y divide-stone-200/50 font-inter text-sm leading-tight">
@@ -10580,7 +10588,7 @@
                             class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-luxury-stripe even:bg-transparent">
                             <div class="cv-title-row">
                                 <span
-                                    class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
+                                    class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2025</span>
                                 <span class="cv-title inline align-middle font-bold text-luxury-textMain text-xs">Jeu
                                     caméra et casting</span>
                             </div>
@@ -10591,7 +10599,7 @@
                             class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-luxury-stripe even:bg-transparent">
                             <div class="cv-title-row">
                                 <span
-                                    class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
+                                    class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2024</span>
                                 <span class="cv-title inline align-middle font-bold text-luxury-textMain text-xs">Voix
                                     en studio professionnel</span>
                             </div>
@@ -10602,7 +10610,7 @@
                             class="py-2 hover:bg-stone-50 px-2 rounded transition odd:bg-luxury-stripe even:bg-transparent">
                             <div class="cv-title-row">
                                 <span
-                                    class="cv-year inline-block align-middle mr-1.5 text-[11px] font-mono text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2018<span class="cv-year-fin"><span class="cv-year-tiret"> - </span>2021</span></span>
+                                    class="cv-year inline-block align-middle mr-1.5 text-[11px] font-inter tabular-nums text-luxury-goldInk font-bold bg-luxury-surface border border-stone-200 px-1 py-0.5 rounded whitespace-nowrap">2018<span class="cv-year-fin"><span class="cv-year-tiret"> - </span>2021</span></span>
                                 <span class="cv-title inline align-middle font-bold text-luxury-textMain text-xs">Art
                                     dramatique</span>
                             </div>
@@ -10721,7 +10729,7 @@
                         </div>
                         <!-- Les années de la saison ouvrent et referment « la
                              saison d'un regard » (voir dlSaisonOuvrir). -->
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">
+                        <h3 class="text-base font-bold font-inter tracking-wide text-luxury-textMain">
                             <button type="button" id="dates-saison-bouton" class="dates-saison-bouton"
                                 aria-expanded="false" aria-controls="dates-saison-panneau"
                                 data-track="dates_saison"><span id="upcoming-season-title">Saison 2026 -
@@ -10786,13 +10794,13 @@
                                     <div class="mt-2 space-y-1.5">
                                         <div class="filter-row flex items-start gap-2" data-row="1">
                                             <span
-                                                class="text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Spectacle</span>
+                                                class="text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted font-inter pt-1.5 w-14 flex-shrink-0">Spectacle</span>
                                             <div class="flex flex-wrap gap-1" id="filter-shows" role="group"
                                                 aria-label="Filtrer par spectacle"></div>
                                         </div>
                                         <div class="filter-row flex items-start gap-2" data-row="2">
                                             <span
-                                                class="text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted font-montserrat pt-1.5 w-14 flex-shrink-0">Ville</span>
+                                                class="text-[11px] uppercase font-bold tracking-widest text-luxury-textMuted font-inter pt-1.5 w-14 flex-shrink-0">Ville</span>
                                             <div class="flex flex-wrap gap-1" id="filter-places" role="group"
                                                 aria-label="Filtrer par ville"></div>
                                         </div>
@@ -10800,7 +10808,7 @@
 
                                     <div
                                         class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-stone-200/40">
-                                        <p class="text-[11px] text-luxury-textMuted font-mono" id="dates-count"
+                                        <p class="text-[11px] text-luxury-textMuted font-inter tabular-nums" id="dates-count"
                                             aria-live="polite"></p>
                                         <button type="button" id="dates-reset"
                                             class="hidden text-[11px] uppercase font-bold tracking-wider text-luxury-goldInk hover:underline">
@@ -10862,7 +10870,7 @@
                                 <use href="#i-solid-clock-rotate-left"></use>
                             </svg>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Archives &
+                        <h3 class="text-base font-bold font-inter tracking-wide text-luxury-textMain">Archives &
                             dates passées</h3>
                     </div>
 
@@ -10885,7 +10893,7 @@
                                 <use href="#i-solid-film"></use>
                             </svg>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Bande démo
+                        <h3 class="text-base font-bold font-inter tracking-wide text-luxury-textMain">Bande démo
                             caméra</h3>
                     </div>
 
@@ -10996,7 +11004,7 @@
                                 <use href="#i-solid-microphone-lines"></use>
                             </svg>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Publicités
+                        <h3 class="text-base font-bold font-inter tracking-wide text-luxury-textMain">Publicités
                         </h3>
                     </div>
 
@@ -11014,12 +11022,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">L’Oréal
+                                        class="audio-title font-bold text-luxury-textMain font-inter uppercase tracking-wider text-[11px]">L’Oréal
                                         <span
                                             class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Grave, doux, sincère (home studio)</span></span>
                                     <span id="time-audio-loreal"
-                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
+                                        class="font-inter tabular-nums text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
                                 </div>
                                 <div data-audio-seek="audio-loreal" data-duree="39.9"
                                     data-onde="3uoihd9gvolhc9eqqnrmpogcd96bmpslmkpgcccbbfdalojrxkbk96oqdsmnnumcicaisgai97oqnotrosmcoodhthbzsmrshiqfbrrqrqmgrhbpiqtslksfbplbrqjkic9fcjnmkdojecaccolqqhfdbeunhomedekprlkqicdhmrnomheehhkeac327gfcda99b531" role="slider" tabindex="0" aria-valuemin="0"
@@ -11045,12 +11053,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Nexity
+                                        class="audio-title font-bold text-luxury-textMain font-inter uppercase tracking-wider text-[11px]">Nexity
                                         <span
                                             class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Confiant, lumineux (Europe 1)</span></span>
                                     <span id="time-audio-nexity"
-                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
+                                        class="font-inter tabular-nums text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
                                 </div>
                                 <div data-audio-seek="audio-nexity" data-duree="27.5"
                                     data-onde="cddcbkjrboikmqroqkimd8cittjfknghiihkdb78jiiobihkimpqa8jmhlnkfpgbbknpqlknkfmqn9flicjkeno78jiklicgmjbbadbznhhccdddfhdfugnmidmpmfqckekkgqk7imgemnke88eqtufnkmuolkllqkjn8hfqtoaglipmhoiglkb8abcjlmgdegbeb752" role="slider" tabindex="0" aria-valuemin="0"
@@ -11076,12 +11084,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Uber
+                                        class="audio-title font-bold text-luxury-textMain font-inter uppercase tracking-wider text-[11px]">Uber
                                         <span
                                             class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Sobre, intime, droit (Coachs Associés)</span></span>
                                     <span id="time-audio-uber"
-                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
+                                        class="font-inter tabular-nums text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
                                 </div>
                                 <div data-audio-seek="audio-uber" data-duree="60.7"
                                     data-onde="12444mra55554duqtoin65545hq955bvj5559pi567776szto66qlmie776tvmklk765655ftqqm555555uqpk65565pqjlf66666isntlqi677apoa66nj42juk211ip59acoul766677vvroa777wymo7777tnlp87ipf77qmh788ow66itton5665krmkook90001" role="slider" tabindex="0" aria-valuemin="0"
@@ -11109,12 +11117,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Play-Off
+                                        class="audio-title font-bold text-luxury-textMain font-inter uppercase tracking-wider text-[11px]">Play-Off
                                         NBA <span
                                             class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Dynamique, sport, jeunes (Coachs Associés)</span></span>
                                     <span id="time-audio-nba"
-                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
+                                        class="font-inter tabular-nums text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
                                 </div>
                                 <div data-audio-seek="audio-nba" data-duree="30.6"
                                     data-onde="6677azwpjp66kmljvdrmhykoom777lqmtnrvtqkinrvl7ijnskuoqhgdjee97clkhquojungjjrpoks86pwslmrsipjrqmmkmrf77udulrklhoo867enkop97airoeiof776lnnijiid677pzvupyouva7lwoqlxrqksrmlmsh8iurgsnsdikcka7877866554321000" role="slider" tabindex="0" aria-valuemin="0"
@@ -11141,12 +11149,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Se
+                                        class="audio-title font-bold text-luxury-textMain font-inter uppercase tracking-wider text-[11px]">Se
                                         Loger <span
                                             class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Rythmé, espiègle (Coachs Associés)</span></span>
                                     <span id="time-audio-seloger"
-                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
+                                        class="font-inter tabular-nums text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
                                 </div>
                                 <div data-audio-seek="audio-seloger" data-duree="32.3"
                                     data-onde="798d9ba8ckqbcrjf734ikngfjjrkjkji55gjnstckgk58mrpq7dmljh7676dtur56jmzdmqqhojiihb6667gkf57fqkpqlhobhmjn6jmuk6blnhmj7797fijto9697aiklfmqpieg8gdce99778a9788enb789nklqmp989km76667crpc6776644444433210000000" role="slider" tabindex="0" aria-valuemin="0"
@@ -11172,7 +11180,7 @@
                                 <use href="#i-solid-compass"></use>
                             </svg>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Voix Off &
+                        <h3 class="text-base font-bold font-inter tracking-wide text-luxury-textMain">Voix Off &
                             Documentaire</h3>
                     </div>
 
@@ -11189,12 +11197,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Docu
+                                        class="audio-title font-bold text-luxury-textMain font-inter uppercase tracking-wider text-[11px]">Docu
                                         Animalier <span
                                             class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Narration (Maquette Home Studio)</span></span>
                                     <span id="time-audio-docuhome"
-                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
+                                        class="font-inter tabular-nums text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
                                 </div>
                                 <div data-audio-seek="audio-docuhome" data-duree="196.0"
                                     data-onde="13vkrm6oq6ovo5qp5oet667kr4rnewn5iufpu5sum8vqil5ntrfmukma8xljv66u8mp787666rqy4rf4uwr3fpkvsq7575uupjmn67qiukupurljsiv936fywaquk7sn7lruk5roct69bdzv96ttkeljq78mvg6wxpkjrc7vjjvk8cgebvrnx8njuh9vvwgugaehhf95" role="slider" tabindex="0" aria-valuemin="0"
@@ -11219,7 +11227,7 @@
                                 <use href="#i-solid-book-open"></use>
                             </svg>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Livre Audio
+                        <h3 class="text-base font-bold font-inter tracking-wide text-luxury-textMain">Livre Audio
                         </h3>
                     </div>
 
@@ -11236,12 +11244,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">Les
+                                        class="audio-title font-bold text-luxury-textMain font-inter uppercase tracking-wider text-[11px]">Les
                                         enfants du fleuve <span
                                             class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Lecture narrative (Coachs Associés)</span></span>
                                     <span id="time-audio-book"
-                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
+                                        class="font-inter tabular-nums text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
                                 </div>
                                 <div data-audio-seek="audio-book" data-duree="194.2"
                                     data-onde="vmnni0tdsjqpmk0bwpeqqofp71xptfiuqssr2qqmak0csn7ie1npj0otrjrrtbrtjldp7mvppal8paqqmro81pjggotq50bo01otpownplaofutknnqs1txgoritra2lqm2nqrhhsnn74tq0cvuolrqpurfrf0sezuotbbronr1yj0krinpg0tvusnponsqmsuphqpka" role="slider" tabindex="0" aria-valuemin="0"
@@ -11268,7 +11276,7 @@
                                 <use href="#i-solid-masks-theater"></use>
                             </svg>
                         </div>
-                        <h3 class="text-base font-bold font-montserrat tracking-wide text-luxury-textMain">Doublage
+                        <h3 class="text-base font-bold font-inter tracking-wide text-luxury-textMain">Doublage
                         </h3>
                     </div>
 
@@ -11286,12 +11294,12 @@
                             <div class="flex-grow min-w-0">
                                 <div class="flex flex-col sm:flex-row justify-between text-xs mb-1 gap-1">
                                     <span
-                                        class="audio-title font-bold text-luxury-textMain font-montserrat uppercase tracking-wider text-[11px]">3,
+                                        class="audio-title font-bold text-luxury-textMain font-inter uppercase tracking-wider text-[11px]">3,
                                         2, 1 Go ! <span
                                             class="text-luxury-textMuted font-normal lowercase italic text-[12px] font-inter">
                                             - Nathan, voix adolescent (home studio)</span></span>
                                     <span id="time-audio-doublage-nathan"
-                                        class="font-mono text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
+                                        class="font-inter tabular-nums text-luxury-textMuted text-[11px] self-end sm:self-center"></span>
                                 </div>
                                 <div data-audio-seek="audio-doublage-nathan" data-duree="55.1"
                                     data-onde="5le1aifeifef711mfbjebegd30cjhbec31002gd2cihjj200ch449jff00doifgikkii80nkbdkeqk900fhh4hghhj0000006lea50desbecbe5000bfa406de6d6bbeidd72cdfe5dfd5bgfb95000csjec612hkjahhggjfhg9000000cvyzfefafdefc888b72000" role="slider" tabindex="0"
@@ -11365,7 +11373,7 @@
             class="glass-card rounded-xl p-4 mt-5 border border-stone-200/50 bg-luxury-surface/70 shadow-sm no-print">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div class="text-center sm:text-left">
-                    <p class="text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat">
+                    <p class="text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk font-inter">
                         Contact
                     </p>
                     <!-- « Copier » ici aussi : c'est au pied de page qu'on
@@ -11491,7 +11499,7 @@
             id="video-modal-card">
             <!-- Header bar inside video modal -->
             <div class="bg-stone-50 px-4 py-2 border-b border-stone-200 flex justify-between items-center">
-                <span class="text-[11px] font-mono font-bold text-luxury-goldInk tracking-wider uppercase"><svg
+                <span class="text-[11px] font-inter tabular-nums font-bold text-luxury-goldInk tracking-wider uppercase"><svg
                         class="ico mr-2 text-luxury-goldInk" aria-hidden="true">
                         <use href="#i-solid-play"></use>
                     </svg> <span id="video-modal-titre">LECTURE VIDÉO</span></span>
@@ -11546,7 +11554,7 @@
             <div class="cal-entete bg-stone-50 px-5 py-3.5 border-b border-stone-200 flex justify-between items-center"
                 data-feuille-prise>
                 <span
-                    class="text-xs font-mono font-bold text-luxury-goldInk tracking-wider uppercase flex items-center gap-2">
+                    class="text-xs font-inter tabular-nums font-bold text-luxury-goldInk tracking-wider uppercase flex items-center gap-2">
                     <svg class="ico text-luxury-goldInk text-sm" aria-hidden="true">
                         <use href="#i-regular-calendar-plus"></use>
                     </svg> AJOUTER À L’AGENDA
@@ -12476,16 +12484,16 @@
             let list;
             let header = '';
             if (dates.length) {
-                header = `<p class="text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk font-montserrat pt-1">
+                header = `<p class="text-[11px] uppercase font-bold tracking-widest text-luxury-goldInk font-inter pt-1">
                         Prochaines représentations</p>`;
                 list = dates.map(p => {
                     const t = performanceTimeStr(p);
                     const school = p.isSchool
                         ? ` <span class="text-luxury-warn">· séance scolaire</span>` : '';
                     return `<div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 py-1 border-b border-stone-200/30 last:border-0">
-                        <span class="font-mono text-[11px] font-bold text-luxury-goldInk whitespace-nowrap">${esc(p.dateLabel)}</span>
+                        <span class="font-inter tabular-nums text-[11px] font-bold text-luxury-goldInk whitespace-nowrap">${esc(p.dateLabel)}</span>
                         <span class="text-[12px] text-luxury-textMain">${esc(p.location)}</span>
-                        <span class="text-[11px] text-luxury-textMuted font-mono">${t ? esc(t) : 'horaire à confirmer'}${school}</span>
+                        <span class="text-[11px] text-luxury-textMuted font-inter tabular-nums">${t ? esc(t) : 'horaire à confirmer'}${school}</span>
                     </div>`;
                 }).join('');
             } else {
@@ -13648,7 +13656,7 @@
                     const panelId = 'archive-panel-' + seasonIdx++;
                     archivesHtml += `
                     <div class="group bg-luxury-stripe border border-stone-200/50 rounded-lg overflow-hidden">
-                        <button type="button" class="drawer-toggle w-full flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-montserrat text-xs"
+                        <button type="button" class="drawer-toggle w-full flex justify-between items-center p-2.5 cursor-pointer select-none font-bold text-luxury-textMain font-inter text-xs"
                             aria-expanded="${seasonsOpen ? 'true' : 'false'}" aria-controls="${panelId}">
                             <span class="font-semibold flex items-center gap-2">${esc(seasonName)}</span>
                             <svg class="ico text-[10px] text-stone-500 drawer-chevron" aria-hidden="true"><use href="#i-solid-chevron-down"></use></svg>

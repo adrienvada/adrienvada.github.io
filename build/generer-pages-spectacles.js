@@ -815,7 +815,7 @@ ${MESURE}${SERVICE_WORKER}${SPECULATION}
         /* Le retour au site : la seule chose que la page ajoute au montage. */
         .u-retour {
             position: absolute; top: 1.2rem; left: 1.4rem; z-index: 4;
-            font: 700 .74rem/1 'Montserrat', system-ui, sans-serif;
+            font: 700 .74rem/1 'Inter', system-ui, sans-serif;
             letter-spacing: .16em; text-transform: uppercase;
             color: var(--u-muted); text-decoration: none;
         }
@@ -1694,7 +1694,7 @@ a { color: var(--accent-ink); }
 /* ── La manchette ── */
 .tete { padding: 3.2rem 0 2.4rem; text-align: center; }
 .sur-titre {
-    margin: 0 0 1rem; font: 700 .68rem/1.5 'Montserrat', system-ui, sans-serif;
+    margin: 0 0 1rem; font: 700 .68rem/1.5 'Inter', system-ui, sans-serif;
     letter-spacing: .26em; text-transform: uppercase; color: var(--accent-ink);
 }
 h1 {
@@ -1717,7 +1717,7 @@ h1 {
 /* ── Intitulés de groupe — les mêmes que le CV, icône comprise ── */
 .groupe {
     display: flex; align-items: center; gap: .8rem; margin: 2.6rem 0 0;
-    font: 700 .72rem/1 'Montserrat', system-ui, sans-serif;
+    font: 700 .72rem/1 'Inter', system-ui, sans-serif;
     letter-spacing: .2em; text-transform: uppercase; color: var(--accent-ink);
 }
 .groupe-ico {

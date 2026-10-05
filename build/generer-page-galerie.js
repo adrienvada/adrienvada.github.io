@@ -147,7 +147,7 @@ const SEUIL_TELEPHONE = 640;
 
 function genererCss() {
     return `/* GALERIE PHOTO (/galerie/) — feuille générée (build/generer-page-galerie.js)
-   Même univers visuel que le répertoire de spectacles : Cinzel, Inter, Montserrat,
+   Même univers visuel que le répertoire de spectacles : Cinzel et Inter,
    or sur noir, grain de pellicule, grille dont la densité se règle aux boutons − et +. */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -353,7 +353,7 @@ a { color: var(--accent-ink); }
 
 .sur-titre {
     margin: 0 0 1rem;
-    font: 700 .68rem/1.5 'Montserrat', system-ui, sans-serif;
+    font: 700 .68rem/1.5 'Inter', system-ui, sans-serif;
     letter-spacing: .26em;
     text-transform: uppercase;
     color: var(--accent-ink);
@@ -389,7 +389,7 @@ h1 {
 
 .sous-titre-galerie {
     margin: 1.2rem 0 0;
-    font: 500 .72rem/1.5 'Montserrat', system-ui, sans-serif;
+    font: 500 .72rem/1.5 'Inter', system-ui, sans-serif;
     letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--muted);
@@ -440,7 +440,8 @@ h1 {
 .carte-num {
     display: block;
     margin-top: .45rem;
-    font: 600 .6rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font: 600 .6rem/1 Inter, sans-serif;
+    font-variant-numeric: tabular-nums;
     letter-spacing: .1em;
     color: var(--num);
 }
@@ -778,7 +779,7 @@ html.vt-book .zoom-img {
 }
 
 .zoom-caption {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .74rem;
     font-weight: 600;
     letter-spacing: .18em;

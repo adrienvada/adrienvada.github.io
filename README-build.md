@@ -243,7 +243,7 @@ de quatre minutes, ce qui a déjà cassé ou casserait sans bruit :
   est en Cinzel, la fiche a ses six cases étiquetées ; sur un autre onglet,
   le médaillon rond d'avant — dès le premier rendu quand on arrive sur un
   autre onglet ; sur papier, l'en-tête d'avant (médaillon de 68 px, nom en
-  Montserrat) ;
+  Inter) ;
 - arriver par un lien vers un onglet (`/#page_dates`) : la page visée dès le
   premier rendu, sans CV ni repli qui glisse — et le CV revient si le script
   de la page ne démarre pas (voir [Le portrait d'affiche](#le-portrait-daffiche)) ;
@@ -1233,7 +1233,7 @@ moteur d'impression.
   premier, on attendrait cinq secondes de rideau et le canevas des particules
   tournerait pendant l'impression ; sans le second, le rendu à l'écran qui
   précède le tirage chargerait les variables sombres.
-- **`document.fonts.ready`** : imprimer avant l'arrivée de Cinzel et Montserrat
+- **`document.fonts.ready`** : imprimer avant l'arrivée de Cinzel et Inter
   donnerait un CV en police de repli, aux césures — donc à la pagination —
   différentes.
 - **Le titre du document est réécrit** juste avant le tirage. Chromium recopie
@@ -3622,7 +3622,22 @@ conservé.
 
 ## Polices — servies par le site
 
-Inter, Montserrat, Cinzel et Caveat sont dans `ressources/polices/`, déclarées
+**Trois familles, et pas une de plus** : Cinzel pour le nom et les titres,
+Inter pour tout le reste, Caveat pour la lettre. Il y en avait cinq —
+Montserrat pour les onglets, les boutons et les capitales espacées, et la
+police à chasse fixe du système pour les années, les heures et les
+éphémérides, qui valait SF Mono sur iPhone, Consolas sous Windows, autre
+chose sous Android : le même site n'avait pas le même visage partout.
+L'expertise d'octobre 2026 les a remplacées par Inter : les capitales
+espacées gardent leur dessin (graisse, espacement), et les chiffres alignés
+en colonne le restent par les chiffres tabulaires (`tabular-nums`, la classe
+Tailwind du même nom à la place de `font-mono`, et `font-variant-numeric`
+dans les règles écrites à la main — **après** un `font:` raccourci, qui le
+remet à zéro). Une famille de moins à télécharger (38 Ko au premier écran).
+Ne pas réintroduire `font-mono` : `tailwind.config.js` n'a plus de famille
+« montserrat », et le contrôle du papier attend Inter dans l'en-tête imprimé.
+
+Inter, Cinzel et Caveat sont dans `ressources/polices/`, déclarées
 par `polices.css` ; licence SIL OFL 1.1 (voir `LISEZMOI.txt`). Elles venaient
 de Google Fonts : une feuille bloquante sur un autre domaine, deux connexions
 de plus avant le premier rendu, et l'adresse de chaque visiteur transmise à
@@ -3630,8 +3645,8 @@ Google. Chaque famille tient en deux fichiers (`latin`, `latin-ext`, ce
 dernier ne se chargeant que pour un caractère qu'il est seul à avoir).
 Pour changer de version : voir `LISEZMOI.txt`.
 
-- **Demandées d'avance** (`preload`) : sur l'accueil, Cinzel, Montserrat et
-  Inter ; sur les pages spectacle, Cinzel et Inter. Cinzel manquait à
+- **Demandées d'avance** (`preload`) : Cinzel et Inter, sur l'accueil comme
+  sur les pages spectacle. Cinzel manquait à
   l'accueil — le préchargement datait d'un nom en Montserrat, et le nom est
   passé en Cinzel sans lui : le texte le plus en vue de la page s'affichait
   en serif de secours, puis changeait de forme 0,6 à 0,8 s plus tard. Inter

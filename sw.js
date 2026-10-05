@@ -73,7 +73,7 @@ const MAX_ENTREES = 400;
 // — par la première page venue, fiche, galerie ou 404, qui ne l'emploie
 // pas, et concourir avec sa propre demande sur l'accueil. Elle est gardée
 // à son premier usage, comme les images.
-const POLICES = ['inter-latin', 'montserrat-latin', 'cinzel-latin']
+const POLICES = ['inter-latin', 'cinzel-latin']
     .map((f) => `/ressources/polices/${f}.woff2`);
 
 const gardable = (url) => url.origin === self.location.origin && GARDE.test(url.pathname);

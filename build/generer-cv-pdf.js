@@ -147,7 +147,7 @@ const { servir } = require('./serveur-local');
         // l'écran.
         await page.emulateMedia({ media: 'print' });
 
-        // Cinzel et Montserrat sont servies par le site lui-même
+        // Cinzel et Inter sont servies par le site lui-même
         // (ressources/polices/), mais elles arrivent quand même APRÈS la
         // page : le navigateur ne les demande qu'en rencontrant un texte qui
         // les emploie. Imprimer avant leur chargement donnerait un CV en
