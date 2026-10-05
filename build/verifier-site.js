@@ -2575,14 +2575,72 @@ function exige(condition, message) {
             exige(!intruses.length, `dates.ics annonce une séance scolaire : ${intruses.map((s) => `${s.titre} ${s.debut}`).join(', ')}`);
 
             // Servi comme un agenda, et l'onglet Dates y mène : webcal pour
-            // Calendrier et Outlook, l'adresse https à copier pour Google.
+            // Calendrier et Outlook, l'adresse d'abonnement de Google Agenda
+            // (cid=webcal://…), et l'adresse https à copier.
             const servi = await fetch(base + '/dates.ics');
             exige(servi.ok && /^text\/calendar/.test(servi.headers.get('content-type') || ''), `dates.ics servi en « ${servi.headers.get('content-type')} »`);
             const accueil = fs.readFileSync(path.join(RACINE, 'index.html'), 'utf8');
             const bloc = (accueil.match(/<div class="dates-abonnement[^"]*"[\s\S]*?<\/div>/) || [''])[0];
-            exige(/no-print/.test(bloc) && /href="webcal:\/\/adrienvada\.fr\/dates\.ics"/.test(bloc) && /data-copier="https:\/\/adrienvada\.fr\/dates\.ics"/.test(bloc)
-                && (bloc.match(/data-track="agenda_abonnement"/g) || []).length === 2,
-                'l’onglet Dates ne propose pas l’abonnement (webcal, l’adresse https à copier, la mesure agenda_abonnement), ou l’imprime');
+            exige(/no-print/.test(bloc) && /href="webcal:\/\/adrienvada\.fr\/dates\.ics"/.test(bloc)
+                && bloc.includes('href="https://calendar.google.com/calendar/render?cid=webcal%3A%2F%2Fadrienvada.fr%2Fdates.ics"')
+                && /data-copier="https:\/\/adrienvada\.fr\/dates\.ics"/.test(bloc)
+                && (bloc.match(/data-track="agenda_abonnement"/g) || []).length === 3,
+                'l’onglet Dates ne propose pas l’abonnement (webcal, Google Agenda, l’adresse https à copier, la mesure agenda_abonnement), ou l’imprime');
+        });
+
+        // ── S'ABONNER SUR ANDROID ──
+        //  Aucune application d'Android n'ouvre webcal:// (sur un Pixel, le
+        //  toucher ne faisait rien), et Google Agenda n'accepte un abonnement
+        //  que depuis un ordinateur. Sur Android, le lien webcal s'efface, et
+        //  celui de Google Agenda devient un bouton qui envoie le lien (la
+        //  feuille de partage), ou le copie quand le partage échoue.
+        await verifie('s’abonner à l’agenda : webcal et Google Agenda sur ordinateur ; sur Android, un bouton qui envoie le lien Google Agenda, ou le copie', async () => {
+            const GOOGLE = 'https://calendar.google.com/calendar/render?cid=webcal%3A%2F%2Fadrienvada.fr%2Fdates.ics';
+            const c = await visiteur({ viewport: { width: 1280, height: 900 } });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await p.waitForTimeout(400);
+            const bureau = await p.evaluate(() => [...document.querySelectorAll('.dates-abonnement [data-abonnement]')]
+                .map((e) => `${e.getAttribute('data-abonnement')} ${e.getAttribute('href')} ${e.getAttribute('target') || ''}`.trim()));
+            exige(bureau.join(' | ') === `webcal webcal://adrienvada.fr/dates.ics | google ${GOOGLE} _blank`, `sur ordinateur, l’abonnement propose : ${bureau.join(' | ')}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+            await c.close();
+
+            const ca = await visiteur({
+                viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2,
+                userAgent: 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36'
+            });
+            const pa = await ca.newPage();
+            const erreursA = guette(pa);
+            await pa.addInitScript(() => {
+                Object.defineProperty(Navigator.prototype, 'share', { configurable: true, value(d) { window.__partage = d; return Promise.resolve(); } });
+            });
+            await pa.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await pa.waitForTimeout(400);
+            const android = await pa.evaluate(() => ({
+                liens: [...document.querySelectorAll('.dates-abonnement [data-abonnement]')].map((e) => `${e.tagName.toLowerCase()} ${e.getAttribute('data-abonnement')}`).join(' | '),
+                texte: document.querySelector('[data-abonnement="android"]')?.textContent.trim(),
+                aide: document.querySelector('.dates-abonnement-aide').textContent
+            }));
+            exige(android.liens === 'button android' && /lien d’abonnement/.test(android.texte || '') && /ordinateur/.test(android.aide),
+                `sur Android, l’abonnement propose « ${android.liens} » (« ${android.texte} »)`);
+            await pa.locator('[data-abonnement="android"]').scrollIntoViewIfNeeded();
+            await pa.tap('[data-abonnement="android"]');
+            await pa.waitForTimeout(200);
+            const partage = await pa.evaluate(() => window.__partage || null);
+            exige(partage && partage.url === GOOGLE && /ordinateur/.test(partage.text || ''), `le bouton d’Android ne partage pas le lien de Google Agenda (${JSON.stringify(partage)})`);
+            // Quand le partage échoue (autre chose qu'une annulation), le lien est copié.
+            await pa.evaluate(() => {
+                Object.defineProperty(Navigator.prototype, 'share', { configurable: true, value() { return Promise.reject(new DOMException('refusé', 'NotAllowedError')); } });
+                window.copierTexte = (texte) => { window.__copie = texte; return Promise.resolve(true); };
+            });
+            await pa.tap('[data-abonnement="android"]');
+            await pa.waitForTimeout(200);
+            const copie = await pa.evaluate(() => ({ texte: window.__copie || '', aide: document.querySelector('.dates-abonnement-aide').textContent }));
+            exige(copie.texte === GOOGLE && /Lien copié/.test(copie.aide), `sans partage, le lien n’est pas copié (« ${copie.texte} », « ${copie.aide} »)`);
+            exige(!erreursA.length, erreursA.join(' | '));
+            await ca.close();
         });
 
         await verifie('le book : fermer puis rouvrir aussitôt ne laisse pas une page morte', async () => {

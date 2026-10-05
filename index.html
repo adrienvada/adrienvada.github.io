@@ -7333,6 +7333,12 @@
             border-top: 1px solid rgb(var(--c-s200) / 0.6);
         }
 
+        .dates-abonnement-liens {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0 20px;
+        }
+
         .dates-abonnement-lien {
             display: inline-flex;
             align-items: center;
@@ -7353,6 +7359,16 @@
 
         .dates-abonnement-lien .ico {
             font-size: 14px;
+        }
+
+        /* Sur Android, le lien de Google Agenda devient un bouton (voir
+           « S'abonner à l'agenda, sur Android ») : même dessin. */
+        button.dates-abonnement-lien {
+            padding: 0;
+            border: 0;
+            background: none;
+            cursor: pointer;
+            text-align: left;
         }
 
         .dates-abonnement-aide {
@@ -11003,24 +11019,43 @@
                          jour : l'application relit dates.ics chaque jour (voir
                          build/fabriquer-agenda.js). Au pied de la liste, et
                          discret : c'est le geste de qui vient d'y lire plus
-                         d'une date. webcal:// est l'adresse que Calendrier
-                         (iPhone, Mac) et Outlook ouvrent d'un toucher, en
-                         proposant l'abonnement ; Android et Google Agenda ne la
-                         connaissent pas, mais prennent la même en https,
-                         collée dans « À partir de l'URL » : la phrase dit les
-                         deux gestes, et « Copier » fait le second (voir
-                         « Copier une adresse »). -->
+                         d'une date. Deux liens, parce que deux mondes :
+                           · webcal:// — Calendrier (iPhone, Mac) et Outlook
+                             l'ouvrent d'un toucher et proposent l'abonnement ;
+                           · Google Agenda — son adresse d'abonnement (cid=,
+                             qui ne prend que webcal://). Google n'accepte un
+                             abonnement que depuis le navigateur d'un
+                             ordinateur ; l'agenda suit ensuite sur le
+                             téléphone.
+                         Sur Android, aucune application n'ouvre webcal:// (le
+                         toucher ne faisait rien, sur un Pixel) : le script
+                         « S'abonner à l'agenda, sur Android » retire ce lien
+                         et fait du second « M'envoyer le lien d'abonnement »,
+                         à ouvrir sur un ordinateur. L'adresse en https, avec
+                         « Copier », reste pour les autres applications
+                         (« À partir de l'URL »). -->
                     <div class="dates-abonnement no-print">
-                        <a class="dates-abonnement-lien" href="webcal://adrienvada.fr/dates.ics"
-                            data-track="agenda_abonnement" data-track-detail="webcal">
-                            <svg class="ico" aria-hidden="true">
-                                <use href="#i-solid-calendar-days"></use>
-                            </svg>
-                            S’abonner à l’agenda
-                        </a>
-                        <p class="dates-abonnement-aide">Les nouvelles dates y arrivent d’elles-mêmes. Sur
-                            iPhone, Mac ou Outlook, le lien suffit ; avec Google Agenda ou sur Android, ajoutez
-                            l’adresse ci-dessous dans « Autres agendas › À partir de l’URL ».</p>
+                        <p class="dates-abonnement-liens">
+                            <a class="dates-abonnement-lien" href="webcal://adrienvada.fr/dates.ics"
+                                data-abonnement="webcal" data-track="agenda_abonnement" data-track-detail="webcal">
+                                <svg class="ico" aria-hidden="true">
+                                    <use href="#i-solid-calendar-days"></use>
+                                </svg>
+                                S’abonner à l’agenda
+                            </a>
+                            <a class="dates-abonnement-lien"
+                                href="https://calendar.google.com/calendar/render?cid=webcal%3A%2F%2Fadrienvada.fr%2Fdates.ics"
+                                target="_blank" rel="noopener" data-abonnement="google"
+                                data-track="agenda_abonnement" data-track-detail="google">
+                                <svg class="ico" aria-hidden="true">
+                                    <use href="#i-brands-google"></use>
+                                </svg>
+                                Dans Google Agenda
+                            </a>
+                        </p>
+                        <p class="dates-abonnement-aide">Les nouvelles dates y arrivent d’elles-mêmes. Le premier
+                            lien ouvre Calendrier (iPhone, Mac) ou Outlook. Google Agenda n’accepte un abonnement
+                            que depuis un ordinateur ; les dates suivent ensuite sur le téléphone.</p>
                         <p class="dates-abonnement-adresse">
                             <span translate="no">https://adrienvada.fr/dates.ics</span>
                             <button type="button" class="contact-outil" data-copier="https://adrienvada.fr/dates.ics"
@@ -12024,6 +12059,56 @@
                 if (!bouton) return;
                 const texte = bouton.getAttribute('data-copier');
                 copier(texte).then((ok) => confirmer(bouton, texte, ok));
+            });
+        })();
+
+        // ════════════════════════════════════════════════════════════════
+        //  S'ABONNER À L'AGENDA, SUR ANDROID
+        //  Aucune application d'Android n'ouvre webcal:// : sur un Pixel, le
+        //  toucher ne faisait rien. Et Google Agenda n'accepte un abonnement
+        //  que depuis le navigateur d'un ordinateur, ni depuis son
+        //  application, ni depuis le téléphone. Sur Android, le lien webcal
+        //  s'efface donc, et celui de Google Agenda devient « M'envoyer le
+        //  lien d'abonnement » : la feuille de partage l'envoie par mail ou
+        //  par message, pour l'ouvrir sur un ordinateur ; l'agenda abonné
+        //  suit ensuite sur le téléphone. Sans feuille de partage, le lien
+        //  est copié (window.copierTexte, voir « Copier une adresse »).
+        // ════════════════════════════════════════════════════════════════
+        (() => {
+            if (!/Android/i.test(navigator.userAgent)) return;
+            const bloc = document.querySelector('.dates-abonnement');
+            const google = bloc && bloc.querySelector('[data-abonnement="google"]');
+            const aide = bloc && bloc.querySelector('.dates-abonnement-aide');
+            if (!google || !aide) return;
+            const lien = google.href;
+            bloc.querySelector('[data-abonnement="webcal"]')?.remove();
+            const bouton = document.createElement('button');
+            bouton.type = 'button';
+            bouton.className = google.className;
+            bouton.setAttribute('data-abonnement', 'android');
+            bouton.setAttribute('data-track', 'agenda_abonnement');
+            bouton.setAttribute('data-track-detail', 'android');
+            bouton.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-solid-share-nodes"></use></svg>M’envoyer le lien d’abonnement';
+            google.replaceWith(bouton);
+            const consigne = 'Sur Android, Google Agenda n’accepte un abonnement que depuis un ordinateur : envoyez-vous ce lien et ouvrez-le là-bas. Les dates arriveront ensuite sur ce téléphone, et les nouvelles d’elles-mêmes.';
+            aide.textContent = consigne;
+            let minuterie = 0;
+            const dire = (texte) => {
+                aide.textContent = texte;
+                window.annoncerCopie?.(texte);
+                clearTimeout(minuterie);
+                minuterie = setTimeout(() => { aide.textContent = consigne; }, 6000);
+            };
+            const copier = () => (window.copierTexte ? window.copierTexte(lien) : Promise.resolve(false)).then((ok) => dire(ok
+                ? 'Lien copié : collez-le dans un mail ou un message, et ouvrez-le sur un ordinateur.'
+                : `Copie impossible. Le lien est ${lien}`));
+            bouton.addEventListener('click', () => {
+                if (!navigator.share) { copier(); return; }
+                navigator.share({
+                    title: 'Les dates d’Adrien Vada',
+                    text: 'Pour recevoir les dates d’Adrien Vada dans Google Agenda, ouvrez ce lien sur un ordinateur :',
+                    url: lien
+                }).catch((e) => { if (!e || e.name !== 'AbortError') copier(); });
             });
         })();
 

@@ -202,8 +202,12 @@ minutes environ, ce qui a déjà cassé ou casserait sans bruit :
   ligne CRLF, lignes de 75 octets au plus, chaque `BEGIN` fermé par son `END`,
   un UID par événement, les champs attendus, chaque séance publique de la
   copie (relue à part, une par heure) et aucune scolaire, servi en
-  `text/calendar` ; l'onglet Dates y mène (webcal, l'adresse https à copier,
-  la mesure), et rien ne s'en imprime ;
+  `text/calendar` ; l'onglet Dates y mène (webcal, Google Agenda, l'adresse
+  https à copier, la mesure), et rien ne s'en imprime ;
+- s'abonner à l'agenda : sur ordinateur, le lien webcal et celui de Google
+  Agenda (`cid=webcal://…`, dans un nouvel onglet) ; sur Android, ni l'un ni
+  l'autre, mais « M'envoyer le lien d'abonnement », qui confie le lien de
+  Google Agenda à la feuille de partage, et le copie quand le partage échoue ;
 - le book : fermer puis rouvrir aussitôt ne laisse pas une page morte ;
 - la frise du CV, comme le prototype de l'audit, avec les deux pilotes : la
   ligne de lecture aux trois quarts de l'écran, la pointe du fil dessus
@@ -2020,12 +2024,27 @@ Dates, « S'abonner à l'agenda » :
 
 - **`webcal://adrienvada.fr/dates.ics`** — Calendrier (iPhone, Mac) et
   Outlook l'ouvrent d'un toucher et proposent l'abonnement ;
+- **« Dans Google Agenda »** —
+  `https://calendar.google.com/calendar/render?cid=webcal%3A%2F%2Fadrienvada.fr%2Fdates.ics`,
+  dans un nouvel onglet : Google Agenda demande de confirmer, et l'agenda
+  suit ensuite sur le téléphone. `cid` ne prend que `webcal://` (une adresse
+  en `https://` y est refusée ; Google la relit en `http://`, que GitHub
+  Pages renvoie vers `https://`). **Google n'accepte un abonnement que depuis
+  le navigateur d'un ordinateur** : ni son application, ni un téléphone ;
 - **l'adresse en `https://`**, avec un bouton « Copier » (celui de
-  « Copier une adresse ») — Android et Google Agenda ne connaissent pas
-  `webcal:` ; on colle l'adresse dans Google Agenda, *Autres agendas ›
-  À partir de l'URL*. Une phrase sous le lien dit les deux gestes.
+  « Copier une adresse »), pour les autres applications (*À partir de
+  l'URL*).
 
-Mesure : `agenda_abonnement`, détail `webcal` ou `https`.
+**Sur Android**, aucune application n'ouvre `webcal://` : sur un Pixel, le
+toucher ne faisait rien (octobre 2026). Le script « S'abonner à l'agenda,
+sur Android » (`index.html`) retire donc ce lien, et fait de celui de Google
+Agenda un bouton, « M'envoyer le lien d'abonnement » : la feuille de partage
+l'envoie par mail ou par message, pour l'ouvrir sur un ordinateur ; sans
+feuille de partage (ou si elle échoue, hors annulation), le lien est copié,
+et la phrase d'aide le dit — elle explique aussi pourquoi un ordinateur.
+
+Mesure : `agenda_abonnement`, détail `webcal`, `google`, `android` ou
+`https` (l'adresse copiée).
 
 **Ce qu'il contient.** Les représentations **publiques** de `dates.js`, jamais
 une séance scolaire (même règle que les données structurées) ; celles à
@@ -4499,7 +4518,9 @@ dont le détail suit la largeur de l'écran, 768 px), `fiche_pro`
 `date_partage` (« Partager cette date », dans la fenêtre d'agenda : le nom du
 spectacle — qu'elle parte par la feuille de partage ou par le
 presse-papiers), `agenda_abonnement` (« S'abonner à l'agenda », au pied de
-l'onglet Dates : `webcal` pour le lien, `https` pour l'adresse copiée).
+l'onglet Dates : `webcal` pour le lien, `google` pour Google Agenda,
+`android` pour « M'envoyer le lien d'abonnement », `https` pour l'adresse
+copiée).
 
 **Ne jamais transmettre autre chose que ce que la page affiche déjà** : noms de
 spectacle, noms de démo. Rien qui identifie qui que ce soit.
