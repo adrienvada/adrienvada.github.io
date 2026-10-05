@@ -3261,7 +3261,17 @@ function exige(condition, message) {
                     };
                     requestAnimationFrame(pas);
                 });
-                await p.click('#tab-page_dates');
+                // Là où l'onglet est à l'écran, comme un visiteur. Au téléphone,
+                // la barre attend en bas, et un clic de Playwright faisait
+                // d'abord défiler la page jusqu'à sa place (voir « La barre
+                // d'onglets » dans README-build.md), puis attendait qu'elle se
+                // pose : sur la machine des demandes de fusion, le passage
+                // tombait alors après la fenêtre observée (1,5 s).
+                const onglet = await p.evaluate(() => {
+                    const r = document.getElementById('tab-page_dates').getBoundingClientRect();
+                    return [r.left + r.width / 2, r.top + r.height / 2];
+                });
+                await p.mouse.click(onglet[0], onglet[1]);
                 // La fin du passage, et non un délai fixe : sur une machine
                 // chargée, 900 ms ne suffisaient pas toujours à le finir.
                 await p.waitForFunction(() => !document.documentElement.classList.contains('vt-onglet'), null, { timeout: 5000 }).catch(() => { });
