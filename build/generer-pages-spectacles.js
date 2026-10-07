@@ -55,6 +55,7 @@ const { execFileSync } = require('child_process');
 // visage. La version précédente en avait deux, et la seconde aplatissait la
 // séquence en une grille de photos.
 const MONTAGE = require('../univers-montage.js');
+const { INCRUSTEE } = require('./incrustee.js');
 
 // ════════════════════════════════════════════════════════════════
 //  LA BALISE DE MESURE
@@ -674,7 +675,7 @@ function pageSpectacle(uni, cle, cv, SHOW_DATA, suivant) {
          téléphone, se voyait. -->
     <meta name="color-scheme" content="${MONTAGE.salleDe(uni) === 'claire' ? 'light' : 'dark'}">
 
-${MESURE}${SERVICE_WORKER}${SPECULATION}
+${INCRUSTEE}${MESURE}${SERVICE_WORKER}${SPECULATION}
     <meta property="og:type" content="article">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">
@@ -1124,7 +1125,7 @@ function pageRepertoire(fiches, misAJour) {
     </script>
     <meta name="theme-color" content="#0a0907">
 
-${MESURE}${SERVICE_WORKER}${SPECULATION}
+${INCRUSTEE}${MESURE}${SERVICE_WORKER}${SPECULATION}
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Adrien Vada">

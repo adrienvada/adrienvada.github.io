@@ -427,6 +427,7 @@ ici : c'est ce qui l'empêche de revenir.
 |---|---|---|
 | une classe Tailwind dans `index.html`, `404.html`, `dates.js`, `galerie.js`, `admin/` | [la commande Tailwind](#régénérer-stylescss-obligatoire-après-modification-des-classes) | `styles.css` |
 | **`galerie.js`** — ajout ou ordre des photos du book, texte `alt` | [`python3 build/variantes-images.py`](#ajouter-une-photo-au-book), puis `node build/generer-page-galerie.js` | les vignettes, puis `/galerie/…` |
+| **`build/incrustee.js`** — les pages ouvertes par-dessus l'accueil | `npm --prefix build run pages` | `/galerie/…`, `/spectacles/…` (voir [le mini-lecteur](#démos-voix--le-mini-lecteur-lenchaînement-lécran-verrouillé)) |
 | **`univers.js`** — un texte, un montage, un genre, une palette | `node build/generer-pages-spectacles.js` | `/spectacles/…`, `sitemap.xml`, `dates.ics` (le nom, la page et la durée d'un spectacle, voir [l'agenda à s'abonner](#lagenda-à-sabonner-datesics)) |
 | une **ligne du CV** dans `index.html` — titre, auteur, année, badge, rôle, compagnie | la même commande | idem : les pages spectacle lisent le CV |
 | le **vocabulaire du mouvement** dans `index.html` (`--ease-*`, `--dur-*`) | `npm --prefix build run pages` (la galerie, puis les pages spectacle) | `/galerie/…`, `/spectacles/…` : les pages spectacle, le répertoire et la galerie le relisent (voir [Un seul moteur](#un-seul-moteur-un-seul-visage) et [Le vocabulaire](#le-vocabulaire)) |
@@ -4493,22 +4494,34 @@ l'autre, et un **mini-lecteur** (`#lecteur-voix`, `lecteurVoix` dans
   (`no-print`).
 - **Un seul son à la fois** : la salle noire met la démo en pause (voir
   [Un seul son à la fois](#un-seul-son-à-la-fois)).
-- **La galerie par-dessus l'accueil.** `/galerie/` est une autre page : y
-  aller détruisait l'accueil, et la démo avec lui. Tant que le mini-lecteur
-  tient une démo (`activeAudioId`, en pause comprise), le portrait ouvre
-  donc la galerie **dans un cadre** (`#galerie-incrustee`,
-  `galerieIncrustee` dans `index.html`), au-dessus de tout — la barre
+- **La galerie et les spectacles par-dessus l'accueil.** `/galerie/`, le
+  répertoire et les fiches sont d'autres pages : y aller détruisait
+  l'accueil, et la démo avec lui. Tant que le mini-lecteur tient une démo
+  (`activeAudioId`, en pause comprise), un lien vers l'une d'elles — le
+  portrait, « Répertoire des spectacles » au pied, le nom d'un spectacle
+  dans l'onglet Dates — l'ouvre donc **dans un cadre** (`#page-incrustee`,
+  `pageIncrustee` dans `index.html`), au-dessus de tout — la barre
   d'onglets comprise (41 contre 40) — sauf du lecteur, qui monte à 42 le
   temps qu'elle est ouverte et garde ses boutons. Sans démo, rien ne change :
-  le lien mène à la vraie page, avec son passage du portrait. C'est une
+  le lien mène à la vraie page, avec son passage. Jamais par-dessus une autre
+  couche (un univers, l'agenda) : leurs liens gardent leur chemin. C'est une
   couche comme les autres : une entrée d'historique (le geste de retour la
   referme), Échap, la page dessous inerte et figée — sauf le lecteur et son
-  annonce. La galerie se sait dans le cadre (classe `incrustee`, posée par
-  son `<head>`, voir `generer-page-galerie.js`) : elle laisse au lecteur la
-  place sous sa dernière rangée, et son lien « ← Adrien Vada » et Échap
-  (visionneuse fermée) demandent de refermer par un `postMessage` au lieu de
-  recharger l'accueil. Le cadre est retiré à la fermeture ; le thème choisi
-  dedans est repris par l'accueil en sortant.
+  annonce. Le cadre est retiré à la fermeture ; le thème choisi dedans est
+  repris par l'accueil en sortant.
+
+  **Les pages se savent dans le cadre** : un bloc commun,
+  `build/incrustee.js`, posé dans leur `<head>` par les deux générateurs,
+  leur donne la classe `incrustee` avant le premier rendu si la page parente
+  est l'accueil et a la couche. Elles laissent alors au lecteur la place sous
+  leur fin ; un lien vers l'accueil referme le cadre par un `postMessage`
+  (avec son ancre : « Accéder aux dates » ouvre l'onglet Dates) ; un lien
+  vers une autre page du site s'ouvre dans le cadre **en la remplaçant**
+  (`location.replace` : l'historique ne garde que l'entrée de la couche, que
+  le retour referme d'un coup) ; un lien vers un autre site — une
+  billetterie — s'ouvre dans un nouvel onglet. La galerie ajoute Échap,
+  visionneuse fermée. Modifier `build/incrustee.js` impose de régénérer la
+  galerie et les pages spectacle (`npm --prefix build run pages`).
 
 ---
 

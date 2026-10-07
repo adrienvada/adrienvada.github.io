@@ -18,6 +18,37 @@
          téléphone, se voyait. -->
     <meta name="color-scheme" content="dark">
 
+    <script>
+        // INCRUSTÉE DANS L'ACCUEIL — voir build/incrustee.js.
+        (function () {
+            try {
+                if (window.parent === window || parent.location.origin !== location.origin
+                    || !parent.document.getElementById('page-incrustee')) return;
+            } catch (e) { return; }
+            document.documentElement.classList.add('incrustee');
+            function refermer(ancre) {
+                parent.postMessage({ av: 'fermer-incrustee', ancre: ancre || '' }, location.origin);
+            }
+            window.refermerIncrustee = refermer;
+            document.addEventListener('click', function (e) {
+                if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                var a = e.target.closest && e.target.closest('a[href]');
+                if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+                var u = new URL(a.href, location.href);
+                if (!/^https?:$/.test(u.protocol)) return;
+                if (u.origin === location.origin && u.pathname === location.pathname && u.search === location.search) return;
+                e.preventDefault();
+                if (u.origin !== location.origin) window.open(u.href, '_blank', 'noopener');
+                else if (u.pathname === '/' || u.pathname === '/index.html') refermer(u.hash.slice(1));
+                else location.replace(u.href);
+            });
+        })();
+    </script>
+    <style>
+        html.incrustee body {
+            padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+        }
+    </style>
     <!-- Mesure d'audience — Umami, sans cookie ni identifiant persistant.
          Chargeur identique à celui du <head> d'index.html ; il est écrit
          ici par build/generer-pages-spectacles.js, ne le modifiez pas à la
