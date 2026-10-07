@@ -239,6 +239,13 @@ main {
     margin: 0 auto;
 }
 
+/* Incrustée dans l'accueil (voir le <head>) : le mini-lecteur des démos
+   voix flotte au bas de l'écran, au-dessus du cadre (56 px, 8 du bord au
+   téléphone, 16 sur grand écran). La dernière rangée reste au-dessus. */
+html.incrustee main {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
 /* Réservé aux lecteurs d'écran : l'annonce de la visionneuse. */
 .sr {
     position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
@@ -1058,6 +1065,21 @@ function genererHtml() {
             try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
         })();
 
+        // INCRUSTÉE DANS L'ACCUEIL. Quand une démo voix joue, l'accueil
+        // ouvre la galerie dans un cadre, par-dessus lui, au lieu de la
+        // quitter : la démo continue (voir galerieIncrustee dans
+        // index.html). La page le sait ici, avant le premier rendu : elle
+        // laisse au mini-lecteur la place sous la dernière rangée, et son
+        // lien de retour referme le cadre au lieu de recharger l'accueil.
+        (function () {
+            try {
+                if (window.parent !== window && parent.location.origin === location.origin
+                    && parent.document.getElementById('galerie-incrustee')) {
+                    document.documentElement.classList.add('incrustee');
+                }
+            } catch (e) { }
+        })();
+
         // ════════════════════════════════════════════════════════════════
         //  LE BOOK S'OUVRE AU PLUS LARGE — planche contact, pas diaporama
         //  ----------------------------------------------------------------
@@ -1547,6 +1569,24 @@ ${JSON.stringify(schemaJson, null, 2)}
             else if (e.key === 'ArrowRight') nextPhoto();
             else if (e.key === 'ArrowLeft') prevPhoto();
         });
+
+        // INCRUSTÉE DANS L'ACCUEIL (voir le <head>) : revenir à l'accueil,
+        // c'est refermer le cadre — recharger la page couperait la démo
+        // qu'on écoute. Échap fait de même, visionneuse fermée : écouté à
+        // la capture, il voit la visionneuse AVANT que l'écouteur
+        // ci-dessus ne la referme, et ne ferme pas les deux d'un coup.
+        if (document.documentElement.classList.contains('incrustee')) {
+            var refermer = function () { parent.postMessage({ av: 'fermer-galerie' }, location.origin); };
+            var retourAccueil = document.querySelector('.retour');
+            if (retourAccueil) retourAccueil.addEventListener('click', function (e) {
+                if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                refermer();
+            });
+            window.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && zoomModal.hidden) refermer();
+            }, true);
+        }
 
         // ════════════════════════════════════════════════════════════════
         //  GROSSIR LA PHOTO, ET ELLE SEULE

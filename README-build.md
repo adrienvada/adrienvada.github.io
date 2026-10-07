@@ -4493,6 +4493,22 @@ l'autre, et un **mini-lecteur** (`#lecteur-voix`, `lecteurVoix` dans
   (`no-print`).
 - **Un seul son à la fois** : la salle noire met la démo en pause (voir
   [Un seul son à la fois](#un-seul-son-à-la-fois)).
+- **La galerie par-dessus l'accueil.** `/galerie/` est une autre page : y
+  aller détruisait l'accueil, et la démo avec lui. Tant que le mini-lecteur
+  tient une démo (`activeAudioId`, en pause comprise), le portrait ouvre
+  donc la galerie **dans un cadre** (`#galerie-incrustee`,
+  `galerieIncrustee` dans `index.html`), au-dessus de tout — la barre
+  d'onglets comprise (41 contre 40) — sauf du lecteur, qui monte à 42 le
+  temps qu'elle est ouverte et garde ses boutons. Sans démo, rien ne change :
+  le lien mène à la vraie page, avec son passage du portrait. C'est une
+  couche comme les autres : une entrée d'historique (le geste de retour la
+  referme), Échap, la page dessous inerte et figée — sauf le lecteur et son
+  annonce. La galerie se sait dans le cadre (classe `incrustee`, posée par
+  son `<head>`, voir `generer-page-galerie.js`) : elle laisse au lecteur la
+  place sous sa dernière rangée, et son lien « ← Adrien Vada » et Échap
+  (visionneuse fermée) demandent de refermer par un `postMessage` au lieu de
+  recharger l'accueil. Le cadre est retiré à la fermeture ; le thème choisi
+  dedans est repris par l'accueil en sortant.
 
 ---
 

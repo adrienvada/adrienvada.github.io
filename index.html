@@ -5124,6 +5124,81 @@
             animation: none;
         }
 
+        /* ══════════════════════════════════════════════════════════════
+           LA GALERIE PAR-DESSUS L'ACCUEIL, QUAND UNE DÉMO JOUE
+           ──────────────────────────────────────────────────────────────
+           Aller à /galerie/ quittait la page, et la démo qu'on écoutait
+           s'arrêtait avec elle. Tant que le mini-lecteur est là, le
+           portrait ouvre donc la galerie DANS un cadre, au-dessus de tout
+           — sauf du mini-lecteur, qui reste par-dessus elle et garde
+           ses boutons. Sans démo, rien ne change : le lien mène à la vraie
+           page, avec son passage (voir galerieIncrustee).
+
+           AU-DESSUS DE LA BARRE D'ONGLETS (40), qui passe elle-même devant
+           le lecteur (39) en temps ordinaire : la couche se pose à 41, et
+           le lecteur monte à 42 le temps qu'elle est ouverte.
+
+           Dans #site, à côté du lecteur : #site fait sa propre pile
+           (z-10), et une couche posée hors de lui passerait par-dessus le
+           lecteur quel que soit son rang. Elle monte comme le lecteur entre
+           (transformation et opacité), et redescend ; en mouvement réduit,
+           elle paraît, net. Les bords de l'iPhone couché sont tenus ici :
+           dans un cadre, la galerie ne les connaît pas. */
+        .galerie-incrustee {
+            position: fixed;
+            inset: 0;
+            z-index: 41;
+            padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
+            background: rgb(var(--c-bg));
+        }
+
+        .galerie-incrustee[hidden] {
+            display: none;
+        }
+
+        .galerie-incrustee iframe {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            .galerie-incrustee:not([hidden]) {
+                animation: galerie-entre var(--dur-panel) var(--ease-out) both;
+            }
+
+            .galerie-incrustee.s-ferme {
+                animation: galerie-sort var(--dur-quick) ease-in both;
+            }
+        }
+
+        @keyframes galerie-entre {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+        }
+
+        @keyframes galerie-sort {
+            to {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+        }
+
+        html.galerie-ouverte .lecteur-voix {
+            z-index: 42;
+        }
+
+        /* La barre d'onglets est sous la galerie : le lecteur, qui se
+           tenait au-dessus d'elle au téléphone, redescend au bord. */
+        @media (max-width: 767px) {
+            html.galerie-ouverte .lecteur-voix {
+                translate: none;
+            }
+        }
+
         /* ── La salle de projection (Démos caméra) ──
            Une salle : noire dans les deux thèmes, comme un cinéma. L'écran
            au milieu, sa lumière qui déborde autour (le halo : le plan réduit
@@ -11549,6 +11624,15 @@
 
         </main>
 
+        <!-- LA GALERIE PAR-DESSUS L'ACCUEIL. Vide et cachée ; quand une démo
+             joue, le portrait y ouvre /galerie/ dans un cadre au lieu de
+             quitter la page, et la démo continue (voir galerieIncrustee).
+             Juste avant le mini-lecteur, dans #site : il reste au-dessus
+             d'elle. Pas d'aria-modal : le lecteur reste atteignable, le
+             reste de la page devient inerte. -->
+        <div id="galerie-incrustee" class="galerie-incrustee no-print" role="dialog" aria-label="Galerie photo"
+            hidden></div>
+
         <!-- LE MINI-LECTEUR DES DÉMOS VOIX. Changer d'onglet coupait la
              démo : on ne pouvait pas écouter une voix en lisant le CV, ce
              qui est exactement ce que fait un directeur de casting. Il
@@ -12400,6 +12484,8 @@
                     window.closeShowUniverse?.(dejaAnime ? { sansPassage: true, instantane: true } : undefined);
                 } else if (layer === 'recit') {
                     window.fermerLeRecit?.(dejaAnime);
+                } else if (layer === 'galerie') {
+                    galerieIncrustee.fermer(dejaAnime);
                 } else if (openModalEl) {
                     if (openModalEl.id === 'video-modal') closeVideoModal();
                     else closeCalendarModal();
@@ -16545,6 +16631,126 @@
             });
 
             return { montrer, suivre, refusee, avancer, position, finie, taire, fermer };
+        })();
+
+        // ════════════════════════════════════════════════════════════════
+        //  LA GALERIE PAR-DESSUS L'ACCUEIL, QUAND UNE DÉMO JOUE
+        //  ----------------------------------------------------------------
+        //  /galerie/ est une autre page : y aller détruisait celle-ci, et la
+        //  démo qu'on écoutait avec elle. Tant que le mini-lecteur tient une
+        //  démo (activeAudioId, en pause comprise), le portrait ouvre donc la
+        //  galerie dans un cadre (#galerie-incrustee), au-dessus de tout sauf
+        //  du lecteur : la démo continue, et ses boutons restent sous le
+        //  doigt. Sans démo, le lien mène à la vraie page, avec son passage
+        //  — le portrait qui se range dans la planche.
+        //
+        //  C'est une couche comme les autres : une entrée d'historique (le
+        //  geste de retour la referme), Échap, la page dessous inerte et
+        //  figée (modal-open) — sauf le lecteur et son annonce. La galerie se
+        //  sait dans le cadre (classe `incrustee`, posée par son <head>) :
+        //  son lien « ← Adrien Vada » et Échap y demandent de refermer, par
+        //  un message, au lieu de recharger l'accueil. Le cadre est retiré à
+        //  la fermeture : rouverte, la galerie repart du haut, au thème du
+        //  moment ; le thème choisi dedans est repris ici en sortant.
+        // ════════════════════════════════════════════════════════════════
+        const galerieIncrustee = (() => {
+            const couche = document.getElementById('galerie-incrustee');
+            const lien = document.querySelector('#en-tete a.affiche-portrait');
+            const rien = () => { };
+            if (!couche || !lien) return { fermer: rien };
+            const calme = matchMedia('(prefers-reduced-motion: reduce)');
+            const GARDES = ['lecteur-voix', 'lecteur-voix-annonce'];
+            let ouverte = false, rendre = null, liberer = null, retrait = 0;
+
+            // La page devient inerte, comme sous les autres couches (voir
+            // isolerCouche, dans univers.js) — à ceci près que le lecteur et
+            // son annonce restent vivants : c'est pour eux qu'on est là.
+            function isoler() {
+                const rendus = [];
+                for (let el = couche; el.parentElement && el !== document.body; el = el.parentElement) {
+                    for (const frere of el.parentElement.children) {
+                        if (frere === el || frere.inert || GARDES.includes(frere.id)
+                            || /^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(frere.tagName)) continue;
+                        frere.inert = true;
+                        rendus.push(frere);
+                    }
+                }
+                return () => { rendus.forEach(n => { n.inert = false; }); };
+            }
+
+            function ouvrir() {
+                if (ouverte) return;
+                clearTimeout(retrait);
+                ouverte = true;
+                rendre = document.activeElement;
+                couche.classList.remove('s-ferme');
+                couche.replaceChildren();
+                const cadre = document.createElement('iframe');
+                cadre.title = 'Galerie photo';
+                cadre.src = lien.getAttribute('href');
+                couche.appendChild(cadre);
+                couche.hidden = false;
+                document.documentElement.classList.add('galerie-ouverte');
+                pushOverlayState('galerie');
+                // Le verrou et l'inertie une image plus tard, pendant la
+                // montée (voir « La fenêtre d'abord, la page ensuite »).
+                apresLImage(() => {
+                    if (!ouverte) return;
+                    document.body.classList.add('modal-open');
+                    liberer = isoler();
+                });
+                cadre.focus();
+            }
+
+            // `direct` : le geste de retour du téléphone a déjà montré la
+            // page dessous — pas de descente en plus.
+            function fermer(direct) {
+                if (!ouverte) return;
+                ouverte = false;
+                dropOverlayState('galerie');
+                document.documentElement.classList.remove('galerie-ouverte');
+                if (!openModalEl) document.body.classList.remove('modal-open');
+                if (liberer) { liberer(); liberer = null; }
+                let theme = null;
+                try { theme = localStorage.getItem('avTheme'); } catch (e) { }
+                if ((theme === 'light' || theme === 'dark') && theme !== document.documentElement.getAttribute('data-theme')) {
+                    applyTheme(theme, false);
+                }
+                const cacher = () => {
+                    if (ouverte) return;
+                    couche.hidden = true;
+                    couche.classList.remove('s-ferme');
+                    couche.replaceChildren();
+                };
+                if (direct || calme.matches) cacher();
+                else {
+                    couche.classList.add('s-ferme');
+                    retrait = setTimeout(cacher, 220);
+                }
+                if (rendre && rendre !== document.body && document.contains(rendre)) rendre.focus({ preventScroll: true });
+                rendre = null;
+            }
+
+            lien.addEventListener('click', (e) => {
+                if (!activeAudioId || e.defaultPrevented || e.button !== 0
+                    || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                e.preventDefault();
+                ouvrir();
+            });
+
+            // La galerie demande à être refermée (son lien de retour, Échap).
+            addEventListener('message', (e) => {
+                const cadre = couche.querySelector('iframe');
+                if (e.origin !== location.origin || !cadre || e.source !== cadre.contentWindow) return;
+                if (e.data && e.data.av === 'fermer-galerie') fermer();
+            });
+
+            // Échap, le focus resté ici (sur le lecteur) : la galerie aussi.
+            addEventListener('keydown', (e) => {
+                if (ouverte && e.key === 'Escape' && !e.defaultPrevented) fermer();
+            });
+
+            return { fermer };
         })();
 
         function updateAudioProgress(audioId) {
