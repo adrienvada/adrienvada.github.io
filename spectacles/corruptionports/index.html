@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PAGE GÉNÉRÉE — ne pas modifier à la main.
+         Source : build/generer-pages-spectacles.js, qui appelle le MÊME
+         moteur de montage que le panneau plein écran de la page d'accueil
+         (univers-montage.js) et la MÊME feuille de style (univers.css). -->
+    <title>Agence française anticorruption : dans les ports · Adrien Vada</title>
+    <meta name="description" content="Agence française anticorruption : dans les ports, vidéo de formation — avec Adrien Vada. Du repérage à la pression, chaque métier du port peut être…">
+    <link rel="canonical" href="https://adrienvada.fr/spectacles/corruptionports/">
+    <meta name="theme-color" content="#0a1119">
+    <!-- LE NAVIGATEUR SAIT QUE LA SALLE EST SOMBRE (ou claire) : ses barres
+         de défilement, ses champs et le fond qu'il peint avant la feuille
+         de style s'y accordent — un éclair blanc avant une salle noire, au
+         téléphone, se voyait. -->
+    <meta name="color-scheme" content="dark">
+
+    <script>
+        // INCRUSTÉE DANS L'ACCUEIL — voir build/incrustee.js.
+        (function () {
+            try {
+                if (window.parent === window || parent.location.origin !== location.origin
+                    || !parent.document.getElementById('page-incrustee')) return;
+            } catch (e) { return; }
+            document.documentElement.classList.add('incrustee');
+            function refermer(ancre) {
+                parent.postMessage({ av: 'fermer-incrustee', ancre: ancre || '' }, location.origin);
+            }
+            window.refermerIncrustee = refermer;
+            document.addEventListener('click', function (e) {
+                if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                var a = e.target.closest && e.target.closest('a[href]');
+                if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+                var u = new URL(a.href, location.href);
+                if (!/^https?:$/.test(u.protocol)) return;
+                if (u.origin === location.origin && u.pathname === location.pathname && u.search === location.search) return;
+                e.preventDefault();
+                if (u.origin !== location.origin) window.open(u.href, '_blank', 'noopener');
+                else if (u.pathname === '/' || u.pathname === '/index.html') refermer(u.hash.slice(1));
+                else location.replace(u.href);
+            });
+        })();
+    </script>
+    <style>
+        html.incrustee body {
+            padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+        }
+    </style>
+    <!-- Mesure d'audience — Umami, sans cookie ni identifiant persistant.
+         Chargeur identique à celui du <head> d'index.html ; il est écrit
+         ici par build/generer-pages-spectacles.js, ne le modifiez pas à la
+         main. Voir README-build.md, § Mesure d'audience. -->
+    <script>
+        (function () {
+            var ATTRIBUTS = {
+                'website-id': '23c34c7a-c28c-4b5b-b237-a154139b62da',
+                'domains': 'adrienvada.fr'
+            };
+            var file = window.avMesureEnAttente = window.avMesureEnAttente || [];
+            function charger() {
+                var s = document.createElement('script');
+                s.src = 'https://cloud.umami.is/script.js';
+                s.async = true;
+                for (var k in ATTRIBUTS) s.setAttribute('data-' + k, ATTRIBUTS[k]);
+                s.onload = function () {
+                    var u = window.umami;
+                    if (!u || typeof u.track !== 'function') return;
+                    file.splice(0).forEach(function (g) { u.track(g[0], g[1]); });
+                };
+                document.head.appendChild(s);
+            }
+            if (document.prerendering) document.addEventListener('prerenderingchange', charger, { once: true });
+            else charger();
+        })();
+    </script>
+    <script>
+        // Le service worker des polices et des images, inscrit après le
+        // chargement — le même bloc que l'accueil (voir son <head>).
+        (function () {
+            if (!('serviceWorker' in navigator)) return;
+            // Pas sur l'aperçu Cloudflare : voir le même bloc dans l'accueil.
+            if (/\.workers\.dev$/.test(location.hostname)) {
+                navigator.serviceWorker.getRegistrations().then(function (rs) {
+                    rs.forEach(function (r) { r.unregister(); });
+                }).catch(function () { });
+                if (window.caches) caches.keys().then(function (ks) {
+                    ks.forEach(function (k) { if (k.indexOf('av-') === 0) caches.delete(k); });
+                }).catch(function () { });
+                return;
+            }
+            addEventListener('load', function () {
+                var servie = !!navigator.serviceWorker.controller;
+                navigator.serviceWorker.register('/sw.js').then(function () {
+                    return navigator.serviceWorker.ready;
+                }).then(function (reg) {
+                    if (servie || !reg.active) return;
+                    var urls = performance.getEntriesByType('resource').map(function (r) { return r.name; })
+                        .filter(function (u) { return /\/ressources\/(polices|images)\//.test(u); });
+                    reg.active.postMessage({ type: 'garder', urls: urls });
+                }).catch(function () { });
+            });
+        })();
+    </script>
+    <script type="speculationrules">
+        {
+            "prerender": [{
+                "where": { "or": [{ "href_matches": "/spectacles/*/" }, { "href_matches": "/galerie/" }] },
+                "eagerness": "moderate"
+            }],
+            "prefetch": [{
+                "where": { "or": [{ "href_matches": "/" }, { "href_matches": "/spectacles/" }] },
+                "eagerness": "moderate"
+            }]
+        }
+    </script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:site_name" content="Adrien Vada">
+    <meta property="og:title" content="Agence française anticorruption : dans les ports · Adrien Vada">
+    <meta property="og:description" content="Agence française anticorruption : dans les ports, vidéo de formation — avec Adrien Vada. Du repérage à la pression, chaque métier du port peut être…">
+    <meta property="og:image" content="https://adrienvada.fr/ressources/images/og-adrien-vada.jpg">
+    <meta property="og:url" content="https://adrienvada.fr/spectacles/corruptionports/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Agence française anticorruption : dans les ports · Adrien Vada">
+    <meta name="twitter:description" content="Agence française anticorruption : dans les ports, vidéo de formation — avec Adrien Vada. Du repérage à la pression, chaque métier du port peut être…">
+    <meta name="twitter:image" content="https://adrienvada.fr/ressources/images/og-adrien-vada.jpg">
+
+    <!-- En PNG, comme l'accueil : favicon.svg n'était qu'un PNG de 256 px en
+         base64, 128 Ko que Chrome préférait aux PNG déclarés (voir
+         index.html). -->
+    <link rel="icon" type="image/png" href="../../favicon_io/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="../../favicon_io/favicon-96x96.png" sizes="96x96">
+    <!-- L'icône d'écran d'accueil et le manifeste, comme l'accueil : sans
+         eux, « Sur l'écran d'accueil » depuis une page spectacle posait une
+         capture de la page en guise d'icône. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="../../favicon_io/site.webmanifest">
+
+    <!-- Les polices du site, servies par le site (ressources/polices/). Le
+         titre est en Cinzel et le synopsis en Inter : ce sont les deux
+         premières choses qui s'écrivent, on les demande donc d'avance. -->
+    <link rel="preload" href="../../ressources/polices/cinzel-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../../ressources/polices/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../ressources/polices/polices.css">
+    <link rel="stylesheet" href="../../univers.css">
+
+    <!-- Le repli quand le script ne charge pas. Les mots du montage attendent
+         à opacity 0 : sans JavaScript, la page serait un écran vide, et son
+         texte invisible à qui doit l'indexer. Ce <noscript> les rend visibles
+         d'un coup. Il ne coûte rien quand tout va bien : le navigateur ne
+         charge cette feuille que s'il n'exécute pas de script. -->
+    <noscript><link rel="stylesheet" href="../../univers-statique.css"></noscript>
+
+    <script>
+        // Visiter une fiche, c'est avoir commencé sa visite : le retour vers
+        // l'accueil ne doit pas lever le rideau d'introduction au milieu du
+        // parcours. C'est la mémoire de la VISITE (sessionStorage), pas celle
+        // de l'appareil : l'ouverture n'a pas joué, et un visiteur qui
+        // reviendra un autre jour depuis un autre site y aura droit — voir
+        // « Le lien direct entre sans rideau » dans index.html.
+        try { sessionStorage.setItem('avIntroSeen', '1'); } catch (e) { }
+
+        // Le titre qui attend de s'écrire, la première photo qui attend son
+        // allumage dans le noir : cachés seulement si le moteur est là pour
+        // les montrer (u-anime). Et le drapeau de la régie, posé avant le
+        // premier rendu — le même en-tête que sur l'accueil (index.html),
+        // où tout cela est expliqué ; build/verifier-site.js compare les
+        // deux.
+        (function () {
+            var racine = document.documentElement;
+            racine.classList.add('u-anime');
+            if (/[?&]repli(?:[=&]|$)/.test(location.search) || !(window.CSS && CSS.supports &&
+                CSS.supports('animation-timeline: view()') && CSS.supports('view-timeline: --rg block')))
+                racine.classList.add('regie-repli');
+            addEventListener('DOMContentLoaded', function () {
+                setTimeout(function () {
+                    if (!window.__universPret) racine.classList.remove('u-anime');
+                    if (!window.Regie) racine.classList.remove('regie-repli');
+                }, 0);
+            });
+            // Une photo du travelling paraît en fondu dès qu'elle arrive (voir
+            // .u-of-photo img dans univers.css) — sans attendre le moteur :
+            // la première arrive bien avant lui, et l'attendre la retenait
+            // 2,5 à 3,2 s de plus (téléphone, 4G lente, ×4). L'arrivée
+            // d'une image ne remonte pas jusqu'à la fenêtre : on l'écoute
+            // sur le document, à la descente. u-allume-plans les cache
+            // jusque-là.
+            racine.classList.add('u-allume-plans');
+            document.addEventListener('load', function (e) {
+                var img = e.target;
+                if (img.matches && img.matches('.u-of-photo img')) img.classList.add('est-decodee');
+            }, true);
+        })();
+    </script>
+
+    <!-- La palette du spectacle, injectée comme le panneau l'injecte sur
+         #show-universe. Mêmes variables, mêmes valeurs : c'est ce qui donne
+         à la page la couleur exacte de son univers. -->
+    <style>
+        /* Le mouvement de l'accueil — relu dans index.html (voir
+           chargerMouvement) : sans lui, les transitions d'univers.css
+           tombaient à zéro sur cette page. */
+        :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-panel: cubic-bezier(0.4, 0, 0.2, 1); --ease-ressort: linear(0, 0.005 1%, 0.039 3%, 0.098 5%, 0.215 8%, 0.566 16%, 0.715 20%, 0.807 23%, 0.901 27%, 0.966 31%, 1.013 36%, 1.036 42%, 1.032 52%, 1.002 75%, 1); --dur-press: 90ms; --dur-quick: 180ms; --dur-base: 320ms; --dur-panel: 400ms; --dur-scene: 460ms; --dur-morph: 620ms; }
+        body { margin: 0; background: #0a1119; }
+        #show-universe {
+            --u-bg: #0a1119;
+            --u-surface: #121c28;
+            --u-text: #e6ecf2;
+            --u-muted: #8d9bab;
+            --u-accent: #d9652b;
+            --u-accent-ink: #f08a52;
+            --u-on-accent: #0a1119;
+            --u-line: rgba(230,236,242,0.14);
+            --u-glow: rgba(60,110,160,0.34);
+        }
+        /* Le retour au site : la seule chose que la page ajoute au montage. */
+        .u-retour {
+            position: absolute; top: 1.2rem; left: 1.4rem; z-index: 4;
+            font: 700 .74rem/1 'Inter', system-ui, sans-serif;
+            letter-spacing: .16em; text-transform: uppercase;
+            color: var(--u-muted); text-decoration: none;
+        }
+        .u-retour:hover { color: var(--u-accent-ink); }
+        /* Le morphing depuis le répertoire — et depuis l'onglet Dates de
+           l'accueil : les documents y consentent, et cette page porte le
+           nom que la vignette touchée prend au départ. La photo de la
+           vignette grandit jusqu'à devenir le fond du titre, comme dans le
+           panneau de l'accueil (voir « La vignette devient l'univers »
+           dans univers.js) — ou, quand la page s'ouvre sur son travelling,
+           la première photo de celui-ci (voir le script de l'en-tête). Sans
+           photo, c'est la page entière qui sort de la vignette. Navigateurs
+           plus anciens : navigation ordinaire.
+
+           La petite image ne se montre jamais en grand : elle s'efface tôt,
+           tant qu'elle est encore petite, et le fond arrive en même temps. */
+        @view-transition { navigation: auto; }
+        #show-universe { view-transition-name: fiche-corruptionports; view-transition-class: fiche; }
+        #show-universe .u-of-photo { view-transition-class: fiche; }
+        ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
+        ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+        ::view-transition-group(*.fiche) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-ressort); }
+        ::view-transition-old(*.fiche), ::view-transition-new(*.fiche) { height: 100%; object-fit: cover; object-position: 50% 30%; }
+        /* La photo couvre la boîte qui voyage, sans en sortir : une
+           image de passage ne rogne pas ce qui déborde de son cadrage, et
+           la première photo du travelling, en paysage, s'étalait hors de
+           la carte en portrait — hors de l'écran à gauche, sur la carte
+           voisine à droite (même règle que le portrait de l'accueil). */
+        ::view-transition-image-pair(*.fiche) { overflow: clip; }
+        ::view-transition-old(*.fiche) { animation: vt-fiche-sort calc(var(--dur-morph) * .35) ease-out both; }
+        ::view-transition-new(*.fiche) { animation: vt-fiche-entre calc(var(--dur-morph) * .4) ease-out both; }
+        @keyframes vt-fiche-sort { to { opacity: 0; } }
+        @keyframes vt-fiche-entre { from { opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*), ::view-transition-image-pair(*),
+            ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+        }
+    </style>
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Movie",
+  "name": "Agence française anticorruption : dans les ports",
+  "description": "Agence française anticorruption : dans les ports, vidéo de formation — avec Adrien Vada. Du repérage à la pression, chaque métier du port peut être…",
+  "url": "https://adrienvada.fr/spectacles/corruptionports/",
+  "inLanguage": "fr",
+  "image": "https://adrienvada.fr/ressources/images/og-adrien-vada.jpg",
+  "actor": {
+    "@type": "Person",
+    "@id": "https://adrienvada.fr/#adrien-vada",
+    "name": "Adrien Vada"
+  },
+  "dateCreated": "2025"
+}
+</script>
+</head>
+
+<!-- La classe u-page-spectacle est le signal que guette univers.js : elle lui
+     dit que le panneau est déjà rempli et qu'il n'a qu'à lui donner vie —
+     l'écriture du titre, la parallaxe, les révélations au défilement,
+     l'agrandissement des photos. C'est le MÊME moteur que sur l'accueil, et
+     c'est pourquoi la page ne se contente pas de ressembler à son univers :
+     elle se comporte comme lui.
+
+     data-u-show porte le titre EXACT du spectacle — la clé de SHOW_UNIVERSES,
+     celle qu'écrit aussi dates.js. C'est par elle qu'univers.js retrouve les
+     représentations de CETTE page au moment de rafraîchir son pied.
+
+     data-u-creation dit ce qu'un pied sans date ne peut pas deviner : un
+     spectacle sans représentation à venir est-il ARRÊTÉ ou PAS ENCORE CRÉÉ ?
+     Sur l'accueil c'est le badge de la ligne du CV qui tranche ; cette page
+     n'a pas de CV, on le lui écrit donc noir sur blanc. -->
+<body class="u-page-spectacle" data-u-show="Agence française anticorruption : dans les ports">
+    <!-- Sprite d'icônes : les 10 dessins dont cette page peut avoir
+         besoin, pris dans celui d'index.html. Icônes FontAwesome Free,
+         licence CC BY 4.0 (fontawesome.com). -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-regular-calendar-plus" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18h6" /><path d="M16 2v3" /><path d="M19 15v6" /><path d="M21 11.5V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h8.3" /><path d="M3 9h18" /><path d="M8 2v3" /></g></symbol><symbol id="i-solid-arrow-down" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></g></symbol><symbol id="i-solid-arrow-right" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></g></symbol><symbol id="i-solid-chevron-left" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></g></symbol><symbol id="i-solid-chevron-right" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></g></symbol><symbol id="i-solid-chevron-up" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6" /></g></symbol><symbol id="i-solid-expand" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 15 6 6" /><path d="m15 9 6-6" /><path d="M21 16v5h-5" /><path d="M21 8V3h-5" /><path d="M3 16v5h5" /><path d="m3 21 6-6" /><path d="M3 8V3h5" /><path d="M9 9 3 3" /></g></symbol><symbol id="i-solid-play" viewBox="0 0 384 512"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></symbol><symbol id="i-solid-up-right-from-square" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10" /><path d="M7 17 17 7" /></g></symbol><symbol id="i-solid-xmark" viewBox="1 1 22 22"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></g></symbol></svg>
+    <!-- <main> : le contenu principal de la page, annoncé comme tel. Un
+         lecteur d'écran y saute d'une touche ; un moteur sait où commence
+         ce qui compte.
+
+         OUVERT D'EMBLÉE (is-open). Sur l'accueil, le panneau part d'une
+         opacité nulle que le moteur lève en l'ouvrant ; ici, il n'y a rien
+         à ouvrir, et cette opacité ne se levait qu'après les cinq scripts
+         de fin de page, en fondu joué par le compositeur — que Chrome ne
+         compte pas comme un affichage. Chrome ne voyait donc souvent aucun
+         premier affichage (Lighthouse « NO_FCP ») : les pages faites pour
+         être trouvées n'avaient pas de mesure, et le visiteur regardait un
+         fond vide jusqu'au lever du panneau. Au téléphone en 4G lente (×4),
+         copie publiée, cinq passes : premier affichage 1 848 → 900 ms sur
+         Le rapt, 2 216 → 908 ms sur Bérénice. Ce que le moteur écrit (le
+         titre, le synopsis) reste caché jusqu'à lui (.u-anime). -->
+    <main id="show-universe" class="is-open">
+        <a class="u-retour" href="../../"><span aria-hidden="true">←</span> Adrien Vada</a>
+        
+        <a href="/spectacles/" class="u-close" aria-label="Retour au répertoire des spectacles">
+            <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
+        </a>
+        <!-- La barre de progression vaut aussi pour une page autonome : le
+             panneau y défile dans sa propre boîte, exactement comme ici. -->
+        <div class="u-progress" aria-hidden="true"><span></span></div>
+        <nav class="u-chapitres" aria-label="Chapitres">
+            <ol class="u-chapitres-liste" id="u-chapitres-liste" hidden>
+                <li><button type="button" data-u-chapitre="haut"><span class="u-chapitres-n">1</span>Ouverture</button></li><li><button type="button" data-u-chapitre="montage"><span class="u-chapitres-n">2</span>Images</button></li><li><button type="button" data-u-chapitre="video"><span class="u-chapitres-n">3</span>Bande-annonce</button></li><li><button type="button" data-u-chapitre="pied"><span class="u-chapitres-n">4</span>Le film</button></li><li><button type="button" data-u-chapitre="distribution"><span class="u-chapitres-n">5</span>Distribution</button></li>
+            </ol>
+            <button type="button" class="u-chapitres-bouton" aria-expanded="false" aria-controls="u-chapitres-liste">
+                <span class="u-chapitres-n" data-u-chapitre-n>1/5</span>
+                <span class="u-chapitres-courant" data-u-chapitre-nom>Ouverture</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-chevron-up"></use></svg>
+            </button>
+        </nav>
+
+        <div class="u-hero-wrap rg-vue">
+        
+
+        <header class="u-hero">
+            <!-- Année · genre · badge. Le genre se lit dans le même souffle
+                 que la date et l'état de la tournée : c'est la ligne d'une
+                 feuille de salle, et elle dit en trois mots ce qu'on va voir
+                 avant même le titre. Il est pris sur l'univers et non sur la
+                 ligne du CV, qui ne le porte pas. -->
+            <p class="u-eyebrow rg-k">2025 · Film de prévention</p>
+            <!-- LE TITRE, D'UN SEUL TENANT POUR QUI NE LE VOIT PAS. Les lettres
+                 tombent une à une et sont donc cachées aux lecteurs d'écran
+                 (voir splitChars) ; aria-label leur donne le mot entier.
+                 PAS de copie du titre en texte masqué : un moteur la lirait
+                 collée aux lettres, « BéréniceBérénice ». Les lettres, elles,
+                 restent le texte du titre pour qui l'indexe.
+                 Sur une page autonome c'est le titre de la page, de premier
+                 niveau ; dans le panneau de l'accueil, qui a déjà le sien, de
+                 second niveau. -->
+            <h1 class="u-title rg-k" id="u-titre" aria-label="Agence française anticorruption : dans les ports" style="--u-title-chars:14;--u-title-len:48"><span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:0">A</span><span class="u-ch" style="--i:1">g</span><span class="u-ch" style="--i:2">e</span><span class="u-ch" style="--i:3">n</span><span class="u-ch" style="--i:4">c</span><span class="u-ch" style="--i:5">e</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:6">f</span><span class="u-ch" style="--i:7">r</span><span class="u-ch" style="--i:8">a</span><span class="u-ch" style="--i:9">n</span><span class="u-ch" style="--i:10">ç</span><span class="u-ch" style="--i:11">a</span><span class="u-ch" style="--i:12">i</span><span class="u-ch" style="--i:13">s</span><span class="u-ch" style="--i:14">e</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:15">a</span><span class="u-ch" style="--i:16">n</span><span class="u-ch" style="--i:17">t</span><span class="u-ch" style="--i:18">i</span><span class="u-ch" style="--i:19">c</span><span class="u-ch" style="--i:20">o</span><span class="u-ch" style="--i:21">r</span><span class="u-ch" style="--i:22">r</span><span class="u-ch" style="--i:23">u</span><span class="u-ch" style="--i:24">p</span><span class="u-ch" style="--i:25">t</span><span class="u-ch" style="--i:26">i</span><span class="u-ch" style="--i:27">o</span><span class="u-ch" style="--i:28">n</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:29">:</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:30">d</span><span class="u-ch" style="--i:31">a</span><span class="u-ch" style="--i:32">n</span><span class="u-ch" style="--i:33">s</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:34">l</span><span class="u-ch" style="--i:35">e</span><span class="u-ch" style="--i:36">s</span></span> <span class="u-word" aria-hidden="true"><span class="u-ch" style="--i:37">p</span><span class="u-ch" style="--i:38">o</span><span class="u-ch" style="--i:39">r</span><span class="u-ch" style="--i:40">t</span><span class="u-ch" style="--i:41">s</span></span></h1>
+            
+            <p class="u-synopsis rg-k"><span class="u-line"><span class="u-wd" style="--i:0">Du</span> <span class="u-wd" style="--i:1">repérage</span> <span class="u-wd" style="--i:2">à</span> <span class="u-wd" style="--i:3">la</span> <span class="u-wd" style="--i:4">pression,</span> <span class="u-wd" style="--i:5">chaque</span> <span class="u-wd" style="--i:6">métier</span> <span class="u-wd" style="--i:7">du</span> <span class="u-wd" style="--i:8">port</span> <span class="u-wd" style="--i:9">peut</span> <span class="u-wd" style="--i:10">être</span> <span class="u-wd" style="--i:11">approché.</span> <span class="u-wd" style="--i:12">Une</span> <span class="u-wd" style="--i:13">vidéo</span> <span class="u-wd" style="--i:14">de</span> <span class="u-wd" style="--i:15">formation,</span> <span class="u-wd" style="--i:16">tirée</span> <span class="u-wd" style="--i:17">de</span> <span class="u-wd" style="--i:18">situations</span> <span class="u-wd" style="--i:19">réelles,</span> <span class="u-wd" style="--i:20">pour</span> <span class="u-wd" style="--i:21">reconnaître</span> <span class="u-wd" style="--i:22">la</span> <span class="u-wd" style="--i:23">corruption</span> <span class="u-wd" style="--i:24">avant</span> <span class="u-wd" style="--i:25">qu’elle</span> <span class="u-wd" style="--i:26">ne</span> <span class="u-wd" style="--i:27">s’installe.</span></span></p>
+            <div class="u-couche u-couche-meta rg-k"><p class="u-meta"><br>Vidéo de formation</p></div>
+
+            <!-- Raccourci vers les dates dès le titre : sans lui, il faut
+                 traverser tout le défilé de photos pour savoir quand voir le
+                 spectacle — or c'est souvent la seule raison de la visite.
+                 Ce que les dates y changent est dans heroActionsHtml. -->
+            <div class="u-couche u-couche-actions rg-k"><div class="u-hero-actions">
+                <button type="button" class="u-btn" data-u-jump>
+                        La bande-annonce
+                        <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>
+                    </button>
+            </div></div>
+
+            <span class="u-couche u-couche-fleche rg-k" aria-hidden="true"><span class="u-scroll"><svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg></span></span>
+            <span class="u-loader" role="status" aria-label="Chargement des visuels">
+                <svg viewBox="0 0 100 128" aria-hidden="true" focusable="false">
+                    <path fill-rule="evenodd" d="M50 8C71 8 85 25 85 49c0 33-15 71-35 71S15 82 15 49C15 25 29 8 50 8z
+                        M26 56q10-9 20 0-10 9-20 0z
+                        M54 56q10-9 20 0-10 9-20 0z
+                        M50 63q3 9 0 17-3-8 0-17z" />
+                </svg>
+            </span>
+        </header>
+        </div>
+
+        <div class="u-figs"><div class="u-chapter u-ecrit rg-vue">
+                    <span class="u-chapter-num">AFA</span>
+                    <h2><span class="u-line"><span class="u-rw">Une</span> <span class="u-rw">vidéo</span> <span class="u-rw">de</span> <span class="u-rw">formation</span> <span class="u-rw">de</span> <span class="u-rw">l’Agence</span> <span class="u-rw">française</span> <span class="u-rw">anticorruption</span> <span class="u-rw">sur</span> <span class="u-rw">les</span> <span class="u-rw">risques</span> <span class="u-rw">de</span> <span class="u-rw">corruption</span> <span class="u-rw">dans</span> <span class="u-rw">les</span> <span class="u-rw">zones</span> <span class="u-rw">portuaires</span> <span class="u-rw">—</span> <span class="u-rw">2025.</span></span></h2>
+                </div><figure class="u-video u-reveal">
+            <button type="button" class="u-video-play" data-u-video="yt:2Lh7Fhcc_sU"
+                    aria-label="Lire la vidéo : La bande-annonce.">
+                <picture><source type="image/webp" srcset="https://i.ytimg.com/vi_webp/2Lh7Fhcc_sU/maxresdefault.webp"><img src="https://i.ytimg.com/vi/2Lh7Fhcc_sU/maxresdefault.jpg" data-u-poster="2Lh7Fhcc_sU" alt="" loading="lazy" decoding="async"></picture>
+                <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
+            </button>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">La bande-annonce.</span></figcaption>
+        </figure><figure class="u-video u-reveal">
+            <button type="button" class="u-video-play" data-u-video="yt:fJN8XPC67aw"
+                    aria-label="Lire la vidéo : La vidéo entière.">
+                <picture><source type="image/webp" srcset="https://i.ytimg.com/vi_webp/fJN8XPC67aw/maxresdefault.webp"><img src="https://i.ytimg.com/vi/fJN8XPC67aw/maxresdefault.jpg" data-u-poster="fJN8XPC67aw" alt="" loading="lazy" decoding="async"></picture>
+                <span class="u-video-icon" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-play"></use></svg></span>
+            </button>
+            <figcaption class="u-cap rg-vue"><span class="rg-k">La vidéo entière.</span></figcaption>
+        </figure></div>
+
+        <footer class="u-foot" id="u-foot">
+            <h2 class="u-foot-title">Le film</h2>
+            
+            <div class="u-actions">
+                <a class="u-btn" href="https://www.youtube.com/watch?v=fJN8XPC67aw" target="_blank" rel="noopener">Fiche du film<span class="u-sr"> (nouvel onglet)</span> <svg class="ico" aria-hidden="true"><use href="#i-solid-up-right-from-square"></use></svg></a>
+                
+            </div>
+            
+            <div class="u-cast">
+            <h3>Distribution</h3>
+            <p class="u-cast-names"><span class="u-cast-name">Adrien Vada</span></p>
+            <p class="u-cast-note">Vidéo de l’Agence française anticorruption.</p>
+        </div>
+            
+            <p class="u-suivant"><a href="/spectacles/hommemoderne/" data-track="univers_suivant" data-track-detail="L’Homme moderne">
+                <span class="u-suivant-quoi">Film suivant</span>
+                <span class="u-suivant-titre">L’Homme moderne</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-right"></use></svg></a></p>
+        </footer>
+
+<!-- Agrandissement : la photo entière, jamais recadrée. C'est le
+             recours quand le plein cadre ne dit pas ce qu'on regarde. -->
+        <div class="u-zoom" hidden role="dialog" aria-modal="true" aria-label="Photo agrandie">
+            <button type="button" class="u-close u-zoom-close" aria-label="Fermer la photo">
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-xmark"></use></svg>
+            </button>
+            <button type="button" class="u-zoom-nav u-zoom-prev" aria-label="Photo précédente">
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-chevron-left"></use></svg>
+            </button>
+            <button type="button" class="u-zoom-nav u-zoom-next" aria-label="Photo suivante">
+                <svg class="ico" aria-hidden="true"><use href="#i-solid-chevron-right"></use></svg>
+            </button>
+            <figure>
+                <img alt="" decoding="async">
+                <figcaption></figcaption>
+            </figure>
+        </div>
+    </main>
+
+    <!-- LES DATES, LUES ICI COMME SUR L'ACCUEIL.
+         Le pied de cette page a été écrit à la génération : c'est un repli
+         honnête — il s'affiche sans JavaScript et part avec le fichier —
+         mais il vieillit. Il ne bougeait qu'au prochain passage des deux
+         scripts de build, si bien qu'une date saisie dans /admin/ pouvait
+         rester invisible ici pendant des semaines, alors que l'accueil
+         l'annonçait déjà.
+
+         Ces deux fichiers rendent la page vivante, dans l'ordre qu'ils ont
+         sur l'accueil : dates.js pose la copie de repli, dates-live.js la
+         remplace si Supabase répond. univers.js, chargé ensuite, redessine
+         le pied à partir de l'une ou de l'autre. Le HTML généré ne sert donc
+         plus qu'à celui qui n'exécute rien — un robot, un navigateur sans
+         script — et le visiteur voit toujours l'état du jour. -->
+    <script src="../../dates.js"></script>
+    <script src="../../dates-live.js"></script>
+
+    <!-- Le moteur, dans l'ordre : la régie (le défilement qui mène les
+         scènes, là où le navigateur ne le fait pas lui-même), le montage
+         (univers.js s'en sert), puis univers.js, qui reconnaît la classe du
+         <body> et anime le panneau déjà en place. Aucun n'est propre à
+         cette page. -->
+    <script src="../../regie.js"></script>
+    <script src="../../univers-montage.js"></script>
+    <script src="../../univers.js"></script>
+</body>
+
+</html>

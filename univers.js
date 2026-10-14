@@ -643,6 +643,39 @@ const SHOW_UNIVERSES = {
         ]
     },
 
+    'Agence française anticorruption : dans les ports': {
+        slug: 'corruptionports',
+        kind: 'film',
+        // Pas d'affiche ni de photos de tournage : la page s'ouvre sur la
+        // bande-annonce, puis la vidéo entière.
+        heroCta: 'La bande-annonce',
+        // Un port la nuit : l'acier du quai, le bleu d'encre de l'eau, et
+        // l'orange des conteneurs pour accent.
+        palette: {
+            bg: '#0a1119', surface: '#121c28', text: '#e6ecf2', muted: '#8d9bab',
+            accent: '#d9652b', accentInk: '#f08a52', onAccent: '#0a1119',
+            line: 'rgba(230,236,242,0.14)', glow: 'rgba(60,110,160,0.34)'
+        },
+        genre: 'Film de prévention',
+        synopsis: ['Du repérage à la pression, chaque métier du port peut être approché. Une vidéo de formation, tirée de situations réelles, pour reconnaître la corruption avant qu’elle ne s’installe.'],
+        cast: ['Adrien Vada'],
+        castNote: 'Vidéo de l’Agence française anticorruption.',
+        sequence: [
+            {
+                chapter: 'AFA',
+                chapterTitle: 'Une vidéo de formation de l’Agence française anticorruption sur les risques de corruption dans les zones portuaires — 2025.'
+            },
+            {
+                video: 'https://youtu.be/2Lh7Fhcc_sU',
+                c: ['La bande-annonce.']
+            },
+            {
+                video: 'https://youtu.be/fJN8XPC67aw',
+                c: ['La vidéo entière.']
+            },
+        ]
+    },
+
     "L’Homme moderne": {
         slug: 'hommemoderne',
         kind: 'film',
