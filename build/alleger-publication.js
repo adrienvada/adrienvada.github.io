@@ -112,7 +112,7 @@ function fichiersDuSite() {
     };
     const existants = liste => liste.filter(f => fs.existsSync(path.join(RACINE, f)));
     return {
-        html: existants(['index.html', '404.html'])
+        html: existants(['index.html', '404.html', 'date/index.html'])
             .concat(lister('spectacles', '.html'))
             .concat(lister('galerie', '.html')),
         js: existants([
@@ -335,7 +335,7 @@ async function main() {
     }
 
     const fichiers = fichiersDuSite();
-    const pages = ['/', '/404.html', '/spectacles/', '/galerie/'];
+    const pages = ['/', '/404.html', '/date/', '/spectacles/', '/galerie/'];
     const premier = fichiers.html.find(f => /^spectacles[\\/][^\\/]+[\\/]index\.html$/.test(f));
     if (premier) pages.push('/' + path.dirname(premier).split(path.sep).join('/') + '/');
     let temoin = null;

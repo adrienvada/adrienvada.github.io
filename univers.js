@@ -2993,13 +2993,96 @@ const SHOW_UNIVERSES = {
         overlay.addEventListener('pointercancel', lacher);
     }
 
+    // ── ENVOYER UNE DATE ──
+    //  Le geste de « Partager » : la date part chez quelqu'un. Le texte et
+    //  l'adresse viennent de partageDe (univers-montage.js). Par la feuille
+    //  de partage du téléphone quand il en a une (Web Share) ; sinon —
+    //  Firefox, un ordinateur sous Linux — le message est copié, et le
+    //  bouton le dit deux secondes (une coche, « copiée » pour les lecteurs
+    //  d'écran). Refermer la feuille sans rien envoyer n'est pas un échec :
+    //  rien ne se passe. Publié (window.partagerUneDate) : l'onglet Dates de
+    //  l'accueil s'en sert aussi. La copie et l'annonce de l'accueil
+    //  (window.copierTexte, window.annoncerCopie) sont reprises quand elles
+    //  sont là ; sur une page spectacle, ce sont celles d'ici.
+    function annoncerEnvoi(texte) {
+        if (typeof window.annoncerCopie === 'function') { window.annoncerCopie(texte); return; }
+        let zone = document.getElementById('u-annonce-envoi');
+        if (!zone) {
+            zone = document.createElement('p');
+            zone.id = 'u-annonce-envoi';
+            zone.className = 'u-sr';
+            zone.setAttribute('aria-live', 'polite');
+            document.body.appendChild(zone);
+        }
+        zone.textContent = '';
+        requestAnimationFrame(() => { zone.textContent = texte; });
+    }
+    function copierEnvoi(texte) {
+        if (typeof window.copierTexte === 'function') return window.copierTexte(texte);
+        const parSelection = () => {
+            const avant = document.activeElement;
+            const champ = document.createElement('textarea');
+            champ.value = texte;
+            champ.setAttribute('readonly', '');
+            champ.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+            document.body.appendChild(champ);
+            champ.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { }
+            champ.remove();
+            if (avant && avant !== document.body && avant.isConnected) avant.focus({ preventScroll: true });
+            return ok;
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(texte).then(() => true, parSelection);
+        }
+        return Promise.resolve(parSelection());
+    }
+    const envoiMinuteries = new WeakMap();
+    //  → une promesse : 'partage', 'copie', ou false (annulé, impossible).
+    function partagerUneDate(partage, bouton) {
+        if (!partage) return Promise.resolve(false);
+        if (typeof track === 'function') track('date_partage', { detail: partage.spectacle || partage.titre || '' });
+        const parCopie = () => copierEnvoi(partage.message).then((ok) => {
+            if (!ok) { annoncerEnvoi(`Copie impossible. ${partage.message}`); return false; }
+            annoncerEnvoi(`Date copiée : ${partage.message.split('\n')[0]}. À coller dans un message.`);
+            const use = bouton && bouton.querySelector('use');
+            if (use) {
+                use.setAttribute('href', '#i-solid-check');
+                bouton.classList.add('est-copie');
+                clearTimeout(envoiMinuteries.get(bouton));
+                envoiMinuteries.set(bouton, setTimeout(() => {
+                    use.setAttribute('href', '#i-solid-share-nodes');
+                    bouton.classList.remove('est-copie');
+                }, 2000));
+            }
+            return 'copie';
+        });
+        if (typeof navigator.share !== 'function') return parCopie();
+        // Le texte seul, liens compris (voir partageDe) : l'univers y vient
+        // avant la billetterie, et c'est lui qui fait l'aperçu.
+        return navigator.share({ title: partage.titre, text: partage.message }).then(
+            () => 'partage',
+            (e) => (e && e.name === 'AbortError' ? false : parCopie()));
+    }
+    window.partagerUneDate = partagerUneDate;
+
+    //  Le dossier du spectacle sous /spectacles/ : celui de l'univers ouvert
+    //  depuis le CV, ou celui de la page statique, lu dans son adresse —
+    //  son <body> ne porte que le titre (data-u-show), qui n'en est pas un.
+    function dossierDuSpectacle() {
+        if (overlay?.dataset.slug) return overlay.dataset.slug;
+        const m = location.pathname.match(/\/spectacles\/([a-z0-9-]+)\//);
+        return m ? m[1] : '';
+    }
+
     // La même fabrique que calOptionClick(), dans index.html : agendaDe
     // (univers-montage.js) écrit le fichier et les adresses — l'heure de
     // Paris, un identifiant tiré de la séance, la norme iCalendar.
     function agendaAction(type, data) {
         if (!data) return;
         if (typeof track === 'function') track('date_agenda', { spectacle: data.title || '', par: type });
-        const slug = overlay?.dataset.slug || document.body.dataset.uShow || '';
+        const slug = dossierDuSpectacle();
         const agenda = agendaDe(Object.assign({}, data, {
             page: slug ? `https://adrienvada.fr/spectacles/${slug}/` : ''
         }));
@@ -3088,6 +3171,17 @@ const SHOW_UNIVERSES = {
                 if (data) openAgendaModal(data, calBtn);
                 return;
             }
+            // Envoyer la date : les données sont celles du bouton d'agenda
+            // voisin (voir agendaHtml, univers-montage.js) — toutes les
+            // séances d'une série.
+            const envoi = e.target.closest('.u-date-partage');
+            if (envoi) {
+                let data = null;
+                try { data = JSON.parse(envoi.closest('.u-dl')?.querySelector('.u-date-cal')?.dataset.cal || 'null'); } catch (err) { }
+                if (!data) return;
+                partagerUneDate(UniversMontage.partageDe(Array.isArray(data.seances) ? data.seances : [data], { page: dossierDuSpectacle() }), envoi);
+                return;
+            }
             const seance = e.target.closest('[data-u-cal-seance]');
             if (seance) {
                 const groupe = seance.parentElement;
@@ -3155,7 +3249,9 @@ const SHOW_UNIVERSES = {
                 if (!foot) return;
                 // Rien à préparer : ce qui se trouve en chemin s'anime au
                 // défilement, et se trouve dans son état final à l'arrivée.
-                foot.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+                // Une date envoyée (accueillirLaDateVisee) : on va à sa ligne.
+                const visee = foot.querySelector('.u-dl--visee');
+                (visee || foot).scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: visee ? 'center' : 'start' });
                 // LE FOCUS SUIT LE SAUT. La page défilait jusqu'aux dates, mais
                 // le focus restait sur le bouton, là-haut : la touche Tab
                 // suivante renvoyait à la première photo, et il fallait
@@ -3380,6 +3476,41 @@ const SHOW_UNIVERSES = {
             const ghost = footGhostHtml(etat);
             if (ghost) barre.insertAdjacentHTML('beforeend', ghost);
         }
+        accueillirLaDateVisee(racine);
+    }
+
+    // ── LA DATE QU'ON VOUS A ENVOYÉE ──
+    //  Une date partagée mène à la page de son spectacle, la date dans
+    //  l'adresse (/spectacles/berenice/?date=2027-01-30 ; voir partageDe,
+    //  univers-montage.js) : l'aperçu du message est la carte du spectacle,
+    //  et la page accueille la date sans rien ajouter à l'écran. Le bouton
+    //  d'en-tête, « Accéder aux dates », la dit (« Sam. 30 janv. ·
+    //  Saint-Lô ») et y mène ; sa ligne, au pied, est mise en avant
+    //  (.u-dl--visee), avec sa réservation et son agenda. Une date passée ou
+    //  retirée ne change rien : la page reste celle de tout le monde.
+    //  Refait après chaque réécriture du pied (les dates en direct).
+    const JOURS_BREFS = ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'];
+    const MOIS_BREFS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    function accueillirLaDateVisee(racine) {
+        let visee = '';
+        try { visee = new URLSearchParams(location.search).get('date') || ''; } catch (e) { }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(visee) || !racine) return;
+        const ligne = [...racine.querySelectorAll('.u-foot .u-dl')].find((li) => {
+            let d = null;
+            try { d = JSON.parse(li.querySelector('.u-date-cal')?.dataset.cal || 'null'); } catch (e) { }
+            return d && (Array.isArray(d.seances) ? d.seances : [d]).some((s) => s.icsDate === visee);
+        });
+        if (!ligne) return;
+        ligne.classList.add('u-dl--visee');
+        const bouton = racine.querySelector('.u-hero-actions [data-u-jump]');
+        if (!bouton) return;
+        const [a, m, j] = visee.split('-').map(Number);
+        const jour = new Date(Date.UTC(a, m - 1, j, 12));
+        const ville = ligne.querySelector('.u-dl-ville')?.textContent.trim() || '';
+        const libelle = `${JOURS_BREFS[jour.getUTCDay()]} ${j === 1 ? '1er' : j} ${MOIS_BREFS[m - 1]}${ville ? ` · ${ville}` : ''}`;
+        bouton.innerHTML = `${escape(libelle)} <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>`;
+        bouton.setAttribute('aria-label', `Aller à la date : ${libelle}`);
+        bouton.dataset.uVisee = '';
     }
 
     // dates-live.js appelle ce nom quand Supabase a répondu. Il est posé au

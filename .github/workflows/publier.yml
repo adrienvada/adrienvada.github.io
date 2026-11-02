@@ -48,7 +48,12 @@ concurrency:
 
 jobs:
   publier:
-    runs-on: ubuntu-latest
+    # UBUNTU 24.04, ET NON « LA DERNIÈRE ». ubuntu-latest est passé à
+    # 26.04 en novembre 2026, où Playwright 1.56.1 (build/package.json) ne
+    # sait pas installer Chromium : la vérification s'arrêtait avant la
+    # première épreuve, et la publication partait sans CV en PDF refait. On
+    # monte l'image en même temps que Playwright, en regardant le résultat.
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deploiement.outputs.page_url }}

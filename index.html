@@ -6887,7 +6887,7 @@
            jusqu'à ses puces. */
         .dl {
             display: grid;
-            grid-template-columns: 48px minmax(0, 1fr);
+            grid-template-columns: 48px minmax(0, 1fr) auto;
             column-gap: 11px;
             align-items: center;
             margin-right: -1rem;
@@ -7268,37 +7268,94 @@
             font-weight: 500;
         }
 
-        /* Il prend 4 px sur la marge de droite, que son dessin laisse vide :
-           une série de deux séances tient alors sur une rangée dès 375 px. */
-        .dl-seances-agenda {
-            margin-left: auto;
-            margin-right: -4px;
-        }
-
-        /* Sur grand écran, la rangée ne passe jamais à la ligne, et le bord
-           droit est loin : l'agenda suit les puces. */
-        @media (min-width: 768px) {
-            .dl-seances-agenda {
-                margin: 0 0 0 2px;
-            }
-        }
-
+        /* LA FEUILLE EST L'AGENDA (dlAgenda) : le bouton n'a pas de dessin
+           à lui, c'est la feuille d'éphéméride qu'on touche. Un « + » posé
+           à son coin haut droit, sur le bandeau du mois, dit qu'on peut la
+           garder — en bas, il mordait sur le jour de la semaine d'une série
+           (« ven–sam ») ; au survol, elle se soulève d'un pixel. 48 × 56 :
+           la cible du doigt, sans rien ajouter. */
         .dl-agenda {
+            position: relative;
+            display: block;
+            padding: 0;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .dl-agenda .dl-feuille {
+            transition: transform var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
+        }
+
+        .dl-agenda:hover .dl-feuille {
+            transform: translateY(-1px);
+        }
+
+        .dl-agenda:focus-visible {
+            outline: 2px solid var(--dl-a, rgb(var(--c-gold-ink)));
+            outline-offset: 3px;
+        }
+
+        /* À −3 px du haut, pas plus : une ligne de 64 px laisse 4 px au-dessus
+           de la feuille, et la pastille ne doit pas déborder sur la ligne
+           d'avant, qui la recouvrirait. */
+        .dl-agenda-plus {
+            position: absolute;
+            z-index: 1;
+            right: -6px;
+            top: -3px;
             display: grid;
             place-items: center;
-            width: 24px;
-            height: 24px;
-            border-radius: 6px;
-            color: rgb(var(--c-gold-ink));
-            transition: background-color var(--dur-quick) ease;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgb(var(--c-surface));
+            color: var(--dl-encre, rgb(var(--c-gold-ink)));
+            box-shadow: 0 0 0 1.5px var(--dl-a, rgb(var(--c-gold))), 0 1px 2px rgb(0 0 0 / 0.2);
         }
 
-        .dl-agenda:hover {
-            background: rgb(var(--c-gold) / 0.1);
+        /* Le « + », deux traits : aucun dessin du sprite n'en tient lieu. */
+        .dl-agenda-plus::before,
+        .dl-agenda-plus::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 8px;
+            height: 1.75px;
+            border-radius: 1px;
+            background: currentColor;
+            transform: translate(-50%, -50%);
         }
 
-        .dl-agenda .ico {
-            font-size: 13px;
+        .dl-agenda-plus::after {
+            transform: translate(-50%, -50%) rotate(90deg);
+        }
+
+        /* ENVOYER LA DATE (dlEnvoi) : à droite de la ligne, rond, centré sur
+           elle, cerné de la couleur du spectacle — en face de la feuille. */
+        /* 32 px, et 4 px repris sur l'écart de la grille : la rangée des
+           séances d'une série de deux soirs tient encore sur une ligne. */
+        .dl-partage {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 32px;
+            height: 32px;
+            margin-left: -4px;
+            border-radius: 50%;
+            border: 1px solid color-mix(in srgb, var(--dl-a, rgb(var(--c-gold))) 55%, transparent);
+            color: var(--dl-encre, rgb(var(--c-gold-ink)));
+            transition: background-color var(--dur-quick) ease, border-color var(--dur-quick) ease;
+        }
+
+        .dl-partage:hover,
+        .dl-partage.est-copie {
+            border-color: var(--dl-a, rgb(var(--c-gold)));
+            background: color-mix(in srgb, var(--dl-a, rgb(var(--c-gold))) 12%, transparent);
+        }
+
+        .dl-partage .ico {
+            font-size: 14px;
         }
 
         /* AU DOIGT, DES CIBLES À SA TAILLE. Les puces de séance — celles qui
@@ -7329,21 +7386,18 @@
                 inset: -5px -3px;
             }
 
-            .dl-agenda {
-                position: relative;
-                width: 34px;
-                height: 34px;
-                border-radius: 8px;
+            /* L'envoi : le même dessin, une zone de 44 px au doigt qui
+               déborde sans rien pousser. */
+            .dl-partage {
+                width: 36px;
+                height: 36px;
             }
 
-            .dl-agenda::after {
+            .dl-partage::after {
                 content: '';
                 position: absolute;
-                inset: -3px;
-            }
-
-            .dl-agenda .ico {
-                font-size: 15px;
+                inset: -4px;
+                border-radius: 50%;
             }
         }
 
@@ -7664,7 +7718,8 @@
                 display: none !important;
             }
 
-            .dl-agenda {
+            .dl-agenda,
+            .dl-partage {
                 display: none !important;
             }
 
@@ -13543,17 +13598,33 @@
             return `<li class="dl-seance"><span class="dl-puce dl-puce--muette">${jour}${p.heure ? `${heure} · ` : ''}<i>billetterie à venir</i></span></li>`;
         }
 
-        // L'agenda ferme la rangée : un seul bouton par ligne. Pour une
-        // série, la fenêtre demande quelle séance ajouter (data-cal-serie :
-        // leurs places dans renderedEventsData) ; elle propose d'abord la
-        // première séance publique.
-        function dlAgenda(e) {
+        // LA FEUILLE EST L'AGENDA : un seul bouton par ligne, à gauche, et le
+        // dessin qui dit la date est celui qu'on touche pour la garder (un
+        // « + » à son coin le signale). Il fermait la rangée des séances,
+        // petit et seul à droite, souvent passé à la ligne. Pour une série,
+        // la fenêtre demande quelle séance ajouter (data-cal-serie : leurs
+        // places dans renderedEventsData) ; elle propose d'abord la première
+        // séance publique.
+        function dlAgenda(e, feuille) {
             const p = e.perfs.find(q => !q.ecole) || e.perfs[0];
             const serie = e.perfs.length > 1;
             const quand = serie && e.debut ? dlDateEnLettres(e.jours, true) : dlQuandComplet(p);
-            return `<li class="dl-seances-agenda"><button type="button" class="dl-agenda" data-cal-index="${p.cal}"`
+            return `<button type="button" class="dl-agenda" data-cal-index="${p.cal}"`
                 + (serie ? ` data-cal-serie="${e.perfs.map(q => q.cal).join(' ')}"` : '')
-                + ` aria-label="${esc(`Ajouter au calendrier : ${e.titre}, ${quand}`)}"><svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button></li>`;
+                + ` aria-label="${esc(`Ajouter au calendrier : ${e.titre}, ${quand}`)}">${feuille}`
+                + '<span class="dl-agenda-plus" aria-hidden="true"></span></button>';
+        }
+
+        // ENVOYER LA DATE à quelqu'un (data-dl-partage : les places de toutes
+        // ses séances ; voir dlPartager) : le message dit la date et le lieu,
+        // puis mène à la page du spectacle et à la billetterie. À droite de
+        // la ligne, rond, centré sur elle : le geste qui fait venir du monde
+        // se voit, en face de la feuille.
+        function dlEnvoi(e) {
+            const p = e.perfs.find(q => !q.ecole) || e.perfs[0];
+            const quand = e.perfs.length > 1 && e.debut ? dlDateEnLettres(e.jours, true) : dlQuandComplet(p);
+            return `<button type="button" class="dl-partage" data-dl-partage="${e.perfs.map(q => q.cal).join(' ')}"`
+                + ` aria-label="${esc(`Envoyer cette date : ${e.titre}, ${quand}`)}"><svg class="ico" aria-hidden="true"><use href="#i-solid-share-nodes"></use></svg></button>`;
         }
 
         // La ligne. `vue` : 'date' (sous un intercalaire de mois, le titre
@@ -13577,11 +13648,12 @@
                 + (l.ville && l.salle ? ' · ' : '') + esc(l.salle) + (l.dep ? ` (${esc(l.dep)})` : '');
             return `<article class="dl ${e.serie ? 'dl--serie' : 'dl--seule'}" id="dl-e${e.k}"`
                 + ` data-dl-cle="${esc((e.debut ? e.debut.iso : '') + '|' + e.titre)}" style="${dlStyle(e.spectacle)}">`
-                + dlFeuille(e, vue)
+                + dlAgenda(e, dlFeuille(e, vue))
                 + `<div class="dl-corps"><p class="dl-quand sr-only">${esc(quand)}</p>`
                 + titre
                 + `<p class="dl-lieu">${vue === 'date' ? '' : pastille}${lieu}</p>`
-                + `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}${dlAgenda(e)}</ul></div></article>`;
+                + `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}</ul></div>`
+                + `${dlEnvoi(e)}</article>`;
         }
 
         function dlParMois(entrees) {
@@ -14259,6 +14331,13 @@
                 if (data) calChoisirSeance(data);
                 return;
             }
+            const envoi = e.target.closest('[data-dl-partage]');
+            if (envoi) {
+                e.preventDefault();
+                e.stopPropagation();
+                dlPartager(envoi);
+                return;
+            }
             const cal = e.target.closest('[data-cal-index]');
             if (!cal) return;
             e.preventDefault();
@@ -14908,35 +14987,47 @@
         // ════════════════════════════════════════════════════════════════
         //  PARTAGER CETTE DATE
         //  La fenêtre pose une date dans SON agenda ; ce geste-ci l'envoie à
-        //  quelqu'un — le spectateur qui demande « on y va ? ». Un texte qui
-        //  se lit tel quel dans un message, « Bérénice — jeu. 12 nov. à
-        //  20h00, Le Forum, Falaise (14) », et le lien de la page du
-        //  spectacle (l'onglet Dates, s'il n'en a pas). Les adresses sont
+        //  quelqu'un — le spectateur qui demande « on y va ? ». Deux portes :
+        //  le bouton « Envoyer cette date » de chaque ligne (dlPartager : la
+        //  ligne entière, une série avec toutes ses séances), et la ligne
+        //  « Partager cette date » de la fenêtre d'agenda (calPartager : la
+        //  séance choisie). Le message vient de partageDe (univers-montage.js)
+        //  — la date, le lieu, la billetterie quand elle est ouverte — et
+        //  mène à la page d'invitation (/date/), où le destinataire réserve,
+        //  l'ajoute à son agenda ou cherche son chemin. Les adresses sont
         //  celles du site public, même depuis un aperçu : c'est là que le
         //  destinataire doit arriver.
         //
         //  La feuille de partage du téléphone quand il en a une (Web Share).
-        //  Sinon — Firefox, un ordinateur sous Linux —, le texte et le lien
-        //  sont copiés par le mécanisme de « Copier une adresse », et la
-        //  ligne le dit deux secondes ; #annonce-copie le dit aux lecteurs
-        //  d'écran. Refermer la feuille de partage sans rien envoyer n'est
-        //  pas un échec : rien ne se passe. La date partie, la fenêtre se
-        //  referme, comme après « Ajouter ».
+        //  Sinon — Firefox, un ordinateur sous Linux —, le message est copié
+        //  par le mécanisme de « Copier une adresse » (window.copierTexte) ;
+        //  #annonce-copie le dit aux lecteurs d'écran. Refermer la feuille de
+        //  partage sans rien envoyer n'est pas un échec : rien ne se passe.
+        //  La date partie depuis la fenêtre, celle-ci se referme, comme après
+        //  « Ajouter ».
         // ════════════════════════════════════════════════════════════════
         let calPartageMinuterie = 0;
 
-        // La date comme on la dit : le jour abrégé, l'heure — ou ce qui en
-        // tient lieu (« matin », « horaire à confirmer ») —, la séance
-        // scolaire si c'en est une, puis le lieu exact.
-        function calTexteDeLaDate(data) {
-            const j = dlJour(data.icsDate);
-            const quand = j ? `${DL_JOURS_COURTS[j.js]} ${dlQuantieme(j)} ${DL_MOIS_COURTS[j.m]}` : (data.dateLabel || '');
-            const heure = performanceTimeStr(data);
-            const horloge = /^\d{1,2}\s*[hH:]/.test(heure);
-            const notes = [horloge ? '' : (heure || 'horaire à confirmer'), data.ecole ? 'séance scolaire' : ''].filter(Boolean);
-            return `${data.title || ''} — ${quand}${horloge ? ` à ${heure}` : ''}`
-                + (notes.length ? ` (${notes.join(', ')})` : '')
-                + (data.location ? `, ${data.location}` : '');
+        // Une séance de renderedEventsData, dans la langue de partageDe.
+        function dlSeancePartagee(d) {
+            return {
+                title: d.title, subtitle: d.subtitle, location: d.location, icsDate: d.icsDate,
+                time: d.time, times: d.times, scolaire: !!d.ecole, billetterie: d.billetterie
+            };
+        }
+
+        function dlPartage(datas) {
+            const liste = datas.filter(Boolean);
+            if (!liste.length || typeof UniversMontage === 'undefined') return null;
+            return UniversMontage.partageDe(liste.map(dlSeancePartagee), { page: liste[0].slug || '' });
+        }
+
+        // Le bouton de la ligne : il garde sa coche deux secondes quand la
+        // date a été copiée (voir partagerUneDate, univers.js).
+        function dlPartager(bouton) {
+            const datas = (bouton.dataset.dlPartage || '').split(' ').filter(Boolean).map(i => window.renderedEventsData[+i]);
+            const partage = dlPartage(datas);
+            if (partage && typeof window.partagerUneDate === 'function') window.partagerUneDate(partage, bouton);
         }
 
         // Le sous-titre dit ce qui va se passer : la feuille de partage, ou
@@ -14950,34 +15041,20 @@
         }
 
         function calPartager() {
-            const data = currentCalendarEventData;
-            if (!data) return;
-            // Le geste qui fait venir quelqu'un d'autre. Le détail est le
-            // spectacle, comme pour date_agenda : rien de plus que la page.
-            track('date_partage', { detail: data.title || '' });
-            const texte = calTexteDeLaDate(data);
-            const url = data.slug ? `https://adrienvada.fr/spectacles/${data.slug}/` : 'https://adrienvada.fr/#page_dates';
-            const copier = () => (window.copierTexte ? window.copierTexte(`${texte}\n${url}`) : Promise.resolve(false))
-                .then((ok) => {
-                    const annoncer = window.annoncerCopie || (() => { });
-                    if (!ok) {
-                        annoncer(`Copie impossible. ${texte}, ${url}`);
-                        return;
-                    }
-                    annoncer(`Date copiée : ${texte}`);
-                    const aide = document.getElementById('cal-partager-aide');
-                    if (aide) aide.textContent = 'Copiée : à coller dans un message';
-                    setIcon(document.getElementById('cal-partager-signe'), 'solid-check');
-                    clearTimeout(calPartageMinuterie);
-                    calPartageMinuterie = setTimeout(calPartageAuRepos, 2000);
-                });
-            if (typeof navigator.share !== 'function') {
-                copier();
-                return;
-            }
-            navigator.share({ title: data.title || 'Adrien Vada', text: texte, url }).then(
-                () => { if (openModalEl && openModalEl.id === 'calendar-modal') closeCalendarModal(); },
-                (e) => { if (!e || e.name !== 'AbortError') copier(); });
+            const partage = dlPartage([currentCalendarEventData]);
+            if (!partage || typeof window.partagerUneDate !== 'function') return;
+            window.partagerUneDate(partage, null).then((issue) => {
+                if (issue === 'partage') {
+                    if (openModalEl && openModalEl.id === 'calendar-modal') closeCalendarModal();
+                    return;
+                }
+                if (issue !== 'copie') return;
+                const aide = document.getElementById('cal-partager-aide');
+                if (aide) aide.textContent = 'Copiée : à coller dans un message';
+                setIcon(document.getElementById('cal-partager-signe'), 'solid-check');
+                clearTimeout(calPartageMinuterie);
+                calPartageMinuterie = setTimeout(calPartageAuRepos, 2000);
+            });
         }
 
         // ════════════════════════════════════════════════════════════════

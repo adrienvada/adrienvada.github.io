@@ -1306,9 +1306,12 @@ const UniversMontage = (function () {
         return `<li><span class="u-dl-puce u-dl-puce--muette">${jour}${heure ? heure + ' · ' : ''}<i>billetterie à venir</i></span></li>`;
     }
 
-    function agendaHtml(rang, titre) {
+    // LA FEUILLE EST L'AGENDA : le dessin qui dit la date est le bouton qui
+    // la garde (un « + » à son coin le signale), comme dans l'onglet Dates.
+    // Sans date lisible, la feuille reste un dessin.
+    function agendaHtml(rang, titre, feuille) {
         const perfs = rang.perfs.filter(p => p.icsDate);
-        if (!perfs.length) return '';
+        if (!perfs.length) return feuille;
         // La séance proposée d'abord : la première ouverte au public.
         const p = perfs.find(q => !q.isSchool) || perfs[0];
         const donnee = (q) => ({
@@ -1318,9 +1321,20 @@ const UniversMontage = (function () {
         });
         const data = donnee(p);
         if (perfs.length > 1) data.seances = perfs.map(donnee);
-        return `<li class="u-dl-agenda"><button type="button" class="u-date-cal" data-cal="${escape(JSON.stringify(data))}"`
-            + ` aria-label="Ajouter au calendrier : ${escape(titre)}, ${escape(quandEnLettres(rang))}">`
-            + `<svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button></li>`;
+        return `<button type="button" class="u-date-cal" data-cal="${escape(JSON.stringify(data))}"`
+            + ` aria-label="Ajouter au calendrier : ${escape(titre)}, ${escape(quandEnLettres(rang))}">${feuille}`
+            + '<span class="u-dl-plus" aria-hidden="true"></span></button>';
+    }
+
+    // ENVOYER LA DATE à quelqu'un (partageDe, plus bas ; le geste est dans
+    // univers.js) : toute la ligne part, une série avec toutes ses séances.
+    // À droite de la ligne, rond, centré sur elle, en face de la feuille. Il
+    // relit les données du bouton d'agenda de sa ligne plutôt que de les
+    // écrire une seconde fois.
+    function envoiHtml(rang, titre) {
+        if (!rang.perfs.some(p => p.icsDate)) return '';
+        return `<button type="button" class="u-date-partage" aria-label="Envoyer cette date : ${escape(titre)}, ${escape(quandEnLettres(rang))}">`
+            + '<svg class="ico" aria-hidden="true"><use href="#i-solid-share-nodes"></use></svg></button>';
     }
 
     function datesHtml(perfs) {
@@ -1331,11 +1345,11 @@ const UniversMontage = (function () {
             const lieu = (l.ville ? `<span class="u-dl-ville">${escape(l.ville)}</span>` : '')
                 + (l.ville && l.salle ? ' · ' : '') + escape(l.salle) + (l.dep ? ` (${escape(l.dep)})` : '');
             return `<li class="u-dl${rang.perfs.length > 1 ? ' u-dl--serie' : ''}">`
-                + feuilleHtml(rang)
+                + agendaHtml(rang, titre, feuilleHtml(rang))
                 + `<div class="u-dl-corps"><p class="u-sr">${escape(quandEnLettres(rang))}</p>`
                 + `<p class="u-dl-lieu">${lieu || escape(rang.location)}</p>`
-                + `<ul class="u-dl-seances" role="list">${rang.perfs.map(p => puceHtml(p, rang, titre)).join('')}${agendaHtml(rang, titre)}</ul>`
-                + '</div></li>';
+                + `<ul class="u-dl-seances" role="list">${rang.perfs.map(p => puceHtml(p, rang, titre)).join('')}</ul>`
+                + `</div>${envoiHtml(rang, titre)}</li>`;
         }).join('');
         return `<ul class="u-dates" role="list">${rows}</ul>`;
     }
@@ -1687,7 +1701,103 @@ const UniversMontage = (function () {
         return { ics, google, outlook, fichier };
     }
 
+    // ── ENVOYER UNE DATE À QUELQU'UN ─────────────────────────────────
+    //  « On y va ? » : la date part dans un message, et doit s'y lire telle
+    //  quelle, sans ouvrir de lien — le spectacle, le jour et l'heure, le
+    //  lieu. Puis DEUX liens au plus, dans l'ordre où on les veut :
+    //
+    //      Bérénice — sam. 30 janv. à 18h00
+    //      Théâtre de la ville de Saint-Lô (50)
+    //
+    //      Le spectacle : https://adrienvada.fr/spectacles/berenice/?date=2027-01-30
+    //      Réserver : https://…
+    //
+    //  L'UNIVERS D'ABORD. Les messageries (WhatsApp, Signal, Messenger)
+    //  font l'aperçu du PREMIER lien : c'est la carte du spectacle — son
+    //  image de partage, son titre — qui paraît, et non la page de la
+    //  billetterie. La date voyage dans l'adresse (?date=) : la page du
+    //  spectacle l'accueille — son bouton d'en-tête la dit, sa ligne est
+    //  mise en avant au pied, avec la réservation et l'agenda (voir
+    //  accueillirLaDateVisee, univers.js). Un spectacle sans page mène à la
+    //  page d'invitation (/date/), qui relit la base et offre réservation,
+    //  agenda et itinéraire.
+    //
+    //  Les liens sont DANS le texte, et l'on partage le texte seul : passée
+    //  à part (`url`), l'adresse finissait au bout du message, après la
+    //  billetterie — dont l'aperçu prenait alors la place.
+    //
+    //  Une seule fabrique pour l'onglet Dates, la fenêtre d'agenda de
+    //  l'accueil et le pied des univers (le geste lui-même — feuille de
+    //  partage ou copie — est partagerUneDate, dans univers.js).
+    //    seances : [{ title, subtitle, location, icsDate, time ou times,
+    //                 scolaire, billetterie }] — une ligne de l'agenda :
+    //                 une séance, ou toutes celles d'une série
+    //    opts    : { page } — le dossier du spectacle sous /spectacles/
+    //  → null sans date lisible ; sinon { titre, message, url, spectacle } :
+    //    `message` est ce qui part (feuille de partage ou copie), `url` le
+    //    lien du site qu'il porte.
+    const slugTitre = (t) => sansAccents(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    //  L'adresse de la page d'invitation. `s` le spectacle (son titre en
+    //  lettres simples), `j` le jour, `h` l'heure quand on envoie UNE séance
+    //  (une série n'en a pas : la page les montre toutes), `p` sa page.
+    function lienDate(o) {
+        const q = [`s=${encodeURIComponent(slugTitre(o.titre))}`, `j=${o.jour}`];
+        if (o.heure) q.push(`h=${encodeURIComponent(o.heure)}`);
+        if (/^[a-z0-9-]+$/.test(o.page || '')) q.push(`p=${o.page}`);
+        return `${SITE}/date/?${q.join('&')}`;
+    }
+
+    //  « jeu. 12 nov. à 20h00 », « ven. 13 nov. (matin, séance scolaire) »,
+    //  « sam. 14 nov. (horaire à confirmer) ».
+    function seanceEnClair(s) {
+        const j = jourIso(s.icsDate);
+        const h = heuresDe(s);
+        const horloge = /^\d{1,2}\s*[hH:]/.test(h);
+        const notes = [horloge ? '' : (h && !/confirmer/i.test(h) ? h : 'horaire à confirmer'), s.scolaire ? 'séance scolaire' : ''].filter(Boolean);
+        return `${JOURS_COURTS[j.js]} ${j.j === 1 ? '1er' : j.j} ${MOIS_COURTS[j.m]}${horloge ? ` à ${h}` : ''}`
+            + (notes.length ? ` (${notes.join(', ')})` : '');
+    }
+
+    function partageDe(seances, opts) {
+        const datees = (seances || []).filter(s => s && jourIso(s.icsDate));
+        if (!datees.length) return null;
+        // Les séances scolaires d'une série n'intéressent pas l'ami à qui
+        // l'on écrit : elles ne partent que s'il n'y a qu'elles.
+        const ouvertes = datees.filter(s => !s.scolaire);
+        const liste = ouvertes.length ? ouvertes : datees;
+        const t = liste[0];
+        const titre = String(t.title || '').trim() || 'Spectacle';
+        const nom = t.subtitle ? `${titre} (${t.subtitle})` : titre;
+        const lieu = String(t.location || '').trim();
+        const publiques = liste.filter(s => !s.scolaire);
+        const billets = [...new Set(publiques.map(s => lienSur(s.billetterie)).filter(Boolean))];
+        // Une billetterie par séance (deux théâtres, deux adresses) : chaque
+        // séance porte la sienne ; sinon une ligne pour toutes.
+        const parSeance = billets.length > 1;
+        const lignes = [];
+        if (liste.length === 1) {
+            lignes.push(`${nom} — ${seanceEnClair(t)}`);
+            if (lieu) lignes.push(lieu);
+        } else {
+            lignes.push(nom);
+            if (lieu) lignes.push(lieu);
+            liste.forEach(s => {
+                const b = parSeance && !s.scolaire ? lienSur(s.billetterie) : '';
+                lignes.push(`· ${seanceEnClair(s)}${b ? ` — réserver : ${b}` : ''}`);
+            });
+        }
+        const page = /^[a-z0-9-]+$/.test((opts && opts.page) || '') ? opts.page : '';
+        const url = page ? `${SITE}/spectacles/${page}/?date=${t.icsDate}`
+            : lienDate({ titre, jour: t.icsDate, heure: liste.length === 1 && !/confirmer/i.test(heuresDe(t)) ? heuresDe(t) : '' });
+        lignes.push('', `${page ? 'Le spectacle' : 'Infos et agenda'} : ${url}`);
+        if (billets.length === 1) lignes.push(`Réserver : ${billets[0]}`);
+        else if (!billets.length && publiques.length) lignes.push('Réservations pas encore ouvertes.');
+        return { titre: nom, message: lignes.join('\n'), url, spectacle: titre };
+    }
+
     return {
+        partageDe, lienDate, slugTitre, seanceEnClair, jourIso, heuresDe, JOURS_LONGS, MOIS_LONGS,
         panelHtml, datesHtml, chapitresDe, salleDe, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, agendaDe, photoPrincipale, couverture, organisateurs,
         toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,
