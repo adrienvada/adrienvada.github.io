@@ -6887,7 +6887,7 @@
            jusqu'à ses puces. */
         .dl {
             display: grid;
-            grid-template-columns: 48px minmax(0, 1fr);
+            grid-template-columns: 48px minmax(0, 1fr) auto;
             column-gap: 11px;
             align-items: center;
             margin-right: -1rem;
@@ -7268,76 +7268,94 @@
             font-weight: 500;
         }
 
-        /* Il prend 4 px sur la marge de droite, que son dessin laisse vide :
-           une série de deux séances tient alors sur une rangée dès 375 px. */
-        .dl-seances-agenda {
-            margin-left: auto;
-            margin-right: -4px;
-        }
-
-        /* Sur grand écran, la rangée ne passe jamais à la ligne, et le bord
-           droit est loin : l'agenda suit les puces. */
-        @media (min-width: 768px) {
-            .dl-seances-agenda {
-                margin: 0 0 0 2px;
-            }
-        }
-
+        /* LA FEUILLE EST L'AGENDA (dlAgenda) : le bouton n'a pas de dessin
+           à lui, c'est la feuille d'éphéméride qu'on touche. Un « + » posé
+           à son coin haut droit, sur le bandeau du mois, dit qu'on peut la
+           garder — en bas, il mordait sur le jour de la semaine d'une série
+           (« ven–sam ») ; au survol, elle se soulève d'un pixel. 48 × 56 :
+           la cible du doigt, sans rien ajouter. */
         .dl-agenda {
+            position: relative;
+            display: block;
+            padding: 0;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .dl-agenda .dl-feuille {
+            transition: transform var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
+        }
+
+        .dl-agenda:hover .dl-feuille {
+            transform: translateY(-1px);
+        }
+
+        .dl-agenda:focus-visible {
+            outline: 2px solid var(--dl-a, rgb(var(--c-gold-ink)));
+            outline-offset: 3px;
+        }
+
+        /* À −3 px du haut, pas plus : une ligne de 64 px laisse 4 px au-dessus
+           de la feuille, et la pastille ne doit pas déborder sur la ligne
+           d'avant, qui la recouvrirait. */
+        .dl-agenda-plus {
+            position: absolute;
+            z-index: 1;
+            right: -6px;
+            top: -3px;
             display: grid;
             place-items: center;
-            width: 24px;
-            height: 24px;
-            border-radius: 6px;
-            color: rgb(var(--c-gold-ink));
-            transition: background-color var(--dur-quick) ease;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgb(var(--c-surface));
+            color: var(--dl-encre, rgb(var(--c-gold-ink)));
+            box-shadow: 0 0 0 1.5px var(--dl-a, rgb(var(--c-gold))), 0 1px 2px rgb(0 0 0 / 0.2);
         }
 
-        .dl-agenda:hover {
-            background: rgb(var(--c-gold) / 0.1);
+        /* Le « + », deux traits : aucun dessin du sprite n'en tient lieu. */
+        .dl-agenda-plus::before,
+        .dl-agenda-plus::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 8px;
+            height: 1.75px;
+            border-radius: 1px;
+            background: currentColor;
+            transform: translate(-50%, -50%);
         }
 
-        .dl-agenda .ico {
-            font-size: 13px;
+        .dl-agenda-plus::after {
+            transform: translate(-50%, -50%) rotate(90deg);
         }
 
-        /* LA PREMIÈRE LIGNE ET L'ENVOI DE LA DATE (dlEnvoi). Le bouton tient
-           dans la hauteur du titre — ses marges négatives le laissent
-           déborder sans rien pousser : la ligne garde sa hauteur au pixel.
-           Le titre s'arrête avant lui, sur ses points de suspension. */
-        .dl-tete {
-            display: flex;
-            align-items: flex-start;
-            gap: 6px;
-            min-width: 0;
-        }
-
-        .dl-tete>.dl-titre,
-        .dl-tete>.dl-lieu {
-            flex: 1 1 auto;
-            min-width: 0;
-        }
-
+        /* ENVOYER LA DATE (dlEnvoi) : à droite de la ligne, rond, centré sur
+           elle, cerné de la couleur du spectacle — en face de la feuille. */
+        /* 32 px, et 4 px repris sur l'écart de la grille : la rangée des
+           séances d'une série de deux soirs tient encore sur une ligne. */
         .dl-partage {
             position: relative;
-            flex-shrink: 0;
             display: grid;
             place-items: center;
-            width: 24px;
-            height: 24px;
-            margin: -4.5px -4px -4.5px 0;
-            border-radius: 6px;
-            color: rgb(var(--c-gold-ink));
-            transition: background-color var(--dur-quick) ease;
+            width: 32px;
+            height: 32px;
+            margin-left: -4px;
+            border-radius: 50%;
+            border: 1px solid color-mix(in srgb, var(--dl-a, rgb(var(--c-gold))) 55%, transparent);
+            color: var(--dl-encre, rgb(var(--c-gold-ink)));
+            transition: background-color var(--dur-quick) ease, border-color var(--dur-quick) ease;
         }
 
         .dl-partage:hover,
         .dl-partage.est-copie {
-            background: rgb(var(--c-gold) / 0.1);
+            border-color: var(--dl-a, rgb(var(--c-gold)));
+            background: color-mix(in srgb, var(--dl-a, rgb(var(--c-gold))) 12%, transparent);
         }
 
         .dl-partage .ico {
-            font-size: 12px;
+            font-size: 14px;
         }
 
         /* AU DOIGT, DES CIBLES À SA TAILLE. Les puces de séance — celles qui
@@ -7368,33 +7386,18 @@
                 inset: -5px -3px;
             }
 
-            .dl-agenda {
-                position: relative;
-                width: 34px;
-                height: 34px;
-                border-radius: 8px;
+            /* L'envoi : le même dessin, une zone de 44 px au doigt qui
+               déborde sans rien pousser. */
+            .dl-partage {
+                width: 36px;
+                height: 36px;
             }
 
-            .dl-agenda::after {
-                content: '';
-                position: absolute;
-                inset: -3px;
-            }
-
-            .dl-agenda .ico {
-                font-size: 15px;
-            }
-
-            /* L'envoi garde le dessin de la ligne du titre ; c'est sa zone
-               qui grandit, jusqu'à 40 px, par-dessus la marge. */
             .dl-partage::after {
                 content: '';
                 position: absolute;
-                inset: -8px;
-            }
-
-            .dl-partage .ico {
-                font-size: 14px;
+                inset: -4px;
+                border-radius: 50%;
             }
         }
 
@@ -13595,26 +13598,28 @@
             return `<li class="dl-seance"><span class="dl-puce dl-puce--muette">${jour}${p.heure ? `${heure} · ` : ''}<i>billetterie à venir</i></span></li>`;
         }
 
-        // L'agenda ferme la rangée : un seul bouton par ligne. Pour une
-        // série, la fenêtre demande quelle séance ajouter (data-cal-serie :
-        // leurs places dans renderedEventsData) ; elle propose d'abord la
-        // première séance publique.
-        function dlAgenda(e) {
+        // LA FEUILLE EST L'AGENDA : un seul bouton par ligne, à gauche, et le
+        // dessin qui dit la date est celui qu'on touche pour la garder (un
+        // « + » à son coin le signale). Il fermait la rangée des séances,
+        // petit et seul à droite, souvent passé à la ligne. Pour une série,
+        // la fenêtre demande quelle séance ajouter (data-cal-serie : leurs
+        // places dans renderedEventsData) ; elle propose d'abord la première
+        // séance publique.
+        function dlAgenda(e, feuille) {
             const p = e.perfs.find(q => !q.ecole) || e.perfs[0];
             const serie = e.perfs.length > 1;
             const quand = serie && e.debut ? dlDateEnLettres(e.jours, true) : dlQuandComplet(p);
-            return `<li class="dl-seances-agenda"><button type="button" class="dl-agenda" data-cal-index="${p.cal}"`
+            return `<button type="button" class="dl-agenda" data-cal-index="${p.cal}"`
                 + (serie ? ` data-cal-serie="${e.perfs.map(q => q.cal).join(' ')}"` : '')
-                + ` aria-label="${esc(`Ajouter au calendrier : ${e.titre}, ${quand}`)}"><svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button></li>`;
+                + ` aria-label="${esc(`Ajouter au calendrier : ${e.titre}, ${quand}`)}">${feuille}`
+                + '<span class="dl-agenda-plus" aria-hidden="true"></span></button>';
         }
 
         // ENVOYER LA DATE à quelqu'un (data-dl-partage : les places de toutes
-        // ses séances ; voir dlPartager) : le message dit la date, le lieu,
-        // la billetterie, et mène à la page d'invitation où le destinataire
-        // l'ajoute à son agenda. Au bout de la première ligne (le titre, ou
-        // le lieu rangé par spectacle), dans le coin : à côté de l'agenda,
-        // il faisait passer la rangée des séances à la ligne au téléphone —
-        // 33 px de plus sur une ligne sur trois.
+        // ses séances ; voir dlPartager) : le message dit la date et le lieu,
+        // puis mène à la page du spectacle et à la billetterie. À droite de
+        // la ligne, rond, centré sur elle : le geste qui fait venir du monde
+        // se voit, en face de la feuille.
         function dlEnvoi(e) {
             const p = e.perfs.find(q => !q.ecole) || e.perfs[0];
             const quand = e.perfs.length > 1 && e.debut ? dlDateEnLettres(e.jours, true) : dlQuandComplet(p);
@@ -13636,19 +13641,19 @@
             const proche = e.debut ? relativeDayLabel(e.debut.t, '') : '';
             const pastille = proche ? `<span class="dl-proche">${esc(proche)}</span>` : '';
             const titre = vue === 'date'
-                ? `<div class="dl-tete"><h5 class="dl-titre">${pastille}${dlVersPage(e.spectacle, esc(e.titre))}${e.show.subtitle ? ` <span class="dl-sous">(${esc(e.show.subtitle)})</span>` : ''}</h5>${dlEnvoi(e)}</div>`
+                ? `<h5 class="dl-titre">${pastille}${dlVersPage(e.spectacle, esc(e.titre))}${e.show.subtitle ? ` <span class="dl-sous">(${esc(e.show.subtitle)})</span>` : ''}</h5>`
                 : '';
             const l = dlLieu(e.show);
             const lieu = (l.ville ? `<span class="dl-ville">${esc(l.ville)}</span>` : '')
                 + (l.ville && l.salle ? ' · ' : '') + esc(l.salle) + (l.dep ? ` (${esc(l.dep)})` : '');
             return `<article class="dl ${e.serie ? 'dl--serie' : 'dl--seule'}" id="dl-e${e.k}"`
                 + ` data-dl-cle="${esc((e.debut ? e.debut.iso : '') + '|' + e.titre)}" style="${dlStyle(e.spectacle)}">`
-                + dlFeuille(e, vue)
+                + dlAgenda(e, dlFeuille(e, vue))
                 + `<div class="dl-corps"><p class="dl-quand sr-only">${esc(quand)}</p>`
                 + titre
-                + (vue === 'date' ? `<p class="dl-lieu">${lieu}</p>`
-                    : `<div class="dl-tete"><p class="dl-lieu">${pastille}${lieu}</p>${dlEnvoi(e)}</div>`)
-                + `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}${dlAgenda(e)}</ul></div></article>`;
+                + `<p class="dl-lieu">${vue === 'date' ? '' : pastille}${lieu}</p>`
+                + `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}</ul></div>`
+                + `${dlEnvoi(e)}</article>`;
         }
 
         function dlParMois(entrees) {

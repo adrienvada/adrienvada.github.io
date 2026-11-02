@@ -2480,7 +2480,7 @@ html.vt-univers-retour::view-transition-new(u-titre) {
    --u-accent-ink pour ce qui s'écrit en couleur. */
 .u-dl {
     display: grid;
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: 48px minmax(0, 1fr) auto;
     column-gap: 12px;
     align-items: center;
     padding: 10px 2px;
@@ -2558,26 +2558,6 @@ html.vt-univers-retour::view-transition-new(u-titre) {
 
 .u-dl-corps {
     min-width: 0;
-}
-
-/* La ligne du lieu, et l'envoi de la date à son bout (envoiHtml,
-   univers-montage.js) : il tient dans sa hauteur, ses marges négatives le
-   laissant déborder sans rien pousser ; au doigt, c'est sa zone qui grandit
-   (::after), pas son dessin. */
-.u-dl-tete {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-}
-
-.u-dl-tete>.u-dl-lieu {
-    flex: 1 1 auto;
-    min-width: 0;
-}
-
-.u-date-partage {
-    position: relative;
-    margin: -4px -4px -4px 0;
 }
 
 .u-dl-lieu {
@@ -2660,39 +2640,95 @@ a.u-dl-puce:focus-visible {
     padding-inline: 12px 8px;
 }
 
-/* L'agenda ferme la rangée, au bord droit. */
-.u-dl-agenda {
-    margin-left: auto;
+/* LA FEUILLE EST L'AGENDA (agendaHtml, univers-montage.js) : le bouton
+   n'a pas de dessin à lui, c'est la feuille qu'on touche ; un « + » à son
+   coin haut droit, sur le bandeau du mois, dit qu'on peut la garder (en bas,
+   il mordait sur les jours d'une série), et elle se soulève d'un pixel au
+   survol. 48 × 56 : la cible du doigt. */
+.u-date-cal {
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: inherit;
+    cursor: pointer;
 }
 
-.u-date-cal,
+.u-date-cal .u-dl-feuille {
+    transition: transform var(--dur-base) var(--ease-out);
+}
+
+.u-date-cal:hover .u-dl-feuille {
+    transform: translateY(-1px);
+}
+
+.u-date-cal:active .u-dl-feuille {
+    transform: scale(0.95);
+}
+
+.u-date-cal:focus-visible {
+    outline: 2px solid var(--u-accent);
+    outline-offset: 3px;
+}
+
+.u-dl-plus {
+    position: absolute;
+    right: -6px;
+    top: -6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--u-bg);
+    color: var(--u-accent-ink);
+    box-shadow: 0 0 0 1.5px var(--u-accent), 0 1px 2px rgb(0 0 0 / 0.2);
+}
+
+/* Le « + », deux traits : aucun dessin du sprite n'en tient lieu. */
+.u-dl-plus::before,
+.u-dl-plus::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 8px;
+    height: 1.75px;
+    border-radius: 1px;
+    background: currentColor;
+    transform: translate(-50%, -50%);
+}
+
+.u-dl-plus::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+}
+
+/* ENVOYER LA DATE (envoiHtml) : à droite de la ligne, rond, centré sur
+   elle, cerné de la couleur du spectacle — en face de la feuille. */
 .u-date-partage {
-    flex-shrink: 0;
-    width: 30px;
-    height: 30px;
     display: grid;
     place-items: center;
-    border-radius: 8px;
-    color: var(--u-accent-ink);
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--u-accent) 55%, transparent);
     background: transparent;
-    border: 1px solid transparent;
+    color: var(--u-accent-ink);
     cursor: pointer;
     transition: background var(--dur-base) var(--ease-out),
-        border-color var(--dur-base) var(--ease-out),
-        color var(--dur-base) var(--ease-out);
+        border-color var(--dur-base) var(--ease-out);
 }
 
-.u-date-cal .ico,
 .u-date-partage .ico {
-    font-size: 14px;
+    font-size: 15px;
 }
 
-.u-date-cal:hover,
-.u-date-cal:focus-visible,
 .u-date-partage:hover,
-.u-date-partage:focus-visible {
+.u-date-partage:focus-visible,
+.u-date-partage.est-copie {
     background: color-mix(in srgb, var(--u-accent) 14%, transparent);
-    border-color: color-mix(in srgb, var(--u-accent) 50%, transparent);
+    border-color: var(--u-accent);
 }
 
 /* AU DOIGT, DES CIBLES À SA TAILLE : 34 px de puce, 40 d'agenda, et la
@@ -2715,15 +2751,11 @@ a.u-dl-puce:focus-visible {
         inset: -4px -3px;
     }
 
-    .u-date-cal {
-        width: 40px;
-        height: 40px;
-    }
-
     .u-date-partage::after {
         content: '';
         position: absolute;
-        inset: -5px;
+        inset: -4px;
+        border-radius: 50%;
     }
 }
 

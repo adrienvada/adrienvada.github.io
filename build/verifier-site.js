@@ -2560,10 +2560,15 @@ function exige(condition, message) {
                 return {
                     avec, sans,
                     boutons: [...document.querySelectorAll('#page_dates article.dl')].map((a) => a.querySelectorAll('.dl-partage').length),
+                    // La feuille est l'agenda : un bouton à gauche, et rien
+                    // d'autre dans la rangée des séances.
+                    feuilles: [...document.querySelectorAll('#page_dates article.dl')].map((a) => a.querySelectorAll('.dl-agenda > .dl-feuille').length === 1
+                        && a.querySelectorAll('.dl-agenda').length === 1 && !a.querySelector('.dl-seances .dl-agenda')),
                     nom: document.querySelector('#page_dates .dl-partage')?.getAttribute('aria-label') || ''
                 };
             }, SAISON);
             exige(lignes.boutons.length === 2 && lignes.boutons.every((n) => n === 1), `pas un bouton d’envoi par ligne : ${JSON.stringify(lignes.boutons)}`);
+            exige(lignes.feuilles.every(Boolean), `la feuille n’est pas le bouton d’agenda de sa ligne : ${JSON.stringify(lignes.feuilles)}`);
             exige(lignes.avec.every((h, i) => Math.abs(h - lignes.sans[i]) < 0.5), `le bouton d’envoi grandit une ligne : ${JSON.stringify(lignes)}`);
             exige(/^Envoyer cette date : Bérénice/.test(lignes.nom), `le bouton d’envoi n’a pas de nom : « ${lignes.nom} »`);
             await p.locator('#page_dates .dl--serie .dl-partage').scrollIntoViewIfNeeded();
@@ -2636,11 +2641,13 @@ function exige(condition, message) {
                 await q.waitForFunction(() => window.__universPret && document.querySelector('.u-hero-actions [data-u-jump]'), null, { timeout: 8000 })
                     .catch(() => { });
                 return q.evaluate(() => ({
+                    feuilles: [...document.querySelectorAll('.u-foot .u-dl')].every((li) => li.querySelector('.u-date-cal > .u-dl-feuille') && li.querySelector(':scope > .u-date-partage')),
                     bouton: document.querySelector('.u-hero-actions [data-u-jump]')?.textContent.trim() || '',
                     visees: [...document.querySelectorAll('.u-foot .u-dl--visee .u-dl-ville')].map((v) => v.textContent)
                 }));
             };
             const visee = await accueil('?date=2099-11-13');
+            exige(visee.feuilles, 'au pied de l’univers, la feuille n’est pas le bouton d’agenda, ou l’envoi n’est pas au bout de la ligne');
             exige(visee.bouton === 'Ven. 13 nov. · Falaise' && JSON.stringify(visee.visees) === '["Falaise"]',
                 `la page du spectacle n’accueille pas la date envoyée : ${JSON.stringify(visee)}`);
             for (const suite of ['', '?date=2099-11-20']) {

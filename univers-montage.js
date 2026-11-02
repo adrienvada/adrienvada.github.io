@@ -1306,9 +1306,12 @@ const UniversMontage = (function () {
         return `<li><span class="u-dl-puce u-dl-puce--muette">${jour}${heure ? heure + ' · ' : ''}<i>billetterie à venir</i></span></li>`;
     }
 
-    function agendaHtml(rang, titre) {
+    // LA FEUILLE EST L'AGENDA : le dessin qui dit la date est le bouton qui
+    // la garde (un « + » à son coin le signale), comme dans l'onglet Dates.
+    // Sans date lisible, la feuille reste un dessin.
+    function agendaHtml(rang, titre, feuille) {
         const perfs = rang.perfs.filter(p => p.icsDate);
-        if (!perfs.length) return '';
+        if (!perfs.length) return feuille;
         // La séance proposée d'abord : la première ouverte au public.
         const p = perfs.find(q => !q.isSchool) || perfs[0];
         const donnee = (q) => ({
@@ -1318,16 +1321,16 @@ const UniversMontage = (function () {
         });
         const data = donnee(p);
         if (perfs.length > 1) data.seances = perfs.map(donnee);
-        return `<li class="u-dl-agenda"><button type="button" class="u-date-cal" data-cal="${escape(JSON.stringify(data))}"`
-            + ` aria-label="Ajouter au calendrier : ${escape(titre)}, ${escape(quandEnLettres(rang))}">`
-            + `<svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button></li>`;
+        return `<button type="button" class="u-date-cal" data-cal="${escape(JSON.stringify(data))}"`
+            + ` aria-label="Ajouter au calendrier : ${escape(titre)}, ${escape(quandEnLettres(rang))}">${feuille}`
+            + '<span class="u-dl-plus" aria-hidden="true"></span></button>';
     }
 
     // ENVOYER LA DATE à quelqu'un (partageDe, plus bas ; le geste est dans
     // univers.js) : toute la ligne part, une série avec toutes ses séances.
-    // Au bout de la ligne du lieu : à côté de l'agenda, la rangée des
-    // séances passait à la ligne au téléphone. Il relit les données du
-    // bouton d'agenda de sa ligne plutôt que de les écrire une seconde fois.
+    // À droite de la ligne, rond, centré sur elle, en face de la feuille. Il
+    // relit les données du bouton d'agenda de sa ligne plutôt que de les
+    // écrire une seconde fois.
     function envoiHtml(rang, titre) {
         if (!rang.perfs.some(p => p.icsDate)) return '';
         return `<button type="button" class="u-date-partage" aria-label="Envoyer cette date : ${escape(titre)}, ${escape(quandEnLettres(rang))}">`
@@ -1342,11 +1345,11 @@ const UniversMontage = (function () {
             const lieu = (l.ville ? `<span class="u-dl-ville">${escape(l.ville)}</span>` : '')
                 + (l.ville && l.salle ? ' · ' : '') + escape(l.salle) + (l.dep ? ` (${escape(l.dep)})` : '');
             return `<li class="u-dl${rang.perfs.length > 1 ? ' u-dl--serie' : ''}">`
-                + feuilleHtml(rang)
+                + agendaHtml(rang, titre, feuilleHtml(rang))
                 + `<div class="u-dl-corps"><p class="u-sr">${escape(quandEnLettres(rang))}</p>`
-                + `<div class="u-dl-tete"><p class="u-dl-lieu">${lieu || escape(rang.location)}</p>${envoiHtml(rang, titre)}</div>`
-                + `<ul class="u-dl-seances" role="list">${rang.perfs.map(p => puceHtml(p, rang, titre)).join('')}${agendaHtml(rang, titre)}</ul>`
-                + '</div></li>';
+                + `<p class="u-dl-lieu">${lieu || escape(rang.location)}</p>`
+                + `<ul class="u-dl-seances" role="list">${rang.perfs.map(p => puceHtml(p, rang, titre)).join('')}</ul>`
+                + `</div>${envoiHtml(rang, titre)}</li>`;
         }).join('');
         return `<ul class="u-dates" role="list">${rows}</ul>`;
     }

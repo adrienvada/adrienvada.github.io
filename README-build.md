@@ -1950,15 +1950,23 @@ l'heure avec son décalage du jour (« +01:00 », « +02:00 »).
 
 ### Envoyer une date : le bouton de chaque ligne, l'univers qui l'accueille
 
-**Chaque date a son bouton « Envoyer cette date »** (le signe du partage),
-dans l'onglet Dates (`dlEnvoi`, `dlPartager`) comme au pied des univers et
-des pages spectacle (`envoiHtml`, univers-montage.js) : la date part chez
-quelqu'un, et non dans son propre agenda. Il est **au bout de la première
-ligne** — le titre, ou le lieu quand on range par spectacle —, et non à côté
-de l'agenda : là, il faisait passer la rangée des séances à la ligne au
-téléphone (33 px de plus sur une ligne sur trois). Ses marges négatives le
-laissent déborder sans rien pousser : la ligne garde sa hauteur au pixel
-(la vérification le mesure). Une série part entière, **sans ses séances
+**Une ligne de date, deux gestes, de part et d'autre** — dans l'onglet
+Dates (`dlAgenda`, `dlEnvoi`) comme au pied des univers et des pages
+spectacle (`agendaHtml`, `envoiHtml`, univers-montage.js) :
+
+- **à gauche, la feuille d'éphéméride EST le bouton d'agenda** : le dessin
+  qui dit la date est celui qu'on touche pour la garder. Une pastille « + »
+  à son coin haut droit, sur le bandeau du mois, le signale (en bas, elle
+  mordait sur les jours d'une série, « ven–sam ») ; au survol, la feuille se
+  soulève d'un pixel. L'agenda fermait la rangée des séances, petit et
+  souvent passé seul à la ligne ;
+- **à droite, « Envoyer cette date »**, un bouton rond cerné de la couleur
+  du spectacle, centré sur la ligne (une troisième colonne de la grille) :
+  la date part chez quelqu'un, et non dans son propre agenda. 32 px repris
+  de 4 px sur l'écart de la grille (36 px au doigt, et une zone de 44 px) :
+  une série de deux soirs tient toujours en 80 px au téléphone.
+
+Une série part entière, **sans ses séances
 scolaires** (sauf s'il n'y a qu'elles) ; la fenêtre d'agenda garde sa ligne
 « Partager cette date » (`calPartager`), qui envoie la séance choisie.
 
