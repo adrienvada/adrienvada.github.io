@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- LA PAGE D'INVITATION. C'est ici qu'arrive le lien d'une date
+         envoyée depuis le site (« Envoyer cette date », voir partageDe dans
+         univers-montage.js) : le destinataire y trouve la date, le lieu, la
+         billetterie, l'ajout à son agenda et l'itinéraire. L'adresse ne
+         porte que de quoi RETROUVER la date — le spectacle, le jour, l'heure
+         (?s=berenice&j=2026-11-12&h=20h00&p=berenice) — et la page relit la
+         base : une heure corrigée après l'envoi y est juste, et une adresse
+         fabriquée ne fait rien écrire d'autre que ce que la base contient.
+         Pas une page à trouver : elle n'est rien sans son adresse. -->
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#0a0907">
+    <script>
+        // Le thème du site, posé avant le premier rendu : celui qu'on a
+        // choisi, sinon celui de l'appareil (voir index.html).
+        (function () {
+            var t = 'dark', choisi = null;
+            try { choisi = localStorage.getItem('avTheme'); } catch (e) { }
+            if (choisi === 'light' || choisi === 'dark') t = choisi;
+            else if (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) t = 'light';
+            document.documentElement.setAttribute('data-theme', t);
+            var m = document.querySelector('meta[name="theme-color"]');
+            if (m) m.setAttribute('content', t === 'light' ? '#FAF9F5' : '#0a0907');
+        })();
+    </script>
+    <title>Une date — Adrien Vada</title>
+    <meta name="description" content="Une représentation avec Adrien Vada : la date, le lieu, la réservation et l’ajout à votre agenda.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:site_name" content="Adrien Vada">
+    <meta property="og:title" content="Une date au théâtre, avec Adrien Vada">
+    <meta property="og:description" content="La date, le lieu, la réservation et l’ajout à votre agenda.">
+    <meta property="og:image" content="https://adrienvada.fr/ressources/images/og-adrien-vada.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Mesure d'audience — le même chargeur que l'accueil et la page 404
+         (voir leur <head>). Les gestes de la page (réserver, ajouter à
+         l'agenda) attendent Umami dans la même file, sous les mêmes noms
+         que dans l'onglet Dates : date_booking, date_agenda. -->
+    <script>
+        (function () {
+            var ATTRIBUTS = {
+                'website-id': '23c34c7a-c28c-4b5b-b237-a154139b62da',
+                'domains': 'adrienvada.fr'
+            };
+            var file = window.avMesureEnAttente = window.avMesureEnAttente || [];
+            function charger() {
+                var s = document.createElement('script');
+                s.src = 'https://cloud.umami.is/script.js';
+                s.async = true;
+                for (var k in ATTRIBUTS) s.setAttribute('data-' + k, ATTRIBUTS[k]);
+                s.onload = function () {
+                    var u = window.umami;
+                    if (!u || typeof u.track !== 'function') return;
+                    file.splice(0).forEach(function (g) { u.track(g[0], g[1]); });
+                };
+                document.head.appendChild(s);
+            }
+            if (document.prerendering) document.addEventListener('prerenderingchange', charger, { once: true });
+            else charger();
+        })();
+
+        // Le service worker des polices et des images, inscrit après le
+        // chargement — le même bloc que l'accueil (voir son <head>).
+        (function () {
+            if (!('serviceWorker' in navigator)) return;
+            // Pas sur l'aperçu Cloudflare : voir le même bloc dans l'accueil.
+            if (/\.workers\.dev$/.test(location.hostname)) {
+                navigator.serviceWorker.getRegistrations().then(function (rs) {
+                    rs.forEach(function (r) { r.unregister(); });
+                }).catch(function () { });
+                if (window.caches) caches.keys().then(function (ks) {
+                    ks.forEach(function (k) { if (k.indexOf('av-') === 0) caches.delete(k); });
+                }).catch(function () { });
+                return;
+            }
+            addEventListener('load', function () {
+                var servie = !!navigator.serviceWorker.controller;
+                navigator.serviceWorker.register('/sw.js').then(function () {
+                    return navigator.serviceWorker.ready;
+                }).then(function (reg) {
+                    if (servie || !reg.active) return;
+                    var urls = performance.getEntriesByType('resource').map(function (r) { return r.name; })
+                        .filter(function (u) { return /\/ressources\/(polices|images)\//.test(u); });
+                    reg.active.postMessage({ type: 'garder', urls: urls });
+                }).catch(function () { });
+            });
+        })();
+    </script>
+
+    <link rel="stylesheet" href="/ressources/polices/polices.css">
+
+    <link rel="icon" type="image/png" href="/favicon_io/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/favicon_io/favicon-96x96.png" sizes="96x96" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    <style>
+        /* ══════════════════════════════════════════════════════════════
+           LE CARTON D'INVITATION
+           ══════════════════════════════════════════════════════════════
+           Une carte, au centre : l'image de partage du spectacle en tête
+           quand il en a une, puis ce qu'on cherche en ouvrant le lien, dans
+           l'ordre où on le cherche — quand, où, réserver, l'agenda, le
+           chemin. Les couleurs du site : or sur noir, ou papier si l'on a
+           choisi le clair. Au doigt, chaque bouton fait 44 px au moins. */
+        :root {
+            --fond: #0a0907;
+            --carte: #15120e;
+            --bord: rgba(191, 169, 138, .22);
+            --texte: #f2ece0;
+            --discret: #a89f8e;
+            --or: #bfa98a;
+            --or-encre: #e6d3ad;
+            --sur-or: #0a0907;
+            color-scheme: dark;
+        }
+
+        :root[data-theme="light"] {
+            --fond: #faf9f5;
+            --carte: #ffffff;
+            --bord: rgba(138, 109, 68, .25);
+            --texte: #1f1a14;
+            --discret: #5f5548;
+            --or: #8a6d44;
+            --or-encre: #6f5634;
+            --sur-or: #ffffff;
+            color-scheme: light;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+        }
+
+        body {
+            min-height: 100svh;
+            background: var(--fond);
+            color: var(--texte);
+            font-family: 'Inter', system-ui, sans-serif;
+            line-height: 1.5;
+        }
+
+        .page {
+            width: min(100% - 32px, 480px);
+            margin: 0 auto;
+            padding: 28px 0 40px;
+        }
+
+        .marque {
+            display: block;
+            margin: 0 0 16px;
+            text-align: center;
+            font: 600 .72rem/1 'Cinzel', serif;
+            letter-spacing: .26em;
+            text-transform: uppercase;
+            color: var(--or);
+            text-decoration: none;
+        }
+
+        .carte {
+            overflow: hidden;
+            border: 1px solid var(--bord);
+            border-radius: 18px;
+            background: var(--carte);
+        }
+
+        .affiche {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1200 / 630;
+            object-fit: cover;
+            background: var(--bord);
+        }
+
+        .corps {
+            display: grid;
+            gap: 18px;
+            padding: 22px 22px 24px;
+        }
+
+        .sur {
+            margin: 0 0 4px;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            color: var(--or);
+        }
+
+        h1 {
+            margin: 0;
+            font: 600 clamp(1.5rem, 6vw, 2rem)/1.15 'Cinzel', serif;
+        }
+
+        .sous-titre {
+            margin: 4px 0 0;
+            color: var(--discret);
+            font-size: .9rem;
+        }
+
+        .quand {
+            display: grid;
+            gap: 2px;
+            padding: 14px 16px;
+            border-left: 3px solid var(--or);
+            border-radius: 4px 10px 10px 4px;
+            background: color-mix(in srgb, var(--or) 9%, transparent);
+        }
+
+        .quand-jour {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .quand-jour::first-letter {
+            text-transform: uppercase;
+        }
+
+        .quand-heure {
+            font-size: .95rem;
+            color: var(--or-encre);
+            font-weight: 600;
+        }
+
+        .quand-lieu {
+            margin-top: 4px;
+            font-size: .92rem;
+            color: var(--discret);
+        }
+
+        .note {
+            margin: 0;
+            font-size: .85rem;
+            color: var(--discret);
+        }
+
+        .seances {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .seances[hidden] {
+            display: none;
+        }
+
+        .seance {
+            min-height: 36px;
+            padding: 0 14px;
+            border-radius: 999px;
+            border: 1px solid var(--bord);
+            background: transparent;
+            color: var(--texte);
+            font: 500 .8rem 'Inter', system-ui, sans-serif;
+            cursor: pointer;
+        }
+
+        .seance[aria-pressed="true"] {
+            border-color: var(--or);
+            background: color-mix(in srgb, var(--or) 16%, transparent);
+            color: var(--or-encre);
+            font-weight: 700;
+        }
+
+        .bouton {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 48px;
+            padding: 10px 18px;
+            border-radius: 999px;
+            border: 1px solid color-mix(in srgb, var(--or) 65%, transparent);
+            background: transparent;
+            color: var(--or-encre);
+            font: 700 .8rem 'Inter', system-ui, sans-serif;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color .32s cubic-bezier(0.16, 1, 0.3, 1), color .32s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .bouton--plein {
+            background: var(--or);
+            color: var(--sur-or);
+        }
+
+        .bouton:hover,
+        .bouton:focus-visible {
+            background: var(--or);
+            color: var(--sur-or);
+        }
+
+        .bouton--plein:hover,
+        .bouton--plein:focus-visible {
+            background: var(--or-encre);
+        }
+
+        .bouton svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        h2 {
+            margin: 0 0 10px;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            color: var(--discret);
+        }
+
+        .agendas {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .agendas .bouton {
+            min-height: 44px;
+            padding: 8px 6px;
+            border-radius: 12px;
+            letter-spacing: .02em;
+            text-transform: none;
+            font-size: .8rem;
+        }
+
+        .liens {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px 18px;
+            margin-top: 18px;
+        }
+
+        .liens a {
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            color: var(--discret);
+            font-size: .8rem;
+            text-decoration: none;
+        }
+
+        .liens a:hover,
+        .liens a:focus-visible {
+            color: var(--or-encre);
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--or);
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 359px) {
+            .agendas {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+        <symbol id="i-billet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" /><path d="M13 5v2" /><path d="M13 17v2" /><path d="M13 11v2" /></g></symbol>
+        <symbol id="i-chemin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></g></symbol>
+    </svg>
+
+    <div class="page">
+        <a class="marque" href="/">Adrien Vada</a>
+        <main class="carte" id="carte">
+            <img class="affiche" id="affiche" alt="" width="1200" height="630" hidden>
+            <div class="corps">
+                <div>
+                    <p class="sur" id="sur">Au théâtre, avec Adrien Vada</p>
+                    <h1 id="titre">Une date</h1>
+                    <p class="sous-titre" id="sous-titre" hidden></p>
+                </div>
+
+                <div class="quand" id="quand" hidden>
+                    <span class="quand-jour" id="quand-jour"></span>
+                    <span class="quand-heure" id="quand-heure"></span>
+                    <span class="quand-lieu" id="quand-lieu"></span>
+                </div>
+
+                <!-- Les séances d'une série, quand on en a envoyé une : on
+                     choisit la sienne, celle du message d'abord. -->
+                <div class="seances" id="seances" role="group" aria-label="Choisir une séance" hidden></div>
+
+                <p class="note" id="note">
+                    <noscript>Cette page a besoin de JavaScript pour retrouver la date.
+                        <a href="/#page_dates">Toutes les dates</a> se lisent aussi sur le site.</noscript>
+                </p>
+
+                <a class="bouton bouton--plein" id="reserver" target="_blank" rel="noopener" hidden>
+                    <svg aria-hidden="true"><use href="#i-billet"></use></svg>Réserver
+                </a>
+
+                <section id="agenda" hidden aria-labelledby="agenda-titre">
+                    <h2 id="agenda-titre">Ajouter à mon agenda</h2>
+                    <div class="agendas">
+                        <button type="button" class="bouton" data-agenda="ics">iPhone, Mac</button>
+                        <button type="button" class="bouton" data-agenda="google">Google</button>
+                        <button type="button" class="bouton" data-agenda="outlook">Outlook</button>
+                    </div>
+                </section>
+
+                <a class="bouton" id="chemin" target="_blank" rel="noopener" hidden>
+                    <svg aria-hidden="true"><use href="#i-chemin"></use></svg>Itinéraire
+                </a>
+            </div>
+        </main>
+
+        <nav class="liens" aria-label="Sur le site">
+            <a id="vers-spectacle" hidden>Le spectacle</a>
+            <a href="/#page_dates">Toutes les dates</a>
+            <a href="/">Le site d’Adrien Vada</a>
+        </nav>
+    </div>
+
+    <!-- Les dates : la copie du dépôt d'abord, puis la base en direct
+         (dates-live.js), comme sur l'accueil. Le moteur des univers fournit
+         la fabrique d'agenda (agendaDe) et le langage des dates. -->
+    <script src="/dates.js"></script>
+    <script src="/dates-live.js"></script>
+    <script src="/univers-montage.js"></script>
+    <script>
+        (function () {
+            'use strict';
+            if (typeof UniversMontage === 'undefined' || typeof SHOW_DATA === 'undefined') return;
+            var M = UniversMontage;
+            var SITE = 'https://adrienvada.fr';
+            var q = new URLSearchParams(location.search);
+            var S = String(q.get('s') || '').toLowerCase();
+            var J = /^\d{4}-\d{2}-\d{2}$/.test(q.get('j') || '') ? q.get('j') : '';
+            var H = String(q.get('h') || '');
+            var P = /^[a-z0-9-]+$/.test(q.get('p') || '') ? q.get('p') : '';
+            var $ = function (id) { return document.getElementById(id); };
+            var choisie = null;
+
+            function mesure(nom, details) {
+                try {
+                    var u = window.umami;
+                    if (u && typeof u.track === 'function') u.track(nom, details);
+                    else (window.avMesureEnAttente || []).push([nom, details]);
+                } catch (e) { }
+            }
+
+            // Aujourd'hui, à Paris — c'est là que se jouent les dates.
+            function aujourdhui() {
+                try {
+                    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date());
+                } catch (e) {
+                    var d = new Date();
+                    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                }
+            }
+
+            // Les séances de la ligne envoyée : celles du même spectacle,
+            // dans l'entrée (date seule ou série) qui contient le jour dit.
+            function seancesEnvoyees() {
+                var out = [];
+                if (!S || !J) return out;
+                (SHOW_DATA.upcoming || []).forEach(function (e) {
+                    if (M.slugTitre(e.title) !== S) return;
+                    var reps = e.type === 'series' && Array.isArray(e.shows) ? e.shows : [e];
+                    if (!reps.some(function (r) { return r.icsDate === J; })) return;
+                    reps.forEach(function (r) {
+                        out.push({
+                            title: e.title || '', subtitle: e.subtitle || '', location: e.location || '',
+                            icsDate: r.icsDate, time: r.time || '', times: r.times || null,
+                            scolaire: !!(r.isSchool || e.isSchool),
+                            billetterie: M.lienSur(r.bookingUrl || e.bookingUrl)
+                        });
+                    });
+                });
+                return out;
+            }
+
+            function cle(s) { return s.icsDate + '|' + M.heuresDe(s); }
+
+            function jourEnLettres(s) {
+                var j = M.jourIso(s.icsDate);
+                return j ? M.JOURS_LONGS[j.js] + ' ' + (j.j === 1 ? '1er' : j.j) + ' ' + M.MOIS_LONGS[j.m] + ' ' + j.a : '';
+            }
+
+            function heureEnClair(s) {
+                var h = M.heuresDe(s);
+                var txt = !h || /confirmer/i.test(h) ? 'Horaire à confirmer'
+                    : /^\d{1,2}\s*[hH:]/.test(h) ? 'à ' + h : h.charAt(0).toUpperCase() + h.slice(1);
+                return txt + (s.scolaire ? ' · séance scolaire' : '');
+            }
+
+            function introuvable(passee) {
+                $('titre').textContent = passee ? 'Cette représentation a eu lieu' : 'Cette date n’est plus à l’affiche';
+                $('sur').textContent = 'Adrien Vada';
+                $('note').textContent = passee
+                    ? 'Les prochaines dates sont sur le site.'
+                    : 'Elle est passée, ou a changé depuis l’envoi du message. Les prochaines dates sont sur le site.';
+                $('note').hidden = false;
+                ['quand', 'seances', 'reserver', 'agenda', 'chemin', 'sous-titre'].forEach(function (id) { $(id).hidden = true; });
+            }
+
+            function dessiner() {
+                var toutes = seancesEnvoyees();
+                var auj = aujourdhui();
+                var aVenir = toutes.filter(function (s) { return s.icsDate >= auj; });
+                // Une séance scolaire ne regarde pas l'ami à qui l'on écrit :
+                // elle n'est proposée que si c'est elle qu'on a envoyée, ou
+                // s'il n'y en a pas d'autre.
+                var publiques = aVenir.filter(function (s) { return !s.scolaire; });
+                var visee = H && aVenir.find(function (s) { return s.icsDate === J && M.heuresDe(s) === H; });
+                if (publiques.length && !(visee && visee.scolaire)) aVenir = publiques;
+                if (P) {
+                    var lien = $('vers-spectacle');
+                    lien.href = '/spectacles/' + P + '/';
+                    lien.hidden = false;
+                }
+                if (!aVenir.length) { introuvable(toutes.length > 0); return; }
+
+                // La séance du message d'abord ; sinon la première ouverte
+                // au public ; et celle qu'on a choisie reste choisie quand la
+                // base répond.
+                var avant = choisie && cle(choisie);
+                choisie = (avant && aVenir.find(function (s) { return cle(s) === avant; }))
+                    || (visee && aVenir.indexOf(visee) >= 0 ? visee : null)
+                    || aVenir.find(function (s) { return s.icsDate === J && !s.scolaire; })
+                    || aVenir.find(function (s) { return !s.scolaire; }) || aVenir[0];
+
+                var t = choisie;
+                $('titre').textContent = t.title;
+                $('sous-titre').textContent = t.subtitle;
+                $('sous-titre').hidden = !t.subtitle;
+                document.title = t.title + ', ' + jourEnLettres(t) + ' — Adrien Vada';
+
+                var seances = $('seances');
+                seances.hidden = aVenir.length < 2;
+                seances.textContent = '';
+                if (aVenir.length > 1) {
+                    aVenir.forEach(function (s) {
+                        var b = document.createElement('button');
+                        b.type = 'button';
+                        b.className = 'seance';
+                        b.textContent = M.seanceEnClair(s);
+                        b.setAttribute('aria-pressed', String(s === choisie));
+                        b.addEventListener('click', function () {
+                            choisie = s;
+                            dessiner();
+                            // Les puces sont refaites : le focus va à la nouvelle.
+                            var faite = seances.querySelector('[aria-pressed="true"]');
+                            if (faite) faite.focus();
+                        });
+                        seances.appendChild(b);
+                    });
+                }
+
+                $('quand').hidden = false;
+                $('quand-jour').textContent = jourEnLettres(t);
+                $('quand-heure').textContent = heureEnClair(t);
+                $('quand-lieu').textContent = t.location;
+
+                var reserver = $('reserver');
+                reserver.hidden = !(t.billetterie && !t.scolaire);
+                if (!reserver.hidden) reserver.href = t.billetterie;
+                $('note').textContent = t.scolaire ? 'Séance scolaire : elle est réservée aux classes inscrites.'
+                    : t.billetterie ? '' : 'Les réservations ne sont pas encore ouvertes.';
+                $('note').hidden = !$('note').textContent;
+
+                $('agenda').hidden = false;
+                var chemin = $('chemin');
+                chemin.hidden = !t.location;
+                chemin.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(t.location);
+            }
+
+            // L'image de partage du spectacle (build/fabriquer-images-partage.py),
+            // celle que les messageries montrent déjà de sa page. Sans elle,
+            // la carte commence au titre.
+            if (P) {
+                var img = $('affiche');
+                img.onload = function () { img.hidden = false; };
+                img.onerror = function () { img.remove(); };
+                img.src = '/ressources/images/partage/' + P + '.jpg';
+            }
+
+            $('reserver').addEventListener('click', function () {
+                if (choisie) mesure('date_booking', { detail: choisie.title });
+            });
+
+            // L'agenda : la même fabrique que le site (agendaDe) — l'heure de
+            // Paris, la billetterie et la page du spectacle dans la
+            // description.
+            $('agenda').addEventListener('click', function (e) {
+                var b = e.target.closest('[data-agenda]');
+                if (!b || !choisie) return;
+                var type = b.dataset.agenda;
+                mesure('date_agenda', { spectacle: choisie.title, par: type });
+                var agenda = M.agendaDe(Object.assign({}, choisie, { page: P ? SITE + '/spectacles/' + P + '/' : '' }));
+                if (!agenda) return;
+                if (type === 'google' || type === 'outlook') {
+                    window.open(type === 'google' ? agenda.google() : agenda.outlook(), '_blank', 'noopener');
+                    return;
+                }
+                var url = URL.createObjectURL(new Blob([agenda.ics()], { type: 'text/calendar;charset=utf-8' }));
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = agenda.fichier;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function () { a.remove(); URL.revokeObjectURL(url); }, 100);
+            });
+
+            dessiner();
+            // La base a répondu, et diffère de la copie : on redessine.
+            document.addEventListener('dates:mises-a-jour', dessiner);
+        })();
+    </script>
+</body>
+
+</html>

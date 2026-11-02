@@ -2560,6 +2560,26 @@ html.vt-univers-retour::view-transition-new(u-titre) {
     min-width: 0;
 }
 
+/* La ligne du lieu, et l'envoi de la date à son bout (envoiHtml,
+   univers-montage.js) : il tient dans sa hauteur, ses marges négatives le
+   laissant déborder sans rien pousser ; au doigt, c'est sa zone qui grandit
+   (::after), pas son dessin. */
+.u-dl-tete {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.u-dl-tete>.u-dl-lieu {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.u-date-partage {
+    position: relative;
+    margin: -4px -4px -4px 0;
+}
+
 .u-dl-lieu {
     margin: 0;
     font-size: .84rem;
@@ -2635,7 +2655,8 @@ a.u-dl-puce:focus-visible {
     margin-left: auto;
 }
 
-.u-date-cal {
+.u-date-cal,
+.u-date-partage {
     flex-shrink: 0;
     width: 30px;
     height: 30px;
@@ -2651,12 +2672,15 @@ a.u-dl-puce:focus-visible {
         color var(--dur-base) var(--ease-out);
 }
 
-.u-date-cal .ico {
+.u-date-cal .ico,
+.u-date-partage .ico {
     font-size: 14px;
 }
 
 .u-date-cal:hover,
-.u-date-cal:focus-visible {
+.u-date-cal:focus-visible,
+.u-date-partage:hover,
+.u-date-partage:focus-visible {
     background: color-mix(in srgb, var(--u-accent) 14%, transparent);
     border-color: color-mix(in srgb, var(--u-accent) 50%, transparent);
 }
@@ -2684,6 +2708,12 @@ a.u-dl-puce:focus-visible {
     .u-date-cal {
         width: 40px;
         height: 40px;
+    }
+
+    .u-date-partage::after {
+        content: '';
+        position: absolute;
+        inset: -5px;
     }
 }
 

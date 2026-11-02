@@ -2306,7 +2306,8 @@ function exige(condition, message) {
         // doit pas défiler, sans quoi le navigateur coupe le suivi). Un petit
         // glissement la rend à sa place ; un lancer bref la renvoie, même
         // court. « Partager cette date » envoie le texte de la date et le lien
-        // de la page du spectacle, ou les copie sans partage du navigateur.
+        // de sa page d'invitation (/date/), ou les copie sans partage du
+        // navigateur.
         // En mouvement réduit, elle paraît sans glisser ; sur ordinateur, la
         // fenêtre reste au centre, sans poignée. La date fictive, un jeudi
         // 12 novembre lointain, ne dépend pas de la saison.
@@ -2449,9 +2450,9 @@ function exige(condition, message) {
             await p.waitForTimeout(700);
             const partage = await p.evaluate(() => window.__partage);
             const apresPartage = await lire(p);
-            exige(partage && partage.text === 'Bérénice — jeu. 12 nov. à 20h00, Le Forum, Falaise (14)'
-                && partage.url === 'https://adrienvada.fr/spectacles/berenice/',
-                `« Partager cette date » n’envoie pas la date et la page du spectacle : ${JSON.stringify(partage)}`);
+            exige(partage && partage.text === 'Bérénice — jeu. 12 nov. à 20h00\nLe Forum, Falaise (14)\nRéservations pas encore ouvertes.\nPour l’ajouter à son agenda :'
+                && partage.url === 'https://adrienvada.fr/date/?s=berenice&j=2099-11-12&h=20h00&p=berenice',
+                `« Partager cette date » n’envoie pas la date et sa page d’invitation : ${JSON.stringify(partage)}`);
             exige(apresPartage.cachee && apresPartage.surLeBouton, 'la date partagée, la fenêtre reste ouverte');
             // … ou copiés, sans partage du navigateur, et la ligne le dit.
             await p.evaluate(() => Object.defineProperty(navigator, 'share', { configurable: true, value: undefined }));
@@ -2467,7 +2468,7 @@ function exige(condition, message) {
                 dedans: !!document.activeElement?.closest('#calendar-modal')
             }));
             exige(/^Copier/.test(aideAvant), `sans partage du navigateur, la ligne ne dit pas qu’elle copie : « ${aideAvant} »`);
-            exige(copie.presse === 'Bérénice — jeu. 12 nov. à 20h00, Le Forum, Falaise (14)\nhttps://adrienvada.fr/spectacles/berenice/',
+            exige(copie.presse === 'Bérénice — jeu. 12 nov. à 20h00\nLe Forum, Falaise (14)\nRéservations pas encore ouvertes.\nPour l’ajouter à son agenda :\nhttps://adrienvada.fr/date/?s=berenice&j=2099-11-12&h=20h00&p=berenice',
                 `le texte copié : ${JSON.stringify(copie.presse)}`);
             exige(/^Copiée/.test(copie.aide) && /^Date copiée : Bérénice/.test(copie.annonce) && copie.dedans,
                 `la copie n’est pas dite, ou le focus a quitté la fenêtre : ${JSON.stringify(copie)}`);
@@ -2505,6 +2506,121 @@ function exige(condition, message) {
                 `sur ordinateur, la fenêtre d’agenda n’est plus celle d’avant (au centre, sans poignée) : ${JSON.stringify(centre)}`);
             exige(!ordi.erreurs.length, ordi.erreurs.join(' | '));
             await ordi.c.close();
+        });
+
+        // ── ENVOYER UNE DATE ──
+        // Chaque ligne de l'onglet Dates a son bouton « Envoyer cette date »,
+        // au bout de sa première ligne : il ne doit rien pousser (la ligne
+        // garde sa hauteur au pixel). Le message part par la feuille de
+        // partage — la date, le lieu, la billetterie, et la page
+        // d'invitation ; une série sans ses séances scolaires. La page
+        // d'invitation relit les dates et offre la réservation, l'agenda et
+        // l'itinéraire ; une date qui n'existe plus le dit. Une saison
+        // fictive, en 2099, ne dépend pas de la vraie.
+        await verifie('« Envoyer cette date » : un bouton par ligne qui ne la grandit pas, un message avec la billetterie et la page d’invitation — et cette page réserve, ajoute à l’agenda, mène à l’itinéraire, et dit une date disparue', async () => {
+            const SAISON = [
+                {
+                    type: 'series', id: 'panel-berenice-falaise-2099-11-12', dateLabel: '12 - 13 nov. 2099', title: 'Bérénice',
+                    location: 'Le Forum, Falaise (14)', city: 'Falaise', shows: [
+                        { dateLabel: '12 nov. 2099', time: '14h15', bookingUrl: '', isSchool: true, icsDate: '2099-11-12' },
+                        { dateLabel: '12 nov. 2099', time: '20h00', bookingUrl: 'https://exemple.fr/billets', isSchool: false, icsDate: '2099-11-12' },
+                        { dateLabel: '13 nov. 2099', time: '18h00', bookingUrl: 'https://exemple.fr/billets', isSchool: false, icsDate: '2099-11-13' }
+                    ]
+                },
+                {
+                    type: 'single', title: 'Bérénice', location: 'Le Forum, Falaise (14)', city: 'Falaise',
+                    dateLabel: '2 déc. 2099', icsDate: '2099-12-02', time: '', bookingUrl: '', isSchool: false
+                }
+            ];
+            const c = await visiteur({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true });
+            // La base ne répond pas : la saison fictive tient.
+            await c.route(/supabase\.co/, (r) => r.abort());
+            await c.addInitScript(() => {
+                window.__partages = [];
+                Object.defineProperty(navigator, 'share', {
+                    configurable: true, value: (d) => { window.__partages.push(d); return Promise.resolve(); }
+                });
+            });
+            const p = await c.newPage();
+            const erreurs = guette(p);
+            await p.goto(base + '/#page_dates', { waitUntil: 'load' });
+            await p.waitForTimeout(800);
+            const lignes = await p.evaluate((saison) => {
+                SHOW_DATA.upcoming = saison;
+                datesMisesAJour();
+                const mesure = () => [...document.querySelectorAll('#page_dates article.dl')].map((a) => a.getBoundingClientRect().height);
+                const avec = mesure();
+                const st = document.createElement('style');
+                st.textContent = '.dl-partage{display:none!important}';
+                document.head.appendChild(st);
+                const sans = mesure();
+                st.remove();
+                return {
+                    avec, sans,
+                    boutons: [...document.querySelectorAll('#page_dates article.dl')].map((a) => a.querySelectorAll('.dl-partage').length),
+                    nom: document.querySelector('#page_dates .dl-partage')?.getAttribute('aria-label') || ''
+                };
+            }, SAISON);
+            exige(lignes.boutons.length === 2 && lignes.boutons.every((n) => n === 1), `pas un bouton d’envoi par ligne : ${JSON.stringify(lignes.boutons)}`);
+            exige(lignes.avec.every((h, i) => Math.abs(h - lignes.sans[i]) < 0.5), `le bouton d’envoi grandit une ligne : ${JSON.stringify(lignes)}`);
+            exige(/^Envoyer cette date : Bérénice/.test(lignes.nom), `le bouton d’envoi n’a pas de nom : « ${lignes.nom} »`);
+            await p.locator('#page_dates .dl--serie .dl-partage').scrollIntoViewIfNeeded();
+            await p.locator('#page_dates .dl--serie .dl-partage').tap();
+            await p.locator('#page_dates .dl--seule .dl-partage').tap();
+            await p.waitForTimeout(300);
+            const [serie, seule] = await p.evaluate(() => window.__partages);
+            exige(serie && serie.text === 'Bérénice\nLe Forum, Falaise (14)\n· jeu. 12 nov. à 20h00\n· ven. 13 nov. à 18h00\nRéserver : https://exemple.fr/billets\nPour l’ajouter à son agenda :'
+                && serie.url === 'https://adrienvada.fr/date/?s=berenice&j=2099-11-12&p=berenice',
+                `une série n’envoie pas ses séances publiques, sa billetterie et sa page d’invitation : ${JSON.stringify(serie)}`);
+            exige(seule && seule.text === 'Bérénice — mer. 2 déc. (horaire à confirmer)\nLe Forum, Falaise (14)\nRéservations pas encore ouvertes.\nPour l’ajouter à son agenda :'
+                && seule.url === 'https://adrienvada.fr/date/?s=berenice&j=2099-12-02&p=berenice',
+                `une date seule sans heure ni billetterie ne le dit pas : ${JSON.stringify(seule)}`);
+            exige(!erreurs.length, erreurs.join(' | '));
+
+            // La page d'invitation, avec la même saison à la place de dates.js.
+            await c.route(/\/dates\.js$/, (r) => r.fulfill({
+                contentType: 'text/javascript', body: `const SHOW_DATA = ${JSON.stringify({ upcoming: SAISON, archives: [] })};`
+            }));
+            const q = await c.newPage();
+            const erreursQ = guette(q);
+            await q.goto(serie.url.replace('https://adrienvada.fr', base), { waitUntil: 'load' });
+            await q.waitForTimeout(400);
+            const carte = await q.evaluate(() => ({
+                titre: document.querySelector('h1').textContent,
+                jour: document.getElementById('quand-jour').textContent,
+                heure: document.getElementById('quand-heure').textContent,
+                lieu: document.getElementById('quand-lieu').textContent,
+                seances: [...document.querySelectorAll('#seances .seance')].map((b) => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? ' *' : '')),
+                reserver: !document.getElementById('reserver').hidden && document.getElementById('reserver').href,
+                chemin: !document.getElementById('chemin').hidden && document.getElementById('chemin').href,
+                agendas: document.querySelectorAll('#agenda [data-agenda]').length,
+                spectacle: document.getElementById('vers-spectacle').getAttribute('href'),
+                petit: [...document.querySelectorAll('.bouton, .liens a')].filter((b) => b.offsetParent && b.getBoundingClientRect().height < 44).length,
+                large: document.documentElement.scrollWidth > innerWidth
+            }));
+            exige(carte.titre === 'Bérénice' && carte.jour === 'jeudi 12 novembre 2099' && carte.heure === 'à 20h00' && carte.lieu === 'Le Forum, Falaise (14)',
+                `la page d’invitation ne dit pas la date : ${JSON.stringify(carte)}`);
+            exige(JSON.stringify(carte.seances) === JSON.stringify(['jeu. 12 nov. à 20h00 *', 'ven. 13 nov. à 18h00']),
+                `la page d’invitation ne propose pas les séances publiques, la première choisie : ${JSON.stringify(carte.seances)}`);
+            exige(carte.reserver === 'https://exemple.fr/billets' && carte.agendas === 3 && /google\.com\/maps\/search\/\?api=1&query=Le%20Forum/.test(carte.chemin || '')
+                && carte.spectacle === '/spectacles/berenice/', `réserver, l’agenda, l’itinéraire ou le spectacle manquent : ${JSON.stringify(carte)}`);
+            exige(!carte.petit && !carte.large, `un bouton de moins de 44 px, ou la page déborde : ${JSON.stringify(carte)}`);
+            // Google Agenda reçoit la séance choisie, à l'heure de Paris.
+            await q.locator('#seances .seance').nth(1).tap();
+            await q.evaluate(() => { window.open = (u) => { window.__ouvert = u; return null; }; });
+            await q.locator('[data-agenda="google"]').tap();
+            const adresse = await q.evaluate(() => window.__ouvert || '');
+            exige(/calendar\.google\.com/.test(adresse) && /dates=20991113T180000/.test(adresse) && /ctz=Europe%2FParis/.test(adresse),
+                `Google Agenda ne reçoit pas la séance choisie : ${adresse}`);
+            // Une date disparue de la base.
+            await q.goto(base + '/date/?s=berenice&j=2099-11-20&p=berenice', { waitUntil: 'load' });
+            const perdue = await q.evaluate(() => ({
+                titre: document.querySelector('h1').textContent,
+                agenda: !document.getElementById('agenda').hidden, reserver: !document.getElementById('reserver').hidden
+            }));
+            exige(/plus à l’affiche/.test(perdue.titre) && !perdue.agenda && !perdue.reserver, `une date disparue ne le dit pas : ${JSON.stringify(perdue)}`);
+            exige(!erreursQ.length, erreursQ.join(' | '));
+            await c.close();
         });
 
         // ── L'AGENDA À S'ABONNER ──
@@ -3935,7 +4051,7 @@ function exige(condition, message) {
 
         await verifie('la mesure attend : un chargeur partout et jamais un script différé, les gestes d’avant Umami en file, rien d’une page pré-rendue — ni vue, ni titre écrit', async () => {
             // Chaque page publique charge Umami par le chargeur, avant ses feuilles.
-            const pages = ['index.html', '404.html', 'galerie/index.html', 'spectacles/index.html']
+            const pages = ['index.html', '404.html', 'date/index.html', 'galerie/index.html', 'spectacles/index.html']
                 .concat(dossiers.map((d) => `spectacles/${d}/index.html`));
             for (const f of pages) {
                 const h = fs.readFileSync(path.join(RACINE, f), 'utf8');
@@ -4000,7 +4116,7 @@ function exige(condition, message) {
         });
 
         await verifie('les pages générées s’affichent sans attendre : la fiche ouverte d’emblée, peinte avant son moteur ; le répertoire et la galerie sans feuille à attendre ; des icônes en PNG ; les pages voisines préparées au survol, en « moderate »', async () => {
-            const publiques = ['index.html', '404.html', 'galerie/index.html', 'spectacles/index.html']
+            const publiques = ['index.html', '404.html', 'date/index.html', 'galerie/index.html', 'spectacles/index.html']
                 .concat(dossiers.map((d) => `spectacles/${d}/index.html`));
             for (const f of publiques) {
                 const h = fs.readFileSync(path.join(RACINE, f), 'utf8');
@@ -4167,7 +4283,7 @@ function exige(condition, message) {
                 .matchAll(/<link rel="preload" href="\/ressources\/polices\/([\w-]+)\.woff2"/g)].map((m) => m[1]);
             exige(installees.length && installees.sort().join() === prechargees.sort().join(),
                 `sw.js garde à l’installation ${installees.join(', ') || 'rien'} ; l’accueil précharge ${prechargees.join(', ')}`);
-            const publiques = ['index.html', '404.html', 'galerie/index.html', 'spectacles/index.html']
+            const publiques = ['index.html', '404.html', 'date/index.html', 'galerie/index.html', 'spectacles/index.html']
                 .concat(dossiers.map((d) => `spectacles/${d}/index.html`));
             for (const f of publiques) {
                 const h = fs.readFileSync(path.join(RACINE, f), 'utf8');

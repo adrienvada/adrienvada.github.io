@@ -193,8 +193,8 @@ minutes environ, ce qui a déjà cassé ou casserait sans bruit :
   `touch-action: none`, la croix à 44 px ; de vrais touchers sur la poignée —
   un petit glissement lent la rend à sa place, tirée loin elle se referme et
   rend focus et page, un lancer bref la renvoie ; « Partager cette date »
-  envoie « Bérénice — jeu. 12 nov. à 20h00, Le Forum, Falaise (14) » et la
-  page du spectacle, ou les copie (presse-papiers relu, copie annoncée, focus
+  envoie « Bérénice — jeu. 12 nov. à 20h00 », le lieu, la billetterie et la
+  page d'invitation (`/date/`), ou les copie (presse-papiers relu, copie annoncée, focus
   resté dans la fenêtre) ; en mouvement réduit elle est posée d'emblée et
   disparaît d'un coup ; sur ordinateur, la fenêtre reste au centre, sans
   poignée ;
@@ -1948,21 +1948,60 @@ identifiant tiré du jour, de l'heure, du spectacle et du lieu, le texte
 description. Google reçoit le fuseau à part (`ctz=Europe/Paris`), Outlook
 l'heure avec son décalage du jour (« +01:00 », « +02:00 »).
 
-**« Partager cette date »**, une ligne de plus sous les agendas
-(`calPartager`) : la date part chez quelqu'un, et non dans son propre agenda.
-Un texte qui se lit tel quel dans un message — « Bérénice — jeu. 12 nov. à
-20h00, Le Forum, Falaise (14) » (« horaire à confirmer », « séance
-scolaire » quand c'est le cas) — et le lien de la page du spectacle,
-`https://adrienvada.fr/spectacles/<slug>/`, ou de l'onglet Dates s'il n'en a
-pas : les adresses du site public, même depuis un aperçu. Par la feuille de
-partage du téléphone (`navigator.share`) ; sans elle — Firefox, un
-ordinateur sous Linux —, le texte et le lien sont copiés par le mécanisme de
-« Copier une adresse » (`window.copierTexte`, `window.annoncerCopie`), la ligne
-dit « Copiée » deux secondes et `#annonce-copie` le dit aux lecteurs d'écran.
-Son sous-titre annonce lequel des deux arrivera. Partagée, la date est
-partie : la fenêtre se referme ; une feuille de partage refermée sans rien
-envoyer ne fait rien. Mesure : `date_partage`, le spectacle en détail. La
-ligne « Autre application mobile… » (le fichier `.ics` confié à une autre
+### Envoyer une date : le bouton de chaque ligne et la page d'invitation
+
+**Chaque date a son bouton « Envoyer cette date »** (le signe du partage),
+dans l'onglet Dates (`dlEnvoi`, `dlPartager`) comme au pied des univers et
+des pages spectacle (`envoiHtml`, univers-montage.js) : la date part chez
+quelqu'un, et non dans son propre agenda. Il est **au bout de la première
+ligne** — le titre, ou le lieu quand on range par spectacle —, et non à côté
+de l'agenda : là, il faisait passer la rangée des séances à la ligne au
+téléphone (33 px de plus sur une ligne sur trois). Ses marges négatives le
+laissent déborder sans rien pousser : la ligne garde sa hauteur au pixel
+(la vérification le mesure). Une série part entière, **sans ses séances
+scolaires** (sauf s'il n'y a qu'elles) ; la fenêtre d'agenda garde sa ligne
+« Partager cette date » (`calPartager`), qui envoie la séance choisie.
+
+**Le message se lit tel quel**, sans ouvrir de lien (`partageDe`,
+univers-montage.js, une seule fabrique pour les trois portes) :
+
+    Bérénice — jeu. 12 nov. à 20h00
+    Le Forum, Falaise (14)
+    Réserver : https://…
+    Pour l’ajouter à son agenda :
+    https://adrienvada.fr/date/?s=berenice&j=2026-11-12&h=20h00&p=berenice
+
+« horaire à confirmer », « séance scolaire » quand c'est le cas ;
+« Réservations pas encore ouvertes. » sans billetterie ; une série liste ses
+séances (« · ven. 13 nov. à 18h00 »), et chacune porte sa billetterie si
+elles en ont plusieurs. Par la feuille de partage du téléphone
+(`navigator.share`, le texte puis l'adresse) ; sans elle — Firefox, un
+ordinateur sous Linux —, le message est copié (`partagerUneDate`,
+univers.js : `window.copierTexte` et `window.annoncerCopie` sur l'accueil,
+les siens sur une page spectacle) ; le bouton prend une coche deux
+secondes, la ligne de la fenêtre dit « Copiée », et les lecteurs d'écran
+l'entendent. Partagée depuis la fenêtre, la date est partie : la fenêtre se
+referme ; une feuille de partage refermée sans rien envoyer ne fait rien.
+Mesure : `date_partage`, le spectacle en détail.
+
+**La page d'invitation, `/date/`** (`date/index.html`), est celle où arrive
+le destinataire : l'image de partage du spectacle, son titre, la date en
+toutes lettres, l'heure et le lieu ; **Réserver** quand la billetterie est
+ouverte ; **Ajouter à mon agenda** — iPhone et Mac (le fichier `.ics`),
+Google, Outlook, par la même fabrique que le site (`agendaDe`) ;
+**Itinéraire** (une recherche Google Maps du lieu, au toucher seulement :
+aucune carte n'est chargée) ; le spectacle et toutes les dates. L'adresse ne
+porte que de quoi **retrouver** la date — `s` le titre en lettres simples,
+`j` le jour, `h` l'heure d'une séance, `p` le dossier du spectacle — et la
+page relit `dates.js` puis la base (`dates-live.js`) : une heure corrigée
+après l'envoi y est juste, et une adresse fabriquée ne fait écrire que ce
+que la base contient. Une série y montre ses séances publiques en puces, la
+séance envoyée choisie d'abord. Une date passée ou retirée le dit (« Cette
+date n'est plus à l'affiche ») et mène aux autres. La page n'est pas à
+trouver : `noindex`, hors du sitemap. Mesure : `date_booking` et
+`date_agenda`, comme dans l'onglet Dates.
+
+La ligne « Autre application mobile… » (le fichier `.ics` confié à une autre
 application) a pris un dessin d'agenda : deux lignes au même signe de
 partage, pour deux gestes différents, se confondaient.
 
@@ -4642,9 +4681,10 @@ dont le détail suit la largeur de l'écran, 768 px), `fiche_pro`
 (`agences-artistiques`, `filmmakers`), `reseau` (`instagram`, `linkedin`,
 `spotify`), `demo_youtube`, `date_agenda`, `date_booking`, `banner_next_date`
 (la prochaine date du CV, ouverte dans l'onglet Dates : le nom du spectacle),
-`date_partage` (« Partager cette date », dans la fenêtre d'agenda : le nom du
-spectacle — qu'elle parte par la feuille de partage ou par le
-presse-papiers), `agenda_abonnement` (« S'abonner à l'agenda », au pied de
+`date_partage` (« Envoyer cette date », sur chaque ligne de date, et
+« Partager cette date », dans la fenêtre d'agenda : le nom du spectacle —
+qu'elle parte par la feuille de partage ou par le presse-papiers ; la page
+d'invitation `/date/` compte ensuite ses `date_booking` et `date_agenda`), `agenda_abonnement` (« S'abonner à l'agenda », au pied de
 l'onglet Dates : `webcal` pour le lien, `google` pour Google Agenda,
 `android` pour « M'envoyer le lien d'abonnement », `https` pour l'adresse
 copiée).

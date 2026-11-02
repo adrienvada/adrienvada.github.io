@@ -1323,6 +1323,17 @@ const UniversMontage = (function () {
             + `<svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button></li>`;
     }
 
+    // ENVOYER LA DATE à quelqu'un (partageDe, plus bas ; le geste est dans
+    // univers.js) : toute la ligne part, une série avec toutes ses séances.
+    // Au bout de la ligne du lieu : à côté de l'agenda, la rangée des
+    // séances passait à la ligne au téléphone. Il relit les données du
+    // bouton d'agenda de sa ligne plutôt que de les écrire une seconde fois.
+    function envoiHtml(rang, titre) {
+        if (!rang.perfs.some(p => p.icsDate)) return '';
+        return `<button type="button" class="u-date-partage" aria-label="Envoyer cette date : ${escape(titre)}, ${escape(quandEnLettres(rang))}">`
+            + '<svg class="ico" aria-hidden="true"><use href="#i-solid-share-nodes"></use></svg></button>';
+    }
+
     function datesHtml(perfs) {
         if (!perfs || !perfs.length) return '';
         const titre = perfs[0].title || '';
@@ -1333,7 +1344,7 @@ const UniversMontage = (function () {
             return `<li class="u-dl${rang.perfs.length > 1 ? ' u-dl--serie' : ''}">`
                 + feuilleHtml(rang)
                 + `<div class="u-dl-corps"><p class="u-sr">${escape(quandEnLettres(rang))}</p>`
-                + `<p class="u-dl-lieu">${lieu || escape(rang.location)}</p>`
+                + `<div class="u-dl-tete"><p class="u-dl-lieu">${lieu || escape(rang.location)}</p>${envoiHtml(rang, titre)}</div>`
                 + `<ul class="u-dl-seances" role="list">${rang.perfs.map(p => puceHtml(p, rang, titre)).join('')}${agendaHtml(rang, titre)}</ul>`
                 + '</div></li>';
         }).join('');
@@ -1687,7 +1698,88 @@ const UniversMontage = (function () {
         return { ics, google, outlook, fichier };
     }
 
+    // ── ENVOYER UNE DATE À QUELQU'UN ─────────────────────────────────
+    //  « On y va ? » : la date part dans un message, et doit s'y lire telle
+    //  quelle, sans ouvrir de lien — le spectacle, le jour et l'heure, le
+    //  lieu, la billetterie quand elle est ouverte. Puis UNE adresse : la
+    //  page d'invitation (/date/), où le destinataire trouve en un geste la
+    //  réservation, l'ajout à son agenda et l'itinéraire. Elle relit la
+    //  base à chaque visite : une heure corrigée après l'envoi y est juste.
+    //
+    //  Une seule fabrique pour l'onglet Dates, la fenêtre d'agenda de
+    //  l'accueil et le pied des univers (le geste lui-même — feuille de
+    //  partage ou copie — est partagerUneDate, dans univers.js).
+    //    seances : [{ title, subtitle, location, icsDate, time ou times,
+    //                 scolaire, billetterie }] — une ligne de l'agenda :
+    //                 une séance, ou toutes celles d'une série
+    //    opts    : { page } — le dossier du spectacle sous /spectacles/
+    //  → null sans date lisible ; sinon { titre, texte, url, message }.
+    //    `message` est le texte suivi de l'adresse : ce que l'on copie
+    //    quand il n'y a pas de feuille de partage.
+    const slugTitre = (t) => sansAccents(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    //  L'adresse de la page d'invitation. `s` le spectacle (son titre en
+    //  lettres simples), `j` le jour, `h` l'heure quand on envoie UNE séance
+    //  (une série n'en a pas : la page les montre toutes), `p` sa page.
+    function lienDate(o) {
+        const q = [`s=${encodeURIComponent(slugTitre(o.titre))}`, `j=${o.jour}`];
+        if (o.heure) q.push(`h=${encodeURIComponent(o.heure)}`);
+        if (/^[a-z0-9-]+$/.test(o.page || '')) q.push(`p=${o.page}`);
+        return `${SITE}/date/?${q.join('&')}`;
+    }
+
+    //  « jeu. 12 nov. à 20h00 », « ven. 13 nov. (matin, séance scolaire) »,
+    //  « sam. 14 nov. (horaire à confirmer) ».
+    function seanceEnClair(s) {
+        const j = jourIso(s.icsDate);
+        const h = heuresDe(s);
+        const horloge = /^\d{1,2}\s*[hH:]/.test(h);
+        const notes = [horloge ? '' : (h && !/confirmer/i.test(h) ? h : 'horaire à confirmer'), s.scolaire ? 'séance scolaire' : ''].filter(Boolean);
+        return `${JOURS_COURTS[j.js]} ${j.j === 1 ? '1er' : j.j} ${MOIS_COURTS[j.m]}${horloge ? ` à ${h}` : ''}`
+            + (notes.length ? ` (${notes.join(', ')})` : '');
+    }
+
+    function partageDe(seances, opts) {
+        const datees = (seances || []).filter(s => s && jourIso(s.icsDate));
+        if (!datees.length) return null;
+        // Les séances scolaires d'une série n'intéressent pas l'ami à qui
+        // l'on écrit : elles ne partent que s'il n'y a qu'elles.
+        const ouvertes = datees.filter(s => !s.scolaire);
+        const liste = ouvertes.length ? ouvertes : datees;
+        const t = liste[0];
+        const titre = String(t.title || '').trim() || 'Spectacle';
+        const nom = t.subtitle ? `${titre} (${t.subtitle})` : titre;
+        const lieu = String(t.location || '').trim();
+        const publiques = liste.filter(s => !s.scolaire);
+        const billets = [...new Set(publiques.map(s => lienSur(s.billetterie)).filter(Boolean))];
+        // Une billetterie par séance (deux théâtres, deux adresses) : chaque
+        // séance porte la sienne ; sinon une ligne pour toutes.
+        const parSeance = billets.length > 1;
+        const lignes = [];
+        if (liste.length === 1) {
+            lignes.push(`${nom} — ${seanceEnClair(t)}`);
+            if (lieu) lignes.push(lieu);
+        } else {
+            lignes.push(nom);
+            if (lieu) lignes.push(lieu);
+            liste.forEach(s => {
+                const b = parSeance && !s.scolaire ? lienSur(s.billetterie) : '';
+                lignes.push(`· ${seanceEnClair(s)}${b ? ` — réserver : ${b}` : ''}`);
+            });
+        }
+        if (billets.length === 1) lignes.push(`Réserver : ${billets[0]}`);
+        else if (!billets.length && publiques.length) lignes.push('Réservations pas encore ouvertes.');
+        lignes.push('Pour l’ajouter à son agenda :');
+        const texte = lignes.join('\n');
+        const url = lienDate({
+            titre, jour: t.icsDate, page: opts && opts.page,
+            heure: liste.length === 1 && !/confirmer/i.test(heuresDe(t)) ? heuresDe(t) : ''
+        });
+        return { titre: nom, texte, url, message: `${texte}\n${url}`, spectacle: titre };
+    }
+
     return {
+        partageDe, lienDate, slugTitre, seanceEnClair, jourIso, heuresDe, JOURS_LONGS, MOIS_LONGS,
         panelHtml, datesHtml, chapitresDe, salleDe, escape, lienSur, evenementTheatre, jsonLd, dureeMinutes, agendaDe, photoPrincipale, couverture, organisateurs,
         toLines, splitWords, splitChars, titleMetrics, revealWords,
         heroActionsHtml, footTitleText, footDatesHtml, footGhostHtml,

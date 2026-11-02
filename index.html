@@ -7301,6 +7301,45 @@
             font-size: 13px;
         }
 
+        /* LA PREMIÈRE LIGNE ET L'ENVOI DE LA DATE (dlEnvoi). Le bouton tient
+           dans la hauteur du titre — ses marges négatives le laissent
+           déborder sans rien pousser : la ligne garde sa hauteur au pixel.
+           Le titre s'arrête avant lui, sur ses points de suspension. */
+        .dl-tete {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .dl-tete>.dl-titre,
+        .dl-tete>.dl-lieu {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .dl-partage {
+            position: relative;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            width: 24px;
+            height: 24px;
+            margin: -4.5px -4px -4.5px 0;
+            border-radius: 6px;
+            color: rgb(var(--c-gold-ink));
+            transition: background-color var(--dur-quick) ease;
+        }
+
+        .dl-partage:hover,
+        .dl-partage.est-copie {
+            background: rgb(var(--c-gold) / 0.1);
+        }
+
+        .dl-partage .ico {
+            font-size: 12px;
+        }
+
         /* AU DOIGT, DES CIBLES À SA TAILLE. Les puces de séance — celles qui
            mènent à la billetterie — faisaient 24 px de haut, le bouton
            d'agenda 24 × 24 : le minimum légal, la moitié des 44 px que
@@ -7344,6 +7383,18 @@
 
             .dl-agenda .ico {
                 font-size: 15px;
+            }
+
+            /* L'envoi garde le dessin de la ligne du titre ; c'est sa zone
+               qui grandit, jusqu'à 40 px, par-dessus la marge. */
+            .dl-partage::after {
+                content: '';
+                position: absolute;
+                inset: -8px;
+            }
+
+            .dl-partage .ico {
+                font-size: 14px;
             }
         }
 
@@ -7664,7 +7715,8 @@
                 display: none !important;
             }
 
-            .dl-agenda {
+            .dl-agenda,
+            .dl-partage {
                 display: none !important;
             }
 
@@ -13556,6 +13608,20 @@
                 + ` aria-label="${esc(`Ajouter au calendrier : ${e.titre}, ${quand}`)}"><svg class="ico" aria-hidden="true"><use href="#i-regular-calendar-plus"></use></svg></button></li>`;
         }
 
+        // ENVOYER LA DATE à quelqu'un (data-dl-partage : les places de toutes
+        // ses séances ; voir dlPartager) : le message dit la date, le lieu,
+        // la billetterie, et mène à la page d'invitation où le destinataire
+        // l'ajoute à son agenda. Au bout de la première ligne (le titre, ou
+        // le lieu rangé par spectacle), dans le coin : à côté de l'agenda,
+        // il faisait passer la rangée des séances à la ligne au téléphone —
+        // 33 px de plus sur une ligne sur trois.
+        function dlEnvoi(e) {
+            const p = e.perfs.find(q => !q.ecole) || e.perfs[0];
+            const quand = e.perfs.length > 1 && e.debut ? dlDateEnLettres(e.jours, true) : dlQuandComplet(p);
+            return `<button type="button" class="dl-partage" data-dl-partage="${e.perfs.map(q => q.cal).join(' ')}"`
+                + ` aria-label="${esc(`Envoyer cette date : ${e.titre}, ${quand}`)}"><svg class="ico" aria-hidden="true"><use href="#i-solid-share-nodes"></use></svg></button>`;
+        }
+
         // La ligne. `vue` : 'date' (sous un intercalaire de mois, le titre
         // est écrit) ou 'spectacle' (sous le nom de la pièce, il serait
         // répété). La date en lettres n'est écrite que pour les lecteurs
@@ -13570,7 +13636,7 @@
             const proche = e.debut ? relativeDayLabel(e.debut.t, '') : '';
             const pastille = proche ? `<span class="dl-proche">${esc(proche)}</span>` : '';
             const titre = vue === 'date'
-                ? `<h5 class="dl-titre">${pastille}${dlVersPage(e.spectacle, esc(e.titre))}${e.show.subtitle ? ` <span class="dl-sous">(${esc(e.show.subtitle)})</span>` : ''}</h5>`
+                ? `<div class="dl-tete"><h5 class="dl-titre">${pastille}${dlVersPage(e.spectacle, esc(e.titre))}${e.show.subtitle ? ` <span class="dl-sous">(${esc(e.show.subtitle)})</span>` : ''}</h5>${dlEnvoi(e)}</div>`
                 : '';
             const l = dlLieu(e.show);
             const lieu = (l.ville ? `<span class="dl-ville">${esc(l.ville)}</span>` : '')
@@ -13580,7 +13646,8 @@
                 + dlFeuille(e, vue)
                 + `<div class="dl-corps"><p class="dl-quand sr-only">${esc(quand)}</p>`
                 + titre
-                + `<p class="dl-lieu">${vue === 'date' ? '' : pastille}${lieu}</p>`
+                + (vue === 'date' ? `<p class="dl-lieu">${lieu}</p>`
+                    : `<div class="dl-tete"><p class="dl-lieu">${pastille}${lieu}</p>${dlEnvoi(e)}</div>`)
                 + `<ul class="dl-seances" role="list">${e.perfs.map(q => dlSeance(q, e)).join('')}${dlAgenda(e)}</ul></div></article>`;
         }
 
@@ -14259,6 +14326,13 @@
                 if (data) calChoisirSeance(data);
                 return;
             }
+            const envoi = e.target.closest('[data-dl-partage]');
+            if (envoi) {
+                e.preventDefault();
+                e.stopPropagation();
+                dlPartager(envoi);
+                return;
+            }
             const cal = e.target.closest('[data-cal-index]');
             if (!cal) return;
             e.preventDefault();
@@ -14908,35 +14982,47 @@
         // ════════════════════════════════════════════════════════════════
         //  PARTAGER CETTE DATE
         //  La fenêtre pose une date dans SON agenda ; ce geste-ci l'envoie à
-        //  quelqu'un — le spectateur qui demande « on y va ? ». Un texte qui
-        //  se lit tel quel dans un message, « Bérénice — jeu. 12 nov. à
-        //  20h00, Le Forum, Falaise (14) », et le lien de la page du
-        //  spectacle (l'onglet Dates, s'il n'en a pas). Les adresses sont
+        //  quelqu'un — le spectateur qui demande « on y va ? ». Deux portes :
+        //  le bouton « Envoyer cette date » de chaque ligne (dlPartager : la
+        //  ligne entière, une série avec toutes ses séances), et la ligne
+        //  « Partager cette date » de la fenêtre d'agenda (calPartager : la
+        //  séance choisie). Le message vient de partageDe (univers-montage.js)
+        //  — la date, le lieu, la billetterie quand elle est ouverte — et
+        //  mène à la page d'invitation (/date/), où le destinataire réserve,
+        //  l'ajoute à son agenda ou cherche son chemin. Les adresses sont
         //  celles du site public, même depuis un aperçu : c'est là que le
         //  destinataire doit arriver.
         //
         //  La feuille de partage du téléphone quand il en a une (Web Share).
-        //  Sinon — Firefox, un ordinateur sous Linux —, le texte et le lien
-        //  sont copiés par le mécanisme de « Copier une adresse », et la
-        //  ligne le dit deux secondes ; #annonce-copie le dit aux lecteurs
-        //  d'écran. Refermer la feuille de partage sans rien envoyer n'est
-        //  pas un échec : rien ne se passe. La date partie, la fenêtre se
-        //  referme, comme après « Ajouter ».
+        //  Sinon — Firefox, un ordinateur sous Linux —, le message est copié
+        //  par le mécanisme de « Copier une adresse » (window.copierTexte) ;
+        //  #annonce-copie le dit aux lecteurs d'écran. Refermer la feuille de
+        //  partage sans rien envoyer n'est pas un échec : rien ne se passe.
+        //  La date partie depuis la fenêtre, celle-ci se referme, comme après
+        //  « Ajouter ».
         // ════════════════════════════════════════════════════════════════
         let calPartageMinuterie = 0;
 
-        // La date comme on la dit : le jour abrégé, l'heure — ou ce qui en
-        // tient lieu (« matin », « horaire à confirmer ») —, la séance
-        // scolaire si c'en est une, puis le lieu exact.
-        function calTexteDeLaDate(data) {
-            const j = dlJour(data.icsDate);
-            const quand = j ? `${DL_JOURS_COURTS[j.js]} ${dlQuantieme(j)} ${DL_MOIS_COURTS[j.m]}` : (data.dateLabel || '');
-            const heure = performanceTimeStr(data);
-            const horloge = /^\d{1,2}\s*[hH:]/.test(heure);
-            const notes = [horloge ? '' : (heure || 'horaire à confirmer'), data.ecole ? 'séance scolaire' : ''].filter(Boolean);
-            return `${data.title || ''} — ${quand}${horloge ? ` à ${heure}` : ''}`
-                + (notes.length ? ` (${notes.join(', ')})` : '')
-                + (data.location ? `, ${data.location}` : '');
+        // Une séance de renderedEventsData, dans la langue de partageDe.
+        function dlSeancePartagee(d) {
+            return {
+                title: d.title, subtitle: d.subtitle, location: d.location, icsDate: d.icsDate,
+                time: d.time, times: d.times, scolaire: !!d.ecole, billetterie: d.billetterie
+            };
+        }
+
+        function dlPartage(datas) {
+            const liste = datas.filter(Boolean);
+            if (!liste.length || typeof UniversMontage === 'undefined') return null;
+            return UniversMontage.partageDe(liste.map(dlSeancePartagee), { page: liste[0].slug || '' });
+        }
+
+        // Le bouton de la ligne : il garde sa coche deux secondes quand la
+        // date a été copiée (voir partagerUneDate, univers.js).
+        function dlPartager(bouton) {
+            const datas = (bouton.dataset.dlPartage || '').split(' ').filter(Boolean).map(i => window.renderedEventsData[+i]);
+            const partage = dlPartage(datas);
+            if (partage && typeof window.partagerUneDate === 'function') window.partagerUneDate(partage, bouton);
         }
 
         // Le sous-titre dit ce qui va se passer : la feuille de partage, ou
@@ -14950,34 +15036,20 @@
         }
 
         function calPartager() {
-            const data = currentCalendarEventData;
-            if (!data) return;
-            // Le geste qui fait venir quelqu'un d'autre. Le détail est le
-            // spectacle, comme pour date_agenda : rien de plus que la page.
-            track('date_partage', { detail: data.title || '' });
-            const texte = calTexteDeLaDate(data);
-            const url = data.slug ? `https://adrienvada.fr/spectacles/${data.slug}/` : 'https://adrienvada.fr/#page_dates';
-            const copier = () => (window.copierTexte ? window.copierTexte(`${texte}\n${url}`) : Promise.resolve(false))
-                .then((ok) => {
-                    const annoncer = window.annoncerCopie || (() => { });
-                    if (!ok) {
-                        annoncer(`Copie impossible. ${texte}, ${url}`);
-                        return;
-                    }
-                    annoncer(`Date copiée : ${texte}`);
-                    const aide = document.getElementById('cal-partager-aide');
-                    if (aide) aide.textContent = 'Copiée : à coller dans un message';
-                    setIcon(document.getElementById('cal-partager-signe'), 'solid-check');
-                    clearTimeout(calPartageMinuterie);
-                    calPartageMinuterie = setTimeout(calPartageAuRepos, 2000);
-                });
-            if (typeof navigator.share !== 'function') {
-                copier();
-                return;
-            }
-            navigator.share({ title: data.title || 'Adrien Vada', text: texte, url }).then(
-                () => { if (openModalEl && openModalEl.id === 'calendar-modal') closeCalendarModal(); },
-                (e) => { if (!e || e.name !== 'AbortError') copier(); });
+            const partage = dlPartage([currentCalendarEventData]);
+            if (!partage || typeof window.partagerUneDate !== 'function') return;
+            window.partagerUneDate(partage, null).then((issue) => {
+                if (issue === 'partage') {
+                    if (openModalEl && openModalEl.id === 'calendar-modal') closeCalendarModal();
+                    return;
+                }
+                if (issue !== 'copie') return;
+                const aide = document.getElementById('cal-partager-aide');
+                if (aide) aide.textContent = 'Copiée : à coller dans un message';
+                setIcon(document.getElementById('cal-partager-signe'), 'solid-check');
+                clearTimeout(calPartageMinuterie);
+                calPartageMinuterie = setTimeout(calPartageAuRepos, 2000);
+            });
         }
 
         // ════════════════════════════════════════════════════════════════
