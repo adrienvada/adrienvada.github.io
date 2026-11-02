@@ -3045,7 +3045,7 @@ const SHOW_UNIVERSES = {
         if (typeof track === 'function') track('date_partage', { detail: partage.spectacle || partage.titre || '' });
         const parCopie = () => copierEnvoi(partage.message).then((ok) => {
             if (!ok) { annoncerEnvoi(`Copie impossible. ${partage.message}`); return false; }
-            annoncerEnvoi(`Date copiée : ${partage.texte.split("\n")[0]}. À coller dans un message.`);
+            annoncerEnvoi(`Date copiée : ${partage.message.split('\n')[0]}. À coller dans un message.`);
             const use = bouton && bouton.querySelector('use');
             if (use) {
                 use.setAttribute('href', '#i-solid-check');
@@ -3059,7 +3059,9 @@ const SHOW_UNIVERSES = {
             return 'copie';
         });
         if (typeof navigator.share !== 'function') return parCopie();
-        return navigator.share({ title: partage.titre, text: partage.texte, url: partage.url }).then(
+        // Le texte seul, liens compris (voir partageDe) : l'univers y vient
+        // avant la billetterie, et c'est lui qui fait l'aperçu.
+        return navigator.share({ title: partage.titre, text: partage.message }).then(
             () => 'partage',
             (e) => (e && e.name === 'AbortError' ? false : parCopie()));
     }
@@ -3247,7 +3249,9 @@ const SHOW_UNIVERSES = {
                 if (!foot) return;
                 // Rien à préparer : ce qui se trouve en chemin s'anime au
                 // défilement, et se trouve dans son état final à l'arrivée.
-                foot.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+                // Une date envoyée (accueillirLaDateVisee) : on va à sa ligne.
+                const visee = foot.querySelector('.u-dl--visee');
+                (visee || foot).scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: visee ? 'center' : 'start' });
                 // LE FOCUS SUIT LE SAUT. La page défilait jusqu'aux dates, mais
                 // le focus restait sur le bouton, là-haut : la touche Tab
                 // suivante renvoyait à la première photo, et il fallait
@@ -3472,6 +3476,41 @@ const SHOW_UNIVERSES = {
             const ghost = footGhostHtml(etat);
             if (ghost) barre.insertAdjacentHTML('beforeend', ghost);
         }
+        accueillirLaDateVisee(racine);
+    }
+
+    // ── LA DATE QU'ON VOUS A ENVOYÉE ──
+    //  Une date partagée mène à la page de son spectacle, la date dans
+    //  l'adresse (/spectacles/berenice/?date=2027-01-30 ; voir partageDe,
+    //  univers-montage.js) : l'aperçu du message est la carte du spectacle,
+    //  et la page accueille la date sans rien ajouter à l'écran. Le bouton
+    //  d'en-tête, « Accéder aux dates », la dit (« Sam. 30 janv. ·
+    //  Saint-Lô ») et y mène ; sa ligne, au pied, est mise en avant
+    //  (.u-dl--visee), avec sa réservation et son agenda. Une date passée ou
+    //  retirée ne change rien : la page reste celle de tout le monde.
+    //  Refait après chaque réécriture du pied (les dates en direct).
+    const JOURS_BREFS = ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'];
+    const MOIS_BREFS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    function accueillirLaDateVisee(racine) {
+        let visee = '';
+        try { visee = new URLSearchParams(location.search).get('date') || ''; } catch (e) { }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(visee) || !racine) return;
+        const ligne = [...racine.querySelectorAll('.u-foot .u-dl')].find((li) => {
+            let d = null;
+            try { d = JSON.parse(li.querySelector('.u-date-cal')?.dataset.cal || 'null'); } catch (e) { }
+            return d && (Array.isArray(d.seances) ? d.seances : [d]).some((s) => s.icsDate === visee);
+        });
+        if (!ligne) return;
+        ligne.classList.add('u-dl--visee');
+        const bouton = racine.querySelector('.u-hero-actions [data-u-jump]');
+        if (!bouton) return;
+        const [a, m, j] = visee.split('-').map(Number);
+        const jour = new Date(Date.UTC(a, m - 1, j, 12));
+        const ville = ligne.querySelector('.u-dl-ville')?.textContent.trim() || '';
+        const libelle = `${JOURS_BREFS[jour.getUTCDay()]} ${j === 1 ? '1er' : j} ${MOIS_BREFS[m - 1]}${ville ? ` · ${ville}` : ''}`;
+        bouton.innerHTML = `${escape(libelle)} <svg class="ico" aria-hidden="true"><use href="#i-solid-arrow-down"></use></svg>`;
+        bouton.setAttribute('aria-label', `Aller à la date : ${libelle}`);
+        bouton.dataset.uVisee = '';
     }
 
     // dates-live.js appelle ce nom quand Supabase a répondu. Il est posé au

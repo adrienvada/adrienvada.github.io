@@ -2650,6 +2650,16 @@ a.u-dl-puce:focus-visible {
     font-weight: 500;
 }
 
+/* LA DATE QU'ON VOUS A ENVOYÉE (accueillirLaDateVisee, univers.js) : sa
+   ligne prend un voile de la couleur du spectacle et un trait à gauche.
+   Rien d'autre ne change sur la page. */
+.u-dl--visee {
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--u-accent) 12%, transparent);
+    box-shadow: inset 3px 0 0 var(--u-accent);
+    padding-inline: 12px 8px;
+}
+
 /* L'agenda ferme la rangée, au bord droit. */
 .u-dl-agenda {
     margin-left: auto;

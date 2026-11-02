@@ -1701,10 +1701,27 @@ const UniversMontage = (function () {
     // ── ENVOYER UNE DATE À QUELQU'UN ─────────────────────────────────
     //  « On y va ? » : la date part dans un message, et doit s'y lire telle
     //  quelle, sans ouvrir de lien — le spectacle, le jour et l'heure, le
-    //  lieu, la billetterie quand elle est ouverte. Puis UNE adresse : la
-    //  page d'invitation (/date/), où le destinataire trouve en un geste la
-    //  réservation, l'ajout à son agenda et l'itinéraire. Elle relit la
-    //  base à chaque visite : une heure corrigée après l'envoi y est juste.
+    //  lieu. Puis DEUX liens au plus, dans l'ordre où on les veut :
+    //
+    //      Bérénice — sam. 30 janv. à 18h00
+    //      Théâtre de la ville de Saint-Lô (50)
+    //
+    //      Le spectacle : https://adrienvada.fr/spectacles/berenice/?date=2027-01-30
+    //      Réserver : https://…
+    //
+    //  L'UNIVERS D'ABORD. Les messageries (WhatsApp, Signal, Messenger)
+    //  font l'aperçu du PREMIER lien : c'est la carte du spectacle — son
+    //  image de partage, son titre — qui paraît, et non la page de la
+    //  billetterie. La date voyage dans l'adresse (?date=) : la page du
+    //  spectacle l'accueille — son bouton d'en-tête la dit, sa ligne est
+    //  mise en avant au pied, avec la réservation et l'agenda (voir
+    //  accueillirLaDateVisee, univers.js). Un spectacle sans page mène à la
+    //  page d'invitation (/date/), qui relit la base et offre réservation,
+    //  agenda et itinéraire.
+    //
+    //  Les liens sont DANS le texte, et l'on partage le texte seul : passée
+    //  à part (`url`), l'adresse finissait au bout du message, après la
+    //  billetterie — dont l'aperçu prenait alors la place.
     //
     //  Une seule fabrique pour l'onglet Dates, la fenêtre d'agenda de
     //  l'accueil et le pied des univers (le geste lui-même — feuille de
@@ -1713,9 +1730,9 @@ const UniversMontage = (function () {
     //                 scolaire, billetterie }] — une ligne de l'agenda :
     //                 une séance, ou toutes celles d'une série
     //    opts    : { page } — le dossier du spectacle sous /spectacles/
-    //  → null sans date lisible ; sinon { titre, texte, url, message }.
-    //    `message` est le texte suivi de l'adresse : ce que l'on copie
-    //    quand il n'y a pas de feuille de partage.
+    //  → null sans date lisible ; sinon { titre, message, url, spectacle } :
+    //    `message` est ce qui part (feuille de partage ou copie), `url` le
+    //    lien du site qu'il porte.
     const slugTitre = (t) => sansAccents(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
     //  L'adresse de la page d'invitation. `s` le spectacle (son titre en
@@ -1767,15 +1784,13 @@ const UniversMontage = (function () {
                 lignes.push(`· ${seanceEnClair(s)}${b ? ` — réserver : ${b}` : ''}`);
             });
         }
+        const page = /^[a-z0-9-]+$/.test((opts && opts.page) || '') ? opts.page : '';
+        const url = page ? `${SITE}/spectacles/${page}/?date=${t.icsDate}`
+            : lienDate({ titre, jour: t.icsDate, heure: liste.length === 1 && !/confirmer/i.test(heuresDe(t)) ? heuresDe(t) : '' });
+        lignes.push('', `${page ? 'Le spectacle' : 'Infos et agenda'} : ${url}`);
         if (billets.length === 1) lignes.push(`Réserver : ${billets[0]}`);
         else if (!billets.length && publiques.length) lignes.push('Réservations pas encore ouvertes.');
-        lignes.push('Pour l’ajouter à son agenda :');
-        const texte = lignes.join('\n');
-        const url = lienDate({
-            titre, jour: t.icsDate, page: opts && opts.page,
-            heure: liste.length === 1 && !/confirmer/i.test(heuresDe(t)) ? heuresDe(t) : ''
-        });
-        return { titre: nom, texte, url, message: `${texte}\n${url}`, spectacle: titre };
+        return { titre: nom, message: lignes.join('\n'), url, spectacle: titre };
     }
 
     return {

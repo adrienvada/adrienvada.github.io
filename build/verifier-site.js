@@ -2306,8 +2306,8 @@ function exige(condition, message) {
         // doit pas défiler, sans quoi le navigateur coupe le suivi). Un petit
         // glissement la rend à sa place ; un lancer bref la renvoie, même
         // court. « Partager cette date » envoie le texte de la date et le lien
-        // de sa page d'invitation (/date/), ou les copie sans partage du
-        // navigateur.
+        // de la page du spectacle, la date dans l'adresse, ou les copie sans
+        // partage du navigateur.
         // En mouvement réduit, elle paraît sans glisser ; sur ordinateur, la
         // fenêtre reste au centre, sans poignée. La date fictive, un jeudi
         // 12 novembre lointain, ne dépend pas de la saison.
@@ -2450,9 +2450,8 @@ function exige(condition, message) {
             await p.waitForTimeout(700);
             const partage = await p.evaluate(() => window.__partage);
             const apresPartage = await lire(p);
-            exige(partage && partage.text === 'Bérénice — jeu. 12 nov. à 20h00\nLe Forum, Falaise (14)\nRéservations pas encore ouvertes.\nPour l’ajouter à son agenda :'
-                && partage.url === 'https://adrienvada.fr/date/?s=berenice&j=2099-11-12&h=20h00&p=berenice',
-                `« Partager cette date » n’envoie pas la date et sa page d’invitation : ${JSON.stringify(partage)}`);
+            exige(partage && partage.text === 'Bérénice — jeu. 12 nov. à 20h00\nLe Forum, Falaise (14)\n\nLe spectacle : https://adrienvada.fr/spectacles/berenice/?date=2099-11-12\nRéservations pas encore ouvertes.',
+                `« Partager cette date » n’envoie pas la date et la page du spectacle : ${JSON.stringify(partage)}`);
             exige(apresPartage.cachee && apresPartage.surLeBouton, 'la date partagée, la fenêtre reste ouverte');
             // … ou copiés, sans partage du navigateur, et la ligne le dit.
             await p.evaluate(() => Object.defineProperty(navigator, 'share', { configurable: true, value: undefined }));
@@ -2468,7 +2467,7 @@ function exige(condition, message) {
                 dedans: !!document.activeElement?.closest('#calendar-modal')
             }));
             exige(/^Copier/.test(aideAvant), `sans partage du navigateur, la ligne ne dit pas qu’elle copie : « ${aideAvant} »`);
-            exige(copie.presse === 'Bérénice — jeu. 12 nov. à 20h00\nLe Forum, Falaise (14)\nRéservations pas encore ouvertes.\nPour l’ajouter à son agenda :\nhttps://adrienvada.fr/date/?s=berenice&j=2099-11-12&h=20h00&p=berenice',
+            exige(copie.presse === 'Bérénice — jeu. 12 nov. à 20h00\nLe Forum, Falaise (14)\n\nLe spectacle : https://adrienvada.fr/spectacles/berenice/?date=2099-11-12\nRéservations pas encore ouvertes.',
                 `le texte copié : ${JSON.stringify(copie.presse)}`);
             exige(/^Copiée/.test(copie.aide) && /^Date copiée : Bérénice/.test(copie.annonce) && copie.dedans,
                 `la copie n’est pas dite, ou le focus a quitté la fenêtre : ${JSON.stringify(copie)}`);
@@ -2512,12 +2511,15 @@ function exige(condition, message) {
         // Chaque ligne de l'onglet Dates a son bouton « Envoyer cette date »,
         // au bout de sa première ligne : il ne doit rien pousser (la ligne
         // garde sa hauteur au pixel). Le message part par la feuille de
-        // partage — la date, le lieu, la billetterie, et la page
-        // d'invitation ; une série sans ses séances scolaires. La page
-        // d'invitation relit les dates et offre la réservation, l'agenda et
-        // l'itinéraire ; une date qui n'existe plus le dit. Une saison
+        // partage — la date, le lieu, puis la page du spectacle (la date
+        // dans l'adresse) AVANT la billetterie, qui ferait sinon l'aperçu ;
+        // une série sans ses séances scolaires. La page du spectacle
+        // accueille la date : son bouton d'en-tête la dit, sa ligne est mise
+        // en avant. Un spectacle sans page mène à la page d'invitation, qui
+        // relit les dates et offre la réservation, l'agenda et l'itinéraire ;
+        // une date qui n'existe plus le dit. Une saison
         // fictive, en 2099, ne dépend pas de la vraie.
-        await verifie('« Envoyer cette date » : un bouton par ligne qui ne la grandit pas, un message avec la billetterie et la page d’invitation — et cette page réserve, ajoute à l’agenda, mène à l’itinéraire, et dit une date disparue', async () => {
+        await verifie('« Envoyer cette date » : un bouton par ligne qui ne la grandit pas, un message où la page du spectacle précède la billetterie — la page du spectacle accueille la date ; sans page, l’invitation réserve, ajoute à l’agenda, mène à l’itinéraire, et dit une date disparue', async () => {
             const SAISON = [
                 {
                     type: 'series', id: 'panel-berenice-falaise-2099-11-12', dateLabel: '12 - 13 nov. 2099', title: 'Bérénice',
@@ -2569,21 +2571,28 @@ function exige(condition, message) {
             await p.locator('#page_dates .dl--seule .dl-partage').tap();
             await p.waitForTimeout(300);
             const [serie, seule] = await p.evaluate(() => window.__partages);
-            exige(serie && serie.text === 'Bérénice\nLe Forum, Falaise (14)\n· jeu. 12 nov. à 20h00\n· ven. 13 nov. à 18h00\nRéserver : https://exemple.fr/billets\nPour l’ajouter à son agenda :'
-                && serie.url === 'https://adrienvada.fr/date/?s=berenice&j=2099-11-12&p=berenice',
-                `une série n’envoie pas ses séances publiques, sa billetterie et sa page d’invitation : ${JSON.stringify(serie)}`);
-            exige(seule && seule.text === 'Bérénice — mer. 2 déc. (horaire à confirmer)\nLe Forum, Falaise (14)\nRéservations pas encore ouvertes.\nPour l’ajouter à son agenda :'
-                && seule.url === 'https://adrienvada.fr/date/?s=berenice&j=2099-12-02&p=berenice',
+            // L'univers avant la billetterie : c'est le premier lien qui fait
+            // l'aperçu du message.
+            exige(serie && !serie.url && serie.text === 'Bérénice\nLe Forum, Falaise (14)\n· jeu. 12 nov. à 20h00\n· ven. 13 nov. à 18h00\n\nLe spectacle : https://adrienvada.fr/spectacles/berenice/?date=2099-11-12\nRéserver : https://exemple.fr/billets',
+                `une série n’envoie pas ses séances publiques, la page du spectacle puis sa billetterie : ${JSON.stringify(serie)}`);
+            exige(seule && seule.text === 'Bérénice — mer. 2 déc. (horaire à confirmer)\nLe Forum, Falaise (14)\n\nLe spectacle : https://adrienvada.fr/spectacles/berenice/?date=2099-12-02\nRéservations pas encore ouvertes.',
                 `une date seule sans heure ni billetterie ne le dit pas : ${JSON.stringify(seule)}`);
+            // Un spectacle sans page mène à la page d'invitation.
+            const sansPage = await p.evaluate(() => UniversMontage.partageDe([{ title: 'Un inédit', location: 'Le Forum, Falaise (14)', icsDate: '2099-11-12', time: '20h00' }], {}).message);
+            exige(sansPage.includes('\nInfos et agenda : https://adrienvada.fr/date/?s=un-inedit&j=2099-11-12&h=20h00'),
+                `un spectacle sans page ne mène pas à la page d’invitation : ${JSON.stringify(sansPage)}`);
             exige(!erreurs.length, erreurs.join(' | '));
 
-            // La page d'invitation, avec la même saison à la place de dates.js.
-            await c.route(/\/dates\.js$/, (r) => r.fulfill({
-                contentType: 'text/javascript', body: `const SHOW_DATA = ${JSON.stringify({ upcoming: SAISON, archives: [] })};`
-            }));
+            // La page d'invitation et la page du spectacle, avec la même
+            // saison à la place de celle de dates.js (le reste du fichier,
+            // upcomingPerformances compris, est gardé).
+            await c.route(/\/dates\.js$/, async (r) => {
+                const vrai = await (await r.fetch()).text();
+                await r.fulfill({ contentType: 'text/javascript', body: `${vrai}\nSHOW_DATA.upcoming = ${JSON.stringify(SAISON)};` });
+            });
             const q = await c.newPage();
             const erreursQ = guette(q);
-            await q.goto(serie.url.replace('https://adrienvada.fr', base), { waitUntil: 'load' });
+            await q.goto(base + '/date/?s=berenice&j=2099-11-12&p=berenice', { waitUntil: 'load' });
             await q.waitForTimeout(400);
             const carte = await q.evaluate(() => ({
                 titre: document.querySelector('h1').textContent,
@@ -2619,6 +2628,25 @@ function exige(condition, message) {
                 agenda: !document.getElementById('agenda').hidden, reserver: !document.getElementById('reserver').hidden
             }));
             exige(/plus à l’affiche/.test(perdue.titre) && !perdue.agenda && !perdue.reserver, `une date disparue ne le dit pas : ${JSON.stringify(perdue)}`);
+            // La page du spectacle accueille la date envoyée : le bouton
+            // d'en-tête la dit, sa ligne est mise en avant ; sans date, ou
+            // avec une date qu'elle n'a pas, rien ne change.
+            const accueil = async (suite) => {
+                await q.goto(base + '/spectacles/berenice/' + suite, { waitUntil: 'load' });
+                await q.waitForFunction(() => window.__universPret && document.querySelector('.u-hero-actions [data-u-jump]'), null, { timeout: 8000 })
+                    .catch(() => { });
+                return q.evaluate(() => ({
+                    bouton: document.querySelector('.u-hero-actions [data-u-jump]')?.textContent.trim() || '',
+                    visees: [...document.querySelectorAll('.u-foot .u-dl--visee .u-dl-ville')].map((v) => v.textContent)
+                }));
+            };
+            const visee = await accueil('?date=2099-11-13');
+            exige(visee.bouton === 'Ven. 13 nov. · Falaise' && JSON.stringify(visee.visees) === '["Falaise"]',
+                `la page du spectacle n’accueille pas la date envoyée : ${JSON.stringify(visee)}`);
+            for (const suite of ['', '?date=2099-11-20']) {
+                const neutre = await accueil(suite);
+                exige(neutre.bouton === 'Accéder aux dates' && !neutre.visees.length, `la page du spectacle change sans date envoyée (${suite || 'sans date'}) : ${JSON.stringify(neutre)}`);
+            }
             exige(!erreursQ.length, erreursQ.join(' | '));
             await c.close();
         });
