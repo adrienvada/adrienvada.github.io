@@ -247,8 +247,8 @@ const UniversMontage = (function () {
     //  d'après variantes.json — jamais à la main —, et le contrôle
     //  automatique les confronte.
     const ECRAN_LARGE = new Set([
-        'alabarre/6', 'asyoulikeit/3', 'asyoulikeit/8', 'audiences/4',
-        'berenice/3', 'berenice/18', 'cleophene/5', 'cleophene/7', 'cleophene/9',
+        'asyoulikeit/3', 'asyoulikeit/8', 'audiences/4', 'berenice/3',
+        'berenice/18', 'cleophene/5', 'cleophene/7', 'cleophene/9',
         'fulgurees/2', 'fulgurees/7', 'fulgurees/10', 'fulgurees/23'
     ]);
 

@@ -2,11 +2,10 @@
  "_": "Écrit par build/variantes-images.py — ne pas modifier à la main. « 2400 » : chaque photo de plus de 1920 px, avec la qualité de sa version <nom>-2400.webp, ou null et la raison si elle n'en a pas (le JPEG reste alors servi aux écrans larges). « v » : le cadre de la vignette <nom>-v.webp de chaque couverture. « empreinte » : celle du JPEG d'où elles viennent.",
  "2400": {
   "alabarre/6": {
-   "qualite": 78,
-   "ssim": 0.9839,
-   "ko": 78,
-   "jpeg_ko": 331,
-   "empreinte": "eb86e581d398"
+   "qualite": null,
+   "raison": "SSIM 0,9656 au mieux (q88, 501 Ko) ; au-delà, plus de 75 % du JPEG",
+   "jpeg_ko": 784,
+   "empreinte": "5b88cd78c252"
   },
   "alabarre/19": {
    "qualite": null,

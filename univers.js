@@ -300,7 +300,7 @@ const SHOW_UNIVERSES = {
                 by: 'Marion, III - L’institution judiciaire au défi du réel'
             },
             {
-                p: [20, 8, 5, 9], cadre: { 20: '35% 35%', 8: '15% 18%', 5: '47% 18%', 9: '50% 15%' }, c: ['Avocate de la partie civile, IV - Le quotidien du sexisme', 'Prévenu, IV - Le quotidien du sexisme', 'Greffier, II - Face aux violences', 'Avocat de la défense, V - La défense des hommes'],
+                p: [20, 8, 5, 9], cadre: { 20: '35% 35%', 8: '15% 18%', 5: '32% 35%', 9: '25% 40%' }, c: ['Avocate de la partie civile, IV - Le quotidien du sexisme', 'Prévenu, IV - Le quotidien du sexisme', '', ''],
                 aside: ['Comment, dans ces conditions,', 'réussir à “rendre justice” ?']
             },
             {
@@ -308,7 +308,7 @@ const SHOW_UNIVERSES = {
                 by: 'Présidente, VI - Dans le couple '
             },
             {
-                p: [4, 13, 14, 12], cadre: { 4: '18% 25%', 13: '30% 15%', 14: '36% 28%', 12: '52% 25%' }, c: ['', '', ''],
+                p: [4, 13, 14, 12], cadre: { 4: '18% 25%', 13: '58% 35%', 14: '45% 30%', 12: '52% 25%' }, c: ['', '', ''],
                 aside: ['Le spectacle, sobre, peut se jouer en tribunal comme en salle municipale ou établissement scolaire : la salle d’audience est recrée.']
             },
             {
@@ -316,7 +316,7 @@ const SHOW_UNIVERSES = {
                 by: 'Rémi, Anne, X - Conclusion'
             },
             {
-                p: [6], cadre: { 6: '57% 28%' }, c: [''],
+                p: [6], cadre: { 6: '52% 25%' }, c: [''],
                 over: ['« La justice est imparfaite parce qu’elle est humaine… »'],
                 overAt: 'bas'
             },
@@ -324,7 +324,7 @@ const SHOW_UNIVERSES = {
                 text: '« … Elle répond pourtant à l’une des vocations les plus hautes de notre humanité : briser la loi du plus fort. Pour cela, elle doit savoir écouter — et il faut lui en donner le temps. »  '
             },
             {
-                p: [25, 26], cadre: { 25: '55% 50%', 26: '33% 45%' }, c: ['Débat suivant une représentation au lycée des Bruyères, à Sotteville-lès-Rouen', 'Débat suivant une représentation au tribunal d’Avignon', ''],
+                p: [25, 26], cadre: { 25: '85% 55%', 26: '50% 50%' }, c: ['', '', ''],
             },
         ]
     },
