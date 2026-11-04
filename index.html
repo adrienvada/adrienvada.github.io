@@ -7068,6 +7068,57 @@
             color: rgb(var(--c-muted));
         }
 
+        /* LES DATES PASSÉES ONT LEUR FEUILLE AUSSI, plus petite (40 × 46)
+           et sans photo : une date jouée se lit, elle ne s'achète plus. Du
+           papier, le bandeau du mois à la couleur du spectacle, le jour au
+           centre, et en bas l'année — là où le CV l'écrit sous sa
+           vignette : une saison court sur deux années. */
+        .dl-archive {
+            display: grid;
+            grid-template-columns: 40px minmax(0, 1fr);
+            column-gap: 10px;
+            align-items: center;
+            padding: 5px 6px;
+        }
+
+        .dl-feuille--archive {
+            width: 40px;
+            height: 46px;
+            border-radius: 5px;
+        }
+
+        .dl-feuille--archive .dl-bande {
+            height: 13px;
+            line-height: 13px;
+        }
+
+        .dl-feuille--archive .dl-num {
+            margin-top: -2px;
+            font-size: 16px;
+        }
+
+        .dl-feuille--archive.dl-feuille--2 .dl-num {
+            font-size: 12.5px;
+        }
+
+        .dl-feuille--archive .dl-jour {
+            padding: 0 0 4px;
+            letter-spacing: 0.02em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dl-archive .dl-titre {
+            font-size: 12px;
+            line-height: 16px;
+        }
+
+        /* Une date qu'on n'a pas su lire (voir dlJoursArchive) reste écrite
+           en lettres, au-dessus du titre. */
+        .dl-archive .dl-quand {
+            font: 600 11px/15px Inter, sans-serif;
+            color: rgb(var(--c-text));
+        }
+
         .dl-corps {
             min-width: 0;
             display: flex;
@@ -7128,26 +7179,32 @@
            franche ; les puces des séances cernées d'elle ; la feuille
            d'éphéméride dans un cadre de sa couleur. D'un coup d'œil, trois
            Cléophène à la suite, puis une Bérénice. Sans couleur de
-           spectacle, l'encre du texte et l'or du site. */
-        .dl {
+           spectacle, l'encre du texte et l'or du site. Les dates passées
+           (.dl-archive) en font autant. */
+        .dl,
+        .dl-archive {
             --dl-encre: var(--dl-encre-c, rgb(var(--c-text)));
         }
 
-        :root[data-theme="dark"] .dl {
+        :root[data-theme="dark"] .dl,
+        :root[data-theme="dark"] .dl-archive {
             --dl-encre: var(--dl-encre-s, rgb(var(--c-text)));
         }
 
-        .dl .dl-titre {
+        .dl .dl-titre,
+        .dl-archive .dl-titre {
             color: var(--dl-encre);
         }
 
-        .dl .dl-vers-page {
+        .dl .dl-vers-page,
+        .dl-archive .dl-vers-page {
             text-decoration-color: var(--dl-a, rgb(var(--c-text) / 0.35));
             text-decoration-thickness: 2px;
             text-underline-offset: 0.24em;
         }
 
-        .dl .dl-vers-page:hover {
+        .dl .dl-vers-page:hover,
+        .dl-archive .dl-vers-page:hover {
             text-decoration-thickness: 3px;
         }
 
@@ -13551,6 +13608,61 @@
                 + `<span class="dl-jour">${plusieurs ? `${DL_JOURS_BREFS[d.js]}–${DL_JOURS_BREFS[z.js]}` : DL_JOURS_COURTS[d.js]}</span></span>`;
         }
 
+        // LES DATES PASSÉES N'ONT QUE LEUR DATE EN LETTRES : « 13 mai 2026 »,
+        // « 8 - 18 juillet 2025 » dans les archives, « 22 oct. 2026 → 23 oct.
+        // 2026 » pour une série tout juste passée (splitUpcoming). On en tire
+        // le premier et le dernier jour ; le premier prend au dernier le mois
+        // et l'année qu'il n'écrit pas. Illisible : null, et la ligne écrit
+        // alors la date en lettres.
+        const DL_MOIS_RACINES = ['janv', 'fevr', 'mars', 'avr', 'mai', 'juin', 'juil', 'aout', 'sept', 'oct', 'nov', 'dec'];
+        function dlJoursArchive(texte) {
+            const bouts = String(texte || '').trim().split(/\s*→\s*|\s+[-–—]\s+/);
+            if (bouts.length > 2) return null;
+            const lus = bouts.map(b => {
+                const m = /^(\d{1,2})(?:er)?(?:\s+([^\d\s]+))?(?:\s+(\d{4}))?$/i.exec(b.trim());
+                if (!m || +m[1] < 1 || +m[1] > 31) return null;
+                const mois = m[2] ? DL_MOIS_RACINES.findIndex(r => norm(m[2]).startsWith(r)) : null;
+                return mois === -1 ? null : { j: +m[1], m: mois, a: m[3] ? +m[3] : null };
+            });
+            const d = lus[0], z = lus[lus.length - 1];
+            if (!d || !z || z.m === null || z.a === null) return null;
+            if (d.m === null) d.m = z.m;
+            if (d.a === null) d.a = z.a;
+            return { d, z };
+        }
+
+        // Sa feuille : celle des dates à venir, en plus petit et sur papier
+        // (voir « Les dates passées ont leur feuille aussi » dans les
+        // styles), l'année à la place du jour de la semaine.
+        function dlFeuilleArchive(jours) {
+            if (!jours) {
+                return '<span class="dl-feuille dl-feuille--papier dl-feuille--archive" aria-hidden="true"><span class="dl-bande">·</span><span class="dl-num">?</span></span>';
+            }
+            const { d, z } = jours;
+            const deuxMois = z.m !== d.m || z.a !== d.a;
+            const plusieurs = deuxMois || z.j !== d.j;
+            return `<span class="dl-feuille dl-feuille--papier dl-feuille--archive${plusieurs ? ' dl-feuille--2' : ''}" aria-hidden="true">`
+                + `<span class="dl-bande${deuxMois ? ' dl-bande--2' : ''}">${deuxMois ? `${DL_MOIS_BREFS[d.m]}–${DL_MOIS_BREFS[z.m]}` : DL_MOIS_COURTS[d.m]}</span>`
+                + `<span class="dl-num">${plusieurs ? `${d.j}–${z.j}` : d.j}</span>`
+                + `<span class="dl-jour">${z.a}</span></span>`;
+        }
+
+        // Une date passée : la feuille, puis le titre et le lieu, écrits
+        // comme sur les lignes à venir. La date en lettres reste dans la
+        // ligne pour les lecteurs d'écran — la feuille est décorative.
+        function dlLigneArchive(show) {
+            const s = dlSpectacle(show.title || '');
+            const jours = dlJoursArchive(show.date);
+            const l = dlLieu(show);
+            const lieu = (l.ville ? `<span class="dl-ville">${esc(l.ville)}</span>` : '')
+                + (l.ville && l.salle ? ' · ' : '') + esc(l.salle) + (l.dep ? ` (${esc(l.dep)})` : '');
+            return `<div class="dl-archive odd:bg-luxury-stripe rounded" style="${dlStyle(s)}">`
+                + dlFeuilleArchive(jours)
+                + `<div class="dl-corps"><p class="dl-quand${jours ? ' sr-only' : ''}">${esc(show.date)}</p>`
+                + `<p class="dl-titre">${dlVersPage(s, esc(show.title))}</p>`
+                + `<p class="dl-lieu">${lieu}</p></div></div>`;
+        }
+
         // « Rouen · Tribunal judiciaire (76) » : la ville, puis la salle —
         // le libellé du lieu sans sa ville (« L'Éclat, Pont-Audemer »,
         // « Tribunal judiciaire de Rouen »). Une ville qu'on n'y retrouve
@@ -14252,11 +14364,7 @@
                         return true;
                     });
                     if (!rows.length) return;   // saison entièrement filtrée : on la masque
-                    const showsHtml = rows.map(show => `
-                        <div class="py-1 odd:bg-luxury-stripe px-1.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-1">
-                            <span><strong>${esc(show.date)}</strong> : ${dlVersPage(dlSpectacle(show.title || ''), esc(show.title))}</span>
-                            <span class="text-stone-600 text-[12px] md:text-right">${esc(show.location)}</span>
-                        </div>`).join('');
+                    const showsHtml = rows.map(dlLigneArchive).join('');
 
                     const panelId = 'archive-panel-' + seasonIdx++;
                     archivesHtml += `

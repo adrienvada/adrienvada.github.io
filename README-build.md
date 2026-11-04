@@ -1867,6 +1867,13 @@ Le rendu est dans `index.html`, autour de `renderDates()` : les fonctions
   tombe qu'à l'arrivée (`dlDeplier`). Le glissement part après l'image du
   geste, qui montre déjà la flèche ou le libellé du bouton. Images au-delà
   de 20 ms pendant le dépliement ou le repli : 7 à 12 sur 30 → 0 à 2.
+- **Les dates passées ont leur feuille aussi**, plus petite (40 × 46) et
+  sans photo (`dlLigneArchive()`) : du papier, le mois dans un bandeau à la
+  couleur du spectacle, le jour, et l'année en bas. À côté, le titre et la
+  ville puis la salle, comme sur les lignes à venir. Les archives n'ont que
+  leur date en lettres : `dlJoursArchive()` la relit (« 13 mai 2026 »,
+  « 8 - 18 juillet 2025 », « 22 oct. 2026 → 23 oct. 2026 ») ; une date
+  qu'elle ne sait pas lire reste écrite en lettres, sur une feuille « ? ».
 - **Le nom d'un spectacle mène à sa page** (`spectacles/<slug>/`), partout où
   l'onglet l'écrit : la ligne, l'en-tête du rangement par spectacle, les
   archives (`dlVersPage()`). Chaque univers a sa
