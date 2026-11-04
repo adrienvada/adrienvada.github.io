@@ -36,7 +36,7 @@ const SHOW_DATA = {
   // -------------------------------------------------------------
   upcoming: [
     // ⇊ GÉNÉRÉ — build/exporter-dates.js recopie ici la table Supabase. Ne pas éditer à la main. ⇊
-    // Dernier export : 4 octobre 2026 à 22:02 — 25 soirée(s), 15 entrée(s).
+    // Dernier export : 4 novembre 2026 à 21:19 — 30 soirée(s), 16 entrée(s).
     // ── 22 - 23 oct. 2026 : À la barre, peine perdue ? (Rouen) [Série] ──
     {
       type: "series",
@@ -136,6 +136,31 @@ const SHOW_DATA = {
       bookingUrl: "",
       isSchool: true,
       icsDate: "2026-12-04"
+    },
+
+    // ── 15 déc. 2026 : Bérénice (Rouen) [Série] ──
+    {
+      type: "series",
+      id: "panel-berenice-rouen-2026-12-15",
+      dateLabel: "15 déc. 2026",
+      title: "Bérénice",
+      location: "Lycée Jean-Baptiste de la salle, Rouen (76)", city: "Rouen",
+      shows: [
+        {
+          dateLabel: "15 déc. 2026",
+          time: "10h20",
+          bookingUrl: "",
+          isSchool: true,
+          icsDate: "2026-12-15"
+        },
+        {
+          dateLabel: "15 déc. 2026",
+          time: "14h10",
+          bookingUrl: "",
+          isSchool: true,
+          icsDate: "2026-12-15"
+        }
+      ]
     },
 
     // ── 18 déc. 2026 : Cléophène, d’après Rodogune (Pont-Audemer) [Série] ──
@@ -313,7 +338,14 @@ const SHOW_DATA = {
       shows: [
         {
           dateLabel: "18 mai 2027",
-          time: "",
+          time: "10h00",
+          bookingUrl: "",
+          isSchool: true,
+          icsDate: "2027-05-18"
+        },
+        {
+          dateLabel: "18 mai 2027",
+          time: "14h00",
           bookingUrl: "",
           isSchool: true,
           icsDate: "2027-05-18"
@@ -327,16 +359,30 @@ const SHOW_DATA = {
         },
         {
           dateLabel: "20 mai 2027",
-          time: "",
+          time: "10h00",
+          bookingUrl: "",
+          isSchool: true,
+          icsDate: "2027-05-20"
+        },
+        {
+          dateLabel: "20 mai 2027",
+          time: "14h00",
           bookingUrl: "",
           isSchool: true,
           icsDate: "2027-05-20"
         },
         {
           dateLabel: "21 mai 2027",
-          time: "",
+          time: "10h00",
           bookingUrl: "",
-          isSchool: false,
+          isSchool: true,
+          icsDate: "2027-05-21"
+        },
+        {
+          dateLabel: "21 mai 2027",
+          time: "14h00",
+          bookingUrl: "",
+          isSchool: true,
           icsDate: "2027-05-21"
         }
       ]
