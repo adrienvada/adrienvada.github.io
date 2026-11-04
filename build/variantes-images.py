@@ -447,8 +447,9 @@ def bloc_autour(src, i):
 
 
 def couvertures():
-    """{(slug, numéro): (x, y)} : la première photo du montage de chaque
-    univers, et le cadre où la montrent ses vignettes.
+    """{(slug, nom): (x, y)} : la première photo du montage de chaque
+    univers (son numéro, en texte), et le cadre où la montrent ses
+    vignettes. Sans photo au montage, l'affiche si l'univers en a une.
 
     C'est la règle de couverture() dans univers-montage.js : le premier
     temps qui montre des photos, sa première photo — et le `cadre` que ce
@@ -458,6 +459,8 @@ def couvertures():
     for slug, section in sections_univers():
         m = re.search(r"\bp:\s*\[\s*(\d+)", section)
         if not m:
+            if re.search(r"\baffiche:\s*true", section):
+                out[(slug, "affiche")] = position(None)
             continue
         n = int(m.group(1))
         cadre = None
@@ -466,7 +469,7 @@ def couvertures():
             for num, _, valeur in re.findall(r"(\d+)\s*:\s*(['\"])(.*?)\2", c.group(1)):
                 if int(num) == n:
                     cadre = valeur
-        out[(slug, n)] = position(cadre)
+        out[(slug, str(n))] = position(cadre)
     return out
 
 
@@ -487,7 +490,7 @@ def largeurs_pour(source):
     slug = os.path.basename(os.path.dirname(source))
     nom = os.path.basename(source)[:-len(".jpg")]
     plein = nom.isdigit() and (slug, int(nom)) in PLEIN_CADRE
-    couverture = nom.isdigit() and (slug, int(nom)) in COUVERTURES
+    couverture = (slug, nom) in COUVERTURES
     return (((LARGEUR_COUVERTURE,) if couverture else ())
             + LARGEURS_UNIVERS + ((LARGEUR_PLEIN,) if plein else ()))
 
@@ -604,9 +607,9 @@ def vignette_cv(source, tout, memoire):
     lire_montage()
     slug = os.path.basename(os.path.dirname(source))
     nom = os.path.basename(source)[:-len(".jpg")]
-    if not nom.isdigit() or (slug, int(nom)) not in COUVERTURES:
+    if (slug, nom) not in COUVERTURES:
         return []
-    x, y = COUVERTURES[(slug, int(nom))]
+    x, y = COUVERTURES[(slug, nom)]
     cadre = f"{x:g}% {y:g}%"
     cle = cle_photo(source)
     cible = f"{source[:-len('.jpg')]}-v.webp"
@@ -741,7 +744,7 @@ def oublier_disparues(memoire):
             del memoire["2400"][cle]
     for cle in list(memoire["v"]):
         slug, _, nom = cle.partition("/")
-        if not os.path.exists(os.path.join(UNIVERS, cle + ".jpg")) or (slug, int(nom)) not in COUVERTURES:
+        if not os.path.exists(os.path.join(UNIVERS, cle + ".jpg")) or (slug, nom) not in COUVERTURES:
             del memoire["v"][cle]
 
 

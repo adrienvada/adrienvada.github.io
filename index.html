@@ -13811,7 +13811,7 @@
             // UniversMontage est une constante globale (univers-montage.js),
             // pas une propriété de window. La règle de la couverture y vit :
             // les lignes du CV s'en servent aussi.
-            if (!uni || uni.affiche || typeof UniversMontage === 'undefined') return null;
+            if (!uni || uni.kind === 'film' || typeof UniversMontage === 'undefined') return null;
             return UniversMontage.couverture(uni);
         }
 

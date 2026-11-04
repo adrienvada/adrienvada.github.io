@@ -1400,8 +1400,9 @@ const UniversMontage = (function () {
 
     //  LA COUVERTURE DES VIGNETTES : la première photo du montage — la
     //  seule à qui build/variantes-images.py fabrique ses petites versions
-    //  (voir couvertures() là-bas). L'affiche n'y a pas de place : elle
-    //  n'en a pas. Les vignettes des lignes du CV et celles de l'onglet
+    //  (voir couvertures() là-bas). L'affiche n'y prend place que si le
+    //  montage n'a pas de photo — un spectacle en création qui n'a encore
+    //  que son affiche : elle vaut mieux que les initiales. Les vignettes des lignes du CV et celles de l'onglet
     //  Dates s'en servent ; la règle est donc écrite ici, une fois.
     //
     //  `vignette` est ce qu'elles montrent : la couverture RECADRÉE en
@@ -1426,11 +1427,11 @@ const UniversMontage = (function () {
     //  l'appelant pose les initiales.
     function couverture(uni) {
         const bloc = (uni?.sequence || []).find(b => b && Array.isArray(b.p) && b.p.length);
-        if (!bloc) return null;
-        const base = `ressources/images/univers/${uni.slug}/${bloc.p[0]}`;
+        if (!bloc && !uni?.affiche) return null;
+        const base = `ressources/images/univers/${uni.slug}/${bloc ? bloc.p[0] : 'affiche'}`;
         return {
             src: `${base}-240.webp`, vignette: `${base}-v.webp`, repli: `${base}-640.webp`,
-            pos: framePos(uni, bloc, bloc.p[0]) || ''
+            pos: (bloc && framePos(uni, bloc, bloc.p[0])) || ''
         };
     }
 

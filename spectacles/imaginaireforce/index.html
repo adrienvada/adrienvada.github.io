@@ -241,7 +241,7 @@
            La petite image ne se montre jamais en grand : elle s'efface tôt,
            tant qu'elle est encore petite, et le fond arrive en même temps. */
         @view-transition { navigation: auto; }
-        #show-universe { view-transition-name: fiche-imaginaireforce; view-transition-class: fiche; }
+        #show-universe .u-hero-fond { view-transition-name: fiche-imaginaireforce; view-transition-class: fiche; }
         #show-universe .u-of-photo { view-transition-class: fiche; }
         ::view-transition-group(*) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .6, .2, 1); }
         ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
@@ -384,7 +384,7 @@
         </nav>
 
         <div class="u-hero-wrap rg-vue">
-        
+        <div class="u-hero-fond rg-k" aria-hidden="true"><img src="../../ressources/images/univers/imaginaireforce/affiche-1280.webp" srcset="../../ressources/images/univers/imaginaireforce/affiche-640.webp 640w, ../../ressources/images/univers/imaginaireforce/affiche-1280.webp 1280w" sizes="100vw" alt="" decoding="async"></div>
 
         <header class="u-hero">
             <!-- Année · genre · badge. Le genre se lit dans le même souffle
