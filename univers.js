@@ -255,6 +255,7 @@ const SHOW_UNIVERSES = {
 
     "L’imaginaire forcé": {
         slug: 'imaginaireforce',
+        affiche: true,
         title: 'L’Imaginaire forcé',
         subtitle: 'd’après Le Mariage forcé, de Molière',
         // La bougie et les tréteaux : l'or chaud d'une salle du XVIIe,

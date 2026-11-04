@@ -438,7 +438,7 @@ const UniversMontage = (function () {
         if (!uni.affiche) return '';
         return `<figure class="u-fig u-affiche" style="--i:0">
             <button type="button" class="u-fig-media" data-u-zoom="0"
-                    aria-label="Agrandir l’affiche du film">
+                    aria-label="Agrandir l’affiche${uni.kind === 'film' ? ' du film' : ''}">
                 ${pictureHtml(`ressources/images/univers/${uni.slug}/affiche.jpg`, 'affiche',
                     `alt="Affiche — ${escape(title)}" loading="${aUneOuverture(uni) ? 'lazy' : 'eager'}" decoding="async"`)}
                 <span class="u-fig-loupe" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-solid-expand"></use></svg></span>

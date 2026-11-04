@@ -91,6 +91,7 @@ FOLDERS = {
     "lerapt":      "le rapt",
     "peaudesanges": "peau des anges",
     "cassandres":  "cassandres",
+    "imaginaireforce": "imaginaire forcé",
 }
 
 
